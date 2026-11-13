@@ -442,6 +442,177 @@ ClassMethod JobTxObj(tag)
     kill o
 }
 
+/// ---------- N-P20: premise R-01 (unjournaled writes inside an open transaction) ----------
+ClassMethod JOn() As %Boolean
+{
+    quit '($zboolean($zjob, 1024, 1) = 1024)
+}
+
+ClassMethod TryRollback(
+	case,
+	label,
+	one As %Boolean = 0)
+{
+    set err = ""
+    try {
+        if one { trollback 1 } else { trollback }
+    } catch ex {
+        set err = ex.DisplayString()
+    }
+    do ##class(B2Native.Util).Obs(case, label_".error", err)
+    do ##class(B2Native.Util).Obs(case, label_".tlevel", $tlevel)
+}
+
+/// (a) at $TLEVEL 1: unjournaled insert, journaled update of another global, full TROLLBACK.
+ClassMethod P20A(case)
+{
+    kill ^B2R("a")
+    tstart
+    set jm = ##class(%IPM.Utils.JournalManager).%New(0)
+    do ##class(B2Native.Util).Obs(case, "flag.inside", ..JOn())
+    set ^B2R("a", "row") = "unj"
+    kill jm
+    do ##class(B2Native.Util).Obs(case, "flag.after.scope", ..JOn())
+    set ^B2R("a", "other") = "j"
+    do ..TryRollback(case, "rollback")
+    do ##class(B2Native.Util).Obs(case, "row.data", $data(^B2R("a", "row")))
+    do ##class(B2Native.Util).Obs(case, "other.data", $data(^B2R("a", "other")))
+    kill ^B2R("a")
+}
+
+/// (a) neighbour: the same with a journaled insert.
+ClassMethod P20AN(case)
+{
+    kill ^B2R("an")
+    tstart
+    set ^B2R("an", "row") = "j"
+    set ^B2R("an", "other") = "j"
+    do ..TryRollback(case, "rollback")
+    do ##class(B2Native.Util).Obs(case, "row.data", $data(^B2R("an", "row")))
+    do ##class(B2Native.Util).Obs(case, "other.data", $data(^B2R("an", "other")))
+    kill ^B2R("an")
+}
+
+/// (b) at $TLEVEL 2: unjournaled insert, TROLLBACK 1, outer TCOMMIT.
+ClassMethod P20B(case)
+{
+    kill ^B2R("b")
+    tstart
+    set ^B2R("b", "outer") = "j"
+    tstart
+    set jm = ##class(%IPM.Utils.JournalManager).%New(0)
+    set ^B2R("b", "row") = "unj"
+    kill jm
+    do ##class(B2Native.Util).Obs(case, "flag.after.scope", ..JOn())
+    set ^B2R("b", "inner") = "j"
+    do ..TryRollback(case, "rollback1", 1)
+    do ##class(B2Native.Util).Obs(case, "after.rollback1.row.data", $data(^B2R("b", "row")))
+    do ##class(B2Native.Util).Obs(case, "after.rollback1.inner.data", $data(^B2R("b", "inner")))
+    tcommit
+    do ##class(B2Native.Util).Obs(case, "final.tlevel", $tlevel)
+    do ##class(B2Native.Util).Obs(case, "final.row.data", $data(^B2R("b", "row")))
+    do ##class(B2Native.Util).Obs(case, "final.outer.data", $data(^B2R("b", "outer")))
+    kill ^B2R("b")
+}
+
+/// (c) unjournaled insert, then a journaled update of the same node, then TROLLBACK.
+ClassMethod P20C(case)
+{
+    kill ^B2R("c")
+    tstart
+    set jm = ##class(%IPM.Utils.JournalManager).%New(0)
+    set ^B2R("c", "row") = "unj"
+    kill jm
+    do ##class(B2Native.Util).Obs(case, "flag.after.scope", ..JOn())
+    set ^B2R("c", "row") = "journaled"
+    do ..TryRollback(case, "rollback")
+    do ##class(B2Native.Util).Obs(case, "row.data", $data(^B2R("c", "row")))
+    do ##class(B2Native.Util).Obs(case, "row.value", $get(^B2R("c", "row"), "<undefined>"))
+    kill ^B2R("c")
+}
+
+/// (c2) journaled insert, then an unjournaled update of the same node, then TROLLBACK.
+ClassMethod P20C2(case)
+{
+    kill ^B2R("c2")
+    tstart
+    set ^B2R("c2", "row") = "journaled-insert"
+    set jm = ##class(%IPM.Utils.JournalManager).%New(0)
+    set ^B2R("c2", "row") = "unj-update"
+    kill jm
+    do ##class(B2Native.Util).Obs(case, "flag.after.scope", ..JOn())
+    do ..TryRollback(case, "rollback")
+    do ##class(B2Native.Util).Obs(case, "row.data", $data(^B2R("c2", "row")))
+    do ##class(B2Native.Util).Obs(case, "row.value", $get(^B2R("c2", "row"), "<undefined>"))
+    kill ^B2R("c2")
+}
+
+/// (e) through %IPM.General.History: unjournaled insert and update of a row at $TLEVEL 1, journaled write elsewhere, TROLLBACK.
+ClassMethod P20E(case)
+{
+    kill ^B2R("e")
+    set c0 = +$get(^IPM.General.HistoryD)
+    tstart
+    set jm = ##class(%IPM.Utils.JournalManager).%New(0)
+    set h = ..NewHistory("b2-probe-p20e")
+    set sc1 = h.%Save()
+    set id = h.%Id()
+    set h.CommandString = "unj-update"
+    set sc2 = h.%Save()
+    kill h, jm
+    do ##class(B2Native.Util).Obs(case, "flag.after.scope", ..JOn())
+    do ##class(B2Native.Util).Obs(case, "save.ok", $$$ISOK(sc1) && $$$ISOK(sc2))
+    set ^B2R("e", "other") = "j"
+    do ..TryRollback(case, "rollback")
+    do ##class(B2Native.Util).Obs(case, "row.exists", ##class(%IPM.General.History).%ExistsId(id))
+    do ##class(B2Native.Util).Obs(case, "sql.count", ##class(B2Native.Util).SqlCount("SELECT COUNT(*) FROM %IPM_General.History WHERE Package = 'b2-probe-p20e'"))
+    set rs = ##class(%SQL.Statement).%ExecDirect(, "SELECT CommandString FROM %IPM_General.History WHERE ID = ?", id)
+    do ##class(B2Native.Util).Obs(case, "row.CommandString", $select(rs.%Next():rs.%Get("CommandString"), 1:"<none>"))
+    do ##class(B2Native.Util).Obs(case, "other.data", $data(^B2R("e", "other")))
+    do ##class(B2Native.Util).Obs(case, "ids.allocated", +$get(^IPM.General.HistoryD) - c0)
+    // Restore the history: remove the probe row.
+    do ##class(%IPM.General.History).%DeleteId(id)
+    do ##class(B2Native.Util).Obs(case, "cleanup.row.exists", ##class(%IPM.General.History).%ExistsId(id))
+    kill ^B2R("e")
+}
+
+/// (d) as (a), but the process is SIGKILLed inside the transaction; wait for IRIS slot cleanup.
+ClassMethod P20D(case)
+{
+    kill ^B2R("d"), ^IRIS.Temp.B2Signal("p20d")
+    job ##class(B2Native.Premise).JobUnjTx("p20d")
+    set pid = $zchild
+    do ##class(B2Native.Util).Obs(case, "harness.signal", ##class(B2Native.Util).WaitSignal("p20d", 60))
+    do ##class(B2Native.Util).Obs(case, "job.flag.after.scope", $get(^IRIS.Temp.B2Signal("p20d", "flag")))
+    do ##class(B2Native.Util).Obs(case, "dirty.row.data", $data(^B2R("d", "row")))
+    do ##class(B2Native.Util).Obs(case, "dirty.other.data", $data(^B2R("d", "other")))
+    set t0 = $zhorolog
+    do ##class(B2Native.Util).Obs(case, "harness.kill.rc", $zf(-100, "", "/usr/bin/kill", "-9", pid))
+    do ##class(B2Native.Util).Obs(case, "harness.gone", ##class(B2Native.Util).WaitGone(pid, 1500))
+    do ##class(B2Native.Util).Obs(case, "cleanup.seconds", $justify($zhorolog - t0, 0, 0))
+    hang 2
+    do ##class(B2Native.Util).Obs(case, "row.data", $data(^B2R("d", "row")))
+    do ##class(B2Native.Util).Obs(case, "other.data", $data(^B2R("d", "other")))
+    do ##class(B2Native.Util).Obs(case, "flag.this.process", ..JOn())
+    kill ^B2R("d"), ^IRIS.Temp.B2Signal("p20d")
+}
+
+ClassMethod JobUnjTx(tag)
+{
+    tstart
+    set jm = ##class(%IPM.Utils.JournalManager).%New(0)
+    set ^B2R("d", "row") = "unj"
+    kill jm
+    set ^IRIS.Temp.B2Signal(tag, "flag") = ..JOn()
+    set ^B2R("d", "other") = "j"
+    set ^IRIS.Temp.B2Signal(tag, "pid") = $job
+    for i=1:1:6000 {
+        quit:$data(^IRIS.Temp.B2Signal(tag, "release"))
+        hang 0.2
+    }
+    tcommit
+}
+
 ClassMethod NewHistory(package As %String) As %IPM.General.History
 {
     set h = ##class(%IPM.General.History).%New()

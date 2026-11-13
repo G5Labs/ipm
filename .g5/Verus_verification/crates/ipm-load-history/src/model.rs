@@ -603,7 +603,8 @@ pub open spec fn lnm_b2(c: Cfg, s: State, w: u8) -> State {
     let i = slot_of(s, w);
     if f.pc == 11 { if w == 0 { lnm_deps(c, s) } else { set_lnm(s, w, lpc(f, 12)) } }
     else if f.pc == 12 { set_lnm(wmod(s, i, m_touch(gmod(s.ns.mods, i))), w, lpc(f, 13)) }
-    else { set_lnm(if f.dev && c.txm == 0 { dep_commit_mark(c, tcommit(c, s), w) } else { s }, w, lpc(f, 14)) }
+    // control 12 (reviewer variant 212): developer-mode phases run inside an inner transaction
+    else { set_lnm(if f.dev && c.txm == 0 { if c.var == 12 { tstart(c, dep_commit_mark(c, tcommit(c, s), w)) } else { dep_commit_mark(c, tcommit(c, s), w) } } else { s }, w, lpc(f, 14)) }
 }
 
 /// LoadNewModule phases, non-developer commit and exit (1340-1363).
@@ -611,7 +612,9 @@ pub open spec fn lnm_c(c: Cfg, s: State, w: u8) -> State {
     let f = lnm_of(s, w);
     let i = slot_of(s, w);
     if f.pc == 29 {
-        if !f.dev && c.txm == 0 { set_lnm(dep_commit_mark(c, tcommit(c, s), w), w, lpc(f, 30)) } else { set_lnm(s, w, lpc(f, 31)) }
+        if !f.dev && c.txm == 0 { set_lnm(dep_commit_mark(c, tcommit(c, s), w), w, lpc(f, 30)) }
+        else if f.dev && c.txm == 0 && c.var == 12 { set_lnm(tcommit(c, s), w, lpc(f, 31)) }
+        else { set_lnm(s, w, lpc(f, 31)) }
     }
     else if f.pc == 30 { set_lnm(if c.var != 2 { set_com(c, s, i) } else { s }, w, lpc(f, 31)) }
     else if f.pc == 31 { lnm_exit(c, s, w) }
@@ -773,7 +776,7 @@ pub open spec fn cfg_wf(c: Cfg) -> bool {
     &&& mod_wf(gmod(c.init, 0)) && mod_wf(gmod(c.init, 1)) && mod_wf(gmod(c.init, 2))
     &&& (gmod(c.init, 1).present ==> (c.deps.len() >= 1 && gmod(c.init, 1).ver == gpkg(c.deps, 0).ver && !gmod(c.init, 1).dev))
     &&& (gmod(c.init, 2).present ==> (c.deps.len() >= 2 && gmod(c.init, 2).ver == gpkg(c.deps, 1).ver && !gmod(c.init, 2).dev))
-    &&& (c.var == 0 || (1 <= c.var && c.var <= 11) || c.var == 102 || c.var == 103)
+    &&& (c.var == 0 || (1 <= c.var && c.var <= 12) || c.var == 102 || c.var == 103)
 }
 
 } // exec_spec_verified!

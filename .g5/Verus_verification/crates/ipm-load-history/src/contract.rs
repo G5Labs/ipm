@@ -160,7 +160,10 @@ pub open spec fn l1_alts(c: Cfg, q: Q) -> Seq<Seq<MExp>> {
     // developer mode with a transaction: what was committed before the failure point is kept
     else if v == 2 { Seq::empty().push(unchanged_alt()) }
     else if v == 5 || v == 6 { Seq::empty().push(three(mx(2, c.top.ver, 1), unch(), unch())) }
-    else { Seq::empty().push(three(mx(4, c.top.ver, 1), dep_installed(c, 0), dep_installed(c, 1))) }
+    // a failure in or after the phases (verdict 7, 8): the phases ran outside a transaction, so
+    // their work stays: module present at its version with its resources loaded
+    // (`load.outcome.dev`, `dev-mode.keep-on-failure`, wiki/00 L126; stage C R2-01)
+    else { Seq::empty().push(three(mx(1, c.top.ver, 1), dep_installed(c, 0), dep_installed(c, 1))) }
 }
 
 /// Module states a killed load may leave (`att0`: the top action had started).

@@ -1,0 +1,453 @@
+{
+  "run_id": "20261113T214135Z-premise-p20-r01",
+  "label": "premise-p20-r01",
+  "process_outcome": "COMPLETED",
+  "environment_flags": [],
+  "duplicate_observations": [],
+  "expected_files": [
+    {
+      "path": "../../../native/cases/expected-premises-4.json",
+      "sha256": "586458eb0e3a98d1110c8466dc117d5f15504ef103f2196dacdf07f18e21c93c",
+      "mtime_utc": "2026-11-13T21:41:31Z",
+      "evaluated_from": "inputs/expected-premises-4.json",
+      "snapshot_sha256": "586458eb0e3a98d1110c8466dc117d5f15504ef103f2196dacdf07f18e21c93c",
+      "snapshot_matches_current": true,
+      "written_before_run": true,
+      "group": "premises-4"
+    }
+  ],
+  "substantive_verdict": "EVALUATED",
+  "case_verdict_counts": {
+    "CONFIRMED": 6,
+    "REFUTED": 1
+  },
+  "cases": {
+    "N-P20A": {
+      "kind": "premise",
+      "claim": "(a) At $TLEVEL 1, a set made with process journaling off (JournalManager(0) scoped around it) survives a full TROLLBACK; a journaled set made after the scope is undone; no error is raised; the flag is restored at scope exit.",
+      "hypothesis": null,
+      "maps_to": [
+        "B1 R-01",
+        "B1 P-03"
+      ],
+      "verdict": "CONFIRMED",
+      "mismatched_fields": [],
+      "missing_fields": [],
+      "harness_failed_fields": [],
+      "case_markers_complete": true,
+      "fields": {
+        "flag.inside": {
+          "expected": "0",
+          "source": "JournalManager.cls %OnNew(0)",
+          "observed": "0",
+          "match": true
+        },
+        "flag.after.scope": {
+          "expected": "1",
+          "source": "JournalManager.cls %OnClose",
+          "observed": "1",
+          "match": true
+        },
+        "rollback.error": {
+          "expected": "",
+          "source": "claim under test (premise R-01, C round 2 R2-02); N-P07 shows a TROLLBACK leaves sets made with process journaling off (no <ROLLFAIL>)",
+          "observed": "",
+          "match": true
+        },
+        "rollback.tlevel": {
+          "expected": "0",
+          "source": "IRIS TROLLBACK",
+          "observed": "0",
+          "match": true
+        },
+        "row.data": {
+          "expected": "1",
+          "source": "claim under test (premise R-01, C round 2 R2-02); N-P07 shows a TROLLBACK leaves sets made with process journaling off",
+          "observed": "1",
+          "match": true
+        },
+        "other.data": {
+          "expected": "0",
+          "source": "N-P01",
+          "observed": "0",
+          "match": true
+        }
+      },
+      "unexpected_observations": {}
+    },
+    "N-P20AN": {
+      "kind": "premise",
+      "claim": "(a) neighbour: the same insert made with journaling on is undone by the TROLLBACK.",
+      "hypothesis": null,
+      "maps_to": [
+        "B1 P-01"
+      ],
+      "verdict": "CONFIRMED",
+      "mismatched_fields": [],
+      "missing_fields": [],
+      "harness_failed_fields": [],
+      "case_markers_complete": true,
+      "fields": {
+        "rollback.error": {
+          "expected": "",
+          "source": "N-P01",
+          "observed": "",
+          "match": true
+        },
+        "row.data": {
+          "expected": "0",
+          "source": "N-P01",
+          "observed": "0",
+          "match": true
+        },
+        "other.data": {
+          "expected": "0",
+          "source": "N-P01",
+          "observed": "0",
+          "match": true
+        }
+      },
+      "unexpected_observations": {
+        "rollback.tlevel": "0"
+      }
+    },
+    "N-P20B": {
+      "kind": "premise",
+      "claim": "(b) At $TLEVEL 2, an unjournaled set survives TROLLBACK 1 and stays after the outer TCOMMIT; the journaled inner set is undone, the outer set kept.",
+      "hypothesis": null,
+      "maps_to": [
+        "B1 R-01"
+      ],
+      "verdict": "CONFIRMED",
+      "mismatched_fields": [],
+      "missing_fields": [],
+      "harness_failed_fields": [],
+      "case_markers_complete": true,
+      "fields": {
+        "flag.after.scope": {
+          "expected": "1",
+          "source": "JournalManager.cls",
+          "observed": "1",
+          "match": true
+        },
+        "rollback1.error": {
+          "expected": "",
+          "source": "claim under test (premise R-01, C round 2 R2-02); N-P07 shows a TROLLBACK leaves sets made with process journaling off",
+          "observed": "",
+          "match": true
+        },
+        "rollback1.tlevel": {
+          "expected": "1",
+          "source": "N-P02",
+          "observed": "1",
+          "match": true
+        },
+        "after.rollback1.row.data": {
+          "expected": "1",
+          "source": "claim under test (premise R-01, C round 2 R2-02); N-P07 shows a TROLLBACK leaves sets made with process journaling off",
+          "observed": "1",
+          "match": true
+        },
+        "after.rollback1.inner.data": {
+          "expected": "0",
+          "source": "N-P02",
+          "observed": "0",
+          "match": true
+        },
+        "final.tlevel": {
+          "expected": "0",
+          "source": "TCOMMIT",
+          "observed": "0",
+          "match": true
+        },
+        "final.row.data": {
+          "expected": "1",
+          "source": "claim under test (premise R-01, C round 2 R2-02); N-P07 shows a TROLLBACK leaves sets made with process journaling off",
+          "observed": "1",
+          "match": true
+        },
+        "final.outer.data": {
+          "expected": "1",
+          "source": "N-P02",
+          "observed": "1",
+          "match": true
+        }
+      },
+      "unexpected_observations": {}
+    },
+    "N-P20C": {
+      "kind": "premise",
+      "claim": "(c) An unjournaled insert followed by a journaled update of the same node, then TROLLBACK: the rollback restores the value the journaled update overwrote (the unjournaled value), without error.",
+      "hypothesis": null,
+      "maps_to": [
+        "B1 R-01"
+      ],
+      "verdict": "CONFIRMED",
+      "mismatched_fields": [],
+      "missing_fields": [],
+      "harness_failed_fields": [],
+      "case_markers_complete": true,
+      "fields": {
+        "flag.after.scope": {
+          "expected": "1",
+          "source": "JournalManager.cls",
+          "observed": "1",
+          "match": true
+        },
+        "rollback.error": {
+          "expected": "",
+          "source": "claim under test (premise R-01, C round 2 R2-02); N-P07 shows a TROLLBACK leaves sets made with process journaling off (no <ROLLFAIL>)",
+          "observed": "",
+          "match": true
+        },
+        "rollback.tlevel": {
+          "expected": "0",
+          "source": "IRIS TROLLBACK",
+          "observed": "0",
+          "match": true
+        },
+        "row.data": {
+          "expected": "1",
+          "source": "claim under test (premise R-01, C round 2 R2-02); N-P07 shows a TROLLBACK leaves sets made with process journaling off",
+          "observed": "1",
+          "match": true
+        },
+        "row.value": {
+          "expected": "unj",
+          "source": "claim under test (premise R-01, C round 2 R2-02); N-P07 shows a TROLLBACK leaves sets made with process journaling off; the journal records the old value of a journaled SET",
+          "observed": "unj",
+          "match": true
+        }
+      },
+      "unexpected_observations": {}
+    },
+    "N-P20C2": {
+      "kind": "premise",
+      "claim": "(c2) A journaled insert followed by an unjournaled update of the same node, then TROLLBACK: undoing the journaled insert removes the node, so the unjournaled update is lost.",
+      "hypothesis": null,
+      "maps_to": [
+        "B1 R-01 (mixed order, as when a twin inserted in a transaction is later persisted with journaling off)"
+      ],
+      "verdict": "REFUTED",
+      "mismatched_fields": [
+        "row.data"
+      ],
+      "missing_fields": [],
+      "harness_failed_fields": [],
+      "case_markers_complete": true,
+      "fields": {
+        "flag.after.scope": {
+          "expected": "1",
+          "source": "JournalManager.cls",
+          "observed": "1",
+          "match": true
+        },
+        "rollback.error": {
+          "expected": "",
+          "source": "claim under test (premise R-01, C round 2 R2-02); N-P07 shows a TROLLBACK leaves sets made with process journaling off",
+          "observed": "",
+          "match": true
+        },
+        "row.data": {
+          "expected": "0",
+          "source": "claim under test (premise R-01, C round 2 R2-02); N-P07 shows a TROLLBACK leaves sets made with process journaling off; rollback of a journaled insert kills the node",
+          "observed": "1",
+          "match": false
+        }
+      },
+      "unexpected_observations": {
+        "rollback.tlevel": "0",
+        "row.value": "unj-update"
+      }
+    },
+    "N-P20E": {
+      "kind": "premise",
+      "claim": "(e) Through %IPM.General.History: a row inserted and updated with journaling off at $TLEVEL 1 survives a full TROLLBACK with its last value, its index entries readable by SQL; the probe row is then deleted.",
+      "hypothesis": null,
+      "maps_to": [
+        "B1 R-01"
+      ],
+      "verdict": "CONFIRMED",
+      "mismatched_fields": [],
+      "missing_fields": [],
+      "harness_failed_fields": [],
+      "case_markers_complete": true,
+      "fields": {
+        "flag.after.scope": {
+          "expected": "1",
+          "source": "JournalManager.cls",
+          "observed": "1",
+          "match": true
+        },
+        "save.ok": {
+          "expected": "1",
+          "source": "harness",
+          "observed": "1",
+          "match": true
+        },
+        "rollback.error": {
+          "expected": "",
+          "source": "claim under test (premise R-01, C round 2 R2-02); N-P07 shows a TROLLBACK leaves sets made with process journaling off",
+          "observed": "",
+          "match": true
+        },
+        "rollback.tlevel": {
+          "expected": "0",
+          "source": "IRIS TROLLBACK",
+          "observed": "0",
+          "match": true
+        },
+        "row.exists": {
+          "expected": "1",
+          "source": "claim under test (premise R-01, C round 2 R2-02); N-P07 shows a TROLLBACK leaves sets made with process journaling off",
+          "observed": "1",
+          "match": true
+        },
+        "sql.count": {
+          "expected": "1",
+          "source": "claim under test (premise R-01, C round 2 R2-02); N-P07 shows a TROLLBACK leaves sets made with process journaling off (index globals written unjournaled too)",
+          "observed": "1",
+          "match": true
+        },
+        "row.CommandString": {
+          "expected": "unj-update",
+          "source": "claim under test (premise R-01, C round 2 R2-02); N-P07 shows a TROLLBACK leaves sets made with process journaling off",
+          "observed": "unj-update",
+          "match": true
+        },
+        "other.data": {
+          "expected": "0",
+          "source": "N-P01",
+          "observed": "0",
+          "match": true
+        },
+        "ids.allocated": {
+          "expected": "1",
+          "source": "N-P05",
+          "observed": "1",
+          "match": true
+        },
+        "cleanup.row.exists": {
+          "expected": "0",
+          "source": "harness",
+          "observed": "0",
+          "match": true
+        }
+      },
+      "unexpected_observations": {}
+    },
+    "N-P20D": {
+      "kind": "premise",
+      "claim": "(d) As (a), but the process is SIGKILLed inside the transaction: after IRIS's slot cleanup rolls the transaction back, the unjournaled set survives and the journaled set is undone.",
+      "hypothesis": null,
+      "maps_to": [
+        "B1 R-01",
+        "B1 P-05"
+      ],
+      "verdict": "CONFIRMED",
+      "mismatched_fields": [],
+      "missing_fields": [],
+      "harness_failed_fields": [],
+      "case_markers_complete": true,
+      "fields": {
+        "harness.signal": {
+          "expected": "1",
+          "source": "harness",
+          "observed": "1",
+          "match": true
+        },
+        "job.flag.after.scope": {
+          "expected": "1",
+          "source": "JournalManager.cls",
+          "observed": "1",
+          "match": true
+        },
+        "dirty.row.data": {
+          "expected": "1",
+          "source": "harness",
+          "observed": "1",
+          "match": true
+        },
+        "dirty.other.data": {
+          "expected": "1",
+          "source": "harness",
+          "observed": "1",
+          "match": true
+        },
+        "harness.kill.rc": {
+          "expected": "0",
+          "source": "harness",
+          "observed": "0",
+          "match": true
+        },
+        "harness.gone": {
+          "expected": "1",
+          "source": "harness",
+          "observed": "1",
+          "match": true
+        },
+        "row.data": {
+          "expected": "1",
+          "source": "claim under test (premise R-01, C round 2 R2-02); N-P07 shows a TROLLBACK leaves sets made with process journaling off",
+          "observed": "1",
+          "match": true
+        },
+        "other.data": {
+          "expected": "0",
+          "source": "N-P18 (SIGKILL: open transaction rolled back after cleanup)",
+          "observed": "0",
+          "match": true
+        },
+        "flag.this.process": {
+          "expected": "1",
+          "source": "harness: the observer's flag is unaffected",
+          "observed": "1",
+          "match": true
+        }
+      },
+      "unexpected_observations": {
+        "cleanup.seconds": "495"
+      }
+    }
+  },
+  "mutation_controls": [
+    {
+      "mutation": "N-P20A:row.data=0",
+      "original_observed": "1",
+      "verdict_before": "CONFIRMED",
+      "verdict_after": "REFUTED",
+      "field_match_before": true,
+      "field_match_after": false,
+      "detected": true
+    },
+    {
+      "mutation": "N-P20AN:row.data=1",
+      "original_observed": "0",
+      "verdict_before": "CONFIRMED",
+      "verdict_after": "REFUTED",
+      "field_match_before": true,
+      "field_match_after": false,
+      "detected": true
+    },
+    {
+      "mutation": "N-P20D:row.data=0",
+      "original_observed": "1",
+      "verdict_before": "CONFIRMED",
+      "verdict_after": "REFUTED",
+      "field_match_before": true,
+      "field_match_after": false,
+      "detected": true
+    },
+    {
+      "mutation": "N-P20E:sql.count=0",
+      "original_observed": "1",
+      "verdict_before": "CONFIRMED",
+      "verdict_after": "REFUTED",
+      "field_match_before": true,
+      "field_match_after": false,
+      "detected": true
+    }
+  ],
+  "evaluated_utc": "2026-11-13T21:50:04Z",
+  "evaluator": "native/evaluate.py"
+}

@@ -42,8 +42,9 @@ def versions():
 
 
 def run(cmd, timeout):
-    for f in (CR / "target/debug/.fingerprint").glob("ipm-load-history-*") if (CR / "target/debug/.fingerprint").exists() else []:
-        subprocess.run(["rm", "-rf", str(f)])
+    for fp in ("target/debug/.fingerprint", "target/verus-partial/debug/.fingerprint"):
+        for f in (CR / fp).glob("ipm-load-history-*") if (CR / fp).exists() else []:
+            subprocess.run(["rm", "-rf", str(f)])
     try:
         p = subprocess.run(cmd, cwd=CR, capture_output=True, text=True, env=ENV, timeout=timeout)
         return p.returncode, p.stdout + p.stderr, False
@@ -68,7 +69,13 @@ def main():
             i = rest.index("--features"); feats = ["--features", rest[i + 1]]; rest = rest[:i] + rest[i + 2:]
         if "--verus-args" in rest:
             i = rest.index("--verus-args"); vargs = rest[i + 1:]
-        cmd = [str(VD / "cargo-verus"), "verify", "-p", "ipm-load-history", "--offline"] + feats + ["--lib", "--", "--num-threads", "4"] + vargs
+        focus = "--focus" in rest
+        if focus:
+            rest = [x for x in rest if x != "--focus"]
+            if "--verus-args" in rest:
+                i = rest.index("--verus-args"); vargs = rest[i + 1:]
+        # --focus: `cargo verus focus` (verifies only the selected module/function of this crate)
+        cmd = [str(VD / "cargo-verus"), "focus" if focus else "verify", "-p", "ipm-load-history", "--offline"] + feats + ["--lib", "--", "--num-threads", "4"] + vargs
         code, log, to = run(cmd, 3000)
         m = re.findall(r"verification results:: (\d+) verified, (\d+) errors", log)
         fails = sorted(set(re.findall(r"-->\s*ipm-load-history/src/(\S+?):\d+", log)))
@@ -125,7 +132,15 @@ def main():
     rec["inputs_sha256_file"] = "inputs.sha256"
     rec["inputs_digest"] = hashlib.sha256("".join(f"{h}{f}" for f, h in ins).encode()).hexdigest()
     (d / "receipt.json").write_text(json.dumps(rec, indent=2) + "\n")
-    line = {"concern": rec.get("concern"), "label": label, "outcome": rec["observed"], "run_id": run_id, "kind": {"verus": "proof" if not rec.get("features") else "control", "explore": "explore" if rec.get("variant") in ("as-built",) else "control", "cases": "cases", "survey": "explore", "repair-survey": "explore"}[kind],
+    var = rec.get("variant") or ""
+    if kind == "explore":
+        ikind = "explore" if var == "as-built" or label.startswith("diagnostic") else ("repair" if var.startswith("repair") else "control")
+    elif kind == "verus":
+        ikind = "proof" if not rec.get("features") else ("sanity" if rec.get("features") == "sanity-false" else "control")
+    else:
+        ikind = {"cases": "cases", "survey": "explore", "repair-survey": "repair"}[kind]
+    # `repair`: a non-control variant (a proposed product repair) whose check is expected to pass
+    line = {"concern": rec.get("concern"), "label": label, "outcome": rec["observed"], "run_id": run_id, "kind": ikind,
             "variant": rec.get("variant"), "expect": rec.get("expect")}
     with open(VV / "results/index.jsonl", "a") as f:
         f.write(json.dumps(line) + "\n")

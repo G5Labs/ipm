@@ -68,6 +68,21 @@ pub proof fn case_c01_conforms() {
     }) by (compute_only);
 }
 
+pub open spec fn cfg_c26() -> Cfg { mk(0, 1, false, true, false, false, pk_act(2, 1), Seq::empty(), none3()) }
+
+/// Placed first among the lemmas that a developer-mode mutation can break: Verus evaluates
+/// `compute_only` lemmas in source order and stops at the first failure.
+/// B1-C26 (`load.outcome.dev`, `dev-mode.keep-on-failure`): a -dev load whose Activate fails
+/// keeps the manifest and the resources its Reload phase loaded; L1 holds. Control 12 (reviewer
+/// variant 212: developer-mode phases inside an inner transaction) breaks this lemma.
+pub proof fn case_c26_dev_failure_keeps_phase_work() {
+    assert({
+        let s = end_of(cfg_c26());
+        s.top_err && s.ns.mods[0].present && s.ns.mods[0].dev && s.ns.mods[0].res && s.ns.twins[0].com
+        && l1_ok(cfg_c26(), qprov(), s)
+    }) by (compute_only);
+}
+
 pub open spec fn cfg_c11() -> Cfg { mk(0, 0, false, true, false, false, pk(2), Seq::empty(), Seq::empty().push(inst_m(3, false)).push(mod0()).push(mod0())) }
 
 /// B1-C11: downgrade refused: no module data written, row error/Committed=0 (these clauses

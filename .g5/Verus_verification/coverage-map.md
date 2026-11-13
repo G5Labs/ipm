@@ -8,7 +8,7 @@ Maps each in-scope ontology block to its formal support, its connection to the p
   - Theorems are in `crates/ipm-load-history/src/proofs.rs` and case lemmas in `cases.rs`.
   - The domain is every well-formed configuration: all transaction modes, dev flags, `-force`, installed states, a caller transaction or none, up to two leaf dependencies, and all modeled faults.
   - Theorems are symbolic over that domain. Explorer runs are bounded and exhaustive within the single-fault domain listed in `B/model-notes.md` section 3.
-  - Final proof receipt: `results/verus/20261113T204233Z-asbuilt-proofs-r1` (259 verified, 0 errors, no `assume`, `admit` or `external_body`). Final cases: `cases/cases.json` sha256 `05842975…457961` (59 cases).
+  - Final proof receipt: `results/verus/20261113T214349Z-asbuilt-proofs-r2` (260 verified, 0 errors, no `assume`, `admit` or `external_body`). Final cases: `cases/cases.json` sha256 `d3334b16…476cd97` (59 cases). Every explorer run and Verus control was rerun on the final inputs by the orchestrator (`results/verus/*final*` and the explorer receipts after 21:55 UTC).
 - **Product connection:**
   - Bindings are in `crates/ipm-load-history/BINDINGS.md`.
   - Native runs are under `results/native/`. "Replay" means B2's replay of `cases/cases.json` (`B/native-replay.md`).
@@ -18,8 +18,8 @@ Maps each in-scope ontology block to its formal support, its connection to the p
   - **confirmed violation**: the product contradicts the clause, with a defect ID from `bugs_issues.md`.
   - **unresolved authority**: a human decision is needed.
   - **unestablished**: no formal or native evidence.
-- Premises P-01..P-11 used by the theorems are CONFIRMED natively (`premises.md`, `B/native-replay.md` section 6). P-12 (IRISTEMP at restart) is not run, and nothing in the model depends on it. The D1 repair variant's premise R-01 (a History row can be written outside the load's rollback) is unverified.
-- Native replay: 57 of 59 model cases realized. All 57 agree with `l2_predicted` (1161 fields, 0 disagreements). C49T/K are approximate (debugger stall).
+- Premises P-01..P-11 used by the theorems are CONFIRMED natively (`premises.md`, `B/native-replay.md` section 6). P-12 (IRISTEMP at restart) is not run, and nothing in the model depends on it. The D1 repair variant's premise R-01 (a History row written with journaling off survives every rollback and SIGKILL) is CONFIRMED natively (N-P20, `20261113T214135Z-premise-p20-r01`).
+- Native replay: 57 of 59 model cases realized. All 57 agree with `l2_predicted` (1161 fields, 0 disagreements). Against the final `cases.json`: 23 permitted, 34 violate (`verdict-cases-d3334b16.json` beside each replay run). C49T/K are approximate (debugger stall).
 
 ## Package loading
 
@@ -37,7 +37,7 @@ Maps each in-scope ontology block to its formal support, its connection to the p
 | `load.refusal.requirements` (+ Q timing) | V3, `case_c23_sysreq_dev_keeps_manifest` | Native B1-B4, `repro/sysreq-dev-manifest-left.cos` | confirmed violation D4 under Q-17 provisional (decision pending) |
 | `load.same-version` (D) | Modeled installed-equal state | Native g2 | supported |
 | `load.outcome` (what a failure keeps, by mode) | L1-NAMESPACE failures, `theorem_commit_sound`, explorer invariants for default, NoTransaction and NoJournal. Process ends: kill-like and terminate-like. Per-module `<Defaults>` flags not representable | Native A1, A5, C1-C4R, D0. Replay T and K variants (C49T/K approximate). Stage C M5, M5N | supported for database state within scope (P-05, P-06b confirmed). Confirmed violation D13 (failure reported after the commit, B1-C29). D14 (dependency `<Defaults>` NoJournal escapes the rollback) is decision pending (Q-22). Non-database effects (Q-04) unestablished. Temporary repository left after a process end: issue I2 |
-| `load.outcome.dev`, `.early-failure` | `case_c29_error_after_commit`, controls 01 and 04 | Native A2, A5, C2. Suites History `TestDevModeRollbackNotCommitted`, `TestDevModeFailureAfterCommit` | supported |
+| `load.outcome.dev`, `.early-failure` | L1-NAMESPACE (after round 2: phase work kept on a transactional `-dev` failure), `case_c26_dev_failure_keeps_phase_work`, `case_c29_error_after_commit`. Controls 01, 04 and 12 (phase work rolled back) detected | Native A2, A5, C2. Suites History `TestDevModeRollbackNotCommitted`, `TestDevModeFailureAfterCommit` | supported |
 | `load.dependencies` | Up to two leaf dependencies. V1, V2 | Native A0-A5. Suite LoadModuleWithDeps | module state supported. Dependency history: confirmed violation D1 |
 | `load.dependencies.local-repo` | Not modeled | Native A0 (dependencies from `.modules`) | supported by observation only |
 | `load.write-check` | Not modeled | None | unestablished |

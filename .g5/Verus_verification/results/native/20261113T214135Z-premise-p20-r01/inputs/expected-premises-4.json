@@ -1,0 +1,255 @@
+{
+ "group": "premises-4",
+ "written_utc": "2026-11-13T21:41:31Z",
+ "note": "N-P20 probes premise R-01 (C round 2 R2-02 disposition): the repair mechanism of writing History rows with process journaling off inside an open transaction. Scratch global ^B2R and, for (e), %IPM.General.History with cleanup.",
+ "cases": {
+  "N-P20A": {
+   "kind": "premise",
+   "claim": "(a) At $TLEVEL 1, a set made with process journaling off (JournalManager(0) scoped around it) survives a full TROLLBACK; a journaled set made after the scope is undone; no error is raised; the flag is restored at scope exit.",
+   "maps_to": [
+    "B1 R-01",
+    "B1 P-03"
+   ],
+   "fields": {
+    "flag.inside": {
+     "expect": "0",
+     "source": "JournalManager.cls %OnNew(0)"
+    },
+    "flag.after.scope": {
+     "expect": "1",
+     "source": "JournalManager.cls %OnClose"
+    },
+    "rollback.error": {
+     "expect": "",
+     "source": "claim under test (premise R-01, C round 2 R2-02); N-P07 shows a TROLLBACK leaves sets made with process journaling off (no <ROLLFAIL>)"
+    },
+    "rollback.tlevel": {
+     "expect": "0",
+     "source": "IRIS TROLLBACK"
+    },
+    "row.data": {
+     "expect": "1",
+     "source": "claim under test (premise R-01, C round 2 R2-02); N-P07 shows a TROLLBACK leaves sets made with process journaling off"
+    },
+    "other.data": {
+     "expect": "0",
+     "source": "N-P01"
+    }
+   }
+  },
+  "N-P20AN": {
+   "kind": "premise",
+   "claim": "(a) neighbour: the same insert made with journaling on is undone by the TROLLBACK.",
+   "maps_to": [
+    "B1 P-01"
+   ],
+   "fields": {
+    "rollback.error": {
+     "expect": "",
+     "source": "N-P01"
+    },
+    "row.data": {
+     "expect": "0",
+     "source": "N-P01"
+    },
+    "other.data": {
+     "expect": "0",
+     "source": "N-P01"
+    }
+   }
+  },
+  "N-P20B": {
+   "kind": "premise",
+   "claim": "(b) At $TLEVEL 2, an unjournaled set survives TROLLBACK 1 and stays after the outer TCOMMIT; the journaled inner set is undone, the outer set kept.",
+   "maps_to": [
+    "B1 R-01"
+   ],
+   "fields": {
+    "flag.after.scope": {
+     "expect": "1",
+     "source": "JournalManager.cls"
+    },
+    "rollback1.error": {
+     "expect": "",
+     "source": "claim under test (premise R-01, C round 2 R2-02); N-P07 shows a TROLLBACK leaves sets made with process journaling off"
+    },
+    "rollback1.tlevel": {
+     "expect": "1",
+     "source": "N-P02"
+    },
+    "after.rollback1.row.data": {
+     "expect": "1",
+     "source": "claim under test (premise R-01, C round 2 R2-02); N-P07 shows a TROLLBACK leaves sets made with process journaling off"
+    },
+    "after.rollback1.inner.data": {
+     "expect": "0",
+     "source": "N-P02"
+    },
+    "final.tlevel": {
+     "expect": "0",
+     "source": "TCOMMIT"
+    },
+    "final.row.data": {
+     "expect": "1",
+     "source": "claim under test (premise R-01, C round 2 R2-02); N-P07 shows a TROLLBACK leaves sets made with process journaling off"
+    },
+    "final.outer.data": {
+     "expect": "1",
+     "source": "N-P02"
+    }
+   }
+  },
+  "N-P20C": {
+   "kind": "premise",
+   "claim": "(c) An unjournaled insert followed by a journaled update of the same node, then TROLLBACK: the rollback restores the value the journaled update overwrote (the unjournaled value), without error.",
+   "maps_to": [
+    "B1 R-01"
+   ],
+   "fields": {
+    "flag.after.scope": {
+     "expect": "1",
+     "source": "JournalManager.cls"
+    },
+    "rollback.error": {
+     "expect": "",
+     "source": "claim under test (premise R-01, C round 2 R2-02); N-P07 shows a TROLLBACK leaves sets made with process journaling off (no <ROLLFAIL>)"
+    },
+    "rollback.tlevel": {
+     "expect": "0",
+     "source": "IRIS TROLLBACK"
+    },
+    "row.data": {
+     "expect": "1",
+     "source": "claim under test (premise R-01, C round 2 R2-02); N-P07 shows a TROLLBACK leaves sets made with process journaling off"
+    },
+    "row.value": {
+     "expect": "unj",
+     "source": "claim under test (premise R-01, C round 2 R2-02); N-P07 shows a TROLLBACK leaves sets made with process journaling off; the journal records the old value of a journaled SET"
+    }
+   }
+  },
+  "N-P20C2": {
+   "kind": "premise",
+   "claim": "(c2) A journaled insert followed by an unjournaled update of the same node, then TROLLBACK: undoing the journaled insert removes the node, so the unjournaled update is lost.",
+   "maps_to": [
+    "B1 R-01 (mixed order, as when a twin inserted in a transaction is later persisted with journaling off)"
+   ],
+   "fields": {
+    "flag.after.scope": {
+     "expect": "1",
+     "source": "JournalManager.cls"
+    },
+    "rollback.error": {
+     "expect": "",
+     "source": "claim under test (premise R-01, C round 2 R2-02); N-P07 shows a TROLLBACK leaves sets made with process journaling off"
+    },
+    "row.data": {
+     "expect": "0",
+     "source": "claim under test (premise R-01, C round 2 R2-02); N-P07 shows a TROLLBACK leaves sets made with process journaling off; rollback of a journaled insert kills the node"
+    }
+   }
+  },
+  "N-P20E": {
+   "kind": "premise",
+   "claim": "(e) Through %IPM.General.History: a row inserted and updated with journaling off at $TLEVEL 1 survives a full TROLLBACK with its last value, its index entries readable by SQL; the probe row is then deleted.",
+   "maps_to": [
+    "B1 R-01"
+   ],
+   "fields": {
+    "flag.after.scope": {
+     "expect": "1",
+     "source": "JournalManager.cls"
+    },
+    "save.ok": {
+     "expect": "1",
+     "source": "harness",
+     "harness": true
+    },
+    "rollback.error": {
+     "expect": "",
+     "source": "claim under test (premise R-01, C round 2 R2-02); N-P07 shows a TROLLBACK leaves sets made with process journaling off"
+    },
+    "rollback.tlevel": {
+     "expect": "0",
+     "source": "IRIS TROLLBACK"
+    },
+    "row.exists": {
+     "expect": "1",
+     "source": "claim under test (premise R-01, C round 2 R2-02); N-P07 shows a TROLLBACK leaves sets made with process journaling off"
+    },
+    "sql.count": {
+     "expect": "1",
+     "source": "claim under test (premise R-01, C round 2 R2-02); N-P07 shows a TROLLBACK leaves sets made with process journaling off (index globals written unjournaled too)"
+    },
+    "row.CommandString": {
+     "expect": "unj-update",
+     "source": "claim under test (premise R-01, C round 2 R2-02); N-P07 shows a TROLLBACK leaves sets made with process journaling off"
+    },
+    "other.data": {
+     "expect": "0",
+     "source": "N-P01"
+    },
+    "ids.allocated": {
+     "expect": "1",
+     "source": "N-P05"
+    },
+    "cleanup.row.exists": {
+     "expect": "0",
+     "source": "harness",
+     "harness": true
+    }
+   }
+  },
+  "N-P20D": {
+   "kind": "premise",
+   "claim": "(d) As (a), but the process is SIGKILLed inside the transaction: after IRIS's slot cleanup rolls the transaction back, the unjournaled set survives and the journaled set is undone.",
+   "maps_to": [
+    "B1 R-01",
+    "B1 P-05"
+   ],
+   "fields": {
+    "harness.signal": {
+     "expect": "1",
+     "source": "harness",
+     "harness": true
+    },
+    "job.flag.after.scope": {
+     "expect": "1",
+     "source": "JournalManager.cls"
+    },
+    "dirty.row.data": {
+     "expect": "1",
+     "source": "harness",
+     "harness": true
+    },
+    "dirty.other.data": {
+     "expect": "1",
+     "source": "harness",
+     "harness": true
+    },
+    "harness.kill.rc": {
+     "expect": "0",
+     "source": "harness",
+     "harness": true
+    },
+    "harness.gone": {
+     "expect": "1",
+     "source": "harness",
+     "harness": true
+    },
+    "row.data": {
+     "expect": "1",
+     "source": "claim under test (premise R-01, C round 2 R2-02); N-P07 shows a TROLLBACK leaves sets made with process journaling off"
+    },
+    "other.data": {
+     "expect": "0",
+     "source": "N-P18 (SIGKILL: open transaction rolled back after cleanup)"
+    },
+    "flag.this.process": {
+     "expect": "1",
+     "source": "harness: the observer's flag is unaffected"
+    }
+   }
+  }
+ }
+}

@@ -2,7 +2,7 @@
 
 Stage B1 of the IPM Verus uplift. Product `571e04a1`. Paths: `VV` = `.g5/Verus_verification`; crate `VV/crates/ipm-load-history` (`src/model.rs` L2, `src/contract.rs` L1, `src/proofs.rs`, `src/cases.rs`, `src/explore.rs`, `src/bin/b1.rs`); `VV/crates/ipm-load-history/BINDINGS.md`; `VV/premises.md`; `VV/SOURCE.json`; `VV/cases/cases.json`; receipts `VV/results/verus/<run>/`, one line each in `VV/results/index.jsonl`.
 
-Status: COMPLETE for the load path and the history writers, after the stage C round 1 repairs (R1-ONT-01..03, R1-MOD-01..09, -14, -15). History readers (filters, delete, purge) are not modelled. Open: R1-MOD-05 (per-module `<Defaults>` transaction flags; native case pending).
+Status: COMPLETE for the load path and the history writers, after the stage C round 1 repairs (R1-ONT-01..03, R1-MOD-01..09, -14, -15) and round 2 repairs (R2-01, -02, -05, -10). History readers (filters, delete, purge) are not modelled. Not representable: per-module `<Defaults>` transaction flags (native M5 shows D14; precedence is open question R2-03).
 
 ## 1. Model summary
 
@@ -18,7 +18,7 @@ Status: COMPLETE for the load path and the history writers, after the stage C ro
 |---|---|---|
 | L1-STATUS | returned status OK iff verdict success | INT-LOAD-01, -09, -10, -11 |
 | L1-NAMESPACE refusals | path, manifest, downgrade and update-required refusals write no module data in any mode (`load.refusal`, R1-MOD-02); system requirements too under Q-17 provisional; this also holds at a process end | INT-LOAD-02, -09, -10, -11, Q-17 |
-| L1-NAMESPACE failures | default mode: a failed load leaves the namespace unchanged (Q-04: database only); `-dev`: manifest kept after C1, dependencies kept only if all succeed, phases outside a transaction; NoTransaction/NoJournal: partial changes allowed | INT-LOAD-05, -06, -08 |
+| L1-NAMESPACE failures | default mode: a failed load leaves the namespace unchanged (Q-04: database only); `-dev`: manifest kept after C1, dependencies kept only if all succeed, and a failure in or after the phases (verdict 7, 8) leaves the module present at its version with its resources loaded, because the phases run outside a transaction (`load.outcome.dev`, `dev-mode.keep-on-failure`, wiki/00 L126; stage C R2-01); NoTransaction/NoJournal: partial changes allowed | INT-LOAD-05, -06, -08 |
 | L1-NAMESPACE success | module installed at the package version, dev mode `-dev` / `-nodev` / stored (Q-01), dependencies installed non-dev except snapshot under `-dev` | INT-LOAD-01, -07, -15, Q-01 |
 | H-RECORD-EXISTS | one record per attempted action, including each dependency load; it survives the action's own rollback and a parent's rollback (#366, R1-ONT-01); under a caller-held transaction survival is Q-06b (provisional: survives); a record exists once its action started, including after either kind of process end | INT-LOAD-17, INT-HIST-01, -02, -03, -08 |
 | H-RECORD-FIELDS | Success = the action's status; TimeEnd set and Finalized when the action ended normally (a dependency's row may be finalized at its parent's end); an unended record says in progress (Success 0, no TimeEnd), lists the phases its action started with the open one unended, names the package once the action knew it (R1-MOD-03), and is not Finalized (Q-FIN provisional); Package is set once the manifest was read, including validation and multiple-documents refusals (R1-ONT-03, R1-MOD-02); started phases end with their status (Q-14); a placeholder version on an unfinished record is permitted (R1-ONT-02) | INT-HIST-03, -04, -14, 3.2 fields, `history.record`, Q-14, Q-FIN |
@@ -41,7 +41,7 @@ Q parameters (`contract.rs` `Q`; provisional first):
 
 ## 3. What is proved
 
-Final as-built Verus run, on the final inputs: `20261113T204233Z-asbuilt-proofs-r1`: verified 259, errors 0 (exec-twin equality obligations, all proofs, all case and repair lemmas). Earlier green runs (`…192915Z`, `…193253Z`, `…194721Z-asbuilt-proofs-l1rev1`) predate later edits and are superseded (R1-MOD-09); the failed run `…192717Z` is preserved. Evaluator sanity check (R1-MOD-14): `20261113T204317Z-sanity-false-claim` builds with feature `sanity-false`, which adds a deliberately false evaluation lemma (`sanity_false_claim`, "the dependency row of B1-C31 survives as built"); observed: exactly that lemma fails ("expression simplifies to false").
+Final as-built Verus run, on the final inputs: `20261113T214349Z-asbuilt-proofs-r2`: verified 260, errors 0 (exec-twin equality obligations, all proofs, all case and repair lemmas). Earlier green runs (`…192915Z`, `…193253Z`, `…194721Z-asbuilt-proofs-l1rev1`, `…204233Z-asbuilt-proofs-r1`, `…214058Z-asbuilt-proofs-r2`) predate later edits and are superseded; the failed run `…192717Z` is preserved. Verus evaluates `compute_only` lemmas in source order and stops at the first failing one, even with `--verify-function`, so a control run lists only the first failing evaluation lemma. Evaluator sanity check (R1-MOD-14): `20261113T204317Z-sanity-false-claim` builds with feature `sanity-false`, which adds a deliberately false evaluation lemma (`sanity_false_claim`, "the dependency row of B1-C31 survives as built"); observed: exactly that lemma fails ("expression simplifies to false").
 
 Domain: every `Cfg` with `cfg_wf(c)` and `c.var == ACTIVE_VARIANT()` (0 as-built). Theorems are symbolic over this domain, not bounded.
 
@@ -57,7 +57,7 @@ Domain: every `Cfg` with `cfg_wf(c)` and `c.var == ACTIVE_VARIANT()` (0 as-built
 | `theorem_r1` (R1) | no transition except the caller's own rollback removes a durable row |
 | `lemma_inv_nonvacuous` | `inv` holds in a concrete initial state |
 
-Case lemmas (`cases.rs`, evaluation of the spec machine; configurations use `ACTIVE_VARIANT()`): `case_c01_conforms`, `case_c11_downgrade_refused`, `case_c15_update_refused`, `case_c08_committed_without_change`, `case_c09_committed_without_change`, `case_c23_sysreq_dev_keeps_manifest`, `case_c28_phase_left_open`, `case_c29_error_after_commit`, `case_c31_dep_record_lost`, `case_c33_dev_dep_record_lost`, `case_c45_kill_dep_record_lost`, `case_c45_terminate_dep_record_lost`, `case_c46_dev_end_inside_activate`, `case_c42_caller_rollback_record_lost`, `case_c52_multiple_documents_kept`. Repair lemmas (variant 103 explicitly): `repair103_c31`, `repair103_c33`, `repair103_c38`, `repair103_c45` (section 5).
+Case lemmas (`cases.rs`, evaluation of the spec machine; configurations use `ACTIVE_VARIANT()`): `case_c01_conforms`, `case_c26_dev_failure_keeps_phase_work` (a `-dev` Activate failure keeps the manifest and the resources its Reload loaded; R2-01), `case_c11_downgrade_refused`, `case_c15_update_refused`, `case_c08_committed_without_change`, `case_c09_committed_without_change`, `case_c23_sysreq_dev_keeps_manifest`, `case_c28_phase_left_open`, `case_c29_error_after_commit`, `case_c31_dep_record_lost`, `case_c33_dev_dep_record_lost`, `case_c45_kill_dep_record_lost`, `case_c45_terminate_dep_record_lost`, `case_c46_dev_end_inside_activate`, `case_c42_caller_rollback_record_lost`, `case_c52_multiple_documents_kept`. Repair lemmas (variant 103 explicitly): `repair103_c31`, `repair103_c33`, `repair103_c38`, `repair103_c45` (section 5).
 
 Bounded evidence (explorer over the executable twins; single-fault domain of 3 transaction modes x 3 dev flags x caller transaction or not x 5 installed states x 5 dependency shapes x 17 faults; every run exhaustive in its domain, `truncated=false`, depth <= 119), final receipts `20261113T20441xZ-*`: `asbuilt-invariants-default` PASS (1950 configs, 189,577 states), `-notx` and `-nojournal` PASS (183,036 each), `asbuilt-r2-with-foreign-edits` PASS (491,080). Survey of all 375,912 end states of 5850 configurations: `20261113T204353Z-survey-asbuilt-r1/survey.json`.
 
@@ -84,16 +84,16 @@ The explorer run `asbuilt-l1-end` (violation) gives a shortest L1 counterexample
 
 ## 5. D1 repair variant (variant 103, not the as-built product)
 
-Design (BINDINGS.md "Repair variant 103"): dependency History rows are written outside the parent's transaction (premise R-01, unverified design premise); a dependency row reads Committed=1 only when the dependency's writes are durable (at its close if no IPM transaction of the load is open, otherwise when the parent's C2 or C3 commit reaches the load's entry level); a parent rollback leaves it at 0; dependency rows are finalized at the top-level close. This differs from the earlier repair idea "Committed set from the parent's outcome": in `-dev` the parent can fail after C2 while its dependencies stay (native A5, B1-C38), and then the dependency must read Committed=1.
+Design (BINDINGS.md "Repair variant 103"): dependency History rows are written outside the parent's transaction. Mechanism (orchestrator, stage C R2-02): insert and update the row with process journaling off, `%IPM.Utils.JournalManager(0)` scoped around the write, so no rollback of the load, and no rollback at a process end, undoes it. Premise R-01 (such a row survives `TROLLBACK 1`, a full rollback and SIGKILL, without `<ROLLFAIL>`) is being checked natively by B2; every repair-103 result below is conditional on it. A repair that defers dependency rows to the top-level close at `$TLEVEL` 0 would meet the clauses at a normal end but not at a process end: SIGKILL runs no `%OnClose`, and a Terminate's close persists inside the open transaction that IRIS then rolls back (B1-C45K/T, native C3). Other parts of the design: a dependency row reads Committed=1 only when the dependency's writes are durable (at its close if no IPM transaction of the load is open, otherwise when the parent's C2 or C3 commit reaches the load's entry level); a parent rollback leaves it at 0; dependency rows are finalized at the top-level close. This differs from the earlier repair idea "Committed set from the parent's outcome": in `-dev` the parent can fail after C2 while its dependencies stay (native A5, B1-C38), and then the dependency must read Committed=1.
 
 Results:
-- Verus (in `20261113T204233Z-asbuilt-proofs-r1`): `repair103_c31` (row survives, Success OK, Committed=0, Finalized; full L1 holds), `repair103_c33` (failed dependency row survives T2's rollback, Committed=0; full L1 holds), `repair103_c38` (dependency kept, Committed=1 while the parent failed; full L1 holds), `repair103_c45` (kill and terminate: the dependency row survives with Success OK, Committed=0, and every dependency clause holds; the top row still violates V11/D10, which this repair does not address).
+- Verus (in `20261113T214349Z-asbuilt-proofs-r2`): `repair103_c31` (row survives, Success OK, Committed=0, Finalized; full L1 holds), `repair103_c33` (failed dependency row survives T2's rollback, Committed=0; full L1 holds), `repair103_c38` (dependency kept, Committed=1 while the parent failed; full L1 holds), `repair103_c45` (kill and terminate: the dependency row survives with Success OK, Committed=0, and every dependency clause holds; the top row still violates V11/D10, which this repair does not address).
 - Explorer: `repair-103-dep-clauses` PASS (transactional modes, with and without caller transaction, 1950 configurations, 189,577 states, exhaustive; check DEP-REPAIR = every dependency record clause at returned and caller ends, existence and Committed at process ends) against the as-built baseline `asbuilt-dep-clauses` (violation). `repair-103-invariants` PASS (R1, R2, R3-top, COMMIT-SOUND, TLEVEL, PERSIST-TARGET; all modes, 5850 configurations, 555,649 states).
 - Repair survey `20261113T204354Z-repair-103-survey/repair-survey.json` (every end state, both variants): variant 103 has 0 DEP-REPAIR violations in the transactional modes (normal, caller ends, kill, terminate). In NoTransaction/NoJournal it has residual violations, all classified as either the V4 window (a dependency's no-transaction marker sets Committed before its first write; visible at a process end or a manifest refusal in that window) or the V9 lag (an unended dependency row reads Committed=0 because SetCommitted writes IRISTEMP only). These are separate defects (V4, V9) that the D1 repair does not touch.
 
 ## 6. Controls and verdicts
 
-A control removes one guard or effect (variant number; Verus feature `control-NN`). Explorer receipts `20261113T204419Z`-`204424Z`. L1 controls are bound to one clause and evaluated on the configurations where the as-built satisfies that clause at every end state (per-clause domains, R1-MOD-08): L1-NS-ALL (5190 conforming configurations, baseline `asbuilt-l1-ns-all-conforming-domain` PASS), H-COMMITTED and H-RECORD-FIELDS at returned ends. Verus receipts: `20261113T204430Z-control-01-verus-r1` through `20261113T204957Z-control-11-verus-r1`, re-run after the round 1 repairs on the final proof inputs.
+A control removes one guard or effect (variant number; Verus feature `control-NN`). Final explorer receipts `20261113T214455Z`-`214500Z` (earlier sets `…2044xxZ` kept). Index lines for control 05/05b (expected survival), the repair-103 checks (kind `repair`, expect pass) and 11b (diagnostic) carry annotation lines (R2-10). L1 controls are bound to one clause and evaluated on the configurations where the as-built satisfies that clause at every end state (per-clause domains, R1-MOD-08): L1-NS-ALL (5190 conforming configurations, baseline `asbuilt-l1-ns-all-conforming-domain` PASS), H-COMMITTED and H-RECORD-FIELDS at returned ends. Verus receipts: `20261113T204430Z-control-01-verus-r1` through `20261113T204957Z-control-11-verus-r1` (round 1 inputs; round 2 changed only the control-12 branches, the developer-mode L1 branch and the new `case_c26` lemma, and those 11 Verus controls were not re-run), and `20261113T214307Z-control-12-verus` for control 12 on the final inputs.
 
 | Control | Mutation | Property (explorer) | Explorer verdict | Verus verdict (failing lemmas) |
 |---|---|---|---|---|
@@ -107,6 +107,7 @@ A control removes one guard or effect (variant number; Verus feature `control-NN
 | 08 | downgrade guard removed | L1-NS-ALL (915 configs) | detected | detected (`…204820Z`): `case_c11` |
 | 09 | UpdatePackage guard removed | L1-NS-ALL | detected | detected (`…204853Z`): `case_c15` |
 | 10 | Finalized trigger removed | R2 (with foreign edits) | detected | detected (`…204925Z`: verified 254, errors 5): `lemma_top_step`, `lemma_lmr_step`, `lemma_mono_edit`, `lemma_mono_lmr`, `lemma_mono_terminate` |
+| 12 (reviewer variant 212, R2-01) | `-dev` phases run inside an inner transaction, committed on success, rolled back on failure | L1-NS-ALL (915 configs; `20261113T214459Z-control-12-dev-phases-in-transaction`) | detected (L1-NAMESPACE: a `-dev` Activate failure loses its resources) | detected (`20261113T214307Z-control-12-verus`): `case_c26_dev_failure_keeps_phase_work` (contract), depth lemmas `lemma_lnm0_b`, `lemma_lnm0_d`, `lemma_lnm1_b`, `lemma_lnm1_d`. Earlier runs `…214140Z` and `…214235Z` show the same detection but `case_c46` failed first and masked `case_c26` (annotated in `index.jsonl`) |
 | 11 | process end keeps the open transaction (P-05 negated) | L1-NS-ALL | detected | detected (`…204957Z`): `case_c45_kill` |
 
 Notes:
@@ -121,9 +122,10 @@ Notes:
 |---|---|---|---|---|
 | `fc7adec492c7a55f64ecddb44798359c652fbc21beef9973e01d531f123ec8f0` | `20261113T193019Z-cases-asbuilt` | 57 | 15 | replayed natively by B2 |
 | `993008003ef5cda84ef42e503619b314af60a4f61cf764b159e1be1f67714557` | `20261113T194755Z-cases-asbuilt-l1rev1` | 57 | 31 | R1-ONT-01..03 |
-| `058429752d6508a3e4527beb35e5825badf3132c8688b3f6138aa1d9bc457961` | `20261113T204349Z-cases-asbuilt-r1` | 59 | 36 | R1-MOD-01..03, new B1-C51/C52; final |
+| `058429752d6508a3e4527beb35e5825badf3132c8688b3f6138aa1d9bc457961` | `20261113T204349Z-cases-asbuilt-r1` | 59 | 36 | R1-MOD-01..03, new B1-C51/C52 |
+| `d3334b1633e15bada06a1d97f2607350ee2671ca2fe4c333051543222476cd97` | `20261113T214442Z-cases-asbuilt-r2` | 59 | 36 | R2-01; final. `l1_permitted` changed for B1-C26 and B1-C38 only (top module "installed" at 2.0.0 in developer mode, resources loaded, instead of "present, resources any"); no verdict flipped; `l2_predicted` and `inputs` byte-identical for all 59 cases |
 
-`l2_predicted` and `inputs` are byte-identical across all three versions for the 57 original cases.
+`l2_predicted` and `inputs` are byte-identical across all four versions for the 57 original cases (and across the last two for B1-C51/C52). Survey on the final inputs: `20261113T214445Z-survey-asbuilt-r2` (unchanged content).
 
 Flips from `fc7adec4` to `99300800` (conforms → violates): B1-C11, C12, C13, C14, C15, C18 (Package, R1-ONT-03); B1-C42, C43, C50T, C50K (Q-06b); B1-C46K, C48K, C49K (Q-08 default); B1-C46T, C48T (Q-FIN); B1-C49T (Q-08 and Q-FIN).
 
@@ -136,14 +138,14 @@ Native reconciliation (read only after `fc7adec4` and its receipt existed): no d
 ## 8. Trust inventory
 
 - `assume`, `admit`, `external_body`, `#[verifier::external]`, uninterpreted functions: none in the crate.
-- `exec_spec_verified!`: generated exec twins are verified against the spec functions (part of the 259 obligations); the macro and vstd are trusted (pinned vstd `=0.0.0-2026-09-20-0158`).
-- `by (compute_only)`: case and repair lemmas rely on Verus's interpreter; its sanity run is receipted (`20261113T204317Z-sanity-false-claim`).
+- `exec_spec_verified!`: generated exec twins are verified against the spec functions (part of the 260 obligations); the macro and vstd are trusted (pinned vstd `=0.0.0-2026-09-20-0158`).
+- `by (compute_only)`: case and repair lemmas rely on Verus's interpreter; its sanity run is receipted (`20261113T204317Z-sanity-false-claim`). The interpreter evaluates these lemmas in source order and stops at the first failure.
 - Explorer (`vendor/explorer`, plain Rust) and the harness (`explore.rs`, `bin/b1.rs`) are unverified; their results are bounded evidence.
 - Premises: `VV/premises.md` (P-01..P-13 mapped to B2 N-P01..N-P18). Every premise the theorems use is CONFIRMED natively, including P-09 (B1-C09/C10). P-06c (order of `%OnClose` at Terminate across frames) is UNVERIFIED and matters only for NoJournal under a caller transaction. P-10 is PARTIAL. R-01 is a design premise of the repair variant only.
 
 ## 9. Remaining gaps and open obligations
 
-- R1-MOD-05 (open obligation): per-module `<Defaults>` transaction flags are not representable (`Cfg.txm` is global). Code reading (Utils/Module.cls:1166-1169, 1191-1193) and N-P07 imply that a dependency whose own `<Defaults>` set NoJournal=1 writes unjournaled inside its parent's T1, so the parent's rollback leaves it installed while its journaled History row is rolled back; with NoTransaction=1 the namespace rolls back but the dependency's log is marked Committed at 1227. B2's native case (normal parent, dependency `<Defaults>` NoJournal=1, parent Activate fails) had no result when this was written. The model makes no prediction for it.
+- Per-module `<Defaults>` transaction flags (R1-MOD-05) are not representable (`Cfg.txm` is global), so the model makes no prediction for them. Native evidence (B2 `20261113T204405Z-stagec2`): M5, a normal-mode parent whose dependency has `<Defaults>` NoJournal=1 and whose Activate fails, leaves the dependency installed with its class and `.ZPM` document and no History row (no `<ROLLFAIL>`, `$TLEVEL` 0, journaling restored); M5N, without `<Defaults>`, rolls everything back and loses only the dependency row (D1). Recorded as D14, decision pending: whether a module's own `<Defaults>` may override its parent's rollback is open question R2-03 (wiki/00 L175 vs L149).
 - History readers are not modelled: `history find/delete` filters (D2), retention purge (D3), `config delete HistoryRetain` (D5), `-globally`, `GlobalRecords`.
 - Not modelled (BINDINGS lists each with what it could hide): `install`/`update`/`reinstall`/uninstall paths, `LoadModuleReference` early refusals, `WriteAfterInstallMessage` errors, legacy XML installs, nested or more than two dependencies, non-database effects (Q-04), the SIGKILL cleanup window (P-13).
 - COMMIT-EXACT (no false "committed") is not a theorem: the as-built violates it (V4).
@@ -155,9 +157,10 @@ Native reconciliation (read only after `fc7adec4` and its receipt existed): no d
 
 ```sh
 cd VV/crates
-python3 -I scripts/receipt.py verus asbuilt-proofs as-built "verified, 0 errors" "as-built proofs"     # expect: verified 259, errors 0
+python3 -I scripts/receipt.py verus asbuilt-proofs as-built "verified, 0 errors" "as-built proofs"     # expect: verified 260, errors 0
+python3 -I scripts/receipt.py verus control-12-verus control-12 "failure of case_c26" "control 12" --features control-12   # expect: case_c26 and depth lemmas fail
 python3 -I scripts/receipt.py verus control-01-verus control-01 "failure of lemma_lnm0_b" "control 01" --features control-01   # expect: lemma_lnm0_b fails
-python3 -I scripts/receipt.py cases cases-check     # rewrites VV/cases/cases.json; expect sha256 05842975…457961
+python3 -I scripts/receipt.py cases cases-check     # rewrites VV/cases/cases.json; expect sha256 d3334b16…76cd97
 target/release/b1 explore repair-103-dep-clauses   # expect: PASS, 189,577 states, exhaustive
 target/release/b1 explore asbuilt-dep-clauses      # expect: VIOLATION (dependency row lost)
 target/release/b1 explore control-10-no-trigger    # expect: VIOLATION of R2

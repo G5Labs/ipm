@@ -28,7 +28,7 @@ Today a log has two copies, an IRISTEMP row and a namespace twin. The twin is wr
 
 Proposal:
 - The durable `History` row is the only copy that matters after a failure. Every setter writes it directly, through one rollback-proof write: process journaling off for that save only (`%IPM.Utils.JournalManager(0)`), so neither the action's own rollback, a parent's rollback nor a process end undoes it. IRISTEMP is then only a cache.
-- The rollback-proof write is premise R-01. N-P07 shows unjournaled sets survive `TROLLBACK` and the flag is restored. Mixed journaled and unjournaled updates of the same row inside a transaction, and SIGKILL, are checked natively by B2 (`premises.md`).
+- The rollback-proof write is premise R-01, CONFIRMED natively (N-P20): unjournaled History writes survive a full rollback, `TROLLBACK 1` and SIGKILL, and the journaling flag is restored. The insert and every update must all use the unjournaled path, because a journaled insert with unjournaled updates leaves a mixed state.
 - `Committed` is written at each commit and set back to 0 by the rollback path when a parent's rollback undoes a dependency.
 - `Finalized` is set only together with `TimeEnd`.
 - A deferral (write the rows once after the top-level action settles) is simpler but does not survive a process end inside the action, so it would not remove V2, V9 or D10.

@@ -15,7 +15,8 @@ verus! {
 
 /// The variant whose proofs are being checked. 0 (as-built) unless a control feature is set.
 #[cfg(not(any(feature = "control-01", feature = "control-02", feature = "control-03", feature = "control-04", feature = "control-05",
-    feature = "control-06", feature = "control-07", feature = "control-08", feature = "control-09", feature = "control-10", feature = "control-11")))]
+    feature = "control-06", feature = "control-07", feature = "control-08", feature = "control-09", feature = "control-10", feature = "control-11",
+    feature = "control-12")))]
 pub open spec fn ACTIVE_VARIANT() -> u8 { 0 }
 #[cfg(feature = "control-01")] pub open spec fn ACTIVE_VARIANT() -> u8 { 1 }
 #[cfg(feature = "control-02")] pub open spec fn ACTIVE_VARIANT() -> u8 { 2 }
@@ -28,6 +29,7 @@ pub open spec fn ACTIVE_VARIANT() -> u8 { 0 }
 #[cfg(feature = "control-09")] pub open spec fn ACTIVE_VARIANT() -> u8 { 9 }
 #[cfg(feature = "control-10")] pub open spec fn ACTIVE_VARIANT() -> u8 { 10 }
 #[cfg(feature = "control-11")] pub open spec fn ACTIVE_VARIANT() -> u8 { 11 }
+#[cfg(feature = "control-12")] pub open spec fn ACTIVE_VARIANT() -> u8 { 12 }
 
 // ------------------------------------------------------------------ shape
 
