@@ -1,0 +1,6 @@
+Scratch copy: cp -r VV/crates VV/vendor /tmp/r2-model/vv/ ; apply model.diff, proofs.diff, cargo-toml.diff, b1.diff (this directory); add rev2.rs as src/bin/rev2.rs.
+Env: RUSTUP_TOOLCHAIN=1.98.1-x86_64-unknown-linux-gnu CARGO_NET_OFFLINE=true CARGO_TARGET_DIR=/tmp/r2-model/vv/crates/target
+cargo build --release --offline -j 4 -p ipm-load-history --bin rev2 && ./target/release/rev2 211 212 213 214            > rev2.log
+cargo build --release --offline -j 4 -p ipm-load-history --bin b1 && for v in 0 211 212 213 214; do REVIEW_VAR=$v ./target/release/b1 cases /tmp/r2-model/cases-$v.json; done   -> case-predictions.txt
+~/.local/share/g5-verification/verus-0.2026.09.27.3cf1832/verus-x86-linux/cargo-verus verify -p ipm-load-history --offline --features review-212 --lib -- --num-threads 4   > verus-review-212.log
+~/.local/share/g5-verification/verus-0.2026.09.27.3cf1832/verus-x86-linux/cargo-verus verify -p ipm-load-history --offline --features review-211 --lib -- --num-threads 4   > verus-review-211.log

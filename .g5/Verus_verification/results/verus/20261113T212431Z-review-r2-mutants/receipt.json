@@ -1,0 +1,21 @@
+{
+  "run_id": "20261113T212431Z-review-r2-mutants",
+  "kind": "review mutants (stage C round 2, reviewer harness over a scratch copy; not the reviewed crate)",
+  "product": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+  "verus": "0.2026.09.27.3cf1832", "z3": "4.16.0 (bundled)", "rust": "1.98.1-x86_64-unknown-linux-gnu",
+  "base_inputs": "reviewed crate as of 20261113T210746Z-repro-asbuilt (inputs digest 55de5386...)",
+  "variants": {
+    "211": "faulty implementation: the pre-#1322 product (no SetCommitted anywhere; Finalize sets Committed = (-dev flag) || ISOK(status))",
+    "212": "faulty implementation: developer-mode phases run inside an inner transaction opened after C2, committed on success and rolled back on failure",
+    "213": "false premise: %IPM.Utils.JournalManager does not restore process journaling when it goes out of scope (negates half of P-03)",
+    "214": "erroneously permitted step: IPM commits a caller-held transaction when the command ends"
+  },
+  "valid_completion": "default mode, one dependency, no fault: l1_ok=true with no violated clause under variants 0, 211, 212, 213, 214 (rev2.log)",
+  "observed": {
+    "211": "detected: explorer end states COMMIT-SOUND 696 cfgs, COMMIT-EXACT 369, H-COMMITTED[top] 1065; Verus fails inv (cs_ok) at top_step, lnm0 pc 3, 8, 30 and case_c08 (cases.rs:106); 13 replayed case predictions change",
+    "212": "NOT detected by any L1 clause or by COMMIT-SOUND, COMMIT-EXACT, TLEVEL: 168 configurations behave differently, 0 verdict changes; Verus fails only the depth shape invariant (lnm0/lnm1 pc 13 and 29) and the as-built case lemma case_c46 (cases.rs:217); 4 replayed l2 predictions change (B1-C26, C38, C46T, C46K) and no L1 verdict flips",
+    "213": "not distinguishable by formal checks or by the 59 replayed cases (0 l2 changes); 825 NoJournal caller-transaction configurations change verdict clauses; refuted only by the native premise probe N-P07 (journal.enabled.after.scope=1, 20261113T181129Z-premises)",
+    "214": "detected: L1-NAMESPACE at caller rollback (816 cfgs); 3 replayed l2 predictions change (B1-C41..C43)"
+  },
+  "exit_codes": {"rev2": 0, "verus_review_211": 101, "verus_review_212": 101}
+}

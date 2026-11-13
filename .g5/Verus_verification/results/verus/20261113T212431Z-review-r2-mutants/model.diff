@@ -1,0 +1,68 @@
+--- /home/ziniu_wu_g5labs_ai/experiments/ipm-verus-uplift-20261113/ipm/.g5/Verus_verification/crates/ipm-load-history/src/model.rs	2026-11-13 20:39:35.215993437 +0000
++++ ipm-load-history/src/model.rs	2026-11-13 21:19:24.357141430 +0000
+@@ -325,13 +325,13 @@
+ /// AbstractHistory:Finalize: Success = status, Committed = Committed || ISOK(status), TimeEnd.
+ pub open spec fn t_final(c: Cfg, t: Temp, err: bool) -> Temp {
+     Temp { live: t.live, pkg: t.pkg, ver: t.ver, ok: if err { 2u8 } else { 1u8 },
+-        com: if c.var == 5 { t.com } else { t.com || !err }, tend: true, ph: t.ph, phst: t.phst }
++        com: if c.var == 5 { t.com } else if c.var == 211 { c.devf == 1 || !err } else { t.com || !err }, tend: true, ph: t.ph, phst: t.phst }
+ }
+ 
+ /// AbstractHistory:SetCommitted (IRISTEMP only). Repair 102 also copies it to the History row
+ /// when no transaction is open.
+ pub open spec fn set_com(c: Cfg, s: State, i: usize) -> State {
+-    let s2 = put_temp(s, i, t_com(gtemp(s.temp, i)));
++    let s2 = if c.var == 211 { s } else { put_temp(s, i, t_com(gtemp(s.temp, i))) };
+     if c.var == 102 && s.tx.len() == 0 && gtwin(s.ns.twins, i).ex && !gtwin(s.ns.twins, i).fin {
+         let tw = gtwin(s.ns.twins, i);
+         wtwin(s2, i, Twin { ex: tw.ex, id: tw.id, pkg: tw.pkg, ver: tw.ver, ok: tw.ok, com: true, tend: tw.tend, fin: tw.fin, ph: tw.ph, phst: tw.phst, edited: tw.edited })
+@@ -566,7 +566,7 @@
+     if s.tx.len() > (f.itl as usize) && c.var != 4 {
+         rollback1(c, s)
+     } else {
+-        set_lnm(if f.nj { with_jrn(s, f.jprev) } else { s }, w, lpc(f, 32))
++        set_lnm(if f.nj && c.var != 213 { with_jrn(s, f.jprev) } else { s }, w, lpc(f, 32))
+     }
+ }
+ 
+@@ -603,7 +603,7 @@
+     let i = slot_of(s, w);
+     if f.pc == 11 { if w == 0 { lnm_deps(c, s) } else { set_lnm(s, w, lpc(f, 12)) } }
+     else if f.pc == 12 { set_lnm(wmod(s, i, m_touch(gmod(s.ns.mods, i))), w, lpc(f, 13)) }
+-    else { set_lnm(if f.dev && c.txm == 0 { dep_commit_mark(c, tcommit(c, s), w) } else { s }, w, lpc(f, 14)) }
++    else { set_lnm(if f.dev && c.txm == 0 { if c.var == 212 { tstart(c, dep_commit_mark(c, tcommit(c, s), w)) } else { dep_commit_mark(c, tcommit(c, s), w) } } else { s }, w, lpc(f, 14)) }
+ }
+ 
+ /// LoadNewModule phases, non-developer commit and exit (1340-1363).
+@@ -611,7 +611,9 @@
+     let f = lnm_of(s, w);
+     let i = slot_of(s, w);
+     if f.pc == 29 {
+-        if !f.dev && c.txm == 0 { set_lnm(dep_commit_mark(c, tcommit(c, s), w), w, lpc(f, 30)) } else { set_lnm(s, w, lpc(f, 31)) }
++        if !f.dev && c.txm == 0 { set_lnm(dep_commit_mark(c, tcommit(c, s), w), w, lpc(f, 30)) }
++        else if f.dev && c.txm == 0 && c.var == 212 { set_lnm(tcommit(c, s), w, lpc(f, 31)) }
++        else { set_lnm(s, w, lpc(f, 31)) }
+     }
+     else if f.pc == 30 { set_lnm(if c.var != 2 { set_com(c, s, i) } else { s }, w, lpc(f, 31)) }
+     else if f.pc == 31 { lnm_exit(c, s, w) }
+@@ -658,7 +660,10 @@
+     else if s.top_pc == 5 {
+         with_top(persist(c, dep_finalize(c, s), 0), 6, s.top_err)
+     }
+-    else if s.top_pc == 6 { with_top(put_temp(s, 0, t_dead(gtemp(s.temp, 0))), 7, s.top_err) }
++    else if s.top_pc == 6 {
++        let s2 = put_temp(s, 0, t_dead(gtemp(s.temp, 0)));
++        with_top(if c.var == 214 { with_store(s2, s2.ns, Seq::empty()) } else { s2 }, 7, s.top_err)
++    }
+     else { s }
+ }
+ 
+@@ -773,7 +778,7 @@
+     &&& mod_wf(gmod(c.init, 0)) && mod_wf(gmod(c.init, 1)) && mod_wf(gmod(c.init, 2))
+     &&& (gmod(c.init, 1).present ==> (c.deps.len() >= 1 && gmod(c.init, 1).ver == gpkg(c.deps, 0).ver && !gmod(c.init, 1).dev))
+     &&& (gmod(c.init, 2).present ==> (c.deps.len() >= 2 && gmod(c.init, 2).ver == gpkg(c.deps, 1).ver && !gmod(c.init, 2).dev))
+-    &&& (c.var == 0 || (1 <= c.var && c.var <= 11) || c.var == 102 || c.var == 103)
++    &&& (c.var == 0 || (1 <= c.var && c.var <= 11) || c.var == 102 || c.var == 103 || (211 <= c.var && c.var <= 214))
+ }
+ 
+ } // exec_spec_verified!

@@ -1,0 +1,15 @@
+--- /home/ziniu_wu_g5labs_ai/experiments/ipm-verus-uplift-20261113/ipm/.g5/Verus_verification/crates/ipm-load-history/src/bin/b1.rs	2026-11-13 20:41:44.562677469 +0000
++++ ipm-load-history/src/bin/b1.rs	2026-11-13 21:22:50.757764501 +0000
+@@ -289,8 +289,11 @@
+     writeln!(f, "  \"cases\": [").unwrap();
+     let cs = cases();
+     let n = cs.len();
++    let rv: Option<u8> = std::env::var("REVIEW_VAR").ok().map(|v| v.parse().unwrap());
+     for (k, d) in cs.iter().enumerate() {
+-        let c = &d.cfg;
++        let mut cc = d.cfg.clone();
++        if let Some(v) = rv { cc.var = v; }
++        let c = &cc;
+         let (s, trace) = run_case(c, d.end).unwrap_or_else(|| panic!("case {} does not reach its end", d.id));
+         let e = exec_expect_for(c, &q, &s);
+         let viol = violated_clauses(c, &q, &s);
