@@ -17,7 +17,7 @@ Locates evidence for the IPM uplift. It is not a governing specification. Status
 | S-code | `src/`, `preload/`, `module.xml`, `modules/` | `571e04a1` | Observed implementation. Establishes what this revision does, not intent. | discovered | A2 |
 | S-tests | `tests/unit_tests`, `tests/integration_tests`, `tests/migration` | `571e04a1` | Executable examples; maintainer expectations. | discovered | A1, A2 |
 | S-vendor | InterSystems IPM documentation (`docs.intersystems.com`, KEY=AIPM) | `irislatest`, read 2026-11-13 | Vendor manual. | discovered | A1 if reachable |
-| S-iris | InterSystems IRIS documentation on transactions, journaling and IRISTEMP | `irislatest` | Provider contract behind rollback and temp-global premises. | discovered | B1, B2 |
+| S-iris | InterSystems IRIS documentation on transactions, journaling and IRISTEMP | `irislatest` | Provider contract behind rollback and temp-global premises. | not inspected with a recorded locator. Every premise the model uses was instead established by native probes in IRIS 2026.1 (`premises.md`, N-P01..N-P20). `<ROLLFAIL>` in P-03 is from general IRIS knowledge, and no run observed it. | None needed for the claims made. A consumer relying on behavior across IRIS versions should check the documentation. |
 
 Workers add rows below with the same columns. Group incidental files.
 
@@ -60,4 +60,18 @@ Rows A1-S01..A1-S30 come from [A/sources-intent.md](A/sources-intent.md), which 
 
 ## Added by stage B
 
+| ID | Source | Revision | Origin and authority | Status | Follow-up |
+|---|---|---|---|---|---|
+| B-S01 | IRIS 2026.1 Build 234U runtime (container `iris-community@sha256:546fe52b…`) | image pinned in the plan | Provider behavior, observed natively. Authority for premises only. | inspected by probes N-P01..N-P20 (`B/native-report.md` section 2, `B/native-replay.md` section 6) | P-12 (restart) not run |
+| B-S02 | Product suites under `tests/` (History, InstallModule, SystemRequirements, LoadModuleWithDeps, FileBinaryTar, Update, DependencyResolution, CLI, Module) | `571e04a1` | Maintainer expectations (d) | executed (`B/native-report.md` section 3). DependencyResolution has no effective tests | None |
+| B-S03 | G5Labs bank-of-ziniu `crates/explorer`, `crates/actors` | `0171d816` | Consolidated library | `explorer` vendored with per-file hashes. `actors` read and not used (`VV/SOURCE.json`) | None |
+| B-S04 | Verus `0.2026.09.27.3cf1832`, vstd `=0.0.0-2026-09-20-0158`, Rust 1.98.1 | pinned | Toolchain | used for every receipt | None |
+| B-S05 | zot registry `ghcr.io/project-zot/zot-linux-amd64@sha256:b68f727f…` | pinned | Test service from `tests/oras` | used by the integration suites | None |
+
 ## Added by stage C
+
+Reviewers re-read the original sources listed above (CLI help, README, CHANGELOG, wiki, code, tests). Round 1 also read issues and PRs #366, #578, #1237, #1322, #363, #887, #903, #892, #977, #992 and #890. Round 2 read #366, #1237, #1322, #363, #887 and #474. Their limits sections in `C/round-*/review*.md` list what they did not read.
+
+| ID | Source | Revision | Origin and authority | Status | Follow-up |
+|---|---|---|---|---|---|
+| C-S01 | Git history of `src/cls/IPM/Main.cls` (`git log -S'tar.gz'`) and `d541c5b4`, `f83b207e`, `280c8d68`, `5d27e15b` | local `.git` | Commit history; establishes when behavior changed | inspected by round 1 (`review-ontology.md` R1-ONT-04, -05) | None |
