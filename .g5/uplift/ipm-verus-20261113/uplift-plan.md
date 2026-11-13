@@ -49,7 +49,7 @@ Initial uplift of InterSystems Package Manager (IPM) using the G5-Lean-V2 Verus 
 
 ## Review-round counter
 
-Rounds used: **2 of 3**. Round 1 (19:25-21:10 UTC) covered the ontology domain and the model and evidence domain, and every finding was adjudicated and repaired (`C/round-1/`). Round 2 started 21:15 UTC: one fresh reviewer confirms the repairs and reproduces the runbook. A resumed worker continues from this counter.
+Rounds used: **3 of 3**. Round 1 (19:25-21:10 UTC) and round 2 (21:15-22:00 UTC) were adjudicated and repaired (`C/round-1/`, `C/round-2/`). Round 3 is the final confirmation, and any finding it leaves is reported as unresolved in `handoff.md`. A resumed worker continues from this counter.
 
 ## Open obligations
 
