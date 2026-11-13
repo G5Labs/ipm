@@ -1,0 +1,15 @@
+set sc = $system.OBJ.LoadDir("/home/irisowner/zpm/.followup/scripts/FUNative/","ck-d",.err,1) write !,"HELPERS-LOADED ",$system.Status.IsOK(sc),!
+set ids = "" for spec = "fu-hr-a,1.0.0,40", "fu-hr-a,2.0.0,1", "fu-hr-b,1.0.0,1", "fu-hr-b,2.0.0,1", "fu-hr-del,1.0.0,1", "fu-hr-del,2.0.0,1" { set ids = ids_$listbuild(##class(FUNative.Obs).Seed($piece(spec,",",1),$piece(spec,",",2),$piece(spec,",",3))) } write !,"SEEDED ",$listtostring(ids),!
+set total = ##class(FUNative.Obs).CountAll()
+do ##class(FUNative.Obs).Begin("N-R04-FIND") do ##class(FUNative.Obs).Obs("N-R04-FIND","total",total) do ##class(FUNative.Obs).Find("N-R04-FIND","q","Package=fu-hr-a") do ##class(FUNative.Obs).End("N-R04-FIND")
+do ##class(FUNative.Obs).Begin("N-R04-SEL") do ##class(FUNative.Obs).Obs("N-R04-SEL","total",total) do ##class(FUNative.Obs).Find("N-R04-SEL","q","Version_Major=1;package=fu-hr-b") do ##class(FUNative.Obs).End("N-R04-SEL")
+do ##class(FUNative.Obs).Begin("N-R04-SEL2") do ##class(FUNative.Obs).Obs("N-R04-SEL2","total",total) do ##class(FUNative.Obs).Find("N-R04-SEL2","q","Package=fu-hr-b;Version_Major=1") do ##class(FUNative.Obs).End("N-R04-SEL2")
+do ##class(FUNative.Obs).Begin("N-R04-ORDER") do ##class(FUNative.Obs).Obs("N-R04-ORDER","first2",$listtostring($list(ids,1,1))_","_$listtostring($list(ids,2,2))) do ##class(FUNative.Obs).Find("N-R04-ORDER","q","Package=fu-hr-*",1,2) do ##class(FUNative.Obs).End("N-R04-ORDER")
+do ##class(FUNative.Obs).Begin("N-R04-UNKNOWN") do ##class(FUNative.Obs).Find("N-R04-UNKNOWN","q","NoSuchCol=1") do ##class(FUNative.Obs).End("N-R04-UNKNOWN")
+do ##class(FUNative.Obs).Begin("N-R04-DEL") set before = ##class(FUNative.Obs).CountPrefix("fu-hr-del") set others = ##class(FUNative.Obs).CountAll() - before do ##class(FUNative.Obs).Obs("N-R04-DEL","del.before",before)
+do ##class(FUNative.Obs).Run("N-R04-DEL","cmd","history delete -DPackage=fu-hr-del")
+set after = ##class(FUNative.Obs).CountPrefix("fu-hr-del") do ##class(FUNative.Obs).Obs("N-R04-DEL","del.after",after) do ##class(FUNative.Obs).Obs("N-R04-DEL","others.unchanged",(##class(FUNative.Obs).CountAll() - after) = others) do ##class(FUNative.Obs).Obs("N-R04-DEL","total.delta",total - ##class(FUNative.Obs).CountAll()) do ##class(FUNative.Obs).End("N-R04-DEL")
+do ##class(FUNative.Obs).Begin("N-R04-CUTOFF") set cutoff = $system.SQL.Functions.DATEADD("d", -30, +$horolog) do ##class(FUNative.Obs).Obs("N-R04-CUTOFF","cutoff",cutoff) do ##class(FUNative.Obs).Find("N-R04-CUTOFF","q","Package=fu-hr-a;TimeStart=<='"_cutoff_"'") do ##class(FUNative.Obs).Find("N-R04-CUTOFF","truth","Package=fu-hr-a;TimeStart=<="_cutoff) do ##class(FUNative.Obs).End("N-R04-CUTOFF")
+for i=1:1:$listlength(ids) { do ##class(%IPM.General.History).%DeleteId($list(ids,i)) } write !,"UNSEEDED",!
+write !,"NATIVE-END",!
+halt

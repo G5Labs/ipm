@@ -1,0 +1,21 @@
+VIOLATION of COMMIT-EXACT top-level Committed=1 implies something kept (Invariant) after 13 steps; 102759 states explored, 0.14s
+Counterexample for COMMIT-EXACT top-level Committed=1 implies something kept
+ config: ExecCfg { txm: 1, devf: 0, force: false, path_ok: true, cleanup_fails: false, caller_tx: false, top: ExecPkg { ver: 2, upd: false, sysreq: true, act: 0, mf: 2, snap: false, found: true }, deps: [], init: [ExecMod { present: false, ver: 0, dev: false, res: false, doc: 0, wr: 0 }, ExecMod { present: false, ver: 0, dev: false, res: false, doc: 0, wr: 0 }, ExecMod { present: false, ver: 0, dev: false, res: false, doc: 0, wr: 0 }], var: 0 }
+  init: top_pc=0 tx=0
+    1. Step -> top_pc=1 lnm0.pc=0 lmr_pc=0 lnm1.pc=0 tlevel=0 jrn=true alive=true
+    2. Step -> top_pc=2 lnm0.pc=0 lmr_pc=0 lnm1.pc=0 tlevel=0 jrn=true alive=true
+    3. Step -> top_pc=3 lnm0.pc=0 lmr_pc=0 lnm1.pc=0 tlevel=0 jrn=true alive=true
+    4. Step -> top_pc=3 lnm0.pc=1 lmr_pc=0 lnm1.pc=0 tlevel=0 jrn=true alive=true
+    5. Step -> top_pc=3 lnm0.pc=2 lmr_pc=0 lnm1.pc=0 tlevel=0 jrn=true alive=true
+    6. Step -> top_pc=3 lnm0.pc=3 lmr_pc=0 lnm1.pc=0 tlevel=0 jrn=true alive=true
+    7. Step -> top_pc=3 lnm0.pc=4 lmr_pc=0 lnm1.pc=0 tlevel=0 jrn=true alive=true
+    8. Step -> top_pc=3 lnm0.pc=31 lmr_pc=0 lnm1.pc=0 tlevel=0 jrn=true alive=true
+    9. Step -> top_pc=3 lnm0.pc=32 lmr_pc=0 lnm1.pc=0 tlevel=0 jrn=true alive=true
+   10. Step -> top_pc=4 lnm0.pc=32 lmr_pc=0 lnm1.pc=0 tlevel=0 jrn=true alive=true
+   11. Step -> top_pc=5 lnm0.pc=32 lmr_pc=0 lnm1.pc=0 tlevel=0 jrn=true alive=true
+   12. Step -> top_pc=6 lnm0.pc=32 lmr_pc=0 lnm1.pc=0 tlevel=0 jrn=true alive=true
+   13. Step -> top_pc=7 lnm0.pc=32 lmr_pc=0 lnm1.pc=0 tlevel=0 jrn=true alive=true
+ final observation: {"end": "returned", "status": "error", "open_transaction_levels": 0, "modules": {"top": {"manifest_present": false, "zpm_document_version": null, "writes": 0}}, "history_rows": 1, "history": {"top": {"row": true, "id_order": 1, "package_set": false, "version": "0.0.0-0 (placeholder)", "success": "error", "committed": 1, "time_end_set": true, "finalized": true, "phases_started": 0, "last_phase_status": null}}, "history_temp": {"top": {"row": false}}}
+ L1 expectation: {"verdict": "refused: manifest", "status": "error", "modules_one_of": [{"top": "unchanged"}], "history": {"top": {"row": true, "success": "error", "committed": "equals whether the action's changes were kept", "time_end_set": true, "finalized": true, "package_set": "any", "phases_started": "any", "last_phase_status": "any"}}}
+ violated clauses: ["H-COMMITTED[top]"]
+RESULT {"run": "asbuilt-commit-exact", "kind": "explore", "variant": "as-built", "concern": "COMMIT-EXACT: Committed=1 implies something kept (top-level)", "expect": "violation", "observed": "violation", "configs": 2925, "states": 102759, "transitions": 100183, "depth": 12, "truncated": false, "seconds": 0.14, "checks": ["COMMIT-EXACT top-level Committed=1 implies something kept"], "txms": [0, 1, 2], "caller_tx": [false], "foreign_edits": false, "conforming_domain_only": false, "limits": {"max_states": 6000000, "max_depth": 400}}
