@@ -40,7 +40,7 @@ Initial uplift of InterSystems Package Manager (IPM) using the G5-Lean-V2 Verus 
 |---|---|---|---|---|
 | A1 | Intent recovery agent | Which commitments do human-authored sources establish across IPM, in depth for load and history? | `A/intent-inventory.md`, `A/sources-intent.md` | done 2026-11-13: 18 load and 17 history commitments, 42-row catalog, Q-01..Q-17 |
 | A2 | Operation inventory agent | Which operations exist from entry points through writers, commit boundaries, effects and final readers? Deep for load and history. Must not read A1. | `A/operation-inventory.md` | done 2026-11-13: 39 commands, 29 load and 26 history operations, 34 observations |
-| A3 | Ontology author | Reconcile A1 and A2 into one coverage map and write the governing ontology. | `.g5/ontology/**`, `A/coverage-map.md` | draft done (18 pages, 145 blocks, Q-01..Q-19); applying A4 corrections R1-R14 |
+| A3 | Ontology author | Reconcile A1 and A2 into one coverage map and write the governing ontology. | `.g5/ontology/**`, `A/coverage-map.md` | done: 18 pages, 146 blocks (122 I, 5 D, 19 Q), A4 rows R1-R14 adjudicated in `A/reconstruction-dispositions.md` |
 | A4 | Fresh reader | Reconstruct the major functionality from the ontology alone, then compare with A1/A2. | `A/reconstruction-check.md` | done: 6 material corrections (R1-R6), 8 minor |
 | B1 | Verus modeler | L1 contract, L2 as-built transitions, refinement and controls for load and history. | `.g5/Verus_verification/crates/**`, `vendor/**`, `SOURCE.json`, `premises.md`, `cases/**`, `results/verus/**`, `B/model-notes.md` | resumed 19:15 UTC after usage-limit stop; proofs partly green, no receipts yet |
 | B2 | Native validator | Premise checks on IRIS transactions and IRISTEMP, existing suites, and native replay of model cases at the real handler, store and reader. | `.g5/Verus_verification/native/**`, `.g5/Verus_verification/results/native/**`, `B/native-report.md` | phase 1 done (`B/native-report.md`: 18 premises, 9 suites, cases a-g, defects D1-D8); phase 2 replays `cases/cases.json` |
@@ -49,7 +49,7 @@ Initial uplift of InterSystems Package Manager (IPM) using the G5-Lean-V2 Verus 
 
 ## Review-round counter
 
-Rounds used: **0 of 3**. A resumed worker continues from this counter.
+Rounds used: **1 of 3** (round 1 started 2026-11-13 19:25 UTC; ontology domain first, model and evidence domain after B1 and the B2 replay). A resumed worker continues from this counter.
 
 ## Open obligations
 
