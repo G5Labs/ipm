@@ -42,14 +42,14 @@ Initial uplift of InterSystems Package Manager (IPM) using the G5-Lean-V2 Verus 
 | A2 | Operation inventory agent | Which operations exist from entry points through writers, commit boundaries, effects and final readers? Deep for load and history. Must not read A1. | `A/operation-inventory.md` | done 2026-11-13: 39 commands, 29 load and 26 history operations, 34 observations |
 | A3 | Ontology author | Reconcile A1 and A2 into one coverage map and write the governing ontology. | `.g5/ontology/**`, `A/coverage-map.md` | done: 18 pages, 146 blocks (122 I, 5 D, 19 Q), A4 rows R1-R14 adjudicated in `A/reconstruction-dispositions.md` |
 | A4 | Fresh reader | Reconstruct the major functionality from the ontology alone, then compare with A1/A2. | `A/reconstruction-check.md` | done: 6 material corrections (R1-R6), 8 minor |
-| B1 | Verus modeler | L1 contract, L2 as-built transitions, refinement and controls for load and history. | `.g5/Verus_verification/crates/**`, `vendor/**`, `SOURCE.json`, `premises.md`, `cases/**`, `results/verus/**`, `B/model-notes.md` | resumed 19:15 UTC after usage-limit stop; proofs partly green, no receipts yet |
-| B2 | Native validator | Premise checks on IRIS transactions and IRISTEMP, existing suites, and native replay of model cases at the real handler, store and reader. | `.g5/Verus_verification/native/**`, `.g5/Verus_verification/results/native/**`, `B/native-report.md` | phase 1 done (`B/native-report.md`: 18 premises, 9 suites, cases a-g, defects D1-D8); phase 2 replays `cases/cases.json` |
+| B1 | Verus modeler | L1 contract, L2 as-built transitions, refinement and controls for load and history. | `.g5/Verus_verification/crates/**`, `vendor/**`, `SOURCE.json`, `premises.md`, `cases/**`, `results/verus/**`, `B/model-notes.md` | done: 259 verified, 0 errors; V1-V11; D1 repair variant; `B/model-notes.md` |
+| B2 | Native validator | Premise checks on IRIS transactions and IRISTEMP, existing suites, and native replay of model cases at the real handler, store and reader. | `.g5/Verus_verification/native/**`, `.g5/Verus_verification/results/native/**`, `B/native-report.md` | done: phase 1 (`B/native-report.md`) and phase 2 (`B/native-replay.md`: 57/57 model cases agree, stage C cases, premise mapping) |
 | C | Fresh independent reviewers, then repair agents | Coverage and fidelity challenge per round. | `C/round-<n>/**`; repairs in owning artifacts | pending |
 | Handoff | Orchestrator, then a reproduction reviewer | Runbook, coverage map, receipts, findings. | `.g5/Verus_verification/README.md`, `coverage-map.md`, `bugs_issues.md`, `design_simplification.md` | pending |
 
 ## Review-round counter
 
-Rounds used: **1 of 3** (round 1 started 2026-11-13 19:25 UTC; ontology domain first, model and evidence domain after B1 and the B2 replay). A resumed worker continues from this counter.
+Rounds used: **2 of 3**. Round 1 (19:25-21:10 UTC) covered the ontology domain and the model and evidence domain, and every finding was adjudicated and repaired (`C/round-1/`). Round 2 started 21:15 UTC: one fresh reviewer confirms the repairs and reproduces the runbook. A resumed worker continues from this counter.
 
 ## Open obligations
 

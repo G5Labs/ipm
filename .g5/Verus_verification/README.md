@@ -52,7 +52,7 @@ Working directory: `.g5/Verus_verification/crates`. Each command writes a new re
    ```sh
    python3 -I scripts/receipt.py verus repro-asbuilt as-built "verified, 0 errors" "runbook: as-built proofs"
    ```
-   Expected: `verified 248, errors 0`. About 3-6 minutes with 4 threads.
+   Expected: `verified 259, errors 0`, matching the final receipt `results/verus/20261113T204233Z-asbuilt-proofs-r1`. It takes under a minute when the build is cached, and a few minutes from a cold build.
 
 2. Its distinguishing control. Control 01 removes the `SetCommitted` call after the developer-mode first commit (`Utils/Module.cls:1312-1314`).
 
@@ -68,6 +68,13 @@ Working directory: `.g5/Verus_verification/crates`. Each command writes a new re
    ```
    Expected: `VIOLATION` of R3-dep with a 15-step shortest trace in the raw log. The script builds the explorer harness `b1` with the pinned toolchain. The first argument is the explorer run name defined in `src/bin/b1.rs`.
 
+4. The proposed D1 repair, modeled as variant 103 and kept separate from the as-built model.
+
+   ```sh
+   python3 -I scripts/receipt.py explore repair-103-dep-clauses repair-103 pass "runbook: D1 repair variant"
+   ```
+   Expected: `PASS`, exhaustive (189,577 states). The as-built counterpart `asbuilt-dep-clauses` reports a VIOLATION.
+
 ## Reproduce one native defect
 
 Working directory: `.g5/Verus_verification/native`. `up` recreates the containers from the pinned image and discards earlier container state.
@@ -82,7 +89,7 @@ printf '%s\n' 'zpm "load /home/irisowner/zpm/tests/integration_tests/Test/PM/Int
 python3 -I evaluate.py ../results/native/<run-id printed above> cases/expected-repro.json
 ```
 
-Expected: `process_outcome` COMPLETED, and case X3 DEVIATES. `total.after` is 0 while `total.before` is at least 1 and `truth` is 0, so `history delete -DVersion_Major=99` deleted every record (defect D2). The script backs the history up and restores it, and `total.restored` equals `total.before`. A run with `total.before=0` proves nothing.
+Expected: `process_outcome` COMPLETED, and case X3 DEVIATES. `total.after` is 0 while `total.before` is at least 1 and `truth` is 0, so `history delete -DVersion_Major=99` deleted every record (defect D2). The script backs the history up and restores it, and `total.restored` equals `total.before`. A run with `total.before=0` is reported INCOMPLETE by its guard. `repro/history-filter-widened.cos` also needs a record whose major version is not 1, so seed `…/simplest-module/2.0.0/` as well.
 
 To replay the model's cases, see `.g5/uplift/ipm-verus-20261113/B/native-replay.md`. Each case's script, expectations and verdict are listed there.
 

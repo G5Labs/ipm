@@ -183,6 +183,13 @@ Updated after stage C round 1 and B2 phase 2.
 - Repair proposal: print "not finished" when the phase has no end time.
 - Distinguishing check: R2 shows "not finished".
 
+### I2: A load ended mid-way leaves its temporary `.modules` repository registered at first priority
+- Obligation: none directly. `load.dependencies.local-repo` says IPM removes the temporary repository "when loading finishes, even after an error", and no source covers a process end.
+- Path: the repository is created before the transaction and removed only by the explicit `CleanUp()` (`Main.cls:2527-2529`). A process end inside the load skips it.
+- Evidence: after B2's Terminate and SIGKILL replays, six `ipm-temp-modules-N` repositories with `OverriddenSortOrder=-1000` still pointed at the cases' `.modules` folders (`20261113T210229Z-temp-repos-leftover`). B2 recorded and deleted them.
+- Consequence: later installs in the namespace resolve dependencies from those folders first.
+- Proposal: register the temporary repository in a form that does not outlive the process, or remove stale `ipm-temp-modules-*` entries at the start of the next load.
+
 ## Withdrawn
 
 - D7 (`history details` prints the raw `%Status`): wiki/09 L133 documents it on purpose ("so the ObjectScript stack is visible"). Round 1 disposition R1-ONT-13.
