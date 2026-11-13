@@ -1,0 +1,29 @@
+{
+  "run_id": "20261113T222035Z-review-r3-mutants",
+  "kind": "review (hand-written, stage C round 3)",
+  "product": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+  "verus": "0.2026.09.27.3cf1832 (bank-of-ziniu pin), used only for verus-control15.log",
+  "rust": "1.98.1-x86_64-unknown-linux-gnu",
+  "scratch_copy": "/tmp/r3-model/vv (crates and vendor copied from VV at inputs of 20261113T220410Z-review-r3-asbuilt); clean copy /tmp/r3-clean/vv",
+  "commands": [
+    "cargo build --release --offline -p ipm-load-history --bin rev3 -j 4 (CARGO_TARGET_DIR=/tmp/r3-model/target)",
+    "rev3 0 0 0,1,2 ; rev3 103 103 0 (harness sanity: no difference)",
+    "rev3 0 15 1 ; rev3 103 17 1 ; rev3 103 16 0",
+    "cargo-verus verify -p ipm-load-history --offline --features control-15 --lib -- --num-threads 4 (scratch)",
+    "b1 cases / b1 survey from the clean copy (byte-identical to VV/cases/cases.json and 20261113T214445Z-survey-asbuilt-r2/survey.json)",
+    "evaluate_replay.py RUN --cases VV/cases/cases.json on copies of the replay runs under /tmp/r3-review/replays"
+  ],
+  "variants": {
+    "15": "faulty implementation: -DNoTransaction=1 ignored (the load runs as in default mode: tstart, no no-transaction marker, commits as default)",
+    "16": "faulty implementation of the D1 repair as written in bugs_issues.md D1 / design_simplification.md S2: dependency rows written outside the transaction (as 103), Committed taken from the dependency's own log, set back to 0 only on the parent's rollback path",
+    "17": "variant 103 (D1 repair as modelled) plus variant 15"
+  },
+  "observed": {
+    "var15_vs_0_notx": "1950 configs, 1650 behave differently, L1-NAMESPACE newly violated at 0 end states; only new violations are H-RECORD-EXISTS[dep1/dep2] (dependency rows lost, D1)",
+    "var17_vs_103_notx": "1950 configs, 1650 behave differently, 0 L1 clauses newly violated at any end (returned, caller ends, deaths)",
+    "var16_vs_103_default": "352 configs behave differently; H-COMMITTED[dep1/dep2] newly violated at process ends in 176 configs; DEP-REPAIR violations 0 -> 10718 end states; returned ends unchanged",
+    "verus_control15": "exit 101; failures only in case_c08 (as-built observation lemma) and the transaction-depth lemmas lemma_lnm0_a/b/d, lemma_lnm1_*; no contract theorem fails",
+    "valid_completion": "default mode, one dependency, no fault: no violated clause under variants 15, 16, 17"
+  },
+  "limits": "rev3.rs is unverified Rust over the exec twins of the modified scratch copy; variants were not run natively; not indexed in results/index.jsonl"
+}

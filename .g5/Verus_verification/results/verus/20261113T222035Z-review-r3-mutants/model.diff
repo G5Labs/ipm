@@ -1,0 +1,149 @@
+--- /tmp/r3-model/orig-ipm-load-history/src/model.rs	2026-11-13 22:11:26.922211051 +0000
++++ /tmp/r3-model/vv/crates/ipm-load-history/src/model.rs	2026-11-13 22:20:13.724703444 +0000
+@@ -348,7 +348,10 @@
+ 
+ /// Repair 103 writes the History rows of dependency loads (slots 1 and 2) outside the parent's
+ /// transaction.
+-pub open spec fn dep_autonomous(c: Cfg, i: usize) -> bool { c.var == 103 && i != 0 }
++pub open spec fn dep_autonomous(c: Cfg, i: usize) -> bool { (c.var == 103 || c.var == 16 || c.var == 17) && i != 0 }
++
++/// Review r3 variant 15: `-DNoTransaction=1` ignored (the load runs as in default mode).
++pub open spec fn etx(c: Cfg) -> u8 { if (c.var == 15 || c.var == 17) && c.txm == 1 { 0u8 } else { c.txm } }
+ 
+ /// HistoryTemp:Init second half: the History twin %Save (at the caller's $TLEVEL), copying
+ /// Package and the placeholder Version from the temp row.
+@@ -369,7 +372,7 @@
+         // repair 103: Committed only if the dependency's writes are already durable (no IPM
+         // transaction of the load is open); finalized later, at the top-level close
+         autonomous_twin(s, i, Twin { ex: true, id: tw.id, pkg: t.pkg, ver: t.ver, ok: t.ok,
+-            com: t.com && s.tx.len() <= (s.lnm0.itl as usize), tend: t.tend, fin: false, ph: t.ph, phst: t.phst, edited: tw.edited })
++            com: if c.var == 16 { t.com } else { t.com && s.tx.len() <= (s.lnm0.itl as usize) }, tend: t.tend, fin: false, ph: t.ph, phst: t.phst, edited: tw.edited })
+     }
+     else {
+         wtwin(s, i, Twin { ex: true, id: tw.id, pkg: t.pkg, ver: t.ver, ok: t.ok, com: t.com, tend: t.tend,
+@@ -388,7 +391,7 @@
+ }
+ 
+ pub open spec fn dep_commit_mark(c: Cfg, s: State, w: u8) -> State {
+-    if c.var == 103 && w == 0 && s.tx.len() <= (s.lnm0.itl as usize) { dep_mark_one(c, dep_mark_one(c, s, 1), 2) } else { s }
++    if (c.var == 103 || c.var == 17) && w == 0 && s.tx.len() <= (s.lnm0.itl as usize) { dep_mark_one(c, dep_mark_one(c, s, 1), 2) } else { s }
+ }
+ 
+ /// Repair 103: the top-level close finalizes the dependency rows.
+@@ -401,7 +404,7 @@
+ }
+ 
+ pub open spec fn dep_finalize(c: Cfg, s: State) -> State {
+-    if c.var == 103 { dep_fin_one(dep_fin_one(s, 1), 2) } else { s }
++    if c.var == 103 || c.var == 16 || c.var == 17 { dep_fin_one(dep_fin_one(s, 1), 2) } else { s }
+ }
+ 
+ /// Auxiliary: record that slot `i` reached stage `a`.
+@@ -477,9 +480,9 @@
+ 
+ pub open spec fn lnm_begin(c: Cfg, s: State, w: u8) -> State {
+     let f = lnm_of(s, w);
+-    if c.txm == 2 {
++    if etx(c) == 2 {
+         set_lnm(with_jrn(s, false), w, Lnm { pc: 2, itl: f.itl, dev: f.dev, err: f.err, nj: true, jprev: s.jrn, di: f.di })
+-    } else if c.txm == 0 {
++    } else if etx(c) == 0 {
+         set_lnm(tstart(c, s), w, lpc(f, 2))
+     } else {
+         set_lnm(s, w, lpc(f, 2))
+@@ -561,10 +564,18 @@
+     }
+ }
+ 
++pub open spec fn dep_unmark_one(s: State, i: usize) -> State {
++    let tw = gtwin(s.ns.twins, i);
++    if tw.ex && !tw.fin {
++        autonomous_twin(s, i, Twin { ex: tw.ex, id: tw.id, pkg: tw.pkg, ver: tw.ver, ok: tw.ok, com: false,
++            tend: tw.tend, fin: tw.fin, ph: tw.ph, phst: tw.phst, edited: tw.edited })
++    } else { s }
++}
++
+ pub open spec fn lnm_exit(c: Cfg, s: State, w: u8) -> State {
+     let f = lnm_of(s, w);
+     if s.tx.len() > (f.itl as usize) && c.var != 4 {
+-        rollback1(c, s)
++        rollback1(c, if c.var == 16 && w == 0 { dep_unmark_one(dep_unmark_one(s, 1), 2) } else { s })
+     } else {
+         set_lnm(if f.nj { with_jrn(s, f.jprev) } else { s }, w, lpc(f, 32))
+     }
+@@ -578,7 +589,7 @@
+     if f.pc == 0 { lnm_enter(c, s, w) }
+     else if f.pc == 1 { lnm_begin(c, s, w) }
+     else if f.pc == 2 { set_lnm(s, w, if guard_refuses(c, s, w) { lfail(f) } else { lpc(f, 3) }) }
+-    else if f.pc == 3 { set_lnm(if c.txm != 0 && c.var != 3 { set_com(c, s, i) } else { s }, w, lpc(f, 4)) }
++    else if f.pc == 3 { set_lnm(if etx(c) != 0 && c.var != 3 { set_com(c, s, i) } else { s }, w, lpc(f, 4)) }
+     else if f.pc == 4 { lnm_load(c, s, w) }
+     else if f.pc == 5 { set_lnm(put_temp(s, i, t_names(gtemp(s.temp, i), p.ver)), w, lpc(f, 6)) }
+     else { lnm_devsave(c, s, w) }
+@@ -590,7 +601,7 @@
+     let i = slot_of(s, w);
+     let p = pkg_of(c, s, w);
+     if f.pc == 7 {
+-        if f.dev && c.txm == 0 { set_lnm(tcommit(c, s), w, lpc(f, 8)) } else { set_lnm(s, w, lpc(f, 10)) }
++        if f.dev && etx(c) == 0 { set_lnm(tcommit(c, s), w, lpc(f, 8)) } else { set_lnm(s, w, lpc(f, 10)) }
+     }
+     else if f.pc == 8 { set_lnm(if c.var != 1 { set_com(c, s, i) } else { s }, w, lpc(f, 9)) }
+     else if f.pc == 9 { set_lnm(tstart(c, s), w, lpc(f, 10)) }
+@@ -604,7 +615,7 @@
+     if f.pc == 11 { if w == 0 { lnm_deps(c, s) } else { set_lnm(s, w, lpc(f, 12)) } }
+     else if f.pc == 12 { set_lnm(wmod(s, i, m_touch(gmod(s.ns.mods, i))), w, lpc(f, 13)) }
+     // control 12 (reviewer variant 212): developer-mode phases run inside an inner transaction
+-    else { set_lnm(if f.dev && c.txm == 0 { if c.var == 12 { tstart(c, dep_commit_mark(c, tcommit(c, s), w)) } else { dep_commit_mark(c, tcommit(c, s), w) } } else { s }, w, lpc(f, 14)) }
++    else { set_lnm(if f.dev && etx(c) == 0 { if c.var == 12 { tstart(c, dep_commit_mark(c, tcommit(c, s), w)) } else { dep_commit_mark(c, tcommit(c, s), w) } } else { s }, w, lpc(f, 14)) }
+ }
+ 
+ /// LoadNewModule phases, non-developer commit and exit (1340-1363).
+@@ -612,8 +623,8 @@
+     let f = lnm_of(s, w);
+     let i = slot_of(s, w);
+     if f.pc == 29 {
+-        if !f.dev && c.txm == 0 { set_lnm(dep_commit_mark(c, tcommit(c, s), w), w, lpc(f, 30)) }
+-        else if f.dev && c.txm == 0 && c.var == 12 { set_lnm(tcommit(c, s), w, lpc(f, 31)) }
++        if !f.dev && etx(c) == 0 { set_lnm(dep_commit_mark(c, tcommit(c, s), w), w, lpc(f, 30)) }
++        else if f.dev && etx(c) == 0 && c.var == 12 { set_lnm(tcommit(c, s), w, lpc(f, 31)) }
+         else { set_lnm(s, w, lpc(f, 31)) }
+     }
+     else if f.pc == 30 { set_lnm(if c.var != 2 { set_com(c, s, i) } else { s }, w, lpc(f, 31)) }
+@@ -776,7 +787,7 @@
+     &&& mod_wf(gmod(c.init, 0)) && mod_wf(gmod(c.init, 1)) && mod_wf(gmod(c.init, 2))
+     &&& (gmod(c.init, 1).present ==> (c.deps.len() >= 1 && gmod(c.init, 1).ver == gpkg(c.deps, 0).ver && !gmod(c.init, 1).dev))
+     &&& (gmod(c.init, 2).present ==> (c.deps.len() >= 2 && gmod(c.init, 2).ver == gpkg(c.deps, 1).ver && !gmod(c.init, 2).dev))
+-    &&& (c.var == 0 || (1 <= c.var && c.var <= 12) || c.var == 102 || c.var == 103)
++    &&& (c.var == 0 || (1 <= c.var && c.var <= 12) || c.var == 102 || c.var == 103 || c.var == 15 || c.var == 16 || c.var == 17)
+ }
+ 
+ } // exec_spec_verified!
+--- /tmp/r3-model/orig-ipm-load-history/src/proofs.rs	2026-11-13 22:11:26.922322218 +0000
++++ /tmp/r3-model/vv/crates/ipm-load-history/src/proofs.rs	2026-11-13 22:18:01.080615405 +0000
+@@ -16,7 +16,7 @@
+ /// The variant whose proofs are being checked. 0 (as-built) unless a control feature is set.
+ #[cfg(not(any(feature = "control-01", feature = "control-02", feature = "control-03", feature = "control-04", feature = "control-05",
+     feature = "control-06", feature = "control-07", feature = "control-08", feature = "control-09", feature = "control-10", feature = "control-11",
+-    feature = "control-12")))]
++    feature = "control-12", feature = "control-15", feature = "control-16")))]
+ pub open spec fn ACTIVE_VARIANT() -> u8 { 0 }
+ #[cfg(feature = "control-01")] pub open spec fn ACTIVE_VARIANT() -> u8 { 1 }
+ #[cfg(feature = "control-02")] pub open spec fn ACTIVE_VARIANT() -> u8 { 2 }
+@@ -30,6 +30,8 @@
+ #[cfg(feature = "control-10")] pub open spec fn ACTIVE_VARIANT() -> u8 { 10 }
+ #[cfg(feature = "control-11")] pub open spec fn ACTIVE_VARIANT() -> u8 { 11 }
+ #[cfg(feature = "control-12")] pub open spec fn ACTIVE_VARIANT() -> u8 { 12 }
++#[cfg(feature = "control-15")] pub open spec fn ACTIVE_VARIANT() -> u8 { 15 }
++#[cfg(feature = "control-16")] pub open spec fn ACTIVE_VARIANT() -> u8 { 16 }
+ 
+ // ------------------------------------------------------------------ shape
+ 
+--- /tmp/r3-model/orig-ipm-load-history/Cargo.toml	2026-11-13 22:11:26.922387923 +0000
++++ /tmp/r3-model/vv/crates/ipm-load-history/Cargo.toml	2026-11-13 22:18:01.080421424 +0000
+@@ -28,4 +28,6 @@
+ control-10 = []
+ control-11 = []
+ control-12 = []
++control-15 = []
++control-16 = []
+ sanity-false = []
