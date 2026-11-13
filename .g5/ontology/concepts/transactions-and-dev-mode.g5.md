@@ -44,16 +44,25 @@ Users can turn off the transaction for a package change.
 
 These flags can come from the command line, from the namespace's [default modifiers](settings.g5.md#settings.default-modifiers) or from the module's own `<Defaults>`. A value given on the command line wins over the other two.
 
-- Whether a dependency's own `<Defaults>` apply inside its parent's transaction is open ([dependency defaults](#transaction.flag-sources.dependency-defaults)).
+- How a dependency's own `<Defaults>` interact with its parent's transaction is open for `NoJournal` ([dependency defaults](#transaction.flag-sources.dependency-defaults)) and for `NoTransaction` ([dependency NoTransaction](#transaction.flag-sources.dependency-no-transaction)).
 
 <a id="transaction.flag-sources.dependency-defaults"></a>
 [Q · transaction.flag-sources.dependency-defaults]
 
-Does a dependency's own `<Defaults>` `NoTransaction` or `NoJournal` apply inside its parent's transaction, so that the dependency's changes escape the parent's normal-mode rollback?
+Does a dependency's own `<Defaults>` `NoJournal` apply inside its parent's transaction, so that the dependency's changes escape the parent's normal-mode rollback?
 
 - Provisional answer: yes. A module's `<Defaults>` apply whenever that module is installed, including as a dependency. A `NoJournal` dependency therefore keeps its changes when the parent rolls back, and its history record must survive and say so.
-- Reason: the wiki says flags embedded in `module.xml` are "applied whenever this module is installed", and that `NoTransaction` is for modules that "conflict with an outer wrapping transaction". The maintainer comment on `<Defaults>` parsing uses `NoTransaction` as its example. These statements are specific to the flags, while the whole-load rollback rule is general.
-- Alternative: the parent's transaction governs every nested load, so a dependency's `<Defaults>` transaction flags are ignored, or the dependency is refused, while a parent transaction is open. This keeps [the whole-load rollback](../features/load.g5.md#load.outcome).
+- Reason: the wiki says flags embedded in `module.xml` are "applied whenever this module is installed", and that with `NoJournal` "changes cannot be rolled back". These statements are specific to the flags, while the whole-load rollback rule is general.
+- Alternative: the parent's transaction governs every nested load, so a dependency's `<Defaults>` `NoJournal` is ignored, or the dependency is refused, while a parent transaction is open. This keeps [the whole-load rollback](../features/load.g5.md#load.outcome).
+
+<a id="transaction.flag-sources.dependency-no-transaction"></a>
+[Q · transaction.flag-sources.dependency-no-transaction]
+
+Should a dependency's own `<Defaults>` `NoTransaction` suppress its parent's transaction?
+
+- Provisional answer: yes. A module that declares `NoTransaction` must not run inside a transaction opened for its parent, so the package change runs without one, and a failure may leave a partial install.
+- Reason: the wiki gives `NoTransaction`'s purpose as modules in the install that "conflict with an outer wrapping transaction", and says `<Defaults>` apply "whenever this module is installed". Without suppression, the flag of a dependency would have no effect, because the dependency would still run inside the parent's transaction.
+- Alternative: the flag affects only the dependency's own load, so the parent's transaction still wraps it and undoes it on failure. A user whose install contains a conflicting module passes `-DNoTransaction=1` for the whole command.
 
 ## Developer mode
 
@@ -123,7 +132,7 @@ Source locators follow the conventions on the [root page](../root.g5.md#how-to-r
 - test-coverage
 - Children: [rollback scope](#transaction.rollback-scope), [turning transactions off](#transaction.opt-out), [flag sources](#transaction.flag-sources).
 
-Sources: `wiki/00` L125-126, L145-149 ("the entire load/install is wrapped in a transaction; any failure rolls the namespace back"). Inventory: INT-LOAD-08; OP-LOAD-05, OP-LOAD-15, OP-LOAD-16. Test: `History.cls` `TestFailingPhases` (normal-mode failure reads uncommitted). Native evidence (B2 phase 1, run IDs under `.g5/Verus_verification/results/native/`): a normal-mode failure after a dependency loaded leaves the modules and classes absent (case A1, `20261113T182759Z-cases-a`). Rollback premises N-P01 to N-P03 are confirmed (`20261113T181129Z-premises`). Formal evidence is linked at handoff.
+Sources: `wiki/00` L125-126, L145-149 ("the entire load/install is wrapped in a transaction; any failure rolls the namespace back"). Inventory: INT-LOAD-08; OP-LOAD-05, OP-LOAD-15, OP-LOAD-16. Test: `History.cls` `TestFailingPhases` (normal-mode failure reads uncommitted). Native evidence (B2 phase 1, run IDs under `.g5/Verus_verification/results/native/`): a normal-mode failure after a dependency loaded leaves the modules and classes absent (case A1, `20261113T182759Z-cases-a`). Rollback premises N-P01 to N-P03 are confirmed (`20261113T181129Z-premises`). Formal and native evidence, with reliance status, is in the [verification coverage map](../../Verus_verification/coverage-map.md).
 
 ### transaction.rollback-scope
 
@@ -148,7 +157,7 @@ Sources: `wiki/00` L139-155; `wiki/02` L447, L595, L907, L1367; `Main.cls:628-63
 - human-verified
 - user-facing-behavior
 - Expands: [Transactions](#transaction).
-- Children: [dependency defaults](#transaction.flag-sources.dependency-defaults).
+- Children: [dependency defaults](#transaction.flag-sources.dependency-defaults), [dependency NoTransaction](#transaction.flag-sources.dependency-no-transaction).
 
 Sources: `wiki/00` L161-180 (command line, `default-modifiers`, `<Defaults>`); `wiki/03` L252-258 (`-D` overrides `<Defaults>`); maintainer comment `Main.cls:1067-1070` ("so they can be overwritten by commands"). Inventory: INT-LOAD-08, CAT-04, CAT-27; OP-LOAD-05 (`Utils/Module.cls:1166-1169`). Observed: a module's own `<Defaults>` can turn transactions off for itself (`Utils/Module.cls:1033-1041`). Confirmed product defect D19: default modifiers are stored in `^%IPM.DefaultModifiers`, which maps to IRISSYS, so defaults set in one namespace apply in every namespace (stage C case X1, `20261113T204152Z-stagec`). A `-DNoTransaction=1` default set anywhere makes every load non-transactional. Reconstruction check R13: no human source sets precedence between default modifiers and `<Defaults>`. Observed: default modifiers enter the command data, which overrides the module's `<Defaults>`, so the order is command line, then default modifiers, then `<Defaults>` (`Main.cls:1067-1069`; `Utils/Module.cls:1166-1169`). Stage B carries this as a condition, not a rule.
 
@@ -159,9 +168,20 @@ Sources: `wiki/00` L161-180 (command line, `default-modifiers`, `<Defaults>`); `
 - architecture-decision
 - Expands: [Flag sources](#transaction.flag-sources).
 
-Sources: new question Q-22 from stage C round 2 finding R2-03. `wiki/00` L147 (whole-load rollback), L149 (`NoTransaction` "when some modules in the install conflict with an outer wrapping transaction"), L155 (with `NoJournal`, "changes cannot be rolled back"), L175 (`<Defaults>` "applied whenever this module is installed"); maintainer doc comment `Utils/Module.cls:1033-1040` (example `<Defaults>` with `NoTransaction`); [load outcome](../features/load.g5.md#load.outcome). No maintainer statement on dependencies inside a parent transaction was found. The provisional answer follows the sources specific to `<Defaults>` and keeps the record-survival rule of [survives rollback](../features/history.g5.md#history.survives-rollback).
+Sources: new question Q-22 from stage C round 2 finding R2-03. Round 3 finding R3-03 limited it to `NoJournal`, the flag that can escape a parent's rollback, and moved `NoTransaction` to [Q-23](#transaction.flag-sources.dependency-no-transaction). `wiki/00` L147 (whole-load rollback), L149 (`NoTransaction` "when some modules in the install conflict with an outer wrapping transaction"), L155 (with `NoJournal`, "changes cannot be rolled back"), L175 (`<Defaults>` "applied whenever this module is installed"); maintainer doc comment `Utils/Module.cls:1033-1040` (example `<Defaults>` with `NoTransaction`); [load outcome](../features/load.g5.md#load.outcome). No maintainer statement on dependencies inside a parent transaction was found. The provisional answer follows the sources specific to `<Defaults>` and keeps the record-survival rule of [survives rollback](../features/history.g5.md#history.survives-rollback).
 
-Observed (stage C cases M5 and M5N, `20261113T204405Z-stagec2`). In M5 a normal-mode parent fails in Activate, and its dependency's `<Defaults>` set `NoJournal=1`. The parent is rolled back, while the dependency stays installed with its class and `.ZPM` document. No `<ROLLFAIL>` occurs, `$TLEVEL` returns to 0 and the journaling flag is restored. The dependency's history record is lost, because it was journaled and rolled back (D1). M5N, the same without `<Defaults>`, rolls everything back and also loses the dependency record (D1). Code: the dependency's `<Defaults>` are merged under the parent's parameters (`Utils/Module.cls:1166-1169`) and turn journaling off inside the open transaction (`:1191-1193`; premise N-P07). B2 files this as D14, "confirmed, decision pending". A dependency `<Defaults>` `NoTransaction` was not run. By code reading, the dependency then opens no transaction of its own and its writes stay inside the parent's. The model cannot represent this case (`B/model-notes.md`).
+Observed (stage C cases M5 and M5N, `20261113T204405Z-stagec2`). In M5 a normal-mode parent fails in Activate, and its dependency's `<Defaults>` set `NoJournal=1`. The parent is rolled back, while the dependency stays installed with its class and `.ZPM` document. No `<ROLLFAIL>` occurs, `$TLEVEL` returns to 0 and the journaling flag is restored. The dependency's history record is lost, because it was journaled and rolled back (D1). M5N, the same without `<Defaults>`, rolls everything back and also loses the dependency record (D1). Code: the dependency's `<Defaults>` are merged under the parent's parameters (`Utils/Module.cls:1166-1169`) and turn journaling off inside the open transaction (`:1191-1193`; premise N-P07). B2 files this as D14, "confirmed, decision pending". The model cannot represent this case (`B/model-notes.md`).
+
+### transaction.flag-sources.dependency-no-transaction
+
+- agent
+- uncertain
+- architecture-decision
+- Expands: [Flag sources](#transaction.flag-sources).
+
+Sources: new question Q-23 from stage C round 3 finding R3-03. Main source: `wiki/00` L149 ("Use when some modules in the install conflict with an outer wrapping transaction"). Also L147 (whole-load rollback), L175 (`<Defaults>` "applied whenever this module is installed") and the maintainer doc comment `Utils/Module.cls:1033-1040`, whose example `<Defaults>` sets `NoTransaction`. Checked together with [Q-22](#transaction.flag-sources.dependency-defaults): both provisional answers honor a module's own transaction flags when it is installed as a dependency.
+
+Observed by code reading: a dependency whose `<Defaults>` set only `NoTransaction` skips its own `tstart`, but its writes stay journaled inside the parent's open transaction and are undone with it (`Utils/Module.cls:1191-1196`; premise N-P01). Its no-transaction marker first sets `Committed=1` (`:1226-1228`), and its record is then lost with the parent's rollback (D1). The `NoTransaction` variant of stage C case M5 was not run natively.
 
 ### dev-mode
 

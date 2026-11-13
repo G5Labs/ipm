@@ -10,3 +10,13 @@ Repairs the A3 items of [dispositions.md](dispositions.md) for findings R2-03 an
 Coverage map (`A/coverage-map.md`): header counts, the Q-22 row, section 4 rows now marked confirmed (D11, D13, D15-D17, D19, D20), a new `load.outcome` row for D14 and Q-22, and section 9 retitled for phases 1 and 2 with the new statuses and a link to the verification coverage map.
 
 For the orchestrator: Q-22 goes into the handoff decisions. Its provisional answer would make D14 expected behavior, except for the lost dependency record, which stays D1.
+
+## Round 3
+
+Repairs the A3 items of [round 3 dispositions](../round-3/dispositions.md) for findings R3-03, R3-06 and R3-09 in [round 3 review](../round-3/review.md). Checker: 18 files, 149 blocks (122 I, 5 D, 22 Q), 0 issues, 0 writing warnings. No ID was renamed. One block was added (Q-23).
+
+| Finding | Changed IDs | What changed |
+|---|---|---|
+| R3-03 | `transaction.flag-sources.dependency-defaults` (Q-22, kept for `NoJournal`), new `transaction.flag-sources.dependency-no-transaction` (Q-23), `transaction.flag-sources` (bullet, children), `load.outcome` (bullet, metadata) | Q-22 now asks only about `NoJournal`, the flag that physically escapes the parent's rollback (D14, M5). Its provisional answer and sources are unchanged, except that the `NoTransaction` wording moved out. Q-23 asks "Should a dependency's own `<Defaults>` `NoTransaction` suppress its parent's transaction?" Provisional answer: yes, because `wiki/00` L149 gives the flag's purpose as modules that "conflict with an outer wrapping transaction", and without suppression it has no effect. Alternative: the flag affects only the dependency's own load, and the user passes `-DNoTransaction=1` for the whole command. Metadata records the code reading (writes stay journaled inside the parent's transaction, `Utils/Module.cls:1191-1196`, N-P01; the marker sets `Committed=1` first, `:1226-1228`) and that M5's `NoTransaction` variant was not run natively. Both provisional answers were checked together. |
+| R3-06 | `transaction` (metadata); `A/coverage-map.md` | `transaction` now links the verification coverage map instead of saying "linked at handoff". In `A/coverage-map.md`, all 50 `pending B` cells and the legend point to `../../../Verus_verification/coverage-map.md`. "Formal (B1) evidence is still pending" and the stale "stage B" notes in sections 4, 5, 7 and 8 are replaced. The header counts and the Q table now include Q-23. |
+| R3-09 | `history.fields.dependency-source` (Q-15) | Restored two alternatives: show the stored source in listings, which changes the wiki's `n/a` rule; and clear the source of records labeled `load`, not chosen because hiding a real source loses useful history. |

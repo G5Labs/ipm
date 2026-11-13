@@ -99,6 +99,8 @@ How should the log label and show a dependency that IPM pulled from a repository
 - Provisional answer: keep the `load` label for dependencies of `load` and `update`, keep their stored source, and keep the rule that listings show a source only for installs.
 - Reason: the maintainer test for dependency history expects a `load` record for the dependency of a `load`. The original request asks that dependency installs be logged, which this does.
 - Alternative: label them `install` with their source, following the original request's wording "install (including as a dependency)". That changes the maintainer test.
+- Alternative: keep the `load` label and show the stored source in listings for any record that has one. That changes the wiki's rule that listings show `n/a` for anything other than install.
+- Alternative: clear the source of records labeled `load`, as the field's description says for loads. This was not chosen, because hiding a real source loses useful history.
 - `update` is not covered by any source. Provisionally it may store its registry, and listings still show `n/a` for it.
 
 <a id="history.phases"></a>
@@ -421,7 +423,7 @@ Sources: `General/AbstractHistory.cls:11-49` (`:17` placeholder `0.0.0-0`, `:20-
 - user-facing-behavior
 - Expands: [Fields](#history.fields).
 
-Sources: A1 Q-15; `General/AbstractHistory.cls:20-27` ("For load and uninstall this will be empty"); `wiki/09` L76; issue #366 ("install (including as a dependency)", source "for install only"). Reconstruction check R9 asked for one provisional answer. Observed: dependencies of `load` and `update` are labeled `load` but carry a repository source (`Utils/Module.cls:63-69`). The listing shows `n/a` as the source for every record that is not `install`, including a top-level `update` from a registry (`General/History.cls:461-463`, OBS-H7). Round 1 R1-ONT-07: `History.cls` `TestWithDependencies` (L752-770) expects a `load` record for the dependency of a `load`, and the provisional answer now follows it. Native evidence: the A0 dependency record has `Action=load` and `SourceName=ipm-temp-modules-1` (`182759Z-cases-a`).
+Sources: A1 Q-15; `General/AbstractHistory.cls:20-27` ("For load and uninstall this will be empty"); `wiki/09` L76; issue #366 ("install (including as a dependency)", source "for install only"). Reconstruction check R9 asked for one provisional answer. Observed: dependencies of `load` and `update` are labeled `load` but carry a repository source (`Utils/Module.cls:63-69`). The listing shows `n/a` as the source for every record that is not `install`, including a top-level `update` from a registry (`General/History.cls:461-463`, OBS-H7). Round 1 R1-ONT-07: `History.cls` `TestWithDependencies` (L752-770) expects a `load` record for the dependency of a `load`, and the provisional answer now follows it. Native evidence: the A0 dependency record has `Action=load` and `SourceName=ipm-temp-modules-1` (`182759Z-cases-a`). Round 3 R3-09 restored the two draft options, "show the source in the listing" and "clear the source", as alternatives.
 
 ### history.phases
 
