@@ -8,7 +8,7 @@ Maps each in-scope ontology block to its formal support, its connection to the p
   - Theorems are in `crates/ipm-load-history/src/proofs.rs` and case lemmas in `cases.rs`.
   - The domain is every well-formed configuration: all transaction modes, dev flags, `-force`, installed states, a caller transaction or none, up to two leaf dependencies, and all modeled faults.
   - Theorems are symbolic over that domain. Explorer runs are bounded and exhaustive within the single-fault domain listed in `B/model-notes.md` section 3.
-  - Final proof receipt: `results/verus/20261113T214349Z-asbuilt-proofs-r2` (260 verified, 0 errors, no `assume`, `admit` or `external_body`). Final cases: `cases/cases.json` sha256 `d3334b16…476cd97` (59 cases). Every explorer run and Verus control was rerun on the final inputs by the orchestrator (`results/verus/*final*` and the explorer receipts after 21:55 UTC).
+  - Final proof receipt: `results/verus/20261113T214349Z-asbuilt-proofs-r2` (260 verified, 0 errors, no `assume`, `admit` or `external_body`). Final cases: `cases/cases.json` sha256 `d3334b16…476cd97` (59 cases). Every explorer run and Verus control was rerun on the final inputs by the orchestrator (Verus controls `results/verus/*final*` and explorer receipts `20261113T215113Z`..`215126Z`, script `crates/scripts/final-candidate-batch.sh`).
 - **Product connection:**
   - Bindings are in `crates/ipm-load-history/BINDINGS.md`.
   - Native runs are under `results/native/`. "Replay" means B2's replay of `cases/cases.json` (`B/native-replay.md`).
@@ -25,7 +25,7 @@ Maps each in-scope ontology block to its formal support, its connection to the p
 
 | Ontology block | Formal support | Product connection | Reliance |
 |---|---|---|---|
-| `load` (load from a path, with dependencies) | L1-STATUS and L1-NAMESPACE success. `case_c01_conforms`. Explorer L1 runs over the conforming domain pass | Bound steps `Main:Load`, `LoadNewModule`, `LoadModuleReference`. Native A0 and replay C01. Suites LoadModuleWithDeps, InstallModule, History | supported (≤2 leaf dependencies, no nested dependencies) |
+| `load` (load from a path, with dependencies) | L1-STATUS and L1-NAMESPACE success. `case_c01_conforms`. Survey of every end state (`results/verus/20261113T214445Z-survey-asbuilt-r2`) | Bound steps `Main:Load`, `LoadNewModule`, `LoadModuleReference`. Native A0 and replay C01. Suites LoadModuleWithDeps, InstallModule, History | supported (≤2 leaf dependencies, no nested dependencies) |
 | `load.path`, `load.path.archive` | Not modeled (path validity is one input bit) | `.tgz`: suite FileBinaryTar `TestLoadDestinationDirectory` (PASS), stage C S1N. `.tar.gz`: stage C S1 | `.tgz` supported. `.tar.gz` confirmed violation D15 (regression `f83b207e`). Git URL loads unestablished (no native or formal evidence; suspected OBS-L13, clone folder under Q-04) |
 | `load.core` (install, load and update share one path) | Only `load` is modeled | Install and update paths: product suites only | unestablished for install and update beyond the suites |
 | `load.options` | `-dev`, `-nodev`, `-force` modeled | Native g4, g5, g8, g9 | supported for those flags. `-env`, `-bypass-py-deps`, `-create-lockfile`, `-skip-sync` unestablished |
@@ -87,4 +87,4 @@ Maps each in-scope ontology block to its formal support, its connection to the p
 
 ## Status
 
-Updated after stage C round 1 repairs and B2 phase 2. Open obligations are listed in `.g5/uplift/ipm-verus-20261113/handoff.md`.
+Updated after stage C round 3 (final). Changes made after round 3 were validated by the orchestrator only. Open obligations are listed in `.g5/uplift/ipm-verus-20261113/handoff.md`.

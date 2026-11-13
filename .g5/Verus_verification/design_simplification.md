@@ -28,8 +28,8 @@ Today a log has two copies, an IRISTEMP row and a namespace twin. The twin is wr
 
 Proposal:
 - The durable `History` row is the only copy that matters after a failure. Every setter writes it directly, through one rollback-proof write: process journaling off for that save only (`%IPM.Utils.JournalManager(0)`), so neither the action's own rollback, a parent's rollback nor a process end undoes it. IRISTEMP is then only a cache.
-- The rollback-proof write is premise R-01, CONFIRMED natively (N-P20): unjournaled History writes survive a full rollback, `TROLLBACK 1` and SIGKILL, and the journaling flag is restored. The insert and every update must all use the unjournaled path, because a journaled insert with unjournaled updates leaves a mixed state.
-- `Committed` is written at each commit and set back to 0 by the rollback path when a parent's rollback undoes a dependency.
+- The rollback-proof write is premise R-01, CONFIRMED natively (N-P20): unjournaled History writes survive a full rollback, `TROLLBACK 1` and SIGKILL, and the journaling flag is restored. The insert must be unjournaled, because a journaled insert followed by unjournaled updates leaves a mixed state (N-P20C2).
+- `Committed` is the one field written with a journaled update, as the row's last write before each commit. It is set to 1 just before the commit that makes the action's changes durable (C1 or C2 in developer mode, C3 in normal mode, the dependency's close when no IPM transaction is open). Any rollback, including IRIS's rollback after a process end, then restores 0 (N-P20C). A write-then-correct policy, where the rollback path resets `Committed`, fails at process ends because no rollback path runs then.
 - `Finalized` is set only together with `TimeEnd`.
 - A deferral (write the rows once after the top-level action settles) is simpler but does not survive a process end inside the action, so it would not remove V2, V9 or D10.
 

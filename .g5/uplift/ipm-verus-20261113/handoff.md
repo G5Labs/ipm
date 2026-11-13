@@ -27,7 +27,7 @@ Scope: one `load` with up to two leaf dependencies, in every transaction mode an
 - A load that returns has a finalized record with an end time, and its `Success` equals the returned status (`theorem_top_record_complete`).
 - If a load changed module data, its record reads `Committed=1` (`theorem_commit_sound`).
 - Finalized records never change, including under foreign edits (`theorem_r2`).
-- A load never removes a durable history record (`theorem_r1`).
+- A load never removes a durable history record (`theorem_r1`). A dependency row written inside its parent's transaction is not durable until that transaction commits, so D1 is not a counterexample to this theorem.
 - Downgrade and update-required refusals write no module data in any mode. This is proved for the listed cases (`case_c11`, `case_c15`), explored exhaustively over the single-fault domain (L1-NS-ALL), and its controls 08 and 09 are detected. It is not a symbolic theorem.
 - In developer mode, a failure before the first commit rolls everything back. A failure after it keeps the manifest and, after the R2-01 repair, the phase work done before the failure. This rests on the L1-NAMESPACE clause, checked by the explorer and the case lemmas. Variant 212 (phase work rolled back) is the control.
 
@@ -35,13 +35,14 @@ These rest on IRIS premises P-01..P-11, which were confirmed natively. The SIGKI
 
 ## Confirmed product defects
 
-Twenty entries are in `bugs_issues.md`. Each has a governing source, a native reproduction through the public command, and a repair proposal. Defects that depend on a pending decision are marked.
+`bugs_issues.md` lists 18 defects (D1-D6, D9-D20) and two issues (I1, I2). Each defect has a governing source, a native reproduction through the public command, and a repair proposal. The issues have no governing requirement. Defects that depend on a pending decision are marked.
 
 | Severity for users | Defects |
 |---|---|
 | Data loss | D2 (a filtered `history delete` can delete every record), D1 (dependency records lost on rollback) |
 | Wrong installed state | D4 (decision pending: Q-17), D11, D16, D17, D19 (one namespace's `-DNoTransaction` default applies to every namespace), D14 (decision pending: Q-22) |
-| Wrong history content | D9, D10, D12, D13, D6 (decision pending: Q-14) |
+| Wrong history content | D9, D10, D12, D6 (decision pending: Q-14) |
+| Status disagrees with the namespace | D13 (a load that committed reports failure) |
 | Broken features | D3 (retention purge never deletes), D5, D15 (`.tar.gz`), D18 (decision pending: Q-18), D20 (`GlobalRecords`) |
 
 D7 was withdrawn, because the wiki documents the behavior on purpose. I1 and I2 are issues with no governing requirement.
@@ -61,7 +62,7 @@ Ordered by how much they change the verdicts. Each is a Q block in the ontology,
 | Q-18 | `history.read.filter.default-modifiers` | Default modifiers are not `history` filters | D18 |
 | Q-02 | `load.refusal.update-required.dev-bypass` | `-dev` lifts the update-required refusal (matches the product; README and help name only `-force`) | docs |
 | Q-03 | `dev-mode.overwrite-guard.force` | The guard covers `install` only and `-force` does not lift it. This conflicts with wiki/00 L129, so a maintainer must decide | docs or code |
-| Q-01, Q-04, Q-07, Q-09..Q-13, Q-15, Q-16, Q-19, Q-20 | see the coverage map in `A/coverage-map.md` | see the ontology | no current defect verdict |
+| Q-01, Q-04, Q-07, Q-09, Q-10, Q-11, Q-13, Q-15, Q-16, Q-19, Q-20 (Q-12 became a decision) | see the coverage map in `A/coverage-map.md` | see the ontology | no current defect verdict |
 
 ## Incomplete work and open obligations
 
@@ -70,6 +71,7 @@ Ordered by how much they change the verdicts. Each is a Q block in the ontology,
   - per-module `<Defaults>` transaction flags (D14 observed natively);
   - the `install`, `update`, `reinstall` and `uninstall` paths;
   - nested dependencies or more than two;
+  - a dependency already installed at another version or in developer mode, and with it the dependency-level downgrade and update-required guards and version conflicts;
   - legacy XML installs;
   - effects outside the database (Q-04).
 - `Committed` implying changed data is not a theorem, because the product violates it (D12).

@@ -10,7 +10,7 @@ Status values:
 
 `VV` = `.g5/Verus_verification`. Run IDs are directories under `VV/results/native/`.
 
-Updated after stage C round 1 and B2 phase 2.
+Updated after stage C round 3 (final). Changes made after round 3 were validated by the orchestrator only.
 
 ## Confirmed
 
@@ -20,9 +20,15 @@ Updated after stage C round 1 and B2 phase 2.
 - Evidence: B2 cases A1, A2, A3 (`20261113T182759Z-cases-a`, replay `20261113T184230Z-replay-fast`). Reproduction: `VV/native/repro/dep-history-lost.cos` → `20261113T184617Z-repro-dep-history-lost`. The ID is allocated and no row persists.
 - Formal: model violations V1 and V2 (`case_c31_dep_record_lost`, `case_c33_dev_dep_record_lost`, `case_c45_*`, explorer `asbuilt-r3-dep`). Terminate variants are confirmed natively by replay `20261113T194122Z-replay-terminate-b`.
 - Repair proposal: write the dependency's durable History row in a way no rollback undoes, and set its `Committed` from whether the dependency's writes were actually kept.
-  - Mechanism: insert and update the row with process journaling off for the duration of that write only. That is, scope `%IPM.Utils.JournalManager(0)` around the `History` save in `HistoryTemp.Init` and `PersistToTwin`. N-P07 shows unjournaled sets survive `TROLLBACK` and the journaling flag is restored. Premise R-01 is CONFIRMED natively (N-P20, `20261113T214135Z-premise-p20-r01`). An unjournaled insert survives a full rollback, `TROLLBACK 1`, SIGKILL and a later journaled update of the same row, including through `%IPM.General.History`, with no `<ROLLFAIL>`. One caveat: a journaled insert followed by an unjournaled update leaves the unjournaled value after a rollback, and index consistency for that order was not probed. So the insert and every update of the row must use the unjournaled path.
-  - `Committed`: the parent records, for each dependency log, whether its writes were later undone, and the parent's rollback path updates those rows (`Committed=0`). In developer mode, dependencies stay when the parent fails after the second commit (case A5, B1-C38), so they keep `Committed=1`.
-  - A deferral that writes nested rows only after the top-level action settles is not enough, because a process end inside the parent then leaves no dependency row (B1-C45K/T).
+  - Mechanism, per round 3 disposition R3-02:
+    1. Insert the row with process journaling off for that save only (scope `%IPM.Utils.JournalManager(0)` around the `History` save in `HistoryTemp.Init`), with `Committed=0`. No rollback undoes this insert. Premise R-01 is CONFIRMED natively (N-P20, `20261113T214135Z-premise-p20-r01`): the insert survives a full rollback, `TROLLBACK 1` and SIGKILL, including through `%IPM.General.History`, with no `<ROLLFAIL>`.
+    2. Write the facts that must survive whatever happens (package, version, phases, `Success`, `TimeEnd`) with unjournaled updates as they become known.
+    3. Set `Committed=1` with a journaled update. It must be the row's last write before the commit that returns the load to its entry `$TLEVEL`: C2 for a developer-mode dependency, C3 for a normal-mode load. When no IPM transaction is open, write it at the dependency's close. If that commit happens, `Committed=1` is durable. If the parent rolls back, or IRIS rolls back after a process end, the journaled update is undone and the row reads `Committed=0` again (N-P20C: a rolled-back journaled update over an unjournaled row restores the unjournaled value).
+  - Rules for the mechanism:
+    - Never a journaled insert followed by unjournaled updates. N-P20C2 shows that order leaves the unjournaled value after a rollback, and index consistency for it was not probed.
+    - Keep the journaled `Committed` update last before the commit. Whether rolling it back also discards later unjournaled updates of the same stored row was not probed.
+  - A write-then-correct policy (the dependency's own commit sets `Committed=1` durably, and the parent's rollback path resets it) is wrong at process ends. No in-process rollback path runs then, so the row keeps `Committed=1` for a dependency that IRIS rolled back (round 3 variant 16: 176 configurations).
+  - A deferral that writes nested rows only after the top-level action settles is not enough either, because a process end inside the parent then leaves no dependency row (B1-C45K/T).
   - Writers: `HistoryTemp.Init`, `PersistToTwin`, `%OnClose`, `Utils.Module:LoadModuleReference`, `LoadNewModule` error path.
   - Readers: `history find` and `details`, `%IPM_General.History`, `Records`.
   - Preserve: a top-level failure reads `Committed=0`. A committed dependency of a successful parent reads `Committed=1`. ID order follows start order. Finalized rows stay immutable.
@@ -30,9 +36,9 @@ Updated after stage C round 1 and B2 phase 2.
     - A1 expects one dependency row with `Committed=0`.
     - A3 expects a dependency row with an error `Success`.
     - A5/C38 expect the dependency row with `Committed=1`.
-    - B1-C45K and C45T (process end inside the parent) expect the dependency row to survive.
+    - B1-C45K and C45T (process end inside the parent) expect the dependency row to survive with `Committed=0`.
     - A0 keeps two committed rows.
-  - The model's repair variant 103 assumes this mechanism (premise R-01). Its result is in `B/model-notes.md`.
+  - The model's repair variant 103 implements this policy, with the `Committed=1` mark atomic with the commit (`dep_commit_mark`). Its result is in `B/model-notes.md`.
 
 ### D2: One filter column with `_` silently drops every later filter, so a filtered `history delete` empties the namespace
 - Obligation: `history.read.filter` ("Versions are filtered by part", "Filters work the same way for `find` and `delete`"); wiki/09 L112 advertises `Version_Major`. `history.delete` deletes only matching records.
@@ -88,9 +94,12 @@ Updated after stage C round 1 and B2 phase 2.
 - Obligation: `history.record` (I: "after it stops without ending, the log lists its record with `Success` 0, no end time and the phases it has started"). Also `history.fields` `Package`: the name was known and recorded in the in-flight log.
 - Path: every setter after `Init` updates only the IRISTEMP row (`AbstractHistory.cls:86-173`). The twin is written at `Init` and at `%OnClose`. After SIGKILL no `%OnClose` runs. After `$SYSTEM.Process.Terminate` of a non-dev load, `%OnClose` runs before IRIS rolls the transaction back, so the twin update is undone and the IRISTEMP row is deleted (N-P10, C1).
 - Evidence: B2 C1 (`20261113T184230Z-replay-fast`), C3 (`20261113T182927Z-cases-c-sigkill`), C4R (`20261113T183827Z-cases-c4r`). The durable row has `Package=""` and no phases after four phases ended and Activate started. Model: `kill_rec` after round 1 (B1).
-- Repair proposal: at each `SetName`, `SetVersion`, phase boundary and commit, copy the name, version, `Committed` and phases to the durable row. Use the same rollback-proof write as D1 (journaling off around the History save, premise R-01), so the copy survives the load's own rollback and a process end at any `$TLEVEL`. Copying only at `$TLEVEL` 0 would not help a normal-mode load, whose phases all run at `$TLEVEL` 1. This shares the mechanism of D1, D12 and the Q-08 deviation (`design_simplification.md` S2).
+- Repair proposal: use D1's mechanism for every log, not only dependency logs.
+  - At each `SetName`, `SetVersion` and phase boundary, write the name, version and phases to the durable row with an unjournaled update. The copy then survives the load's own rollback and a process end at any `$TLEVEL`. Copying only at `$TLEVEL` 0 would not help a normal-mode load, whose phases all run at `$TLEVEL` 1.
+  - Write `Committed` with a journaled update as the row's last write before each commit, so a rollback restores 0 (N-P20C). Writing `Committed` unjournaled would leave `Committed=1` on a rolled-back load.
+  - This shares the mechanism of D1, D12 and the Q-08 deviation (`design_simplification.md` S2). Premise R-01 is confirmed (N-P20).
   - Preserve: finalized rows stay immutable. `Success` stays 0 and `TimeEnd` empty for an unfinished record. A rolled-back normal-mode load reads `Committed=0`.
-  - Distinguishing check: C4R and C3 list Initialize..Compile ended and Activate open, with the package set. If R-01 is refuted, C3 (normal mode) stays failing and only developer-mode kills (C4R) are repairable this way.
+  - Distinguishing checks: C3 (normal-mode SIGKILL) lists Initialize..Compile ended and Activate open, with the package set and `Committed=0`. C4R (developer-mode SIGKILL after the commits) shows the same phases with `Committed=1`.
 
 ### D11: Manifest refusals under `-DNoTransaction=1` or `-DNoJournal=1` keep module data
 - Obligation: `load.refusal` (I: a refusal writes no module data, in every mode), `load.refusal.manifest`.
