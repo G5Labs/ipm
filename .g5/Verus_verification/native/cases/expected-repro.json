@@ -1,7 +1,7 @@
 {
  "group": "repro",
  "written_utc": "2026-11-13T18:46:17Z",
- "note": "Minimal reproductions of confirmed deviations. expect = governing intent; predicted_as_built = the earlier native observation. A DEVIATES verdict with matched prediction means the defect reproduced.",
+ "note": "Minimal reproductions of confirmed deviations. expect = governing intent; predicted_as_built = the earlier native observation. A DEVIATES verdict with matched prediction means the defect reproduced. Vacuous-pass guards added 2026-11-13 after the repro runs (orchestrator request): X3 total.before >= 1, X2 truth < total.",
  "cases": {
   "X1": {
    "kind": "case",
@@ -42,8 +42,11 @@
      "prediction_source": "case E1"
     },
     "truth": {
-     "expect": null,
-     "source": "SQL truth"
+     "expect": {
+      "lt_field": "total"
+     },
+     "source": "harness: at least one row must lie outside the filter, or a dropped filter is invisible",
+     "harness": true
     },
     "total": {
      "expect": null,
@@ -73,8 +76,11 @@
      "harness": true
     },
     "total.before": {
-     "expect": null,
-     "source": "SQL truth"
+     "expect": {
+      "re": "[1-9][0-9]*"
+     },
+     "source": "harness: a delete check on an empty history is vacuous",
+     "harness": true
     },
     "total.restored": {
      "expect": {

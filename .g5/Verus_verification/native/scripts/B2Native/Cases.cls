@@ -148,6 +148,314 @@ ClassMethod CaseR4(case)
     do ..Obs(case, "shown", ..CountFindRows(.lines))
 }
 
+// ---------- stage C round 1 additions (R1-ONT-04) ----------
+
+ClassMethod SC(rel As %String) As %String
+{
+    quit "/home/irisowner/zpm/.native/fixtures/stagec/"_rel
+}
+
+ClassMethod LoadAndRead(
+	case,
+	cmd,
+	name,
+	extraClass As %String = "")
+{
+    set base = ..MaxHistId(), tbase = ..MaxTempId()
+    do ..Run(case, "load", cmd)
+    do ..ModState(case, name, "mod.")
+    do ..ClassState(case, ..PkgOf(name)_".Main", "cls.")
+    if extraClass '= "" {
+        do ..ClassState(case, extraClass, "extra.cls.")
+    }
+    do ..Obs(case, "doc.version", ##class(B2Native.Replay).DocVersion(name))
+    do ..HistSince(case, base, "hist.")
+    do ..TempRows(case, "temp.", tbase)
+}
+
+/// (a) .tar.gz archive; S1N is the same layout as .tgz.
+ClassMethod CaseS1(case)
+{
+    do ..LoadAndRead(case, "load "_..SC("s1/s1-targz-1.0.0.tar.gz"), "s1-targz")
+}
+
+ClassMethod CaseS1N(case)
+{
+    do ..LoadAndRead(case, "load "_..SC("s1/s1-tgz-1.0.0.tgz"), "s1-tgz")
+}
+
+/// (b) late manifest checks: multiple documents (NoTransaction, and default as neighbour); class-only manifest.
+ClassMethod CaseS2(case)
+{
+    do ..LoadAndRead(case, "load "_..SC("s2/s2-multi-notx/1.0.0/")_" -DNoTransaction=1", "s2-multi-notx", "S2MultiNotxExtra.Main")
+}
+
+ClassMethod CaseS2N(case)
+{
+    do ..LoadAndRead(case, "load "_..SC("s2/s2-multi-def/1.0.0/"), "s2-multi-def", "S2MultiDefExtra.Main")
+}
+
+ClassMethod CaseS2B(case)
+{
+    set base = ..MaxHistId()
+    do ..Run(case, "load", "load "_..SC("s2/s2-nomod-notx/1.0.0/")_" -DNoTransaction=1")
+    do ..ClassState(case, "S2NomodNotxExtra.Main", "extra.cls.")
+    do ..HistSince(case, base, "hist.")
+}
+
+/// (c) update -path with an archive of a different module.
+ClassMethod UpdatePath(
+	case,
+	a,
+	b,
+	archive,
+	mode)
+{
+    do ..Run(case, "setup", "load "_..SC("s3/"_a_"/1.0.0/"))
+    set base = ..MaxHistId(), tbase = ..MaxTempId()
+    do ..Run(case, "update", "update "_a_" -path "_..SC("s3/archives/"_archive)_mode)
+    do ..ModState(case, a, "a.")
+    do ..ClassState(case, ..PkgOf(a)_".Main", "a.cls.")
+    if b '= "" {
+        do ..ModState(case, b, "b.")
+        do ..ClassState(case, ..PkgOf(b)_".Main", "b.cls.")
+        do ..Obs(case, "b.doc.version", ##class(B2Native.Replay).DocVersion(b))
+        do ..Obs(case, "b.moduleroot.dir", ##class(%File).DirectoryExists(##class(%IPM.Repo.UniversalSettings).GetModuleRoot()_b_"/1.0.0"))
+    }
+    do ..HistSince(case, base, "hist.")
+    do ..TempRows(case, "temp.", tbase)
+}
+
+ClassMethod CaseS3(case)
+{
+    do ..UpdatePath(case, "s3-a1", "s3-b1", "s3-b1-1.0.0.tgz", " -DNoTransaction=1")
+}
+
+ClassMethod CaseS3N1(case)
+{
+    do ..UpdatePath(case, "s3-a2", "s3-b2", "s3-b2-1.0.0.tgz", "")
+}
+
+ClassMethod CaseS3N2(case)
+{
+    do ..UpdatePath(case, "s3-a3", "", "s3-a3-2.0.0.tgz", " -DNoTransaction=1")
+}
+
+/// (d) an existing relative path, resolved against the process's current directory.
+ClassMethod CaseS4(case)
+{
+    set old = $system.Process.CurrentDirectory(..SC("s4/"))
+    do ..Obs(case, "cwd", $system.Process.CurrentDirectory())
+    try {
+        do ..LoadAndRead(case, "load s4-rel/1.0.0", "s4-rel")
+    } catch ex {
+        do ..Obs(case, "case.inner.exception", ex.DisplayString())
+    }
+    do $system.Process.CurrentDirectory(old)
+}
+
+ClassMethod CaseS4N1(case)
+{
+    set old = $system.Process.CurrentDirectory(..SC("s4/"))
+    try {
+        set base = ..MaxHistId()
+        do ..Run(case, "load", "load s4-none/1.0.0")
+        do ..HistSince(case, base, "hist.")
+    } catch ex {
+        do ..Obs(case, "case.inner.exception", ex.DisplayString())
+    }
+    do $system.Process.CurrentDirectory(old)
+}
+
+ClassMethod CaseS4N2(case)
+{
+    do ..LoadAndRead(case, "load "_..SC("s4/s4-abs/1.0.0/"), "s4-abs")
+}
+
+/// (d) rebound: a relative path built from the directory %File resolves relative paths against.
+ClassMethod CaseS4R(case)
+{
+    set base = ##class(%File).NormalizeDirectory("")
+    set depth = $length(base, "/") - 2
+    set rel = ""
+    for i=1:1:depth { set rel = rel_"../" }
+    set rel = rel_"home/irisowner/zpm/.native/fixtures/stagec/s4/s4-rel/1.0.0"
+    do ..Obs(case, "binding.base", base)
+    do ..Obs(case, "binding.rel", rel)
+    do ..Obs(case, "rel.exists", ##class(%File).Exists(rel))
+    do ..Obs(case, "rel.normalized", ##class(%File).NormalizeDirectory(rel))
+    do ..LoadAndRead(case, "load "_rel, "s4-rel")
+}
+
+/// R1-MOD-05: a normal-mode parent whose dependency's manifest sets <Defaults> NoJournal=1; the parent's Activate fails.
+ClassMethod Mod05(
+	case,
+	parent,
+	dep)
+{
+    set base = ..MaxHistId(), c0 = +$get(^IPM.General.HistoryD), tbase = ..MaxTempId()
+    set sc = ..Run(case, "load", "load /home/irisowner/zpm/.native/fixtures/stagec2/"_parent_"/1.0.0/")
+    do ..Obs(case, "rollfail", $select($$$ISERR(sc):$system.Status.GetErrorText(sc)["ROLLFAIL", 1:0))
+    do ..ModState(case, parent, "p.")
+    do ..ModState(case, dep, "d.")
+    do ..ClassState(case, ..PkgOf(parent)_".Main", "p.cls.")
+    do ..ClassState(case, ..PkgOf(dep)_".Main", "d.cls.")
+    do ..Obs(case, "d.doc.version", ##class(B2Native.Replay).DocVersion(dep))
+    do ..HistFor(case, parent, base, "p.hist.")
+    do ..HistFor(case, dep, base, "d.hist.")
+    do ..Obs(case, "ids.allocated", +$get(^IPM.General.HistoryD) - c0)
+    do ..TempRows(case, "temp.", tbase)
+    do ..Obs(case, "journal.enabled.after", '($zboolean($zjob, 1024, 1) = 1024))
+}
+
+ClassMethod CaseM5(case)
+{
+    do ..Mod05(case, "m5-p", "m5-d")
+}
+
+ClassMethod CaseM5N(case)
+{
+    do ..Mod05(case, "m5n-p", "m5n-d")
+}
+
+// ---------- phase 2 extras: default modifiers (A2 OBS-H2, X1) and global readers (A2 OBS-H10) ----------
+
+ClassMethod DefModKeys() As %String
+{
+    set out = "", ref = "^%IPM.DefaultModifiers"
+    for {
+        set ref = $query(@ref)
+        quit:ref=""
+        set out = out_$select(out="":"",1:";")_$piece(ref, "(", 2, *)_"="_@ref
+    }
+    quit out
+}
+
+ClassMethod SaveDefMods()
+{
+    kill ^IRIS.Temp.B2DefMod
+    merge ^IRIS.Temp.B2DefMod = ^%IPM.DefaultModifiers
+}
+
+ClassMethod RestoreDefMods()
+{
+    kill ^%IPM.DefaultModifiers
+    merge ^%IPM.DefaultModifiers = ^IRIS.Temp.B2DefMod
+    kill ^IRIS.Temp.B2DefMod
+}
+
+/// Namespace default modifiers set with the product's own help example, then `history find` and `history delete -confirm`.
+ClassMethod CaseH2(case)
+{
+    do ..SaveDefMods()
+    do ..Obs(case, "defaults.initial", ..DefModKeys())
+    try {
+        do ..Run(case, "set", "default-modifiers -set -DNoTransaction=1 -DUpdateSnapshots=1")
+        do ..Obs(case, "defaults.stored", ..DefModKeys())
+        set total = ..Total()
+        do ..Obs(case, "total", total)
+        do ..Obs(case, "find.expected", $select(total>5:5, 1:total))
+        do ..RunCapture(case, "find", "history find -limit 5", .lines)
+        do ..Obs(case, "find.shown", ..CountFindRows(.lines))
+        do ..Obs(case, "delete.total.before", ..Total())
+        do ..Backup()
+        do ..RunCapture(case, "delete", "history delete -confirm", .lines)
+        do ..Obs(case, "delete.total.after", ..Total())
+        do ..Restore()
+        do ..Obs(case, "delete.total.restored", ..Total())
+    } catch ex {
+        do ..Obs(case, "case.inner.exception", ex.DisplayString())
+    }
+    do ..RestoreDefMods()
+    do ..Obs(case, "defaults.restored", ..DefModKeys())
+}
+
+/// Where ^%IPM.DefaultModifiers lives and whether another IPM namespace sees USER's defaults.
+ClassMethod CaseX1(case)
+{
+    do ..SaveDefMods()
+    try {
+        do ..Run(case, "set", "default-modifiers -set -DNoTransaction=1")
+        do ..Obs(case, "dest.USER", ##class(%SYS.Namespace).GetGlobalDest("USER", "%IPM.DefaultModifiers"))
+        do ..Obs(case, "dest.USER-VERIFY", ##class(%SYS.Namespace).GetGlobalDest("USER-VERIFY", "%IPM.DefaultModifiers"))
+        set orig = $namespace, seen = "<error>", ipm = 0
+        try {
+            set $namespace = "USER-VERIFY"
+            set ipm = ##class(%Dictionary.CompiledClass).%ExistsId("%IPM.Main")
+            if ipm {
+                do ##class(%IPM.Main).GetNamespaceDefaultModifiers(.arr)
+                set seen = $get(arr("NoTransaction"))
+            }
+        } catch ex {
+            set seen = "<error> "_ex.DisplayString()
+        }
+        set $namespace = orig
+        do ..Obs(case, "userverify.ipm.present", ipm)
+        do ..Obs(case, "userverify.sees.NoTransaction", seen)
+    } catch ex {
+        do ..Obs(case, "case.inner.exception", ex.DisplayString())
+    }
+    do ..RestoreDefMods()
+    do ..Obs(case, "defaults.restored", ..DefModKeys())
+}
+
+/// A history row in USER-VERIFY read from USER through `history find -globally` and the GlobalRecords query.
+ClassMethod CaseH10(case)
+{
+    set orig = $namespace, id = ""
+    try {
+        set $namespace = "USER-VERIFY"
+        set h = ##class(%IPM.General.History).%New()
+        set h.Action = "load", h.Package = "b2-h10-uv", h.CommandString = "b2 global reader probe", h.Finalized = 1, h.Success = 1, h.Committed = 1
+        set h.Version = ##class(%IPM.General.SemanticVersion).FromString("1.0.0")
+        set sc = h.%Save(), id = h.%Id()
+        kill h
+        set uvtotal = ##class(%SQL.Statement).%ExecDirect(, "SELECT COUNT(*) AS n FROM %IPM_General.History")
+        do uvtotal.%Next()
+        set uvn = uvtotal.n
+    } catch ex {
+        set sc = ex.AsStatus()
+    }
+    set $namespace = orig
+    do ..Obs(case, "uv.insert.ok", $$$ISOK(sc))
+    do ..Obs(case, "uv.total", $get(uvn))
+    do ..Obs(case, "user.total", ..Total())
+    do ..RunCapture(case, "find", "history find -globally -limit 0 -DPackage=b2-h10-uv", .lines)
+    do ..Obs(case, "find.shown", ..CountFindRows(.lines))
+    set hdr = 0, noipm = 0
+    for i=1:1:lines {
+        set:lines(i)["Namespace: USER-VERIFY" hdr = 1
+        set:lines(i)["IPM is not enabled" noipm = noipm + 1
+    }
+    do ..Obs(case, "find.uv.header", hdr)
+    do ..Obs(case, "find.not.enabled.lines", noipm)
+    // Documented API: the GlobalRecords class query, read from USER.
+    set rs = ##class(%SQL.Statement).%ExecDirect(, "SELECT * FROM %IPM_General.History_GlobalRecords(0, 0)")
+    do ..Obs(case, "gr.sqlcode", rs.%SQLCODE)
+    if rs.%SQLCODE < 0 {
+        do ..Obs(case, "gr.message", rs.%Message)
+    } else {
+        set n = 0, uv = 0
+        try {
+            while rs.%Next(.fsc) {
+                set n = n + 1
+                set:rs.%Get("Package")="b2-h10-uv" uv = uv + 1
+            }
+            do ..Obs(case, "gr.fetch.sc", $select($$$ISOK($get(fsc,1)):"OK", 1:$system.Status.GetErrorText(fsc)))
+        } catch ex {
+            do ..Obs(case, "gr.fetch.exception", ex.DisplayString())
+        }
+        do ..Obs(case, "gr.rows", n)
+        do ..Obs(case, "gr.rows.uv", uv)
+        do ..Obs(case, "gr.sqlcode.after", rs.%SQLCODE)
+    }
+    if id '= "" {
+        set $namespace = "USER-VERIFY"
+        do ##class(%IPM.General.History).%DeleteId(id)
+        set $namespace = orig
+    }
+}
+
 // ---------- (a) dependency loads inside a parent load (Q-06, INT-HIST-02/08) ----------
 
 ClassMethod CaseA0(case)

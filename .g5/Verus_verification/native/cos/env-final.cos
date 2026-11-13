@@ -1,0 +1,8 @@
+set rs = ##class(%SQL.Statement).%ExecDirect(,"SELECT Name, Enabled FROM %IPM_Repo.Definition") while rs.%Next() { write !,"OBS ENV repo=",rs.Name," enabled=",rs.Enabled,! }
+write !,"OBS ENV defaultmodifiers.data=",$data(^%IPM.DefaultModifiers),!
+write !,"OBS ENV HistoryRetain=",##class(%IPM.Repo.UniversalSettings).GetHistoryRetain(),!
+set rs = ##class(%SQL.Statement).%ExecDirect(,"SELECT COUNT(*) AS n FROM %IPM_General.HistoryTemp") do rs.%Next() write !,"OBS ENV historytemp.rows=",rs.n,!
+write !,"OBS ENV cwd=",$system.Process.CurrentDirectory(),!
+write !,"OBS ENV journal.enabled=",'($zboolean($zjob,1024,1)=1024),!
+write !,"NATIVE-END",!
+halt

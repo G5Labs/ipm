@@ -1,0 +1,722 @@
+{
+  "run_id": "20261113T182832Z-cases-dg",
+  "label": "cases-dg",
+  "process_outcome": "COMPLETED",
+  "environment_flags": [],
+  "duplicate_observations": [],
+  "expected_files": [
+    {
+      "path": "../../../native/cases/expected-cases.json",
+      "sha256": "e543ed6b3981bc346b4b425bad9f34aab4bb103061a4116ef8d0d7082c332217",
+      "mtime_utc": "2026-11-13T20:12:19Z",
+      "evaluated_from": "../../../native/cases/expected-cases.json",
+      "written_before_run": false,
+      "note": "no snapshot in this run; written_before_run compares the current file's mtime",
+      "group": "cases a-g"
+    }
+  ],
+  "substantive_verdict": "EVALUATED",
+  "case_verdict_counts": {
+    "CONFORMS": 2,
+    "DEVIATES": 1
+  },
+  "cases": {
+    "D0": {
+      "kind": "case",
+      "claim": "Load inside a caller transaction that the caller commits: module and record kept.",
+      "hypothesis": "d (neighbour: caller commits)",
+      "maps_to": null,
+      "verdict": "CONFORMS",
+      "mismatched_fields": [],
+      "missing_fields": [],
+      "harness_failed_fields": [],
+      "case_markers_complete": true,
+      "fields": {
+        "load.ok": {
+          "expected": "1",
+          "source": "INT-LOAD-01",
+          "observed": "1",
+          "match": true
+        },
+        "load.tlevel": {
+          "expected": "1",
+          "source": "N-P03 (inner commits only decrement $TLEVEL)",
+          "observed": "1",
+          "match": true
+        },
+        "after.tlevel": {
+          "expected": "0",
+          "source": "harness",
+          "observed": "0",
+          "match": true
+        },
+        "mod.exists": {
+          "expected": "1",
+          "source": "INT-LOAD-01",
+          "observed": "1",
+          "match": true
+        },
+        "cls.compiled": {
+          "expected": "1",
+          "source": "INT-LOAD-01",
+          "observed": "1",
+          "match": true
+        },
+        "hist.rows": {
+          "expected": "1",
+          "source": "INT-LOAD-17",
+          "observed": "1",
+          "match": true
+        },
+        "hist.row1.SuccessKind": {
+          "expected": "OK",
+          "source": "INT-HIST-05",
+          "observed": "OK",
+          "match": true
+        },
+        "hist.row1.Committed": {
+          "expected": "1",
+          "source": "INT-HIST-05",
+          "observed": "1",
+          "match": true
+        },
+        "hist.row1.Finalized": {
+          "expected": "1",
+          "source": "INT-HIST-05",
+          "observed": "1",
+          "match": true
+        },
+        "temp.rows": {
+          "expected": "0",
+          "source": "intent 3.3",
+          "observed": "0",
+          "match": true
+        }
+      },
+      "unexpected_observations": {
+        "mod.version": "1.0.0",
+        "mod.dev": "0",
+        "cls.defined": "1",
+        "hist.row1.ID": "29",
+        "hist.row1.Action": "load",
+        "hist.row1.Package": "b2-ctx-commit",
+        "hist.row1.Version": "1.0.0",
+        "hist.row1.SuccessText": "OK",
+        "hist.row1.TimeEndSet": "1",
+        "hist.row1.SourceName": "",
+        "hist.row1.CommandString": "load /home/irisowner/zpm/.native/fixtures/b2-ctx-commit/1.0.0/",
+        "hist.row1.Phases": "Initialize:ended:OK,Reload:ended:OK,Validate:ended:OK,Compile:ended:OK,Activate:ended:OK"
+      }
+    },
+    "D1": {
+      "kind": "case",
+      "claim": "Load inside a caller transaction that the caller rolls back: the module is gone (caller's choice), the load's record survives and does not read committed.",
+      "hypothesis": "d",
+      "maps_to": null,
+      "verdict": "DEVIATES",
+      "mismatched_fields": [
+        "hist.rows"
+      ],
+      "missing_fields": [],
+      "harness_failed_fields": [],
+      "case_markers_complete": true,
+      "fields": {
+        "load.ok": {
+          "expected": "1",
+          "source": "INT-LOAD-01",
+          "observed": "1",
+          "match": true
+        },
+        "load.tlevel": {
+          "expected": "1",
+          "source": "N-P03",
+          "observed": "1",
+          "match": true
+        },
+        "after.tlevel": {
+          "expected": "0",
+          "source": "harness",
+          "observed": "0",
+          "match": true
+        },
+        "inflight.hist.rows": {
+          "expected": null,
+          "source": "observation",
+          "observed": "1",
+          "match": null
+        },
+        "inflight.hist.row1.Committed": {
+          "expected": null,
+          "source": "observation",
+          "observed": "1",
+          "match": null
+        },
+        "mod.exists": {
+          "expected": "0",
+          "source": "IRIS rollback of the caller's transaction (N-P03)",
+          "observed": "0",
+          "match": true
+        },
+        "cls.compiled": {
+          "expected": "0",
+          "source": "N-P03",
+          "observed": "0",
+          "match": true
+        },
+        "hist.rows": {
+          "expected": "1",
+          "source": "INT-LOAD-17 'Every load produces a history record'; INT-HIST-02 (record survives rollback); Q-05 open",
+          "observed": "0",
+          "match": false,
+          "predicted_as_built": "0",
+          "prediction_source": "A2 OBS-H16",
+          "matches_prediction": true
+        },
+        "hist.row1.Committed": {
+          "expected": "0",
+          "source": "INT-HIST-05",
+          "observed": null,
+          "match": "N/A",
+          "condition": {
+            "field": "hist.rows",
+            "expect": "1"
+          }
+        },
+        "ids.allocated": {
+          "expected": {
+            "re": "[1-9][0-9]*"
+          },
+          "source": "harness: the load must have reached IPM (a history ID was allocated), or the absence of its row is vacuous",
+          "observed": "1",
+          "match": true
+        },
+        "temp.rows": {
+          "expected": "0",
+          "source": "intent 3.3",
+          "observed": "0",
+          "match": true
+        }
+      },
+      "unexpected_observations": {
+        "inflight.hist.row1.ID": "30",
+        "inflight.hist.row1.Action": "load",
+        "inflight.hist.row1.Package": "b2-ctx-rb",
+        "inflight.hist.row1.Version": "1.0.0",
+        "inflight.hist.row1.SuccessKind": "OK",
+        "inflight.hist.row1.SuccessText": "OK",
+        "inflight.hist.row1.Finalized": "1",
+        "inflight.hist.row1.TimeEndSet": "1",
+        "inflight.hist.row1.SourceName": "",
+        "inflight.hist.row1.CommandString": "load /home/irisowner/zpm/.native/fixtures/b2-ctx-rb/1.0.0/",
+        "inflight.hist.row1.Phases": "Initialize:ended:OK,Reload:ended:OK,Validate:ended:OK,Compile:ended:OK,Activate:ended:OK",
+        "cls.defined": "0"
+      },
+      "as_built_prediction": {
+        "fields": 1,
+        "matched": 1,
+        "verdict": "CONFIRMED"
+      }
+    },
+    "G": {
+      "kind": "case",
+      "claim": "Version transitions through load on update-simple 1.2.1/2.1.1/3.5.0 (product fixture tests/integration_tests/Test/PM/Integration/_data/update-test).",
+      "hypothesis": "g",
+      "maps_to": null,
+      "verdict": "CONFORMS",
+      "mismatched_fields": [],
+      "missing_fields": [],
+      "harness_failed_fields": [],
+      "case_markers_complete": true,
+      "fields": {
+        "g1.ok": {
+          "expected": "1",
+          "source": "INT-LOAD-01 (valid completion)",
+          "observed": "1",
+          "match": true
+        },
+        "g1.mod.version": {
+          "expected": "1.2.1",
+          "source": "INT-LOAD-01 (valid completion)",
+          "observed": "1.2.1",
+          "match": true
+        },
+        "g1.mod.dev": {
+          "expected": "0",
+          "source": "INT-LOAD-01 (valid completion)",
+          "observed": "0",
+          "match": true
+        },
+        "g1.hist.rows": {
+          "expected": "1",
+          "source": "INT-LOAD-17 / INT-HIST-01",
+          "observed": "1",
+          "match": true
+        },
+        "g1.hist.row1.SuccessKind": {
+          "expected": "OK",
+          "source": "INT-HIST-02/04",
+          "observed": "OK",
+          "match": true
+        },
+        "g1.hist.row1.Committed": {
+          "expected": "1",
+          "source": "INT-HIST-05",
+          "observed": "1",
+          "match": true
+        },
+        "g2.ok": {
+          "expected": "1",
+          "source": "INT-LOAD-18 (same version reinstall succeeds)",
+          "observed": "1",
+          "match": true
+        },
+        "g2.mod.version": {
+          "expected": "1.2.1",
+          "source": "INT-LOAD-18 (same version reinstall succeeds)",
+          "observed": "1.2.1",
+          "match": true
+        },
+        "g2.mod.dev": {
+          "expected": "0",
+          "source": "INT-LOAD-18 (same version reinstall succeeds)",
+          "observed": "0",
+          "match": true
+        },
+        "g2.hist.rows": {
+          "expected": "1",
+          "source": "INT-LOAD-17 / INT-HIST-01",
+          "observed": "1",
+          "match": true
+        },
+        "g2.hist.row1.SuccessKind": {
+          "expected": "OK",
+          "source": "INT-HIST-02/04",
+          "observed": "OK",
+          "match": true
+        },
+        "g2.hist.row1.Committed": {
+          "expected": "1",
+          "source": "INT-HIST-05",
+          "observed": "1",
+          "match": true
+        },
+        "g3.ok": {
+          "expected": "0",
+          "source": "INT-LOAD-10 (newer with UpdatePackage refused)",
+          "observed": "0",
+          "match": true
+        },
+        "g3.err": {
+          "expected": {
+            "re": ".*Please use the 'update' command.*"
+          },
+          "source": "INT-LOAD-10 (newer with UpdatePackage refused)",
+          "observed": "ERROR #5001: Cannot perform an update of update-simple from version 1.2.1 to 2.1.1 using the 'install' or 'load' commands. Please use the 'update' command instead. If you are intentionally trying to bypass running update steps, please use the -force flag for 'install' or 'load'.",
+          "match": true
+        },
+        "g3.mod.version": {
+          "expected": "1.2.1",
+          "source": "INT-LOAD-10 (newer with UpdatePackage refused)",
+          "observed": "1.2.1",
+          "match": true
+        },
+        "g3.mod.dev": {
+          "expected": "0",
+          "source": "INT-LOAD-10 (newer with UpdatePackage refused)",
+          "observed": "0",
+          "match": true
+        },
+        "g3.hist.rows": {
+          "expected": "1",
+          "source": "INT-LOAD-17 / INT-HIST-01",
+          "observed": "1",
+          "match": true
+        },
+        "g3.hist.row1.SuccessKind": {
+          "expected": "ERR",
+          "source": "INT-HIST-02/04",
+          "observed": "ERR",
+          "match": true
+        },
+        "g3.hist.row1.Committed": {
+          "expected": "0",
+          "source": "INT-HIST-05",
+          "observed": "0",
+          "match": true
+        },
+        "g4.ok": {
+          "expected": "1",
+          "source": "INT-LOAD-10 (-force bypasses)",
+          "observed": "1",
+          "match": true
+        },
+        "g4.mod.version": {
+          "expected": "2.1.1",
+          "source": "INT-LOAD-10 (-force bypasses)",
+          "observed": "2.1.1",
+          "match": true
+        },
+        "g4.mod.dev": {
+          "expected": "0",
+          "source": "INT-LOAD-10 (-force bypasses)",
+          "observed": "0",
+          "match": true
+        },
+        "g4.hist.rows": {
+          "expected": "1",
+          "source": "INT-LOAD-17 / INT-HIST-01",
+          "observed": "1",
+          "match": true
+        },
+        "g4.hist.row1.SuccessKind": {
+          "expected": "OK",
+          "source": "INT-HIST-02/04",
+          "observed": "OK",
+          "match": true
+        },
+        "g4.hist.row1.Committed": {
+          "expected": "1",
+          "source": "INT-HIST-05",
+          "observed": "1",
+          "match": true
+        },
+        "g5.ok": {
+          "expected": "1",
+          "source": "INT-LOAD-10 qualification (d) and Q-02 provisional (-dev bypass intended)",
+          "observed": "1",
+          "match": true
+        },
+        "g5.mod.version": {
+          "expected": "3.5.0",
+          "source": "INT-LOAD-10 qualification (d) and Q-02 provisional (-dev bypass intended)",
+          "observed": "3.5.0",
+          "match": true
+        },
+        "g5.mod.dev": {
+          "expected": "1",
+          "source": "INT-LOAD-10 qualification (d) and Q-02 provisional (-dev bypass intended)",
+          "observed": "1",
+          "match": true
+        },
+        "g5.hist.rows": {
+          "expected": "1",
+          "source": "INT-LOAD-17 / INT-HIST-01",
+          "observed": "1",
+          "match": true
+        },
+        "g5.hist.row1.SuccessKind": {
+          "expected": "OK",
+          "source": "INT-HIST-02/04",
+          "observed": "OK",
+          "match": true
+        },
+        "g5.hist.row1.Committed": {
+          "expected": "1",
+          "source": "INT-HIST-05",
+          "observed": "1",
+          "match": true
+        },
+        "g6.ok": {
+          "expected": "0",
+          "source": "INT-LOAD-09 (neither -force nor -dev bypasses the downgrade refusal)",
+          "observed": "0",
+          "match": true
+        },
+        "g6.err": {
+          "expected": {
+            "re": ".*Cannot downgrade.*"
+          },
+          "source": "INT-LOAD-09 (neither -force nor -dev bypasses the downgrade refusal)",
+          "observed": "ERROR #5001: Cannot downgrade update-simple from version 3.5.0 to 1.2.1. To downgrade a module, you must first run the uninstall command. Then, run the install or load command with the desired module version.",
+          "match": true
+        },
+        "g6.mod.version": {
+          "expected": "3.5.0",
+          "source": "INT-LOAD-09 (neither -force nor -dev bypasses the downgrade refusal)",
+          "observed": "3.5.0",
+          "match": true
+        },
+        "g6.mod.dev": {
+          "expected": "1",
+          "source": "INT-LOAD-09 (neither -force nor -dev bypasses the downgrade refusal)",
+          "observed": "1",
+          "match": true
+        },
+        "g6.hist.rows": {
+          "expected": "1",
+          "source": "INT-LOAD-17 / INT-HIST-01",
+          "observed": "1",
+          "match": true
+        },
+        "g6.hist.row1.SuccessKind": {
+          "expected": "ERR",
+          "source": "INT-HIST-02/04",
+          "observed": "ERR",
+          "match": true
+        },
+        "g6.hist.row1.Committed": {
+          "expected": "0",
+          "source": "INT-HIST-05",
+          "observed": "0",
+          "match": true
+        },
+        "g7.ok": {
+          "expected": "0",
+          "source": "INT-LOAD-09",
+          "observed": "0",
+          "match": true
+        },
+        "g7.err": {
+          "expected": {
+            "re": ".*Cannot downgrade.*"
+          },
+          "source": "INT-LOAD-09",
+          "observed": "ERROR #5001: Cannot downgrade update-simple from version 3.5.0 to 1.2.1. To downgrade a module, you must first run the uninstall command. Then, run the install or load command with the desired module version.",
+          "match": true
+        },
+        "g7.mod.version": {
+          "expected": "3.5.0",
+          "source": "INT-LOAD-09",
+          "observed": "3.5.0",
+          "match": true
+        },
+        "g7.mod.dev": {
+          "expected": "1",
+          "source": "INT-LOAD-09",
+          "observed": "1",
+          "match": true
+        },
+        "g7.hist.rows": {
+          "expected": "1",
+          "source": "INT-LOAD-17 / INT-HIST-01",
+          "observed": "1",
+          "match": true
+        },
+        "g7.hist.row1.SuccessKind": {
+          "expected": "ERR",
+          "source": "INT-HIST-02/04",
+          "observed": "ERR",
+          "match": true
+        },
+        "g7.hist.row1.Committed": {
+          "expected": "0",
+          "source": "INT-HIST-05",
+          "observed": "0",
+          "match": true
+        },
+        "g8.ok": {
+          "expected": "1",
+          "source": "INT-LOAD-18; Q-01 provisional (plain load keeps the stored dev mode)",
+          "observed": "1",
+          "match": true
+        },
+        "g8.mod.version": {
+          "expected": "3.5.0",
+          "source": "INT-LOAD-18; Q-01 provisional (plain load keeps the stored dev mode)",
+          "observed": "3.5.0",
+          "match": true
+        },
+        "g8.mod.dev": {
+          "expected": "1",
+          "source": "INT-LOAD-18; Q-01 provisional (plain load keeps the stored dev mode)",
+          "observed": "1",
+          "match": true
+        },
+        "g8.hist.rows": {
+          "expected": "1",
+          "source": "INT-LOAD-17 / INT-HIST-01",
+          "observed": "1",
+          "match": true
+        },
+        "g8.hist.row1.SuccessKind": {
+          "expected": "OK",
+          "source": "INT-HIST-02/04",
+          "observed": "OK",
+          "match": true
+        },
+        "g8.hist.row1.Committed": {
+          "expected": "1",
+          "source": "INT-HIST-05",
+          "observed": "1",
+          "match": true
+        },
+        "g9.ok": {
+          "expected": "1",
+          "source": "INT-LOAD-15 (-nodev sets DeveloperMode=0)",
+          "observed": "1",
+          "match": true
+        },
+        "g9.mod.version": {
+          "expected": "3.5.0",
+          "source": "INT-LOAD-15 (-nodev sets DeveloperMode=0)",
+          "observed": "3.5.0",
+          "match": true
+        },
+        "g9.mod.dev": {
+          "expected": "0",
+          "source": "INT-LOAD-15 (-nodev sets DeveloperMode=0)",
+          "observed": "0",
+          "match": true
+        },
+        "g9.hist.rows": {
+          "expected": "1",
+          "source": "INT-LOAD-17 / INT-HIST-01",
+          "observed": "1",
+          "match": true
+        },
+        "g9.hist.row1.SuccessKind": {
+          "expected": "OK",
+          "source": "INT-HIST-02/04",
+          "observed": "OK",
+          "match": true
+        },
+        "g9.hist.row1.Committed": {
+          "expected": "1",
+          "source": "INT-HIST-05",
+          "observed": "1",
+          "match": true
+        },
+        "g10.ok": {
+          "expected": "1",
+          "source": "INT-HIST-01 uninstall",
+          "observed": "1",
+          "match": true
+        },
+        "g10.mod.exists": {
+          "expected": "0",
+          "source": "uninstall",
+          "observed": "0",
+          "match": true
+        }
+      },
+      "unexpected_observations": {
+        "g1.tlevel": "0",
+        "g1.mod.exists": "1",
+        "g1.hist.row1.ID": "31",
+        "g1.hist.row1.Action": "load",
+        "g1.hist.row1.Package": "update-simple",
+        "g1.hist.row1.Version": "1.2.1",
+        "g1.hist.row1.SuccessText": "OK",
+        "g1.hist.row1.Finalized": "1",
+        "g1.hist.row1.TimeEndSet": "1",
+        "g1.hist.row1.SourceName": "",
+        "g1.hist.row1.CommandString": "load /home/irisowner/zpm/tests/integration_tests/Test/PM/Integration/_data/update-test/update-modules-1.x/update-simple/",
+        "g1.hist.row1.Phases": "Initialize:ended:OK,Reload:ended:OK,Validate:ended:OK,Compile:ended:OK,Activate:ended:OK",
+        "g2.tlevel": "0",
+        "g2.mod.exists": "1",
+        "g2.hist.row1.ID": "32",
+        "g2.hist.row1.Action": "load",
+        "g2.hist.row1.Package": "update-simple",
+        "g2.hist.row1.Version": "1.2.1",
+        "g2.hist.row1.SuccessText": "OK",
+        "g2.hist.row1.Finalized": "1",
+        "g2.hist.row1.TimeEndSet": "1",
+        "g2.hist.row1.SourceName": "",
+        "g2.hist.row1.CommandString": "load /home/irisowner/zpm/tests/integration_tests/Test/PM/Integration/_data/update-test/update-modules-1.x/update-simple/",
+        "g2.hist.row1.Phases": "Initialize:ended:OK,Reload:ended:OK,Validate:ended:OK,Compile:ended:OK,Activate:ended:OK",
+        "g3.tlevel": "0",
+        "g3.mod.exists": "1",
+        "g3.hist.row1.ID": "33",
+        "g3.hist.row1.Action": "load",
+        "g3.hist.row1.Package": "",
+        "g3.hist.row1.Version": "0.0.0-0",
+        "g3.hist.row1.SuccessText": "ERR:ERROR #5001: Cannot perform an update of update-simple from version 1.2.1 to 2.1.1 using the 'install' or 'load' commands. Please use the 'update' command instead. If you are intentionally trying to bypass running update steps, please use the -force flag for 'install' or 'load'.",
+        "g3.hist.row1.Finalized": "1",
+        "g3.hist.row1.TimeEndSet": "1",
+        "g3.hist.row1.SourceName": "",
+        "g3.hist.row1.CommandString": "load /home/irisowner/zpm/tests/integration_tests/Test/PM/Integration/_data/update-test/update-modules-2.x/update-simple/",
+        "g3.hist.row1.Phases": "",
+        "g4.tlevel": "0",
+        "g4.mod.exists": "1",
+        "g4.hist.row1.ID": "34",
+        "g4.hist.row1.Action": "load",
+        "g4.hist.row1.Package": "update-simple",
+        "g4.hist.row1.Version": "2.1.1",
+        "g4.hist.row1.SuccessText": "OK",
+        "g4.hist.row1.Finalized": "1",
+        "g4.hist.row1.TimeEndSet": "1",
+        "g4.hist.row1.SourceName": "",
+        "g4.hist.row1.CommandString": "load -force /home/irisowner/zpm/tests/integration_tests/Test/PM/Integration/_data/update-test/update-modules-2.x/update-simple/",
+        "g4.hist.row1.Phases": "Initialize:ended:OK,Reload:ended:OK,Validate:ended:OK,Compile:ended:OK,Activate:ended:OK",
+        "g5.tlevel": "0",
+        "g5.mod.exists": "1",
+        "g5.hist.row1.ID": "35",
+        "g5.hist.row1.Action": "load",
+        "g5.hist.row1.Package": "update-simple",
+        "g5.hist.row1.Version": "3.5.0",
+        "g5.hist.row1.SuccessText": "OK",
+        "g5.hist.row1.Finalized": "1",
+        "g5.hist.row1.TimeEndSet": "1",
+        "g5.hist.row1.SourceName": "",
+        "g5.hist.row1.CommandString": "load -dev /home/irisowner/zpm/tests/integration_tests/Test/PM/Integration/_data/update-test/update-modules-3.x/update-simple/",
+        "g5.hist.row1.Phases": "Initialize:ended:OK,Reload:ended:OK,Validate:ended:OK,Compile:ended:OK,Activate:ended:OK",
+        "g6.tlevel": "0",
+        "g6.mod.exists": "1",
+        "g6.hist.row1.ID": "36",
+        "g6.hist.row1.Action": "load",
+        "g6.hist.row1.Package": "",
+        "g6.hist.row1.Version": "0.0.0-0",
+        "g6.hist.row1.SuccessText": "ERR:ERROR #5001: Cannot downgrade update-simple from version 3.5.0 to 1.2.1. To downgrade a module, you must first run the uninstall command. Then, run the install or load command with the desired module version.",
+        "g6.hist.row1.Finalized": "1",
+        "g6.hist.row1.TimeEndSet": "1",
+        "g6.hist.row1.SourceName": "",
+        "g6.hist.row1.CommandString": "load -force /home/irisowner/zpm/tests/integration_tests/Test/PM/Integration/_data/update-test/update-modules-1.x/update-simple/",
+        "g6.hist.row1.Phases": "",
+        "g7.tlevel": "0",
+        "g7.mod.exists": "1",
+        "g7.hist.row1.ID": "37",
+        "g7.hist.row1.Action": "load",
+        "g7.hist.row1.Package": "",
+        "g7.hist.row1.Version": "0.0.0-0",
+        "g7.hist.row1.SuccessText": "ERR:ERROR #5001: Cannot downgrade update-simple from version 3.5.0 to 1.2.1. To downgrade a module, you must first run the uninstall command. Then, run the install or load command with the desired module version.",
+        "g7.hist.row1.Finalized": "1",
+        "g7.hist.row1.TimeEndSet": "1",
+        "g7.hist.row1.SourceName": "",
+        "g7.hist.row1.CommandString": "load -dev /home/irisowner/zpm/tests/integration_tests/Test/PM/Integration/_data/update-test/update-modules-1.x/update-simple/",
+        "g7.hist.row1.Phases": "",
+        "g8.tlevel": "0",
+        "g8.mod.exists": "1",
+        "g8.hist.row1.ID": "38",
+        "g8.hist.row1.Action": "load",
+        "g8.hist.row1.Package": "update-simple",
+        "g8.hist.row1.Version": "3.5.0",
+        "g8.hist.row1.SuccessText": "OK",
+        "g8.hist.row1.Finalized": "1",
+        "g8.hist.row1.TimeEndSet": "1",
+        "g8.hist.row1.SourceName": "",
+        "g8.hist.row1.CommandString": "load /home/irisowner/zpm/tests/integration_tests/Test/PM/Integration/_data/update-test/update-modules-3.x/update-simple/",
+        "g8.hist.row1.Phases": "Initialize:ended:OK,Reload:ended:OK,Validate:ended:OK,Compile:ended:OK,Activate:ended:OK",
+        "g9.tlevel": "0",
+        "g9.mod.exists": "1",
+        "g9.hist.row1.ID": "39",
+        "g9.hist.row1.Action": "load",
+        "g9.hist.row1.Package": "update-simple",
+        "g9.hist.row1.Version": "3.5.0",
+        "g9.hist.row1.SuccessText": "OK",
+        "g9.hist.row1.Finalized": "1",
+        "g9.hist.row1.TimeEndSet": "1",
+        "g9.hist.row1.SourceName": "",
+        "g9.hist.row1.CommandString": "load -nodev /home/irisowner/zpm/tests/integration_tests/Test/PM/Integration/_data/update-test/update-modules-3.x/update-simple/",
+        "g9.hist.row1.Phases": "Initialize:ended:OK,Reload:ended:OK,Validate:ended:OK,Compile:ended:OK,Activate:ended:OK",
+        "g10.tlevel": "0",
+        "g10.hist.row1.ID": "40",
+        "g10.hist.row1.Action": "uninstall",
+        "g10.hist.row1.Package": "update-simple",
+        "g10.hist.row1.Version": "3.5.0",
+        "g10.hist.row1.SuccessKind": "OK",
+        "g10.hist.row1.SuccessText": "OK",
+        "g10.hist.row1.Committed": "1",
+        "g10.hist.row1.Finalized": "1",
+        "g10.hist.row1.TimeEndSet": "1",
+        "g10.hist.row1.SourceName": "",
+        "g10.hist.row1.CommandString": "uninstall update-simple",
+        "g10.hist.row1.Phases": "Clean:ended:OK",
+        "g10.hist.rows": "1"
+      }
+    }
+  },
+  "mutation_controls": [],
+  "evaluated_utc": "2026-11-13T20:12:27Z",
+  "evaluator": "native/evaluate.py",
+  "re_evaluation": "Expectations changed after this run (vacuous-pass guards); the original verdict.json is kept."
+}

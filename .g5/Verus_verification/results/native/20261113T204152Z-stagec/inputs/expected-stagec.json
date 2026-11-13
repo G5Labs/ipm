@@ -1,0 +1,542 @@
+{
+ "group": "stage C round 1 additions and phase-2 extras",
+ "written_utc": "2026-11-13T19:45:19Z",
+ "note": "Expectations from the sources cited per field (help, CHANGELOG, wiki, ontology entries, INT-*). predicted_as_built from A2 observations and ontology suspected gaps. H2 guards added before the run.",
+ "cases": {
+  "S1": {
+   "kind": "case",
+   "hypothesis": "stage C R1-ONT-04 (a)",
+   "claim": "`load <file>.tar.gz` loads the module like the same archive as .tgz.",
+   "fields": {
+    "load.ok": {
+     "expect": "1",
+     "source": "help Main.cls:280-282 (example `load ...module-0.0.1.tar.gz`); CHANGELOG #474",
+     "predicted_as_built": "0",
+     "prediction_source": "A2 OBS-L2 (extension piece after the last '.' is 'gz', so '.tar.gz' is never recognized; regression from f83b207e per R1-ONT-04)"
+    },
+    "mod.exists": {
+     "expect": "1",
+     "source": "help Main.cls:280-282 (example `load ...module-0.0.1.tar.gz`); CHANGELOG #474",
+     "predicted_as_built": "0",
+     "prediction_source": "A2 OBS-L2 (extension piece after the last '.' is 'gz', so '.tar.gz' is never recognized; regression from f83b207e per R1-ONT-04)"
+    },
+    "cls.compiled": {
+     "expect": "1",
+     "source": "help Main.cls:280-282 (example `load ...module-0.0.1.tar.gz`); CHANGELOG #474",
+     "predicted_as_built": "0",
+     "prediction_source": "A2 OBS-L2 (extension piece after the last '.' is 'gz', so '.tar.gz' is never recognized; regression from f83b207e per R1-ONT-04)"
+    },
+    "hist.rows": {
+     "expect": "1",
+     "source": "INT-LOAD-17"
+    },
+    "hist.row1.SuccessKind": {
+     "expect": "OK",
+     "source": "help Main.cls:280-282 (example `load ...module-0.0.1.tar.gz`); CHANGELOG #474",
+     "predicted_as_built": "ERR",
+     "prediction_source": "A2 OBS-L2 (extension piece after the last '.' is 'gz', so '.tar.gz' is never recognized; regression from f83b207e per R1-ONT-04)"
+    },
+    "load.err": {
+     "expect": null,
+     "source": "observation"
+    }
+   }
+  },
+  "S1N": {
+   "kind": "case",
+   "hypothesis": "stage C (a) neighbour",
+   "claim": "`load <file>.tgz` succeeds.",
+   "fields": {
+    "load.ok": {
+     "expect": "1",
+     "source": "INT-LOAD-01, -03"
+    },
+    "mod.exists": {
+     "expect": "1",
+     "source": "INT-LOAD-01"
+    },
+    "cls.compiled": {
+     "expect": "1",
+     "source": "INT-LOAD-01"
+    },
+    "hist.row1.SuccessKind": {
+     "expect": "OK",
+     "source": "INT-HIST-04"
+    },
+    "hist.row1.Committed": {
+     "expect": "1",
+     "source": "INT-HIST-05"
+    }
+   }
+  },
+  "S2": {
+   "kind": "case",
+   "hypothesis": "stage C R1-ONT-04 (b)",
+   "claim": "A module.xml with the .ZPM document and a second document, loaded with -DNoTransaction=1, is refused and keeps no module data.",
+   "fields": {
+    "load.ok": {
+     "expect": "0",
+     "source": "ontology load.refusal.manifest; wiki/09 L114-133 (malformed manifest 'rejected before any resource was touched'); ontology load.refusal no-write rule (module data)"
+    },
+    "load.err": {
+     "expect": {
+      "re": ".*multiple documents.*"
+     },
+     "source": "Utils/Module.cls:1260 message"
+    },
+    "mod.exists": {
+     "expect": "0",
+     "source": "ontology load.refusal.manifest; wiki/09 L114-133 (malformed manifest 'rejected before any resource was touched'); ontology load.refusal no-write rule (module data)",
+     "predicted_as_built": "1",
+     "prediction_source": "ontology load.refusal.manifest suspected gap / A2 commit matrix (late checks Utils/Module.cls:1255-1264 run after the manifest load; NoTransaction marks Committed at :1227)"
+    },
+    "doc.version": {
+     "expect": "<none>",
+     "source": "ontology load.refusal.manifest; wiki/09 L114-133 (malformed manifest 'rejected before any resource was touched'); ontology load.refusal no-write rule (module data)",
+     "predicted_as_built": "1.0.0",
+     "prediction_source": "ontology load.refusal.manifest suspected gap / A2 commit matrix (late checks Utils/Module.cls:1255-1264 run after the manifest load; NoTransaction marks Committed at :1227)"
+    },
+    "extra.cls.defined": {
+     "expect": "0",
+     "source": "ontology load.refusal.manifest; wiki/09 L114-133 (malformed manifest 'rejected before any resource was touched'); ontology load.refusal no-write rule (module data) (nothing from the refused manifest kept)",
+     "predicted_as_built": "1",
+     "prediction_source": "ontology load.refusal.manifest suspected gap / A2 commit matrix (late checks Utils/Module.cls:1255-1264 run after the manifest load; NoTransaction marks Committed at :1227)"
+    },
+    "cls.compiled": {
+     "expect": "0",
+     "source": "ontology load.refusal.manifest; wiki/09 L114-133 (malformed manifest 'rejected before any resource was touched'); ontology load.refusal no-write rule (module data)"
+    },
+    "hist.row1.SuccessKind": {
+     "expect": "ERR",
+     "source": "INT-HIST-02"
+    },
+    "hist.row1.Committed": {
+     "expect": "0",
+     "source": "INT-HIST-05 (nothing kept)",
+     "predicted_as_built": "1",
+     "prediction_source": "ontology load.refusal.manifest suspected gap / A2 commit matrix (late checks Utils/Module.cls:1255-1264 run after the manifest load; NoTransaction marks Committed at :1227)"
+    }
+   }
+  },
+  "S2N": {
+   "kind": "case",
+   "hypothesis": "stage C (b) neighbour",
+   "claim": "The same kind of manifest under the default transactional mode is refused and rolled back.",
+   "fields": {
+    "load.ok": {
+     "expect": "0",
+     "source": "ontology load.refusal.manifest; wiki/09 L114-133 (malformed manifest 'rejected before any resource was touched'); ontology load.refusal no-write rule (module data)"
+    },
+    "load.err": {
+     "expect": {
+      "re": ".*multiple documents.*"
+     },
+     "source": "Utils/Module.cls:1260 message"
+    },
+    "mod.exists": {
+     "expect": "0",
+     "source": "ontology load.refusal.manifest; wiki/09 L114-133 (malformed manifest 'rejected before any resource was touched'); ontology load.refusal no-write rule (module data)"
+    },
+    "extra.cls.defined": {
+     "expect": "0",
+     "source": "ontology load.refusal.manifest; wiki/09 L114-133 (malformed manifest 'rejected before any resource was touched'); ontology load.refusal no-write rule (module data)"
+    },
+    "hist.row1.Committed": {
+     "expect": "0",
+     "source": "INT-HIST-05"
+    }
+   }
+  },
+  "S2B": {
+   "kind": "case",
+   "hypothesis": "stage C R1-ONT-04 (b)",
+   "claim": "A module.xml holding only a class document, loaded with -DNoTransaction=1, is refused ('No module definition found') and keeps nothing.",
+   "fields": {
+    "load.ok": {
+     "expect": "0",
+     "source": "ontology load.refusal.manifest; wiki/09 L114-133 (malformed manifest 'rejected before any resource was touched'); ontology load.refusal no-write rule (module data)"
+    },
+    "load.err": {
+     "expect": {
+      "re": ".*No module definition found.*"
+     },
+     "source": "Utils/Module.cls:1256 message"
+    },
+    "extra.cls.defined": {
+     "expect": "0",
+     "source": "ontology load.refusal.manifest; wiki/09 L114-133 (malformed manifest 'rejected before any resource was touched'); ontology load.refusal no-write rule (module data)",
+     "predicted_as_built": "1",
+     "prediction_source": "ontology load.refusal.manifest suspected gap / A2 commit matrix (late checks Utils/Module.cls:1255-1264 run after the manifest load; NoTransaction marks Committed at :1227)"
+    },
+    "hist.row1.Committed": {
+     "expect": "0",
+     "source": "INT-HIST-05",
+     "predicted_as_built": "1",
+     "prediction_source": "ontology load.refusal.manifest suspected gap / A2 commit matrix (late checks Utils/Module.cls:1255-1264 run after the manifest load; NoTransaction marks Committed at :1227)"
+    }
+   }
+  },
+  "S3": {
+   "kind": "case",
+   "hypothesis": "stage C R1-ONT-04 (c)",
+   "claim": "`update A -path B-1.0.0.tgz -DNoTransaction=1` is refused and keeps nothing.",
+   "fields": {
+    "setup.ok": {
+     "expect": "1",
+     "source": "harness",
+     "harness": true
+    },
+    "update.ok": {
+     "expect": "0",
+     "source": "A2 OBS-L6; mismatch message Utils/Module.cls:1269-1275; ontology load.refusal no-write rule (module data)"
+    },
+    "update.err": {
+     "expect": {
+      "re": ".*does not contain a module matching.*"
+     },
+     "source": "Utils/Module.cls:1272 message"
+    },
+    "a.exists": {
+     "expect": "1",
+     "source": "A2 OBS-L6; mismatch message Utils/Module.cls:1269-1275; ontology load.refusal no-write rule (module data)"
+    },
+    "a.version": {
+     "expect": "1.0.0",
+     "source": "A2 OBS-L6; mismatch message Utils/Module.cls:1269-1275; ontology load.refusal no-write rule (module data)"
+    },
+    "b.exists": {
+     "expect": "0",
+     "source": "A2 OBS-L6; mismatch message Utils/Module.cls:1269-1275; ontology load.refusal no-write rule (module data)",
+     "predicted_as_built": "1",
+     "prediction_source": "A2 OBS-L6 (B's manifest is loaded and, without a transaction, kept; Committed set at :1227)"
+    },
+    "b.doc.version": {
+     "expect": "<none>",
+     "source": "A2 OBS-L6; mismatch message Utils/Module.cls:1269-1275; ontology load.refusal no-write rule (module data)",
+     "predicted_as_built": "1.0.0",
+     "prediction_source": "A2 OBS-L6 (B's manifest is loaded and, without a transaction, kept; Committed set at :1227)"
+    },
+    "b.cls.compiled": {
+     "expect": "0",
+     "source": "A2 OBS-L6; mismatch message Utils/Module.cls:1269-1275; ontology load.refusal no-write rule (module data)"
+    },
+    "hist.rows": {
+     "expect": "1",
+     "source": "INT-HIST-09 (update records after its own refusals)"
+    },
+    "hist.row1.Action": {
+     "expect": "update",
+     "source": "INT-HIST-01"
+    },
+    "hist.row1.SuccessKind": {
+     "expect": "ERR",
+     "source": "INT-HIST-02"
+    },
+    "hist.row1.Committed": {
+     "expect": "0",
+     "source": "INT-HIST-05",
+     "predicted_as_built": "1",
+     "prediction_source": "A2 OBS-L6 (B's manifest is loaded and, without a transaction, kept; Committed set at :1227)"
+    },
+    "b.moduleroot.dir": {
+     "expect": null,
+     "source": "observation (non-database effect, Q-04)"
+    }
+   }
+  },
+  "S3N1": {
+   "kind": "case",
+   "hypothesis": "stage C (c) neighbour",
+   "claim": "The same mismatch under the default transactional mode is refused and rolled back.",
+   "fields": {
+    "setup.ok": {
+     "expect": "1",
+     "source": "harness",
+     "harness": true
+    },
+    "update.ok": {
+     "expect": "0",
+     "source": "A2 OBS-L6; mismatch message Utils/Module.cls:1269-1275; ontology load.refusal no-write rule (module data)"
+    },
+    "a.version": {
+     "expect": "1.0.0",
+     "source": "A2 OBS-L6; mismatch message Utils/Module.cls:1269-1275; ontology load.refusal no-write rule (module data)"
+    },
+    "b.exists": {
+     "expect": "0",
+     "source": "A2 OBS-L6; mismatch message Utils/Module.cls:1269-1275; ontology load.refusal no-write rule (module data)"
+    },
+    "hist.row1.Committed": {
+     "expect": "0",
+     "source": "INT-HIST-05"
+    },
+    "b.moduleroot.dir": {
+     "expect": null,
+     "source": "observation (non-database effect, Q-04)"
+    }
+   }
+  },
+  "S3N2": {
+   "kind": "case",
+   "hypothesis": "stage C (c) neighbour",
+   "claim": "`update A -path A-2.0.0.tgz -DNoTransaction=1` updates A.",
+   "fields": {
+    "setup.ok": {
+     "expect": "1",
+     "source": "harness",
+     "harness": true
+    },
+    "update.ok": {
+     "expect": "1",
+     "source": "Main.cls:183 (-path: local tarball with the updated version)"
+    },
+    "a.version": {
+     "expect": "2.0.0",
+     "source": "Main.cls:183"
+    },
+    "hist.row1.Action": {
+     "expect": "update",
+     "source": "INT-HIST-01"
+    },
+    "hist.row1.SuccessKind": {
+     "expect": "OK",
+     "source": "INT-HIST-04"
+    },
+    "hist.row1.Committed": {
+     "expect": "1",
+     "source": "INT-HIST-05"
+    }
+   }
+  },
+  "S4": {
+   "kind": "case",
+   "hypothesis": "stage C R1-ONT-04 (d)",
+   "claim": "`load <existing relative path>` is refused.",
+   "fields": {
+    "load.ok": {
+     "expect": "0",
+     "source": "CHANGELOG 0.10.4 #706 ('load now only accepts absolute paths'); ontology load.refusal.path; INT-LOAD-02",
+     "predicted_as_built": "1",
+     "prediction_source": "ontology load.refusal.path 'Observed: an existing relative path is accepted' (Main.cls:2445-2453 refuses only a path that is neither existing, absolute nor a URL)"
+    },
+    "mod.exists": {
+     "expect": "0",
+     "source": "CHANGELOG 0.10.4 #706 ('load now only accepts absolute paths'); ontology load.refusal.path; INT-LOAD-02",
+     "predicted_as_built": "1",
+     "prediction_source": "ontology load.refusal.path 'Observed: an existing relative path is accepted' (Main.cls:2445-2453 refuses only a path that is neither existing, absolute nor a URL)"
+    },
+    "hist.rows": {
+     "expect": "1",
+     "source": "INT-LOAD-17"
+    },
+    "hist.row1.Committed": {
+     "expect": "0",
+     "source": "INT-HIST-05",
+     "predicted_as_built": "1",
+     "prediction_source": "ontology load.refusal.path 'Observed: an existing relative path is accepted' (Main.cls:2445-2453 refuses only a path that is neither existing, absolute nor a URL)"
+    },
+    "cwd": {
+     "expect": null,
+     "source": "harness: process current directory used to resolve the relative path"
+    }
+   }
+  },
+  "S4N1": {
+   "kind": "case",
+   "hypothesis": "stage C (d) neighbour",
+   "claim": "`load <nonexistent relative path>` is refused as not absolute.",
+   "fields": {
+    "load.ok": {
+     "expect": "0",
+     "source": "CHANGELOG 0.10.4 #706 ('load now only accepts absolute paths'); ontology load.refusal.path; INT-LOAD-02"
+    },
+    "load.err": {
+     "expect": {
+      "re": ".*must be absolute.*"
+     },
+     "source": "Main.cls:2452 message"
+    },
+    "hist.row1.Committed": {
+     "expect": "0",
+     "source": "INT-HIST-05"
+    }
+   }
+  },
+  "S4N2": {
+   "kind": "case",
+   "hypothesis": "stage C (d) neighbour",
+   "claim": "`load <absolute path>` succeeds.",
+   "fields": {
+    "load.ok": {
+     "expect": "1",
+     "source": "INT-LOAD-01"
+    },
+    "mod.exists": {
+     "expect": "1",
+     "source": "INT-LOAD-01"
+    }
+   }
+  },
+  "H2": {
+   "kind": "case",
+   "hypothesis": "stage C (e) / A2 OBS-H2",
+   "claim": "Namespace default modifiers set with the product's own help example do not act as `history` filters: `history find` lists records and `history delete -confirm` deletes all.",
+   "fields": {
+    "set.ok": {
+     "expect": "1",
+     "source": "harness",
+     "harness": true
+    },
+    "find.ok": {
+     "expect": "1",
+     "source": "INT-HIST-10 (filters are the history command's own -D options)"
+    },
+    "find.shown": {
+     "expect": {
+      "eq_field": "find.expected"
+     },
+     "source": "INT-HIST-10",
+     "predicted_as_built": "0",
+     "prediction_source": "A2 OBS-H2 (default modifiers are merged into data for every command and duplicated under data('zpm'), which `history` uses as its filter; the SQL error on the unknown column is unchecked by find)"
+    },
+    "delete.ok": {
+     "expect": "1",
+     "source": "INT-HIST-12 (-confirm deletes every record in the namespace)",
+     "predicted_as_built": "0",
+     "prediction_source": "A2 OBS-H2 (default modifiers are merged into data for every command and duplicated under data('zpm'), which `history` uses as its filter; the SQL error on the unknown column is unchecked by find)"
+    },
+    "delete.total.after": {
+     "expect": "0",
+     "source": "INT-HIST-12",
+     "predicted_as_built": {
+      "eq_field": "delete.total.before"
+     },
+     "prediction_source": "A2 OBS-H2 (default modifiers are merged into data for every command and duplicated under data('zpm'), which `history` uses as its filter; the SQL error on the unknown column is unchecked by find)"
+    },
+    "delete.total.restored": {
+     "expect": {
+      "eq_field": "delete.total.before"
+     },
+     "source": "harness",
+     "harness": true
+    },
+    "defaults.restored": {
+     "expect": {
+      "eq_field": "defaults.initial"
+     },
+     "source": "harness",
+     "harness": true
+    },
+    "defaults.stored": {
+     "expect": null,
+     "source": "observation"
+    },
+    "total": {
+     "expect": {
+      "re": "[1-9][0-9]*"
+     },
+     "source": "harness: an empty history makes the find check vacuous",
+     "harness": true
+    },
+    "find.expected": {
+     "expect": null,
+     "source": "SQL truth"
+    },
+    "delete.total.before": {
+     "expect": {
+      "re": "[1-9][0-9]*"
+     },
+     "source": "harness: a delete check on an empty history is vacuous",
+     "harness": true
+    }
+   }
+  },
+  "X1": {
+   "kind": "case",
+   "hypothesis": "stage C (e) / A2 OBS-X1",
+   "claim": "Default modifiers set in USER are not seen in another IPM namespace.",
+   "fields": {
+    "set.ok": {
+     "expect": "1",
+     "source": "harness",
+     "harness": true
+    },
+    "userverify.ipm.present": {
+     "expect": "1",
+     "source": "harness",
+     "harness": true
+    },
+    "userverify.sees.NoTransaction": {
+     "expect": "",
+     "source": "Main.cls default-modifiers description ('default modifiers to use for all package manager commands in the current namespace'); handler names *NamespaceDefaultModifiers",
+     "predicted_as_built": "1",
+     "prediction_source": "A2 OBS-X1, P-10 (^%IPM.DefaultModifiers is a ^% global, stored in a system database)"
+    },
+    "dest.USER": {
+     "expect": null,
+     "source": "observation"
+    },
+    "dest.USER-VERIFY": {
+     "expect": null,
+     "source": "observation"
+    },
+    "defaults.restored": {
+     "expect": null,
+     "source": "observation"
+    }
+   }
+  },
+  "H10": {
+   "kind": "case",
+   "hypothesis": "A2 OBS-H10",
+   "claim": "A record in USER-VERIFY is listed by `history find -globally` and by the documented GlobalRecords query from USER.",
+   "fields": {
+    "uv.insert.ok": {
+     "expect": "1",
+     "source": "harness",
+     "harness": true
+    },
+    "find.ok": {
+     "expect": "1",
+     "source": "INT-HIST-11"
+    },
+    "find.shown": {
+     "expect": "1",
+     "source": "INT-HIST-11 (-globally reads every namespace)"
+    },
+    "find.uv.header": {
+     "expect": "1",
+     "source": "INT-HIST-11 (grouped by namespace)"
+    },
+    "gr.sqlcode": {
+     "expect": "0",
+     "source": "INT-HIST-11 (documented API: class queries Records and GlobalRecords)"
+    },
+    "gr.rows.uv": {
+     "expect": "1",
+     "source": "INT-HIST-11",
+     "when": {
+      "field": "gr.sqlcode",
+      "expect": "0"
+     }
+    },
+    "gr.rows": {
+     "expect": null,
+     "source": "observation"
+    },
+    "find.not.enabled.lines": {
+     "expect": null,
+     "source": "observation (A2 OBS-H10: 'IPM is not enabled' unreachable)"
+    },
+    "uv.total": {
+     "expect": null,
+     "source": "SQL truth"
+    },
+    "user.total": {
+     "expect": null,
+     "source": "SQL truth"
+    }
+   }
+  }
+ }
+}

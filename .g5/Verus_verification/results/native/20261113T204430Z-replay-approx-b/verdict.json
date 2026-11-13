@@ -1,0 +1,448 @@
+{
+ "run_id": "20261113T204430Z-replay-approx-b",
+ "process_outcome": "COMPLETED",
+ "environment_flag": false,
+ "cases_json_sha256": "fc7adec492c7a55f64ecddb44798359c652fbc21beef9973e01d531f123ec8f0",
+ "cases_snapshot": "inputs/b1-cases-fc7adec4.json",
+ "run_cases_json_sha256": "fc7adec492c7a55f64ecddb44798359c652fbc21beef9973e01d531f123ec8f0",
+ "evaluated_against": "../results/native/20261113T204430Z-replay-approx-b/inputs/b1-cases-fc7adec4.json",
+ "cases_with_changed_inputs_need_rerun": [],
+ "binding_snapshot": "inputs/replay-binding.json",
+ "counts": {
+  "l2:APPROXIMATE (disagrees)": 2,
+  "l1:APPROXIMATE (permitted)": 2
+ },
+ "cases": {
+  "B1-C49K": {
+   "title": "Process killed after the final commit, before Finalize (default)",
+   "realized": "approx",
+   "binding_notes": [
+    "APPROXIMATION. No product hook runs user code between the final commit (C3) and Finalize. The JOB sets a ZBREAK (action N with execute code) on the line after C3 (`do tModule.WriteAfterInstallMessage()` in LoadNewModule) that stalls the process; the harness then ends it. The stall only changes timing, and a process end at that point is possible in production, but the injection is a debugger facility, so this case is reported as approximate and never as agreeing."
+   ],
+   "command": "load /home/irisowner/zpm/.native/fixtures/replay/r49kb/m/2.0.0/",
+   "l2_verdict": "APPROXIMATE (disagrees)",
+   "l2_disagreements": [
+    "history_temp.top.committed"
+   ],
+   "l2_missing": [],
+   "l1_verdict": "APPROXIMATE (permitted)",
+   "l1_violations": [],
+   "b1_l1_vs_l2": {
+    "conforms": true,
+    "violated_clauses": [],
+    "q_alternatives_that_change_the_verdict": [
+     "Q-08 abnormal record Committed exact: violates"
+    ]
+   },
+   "native_matches_b1_l1_judgement": true,
+   "harness_failed": [],
+   "setup_failed": [],
+   "fault_not_produced": false,
+   "exception": null,
+   "l2_fields": {
+    "end": {
+     "predicted": "process killed (no %OnClose, rollback)",
+     "observed": "process killed",
+     "result": "AGREE",
+     "binding_field": true
+    },
+    "status": {
+     "predicted": null,
+     "observed": "<none>",
+     "result": "AGREE"
+    },
+    "open_transaction_levels": {
+     "predicted": 0,
+     "observed": "0",
+     "result": "AGREE"
+    },
+    "modules.top.manifest_present": {
+     "predicted": true,
+     "observed": "1",
+     "result": "AGREE"
+    },
+    "modules.top.version": {
+     "predicted": "2.0.0",
+     "observed": "2.0.0",
+     "result": "AGREE"
+    },
+    "modules.top.developer_mode": {
+     "predicted": false,
+     "observed": "0",
+     "result": "AGREE"
+    },
+    "modules.top.resources_loaded": {
+     "predicted": true,
+     "observed": "1",
+     "result": "AGREE"
+    },
+    "modules.top.zpm_document_version": {
+     "predicted": "2.0.0",
+     "observed": "2.0.0",
+     "result": "AGREE"
+    },
+    "modules.top.writes": {
+     "predicted": 3,
+     "result": "N/A",
+     "reason": "module record write count is not observable natively"
+    },
+    "history_rows": {
+     "predicted": 1,
+     "observed": "1",
+     "result": "AGREE"
+    },
+    "history.top.row": {
+     "predicted": true,
+     "observed": "1",
+     "result": "AGREE"
+    },
+    "history.top.id_order": {
+     "predicted": 1,
+     "observed": "1",
+     "result": "AGREE"
+    },
+    "history.top.package_set": {
+     "predicted": false,
+     "observed": "0",
+     "result": "AGREE"
+    },
+    "history.top.version": {
+     "predicted": "0.0.0-0 (placeholder)",
+     "observed": "0.0.0-0",
+     "result": "AGREE"
+    },
+    "history.top.success": {
+     "predicted": "0 (in progress / never finalized)",
+     "observed": "ZERO",
+     "result": "AGREE"
+    },
+    "history.top.committed": {
+     "predicted": 0,
+     "observed": "0",
+     "result": "AGREE"
+    },
+    "history.top.time_end_set": {
+     "predicted": false,
+     "observed": "0",
+     "result": "AGREE"
+    },
+    "history.top.finalized": {
+     "predicted": false,
+     "observed": "0",
+     "result": "AGREE"
+    },
+    "history.top.phases_started": {
+     "predicted": 0,
+     "observed": "0",
+     "result": "AGREE"
+    },
+    "history.top.last_phase_status": {
+     "predicted": null,
+     "observed": "<none>",
+     "result": "AGREE"
+    },
+    "history_temp.top.row": {
+     "predicted": true,
+     "observed": "1",
+     "result": "AGREE"
+    },
+    "history_temp.top.package_set": {
+     "predicted": true,
+     "observed": "1",
+     "result": "AGREE"
+    },
+    "history_temp.top.success": {
+     "predicted": "0 (in progress / never finalized)",
+     "observed": "ZERO",
+     "result": "AGREE"
+    },
+    "history_temp.top.committed": {
+     "predicted": 0,
+     "observed": "1",
+     "result": "DISAGREE"
+    },
+    "history_temp.top.time_end_set": {
+     "predicted": false,
+     "observed": "0",
+     "result": "AGREE"
+    },
+    "history_temp.top.phases_started": {
+     "predicted": 5,
+     "observed": "5",
+     "result": "AGREE"
+    }
+   },
+   "l1_fields": {
+    "modules_one_of": {
+     "permitted": [
+      {
+       "top": "unchanged"
+      },
+      {
+       "top": {
+        "installed": "2.0.0",
+        "developer_mode": false
+       }
+      }
+     ],
+     "observed": {
+      "modules.top.manifest_present": "1",
+      "modules.top.version": "2.0.0",
+      "modules.top.developer_mode": "0",
+      "modules.top.x.last_updated": "2026-11-13 20:44:35",
+      "modules.top.resources_loaded": "1",
+      "modules.top.zpm_document_version": "2.0.0"
+     },
+     "ok": true
+    },
+    "history.top.row": {
+     "permitted": true,
+     "observed": "1",
+     "ok": true
+    },
+    "history.top.success": {
+     "permitted": "0 (in progress)",
+     "observed": "ZERO",
+     "ok": true
+    },
+    "history.top.time_end_set": {
+     "permitted": false,
+     "observed": "0",
+     "ok": true
+    }
+   },
+   "extra_observations": {
+    "binding.command": "load /home/irisowner/zpm/.native/fixtures/replay/r49kb/m/2.0.0/",
+    "binding.zbreak.location": "LoadNewModule+176^%IPM.Utils.Module.1",
+    "binding.zbreak.line": "do tModule.WriteAfterInstallMessage()",
+    "binding.invoke.tlevel": "0",
+    "inflight.modules.top.manifest_present": "1",
+    "inflight.modules.top.version": "2.0.0",
+    "inflight.modules.top.developer_mode": "0",
+    "inflight.modules.top.x.last_updated": "2026-11-13 20:44:35",
+    "inflight.modules.top.resources_loaded": "1",
+    "inflight.modules.top.zpm_document_version": "2.0.0",
+    "inflight.temp.row1.ID": "583",
+    "inflight.temp.row1.Package": "r49kb-m",
+    "inflight.temp.row1.Version": "2.0.0",
+    "inflight.temp.row1.SuccessKind": "ZERO",
+    "inflight.temp.row1.Committed": "1",
+    "inflight.temp.row1.TimeEndSet": "0",
+    "inflight.temp.row1.PersistedTwin": "287",
+    "inflight.temp.row1.Phases": "Initialize:ended:OK,Reload:ended:OK,Validate:ended:OK,Compile:ended:OK,Activate:ended:OK",
+    "inflight.temp.rows": "1",
+    "binding.end.seconds": "411",
+    "modules.top.x.last_updated": "2026-11-13 20:44:35",
+    "history.top.x.package": "",
+    "history.top.x.success_text": "ZERO",
+    "x.ids_allocated": "1",
+    "history_temp.top.x.last_phase_name": "Activate"
+   }
+  },
+  "B1-C49T": {
+   "title": "Process killed after the final commit, before Finalize (default)",
+   "realized": "approx",
+   "binding_notes": [
+    "APPROXIMATION. No product hook runs user code between the final commit (C3) and Finalize. The JOB sets a ZBREAK (action N with execute code) on the line after C3 (`do tModule.WriteAfterInstallMessage()` in LoadNewModule) that stalls the process; the harness then ends it. The stall only changes timing, and a process end at that point is possible in production, but the injection is a debugger facility, so this case is reported as approximate and never as agreeing."
+   ],
+   "command": "load /home/irisowner/zpm/.native/fixtures/replay/r49tb/m/2.0.0/",
+   "l2_verdict": "APPROXIMATE (disagrees)",
+   "l2_disagreements": [
+    "history.top.committed"
+   ],
+   "l2_missing": [],
+   "l1_verdict": "APPROXIMATE (permitted)",
+   "l1_violations": [],
+   "b1_l1_vs_l2": {
+    "conforms": true,
+    "violated_clauses": [],
+    "q_alternatives_that_change_the_verdict": [
+     "Q-08 abnormal record Committed exact: violates"
+    ]
+   },
+   "native_matches_b1_l1_judgement": true,
+   "harness_failed": [],
+   "setup_failed": [],
+   "fault_not_produced": false,
+   "exception": null,
+   "l2_fields": {
+    "end": {
+     "predicted": "process terminated (%OnClose ran, then rollback)",
+     "observed": "process terminated",
+     "result": "AGREE",
+     "binding_field": true
+    },
+    "status": {
+     "predicted": null,
+     "observed": "<none>",
+     "result": "AGREE"
+    },
+    "open_transaction_levels": {
+     "predicted": 0,
+     "observed": "0",
+     "result": "AGREE"
+    },
+    "modules.top.manifest_present": {
+     "predicted": true,
+     "observed": "1",
+     "result": "AGREE"
+    },
+    "modules.top.version": {
+     "predicted": "2.0.0",
+     "observed": "2.0.0",
+     "result": "AGREE"
+    },
+    "modules.top.developer_mode": {
+     "predicted": false,
+     "observed": "0",
+     "result": "AGREE"
+    },
+    "modules.top.resources_loaded": {
+     "predicted": true,
+     "observed": "1",
+     "result": "AGREE"
+    },
+    "modules.top.zpm_document_version": {
+     "predicted": "2.0.0",
+     "observed": "2.0.0",
+     "result": "AGREE"
+    },
+    "modules.top.writes": {
+     "predicted": 3,
+     "result": "N/A",
+     "reason": "module record write count is not observable natively"
+    },
+    "history_rows": {
+     "predicted": 1,
+     "observed": "1",
+     "result": "AGREE"
+    },
+    "history.top.row": {
+     "predicted": true,
+     "observed": "1",
+     "result": "AGREE"
+    },
+    "history.top.id_order": {
+     "predicted": 1,
+     "observed": "1",
+     "result": "AGREE"
+    },
+    "history.top.package_set": {
+     "predicted": true,
+     "observed": "1",
+     "result": "AGREE"
+    },
+    "history.top.version": {
+     "predicted": "2.0.0",
+     "observed": "2.0.0",
+     "result": "AGREE"
+    },
+    "history.top.success": {
+     "predicted": "0 (in progress / never finalized)",
+     "observed": "ZERO",
+     "result": "AGREE"
+    },
+    "history.top.committed": {
+     "predicted": 0,
+     "observed": "1",
+     "result": "DISAGREE"
+    },
+    "history.top.time_end_set": {
+     "predicted": false,
+     "observed": "0",
+     "result": "AGREE"
+    },
+    "history.top.finalized": {
+     "predicted": true,
+     "observed": "1",
+     "result": "AGREE"
+    },
+    "history.top.phases_started": {
+     "predicted": 5,
+     "observed": "5",
+     "result": "AGREE"
+    },
+    "history.top.last_phase_status": {
+     "predicted": "OK",
+     "observed": "OK",
+     "result": "AGREE"
+    },
+    "history_temp.top.row": {
+     "predicted": false,
+     "observed": "0",
+     "result": "AGREE"
+    }
+   },
+   "l1_fields": {
+    "modules_one_of": {
+     "permitted": [
+      {
+       "top": "unchanged"
+      },
+      {
+       "top": {
+        "installed": "2.0.0",
+        "developer_mode": false
+       }
+      }
+     ],
+     "observed": {
+      "modules.top.manifest_present": "1",
+      "modules.top.version": "2.0.0",
+      "modules.top.developer_mode": "0",
+      "modules.top.x.last_updated": "2026-11-13 20:44:31",
+      "modules.top.resources_loaded": "1",
+      "modules.top.zpm_document_version": "2.0.0"
+     },
+     "ok": true
+    },
+    "history.top.row": {
+     "permitted": true,
+     "observed": "1",
+     "ok": true
+    },
+    "history.top.success": {
+     "permitted": "0 (in progress)",
+     "observed": "ZERO",
+     "ok": true
+    },
+    "history.top.time_end_set": {
+     "permitted": false,
+     "observed": "0",
+     "ok": true
+    }
+   },
+   "extra_observations": {
+    "binding.command": "load /home/irisowner/zpm/.native/fixtures/replay/r49tb/m/2.0.0/",
+    "binding.zbreak.location": "LoadNewModule+176^%IPM.Utils.Module.1",
+    "binding.zbreak.line": "do tModule.WriteAfterInstallMessage()",
+    "binding.invoke.tlevel": "0",
+    "inflight.modules.top.manifest_present": "1",
+    "inflight.modules.top.version": "2.0.0",
+    "inflight.modules.top.developer_mode": "0",
+    "inflight.modules.top.x.last_updated": "2026-11-13 20:44:31",
+    "inflight.modules.top.resources_loaded": "1",
+    "inflight.modules.top.zpm_document_version": "2.0.0",
+    "inflight.temp.row1.ID": "582",
+    "inflight.temp.row1.Package": "r49tb-m",
+    "inflight.temp.row1.Version": "2.0.0",
+    "inflight.temp.row1.SuccessKind": "ZERO",
+    "inflight.temp.row1.Committed": "1",
+    "inflight.temp.row1.TimeEndSet": "0",
+    "inflight.temp.row1.PersistedTwin": "286",
+    "inflight.temp.row1.Phases": "Initialize:ended:OK,Reload:ended:OK,Validate:ended:OK,Compile:ended:OK,Activate:ended:OK",
+    "inflight.temp.rows": "1",
+    "binding.end.seconds": "0",
+    "modules.top.x.last_updated": "2026-11-13 20:44:31",
+    "history.top.x.last_phase_name": "Activate",
+    "history.top.x.package": "r49tb-m",
+    "history.top.x.success_text": "ZERO",
+    "x.ids_allocated": "1"
+   }
+  }
+ },
+ "not_realized": {},
+ "mutation_controls": [],
+ "evaluated_utc": "2026-11-13T20:51:37Z",
+ "evaluator": "native/evaluate_replay.py"
+}

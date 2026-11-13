@@ -1,0 +1,90 @@
+{
+  "run_id": "20261113T184623Z-repro-history-delete-underscore",
+  "label": "repro-history-delete-underscore",
+  "process_outcome": "COMPLETED",
+  "environment_flags": [],
+  "duplicate_observations": [],
+  "expected_files": [
+    {
+      "path": "../../../native/cases/expected-repro.json",
+      "sha256": "7d6be780c19c5355259883c64e70a86dc00bb88f660888c129e8e77f15833df0",
+      "mtime_utc": "2026-11-13T20:12:19Z",
+      "evaluated_from": "../../../native/cases/expected-repro.json",
+      "written_before_run": false,
+      "note": "re-evaluation against the current expectations file (--use-current); the run's own snapshot is in inputs/",
+      "snapshot_sha256": "875b9f71246632c8658cac26f21dda76ef98b64fb8563ddacb46ffed9d2f4b59",
+      "expectations_changed_after_run": true,
+      "group": "repro"
+    }
+  ],
+  "substantive_verdict": "EVALUATED",
+  "case_verdict_counts": {
+    "DEVIATES": 1
+  },
+  "cases": {
+    "X3": {
+      "kind": "case",
+      "claim": "repro: history delete -DVersion_Major=99 without -confirm deletes only matching rows (deletes the whole namespace history).",
+      "hypothesis": null,
+      "maps_to": null,
+      "verdict": "DEVIATES",
+      "mismatched_fields": [
+        "total.after"
+      ],
+      "missing_fields": [],
+      "harness_failed_fields": [],
+      "case_markers_complete": true,
+      "fields": {
+        "delete.ok": {
+          "expected": "1",
+          "source": "INT-HIST-12",
+          "observed": "1",
+          "match": true
+        },
+        "total.after": {
+          "expected": {
+            "eq_field": "total.before"
+          },
+          "source": "INT-HIST-10/-12, Q-10 provisional (no row has Version_Major=99)",
+          "observed": "0",
+          "match": false,
+          "predicted_as_built": "0",
+          "prediction_source": "case E4",
+          "matches_prediction": true
+        },
+        "truth": {
+          "expected": "0",
+          "source": "harness",
+          "observed": "0",
+          "match": true
+        },
+        "total.before": {
+          "expected": {
+            "re": "[1-9][0-9]*"
+          },
+          "source": "harness: a delete check on an empty history is vacuous",
+          "observed": "81",
+          "match": true
+        },
+        "total.restored": {
+          "expected": {
+            "eq_field": "total.before"
+          },
+          "source": "harness",
+          "observed": "81",
+          "match": true
+        }
+      },
+      "unexpected_observations": {},
+      "as_built_prediction": {
+        "fields": 1,
+        "matched": 1,
+        "verdict": "CONFIRMED"
+      }
+    }
+  },
+  "mutation_controls": [],
+  "evaluated_utc": "2026-11-13T20:12:27Z",
+  "evaluator": "native/evaluate.py",
+  "re_evaluation": "Expectations changed after this run (vacuous-pass guards); the original verdict.json is kept."
+}

@@ -15,6 +15,7 @@ Field expectations (in EXPECTED.json, cases.<id>.fields.<field>):
   "expect": ["a", "b"]          any of
   "expect": {"re": "..."}       regular expression (fullmatch)
   "expect": {"eq_field": "f"}   equal to another observed field of the same case
+  "expect": {"lt_field": "f"}   integer less than another observed field (used to guard against vacuous passes)
   "expect": null               observation only (no claim)
   "when": {"field": "f", "expect": ...}  apply only when another observed field satisfies the expectation
   "predicted_as_built": ...     optional code-read prediction (same forms), compared separately
@@ -79,6 +80,12 @@ def check(spec, observed, case_obs):
         if "ne_field" in spec:
             other = case_obs.get(spec["ne_field"])
             return other is not None and other != observed
+        if "lt_field" in spec:
+            other = case_obs.get(spec["lt_field"])
+            try:
+                return other is not None and int(observed) < int(other)
+            except ValueError:
+                return False
         raise ValueError(f"unknown expectation form {spec}")
     return observed == str(spec)
 
@@ -146,6 +153,8 @@ def file_meta(path):
 def main(argv):
     args = list(argv)
     mutations, index_concern, expect_summary = [], None, None
+    use_current = "--use-current" in args
+    args = [a for a in args if a != "--use-current"]
     pos = []
     i = 0
     while i < len(args):
@@ -171,7 +180,7 @@ def main(argv):
         snap = os.path.join(run_dir, "inputs", os.path.basename(p))
         sha, mtime = file_meta(p)
         meta = {"path": os.path.relpath(p, run_dir), "sha256": sha, "mtime_utc": mtime.strftime("%Y-%m-%dT%H:%M:%SZ")}
-        if os.path.isfile(snap):
+        if os.path.isfile(snap) and not use_current:
             # The runner copied this file before the session started: evaluate against that copy.
             ssha, _ = file_meta(snap)
             meta.update({"evaluated_from": os.path.relpath(snap, run_dir), "snapshot_sha256": ssha,
@@ -180,6 +189,11 @@ def main(argv):
         else:
             meta.update({"evaluated_from": meta["path"], "written_before_run": mtime < started,
                          "note": "no snapshot in this run; written_before_run compares the current file's mtime"})
+            if os.path.isfile(snap):
+                ssha, _ = file_meta(snap)
+                meta.update({"snapshot_sha256": ssha, "expectations_changed_after_run": ssha != sha,
+                             "note": "re-evaluation against the current expectations file (--use-current); "
+                                     "the run's own snapshot is in inputs/"})
             spec = json.load(open(p))
         meta["group"] = spec.get("group")
         exp_meta.append(meta)
@@ -238,7 +252,11 @@ def main(argv):
         "evaluated_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "evaluator": "native/evaluate.py",
     }
-    with open(os.path.join(run_dir, "verdict.json"), "w") as fh:
+    vname = "verdict.json"
+    if use_current:
+        vname = "verdict-reeval-" + "-".join(e["sha256"][:8] for e in exp_meta) + ".json"
+        verdict["re_evaluation"] = "Expectations changed after this run (vacuous-pass guards); the original verdict.json is kept."
+    with open(os.path.join(run_dir, vname), "w") as fh:
         json.dump(verdict, fh, indent=2)
     if index_concern:
         idx = os.path.join(run_dir, "..", "..", "index.jsonl")

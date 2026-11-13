@@ -1,0 +1,185 @@
+{
+  "run_id": "20261113T204146Z-premise-p19",
+  "label": "premise-p19",
+  "process_outcome": "COMPLETED",
+  "environment_flags": [],
+  "duplicate_observations": [],
+  "expected_files": [
+    {
+      "path": "../../../native/cases/expected-premises-3.json",
+      "sha256": "c24aab9df9c2bc2e3be8c0c7b099f405bac969e6c5cf471e467d538670d69a77",
+      "mtime_utc": "2026-11-13T19:52:09Z",
+      "evaluated_from": "inputs/expected-premises-3.json",
+      "snapshot_sha256": "c24aab9df9c2bc2e3be8c0c7b099f405bac969e6c5cf471e467d538670d69a77",
+      "snapshot_matches_current": true,
+      "written_before_run": true,
+      "group": "premises-3"
+    }
+  ],
+  "substantive_verdict": "EVALUATED",
+  "case_verdict_counts": {
+    "CONFIRMED": 1
+  },
+  "cases": {
+    "N-P19": {
+      "kind": "premise",
+      "claim": "At a terminate-like end, live objects close innermost frame first: the dependency's log, then the top load's JournalManager, then the top log (B1 P-06c).",
+      "hypothesis": null,
+      "maps_to": [
+        "B1 P-06c"
+      ],
+      "verdict": "CONFIRMED",
+      "mismatched_fields": [],
+      "missing_fields": [],
+      "harness_failed_fields": [],
+      "case_markers_complete": true,
+      "fields": {
+        "harness.signal": {
+          "expected": "1",
+          "source": "harness",
+          "observed": "1",
+          "match": true
+        },
+        "harness.gone": {
+          "expected": "1",
+          "source": "harness",
+          "observed": "1",
+          "match": true
+        },
+        "harness.end.rc": {
+          "expected": "1",
+          "source": "harness",
+          "observed": "1",
+          "match": true
+        },
+        "binding.invoke.tlevel": {
+          "expected": "1",
+          "source": "harness: only the caller's level is open (NoJournal starts no transaction)",
+          "observed": "1",
+          "match": true
+        },
+        "history.dep1.row": {
+          "expected": "1",
+          "source": "P-03 / N-P07 (twin insert made with journaling disabled is not undone)",
+          "observed": "1",
+          "match": true
+        },
+        "history.dep1.finalized": {
+          "expected": "1",
+          "source": "P-06c (dependency log closes while journaling is still disabled)",
+          "observed": "1",
+          "match": true
+        },
+        "history.top.row": {
+          "expected": "0",
+          "source": "P-01, P-05 (top Init insert was journaled inside the caller transaction and is rolled back)",
+          "observed": "0",
+          "match": true
+        },
+        "modules.top.manifest_present": {
+          "expected": null,
+          "source": "observation (P-03: unjournaled write)",
+          "observed": "1",
+          "match": null
+        },
+        "modules.dep1.manifest_present": {
+          "expected": null,
+          "source": "observation (P-03: unjournaled write)",
+          "observed": "1",
+          "match": null
+        },
+        "history.dep1.success": {
+          "expected": null,
+          "source": "observation",
+          "observed": "ZERO",
+          "match": null
+        },
+        "history_temp.dep1.row": {
+          "expected": null,
+          "source": "observation",
+          "observed": "0",
+          "match": null
+        }
+      },
+      "unexpected_observations": {
+        "before.modules.top.manifest_present": "0",
+        "before.modules.top.resources_loaded": "0",
+        "before.modules.top.zpm_document_version": "<none>",
+        "before.modules.dep1.manifest_present": "0",
+        "before.modules.dep1.resources_loaded": "0",
+        "before.modules.dep1.zpm_document_version": "<none>",
+        "binding.command": "load /home/irisowner/zpm/.native/fixtures/premise/p19/m/2.0.0/ -DNoJournal=1",
+        "inflight.modules.top.manifest_present": "1",
+        "inflight.modules.top.version": "2.0.0",
+        "inflight.modules.top.developer_mode": "0",
+        "inflight.modules.top.x.last_updated": "2026-11-13 20:41:48",
+        "inflight.modules.top.resources_loaded": "0",
+        "inflight.modules.top.zpm_document_version": "2.0.0",
+        "inflight.modules.dep1.manifest_present": "1",
+        "inflight.modules.dep1.version": "1.0.0",
+        "inflight.modules.dep1.developer_mode": "0",
+        "inflight.modules.dep1.x.last_updated": "2026-11-13 20:41:48",
+        "inflight.modules.dep1.resources_loaded": "1",
+        "inflight.modules.dep1.zpm_document_version": "1.0.0",
+        "inflight.temp.row1.ID": "561",
+        "inflight.temp.row1.Package": "p19-m",
+        "inflight.temp.row1.Version": "2.0.0",
+        "inflight.temp.row1.SuccessKind": "ZERO",
+        "inflight.temp.row1.Committed": "1",
+        "inflight.temp.row1.TimeEndSet": "0",
+        "inflight.temp.row1.PersistedTwin": "265",
+        "inflight.temp.row1.Phases": "",
+        "inflight.temp.row2.ID": "562",
+        "inflight.temp.row2.Package": "p19-d1",
+        "inflight.temp.row2.Version": "1.0.0",
+        "inflight.temp.row2.SuccessKind": "ZERO",
+        "inflight.temp.row2.Committed": "1",
+        "inflight.temp.row2.TimeEndSet": "0",
+        "inflight.temp.row2.PersistedTwin": "266",
+        "inflight.temp.row2.Phases": "Initialize:ended:OK,Reload:ended:OK,Validate:ended:OK,Compile:ended:OK,Activate:open:ZERO",
+        "inflight.temp.rows": "2",
+        "binding.end.seconds": "0",
+        "status": "<none>",
+        "end": "process terminated",
+        "open_transaction_levels": "0",
+        "harness.job.sc.recorded": "0",
+        "modules.top.version": "2.0.0",
+        "modules.top.developer_mode": "0",
+        "modules.top.x.last_updated": "2026-11-13 20:41:48",
+        "modules.top.resources_loaded": "0",
+        "modules.top.zpm_document_version": "2.0.0",
+        "modules.dep1.version": "1.0.0",
+        "modules.dep1.developer_mode": "0",
+        "modules.dep1.x.last_updated": "2026-11-13 20:41:48",
+        "modules.dep1.resources_loaded": "1",
+        "modules.dep1.zpm_document_version": "1.0.0",
+        "history.dep1.id_order": "2",
+        "history.dep1.package_set": "1",
+        "history.dep1.version": "1.0.0",
+        "history.dep1.committed": "1",
+        "history.dep1.time_end_set": "0",
+        "history.dep1.phases_started": "5",
+        "history.dep1.last_phase_status": "OPEN",
+        "history.dep1.x.last_phase_name": "Activate",
+        "history.dep1.x.package": "p19-d1",
+        "history.dep1.x.success_text": "ZERO",
+        "history_rows": "1",
+        "x.ids_allocated": "2",
+        "history_temp.top.row": "0"
+      }
+    }
+  },
+  "mutation_controls": [
+    {
+      "mutation": "N-P19:history.dep1.finalized=0",
+      "original_observed": "1",
+      "verdict_before": "CONFIRMED",
+      "verdict_after": "REFUTED",
+      "field_match_before": true,
+      "field_match_after": false,
+      "detected": true
+    }
+  ],
+  "evaluated_utc": "2026-11-13T20:42:26Z",
+  "evaluator": "native/evaluate.py"
+}

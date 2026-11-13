@@ -111,13 +111,21 @@ Runs: `20261113T182820Z-cases-b`, replay, repro `20261113T184630Z-repro-sysreq-d
 
 A JOB runs `Shell("load …")`. The fixture's Activate Invoke signals through IRISTEMP and waits. Fixtures: `b2-hang-*`.
 
-| Case | How the load ends | Expected (source) | Observed | Verdict |
+Revised after stage C round 1 (R1-ONT-02, R1-MOD-03, R1-MOD-11, R1-MOD-13). The expectations now read as follows:
+- A placeholder version is permitted, not required.
+- `Committed` reflects kept changes, even on an unfinished record (provisional; the Q stays open with "unknown outcome" as the alternative).
+- A record of an action that never ended is not finalized (new Q under `history.locked`, provisional "no").
+- An unended record lists the phases it started and the package once named (`history.record` (I), `history.fields`; defect D10).
+
+The revised verdicts come from re-evaluating the same runs with the current `expected-cases.json` (`verdict-reeval-*.json` in each run). The original `verdict.json` files are kept. C3 and C4R are superseded by the B1 K-variant replay B1-C44K and B1-C46K (`20261113T194155Z-replay-sigkill-b`, see `native-replay.md`), whose expectations were snapshotted before the run.
+
+| Case | How the load ends | Expected (source) | Observed | Verdict (revised) |
 |---|---|---|---|---|
 | C0 neighbour | released, completes in the JOB | installed, record OK, committed, finalized | as expected | CONFORMS |
-| C1 | non-dev, `$SYSTEM.Process.Terminate` while in Activate (`$TLEVEL=1`) | module and classes rolled back; record with empty end, version `0.0.0-0`, Success 0, Committed 0, unfinalized (INT-HIST-03, 3.4) | as expected. `%OnClose` ran before IRIS rolled the transaction back. Its twin update was undone with the transaction, but the IRISTEMP row deletion was not, so the only copy of the real values (package `b2-hang-nd`, version, four completed phases, seen in flight) was destroyed. Durable row: `Package=""`, no phases. No orphan temp row | CONFORMS |
-| C2 | dev, Terminate while in Activate (`$TLEVEL=0`, after both commits) | manifest and classes kept (2.3); record with empty end, placeholder version, Success 0, unfinalized (INT-HIST-03, 3.4); Committed=1 (INT-HIST-05) | manifest and classes kept; record **finalized** by `%OnClose` with `Package=b2-hang-dev`, version 1.0.0, Success 0, Committed=1, no end time, Activate phase open | DEVIATES on Version and Finalized |
-| C3 | non-dev, SIGKILL in Activate | as C1 | as C1, except no `%OnClose`: the IRISTEMP row with the real values was orphaned (removed by the harness after recording) | CONFORMS |
-| C4 / C4R | dev, SIGKILL in Activate | as C2 | module and classes kept; durable row keeps Init values: `Package=""`, `0.0.0-0`, Success 0, **Committed=0**, unfinalized, no phases; orphan IRISTEMP row with Committed=1 | C4 INCOMPLETE (slot not cleared within 400 s); C4R (after cleanup) DEVIATES on Committed, as A2 OBS-H6 predicted |
+| C1 | non-dev, `$SYSTEM.Process.Terminate` while in Activate (`$TLEVEL=1`) | module and classes rolled back. Record: empty end, Success 0, Committed 0, unfinalized, the four ended phases plus open Activate, `Package=b2-hang-nd`; version may be the placeholder | rolled back. `%OnClose` ran before IRIS rolled the transaction back: its twin update was undone, but the IRISTEMP row deletion was not, so the only copy of the package and phases (seen in flight) was destroyed. Durable row: `Package=""`, no phases, unfinalized, no orphan temp row | DEVIATES on Phases and Package (D10). Originally CONFORMS |
+| C2 | dev, Terminate while in Activate (`$TLEVEL=0`, after both commits) | manifest and classes kept; record with empty end, Success 0, Committed=1, unfinalized, started phases, package | manifest and classes kept; record **finalized** by `%OnClose` with `Package=b2-hang-dev`, version 1.0.0, Success 0, Committed=1, no end time, Activate phase open | DEVIATES on Finalized only (new `history.locked` Q, provisional). The real version is permitted. Originally "Version and Finalized" |
+| C3 | non-dev, SIGKILL in Activate | as C1 | as C1, except no `%OnClose`: the IRISTEMP row with the real values was orphaned (removed by the harness after recording) | DEVIATES on Phases and Package (D10). Superseded by B1-C44K |
+| C4 / C4R | dev, SIGKILL in Activate | as C2 | module and classes kept; durable row keeps Init values: `Package=""`, `0.0.0-0`, Success 0, **Committed=0**, unfinalized, no phases; orphan IRISTEMP row with Committed=1 | C4 INCOMPLETE (slot not cleared within 400 s). C4R DEVIATES on Committed (Q, provisional "reflects kept changes"), Phases and Package (D10). Superseded by B1-C46K |
 
 Runs: `20261113T182903Z-cases-c-terminate`, `20261113T182927Z-cases-c-sigkill`, `20261113T183827Z-cases-c4r`, replay (C0-C2). Readers: `history details` shows C1 as `Version: <unset>`, `Success: 0`, `Uncommitted`, empty end (R1, CONFORMS). It shows C2 as `Committed`, `Success: 0`, and the open Activate phase with status text `ERROR #00: (no error description)` (R2, CONFORMS to the expectations set; the status text is a reader defect, D8).
 
@@ -207,16 +215,17 @@ Each defect contradicts a class (a) commitment, the violating path is reached th
 | D5 | `config delete HistoryRetain` restores the first value ever set instead of the default 0, so retention can stay enabled after a user deletes the setting | `config delete` → `ResetToDefault` reads `^IPM.settings(key,"default")` (UniversalSettings.cls:101), which `SetValue` seeds with the first value set (:178-179). `HistoryRetain` has no install-time default | INT-HIST-13 ("0, the default, disables it") | `repro/config-delete-retain.cos`; also seen after the product's own `TestAutoPurgeOldHistory` |
 | D6 | An Invoke bound to the Activate phase that returns an error leaves the Activate phase open (no end, status 0) in a finalized error record. The reader then shows a phase that "never finished" | `Storage/Module.cls:669-671` `quit:$$$ISERR(tSC)` leaves the try block, and `$$$ThrowOnError` (:704) bypasses both `FinalizePhase` calls (:695, :710) | wiki/09 L135-161 reading of an open phase (Q-14 provisional) | `repro/activate-invoke-phase-open.cos`. Invokes on the default Configure phase finalize Activate correctly (A1, A5) |
 
-Further reader defects with no governing source beyond usability:
-- D7: `history details` prints the raw `%Status` value (binary list with an internal stack) as `Success` (History.cls:478-480, R3).
-- D8: an open phase is displayed as `ERROR #00: (no error description)` (History.cls:420 applies `GetErrorText` to the placeholder 0, R2).
+Further reader observations:
+- D7 (withdrawn, stage C round 1, R1-ONT-13): `history details` prints the raw `%Status` value (binary list with an internal stack) as `Success` (History.cls:478-480, R3). wiki/09 L133 documents this on purpose: "The `details` view prints the raw `%Status`, not the formatted error text, so the ObjectScript stack is visible." Not a defect.
+- D8: an open phase is displayed as `ERROR #00: (no error description)` (History.cls:420 applies `GetErrorText` to the placeholder 0, R2). No governing source beyond usability.
+- D9 (stage C round 1, R1-ONT-03): a load refused after its manifest was parsed (downgrade, update required) records an empty `Package` and the placeholder version (g3, g6, g7; R3, R4). wiki/09 L69 allows an empty `Package` only "if the action failed before a name was known", and the refusal message names the module (`Utils/Module.cls:1215`, `:1220`). The evidence is in section 4.7.
 
 ## 6. Deviations governed by open questions (not claimed as defects)
 
 - D1-like loss under a caller transaction (Q-05, case D1, `repro/caller-tx-history-lost.cos`): the twin insert and persist join the caller's transaction, so a caller rollback erases the record even though the in-flight row read Committed=1 and Finalized=1. This contradicts INT-LOAD-17 "Every load produces a history record". Q-05 provisionally limits `Committed` exactness to `$tlevel=0` and does not decide record survival.
-- C4R (Q-08): after a SIGKILL of a dev load, the module and classes remain and the durable record reads Committed=0. This contradicts the INT-HIST-05 definition. It is consistent with the Q-08 provisional rule that readers must not trust Committed on rows with an empty end time.
-- C2: `$SYSTEM.Process.Terminate` of a dev load finalizes the record through `%OnClose` with the real package and version, Success 0, Committed=1 and no end. It deviates from INT-HIST-03 "placeholder version" and from intent 3.4 "unfinalized, editable". It carries more information than the documented form. Whether a record with Success 0 may be finalized (and so locked against correction) is unspecified.
-- C1 (Terminate, non-dev): the record conforms to INT-HIST-03 only because `%OnClose` ran before the rollback and the IRISTEMP row with the real values was deleted. The durable row cannot be attributed to a module (`Package=""`) except through `CommandString`.
+- C4R (Q-08 as revised by R1-ONT-02): after a SIGKILL of a dev load, the module and classes remain and the durable record reads Committed=0. The provisional answer is now "Committed reflects kept changes, even on an unfinished record" (#1237, wiki/09 L215-219), so this deviates from the provisional answer. The Q stays open with "unknown outcome" as the alternative. Its missing phases and package are not a Q matter. They violate `history.record` (I) and are defect D10.
+- C2: `$SYSTEM.Process.Terminate` of a dev load finalizes the record through `%OnClose` with the real package and version, Success 0, Committed=1 and no end. The real version is permitted (R1-ONT-02: the placeholder is permitted, not required). Finalizing a record of an action that never ended deviates from the new `history.locked` Q, whose provisional answer is "no".
+- C1 (Terminate, non-dev): `%OnClose` ran before the rollback, and the IRISTEMP row with the real values was deleted. The durable row therefore has neither the package nor the started phases (D10, as for C3 and C4R).
 
 ## 7. Refuted hypotheses and corrected premises
 
@@ -239,10 +248,13 @@ Further reader defects with no governing source beyond usability:
 - `expected-premises.json` carries `"written_utc": "2026-11-13T18:20:00Z"`, which is a wrong hand-entered value. Its file mtime, 18:10:53Z, precedes the premises run at 18:11:29Z, and the evaluator uses the mtime.
 - The verdicts of the first case runs (`…182759Z` to `…182927Z`, `…183827Z`) report `written_before_run=false`. `expected-cases.json` was appended after them, only to add C4R, the replay Reset, H1 and R1-R4, which moved its mtime. The runner snapshot was added at that point. `20261113T184230Z-replay-fast` re-ran A0-A5, B0-B4, C0-C2, D0, D1, E*, F0, F1 and G with the snapshot and reproduced every per-case verdict. `…cases-hr` and the repro runs also carry snapshots. The first evaluation outputs of those runs were overwritten during re-evaluation with corrected mutation controls.
 - Product conclusions D4 and the section 6 items depend on decisions still open (Q-17, Q-05, Q-08).
+- Re-evaluations after expectation changes do not overwrite `verdict.json`. They are written beside it as `verdict-reeval-<sha8>.json` (evaluate.py `--use-current`) or `verdict-cases-<sha8>.json` (evaluate_replay.py `--cases`), and each has an `index.jsonl` line. This applies to the vacuous-pass guards (E0-E8, R4, D1, repro X2/X3), the process-end revision (C1-C4R) and the stage-C S4 guard.
 
 ## 9. Handoff
 
 Active runs: none. Container `ipm-verus-uplift-iris` and `ipm-verus-uplift-oras` are running. Journals were purged at the end (842 MB container layer). USER holds the B2 helper classes, fixture modules listed in `20261113T184655Z-env-pins` and 86 history rows. IRISTEMP holds no HistoryTemp rows.
+
+Phase 2 (replay of B1 `cases.json`, premise mapping, stage-C additions): see `native-replay.md`.
 
 Remaining obligations:
 1. Map N-P01..N-P18 to B1 P-nn once `VV/premises.md` exists.

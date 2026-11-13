@@ -1,0 +1,25 @@
+{
+  "group": "premises-3",
+  "written_utc": "2026-11-13T19:52:09Z",
+  "note": "N-P19 probes B1 premise P-06c (close order at a terminate-like end). Setup: JOB with a caller transaction, 'load m -DNoJournal=1' where m depends on d1, d1's Activate stalls, then $SYSTEM.Process.Terminate. d1's twin insert and any persist made while journaling is disabled cannot be rolled back (P-03, N-P07). If live objects close innermost first (P-06c), d1's log persists before the top JournalManager re-enables journaling, so d1's row survives finalized. If the top JournalManager closed first, the persist would be journaled and rolled back, leaving d1's row unfinalized.",
+  "cases": {
+    "N-P19": {
+      "kind": "premise",
+      "claim": "At a terminate-like end, live objects close innermost frame first: the dependency's log, then the top load's JournalManager, then the top log (B1 P-06c).",
+      "maps_to": ["B1 P-06c"],
+      "fields": {
+        "harness.signal": {"expect": "1", "source": "harness", "harness": true},
+        "harness.gone": {"expect": "1", "source": "harness", "harness": true},
+        "harness.end.rc": {"expect": "1", "source": "harness", "harness": true},
+        "binding.invoke.tlevel": {"expect": "1", "source": "harness: only the caller's level is open (NoJournal starts no transaction)", "harness": true},
+        "history.dep1.row": {"expect": "1", "source": "P-03 / N-P07 (twin insert made with journaling disabled is not undone)"},
+        "history.dep1.finalized": {"expect": "1", "source": "P-06c (dependency log closes while journaling is still disabled)"},
+        "history.top.row": {"expect": "0", "source": "P-01, P-05 (top Init insert was journaled inside the caller transaction and is rolled back)"},
+        "modules.top.manifest_present": {"expect": null, "source": "observation (P-03: unjournaled write)"},
+        "modules.dep1.manifest_present": {"expect": null, "source": "observation (P-03: unjournaled write)"},
+        "history.dep1.success": {"expect": null, "source": "observation"},
+        "history_temp.dep1.row": {"expect": null, "source": "observation"}
+      }
+    }
+  }
+}

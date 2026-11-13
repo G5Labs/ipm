@@ -1,0 +1,8 @@
+write !,"CASE-BEGIN TR",!
+set rs = ##class(%SQL.Statement).%ExecDirect(,"SELECT Name, Root, OverriddenSortOrder FROM %IPM_Repo_Filesystem.Definition WHERE Name %STARTSWITH 'ipm-temp-modules-' ORDER BY Name") set n=0 while rs.%Next() { set n=n+1 write !,"OBS TR repo",n,"=",rs.Name," root=",rs.Root," sort=",rs.OverriddenSortOrder,! }
+write !,"OBS TR leftover.count=",n,!
+set rs = ##class(%SQL.Statement).%ExecDirect(,"SELECT Name FROM %IPM_Repo_Filesystem.Definition WHERE Name %STARTSWITH 'ipm-temp-modules-'") while rs.%Next() { set sc = ##class(%IPM.Main).Shell("repo -delete -n "_rs.Name) write !,"OBS TR delete.",rs.Name,"=",$system.Status.IsOK(sc),! }
+set rs = ##class(%SQL.Statement).%ExecDirect(,"SELECT COUNT(*) AS c FROM %IPM_Repo_Filesystem.Definition WHERE Name %STARTSWITH 'ipm-temp-modules-'") do rs.%Next() write !,"OBS TR remaining=",rs.c,!
+write !,"CASE-END TR",!
+write !,"NATIVE-END",!
+halt

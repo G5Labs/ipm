@@ -1,0 +1,78 @@
+{
+  "run_id": "20261113T184621Z-repro-history-filter-widened",
+  "label": "repro-history-filter-widened",
+  "process_outcome": "COMPLETED",
+  "environment_flags": [],
+  "duplicate_observations": [],
+  "expected_files": [
+    {
+      "path": "../../../native/cases/expected-repro.json",
+      "sha256": "7d6be780c19c5355259883c64e70a86dc00bb88f660888c129e8e77f15833df0",
+      "mtime_utc": "2026-11-13T20:12:19Z",
+      "evaluated_from": "../../../native/cases/expected-repro.json",
+      "written_before_run": false,
+      "note": "re-evaluation against the current expectations file (--use-current); the run's own snapshot is in inputs/",
+      "snapshot_sha256": "875b9f71246632c8658cac26f21dda76ef98b64fb8563ddacb46ffed9d2f4b59",
+      "expectations_changed_after_run": true,
+      "group": "repro"
+    }
+  ],
+  "substantive_verdict": "EVALUATED",
+  "case_verdict_counts": {
+    "DEVIATES": 1
+  },
+  "cases": {
+    "X2": {
+      "kind": "case",
+      "claim": "repro: GetHistory with filter Version_Major=1 returns only matching rows (filter silently dropped).",
+      "hypothesis": null,
+      "maps_to": null,
+      "verdict": "DEVIATES",
+      "mismatched_fields": [
+        "returned"
+      ],
+      "missing_fields": [],
+      "harness_failed_fields": [],
+      "case_markers_complete": true,
+      "fields": {
+        "returned": {
+          "expected": {
+            "eq_field": "truth"
+          },
+          "source": "INT-HIST-10; wiki/09 L112",
+          "observed": "81",
+          "match": false,
+          "predicted_as_built": {
+            "eq_field": "total"
+          },
+          "prediction_source": "case E1",
+          "matches_prediction": true
+        },
+        "truth": {
+          "expected": {
+            "lt_field": "total"
+          },
+          "source": "harness: at least one row must lie outside the filter, or a dropped filter is invisible",
+          "observed": "59",
+          "match": true
+        },
+        "total": {
+          "expected": null,
+          "source": "SQL truth",
+          "observed": "81",
+          "match": null
+        }
+      },
+      "unexpected_observations": {},
+      "as_built_prediction": {
+        "fields": 1,
+        "matched": 1,
+        "verdict": "CONFIRMED"
+      }
+    }
+  },
+  "mutation_controls": [],
+  "evaluated_utc": "2026-11-13T20:12:27Z",
+  "evaluator": "native/evaluate.py",
+  "re_evaluation": "Expectations changed after this run (vacuous-pass guards); the original verdict.json is kept."
+}

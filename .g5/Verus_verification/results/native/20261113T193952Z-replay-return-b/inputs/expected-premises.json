@@ -1,0 +1,199 @@
+{
+  "group": "premises",
+  "written_utc": "2026-11-13T18:20:00Z",
+  "note": "Expected values come from the claim under test (IRIS semantics the IPM design relies on, as stated in A2 operation-inventory section 0 and the IPM class docs), not from observing IRIS. A null expect is an observation without a claim.",
+  "cases": {
+    "N-P01": {
+      "kind": "premise",
+      "claim": "A full TROLLBACK reverts a journaled global set at $TLEVEL=1 in the namespace database.",
+      "maps_to": ["A2 P-4"],
+      "fields": {
+        "inside.data": {"expect": "1", "source": "IRIS: a process reads its own uncommitted sets"},
+        "after.data": {"expect": "0", "source": "IRIS TROLLBACK semantics; A2 P-4"},
+        "after.tlevel": {"expect": "0", "source": "IRIS TROLLBACK semantics"}
+      }
+    },
+    "N-P02": {
+      "kind": "premise",
+      "claim": "TROLLBACK 1 at $TLEVEL=2 undoes only the innermost level and leaves $TLEVEL=1.",
+      "maps_to": ["A2 P-4"],
+      "fields": {
+        "before.tlevel": {"expect": "2", "source": "nested TSTART"},
+        "after1.tlevel": {"expect": "1", "source": "A2 P-4; Utils/Module.cls:1358-1362 rolls back one level per iteration"},
+        "after1.L1.data": {"expect": "1", "source": "A2 P-4"},
+        "after1.L2.data": {"expect": "0", "source": "A2 P-4"},
+        "final.L1.data": {"expect": "1", "source": "TCOMMIT at level 1 is durable"}
+      }
+    },
+    "N-P03": {
+      "kind": "premise",
+      "claim": "An inner TCOMMIT at $TLEVEL=2 only decrements $TLEVEL and is not durable if the outer level rolls back.",
+      "maps_to": ["A2 P-4", "intent Q-05"],
+      "fields": {
+        "after.inner.tcommit.tlevel": {"expect": "1", "source": "A2 P-4"},
+        "after.outer.rollback.L1.data": {"expect": "0", "source": "A2 P-4"},
+        "after.outer.rollback.L2.data": {"expect": "0", "source": "A2 P-4; intent 2.3 'Inner tcommit is not durable'"}
+      }
+    },
+    "N-P04": {
+      "kind": "premise",
+      "claim": "Sets to ^IRIS.Temp* (IRISTEMP) are not undone by TROLLBACK or TROLLBACK 1.",
+      "maps_to": ["A2 P-2"],
+      "fields": {
+        "full.after.data": {"expect": "1", "source": "HistoryTemp.cls:1 class doc; A2 P-2"},
+        "partial.after.data": {"expect": "1", "source": "A2 P-2"},
+        "partial.after.outer.data": {"expect": "1", "source": "A2 P-2"}
+      }
+    },
+    "N-P05": {
+      "kind": "premise",
+      "claim": "$INCREMENT is not undone by TROLLBACK, so a %IPM.General.History insert that is rolled back is gone and leaves an ID gap.",
+      "maps_to": ["A2 P-5"],
+      "fields": {
+        "counter.delta": {"expect": "1", "source": "A2 P-5"},
+        "rolledback.row.exists": {"expect": "0", "source": "IRIS TROLLBACK semantics"},
+        "next.id.gap": {"expect": "1", "source": "A2 P-5 (ID counter $increment not reused)"}
+      }
+    },
+    "N-P06": {
+      "kind": "premise",
+      "claim": "^IRIS.Temp* globals are one instance-wide store visible from every namespace; namespace-database globals are not.",
+      "maps_to": ["A2 P-1", "intent Q-16"],
+      "fields": {
+        "sys.iristemp.value": {"expect": "USER", "source": "A2 P-1"},
+        "sys.userglobal.data": {"expect": "0", "source": "USER database global not mapped to %SYS"},
+        "userverify.iristemp.value": {"expect": "USER", "source": "A2 P-1"}
+      }
+    },
+    "N-P07": {
+      "kind": "premise",
+      "claim": "With process journaling disabled by %IPM.Utils.JournalManager (the NoJournal path), a TROLLBACK cannot revert global sets because rollback reads the journal; the flag is restored when the manager goes out of scope.",
+      "maps_to": ["A2 commit matrix column D", "intent INT-LOAD-08"],
+      "fields": {
+        "journal.enabled.during": {"expect": "0", "source": "JournalManager.cls %OnNew(0)"},
+        "after.rollback.data": {"expect": "1", "source": "claim under test (no IPM or IRIS source in the inputs states it)"},
+        "journal.enabled.after.scope": {"expect": "1", "source": "JournalManager.cls %OnClose restores the initial value"}
+      }
+    },
+    "N-P08": {
+      "kind": "premise",
+      "claim": "%OnClose runs when the last reference to an object is dropped, not when an earlier reference is dropped.",
+      "maps_to": ["AbstractHistory.cls:6-7 'persisted ... when the object falls out of scope'"],
+      "fields": {
+        "after.first.kill": {"expect": "0", "source": "IRIS object reference counting"},
+        "after.last.kill": {"expect": "1", "source": "IRIS object reference counting"}
+      }
+    },
+    "N-P09": {
+      "kind": "premise",
+      "claim": "%OnClose runs while an exception unwinds the frame holding the only reference, before the caller's CATCH block runs, including through a catch-and-rethrow frame (the Main:Load pattern).",
+      "maps_to": ["Main.cls:2416-2431 Load", "intent INT-HIST-02 mechanism"],
+      "fields": {
+        "closed.in.catch": {"expect": "1", "source": "claim under test"},
+        "rethrow.closed.in.catch": {"expect": "1", "source": "claim under test"}
+      }
+    },
+    "N-P10": {
+      "kind": "premise",
+      "claim": "%OnClose does not run when a JOBbed process holding the object is terminated with $SYSTEM.Process.Terminate.",
+      "maps_to": ["A2 P-6 context", "intent INT-HIST-03, Q-08"],
+      "fields": {
+        "job.started": {"expect": "1", "source": "harness"},
+        "signal": {"expect": "1", "source": "harness"},
+        "terminate.rc": {"expect": "1", "source": "harness"},
+        "gone": {"expect": "1", "source": "harness"},
+        "closed": {"expect": "0", "source": "brief task 1; intent INT-HIST-03 ('A process that dies mid-action leaves a record with an empty end time')"}
+      }
+    },
+    "N-P11": {
+      "kind": "premise",
+      "claim": "At a normal HALT, %OnClose runs for objects still referenced by local variables.",
+      "maps_to": [],
+      "fields": {
+        "signal": {"expect": "1", "source": "harness"},
+        "gone": {"expect": "1", "source": "harness"},
+        "closed": {"expect": "1", "source": "claim under test"}
+      }
+    },
+    "N-P12": {
+      "kind": "premise",
+      "claim": "IRIS rolls back the open transaction of a process terminated with $SYSTEM.Process.Terminate; its IRISTEMP sets stay.",
+      "maps_to": ["A2 P-6", "intent 2.3 abnormal termination (premise for B)"],
+      "fields": {
+        "signal": {"expect": "1", "source": "harness"},
+        "dirty.read.data": {"expect": "1", "source": "IRIS reads are not isolated from other processes' uncommitted sets"},
+        "job.tlevel": {"expect": "1", "source": "harness"},
+        "terminate.rc": {"expect": "1", "source": "harness"},
+        "gone": {"expect": "1", "source": "harness"},
+        "after.data": {"expect": "0", "source": "A2 P-6"},
+        "after.iristemp.data": {"expect": "1", "source": "A2 P-2"}
+      }
+    },
+    "N-P13": {
+      "kind": "premise",
+      "claim": "The %IPM.General.History Finalized trigger allows edits of unfinalized rows, rejects object save and SQL UPDATE of finalized rows, and allows DELETE.",
+      "maps_to": ["A2 P-8", "intent INT-HIST-14"],
+      "fields": {
+        "insert.ok": {"expect": "1", "source": "INT-HIST-14 (append allowed)"},
+        "unfinalized.object.save.ok": {"expect": "1", "source": "intent 3.4 'Edit rejected only when finalized'"},
+        "unfinalized.sql.update.sqlcode": {"expect": "0", "source": "intent 3.4"},
+        "finalize.save.ok": {"expect": "1", "source": "trigger reads the old value {Finalized*O}=0"},
+        "finalized.object.save.ok": {"expect": "0", "source": "INT-HIST-14; A2 P-8"},
+        "finalized.sql.update.sqlcode": {"expect": "-132", "source": "INT-HIST-14; intent 3.3 (SQLCODE -132)"},
+        "stored.CommandString": {"expect": "sql-edit-unfinalized", "source": "INT-HIST-14 (finalized row unchanged)"},
+        "finalized.sql.delete.sqlcode": {"expect": "0", "source": "INT-HIST-14 'Deletion is allowed by design'"},
+        "after.delete.exists": {"expect": "0", "source": "INT-HIST-14"}
+      }
+    },
+    "N-P14": {
+      "kind": "premise",
+      "claim": "With the product HistoryTemp, setters update only the IRISTEMP row; the durable twin keeps its Init values until %OnClose, where a deep %Save of the swizzled PersistedTwin finalizes it, and the temp row is deleted.",
+      "maps_to": ["A2 OBS-H6", "A2 P-9 (first half)", "intent INT-HIST-02 mechanism, INT-HIST-03"],
+      "fields": {
+        "before.close.twin.Finalized": {"expect": "0", "source": "HistoryTemp.cls:21 Init"},
+        "before.close.twin.Committed": {"expect": "0", "source": "A2 OBS-H6"},
+        "before.close.twin.TimeEndSet": {"expect": "0", "source": "A2 OBS-H6"},
+        "before.close.twin.Version": {"expect": "0.0.0-0", "source": "AbstractHistory.cls:17 placeholder"},
+        "before.close.temp.exists": {"expect": "1", "source": "HistoryTemp.cls"},
+        "after.close.twin.Finalized": {"expect": "1", "source": "HistoryTemp.cls:53"},
+        "after.close.twin.Committed": {"expect": "1", "source": "SetCommitted then PersistToTwin"},
+        "after.close.twin.SuccessKind": {"expect": "OK", "source": "Finalize($$$OK)"},
+        "after.close.twin.Version": {"expect": "1.2.3", "source": "SetVersion then PersistToTwin"},
+        "after.close.twin.TimeEndSet": {"expect": "1", "source": "Finalize"},
+        "after.close.temp.exists": {"expect": "0", "source": "HistoryTemp.cls:70 %DeleteId"}
+      }
+    },
+    "N-P15": {
+      "kind": "premise",
+      "claim": "Observation only: deleting the durable twin of an in-progress log before %OnClose (intent 3.4 'unspecified').",
+      "maps_to": ["A2 P-9 (second half)", "intent 3.4"],
+      "fields": {
+        "delete.sqlcode": {"expect": "0", "source": "INT-HIST-14 (delete allowed)"},
+        "kill.thrown": {"expect": null, "source": "observation"},
+        "twin.exists.after": {"expect": null, "source": "observation"},
+        "temp.exists.after": {"expect": null, "source": "observation"}
+      }
+    },
+    "N-P16": {
+      "kind": "premise",
+      "claim": "Once the twin is finalized, a second PersistToTwin (explicit call or the later %OnClose, the self-uninstall path) cannot change it, and %OnClose still deletes the temp row without raising.",
+      "maps_to": ["A2 OBS-H15", "intent INT-HIST-14, INT-HIST-15"],
+      "fields": {
+        "first.persist.ok": {"expect": "1", "source": "HistoryTemp.cls PersistToTwin"},
+        "second.persist.ok": {"expect": "0", "source": "INT-HIST-14 trigger on finalized row"},
+        "kill.thrown": {"expect": "0", "source": "%OnClose returns a status"},
+        "twin.Package": {"expect": "b2-probe-p16", "source": "INT-HIST-14"},
+        "twin.Finalized": {"expect": "1", "source": "first PersistToTwin"},
+        "temp.exists.after.close": {"expect": "0", "source": "HistoryTemp.cls:70"}
+      }
+    },
+    "N-P17": {
+      "kind": "premise",
+      "claim": "The %IPM_General.HistoryTemp table read from another namespace returns IRISTEMP rows created by a process in USER.",
+      "maps_to": ["A2 P-1", "intent Q-16, INT-HIST-16"],
+      "fields": {
+        "userverify.sees.user.temp.row": {"expect": "1", "source": "A2 P-1"}
+      }
+    }
+  }
+}

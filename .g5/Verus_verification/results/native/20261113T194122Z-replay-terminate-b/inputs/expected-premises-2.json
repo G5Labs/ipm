@@ -1,0 +1,21 @@
+{
+  "group": "premises-2",
+  "written_utc": "2026-11-13T18:12:25Z",
+  "note": "Added after N-P10 showed that $SYSTEM.Process.Terminate runs %OnClose. N-P18 checks the abnormal end where no ObjectScript runs in the victim (OS SIGKILL).",
+  "cases": {
+    "N-P18": {
+      "kind": "premise",
+      "claim": "When a process holding an object and an open transaction is killed with SIGKILL, %OnClose does not run and IRIS still rolls back its open transaction; the instance keeps accepting transactions.",
+      "maps_to": ["A2 P-6", "intent INT-HIST-03, Q-08, 2.3 abnormal termination"],
+      "fields": {
+        "signal": {"expect": "1", "source": "harness"},
+        "dirty.read.data": {"expect": "1", "source": "harness"},
+        "kill.rc": {"expect": "0", "source": "harness"},
+        "gone": {"expect": "1", "source": "harness"},
+        "closed": {"expect": "0", "source": "no ObjectScript runs in a SIGKILLed process"},
+        "after.data": {"expect": "0", "source": "A2 P-6"},
+        "health.tx.ok": {"expect": "1", "source": "harness"}
+      }
+    }
+  }
+}

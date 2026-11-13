@@ -10,7 +10,7 @@ Status values:
 
 `VV` = `.g5/Verus_verification`. Run IDs are directories under `VV/results/native/`.
 
-DRAFT: updated after stage C round 1. Final native verdicts are added at handoff.
+Updated after stage C round 1 and B2 phase 2.
 
 ## Confirmed
 
@@ -86,13 +86,17 @@ DRAFT: updated after stage C round 1. Final native verdicts are added at handoff
   - Preserve: finalized rows stay immutable. `Success` stays 0 and `TimeEnd` empty for an unfinished record.
   - Distinguishing check: C4R and C3 list Initialize..Compile ended and Activate open, with the package set.
 
-### D11: A manifest refused by validation under `-DNoJournal=1` keeps the module document
+### D11: Manifest refusals under `-DNoTransaction=1` or `-DNoJournal=1` keep module data
 - Obligation: `load.refusal` (I: a refusal writes no module data, in every mode), `load.refusal.manifest`.
 - Path: the no-transaction marker and `SetCommitted` (`Utils/Module.cls:1226-1228`), then `OBJ.Load` of the manifest (`:1251`). `StudioDocument/Module.cls` `ImportStream` saves the `.ZPM` document and rolls back its own nested transaction when validation refuses the module, but journaling is off, so the save is not undone (P-09, N-P07).
-- Evidence: model case B1-C10. Native replay `20261113T193952Z-replay-return-b`: status error, `zpm_document_version=2.0.0` (before: none), `Committed=1`, no package. B1-C09 (`-DNoTransaction=1`) keeps nothing but shares D12 and D9.
+- Path (late checks): with `-DNoTransaction=1`, a manifest with several documents or no module definition is refused after `OBJ.Load` has saved its documents (`Utils/Module.cls:1251-1260`).
+- Evidence:
+  - NoJournal validation refusal: model case B1-C10, native replay `20261113T193952Z-replay-return-b`. Status error, `zpm_document_version=2.0.0` (before: none), `Committed=1`, no package.
+  - NoTransaction late checks: stage C cases S2 and S2B (`20261113T204152Z-stagec`) and model case B1-C52 (`20261113T205137Z-replay-c51-c52`, l2 agrees). The module record, `.ZPM` document and extra class are kept, with `Committed=1`.
+  - B1-C09 (NoTransaction validation refusal) keeps nothing but shares D12 and D9.
 - Repair proposal: validate the manifest before any write (`design_simplification.md` S1), or delete the saved document on refusal when no transaction is active.
   - Preserve: valid NoJournal loads (B4 neighbour).
-  - Distinguishing check: B1-C10 leaves no `.ZPM` document and records `Committed=0` with the package set.
+  - Distinguishing check: B1-C10, B1-C52, S2 and S2B leave no module data and record `Committed=0`.
 
 ### D12: A NoTransaction or NoJournal load refused after the no-transaction marker reads `Committed=1` with nothing kept
 - Obligation: `history.committed` (I: a refusal before anything is written is not committed, in any mode).
@@ -110,6 +114,57 @@ DRAFT: updated after stage C round 1. Final native verdicts are added at handoff
   - Preserve: the normal-mode rollback of real failures.
   - Distinguishing check: B1-C29 either refuses before writing or succeeds with a warning.
   - If maintainers consider an error after the final commit acceptable, record that as a Q under `load.outcome`.
+
+### D14: A dependency whose own `<Defaults>` sets `NoJournal` escapes its parent's normal-mode rollback
+- Obligation: `load.outcome` (normal mode: "The whole load, including dependencies loaded for it, is rolled back"), `transaction.flag-sources`.
+- Path: `LoadNewModule` for the dependency merges its `<Defaults>` under the parent's parameters (`Utils/Module.cls:1166-1169`). Because the parent never set `NoJournal`, the dependency's value applies and creates `JournalManager(0)` inside the parent's open transaction (`:1191-1193`). Its unjournaled writes are not undone by the parent's `trollback` (N-P07).
+- Evidence: stage C case M5 (`20261113T204405Z-stagec2`), with neighbour M5N. The parent is rolled back, and the dependency stays installed with its class and `.ZPM` document. There is no dependency history row: the row was journaled and rolled back. No `<ROLLFAIL>`, `$TLEVEL` 0. Not representable in the model (open obligation in `B/model-notes.md`).
+- Repair proposal: a nested load inherits its parent's transaction mode. Ignore `NoTransaction` and `NoJournal` from a dependency's `<Defaults>` while a parent transaction is open, or refuse such a dependency.
+  - Preserve: `<Defaults>` transaction flags for a top-level load.
+  - Distinguishing check: M5 leaves the dependency uninstalled.
+
+### D15: `load` refuses `.tar.gz` archives
+- Obligation: `load.path.archive` (help `Main.cls:280-282` example `load C:\module\root\path\module-0.0.1.tar.gz`; CHANGELOG 0.10.0 #474).
+- Path: `extension = $piece(path,".",*)` yields `gz`, so `extension="tar.gz"` never matches (`Main.cls:2466-2467`). The path is then treated as a directory. This regressed in `f83b207e` (#887), which replaced the two-piece check.
+- Evidence: stage C S1, with neighbour S1N (`.tgz`) (`20261113T204152Z-stagec`). Refused with "File not found to obtain module object: module.xml".
+- Repair proposal: test the last piece for `tgz` and the last two pieces for `tar.gz`.
+  - Preserve: `.tgz` and folder loads.
+  - Distinguishing check: S1 loads.
+
+### D16: `update -path` with another module's archive crashes instead of giving the mismatch refusal
+- Obligation: `update.refusal` (an `update -path` archive must contain the named module), `history.committed` (no false commit).
+- Path: `LoadNewModule` opens the installed module by the archive's module name (`Utils/Module.cls:1207`, `""` when not installed) and dereferences it at `:1232` while that module is not installed, before the mismatch guard (`:1269-1275`) can run.
+- Evidence: stage C S3 and S3N1 (`20261113T204152Z-stagec`). `<INVALID OREF>LoadNewModule+67`. Under `-DNoTransaction=1` the log reads `Committed=1`, and the archive is left extracted under `<ModuleRoot>`. A2 OBS-L6's prediction ("B's manifest stays") is refuted.
+- Repair proposal: run the mismatch check on the manifest object before the version guards (S1 in `design_simplification.md`).
+  - Distinguishing check: S3 refuses with the mismatch message and `Committed=0`.
+
+### D17: `load` accepts an existing relative path
+- Obligation: `load.refusal.path` (CHANGELOG 0.10.4 #706: "`load` now only accepts absolute paths").
+- Path: `Main.cls` refuses a relative path only when it does not exist, is not absolute and is not a URL (`Main.cls:2447-2452`). A relative path that `%File` resolves against the process directory passes.
+- Evidence: stage C S4R (`20261113T204405Z-stagec2`), with neighbours S4N1 and S4N2. It loaded, with `Committed=1`.
+- Repair proposal: refuse any non-absolute, non-URL path before the existence check.
+  - Distinguishing check: S4R is refused.
+
+### D18: Namespace default modifiers become `history` filters (decision pending: Q-18)
+- Obligation: `history.read.filter.default-modifiers` (Q-18, provisional: no), `history.read.find` (the log lists records). Also see the round 1 note that query errors must not look like an empty log.
+- Path: defaults are merged into every command's data (`Main.cls:1067-1069`). Non-dotted `-D` names are duplicated under `data("zpm",…)` (`CLI.cls:815-819`), which `History` uses as its filter (`Main.cls:4136`). `GetHistory` ignores the SQL error for the unknown column.
+- Evidence: stage C H2 (`20261113T204152Z-stagec`). After the product's own help example `default-modifiers -set -DNoTransaction=1 -DUpdateSnapshots=1`, `history find` shows 0 rows with an OK status and `history delete -confirm` fails with SQLCODE -29.
+- Repair proposal: `history` reads only its own command-line filters, and query errors are reported.
+  - Distinguishing check: H2 lists the 5 rows.
+
+### D19: "Namespace" default modifiers are shared by every namespace
+- Obligation: `settings.default-modifiers` ("adds to every command in the current namespace"; CLI description).
+- Path: `$$$ZPMDefaultModifiers` is `^%IPM.DefaultModifiers` (`inc/IPM/Common.inc:31`), a `^%` global mapped to IRISSYS.
+- Evidence: stage C X1 (`20261113T204152Z-stagec`). Defaults set in USER are visible in USER-VERIFY. Consequence for loading: `-DNoTransaction=1` set in one namespace makes every load in every namespace non-transactional.
+- Repair proposal: store default modifiers in a namespace global, or subscript the global by namespace.
+  - Distinguishing check: X1 shows nothing in USER-VERIFY.
+
+### D20: The `GlobalRecords` query returns the current namespace's rows once per namespace
+- Obligation: `history.read.api` (`GlobalRecords` reads all namespaces; INT-HIST-11, issue #366 "cross-namespace class query").
+- Path: `GlobalRecordsFetch` (`General/History.cls:253-281`) fetches result sets prepared for other namespaces without switching `$namespace`.
+- Evidence: stage C H10 (`20261113T204152Z-stagec`). `history find -globally` is correct. `SELECT * FROM %IPM_General.History_GlobalRecords(0,0)` returns 458 rows (twice USER's 229) and none of USER-VERIFY's 173.
+- Repair proposal: switch to each result set's namespace while fetching, as `DisplayArray` does (`:528`).
+  - Distinguishing check: H10 returns 229 + 173 rows.
 
 ## Deviations under open questions (decision pending)
 
@@ -134,7 +189,6 @@ DRAFT: updated after stage C round 1. Final native verdicts are added at handoff
 
 ## Suspected, not observed natively
 
-- S-D14: a dependency whose own `<Defaults>` sets `NoJournal` escapes its parent's normal-mode rollback (`Utils/Module.cls:1166-1169`, `:1191-1193`; N-P07). It is then installed with no record, or IRIS raises `<ROLLFAIL>`. Obligation: `load.outcome`, `transaction.flag-sources`. Round 1 R1-MOD-05. Native case queued with B2.
 
 From A2 observations. The listed obligations are in the ontology metadata.
 - OBS-L4: `update -dev` from a registry ends in non-dev mode.
@@ -146,7 +200,7 @@ From A2 observations. The listed obligations are in the ontology metadata.
 - OBS-L15: `LoadedResource` rows survive a rolled-back load.
 - OBS-L17 and OBS-H8: uninstalling a required module reports success.
 - OBS-H4: covered by D5.
-- OBS-H10: global readers in namespaces without IPM.
+- OBS-H10, remaining part: the "IPM is not enabled" message is unreachable (the wrong-rows part is D20).
 - OBS-H12: a purge failure blocks every command.
 - OBS-H13: full cleanup kills other namespaces' in-flight temp rows.
 - OBS-H15: self-uninstall records success before running.
