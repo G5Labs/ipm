@@ -27,15 +27,17 @@ Proposal:
 Today a log has two copies, an IRISTEMP row and a namespace twin. The twin is written at `Init` and again from `%OnClose` (`HistoryTemp.cls:9-73`). Whether the twin survives depends on the transaction level at those moments and on when IRIS runs `%OnClose` (premises P-06a, P-06b, P-06c). Dependency logs are created and closed inside the parent's transaction.
 
 Proposal:
-- The top-level action owns every log it creates, including its dependencies' logs.
-- At its own entry `$TLEVEL`, after its final commit or rollback, it writes the durable rows once, with `Committed` taken from what was actually kept.
-- At each commit at `$TLEVEL` 0, it also copies `Committed` and the phases so far to the durable row, so a killed process leaves an accurate record.
+- The durable `History` row is the only copy that matters after a failure. Every setter writes it directly, through one rollback-proof write: process journaling off for that save only (`%IPM.Utils.JournalManager(0)`), so neither the action's own rollback, a parent's rollback nor a process end undoes it. IRISTEMP is then only a cache.
+- The rollback-proof write is premise R-01. N-P07 shows unjournaled sets survive `TROLLBACK` and the flag is restored. Mixed journaled and unjournaled updates of the same row inside a transaction, and SIGKILL, are checked natively by B2 (`premises.md`).
+- `Committed` is written at each commit and set back to 0 by the rollback path when a parent's rollback undoes a dependency.
 - `Finalized` is set only together with `TimeEnd`.
+- A deferral (write the rows once after the top-level action settles) is simpler but does not survive a process end inside the action, so it would not remove V2, V9 or D10.
 
 - Obligations: `history.survives-rollback` (including dependencies), `history.record` (an unfinished record lists its phases), `history.record.abnormal-end` (Q-08 provisional), and `history.locked.unfinished` (Q-21 provisional).
-- Removes: D1, V1, V2, V9 and V10. It also removes the model's reliance on `%OnClose` ordering, so P-06c is no longer needed.
+- Removes, if R-01 holds: D1, D10, V1, V2, V9 and V10. It also removes the model's reliance on `%OnClose` ordering (P-06c).
+- If R-01 fails: only the outcomes at a normal return (A1, A3, A5) are repairable. Process-end cases (B1-C45K/T, C3, C4R) stay failing.
 - Preserve: finalized rows are immutable (`history.locked`). A top-level failure reads `Committed=0`. IDs follow start order.
-- Not removed: loss under a caller-held transaction (Q-05). An in-process write cannot leave the caller's transaction except through IRISTEMP or with journaling switched off, and that trade-off needs a maintainer decision.
+- Caller-held transactions (Q-05): the same unjournaled write would also make the record survive a caller's rollback. Whether IPM should write outside a caller's transaction at all is a maintainer decision.
 
 ## S3: Explicit `Committed` marking; drop `|| ISOK` from `Finalize`
 

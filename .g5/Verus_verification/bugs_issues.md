@@ -19,14 +19,20 @@ Updated after stage C round 1 and B2 phase 2.
 - Path: `load <dir>` → `LoadNewModule` `tstart` (`Utils/Module.cls:1195`) → `LoadDependencies` → `LoadModuleReference` creates the dependency's log inside the parent's transaction (`:65`, `:67` → `HistoryTemp.cls:21` twin insert). Its `%OnClose` persist (`HistoryTemp.cls:62-73`) also runs inside that transaction and deletes the IRISTEMP row. The parent's `trollback 1` loop (`Utils/Module.cls:1358-1362`) then removes the twin. The same happens in `-dev` when a dependency fails inside the second transaction.
 - Evidence: B2 cases A1, A2, A3 (`20261113T182759Z-cases-a`, replay `20261113T184230Z-replay-fast`). Reproduction: `VV/native/repro/dep-history-lost.cos` → `20261113T184617Z-repro-dep-history-lost`. The ID is allocated and no row persists.
 - Formal: model violations V1 and V2 (`case_c31_dep_record_lost`, `case_c33_dev_dep_record_lost`, `case_c45_*`, explorer `asbuilt-r3-dep`). Terminate variants are confirmed natively by replay `20261113T194122Z-replay-terminate-b`.
-- Repair proposal: write a dependency's durable row outside the parent's transaction, and set its `Committed` from whether the dependency's writes were actually kept, not from the parent's final status. For example, the parent log keeps the IRISTEMP IDs of its dependency logs. After its own final `tcommit` or rollback at the entry `$TLEVEL`, the top-level `LoadNewModule` persists each nested log:
-  - `Committed=0` when the parent's rollback undid the dependency.
-  - `Committed=1` when the dependency's writes were committed and kept. In developer mode, dependencies stay when the parent fails after the second commit (case A5, B1-C38).
+- Repair proposal: write the dependency's durable History row in a way no rollback undoes, and set its `Committed` from whether the dependency's writes were actually kept.
+  - Mechanism: insert and update the row with process journaling off for the duration of that write only. That is, scope `%IPM.Utils.JournalManager(0)` around the `History` save in `HistoryTemp.Init` and `PersistToTwin`. N-P07 shows unjournaled sets survive `TROLLBACK` and the journaling flag is restored. Whether this holds inside an open transaction, mixed with journaled updates of the same row and through SIGKILL, is premise R-01, checked natively by B2 (see `premises.md`).
+  - `Committed`: the parent records, for each dependency log, whether its writes were later undone, and the parent's rollback path updates those rows (`Committed=0`). In developer mode, dependencies stay when the parent fails after the second commit (case A5, B1-C38), so they keep `Committed=1`.
+  - A deferral that writes nested rows only after the top-level action settles is not enough, because a process end inside the parent then leaves no dependency row (B1-C45K/T).
   - Writers: `HistoryTemp.Init`, `PersistToTwin`, `%OnClose`, `Utils.Module:LoadModuleReference`, `LoadNewModule` error path.
   - Readers: `history find` and `details`, `%IPM_General.History`, `Records`.
-  - Preserve: a top-level failure reads `Committed=0`. A committed dependency of a successful parent reads `Committed=1`. ID order follows start order.
-  - Distinguishing check: A1 expects one dependency row with `Committed=0`. A3 expects a dependency row with an error `Success`. A5/C38 expect the dependency row with `Committed=1`. A0 keeps two committed rows.
-  - The model's repair variant is reported in `B/model-notes.md`.
+  - Preserve: a top-level failure reads `Committed=0`. A committed dependency of a successful parent reads `Committed=1`. ID order follows start order. Finalized rows stay immutable.
+  - Distinguishing checks:
+    - A1 expects one dependency row with `Committed=0`.
+    - A3 expects a dependency row with an error `Success`.
+    - A5/C38 expect the dependency row with `Committed=1`.
+    - B1-C45K and C45T (process end inside the parent) expect the dependency row to survive.
+    - A0 keeps two committed rows.
+  - The model's repair variant 103 assumes this mechanism (premise R-01). Its result is in `B/model-notes.md`.
 
 ### D2: One filter column with `_` silently drops every later filter, so a filtered `history delete` empties the namespace
 - Obligation: `history.read.filter` ("Versions are filtered by part", "Filters work the same way for `find` and `delete`"); wiki/09 L112 advertises `Version_Major`. `history.delete` deletes only matching records.
@@ -62,10 +68,10 @@ Updated after stage C round 1 and B2 phase 2.
   - Preserve: settings that do seed their default at install.
   - Distinguishing check: F0 returns 0.
 
-### D6: An Invoke on the Activate phase that returns an error leaves the phase open in a finalized record (decision pending: Q-14)
+### D6: An Invoke that returns an error leaves its phase open in a finalized record (decision pending: Q-14)
 - Obligation: `history.phases` (wiki/09 L135-161: a phase with no elapsed time "never finished"), and `history.phases.returned-errors` (Q-14, provisional: every started phase ends with its status).
-- Path: `Storage/Module.cls:669-671` `quit:$$$ISERR(tSC)` leaves the try block, and `$$$ThrowOnError(tSC)` (`:704`) throws before `FinalizePhase` (`:710`). The catch (`:695`) runs only for thrown errors.
-- Evidence: reproduction `repro/activate-invoke-phase-open.cos` → B2 run listed in `index.jsonl` (`repro-activate-invoke-phase-open`). Invokes on the default Configure phase finalize Activate correctly (A1, A5).
+- Path: in `ExecutePhases`, the before-phase and after-phase Invoke loops exit with `quit:$$$ISERR(tSC)` (`Storage/Module.cls:608-610` and `:669-671`), which leaves the try block. Then `$$$ThrowOnError(tSC)` (`:704`) throws before `FinalizePhase` (`:710`), and the catch (`:695`) runs only for thrown errors. This applies to every phase with an Invoke, not only Activate.
+- Evidence: reproduction `repro/activate-invoke-phase-open.cos` (an Invoke bound to Activate) → B2 run listed in `index.jsonl` (`repro-activate-invoke-phase-open`). Invokes on the default Configure phase finalize Activate correctly (A1, A5). Other phases were not reproduced natively.
 - Repair proposal: call `pLog.FinalizePhase(tOnePhase, tSC)` whenever the phase ends with an error, whether returned or thrown, before `$$$ThrowOnError`.
   - Preserve: phase timings for successful phases.
   - Distinguishing check: the reproduction shows Activate with an end time and the Invoke's error.
@@ -82,9 +88,9 @@ Updated after stage C round 1 and B2 phase 2.
 - Obligation: `history.record` (I: "after it stops without ending, the log lists its record with `Success` 0, no end time and the phases it has started"). Also `history.fields` `Package`: the name was known and recorded in the in-flight log.
 - Path: every setter after `Init` updates only the IRISTEMP row (`AbstractHistory.cls:86-173`). The twin is written at `Init` and at `%OnClose`. After SIGKILL no `%OnClose` runs. After `$SYSTEM.Process.Terminate` of a non-dev load, `%OnClose` runs before IRIS rolls the transaction back, so the twin update is undone and the IRISTEMP row is deleted (N-P10, C1).
 - Evidence: B2 C1 (`20261113T184230Z-replay-fast`), C3 (`20261113T182927Z-cases-c-sigkill`), C4R (`20261113T183827Z-cases-c4r`). The durable row has `Package=""` and no phases after four phases ended and Activate started. Model: `kill_rec` after round 1 (B1).
-- Repair proposal: at each phase boundary and commit at `$TLEVEL` 0, copy the name, version, `Committed` and phases to the durable row. Inside a transaction, keep them in IRISTEMP and copy them at the action's end. This shares the mechanism of D1, D12 and the Q-08 deviation (`design_simplification.md` S2).
-  - Preserve: finalized rows stay immutable. `Success` stays 0 and `TimeEnd` empty for an unfinished record.
-  - Distinguishing check: C4R and C3 list Initialize..Compile ended and Activate open, with the package set.
+- Repair proposal: at each `SetName`, `SetVersion`, phase boundary and commit, copy the name, version, `Committed` and phases to the durable row. Use the same rollback-proof write as D1 (journaling off around the History save, premise R-01), so the copy survives the load's own rollback and a process end at any `$TLEVEL`. Copying only at `$TLEVEL` 0 would not help a normal-mode load, whose phases all run at `$TLEVEL` 1. This shares the mechanism of D1, D12 and the Q-08 deviation (`design_simplification.md` S2).
+  - Preserve: finalized rows stay immutable. `Success` stays 0 and `TimeEnd` empty for an unfinished record. A rolled-back normal-mode load reads `Committed=0`.
+  - Distinguishing check: C4R and C3 list Initialize..Compile ended and Activate open, with the package set. If R-01 is refuted, C3 (normal mode) stays failing and only developer-mode kills (C4R) are repairable this way.
 
 ### D11: Manifest refusals under `-DNoTransaction=1` or `-DNoJournal=1` keep module data
 - Obligation: `load.refusal` (I: a refusal writes no module data, in every mode), `load.refusal.manifest`.
@@ -102,8 +108,9 @@ Updated after stage C round 1 and B2 phase 2.
 - Obligation: `history.committed` (I: a refusal before anything is written is not committed, in any mode).
 - Path: `SetCommitted` runs at `Utils/Module.cls:1226-1228`, before the manifest import (`:1251`), so any refusal after that point leaves `Committed=1`.
 - Evidence: model V4 (`case_c08_committed_without_change`, `case_c09_committed_without_change`, explorer `asbuilt-commit-exact`). Native replay `20261113T193952Z-replay-return-b` (B1-C08: "No module definition found.", nothing written, `Committed=1`).
-- Repair proposal: mark `Committed` only when the first write is kept, for example after `OBJ.Load` returns OK, or after validation (S1).
-  - Preserve: B3 and B4 (requirements refusals that do keep the manifest read `Committed=1`, until D4 is decided). A0.
+- Repair proposal: validate the manifest before the no-transaction marker (`design_simplification.md` S1), so that no refusal follows it. Moving the marker after `OBJ.Load` is not a safe fix on its own: until D11 is fixed, a NoJournal validation refusal (B1-C10) keeps the `.ZPM` document and would then read `Committed=0`, which breaks the proved rule "changed implies `Committed=1`" (`theorem_commit_sound`).
+  - It changes a decision: the D block `history.committed.marking` (PR #1322: mark "before writing when there is no transaction") would move to "after validation". That needs maintainer agreement.
+  - Preserve: changed implies `Committed=1` (B1-C10, B1-C52, S2 until D11 is fixed). B3 and B4 (requirements refusals that keep the manifest read `Committed=1`, until D4 is decided). A0.
   - Distinguishing check: B1-C08 reads `Committed=0`.
 
 ### D13: A load that committed reports failure (`<INVALID OREF>`) when the temporary `.modules` repository could not be created
@@ -115,13 +122,16 @@ Updated after stage C round 1 and B2 phase 2.
   - Distinguishing check: B1-C29 either refuses before writing or succeeds with a warning.
   - If maintainers consider an error after the final commit acceptable, record that as a Q under `load.outcome`.
 
-### D14: A dependency whose own `<Defaults>` sets `NoJournal` escapes its parent's normal-mode rollback
-- Obligation: `load.outcome` (normal mode: "The whole load, including dependencies loaded for it, is rolled back"), `transaction.flag-sources`.
+### D14: A dependency whose own `<Defaults>` sets `NoJournal` escapes its parent's normal-mode rollback (decision pending: Q-22)
+- Obligation: two documented rules conflict, so the precedence is the open question Q-22 under `transaction.flag-sources` (round 2 disposition R2-03).
+  - `load.outcome`, normal mode: "The whole load, including dependencies loaded for it, is rolled back".
+  - `transaction.flag-sources`, with wiki/00 L175: `<Defaults>` are "applied whenever this module is installed". wiki/00 L149: NoTransaction is for modules that "conflict with an outer wrapping transaction". wiki/00 L155: NoJournal changes "cannot be rolled back".
+  - Whichever way Q-22 is decided, the dependency's lost history record is D1.
 - Path: `LoadNewModule` for the dependency merges its `<Defaults>` under the parent's parameters (`Utils/Module.cls:1166-1169`). Because the parent never set `NoJournal`, the dependency's value applies and creates `JournalManager(0)` inside the parent's open transaction (`:1191-1193`). Its unjournaled writes are not undone by the parent's `trollback` (N-P07).
 - Evidence: stage C case M5 (`20261113T204405Z-stagec2`), with neighbour M5N. The parent is rolled back, and the dependency stays installed with its class and `.ZPM` document. There is no dependency history row: the row was journaled and rolled back. No `<ROLLFAIL>`, `$TLEVEL` 0. Not representable in the model (open obligation in `B/model-notes.md`).
-- Repair proposal: a nested load inherits its parent's transaction mode. Ignore `NoTransaction` and `NoJournal` from a dependency's `<Defaults>` while a parent transaction is open, or refuse such a dependency.
-  - Preserve: `<Defaults>` transaction flags for a top-level load.
-  - Distinguishing check: M5 leaves the dependency uninstalled.
+- Options, depending on Q-22:
+  - If the parent's rollback rule wins: a nested load inherits its parent's transaction mode, so `NoTransaction` and `NoJournal` from a dependency's `<Defaults>` are ignored while a parent transaction is open, or such a dependency is refused. Preserve: `<Defaults>` transaction flags for a top-level load. Distinguishing check: M5 leaves the dependency uninstalled.
+  - If the dependency's `<Defaults>` win: document that the parent's rollback cannot undo such a dependency, and keep its history record (D1).
 
 ### D15: `load` refuses `.tar.gz` archives
 - Obligation: `load.path.archive` (help `Main.cls:280-282` example `load C:\module\root\path\module-0.0.1.tar.gz`; CHANGELOG 0.10.0 #474).
@@ -198,6 +208,7 @@ Updated after stage C round 1 and B2 phase 2.
 
 
 From A2 observations. The listed obligations are in the ontology metadata.
+- OBS-L13: a git URL load ignores the clone's exit code (a failed clone surfaces only as "File not found to obtain module object") and never removes the clone folder (`Main.cls:2351-2372`). The leftover folder falls under Q-04 (`transaction.rollback-scope`). Git URL loads have no native or formal evidence.
 - OBS-L4: `update -dev` from a registry ends in non-dev mode.
 - OBS-L5: a dependency newly installed by `update` runs all its update steps.
 - OBS-L7: archive installs delete the module's directory before any guard.
