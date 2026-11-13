@@ -1,0 +1,43 @@
+    Checking ipm-load-history v0.1.0 (/home/ziniu_wu_g5labs_ai/experiments/ipm-verus-uplift-20261113/ipm/.g5/Verus_verification/crates/ipm-load-history)
+error: expression simplifies to false
+   --> ipm-load-history/src/cases.rs:133:12
+    |
+133 |       assert({
+    |  ____________^
+134 | |         let s = end_of(cfg_c28());
+135 | |         s.top_err && s.ns.twins[0].ph == 5 && s.ns.twins[0].phst == 0 && s.ns.mods == cfg_c28().init
+136 | |         && !l1_ok(cfg_c28(), qprov(), s) && l1_ok(cfg_c28(), q_with14(false), s)
+137 | |     }) by (compute_only);
+    | |_____^
+
+error: assertion failed
+   --> ipm-load-history/src/proofs.rs:318:40
+    |
+318 |     } else if s.lnm0.pc == 31 { assert(inv(c, lnm_step(c, s, 0))); 
+    |                                        ^^^^^^^^^^^^^^^^^^^^^^^^^ assertion failed
+
+error: assertion failed
+   --> ipm-load-history/src/proofs.rs:389:40
+    |
+389 |     } else if s.lnm1.pc == 31 { assert(inv(c, lnm_step(c, s, 1))); 
+    |                                        ^^^^^^^^^^^^^^^^^^^^^^^^^ assertion failed
+
+error: postcondition not satisfied
+   --> ipm-load-history/src/proofs.rs:416:13
+    |
+414 | pub proof fn lemma_kill_inv(c: Cfg, s: State)
+    | --------------------------------------------- at the end of the function body
+415 |     requires inv(c, s), running(s),
+416 |     ensures inv(c, kill(c, s)),
+    |             ^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: postcondition not satisfied
+   --> ipm-load-history/src/proofs.rs:422:13
+    |
+420 | pub proof fn lemma_terminate_inv(c: Cfg, s: State)
+    | -------------------------------------------------- at the end of the function body
+421 |     requires inv(c, s), running(s),
+422 |     ensures inv(c, terminate(c, s)),
+    |             ^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: could not compile `ipm-load-history` (lib) due to 5 previous errors

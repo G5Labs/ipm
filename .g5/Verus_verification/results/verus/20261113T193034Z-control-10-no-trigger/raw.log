@@ -1,0 +1,14 @@
+VIOLATION of R2 finalized durable History row never changes (ActionProperty) after 6 steps; 20710 states explored, 0.03s
+Counterexample for R2 finalized durable History row never changes
+ config: ExecCfg { txm: 0, devf: 0, force: false, path_ok: false, cleanup_fails: false, caller_tx: false, top: ExecPkg { ver: 2, upd: false, sysreq: true, act: 0, mf: 0, snap: false, found: true }, deps: [], init: [ExecMod { present: false, ver: 0, dev: false, res: false, doc: 0, wr: 0 }, ExecMod { present: false, ver: 0, dev: false, res: false, doc: 0, wr: 0 }, ExecMod { present: false, ver: 0, dev: false, res: false, doc: 0, wr: 0 }], var: 10 }
+  init: top_pc=0 tx=0
+    1. Step -> top_pc=1 lnm0.pc=0 lmr_pc=0 lnm1.pc=0 tlevel=0 jrn=true alive=true
+    2. Step -> top_pc=2 lnm0.pc=0 lmr_pc=0 lnm1.pc=0 tlevel=0 jrn=true alive=true
+    3. Step -> top_pc=4 lnm0.pc=0 lmr_pc=0 lnm1.pc=0 tlevel=0 jrn=true alive=true
+    4. Step -> top_pc=5 lnm0.pc=0 lmr_pc=0 lnm1.pc=0 tlevel=0 jrn=true alive=true
+    5. Step -> top_pc=6 lnm0.pc=0 lmr_pc=0 lnm1.pc=0 tlevel=0 jrn=true alive=true
+    6. Edit(0) -> top_pc=6 lnm0.pc=0 lmr_pc=0 lnm1.pc=0 tlevel=0 jrn=true alive=true
+ final observation: {"end": "running", "status": null, "open_transaction_levels": 0, "modules": {"top": {"manifest_present": false, "zpm_document_version": null, "writes": 0}}, "history_rows": 1, "history": {"top": {"row": true, "id_order": 1, "package_set": false, "version": "0.0.0-0 (placeholder)", "success": "error", "committed": 0, "time_end_set": true, "finalized": true, "phases_started": 0, "last_phase_status": null}}, "history_temp": {"top": {"row": true, "package_set": false, "success": "error", "committed": 0, "time_end_set": true, "phases_started": 0}}}
+ L1 expectation: {"verdict": "refused: path", "status": "error", "modules_one_of": [{"top": "unchanged"}], "history": {"top": {"row": true, "success": "error", "committed": "equals whether the action's changes were kept", "time_end_set": true, "finalized": true, "package_set": "any", "phases_started": "any", "last_phase_status": "any"}}}
+ violated clauses: []
+RESULT {"run": "control-10-no-trigger", "kind": "control", "variant": "control-10-no-trigger", "concern": "Finalized UPDATE trigger removed; R2 must fail", "expect": "violation", "observed": "violation", "configs": 900, "states": 20710, "transitions": 21611, "depth": 5, "truncated": false, "seconds": 0.03, "checks": ["R2 finalized durable History row never changes"], "txms": [0], "caller_tx": [false], "foreign_edits": true, "limits": {"max_states": 6000000, "max_depth": 400}}

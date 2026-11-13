@@ -1,0 +1,24 @@
+VIOLATION of L1-END (status, namespace and history at every end state) (Invariant) after 16 steps; 21817 states explored, 0.05s
+Counterexample for L1-END (status, namespace and history at every end state)
+ config: ExecCfg { txm: 0, devf: 0, force: false, path_ok: true, cleanup_fails: false, caller_tx: false, top: ExecPkg { ver: 2, upd: false, sysreq: true, act: 0, mf: 0, snap: false, found: true }, deps: [ExecPkg { ver: 1, upd: false, sysreq: true, act: 0, mf: 0, snap: false, found: true }], init: [ExecMod { present: true, ver: 3, dev: false, res: true, doc: 3, wr: 0 }, ExecMod { present: false, ver: 0, dev: false, res: false, doc: 0, wr: 0 }, ExecMod { present: false, ver: 0, dev: false, res: false, doc: 0, wr: 0 }], var: 8 }
+  init: top_pc=0 tx=0
+    1. Step -> top_pc=1 lnm0.pc=0 lmr_pc=0 lnm1.pc=0 tlevel=0 jrn=true alive=true
+    2. Step -> top_pc=2 lnm0.pc=0 lmr_pc=0 lnm1.pc=0 tlevel=0 jrn=true alive=true
+    3. Step -> top_pc=3 lnm0.pc=0 lmr_pc=0 lnm1.pc=0 tlevel=0 jrn=true alive=true
+    4. Step -> top_pc=3 lnm0.pc=1 lmr_pc=0 lnm1.pc=0 tlevel=0 jrn=true alive=true
+    5. Step -> top_pc=3 lnm0.pc=2 lmr_pc=0 lnm1.pc=0 tlevel=1 jrn=true alive=true
+    6. Step -> top_pc=3 lnm0.pc=3 lmr_pc=0 lnm1.pc=0 tlevel=1 jrn=true alive=true
+    7. Step -> top_pc=3 lnm0.pc=4 lmr_pc=0 lnm1.pc=0 tlevel=1 jrn=true alive=true
+    8. Step -> top_pc=3 lnm0.pc=5 lmr_pc=0 lnm1.pc=0 tlevel=1 jrn=true alive=true
+    9. Step -> top_pc=3 lnm0.pc=6 lmr_pc=0 lnm1.pc=0 tlevel=1 jrn=true alive=true
+   10. Step -> top_pc=3 lnm0.pc=7 lmr_pc=0 lnm1.pc=0 tlevel=1 jrn=true alive=true
+   11. Step -> top_pc=3 lnm0.pc=10 lmr_pc=0 lnm1.pc=0 tlevel=1 jrn=true alive=true
+   12. Step -> top_pc=3 lnm0.pc=11 lmr_pc=0 lnm1.pc=0 tlevel=1 jrn=true alive=true
+   13. Step -> top_pc=3 lnm0.pc=11 lmr_pc=1 lnm1.pc=0 tlevel=1 jrn=true alive=true
+   14. Step -> top_pc=3 lnm0.pc=11 lmr_pc=2 lnm1.pc=0 tlevel=1 jrn=true alive=true
+   15. Step -> top_pc=3 lnm0.pc=11 lmr_pc=3 lnm1.pc=0 tlevel=1 jrn=true alive=true
+   16. Kill -> top_pc=3 lnm0.pc=11 lmr_pc=3 lnm1.pc=0 tlevel=0 jrn=true alive=false
+ final observation: {"end": "process killed (no %OnClose, rollback)", "status": null, "open_transaction_levels": 0, "modules": {"top": {"manifest_present": true, "version": "3.0.0", "developer_mode": false, "resources_loaded": true, "zpm_document_version": "3.0.0", "writes": 0}, "dep1": {"manifest_present": false, "zpm_document_version": null, "writes": 0}}, "history_rows": 1, "history": {"top": {"row": true, "id_order": 1, "package_set": false, "version": "0.0.0-0 (placeholder)", "success": "0 (in progress / never finalized)", "committed": 0, "time_end_set": false, "finalized": false, "phases_started": 0, "last_phase_status": null}, "dep1": {"row": false}}, "history_temp": {"top": {"row": true, "package_set": true, "success": "0 (in progress / never finalized)", "committed": 0, "time_end_set": false, "phases_started": 0}, "dep1": {"row": true, "package_set": true, "success": "0 (in progress / never finalized)", "committed": 0, "time_end_set": false, "phases_started": 0}}}
+ L1 expectation: {"verdict": "refused: downgrade", "status": "any", "modules_one_of": [{"top": "unchanged", "dep1": "unchanged"}], "history": {"top": {"row": true, "success": "0 (in progress)", "committed": "any", "time_end_set": false, "finalized": "any", "package_set": "any", "phases_started": "any", "last_phase_status": "any"}, "dep1": {"row": true, "success": "0 (in progress)", "committed": "any", "time_end_set": false, "finalized": "any", "package_set": "any", "phases_started": "any", "last_phase_status": "any"}}}
+ violated clauses: ["H-RECORD-EXISTS[dep1]"]
+RESULT {"run": "control-08-no-downgrade-guard", "kind": "control", "variant": "control-08-no-downgrade-guard", "concern": "downgrade guard removed; L1-END must fail", "expect": "violation", "observed": "violation", "configs": 561, "states": 21817, "transitions": 21488, "depth": 15, "truncated": false, "seconds": 0.05, "checks": ["L1-END (status, namespace and history at every end state)"], "txms": [0], "caller_tx": [false], "foreign_edits": false, "conforming_domain_only": true, "limits": {"max_states": 6000000, "max_depth": 400}}

@@ -1,0 +1,28 @@
+VIOLATION of L1-NS-ALL status and namespace clauses at every end state (including process ends) (Invariant) after 20 steps; 41554 states explored, 0.08s
+Counterexample for L1-NS-ALL status and namespace clauses at every end state (including process ends)
+ config: ExecCfg { txm: 0, devf: 1, force: false, path_ok: true, cleanup_fails: false, caller_tx: false, top: ExecPkg { ver: 2, upd: false, sysreq: false, act: 0, mf: 0, snap: false, found: true }, deps: [], init: [ExecMod { present: true, ver: 3, dev: false, res: true, doc: 3, wr: 0 }, ExecMod { present: false, ver: 0, dev: false, res: false, doc: 0, wr: 0 }, ExecMod { present: false, ver: 0, dev: false, res: false, doc: 0, wr: 0 }], var: 8 }
+  init: top_pc=0 tx=0
+    1. Step -> top_pc=1 lnm0.pc=0 lmr_pc=0 lnm1.pc=0 tlevel=0 jrn=true alive=true
+    2. Step -> top_pc=2 lnm0.pc=0 lmr_pc=0 lnm1.pc=0 tlevel=0 jrn=true alive=true
+    3. Step -> top_pc=3 lnm0.pc=0 lmr_pc=0 lnm1.pc=0 tlevel=0 jrn=true alive=true
+    4. Step -> top_pc=3 lnm0.pc=1 lmr_pc=0 lnm1.pc=0 tlevel=0 jrn=true alive=true
+    5. Step -> top_pc=3 lnm0.pc=2 lmr_pc=0 lnm1.pc=0 tlevel=1 jrn=true alive=true
+    6. Step -> top_pc=3 lnm0.pc=3 lmr_pc=0 lnm1.pc=0 tlevel=1 jrn=true alive=true
+    7. Step -> top_pc=3 lnm0.pc=4 lmr_pc=0 lnm1.pc=0 tlevel=1 jrn=true alive=true
+    8. Step -> top_pc=3 lnm0.pc=5 lmr_pc=0 lnm1.pc=0 tlevel=1 jrn=true alive=true
+    9. Step -> top_pc=3 lnm0.pc=6 lmr_pc=0 lnm1.pc=0 tlevel=1 jrn=true alive=true
+   10. Step -> top_pc=3 lnm0.pc=7 lmr_pc=0 lnm1.pc=0 tlevel=1 jrn=true alive=true
+   11. Step -> top_pc=3 lnm0.pc=8 lmr_pc=0 lnm1.pc=0 tlevel=0 jrn=true alive=true
+   12. Step -> top_pc=3 lnm0.pc=9 lmr_pc=0 lnm1.pc=0 tlevel=0 jrn=true alive=true
+   13. Step -> top_pc=3 lnm0.pc=10 lmr_pc=0 lnm1.pc=0 tlevel=1 jrn=true alive=true
+   14. Step -> top_pc=3 lnm0.pc=31 lmr_pc=0 lnm1.pc=0 tlevel=1 jrn=true alive=true
+   15. Step -> top_pc=3 lnm0.pc=31 lmr_pc=0 lnm1.pc=0 tlevel=0 jrn=true alive=true
+   16. Step -> top_pc=3 lnm0.pc=32 lmr_pc=0 lnm1.pc=0 tlevel=0 jrn=true alive=true
+   17. Step -> top_pc=4 lnm0.pc=32 lmr_pc=0 lnm1.pc=0 tlevel=0 jrn=true alive=true
+   18. Step -> top_pc=5 lnm0.pc=32 lmr_pc=0 lnm1.pc=0 tlevel=0 jrn=true alive=true
+   19. Step -> top_pc=6 lnm0.pc=32 lmr_pc=0 lnm1.pc=0 tlevel=0 jrn=true alive=true
+   20. Step -> top_pc=7 lnm0.pc=32 lmr_pc=0 lnm1.pc=0 tlevel=0 jrn=true alive=true
+ final observation: {"end": "returned", "status": "error", "open_transaction_levels": 0, "modules": {"top": {"manifest_present": true, "version": "2.0.0", "developer_mode": true, "resources_loaded": true, "zpm_document_version": "2.0.0", "writes": 2}}, "history_rows": 1, "history": {"top": {"row": true, "id_order": 1, "package_set": true, "version": "2.0.0", "success": "error", "committed": 1, "time_end_set": true, "finalized": true, "phases_started": 0, "last_phase_status": null}}, "history_temp": {"top": {"row": false}}}
+ L1 expectation: {"verdict": "refused: downgrade", "status": "error", "modules_one_of": [{"top": "unchanged"}], "history": {"top": {"row": true, "success": "error", "committed": "equals whether the action's changes were kept", "time_end_set": true, "finalized": true, "package_set": true, "phases_started": "any", "last_phase_status": "any"}}}
+ violated clauses: ["L1-NAMESPACE"]
+RESULT {"run": "control-08-no-downgrade-guard", "kind": "control", "variant": "control-08-no-downgrade-guard", "concern": "downgrade guard removed; L1-NS-ALL (refusal writes no module data) must fail", "expect": "violation", "observed": "violation", "configs": 840, "states": 41554, "transitions": 40969, "depth": 19, "truncated": false, "seconds": 0.08, "checks": ["L1-NS-ALL status and namespace clauses at every end state (including process ends)"], "txms": [0], "caller_tx": [false], "foreign_edits": false, "conforming_domain_only": true, "limits": {"max_states": 6000000, "max_depth": 400}}

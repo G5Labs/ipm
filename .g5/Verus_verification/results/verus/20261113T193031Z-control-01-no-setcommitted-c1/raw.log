@@ -1,0 +1,28 @@
+VIOLATION of COMMIT-SOUND top-level Committed=0 implies nothing kept (Invariant) after 20 steps; 41805 states explored, 0.06s
+Counterexample for COMMIT-SOUND top-level Committed=0 implies nothing kept
+ config: ExecCfg { txm: 0, devf: 0, force: false, path_ok: true, cleanup_fails: false, caller_tx: false, top: ExecPkg { ver: 2, upd: false, sysreq: false, act: 0, mf: 0, snap: false, found: true }, deps: [], init: [ExecMod { present: true, ver: 2, dev: true, res: true, doc: 2, wr: 0 }, ExecMod { present: false, ver: 0, dev: false, res: false, doc: 0, wr: 0 }, ExecMod { present: false, ver: 0, dev: false, res: false, doc: 0, wr: 0 }], var: 1 }
+  init: top_pc=0 tx=0
+    1. Step -> top_pc=1 lnm0.pc=0 lmr_pc=0 lnm1.pc=0 tlevel=0 jrn=true alive=true
+    2. Step -> top_pc=2 lnm0.pc=0 lmr_pc=0 lnm1.pc=0 tlevel=0 jrn=true alive=true
+    3. Step -> top_pc=3 lnm0.pc=0 lmr_pc=0 lnm1.pc=0 tlevel=0 jrn=true alive=true
+    4. Step -> top_pc=3 lnm0.pc=1 lmr_pc=0 lnm1.pc=0 tlevel=0 jrn=true alive=true
+    5. Step -> top_pc=3 lnm0.pc=2 lmr_pc=0 lnm1.pc=0 tlevel=1 jrn=true alive=true
+    6. Step -> top_pc=3 lnm0.pc=3 lmr_pc=0 lnm1.pc=0 tlevel=1 jrn=true alive=true
+    7. Step -> top_pc=3 lnm0.pc=4 lmr_pc=0 lnm1.pc=0 tlevel=1 jrn=true alive=true
+    8. Step -> top_pc=3 lnm0.pc=5 lmr_pc=0 lnm1.pc=0 tlevel=1 jrn=true alive=true
+    9. Step -> top_pc=3 lnm0.pc=6 lmr_pc=0 lnm1.pc=0 tlevel=1 jrn=true alive=true
+   10. Step -> top_pc=3 lnm0.pc=7 lmr_pc=0 lnm1.pc=0 tlevel=1 jrn=true alive=true
+   11. Step -> top_pc=3 lnm0.pc=8 lmr_pc=0 lnm1.pc=0 tlevel=0 jrn=true alive=true
+   12. Step -> top_pc=3 lnm0.pc=9 lmr_pc=0 lnm1.pc=0 tlevel=0 jrn=true alive=true
+   13. Step -> top_pc=3 lnm0.pc=10 lmr_pc=0 lnm1.pc=0 tlevel=1 jrn=true alive=true
+   14. Step -> top_pc=3 lnm0.pc=31 lmr_pc=0 lnm1.pc=0 tlevel=1 jrn=true alive=true
+   15. Step -> top_pc=3 lnm0.pc=31 lmr_pc=0 lnm1.pc=0 tlevel=0 jrn=true alive=true
+   16. Step -> top_pc=3 lnm0.pc=32 lmr_pc=0 lnm1.pc=0 tlevel=0 jrn=true alive=true
+   17. Step -> top_pc=4 lnm0.pc=32 lmr_pc=0 lnm1.pc=0 tlevel=0 jrn=true alive=true
+   18. Step -> top_pc=5 lnm0.pc=32 lmr_pc=0 lnm1.pc=0 tlevel=0 jrn=true alive=true
+   19. Step -> top_pc=6 lnm0.pc=32 lmr_pc=0 lnm1.pc=0 tlevel=0 jrn=true alive=true
+   20. Step -> top_pc=7 lnm0.pc=32 lmr_pc=0 lnm1.pc=0 tlevel=0 jrn=true alive=true
+ final observation: {"end": "returned", "status": "error", "open_transaction_levels": 0, "modules": {"top": {"manifest_present": true, "version": "2.0.0", "developer_mode": true, "resources_loaded": true, "zpm_document_version": "2.0.0", "writes": 1}}, "history_rows": 1, "history": {"top": {"row": true, "id_order": 1, "package_set": true, "version": "2.0.0", "success": "error", "committed": 0, "time_end_set": true, "finalized": true, "phases_started": 0, "last_phase_status": null}}, "history_temp": {"top": {"row": false}}}
+ L1 expectation: {"verdict": "refused: system requirements", "status": "error", "modules_one_of": [{"top": "unchanged"}], "history": {"top": {"row": true, "success": "error", "committed": "equals whether the action's changes were kept", "time_end_set": true, "finalized": true, "package_set": "any", "phases_started": "any", "last_phase_status": "any"}}}
+ violated clauses: ["L1-NAMESPACE", "H-COMMITTED[top]"]
+RESULT {"run": "control-01-no-setcommitted-c1", "kind": "control", "variant": "control-01-no-setcommitted-c1", "concern": "SetCommitted after C1 removed; COMMIT-SOUND must fail", "expect": "violation", "observed": "violation", "configs": 900, "states": 41805, "transitions": 41275, "depth": 19, "truncated": false, "seconds": 0.06, "checks": ["COMMIT-SOUND top-level Committed=0 implies nothing kept"], "txms": [0], "caller_tx": [false], "foreign_edits": false, "limits": {"max_states": 6000000, "max_depth": 400}}
