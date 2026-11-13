@@ -1,0 +1,36 @@
+set sc = $system.OBJ.LoadDir("/home/irisowner/zpm/.followup/scripts/FUNative/","ck-d",.err,1) write !,"HELPERS-LOADED ",$system.Status.IsOK(sc),!
+do ##class(FUNative.Obs).Begin("N-P21A")
+kill ^FUP21 tstart
+set jm = ##class(%IPM.Utils.JournalManager).%New(0) set ^FUP21("a") = "A" kill jm
+set ^FUP21("a") = "B"
+set jm = ##class(%IPM.Utils.JournalManager).%New(0) set ^FUP21("a") = "C" kill jm
+do ##class(FUNative.Obs).Obs("N-P21A","journaling.on",$select($zboolean($zjob,1024,1)=1024:0,1:1))
+set err = "" try { trollback } catch ex { set err = ex.DisplayString() } do ##class(FUNative.Obs).Obs("N-P21A","error",err) do ##class(FUNative.Obs).Obs("N-P21A","tlevel",$tlevel)
+do ##class(FUNative.Obs).Obs("N-P21A","value",$get(^FUP21("a"),"<undefined>")) kill ^FUP21
+do ##class(FUNative.Obs).End("N-P21A")
+do ##class(FUNative.Obs).Begin("N-P21AN")
+kill ^FUP21 tstart
+set jm = ##class(%IPM.Utils.JournalManager).%New(0) set ^FUP21("a") = "A" kill jm
+set ^FUP21("a") = "B"
+set err = "" try { trollback } catch ex { set err = ex.DisplayString() } do ##class(FUNative.Obs).Obs("N-P21AN","error",err) do ##class(FUNative.Obs).Obs("N-P21AN","tlevel",$tlevel)
+do ##class(FUNative.Obs).Obs("N-P21AN","value",$get(^FUP21("a"),"<undefined>")) kill ^FUP21
+do ##class(FUNative.Obs).End("N-P21AN")
+do ##class(FUNative.Obs).Begin("N-P21B")
+kill ^FUP21 tstart
+set jm = ##class(%IPM.Utils.JournalManager).%New(0) set ^FUP21("a") = "A" kill jm
+set ^FUP21("a") = "B"
+set jm = ##class(%IPM.Utils.JournalManager).%New(0) set ^FUP21("a") = "C" kill jm
+tcommit do ##class(FUNative.Obs).Obs("N-P21B","error","") do ##class(FUNative.Obs).Obs("N-P21B","tlevel",$tlevel)
+do ##class(FUNative.Obs).Obs("N-P21B","value",$get(^FUP21("a"),"<undefined>")) kill ^FUP21
+do ##class(FUNative.Obs).End("N-P21B")
+do ##class(FUNative.Obs).Begin("N-P21R")
+tstart
+set jm = ##class(%IPM.Utils.JournalManager).%New(0) set h = ##class(%IPM.General.History).%New() set h.Action = "load", h.Package = "fu-p21-probe", h.CommandString = "followup probe", h.Version = ##class(%IPM.General.SemanticVersion).FromString("1.0.0") do h.%Save() set id = h.%Id() kill h, jm
+set h = ##class(%IPM.General.History).%OpenId(id) set h.Committed = 1 do h.%Save() kill h
+set jm = ##class(%IPM.Utils.JournalManager).%New(0) set h = ##class(%IPM.General.History).%OpenId(id) set h.Finalized = 1, h.TimeEnd = $zdatetime($horolog,3) do h.%Save() kill h, jm
+set err = "" try { trollback } catch ex { set err = ex.DisplayString() } do ##class(FUNative.Obs).Obs("N-P21R","error",err) do ##class(FUNative.Obs).Obs("N-P21R","tlevel",$tlevel)
+set h = ##class(%IPM.General.History).%OpenId(id) do ##class(FUNative.Obs).Obs("N-P21R","exists",$isobject(h)) if $isobject(h) { do ##class(FUNative.Obs).Obs("N-P21R","committed",+h.Committed) do ##class(FUNative.Obs).Obs("N-P21R","finalized",+h.Finalized) } kill h
+do ##class(%IPM.General.History).%DeleteId(id) do ##class(FUNative.Obs).Obs("N-P21R","probe.deleted",$select(##class(%IPM.General.History).%ExistsId(id):0,1:1))
+do ##class(FUNative.Obs).End("N-P21R")
+write !,"NATIVE-END",!
+halt

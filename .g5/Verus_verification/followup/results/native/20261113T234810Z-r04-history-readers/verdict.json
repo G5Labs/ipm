@@ -1,0 +1,198 @@
+{
+ "cases": {
+  "N-R04-CUTOFF": {
+   "differ": [],
+   "fields": {
+    "q.n": {
+     "expected": "0",
+     "observed": "0",
+     "result": "AGREE"
+    },
+    "truth.n": {
+     "expected": "1",
+     "observed": "1",
+     "result": "AGREE"
+    }
+   },
+   "missing": [],
+   "observations": {
+    "cutoff": "2026-10-14 00:00:00",
+    "q.err": "",
+    "q.n": "0",
+    "q.rows": "",
+    "truth.err": "",
+    "truth.n": "1",
+    "truth.rows": "fu-hr-a#6"
+   },
+   "problems": [],
+   "source": "History.cls:162-181: the purge compares TimeStart with the quoted cutoff; history_readers.py as-built predicts 0 selected rows where the contract selects the 40-day-old row",
+   "verdict": "CONFORMS"
+  },
+  "N-R04-DEL": {
+   "differ": [],
+   "fields": {
+    "cmd.ok": {
+     "expected": "1",
+     "observed": "1",
+     "result": "AGREE"
+    },
+    "del.after": {
+     "expected": "0",
+     "observed": "0",
+     "result": "AGREE"
+    },
+    "del.before": {
+     "expected": "2",
+     "observed": "2",
+     "result": "AGREE"
+    },
+    "others.unchanged": {
+     "expected": "1",
+     "observed": "1",
+     "result": "AGREE"
+    },
+    "total.delta": {
+     "expected": "2",
+     "observed": "2",
+     "result": "AGREE"
+    }
+   },
+   "missing": [],
+   "observations": {
+    "cmd.ok": "1",
+    "cmd.tlevel": "0",
+    "del.after": "0",
+    "del.before": "2",
+    "others.unchanged": "1",
+    "total.delta": "2"
+   },
+   "problems": [],
+   "source": "history_readers.py valid neighbor: delete with a plain-column filter removes exactly the selection",
+   "verdict": "CONFORMS"
+  },
+  "N-R04-FIND": {
+   "differ": [],
+   "fields": {
+    "q.err": {
+     "expected": "",
+     "observed": "",
+     "result": "AGREE"
+    },
+    "q.n": {
+     "expected": "2",
+     "observed": "2",
+     "result": "AGREE"
+    }
+   },
+   "missing": [],
+   "observations": {
+    "q.err": "",
+    "q.n": "2",
+    "q.rows": "fu-hr-a#7,fu-hr-a#6",
+    "total": "9"
+   },
+   "problems": [],
+   "source": "history_readers.py contract and as-built agree (valid neighbor): Package is a plain column",
+   "verdict": "CONFORMS"
+  },
+  "N-R04-ORDER": {
+   "differ": [],
+   "fields": {
+    "q.n": {
+     "expected": "2",
+     "observed": "2",
+     "result": "AGREE"
+    },
+    "q.rows": {
+     "expected": "6,7",
+     "observed": "6,7",
+     "result": "AGREE"
+    }
+   },
+   "missing": [],
+   "observations": {
+    "first2": "6,7",
+    "q.err": "",
+    "q.n": "2",
+    "q.rows": "fu-hr-a#6,fu-hr-a#7"
+   },
+   "problems": [],
+   "source": "GetHistory ORDER BY ID ASC with TOP (History.cls:132-147)",
+   "verdict": "CONFORMS"
+  },
+  "N-R04-SEL": {
+   "differ": [],
+   "fields": {
+    "q.err": {
+     "expected": "",
+     "observed": "",
+     "result": "AGREE"
+    },
+    "q.n": {
+     "expected": "9",
+     "observed": "9",
+     "result": "AGREE"
+    }
+   },
+   "missing": [],
+   "observations": {
+    "q.err": "",
+    "q.n": "9",
+    "q.rows": "fu-hr-del#11,fu-hr-del#10,fu-hr-b#9,fu-hr-b#8,fu-hr-a#7,fu-hr-a#6,testcoverage#3,vscode-per-namespace-settings#2,zpm#1",
+    "total": "9"
+   },
+   "problems": [],
+   "source": "history_readers.py: as-built stops at Version_Major (collation puts it before lowercase package) and returns every row; the wrong variant M-SKIP-INVALID would return the 2 fu-hr-b rows; the contract wants 1",
+   "verdict": "CONFORMS"
+  },
+  "N-R04-SEL2": {
+   "differ": [],
+   "fields": {
+    "q.err": {
+     "expected": "",
+     "observed": "",
+     "result": "AGREE"
+    },
+    "q.n": {
+     "expected": "2",
+     "observed": "2",
+     "result": "AGREE"
+    }
+   },
+   "missing": [],
+   "observations": {
+    "q.err": "",
+    "q.n": "2",
+    "q.rows": "fu-hr-b#9,fu-hr-b#8",
+    "total": "9"
+   },
+   "problems": [],
+   "source": "history_readers.py: Package sorts before Version_Major, so the Package conjunct is kept and the version is dropped (contract: 1 row)",
+   "verdict": "CONFORMS"
+  },
+  "N-R04-UNKNOWN": {
+   "differ": [],
+   "fields": {
+    "q.n": {
+     "expected": "0",
+     "observed": "0",
+     "result": "AGREE"
+    }
+   },
+   "missing": [],
+   "observations": {
+    "q.err": "SQLCODE -29",
+    "q.n": "0",
+    "q.rows": ""
+   },
+   "problems": [],
+   "source": "history_readers.py as-built: an unknown column yields no rows and no exception through GetHistory (native H2 saw the same through find)",
+   "verdict": "CONFORMS"
+  }
+ },
+ "evaluated_utc": "2026-11-13T23:48:11Z",
+ "evaluator_sha256": "eabaed09d053f567c8c1c020988b764f4ff8fb8b8f7644a68e5ea3128ac31d88",
+ "native_end": true,
+ "process_outcome": "COMPLETED",
+ "run_id": "20261113T234810Z-r04-history-readers"
+}

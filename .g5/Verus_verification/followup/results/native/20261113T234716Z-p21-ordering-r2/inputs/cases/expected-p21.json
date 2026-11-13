@@ -1,0 +1,43 @@
+{
+ "cases": [
+  {
+   "id": "N-P21A",
+   "source": "R06e question; N-P20(c) showed the journaled update alone is undone",
+   "expect": {
+    "value": "A",
+    "tlevel": "0",
+    "error": ""
+   },
+   "note": "expected under before-image rollback: the later unjournaled C is lost with the journaled B"
+  },
+  {
+   "id": "N-P21AN",
+   "source": "neighbor: N-P20(c) reproduced (unjournaled A, journaled B, rollback)",
+   "expect": {
+    "value": "A",
+    "tlevel": "0",
+    "error": ""
+   }
+  },
+  {
+   "id": "N-P21B",
+   "source": "neighbor: the same writes, committed",
+   "expect": {
+    "value": "C",
+    "tlevel": "0",
+    "error": ""
+   }
+  },
+  {
+   "id": "N-P21R",
+   "source": "the repair-103 dependency row through %IPM.General.History: unjournaled insert, journaled Committed=1, unjournaled Finalized=1, rollback",
+   "expect": {
+    "exists": "1",
+    "committed": "0",
+    "finalized": "0",
+    "tlevel": "0",
+    "error": ""
+   }
+  }
+ ]
+}

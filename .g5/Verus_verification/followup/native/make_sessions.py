@@ -97,7 +97,7 @@ def p21_session():
     L += ['do ##class(FUNative.Obs).Begin("N-P21AN")', 'kill ^FUP21 tstart', f'{jm} set ^FUP21("a") = "A" kill jm', 'set ^FUP21("a") = "B"', tryrb("N-P21AN"),
           'do ##class(FUNative.Obs).Obs("N-P21AN","value",$get(^FUP21("a"),"<undefined>")) kill ^FUP21', 'do ##class(FUNative.Obs).End("N-P21AN")']
     L += ['do ##class(FUNative.Obs).Begin("N-P21B")', 'kill ^FUP21 tstart', f'{jm} set ^FUP21("a") = "A" kill jm', 'set ^FUP21("a") = "B"',
-          f'{jm} set ^FUP21("a") = "C" kill jm', 'tcommit do ##class(FUNative.Obs).Obs("N-P21B","error","") do ##class(FUNative.Obs).Obs("N-P21B","tlevel",$tlevel)',
+          f'{jm} set ^FUP21("a") = "C" kill jm', 'tcommit  do ##class(FUNative.Obs).Obs("N-P21B","error","") do ##class(FUNative.Obs).Obs("N-P21B","tlevel",$tlevel)',
           'do ##class(FUNative.Obs).Obs("N-P21B","value",$get(^FUP21("a"),"<undefined>")) kill ^FUP21', 'do ##class(FUNative.Obs).End("N-P21B")']
     L += ['do ##class(FUNative.Obs).Begin("N-P21R")', 'tstart',
           f'{jm} set h = ##class(%IPM.General.History).%New() set h.Action = "load", h.Package = "fu-p21-probe", h.CommandString = "followup probe", h.Version = ##class(%IPM.General.SemanticVersion).FromString("1.0.0") do h.%Save() set id = h.%Id() kill h, jm',

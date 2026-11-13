@@ -1,0 +1,62 @@
+{
+ "cases": [
+  {
+   "id": "N-R04-FIND",
+   "source": "history_readers.py contract and as-built agree (valid neighbor): Package is a plain column",
+   "expect": {
+    "q.n": "2",
+    "q.err": ""
+   }
+  },
+  {
+   "id": "N-R04-SEL",
+   "source": "history_readers.py: as-built stops at Version_Major (collation puts it before lowercase package) and returns every row; the wrong variant M-SKIP-INVALID would return the 2 fu-hr-b rows; the contract wants 1",
+   "expect": {
+    "q.n": "@ALL",
+    "q.err": ""
+   }
+  },
+  {
+   "id": "N-R04-SEL2",
+   "source": "history_readers.py: Package sorts before Version_Major, so the Package conjunct is kept and the version is dropped (contract: 1 row)",
+   "expect": {
+    "q.n": "2",
+    "q.err": ""
+   }
+  },
+  {
+   "id": "N-R04-ORDER",
+   "source": "GetHistory ORDER BY ID ASC with TOP (History.cls:132-147)",
+   "expect": {
+    "q.n": "2",
+    "q.rows": "@FIRST2"
+   }
+  },
+  {
+   "id": "N-R04-UNKNOWN",
+   "source": "history_readers.py as-built: an unknown column yields no rows and no exception through GetHistory (native H2 saw the same through find)",
+   "expect": {
+    "q.n": "0"
+   }
+  },
+  {
+   "id": "N-R04-DEL",
+   "source": "history_readers.py valid neighbor: delete with a plain-column filter removes exactly the selection",
+   "expect": {
+    "cmd.ok": "1",
+    "del.before": "2",
+    "del.after": "0",
+    "others.unchanged": "1",
+    "total.delta": "2"
+   }
+  },
+  {
+   "id": "N-R04-CUTOFF",
+   "source": "History.cls:162-181: the purge compares TimeStart with the quoted cutoff; history_readers.py as-built predicts 0 selected rows where the contract selects the 40-day-old row",
+   "expect": {
+    "q.n": "0",
+    "truth.n": "1"
+   }
+  }
+ ]
+}

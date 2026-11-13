@@ -74,14 +74,14 @@ class Store:
         self.undo = []               # open levels: list of [(node, before)]
         self.jrn = True
         self.temp = {}               # IRISTEMP: never undone
-        self.before_image = True     # mutant M-NO-BEFORE-IMAGE sets False
+        self.before_image = True     # compare-and-restore (P-14); mutant M-BEFORE-IMAGE sets False
 
     def tl(self):
         return len(self.undo)
 
     def write(self, node, val):
         if self.undo and self.jrn:
-            self.undo[-1].append((node, self.v.get(node)))
+            self.undo[-1].append((node, self.v.get(node), val))
         if val is None:
             self.v.pop(node, None)
         else:
@@ -96,13 +96,17 @@ class Store:
             self.undo[-1].extend(lvl)
 
     def trollback1(self):
+        """P-14 (native N-P20c, N-P20c2, N-P21A, N-P21R): a journaled write is undone only if the node
+        still holds the value it wrote; a later unjournaled write to the node survives the rollback.
+        The mutant M-BEFORE-IMAGE restores every before-image unconditionally."""
         lvl = self.undo.pop()
-        for node, old in reversed(lvl):
-            if self.before_image or old is None or node not in self.v:
-                if old is None:
-                    self.v.pop(node, None)
-                else:
-                    self.v[node] = old
+        for node, old, new in reversed(lvl):
+            if self.before_image and self.v.get(node) != new:
+                continue
+            if old is None:
+                self.v.pop(node, None)
+            else:
+                self.v[node] = old
 
     def rollback_all(self):
         while self.undo:
@@ -159,7 +163,7 @@ def program(cfg):
 
     steps = []
     S = steps.append
-    rep = cfg.variant in ("REPAIR-103", "REPAIR-103-M-LATE-MARK")
+    rep = cfg.variant in ("REPAIR-103", "REPAIR-103-GUARDED", "REPAIR-103-M-LATE-MARK")
     naive = cfg.variant == "REPAIR-NAIVE"   # only the row's survival is fixed; Committed as built
 
     # ---- history helpers
@@ -225,13 +229,26 @@ def program(cfg):
         return f
 
     def dep_commit_mark(st, ctx):
-        """Repair 103: when a commit returns the load to its entry level, journaled Committed=1 on
-        dependency rows whose module changes are now durable (the row's last write before the commit)."""
-        if not rep:
+        """Repair 103: before a commit that returns the load to its entry level, a journaled
+        Committed=1 on the dependency rows whose writes that commit makes durable. It must be the
+        row's last write before the commit."""
+        if not rep or st.tl() != ctx["entry"] + 1:
             return
         for a in acts[1:]:
             if ("hist", a) in st.v and a in ctx["completed"] and st.v[("hist", a)]["com"] == 0:
                 st.write(("hist", a), {**st.v[("hist", a)], "com": 1})
+
+    def late_write(st, ctx):
+        """Mutant REPAIR-103-M-LATE-MARK: an unjournaled write to the dependency rows between the mark
+        and the commit (for example finalizing them there)."""
+        if cfg.variant != "REPAIR-103-M-LATE-MARK" or st.tl() != ctx["entry"] + 1:
+            return
+        j = st.jrn
+        st.jrn = False
+        for a in acts[1:]:
+            if ("hist", a) in st.v:
+                st.write(("hist", a), {**st.v[("hist", a)], "fin": 1})
+        st.jrn = j
 
     # ---- module writes
     def wmod(a, field):
@@ -268,8 +285,8 @@ def program(cfg):
         if dev(a) and uses_tx(a):
             def c1(st, ctx, a=a):
                 st.tcommit()
-                if st.tl() == ctx["entry"]:
-                    dep_commit_mark(st, ctx)
+            A((f"{a}:C1-mark", dep_commit_mark))
+            A((f"{a}:C1-late", late_write))
             A((f"{a}:C1-commit", c1))
             A((f"{a}:C1-marker", set_committed(a)))
             A((f"{a}:C1-tstart", lambda st, ctx: st.tstart()))
@@ -284,16 +301,16 @@ def program(cfg):
         if dev(a) and uses_tx(a):
             def c2(st, ctx, a=a):
                 st.tcommit()
-                if st.tl() == ctx["entry"]:
-                    dep_commit_mark(st, ctx)
+            A((f"{a}:C2-mark", dep_commit_mark))
+            A((f"{a}:C2-late", late_write))
             A((f"{a}:C2-commit", c2))
         A((f"{a}:write-res", wmod(a, "res")))
         A((f"{a}:activate", "FAULT:" + a))
         if not dev(a) and uses_tx(a):
             def c3(st, ctx, a=a):
                 st.tcommit()
-                if st.tl() == ctx["entry"]:
-                    dep_commit_mark(st, ctx)
+            A((f"{a}:C3-mark", dep_commit_mark))
+            A((f"{a}:C3-late", late_write))
             A((f"{a}:C3-commit", c3))
             A((f"{a}:C3-marker", set_committed(a)))
         A((f"{a}:done", lambda st, ctx, a=a: ctx["completed"].add(a)))
@@ -326,7 +343,7 @@ def run(cfg, init, cut=None, end="return"):
     Returns the observations at the end points."""
     steps, acts, mode, uses_tx = program(cfg)
     st = Store(init)
-    if cfg.variant == "M-NO-BEFORE-IMAGE":
+    if cfg.variant == "M-BEFORE-IMAGE":
         st.before_image = False
     ctx = {"acts": acts, "started": set(), "failed": set(), "completed": set(), "itl": {}, "jprev": {}, "entry": 1 if cfg.caller_tx else 0,
            "kept_now": lambda st, a: True}
@@ -399,7 +416,10 @@ def close(a, st, ctx, variant="as-built"):
         return
     if variant.startswith("REPAIR-103") and a == "top":
         st.write(("hist", a), {"com": t["com"], "ok": t["ok"], "tend": t["tend"], "fin": 1})
-        finalize_dep_rows(st, list(ctx.get("acts", [])))
+        # REPAIR-103-GUARDED: the close finalizes dependency rows only when no transaction of the load
+        # is open, so no unjournaled write can follow the journaled Committed mark before its commit.
+        if variant != "REPAIR-103-GUARDED" or st.tl() == ctx["entry"]:
+            finalize_dep_rows(st, list(ctx.get("acts", [])))
         return
     if variant.startswith("REPAIR-103") and a != "top":
         j = st.jrn
@@ -602,6 +622,20 @@ def corresponding_cases():
     v = returned(Cfg(None, None, ("NoTransaction",), False, None, False, "as-built"))
     out.append(("prediction N-R05-Q23S: same, parent succeeds: dependency installed, row Committed=1",
                 v.get(("mod", "dep1"), {}).get("present") == 1 and v.get(("hist", "dep1"), {}).get("com") == 1))
+    # P-14: the store's rollback against the four native probe sequences
+    def seq(steps, end):
+        st = Store({})
+        st.tstart()
+        for j, val in steps:
+            st.jrn = j
+            st.write("n", val)
+        st.jrn = True
+        (st.trollback1 if end == "rollback" else st.tcommit)()
+        return st.v.get("n")
+    out.append(("N-P20c / N-P21AN: unjournaled A, journaled B, rollback -> A", seq([(False, "A"), (True, "B")], "rollback") == "A"))
+    out.append(("N-P20c2: journaled insert V, unjournaled U, rollback -> U", seq([(True, "V"), (False, "U")], "rollback") == "U"))
+    out.append(("N-P21A: unjournaled A, journaled B, unjournaled C, rollback -> C", seq([(False, "A"), (True, "B"), (False, "C")], "rollback") == "C"))
+    out.append(("N-P21B: the same, committed -> C", seq([(False, "A"), (True, "B"), (False, "C")], "commit") == "C"))
     return out
 
 
@@ -630,8 +664,8 @@ def ordering_hazard():
     st.write(("hist", "d"), {"com": 1, "fin": 1})
     st.jrn = True
     st.trollback1()
-    return {"before_image_semantics": with_before_image, "no_before_image_semantics": st.v[("hist", "d")],
-            "native_probe": "N-P21 decides which holds (followup/native)"}
+    return {"compare_and_restore (P-14, model default)": with_before_image, "unconditional_before_image (mutant)": st.v[("hist", "d")],
+            "native": "N-P21R (followup/results/native/20261113T234716Z-p21-ordering-r2): committed=1, finalized=1 after the rollback"}
 
 
 def main(argv):
@@ -643,12 +677,12 @@ def main(argv):
                         "transaction or not; ends: return, and a Terminate or SIGKILL before every step (no caller transaction); "
                         "retry after every process end",
               "q_options": [{"Q-22": a, "Q-23": b} for a, b in qopts]}
-    for variants in (["as-built"], ["REPAIR-103"], ["REPAIR-NAIVE"], ["M-GLOBAL-MODE"], ["M-NO-BEFORE-IMAGE"], ["M-JOURNAL-NOT-RESTORED"]):
+    for variants in (["as-built"], ["REPAIR-103"], ["REPAIR-103-GUARDED"], ["REPAIR-103-M-LATE-MARK"], ["REPAIR-NAIVE"], ["M-GLOBAL-MODE"], ["M-BEFORE-IMAGE"], ["M-JOURNAL-NOT-RESTORED"]):
         result[variants[0]] = explore(variants, qopts)
     result["correspondence"] = [{"case": c, "holds": ok} for c, ok in corresponding_cases()]
     result["ordering_hazard"] = ordering_hazard()
     json.dump(result, open(os.path.join(out, "loadtx.json"), "w"), indent=1, sort_keys=True, default=str)
-    for k in ("as-built", "REPAIR-103", "REPAIR-NAIVE", "M-GLOBAL-MODE", "M-NO-BEFORE-IMAGE", "M-JOURNAL-NOT-RESTORED"):
+    for k in ("as-built", "REPAIR-103", "REPAIR-103-GUARDED", "REPAIR-103-M-LATE-MARK", "REPAIR-NAIVE", "M-GLOBAL-MODE", "M-BEFORE-IMAGE", "M-JOURNAL-NOT-RESTORED"):
         r = result[k]
         print(k, "configs", r["configs"], "end_states", r["end_states"], "retry_failures", r["retry_failures"], "transient_differs", r["transient_differs"])
         for vk, n in sorted(r["violations"].items()):
