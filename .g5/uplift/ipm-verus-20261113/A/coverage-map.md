@@ -3,7 +3,7 @@
 Joins the A1 [intent inventory](intent-inventory.md) and the A2 [operation inventory](operation-inventory.md) to the governing ontology in [`.g5/ontology`](../../../ontology/root.g5.md). This map locates evidence. The ontology bodies govern.
 
 - Product pin `571e04a1`; wiki `781e98fd`. Locators as in A1 and A2.
-- Ontology: 18 pages, 147 blocks (122 I, 5 D, 20 Q). Q-01 to Q-17 come from A1, and Q-12 is now closed as a decision. Q-18 and Q-19 are new in A3. Q-20 came from the A4 [reconstruction check](reconstruction-check.md) (row dispositions in [reconstruction-dispositions.md](reconstruction-dispositions.md)), and Q-21 from stage C round 1 (`../C/round-1/repairs-ontology.md`).
+- Ontology: 18 pages, 148 blocks (122 I, 5 D, 21 Q). Q-01 to Q-17 come from A1, and Q-12 is now closed as a decision. Q-18 and Q-19 are new in A3. Q-20 came from the A4 [reconstruction check](reconstruction-check.md) (row dispositions in [reconstruction-dispositions.md](reconstruction-dispositions.md)), Q-21 came from stage C round 1 and Q-22 from round 2 (`../C/round-1/repairs-ontology.md`).
 - Native evidence: B2 phase 1 results ([native report](../B/native-report.md)) are cited on the owning blocks and summarized in section 9. Where section 9 gives a status, it replaces `pending B` for native evidence. Formal (B1) evidence is still pending.
 - Columns. **Commitment**: A1 ID and summary. **Governing source**: the strongest human source checked by A3. **Owner**: ontology block IDs. **Operations**: A2 IDs with the main symbol. `CMD-n` is row n of A2 section 1.2, and `EP` names a row of A2 section 1.3. **Model/evidence**: `pending B` for the formal scope (load and history), `out of formal scope` otherwise. Existing product tests are cited in the ontology metadata. **Status**: `covered`, `partial: <what is missing>` or `unmatched`.
 - "Missing" in a status means a clause is unresolved (Q), contradicted by observed code (suspected gap, stage B to confirm), or has no operation. It never means the ontology adopted the observed behavior.
@@ -144,20 +144,21 @@ Each row is a clause of an owned block that the A2 operations do not fully satis
 
 | Owner | Clause | What is missing | Evidence |
 |---|---|---|---|
-| `load.path` | `.tar.gz` archives | Not recognized as an archive | OBS-L2 |
-| `load.refusal.path` | only absolute paths | An existing relative path is accepted | OP-LOAD-02 |
-| `load.refusal`, `load.refusal.manifest` | refusals keep no module data in any mode | Under `-DNoTransaction=1`, late manifest checks leave the manifest and read committed | OP-LOAD-09, A1 2.3, A4 R6 |
+| `load.path` | `.tar.gz` archives | Refused (confirmed, D15) | OBS-L2, stage C S1 |
+| `load.refusal.path` | only absolute paths | An existing relative path is accepted (confirmed, D17) | OP-LOAD-02, stage C S4R |
+| `load.refusal`, `load.refusal.manifest` | refusals keep no module data in any mode | Late manifest checks under NoTransaction and validation refusals under NoJournal keep module data (confirmed, D11); refusals after the marker read committed (D12) | OP-LOAD-09, A1 2.3, A4 R6 |
 | `load.refusal.requirements` | checked before installation | Checked after the manifest write and the developer-mode first commit (confirmed, B2 D4: B2-B4) | Q-17, OBS-L10 |
 | `load.refusal.downgrade` | no bypass | Holds. `PermitDowngrade` honored by the graph but not the guard | OBS-L14 |
 | `load.path.archive`, `install.package` | rollback leaves the namespace as it was | Install folder replaced before version checks | OBS-L7, Q-04 |
-| `load.dependencies.local-repo` | removed even after an error | Cleanup fails with `<INVALID OREF>` when the folder cannot be cached | OBS-L12 |
+| `load.dependencies.local-repo` | removed even after an error | Cleanup fails with `<INVALID OREF>` after commit (confirmed, D13); left registered after a process end (I2) | OBS-L12, B1-C29 |
 | `load.write-check` | checked before installing | Only repository archives are checked | OP-LOAD-19 |
 | `load.core` | one loading path | Legacy XML packages bypass it | OBS-L16 |
+| `load.outcome` | normal mode rolls back the whole load, dependencies included | A dependency's own `<Defaults>` `NoJournal` escapes the rollback (D14, decision pending) | Q-22, stage C M5 |
 | `deps.lockfile` | file in the module root | Wrong folder on a first plain load; survives rollback | OBS-L3, OBS-L11 |
 | `dev-mode.not-propagated`, `update.dev-mode` | `update -dev` | Module itself ends in normal mode when updated from a registry | OBS-L4 |
 | `dev-mode.sticky` | plain load keeps mode | Open, and `Root` and `Repository` are not saved | Q-01, OBS-L3 |
 | `update.steps` | steps from current to new version | Lock timeout skips steps; new dependency runs all steps | OBS-L9, OBS-L5 |
-| `update.refusal` | `-path` mismatch keeps no module data | Checked after the manifest write | OBS-L6, A4 R6 |
+| `update.refusal` | `-path` mismatch refused with its message, no module data | Crashes with `<INVALID OREF>` before the check; `Committed=1` under NoTransaction (confirmed, D16; OBS-L6 refuted) | stage C S3 |
 | `module.processor` | processor errors fail the phase | Compile ignores processor status | OBS-L8 |
 | `history.survives-rollback` | dependency records survive a parent rollback | Lost (confirmed, B2 D1) | OBS-L1, OBS-H5, B2 A1-A3 |
 | `history.record`, `history.phases` | running or never-finished actions listed with their started phases | Permanent record keeps only start values, so no phases and an empty package show until the end | OBS-H6 |
@@ -170,10 +171,10 @@ Each row is a clause of an owned block that the A2 operations do not fully satis
 | `history.locked` | only ended actions are finalized | `$SYSTEM.Process.Terminate` finalizes an unfinished developer-mode record (B2 C2) | Q-21 |
 | `history.read.filter`, `history.delete` | filters apply | First invalid column drops the rest, widening delete (confirmed, B2 D2); `find` hides query errors (E3) | Q-10, OBS-H1 |
 | `history.read.filter` | explicit filters only | Default modifiers become filters | Q-18, OBS-H2 |
-| `history.read.api` | `GlobalRecords` reads all namespaces | Fetch without switching namespace; `Records` ID column | OBS-H10, OBS-H11 |
+| `history.read.api` | `GlobalRecords` reads all namespaces | Returns the current namespace's rows once per namespace (confirmed, D20); `Records` ID column not run | OBS-H10, OBS-H11 |
 | `history.retention` | deletes old records | Cutoff likely matches nothing; error blocks commands; `config delete` restores first value | OBS-H3, Q-13, OBS-H12, OBS-H4 |
 | `history.keep-on-ipm-uninstall`, `uninstall.ipm` | log kept; uninstall recorded | Shared IRISTEMP global killed; success recorded before Clean | Q-16, OBS-H13, OBS-H15 |
-| `settings.default-modifiers` | current namespace only | Stored in a `^%` global, possibly instance-wide | OBS-X1, P-10 |
+| `settings.default-modifiers` | current namespace only | Instance-wide (confirmed, D19) | OBS-X1, stage C X1 |
 | `settings` | `delete` restores the default | Restores the first value ever set (confirmed, B2 D5) | OBS-H4 |
 
 ## 5. Where A1 and A2 disagree
@@ -218,6 +219,7 @@ No disagreement is left unresolved. Disagreements 2, 5 and 8 depend on stage B's
 | Q-19 (new) | Does `reinstall` use the installed or the latest version? | `reinstall.version` | features/install |
 | Q-20 (new, A4 R12) | May a delete or purge remove a running action's record, and what does its final write do? | `history.delete.running-records` | features/history |
 | Q-21 (new, C round 1) | May IPM finalize the record of an action that never ended? | `history.locked.unfinished` | features/history |
+| Q-22 (new, C round 2) | Does a dependency's own `<Defaults>` `NoTransaction` or `NoJournal` apply inside its parent's transaction and escape its rollback? (provisional: yes) | `transaction.flag-sources.dependency-defaults` | concepts/transactions-and-dev-mode |
 
 ## 7. In-scope ontology blocks
 
@@ -234,9 +236,9 @@ These blocks are in the formal scope. Stage B links model and native evidence to
 - Stage B: confirm every suspected gap in section 4 natively, and link model and native evidence to the in-scope blocks in section 7.
 - Human decisions: Q-01 to Q-19 need maintainer answers. Q-02, Q-17, Q-10 and Q-06 change required outcomes most.
 
-## 9. Native evidence status after B2 phase 1 (stage C round 1)
+## 9. Native evidence status after B2 phases 1 and 2 (stage C rounds 1 and 2)
 
-Runs are `20261113T<suffix>` under `.g5/Verus_verification/results/native/`. The owning blocks carry the details, and the [B2 report](../B/native-report.md) is the source. Formal (B1) evidence is linked at handoff.
+Runs are `20261113T<suffix>` under `.g5/Verus_verification/results/native/`. The owning blocks carry the details. Sources: the [B2 report](../B/native-report.md) (phase 1), [native-replay.md](../B/native-replay.md) (phase 2 and stage C) and [bugs_issues.md](../../../Verus_verification/bugs_issues.md). Formal and native evidence per in-scope block is in the [verification coverage map](../../../Verus_verification/coverage-map.md).
 
 | Owner block | Status | Runs |
 |---|---|---|
@@ -246,7 +248,17 @@ Runs are `20261113T<suffix>` under `.g5/Verus_verification/results/native/`. The
 | `load.refusal.requirements.timing` (Q-17) | confirmed defect D4 pending the decision (B2-B4); B0, B1 conform | `182820Z-cases-b`, `184630Z-repro-sysreq-dev-manifest-left` |
 | `load.outcome`, `load.outcome.dev`, `transaction`, `transaction.opt-out` | conforms (A1, A2, A5, B3, B4, C1, C3); P-6 refined: SIGKILL rollback waits for slot cleanup | `182759Z-cases-a`, `182820Z-cases-b`, `182903Z-cases-c-terminate`, `182927Z-cases-c-sigkill`, `181724Z-premise-p18-sigkill-r3`, `181129Z-premises` |
 | `load.path.archive` | `.tgz` covered by suite FileBinaryTar | `182337Z-suite-verify-FileBinaryTar` |
-| `load.path` (`.tar.gz`), `load.refusal.path`, `load.refusal.manifest` late checks, `update.refusal` `-path` mismatch, `load.dependencies.local-repo` cleanup, legacy XML (`load.core`), `history.read.filter.default-modifiers` (Q-18) | not run; queued for B2 phase 2 | none |
+| `load.path` (`.tar.gz`) | confirmed defect D15 (S1); `.tgz` neighbour S1N conforms | `204152Z-stagec` |
+| `load.refusal`, `load.refusal.manifest` | confirmed defects D11 (S2, S2B, B1-C10, B1-C52) and D12 (B1-C08); S2N conforms | `204152Z-stagec`, `193952Z-replay-return-b`, `205137Z-replay-c51-c52` |
+| `update.refusal` (`-path` mismatch) | confirmed defect D16 (S3, S3N1); OBS-L6 refuted; S3N2 conforms | `204152Z-stagec` |
+| `load.refusal.path` | confirmed defect D17 (S4R); S4N1, S4N2 conform | `204405Z-stagec2` |
+| `load.dependencies.local-repo` | confirmed defect D13 (B1-C29); issue I2 (leftover temporary repositories after a process end) | `193952Z-replay-return-b`, `210229Z-temp-repos-leftover` |
+| `transaction.flag-sources.dependency-defaults` (Q-22), `load.outcome` | M5 keeps a `NoJournal` dependency after the parent's rollback (D14, decision pending); M5N rolls back; both lose the dependency record (D1) | `204405Z-stagec2` |
+| `transaction.flag-sources`, `settings.default-modifiers` | confirmed defect D19 (X1, instance-wide defaults) | `204152Z-stagec` |
+| `history.read.filter.default-modifiers` (Q-18) | D18, decision pending (H2) | `204152Z-stagec` |
+| `history.read.global`, `history.read.api` | `find -globally` conforms; `GlobalRecords` confirmed defect D20 (H10) | `204152Z-stagec` |
+| `history.record` | D10 named (C1, C3, C4R); model cases C44-C48 T/K agree | `194122Z-replay-terminate-b`, `194155Z-replay-sigkill-b` |
+| legacy XML (`load.core`) | not run | none |
 | `history.survives-rollback`, `history.dependencies`, `history.dependencies.parent-rollback` | confirmed defect D1 (A1-A3) | `182759Z-cases-a`, `184617Z-repro-dep-history-lost` |
 | `history.committed.nested` (Q-05) | deviates (D1 caller case); D0 conforms | `182832Z-cases-dg`, `184632Z-repro-caller-tx-history-lost` |
 | `history.record`, `history.record.abnormal-end` (Q-08), `history.locked.unfinished` (Q-21), `history.survives-rollback.temp-copy` | C1, C3, C4R show no phases; C2 finalized without end; C4R `Committed=0`; temp-copy premise refuted for Terminate (N-P10) | `182903Z-cases-c-terminate`, `182927Z-cases-c-sigkill`, `183827Z-cases-c4r`, `181129Z-premises` |
@@ -258,4 +270,4 @@ Runs are `20261113T<suffix>` under `.g5/Verus_verification/results/native/`. The
 | `history.phases`, `history.phases.returned-errors` (Q-14) | confirmed defect D6; reader defect D8 | `184444Z-cases-hr` |
 | `history.locked` | conforms (N-P13) | `181129Z-premises` |
 | `history.read.details` | conforms (R1, R2); D7 withdrawn | `184444Z-cases-hr` |
-| `history.read.global`, `history.read.api`, `history.keep-on-ipm-uninstall` and its Q-16, uninstall cases | not run (self-uninstall persist step probed in N-P16; IRISTEMP sharing confirmed in N-P06, N-P17) | `181129Z-premises` |
+| `history.keep-on-ipm-uninstall` and its Q-16, uninstall cases | not run (self-uninstall persist step probed in N-P16; IRISTEMP sharing confirmed in N-P06, N-P17) | `181129Z-premises` |

@@ -325,7 +325,7 @@ May uninstalling IPM in one namespace delete the in-progress records of other na
 
 ## Metadata
 
-Source locators follow the conventions on the [root page](../root.g5.md#how-to-read-this-ontology). Inventory IDs refer to [A1](../../uplift/ipm-verus-20261113/A/intent-inventory.md) (`CAT`, `INT`, `Q`), [A2](../../uplift/ipm-verus-20261113/A/operation-inventory.md) (`OP`, `OBS`, `P`) and the [coverage map](../../uplift/ipm-verus-20261113/A/coverage-map.md). Every block on this page is in the formal scope. Native results of stage B2 phase 1 are cited per block by run, as `<time>-<name>`. The full run ID is `20261113T<time>-<name>` under `.g5/Verus_verification/results/native/`, and the [B2 report](../../uplift/ipm-verus-20261113/B/native-report.md) explains each case and defect (`D1`-`D8`; `D9` is the orchestrator's). Formal (B1) evidence is linked at handoff. History classes: `General/AbstractHistory.cls`, `General/HistoryTemp.cls`, `General/History.cls`, `General/HistoryPhase.cls`; tests in `tests/integration_tests/Test/PM/Integration/History.cls`.
+Source locators follow the conventions on the [root page](../root.g5.md#how-to-read-this-ontology). Inventory IDs refer to [A1](../../uplift/ipm-verus-20261113/A/intent-inventory.md) (`CAT`, `INT`, `Q`), [A2](../../uplift/ipm-verus-20261113/A/operation-inventory.md) (`OP`, `OBS`, `P`) and the [coverage map](../../uplift/ipm-verus-20261113/A/coverage-map.md). Every block on this page is in the formal scope. Native results of stage B2 phase 1 are cited per block by run, as `<time>-<name>`. The full run ID is `20261113T<time>-<name>` under `.g5/Verus_verification/results/native/`, and the [B2 report](../../uplift/ipm-verus-20261113/B/native-report.md) explains each phase-1 case and defect. Formal (B1) and native evidence per block, with reliance status, is in the [verification coverage map](../../Verus_verification/coverage-map.md). B2 phase 2 and stage C runs are listed in [B/native-replay.md](../../uplift/ipm-verus-20261113/B/native-replay.md) sections 3-7, and defects `D10`-`D20`, `I1` and `I2` in [VV/bugs_issues.md](../../Verus_verification/bugs_issues.md). History classes: `General/AbstractHistory.cls`, `General/HistoryTemp.cls`, `General/History.cls`, `General/HistoryPhase.cls`; tests in `tests/integration_tests/Test/PM/Integration/History.cls`.
 
 ### history
 
@@ -357,7 +357,7 @@ Sources: `wiki/09` L20, L72 ("An entry with no elapsed time either is still runn
 Native evidence (B2 phase 1). Process termination splits in two. `$SYSTEM.Process.Terminate` runs the end copy (premise N-P10 refuted), and SIGKILL does not (N-P18).
 - C1, a normal-mode load terminated in Activate: empty end time, conforming, but `Package=""` and no phases. The end copy was undone by the rollback and the IRISTEMP copy deleted. Deviates from listing started phases (`182903Z-cases-c-terminate`).
 - C2, a developer-mode load terminated in Activate: package, version, `Committed=1`, open Activate phase, no end time, but finalized ([unfinished](#history.locked.unfinished)) (`182903Z-cases-c-terminate`).
-- C3 and C4R, SIGKILL: the permanent record keeps only its start values (`Package=""`, no phases), and the IRISTEMP copy is orphaned. Confirmed gap against the phase rule, formerly OBS-H6 (`182927Z-cases-c-sigkill`, `183827Z-cases-c4r`).
+- C3 and C4R, SIGKILL: the permanent record keeps only its start values (`Package=""`, no phases), and the IRISTEMP copy is orphaned. Confirmed product defect D10, formerly OBS-H6 (`182927Z-cases-c-sigkill`, `183827Z-cases-c4r`; C1 replayed in `184230Z-replay-fast`). B1's model cases C44-C48 in T and K variants agree with the product (`194122Z-replay-terminate-b`, `194155Z-replay-sigkill-b`).
 - Listings of a running action from another process were not observed.
 
 Observed: `load` creates its record before checking the path, and `install` before checking for a module name (`Main.cls:2419-2420`, `:2565-2566`). No product test covers an abnormal end.
@@ -380,7 +380,7 @@ Sources: A1 Q-09; `wiki/09` L18; issue #366 ("we still want to log failed instal
 
 Sources: A1 Q-08; issue #1237 ("should reflect whether the action's changes were actually retained"); `wiki/09` L215-219 (recipe for failures that kept changes), L229-233. Round 1 R1-ONT-02 changed the provisional answer to follow issue #1237, and "unknown outcome" is now the alternative.
 
-Native evidence: C4R, a developer-mode load SIGKILLed in Activate after both commits, keeps its module and classes while the permanent record reads `Committed=0`. That deviates from the provisional answer, and the `wiki/09` recipe misses it (`183827Z-cases-c4r`). C2, ended by `$SYSTEM.Process.Terminate`, reads `Committed=1` (`182903Z-cases-c-terminate`). Delay: IRIS rolls back a SIGKILLed process's transaction only after slot cleanup ([load outcome](load.g5.md#load.outcome)). Not run: instance restart (premise P-3).
+Native evidence: C4R, a developer-mode load SIGKILLed in Activate after both commits, keeps its module and classes while the permanent record reads `Committed=0`. That deviates from the provisional answer, and the `wiki/09` recipe misses it (`183827Z-cases-c4r`). C2, ended by `$SYSTEM.Process.Terminate`, reads `Committed=1` (`182903Z-cases-c-terminate`). Delay: IRIS rolls back a SIGKILLed process's transaction only after slot cleanup ([load outcome](load.g5.md#load.outcome)). Not run: instance restart (premise P-3). Approximate case B1-C49 (debugger stall between the final commit and its `Committed` mark): the module is fully installed while the record reads `Committed=0`, and after Terminate the record is also finalized (`205218Z-replay-approx-c`; approximate, see `B/native-replay.md` section 5).
 
 ### history.survives-rollback
 
@@ -431,7 +431,7 @@ Sources: A1 Q-15; `General/AbstractHistory.cls:20-27` ("For load and uninstall t
 - Expands: [History](#history).
 - Children: [returned errors](#history.phases.returned-errors).
 
-Sources: `wiki/09` L135-161 ("A phase with no elapsed time never finished"); `Main.cls:824`. Inventory: A1 3.2 `Phases`; OP-HIST-08, OP-HIST-09, OP-LOAD-23. Tests: `TestPhases`, `TestFailingPhases`. Observed: Configure runs inside Activate and is not recorded as its own phase. Native evidence: B2 D8 shows an open phase as `ERROR #00: (no error description)` (case R2, `184444Z-cases-hr`). No source governs that text. Case C2 shows the open Activate phase after termination (`182903Z-cases-c-terminate`).
+Sources: `wiki/09` L135-161 ("A phase with no elapsed time never finished"); `Main.cls:824`. Inventory: A1 3.2 `Phases`; OP-HIST-08, OP-HIST-09, OP-LOAD-23. Tests: `TestPhases`, `TestFailingPhases`. Observed: Configure runs inside Activate and is not recorded as its own phase. Issue I1 (formerly D8) shows an open phase as `ERROR #00: (no error description)` (case R2, `184444Z-cases-hr`). No source governs that text. Case C2 shows the open Activate phase after termination (`182903Z-cases-c-terminate`).
 
 ### history.phases.returned-errors
 
@@ -450,7 +450,7 @@ Sources: A1 Q-14; `wiki/09` L161. Confirmed product defect B2 D6: an `<Invoke>` 
 - Expands: [History](#history).
 - Children: [marking](#history.committed.marking), [uninstall](#history.committed.uninstall), [versus success](#history.committed.vs-success), [nested](#history.committed.nested), [side effects](#history.committed.side-effects).
 
-Sources: property comment `General/AbstractHistory.cls:41-43`; CHANGELOG 0.10.11 (`#1237`); issue #1237 by isc-dchui ("should reflect whether the action's changes were actually retained"); PR #1322 (merged as `5d27e15b`, approved by isc-kiyer). Inventory: INT-HIST-05; OP-HIST-06, OP-HIST-07, OP-LOAD-07, OP-LOAD-11, OP-LOAD-15. Tests: `TestSimpleHistory`, `TestDevMode`, `TestDevModeRollbackNotCommitted`, `TestDevModeFailureAfterCommit`, `TestNoTransactionFailure`, `TestFailingPhases`. This supersedes issue #366 ("0 in non-developer mode if installation fails; 1 otherwise") and PR #578 review r2585373293 ("in developer mode, committed will be set to 1 regardless"). `wiki/09` L80-86 predates the fix and explains only developer mode. Suspected gap, not run natively in B2 phase 1: a legacy XML package that fails after writing reads uncommitted (OBS-L16). Observed: a refused developer-mode or `-DNoTransaction=1` load that saved its manifest reads committed ([requirements timing](load.g5.md#load.refusal.requirements.timing)). Reconstruction check R4: the first bullet now names top-level actions, because a dependency's success can be undone by its parent's rollback. Round 1 R1-ONT-01: a dependency undone by its parent's rollback reads uncommitted by this definition. Native evidence: top-level outcomes conform in cases A0, A1, A5, B1 and g1 to g9 (`182759Z-cases-a`, `182820Z-cases-b`, `182832Z-cases-dg`, `184230Z-replay-fast`). Deviations are owned elsewhere: B2 to B4 read committed after a requirements refusal ([timing](load.g5.md#load.refusal.requirements.timing), B2 D4), C4R reads uncommitted after a SIGKILLed developer-mode load kept changes ([abnormal end](#history.record.abnormal-end)), and undone dependency records are lost rather than uncommitted (B2 D1).
+Sources: property comment `General/AbstractHistory.cls:41-43`; CHANGELOG 0.10.11 (`#1237`); issue #1237 by isc-dchui ("should reflect whether the action's changes were actually retained"); PR #1322 (merged as `5d27e15b`, approved by isc-kiyer). Inventory: INT-HIST-05; OP-HIST-06, OP-HIST-07, OP-LOAD-07, OP-LOAD-11, OP-LOAD-15. Tests: `TestSimpleHistory`, `TestDevMode`, `TestDevModeRollbackNotCommitted`, `TestDevModeFailureAfterCommit`, `TestNoTransactionFailure`, `TestFailingPhases`. This supersedes issue #366 ("0 in non-developer mode if installation fails; 1 otherwise") and PR #578 review r2585373293 ("in developer mode, committed will be set to 1 regardless"). `wiki/09` L80-86 predates the fix and explains only developer mode. Suspected gap, not run natively by B2: a legacy XML package that fails after writing reads uncommitted (OBS-L16). Observed: a refused developer-mode or `-DNoTransaction=1` load that saved its manifest reads committed ([requirements timing](load.g5.md#load.refusal.requirements.timing)). Reconstruction check R4: the first bullet now names top-level actions, because a dependency's success can be undone by its parent's rollback. Round 1 R1-ONT-01: a dependency undone by its parent's rollback reads uncommitted by this definition. Native evidence: top-level outcomes conform in cases A0, A1, A5, B1 and g1 to g9 (`182759Z-cases-a`, `182820Z-cases-b`, `182832Z-cases-dg`, `184230Z-replay-fast`). Deviations are owned elsewhere: B2 to B4 read committed after a requirements refusal ([timing](load.g5.md#load.refusal.requirements.timing), B2 D4), C4R reads uncommitted after a SIGKILLed developer-mode load kept changes ([abnormal end](#history.record.abnormal-end)), and undone dependency records are lost rather than uncommitted (B2 D1). Confirmed product defect D12: a `-DNoTransaction=1` or `-DNoJournal=1` load refused after the no-transaction marker reads `Committed=1` with nothing kept (model case B1-C08, `193952Z-replay-return-b`). This contradicts the last bullet.
 
 ### history.committed.marking
 
@@ -467,7 +467,7 @@ Sources: PR #1322 body ("`LoadNewModule` now marks it at each commit, or before 
 - test-coverage
 - Expands: [Committed](#history.committed).
 
-Sources: `General/AbstractHistory.cls:43`; PR #1322 body ("Uninstall is unchanged. Its validation runs inside `Clean`, so there is no single point where its writes begin"). Inventory: INT-HIST-06; OP-HIST-02, OP-HIST-24. Test: `TestSimpleHistory` (successful uninstall reads committed). Suspected gap, not run natively in B2 phase 1: an uninstall that IPM skips because other modules need the module returns success and reads committed while the module stays ([dependents](uninstall.g5.md#uninstall.dependents), OBS-L17, OBS-H8). `uninstall zpm` records success before its Clean phase runs (OBS-H15).
+Sources: `General/AbstractHistory.cls:43`; PR #1322 body ("Uninstall is unchanged. Its validation runs inside `Clean`, so there is no single point where its writes begin"). Inventory: INT-HIST-06; OP-HIST-02, OP-HIST-24. Test: `TestSimpleHistory` (successful uninstall reads committed). Suspected gap, not run natively by B2: an uninstall that IPM skips because other modules need the module returns success and reads committed while the module stays ([dependents](uninstall.g5.md#uninstall.dependents), OBS-L17, OBS-H8). `uninstall zpm` records success before its Clean phase runs (OBS-H15).
 
 ### history.committed.vs-success
 
@@ -570,7 +570,7 @@ Sources: A1 Q-10; `wiki/09` L112. Round 1 R1-ONT-10 added query errors in `find`
 - user-facing-behavior
 - Expands: [Filter](#history.read.filter).
 
-Sources: new question from A2 OBS-H2; `Main.cls:820` ("By default, all entries will be affected"); `Main.cls:617-630` (default-modifiers help). Suspected gap, not run natively in B2 phase 1: stored default modifiers are merged into every command, and `history` reads them as filters (`Main.cls:1067-1069`, `:4136`; `CLI.cls:815-819`). Not run by B2 phase 1. It is queued for phase 2.
+Sources: new question from A2 OBS-H2; `Main.cls:820` ("By default, all entries will be affected"); `Main.cls:617-630` (default-modifiers help). Confirmed as D18, decision pending under this question: stored default modifiers are merged into every command, and `history` reads them as filters (`Main.cls:1067-1069`, `:4136`; `CLI.cls:815-819`). Stage C case H2 (`20261113T204152Z-stagec`): after the product's own example `default-modifiers -set -DNoTransaction=1 -DUpdateSnapshots=1`, `history find` shows no rows with a success status, and `history delete -confirm` fails with SQLCODE -29.
 
 ### history.read.details
 
@@ -588,7 +588,7 @@ Sources: `Main.cls:824`, `:839`; `wiki/09` L114-161. Inventory: INT-HIST-10; OP-
 - test-coverage
 - Expands: [Reading](#history.read).
 
-Sources: `Main.cls:821`; `wiki/09` L163-171. Inventory: INT-HIST-11; OP-HIST-14. Test: `TestMultipleNamespaces`. Not run by B2 phase 1.
+Sources: `Main.cls:821`; `wiki/09` L163-171. Inventory: INT-HIST-11; OP-HIST-14. Test: `TestMultipleNamespaces`. Native evidence: `history find -globally` lists a row written in USER-VERIFY under its namespace (stage C case H10, `20261113T204152Z-stagec`).
 
 ### history.read.api
 
@@ -596,7 +596,7 @@ Sources: `Main.cls:821`; `wiki/09` L163-171. Inventory: INT-HIST-11; OP-HIST-14.
 - user-facing-behavior
 - Expands: [Reading](#history.read).
 
-Sources: issue #366 ("documented API ... cross-namespace class query wrapper"); `wiki/09` L199-211; `General/History.cls:24-30`, `:232-237`. Inventory: INT-HIST-11; OP-HIST-19, OP-HIST-20. Suspected gap, not run natively in B2 phase 1: `GlobalRecords` reads other namespaces' results without switching namespace, and `Records` declares an ID column it does not return first (OBS-H10, OBS-H11). No test. Not run by B2 phase 1.
+Sources: issue #366 ("documented API ... cross-namespace class query wrapper"); `wiki/09` L199-211; `General/History.cls:24-30`, `:232-237`. Inventory: INT-HIST-11; OP-HIST-19, OP-HIST-20. Confirmed product defect D20: the `GlobalRecords` query fetches other namespaces' result sets without switching namespace, so it returns the current namespace's rows once per namespace. It returned 458 rows, twice USER's 229, and none of USER-VERIFY's 173 (stage C case H10, `20261113T204152Z-stagec`). Not run: `Records` declares an ID column it does not return first (OBS-H11). No test.
 
 ### history.delete
 

@@ -65,7 +65,7 @@ Sources: `Main.cls:483-507`; `wiki/02` L1251-1288; CHANGELOG 0.10.5 (`#1018`); `
 - user-facing-behavior
 - Expands: [Uninstall](#uninstall).
 
-Sources: `Main.cls:486-487`, `:501`; `wiki/02` L1253; CHANGELOG 0.10.4 (`#058`). Inventory: CAT-16. Suspected gap, not run natively in B2 phase 1: IPM skips the Clean phase with "Clean SKIPPED" and reports success, so the module stays and history records a successful, committed uninstall (`Lifecycle/Base.cls:290-293`, OBS-L17). The maintainer test that expects an error is skipped as "does not yet exist" (`InstallModule.cls` `TestUninstallDependencyDoesError`).
+Sources: `Main.cls:486-487`, `:501`; `wiki/02` L1253; CHANGELOG 0.10.4 (`#058`). Inventory: CAT-16. Suspected gap, not run natively by B2: IPM skips the Clean phase with "Clean SKIPPED" and reports success, so the module stays and history records a successful, committed uninstall (`Lifecycle/Base.cls:290-293`, OBS-L17). The maintainer test that expects an error is skipped as "does not yet exist" (`InstallModule.cls` `TestUninstallDependencyDoesError`).
 
 ### uninstall.recurse
 
@@ -98,7 +98,7 @@ Sources: `Main.cls:500`; `wiki/00` L26; `wiki/03` (`GlobalScope`). Inventory: CA
 - user-facing-behavior
 - Expands: [Uninstall](#uninstall).
 
-Sources: `Main.cls:505`. Inventory: CAT-16. Suspected gap, not run natively in B2 phase 1: `-purge` sets a parameter that nothing reads, because the only reader looks for `Configure.Purge` (`Lifecycle/Base.cls:554`). PR #887 listed deleting a module's data on uninstall as out of scope.
+Sources: `Main.cls:505`. Inventory: CAT-16. Suspected gap, not run natively by B2: `-purge` sets a parameter that nothing reads, because the only reader looks for `Configure.Purge` (`Lifecycle/Base.cls:554`). PR #887 listed deleting a module's data on uninstall as out of scope.
 
 ### uninstall.ipm
 
@@ -106,4 +106,4 @@ Sources: `Main.cls:505`. Inventory: CAT-16. Suspected gap, not run natively in B
 - user-facing-behavior
 - Expands: [Uninstall](#uninstall).
 
-Sources: prompt `Main.cls:2735`; CHANGELOG 0.10.7 (`#1057`), 0.10.10 (`#1227`, `#1228`). Inventory: CAT-16, INT-HIST-15; OP-HIST-23. Suspected gap, not run natively in B2 phase 1: the record is finalized as successful before Clean runs, and the shell exits saying IPM was uninstalled even if Clean was skipped (OBS-H15).
+Sources: prompt `Main.cls:2735`; CHANGELOG 0.10.7 (`#1057`), 0.10.10 (`#1227`, `#1228`). Inventory: CAT-16, INT-HIST-15; OP-HIST-23. Suspected gap, not run natively by B2: the record is finalized as successful before Clean runs, and the shell exits saying IPM was uninstalled even if Clean was skipped (OBS-H15).

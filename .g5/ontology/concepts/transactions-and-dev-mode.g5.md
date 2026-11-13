@@ -44,6 +44,17 @@ Users can turn off the transaction for a package change.
 
 These flags can come from the command line, from the namespace's [default modifiers](settings.g5.md#settings.default-modifiers) or from the module's own `<Defaults>`. A value given on the command line wins over the other two.
 
+- Whether a dependency's own `<Defaults>` apply inside its parent's transaction is open ([dependency defaults](#transaction.flag-sources.dependency-defaults)).
+
+<a id="transaction.flag-sources.dependency-defaults"></a>
+[Q · transaction.flag-sources.dependency-defaults]
+
+Does a dependency's own `<Defaults>` `NoTransaction` or `NoJournal` apply inside its parent's transaction, so that the dependency's changes escape the parent's normal-mode rollback?
+
+- Provisional answer: yes. A module's `<Defaults>` apply whenever that module is installed, including as a dependency. A `NoJournal` dependency therefore keeps its changes when the parent rolls back, and its history record must survive and say so.
+- Reason: the wiki says flags embedded in `module.xml` are "applied whenever this module is installed", and that `NoTransaction` is for modules that "conflict with an outer wrapping transaction". The maintainer comment on `<Defaults>` parsing uses `NoTransaction` as its example. These statements are specific to the flags, while the whole-load rollback rule is general.
+- Alternative: the parent's transaction governs every nested load, so a dependency's `<Defaults>` transaction flags are ignored, or the dependency is refused, while a parent transaction is open. This keeps [the whole-load rollback](../features/load.g5.md#load.outcome).
+
 ## Developer mode
 
 <a id="dev-mode"></a>
@@ -137,8 +148,20 @@ Sources: `wiki/00` L139-155; `wiki/02` L447, L595, L907, L1367; `Main.cls:628-63
 - human-verified
 - user-facing-behavior
 - Expands: [Transactions](#transaction).
+- Children: [dependency defaults](#transaction.flag-sources.dependency-defaults).
 
-Sources: `wiki/00` L161-180 (command line, `default-modifiers`, `<Defaults>`); `wiki/03` L252-258 (`-D` overrides `<Defaults>`); maintainer comment `Main.cls:1067-1070` ("so they can be overwritten by commands"). Inventory: INT-LOAD-08, CAT-04, CAT-27; OP-LOAD-05 (`Utils/Module.cls:1166-1169`). Observed: a module's own `<Defaults>` can turn transactions off for itself (`Utils/Module.cls:1033-1041`). Suspected gap, not run natively in B2 phase 1: default modifiers are stored in `^%IPM.DefaultModifiers`, which may be shared by every namespace (OBS-X1, P-10). Reconstruction check R13: no human source sets precedence between default modifiers and `<Defaults>`. Observed: default modifiers enter the command data, which overrides the module's `<Defaults>`, so the order is command line, then default modifiers, then `<Defaults>` (`Main.cls:1067-1069`; `Utils/Module.cls:1166-1169`). Stage B carries this as a condition, not a rule.
+Sources: `wiki/00` L161-180 (command line, `default-modifiers`, `<Defaults>`); `wiki/03` L252-258 (`-D` overrides `<Defaults>`); maintainer comment `Main.cls:1067-1070` ("so they can be overwritten by commands"). Inventory: INT-LOAD-08, CAT-04, CAT-27; OP-LOAD-05 (`Utils/Module.cls:1166-1169`). Observed: a module's own `<Defaults>` can turn transactions off for itself (`Utils/Module.cls:1033-1041`). Confirmed product defect D19: default modifiers are stored in `^%IPM.DefaultModifiers`, which maps to IRISSYS, so defaults set in one namespace apply in every namespace (stage C case X1, `20261113T204152Z-stagec`). A `-DNoTransaction=1` default set anywhere makes every load non-transactional. Reconstruction check R13: no human source sets precedence between default modifiers and `<Defaults>`. Observed: default modifiers enter the command data, which overrides the module's `<Defaults>`, so the order is command line, then default modifiers, then `<Defaults>` (`Main.cls:1067-1069`; `Utils/Module.cls:1166-1169`). Stage B carries this as a condition, not a rule.
+
+### transaction.flag-sources.dependency-defaults
+
+- agent
+- uncertain
+- architecture-decision
+- Expands: [Flag sources](#transaction.flag-sources).
+
+Sources: new question Q-22 from stage C round 2 finding R2-03. `wiki/00` L147 (whole-load rollback), L149 (`NoTransaction` "when some modules in the install conflict with an outer wrapping transaction"), L155 (with `NoJournal`, "changes cannot be rolled back"), L175 (`<Defaults>` "applied whenever this module is installed"); maintainer doc comment `Utils/Module.cls:1033-1040` (example `<Defaults>` with `NoTransaction`); [load outcome](../features/load.g5.md#load.outcome). No maintainer statement on dependencies inside a parent transaction was found. The provisional answer follows the sources specific to `<Defaults>` and keeps the record-survival rule of [survives rollback](../features/history.g5.md#history.survives-rollback).
+
+Observed (stage C cases M5 and M5N, `20261113T204405Z-stagec2`). In M5 a normal-mode parent fails in Activate, and its dependency's `<Defaults>` set `NoJournal=1`. The parent is rolled back, while the dependency stays installed with its class and `.ZPM` document. No `<ROLLFAIL>` occurs, `$TLEVEL` returns to 0 and the journaling flag is restored. The dependency's history record is lost, because it was journaled and rolled back (D1). M5N, the same without `<Defaults>`, rolls everything back and also loses the dependency record (D1). Code: the dependency's `<Defaults>` are merged under the parent's parameters (`Utils/Module.cls:1166-1169`) and turn journaling off inside the open transaction (`:1191-1193`; premise N-P07). B2 files this as D14, "confirmed, decision pending". A dependency `<Defaults>` `NoTransaction` was not run. By code reading, the dependency then opens no transaction of its own and its writes stay inside the parent's. The model cannot represent this case (`B/model-notes.md`).
 
 ### dev-mode
 
@@ -165,7 +188,7 @@ Sources: `-dev` help `Main.cls:306`, `:434` ("transactions will not be rolled ba
 - Expands: [Developer mode](#dev-mode).
 - Children: [local snapshot exception](#dev-mode.not-propagated.local-snapshot).
 
-Sources: CHANGELOG 0.10.5 (`#316`, `#1036`); `wiki/00` L133; commit `0e25c23d` comment "Propagate all params except developer mode". Inventory: INT-LOAD-07; OP-LOAD-20. Tests: `LoadModuleWithDeps.cls` `TestParamPropagation`; `Update.cls` `TestDevModePropagation`. Suspected gap, not run natively in B2 phase 1: `update <m> -dev` from a registry leaves the top-level module itself in normal mode (OBS-L4). Native evidence: A4 (`load -dev` with a dependency) leaves the dependency in normal mode (`20261113T182759Z-cases-a`). Suites LoadModuleWithDeps and Update pass (`20261113T182313Z-suite-verify-LoadModuleWithDeps`, `20261113T182433Z-suite-verify-Update`).
+Sources: CHANGELOG 0.10.5 (`#316`, `#1036`); `wiki/00` L133; commit `0e25c23d` comment "Propagate all params except developer mode". Inventory: INT-LOAD-07; OP-LOAD-20. Tests: `LoadModuleWithDeps.cls` `TestParamPropagation`; `Update.cls` `TestDevModePropagation`. Suspected gap, not run natively by B2: `update <m> -dev` from a registry leaves the top-level module itself in normal mode (OBS-L4). Native evidence: A4 (`load -dev` with a dependency) leaves the dependency in normal mode (`20261113T182759Z-cases-a`). Suites LoadModuleWithDeps and Update pass (`20261113T182313Z-suite-verify-LoadModuleWithDeps`, `20261113T182433Z-suite-verify-Update`).
 
 ### dev-mode.not-propagated.local-snapshot
 

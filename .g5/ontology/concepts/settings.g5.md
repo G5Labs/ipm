@@ -65,7 +65,7 @@ Sources: `wiki/02` L93-141; `Main.cls:210-220`; CHANGELOG 0.9.0 (`#224`); `prelo
 - user-facing-behavior
 - Expands: [Settings](#settings).
 
-Sources: `Main.cls:617-637`; `wiki/02` L143-166; maintainer comment `Main.cls:1067-1070`. Inventory: CAT-27; A2 1.2 row 28 (`Main:ProcessDefaultModifiers`). Suspected gaps, not run natively in B2 phase 1: the flags are stored in `^%IPM.DefaultModifiers`, which may be shared by every namespace (OBS-X1, P-10). They are also read by `history` as filters ([default-modifier filters](../features/history.g5.md#history.read.filter.default-modifiers), OBS-H2).
+Sources: `Main.cls:617-637`; `wiki/02` L143-166; maintainer comment `Main.cls:1067-1070`. Inventory: CAT-27; A2 1.2 row 28 (`Main:ProcessDefaultModifiers`). Confirmed product defect D19: the flags are stored in `^%IPM.DefaultModifiers`, which maps to IRISSYS from every namespace, so defaults set in USER are visible in USER-VERIFY (stage C case X1, `20261113T204152Z-stagec`). Confirmed as D18, decision pending under Q-18: they are also read by `history` as filters ([default-modifier filters](../features/history.g5.md#history.read.filter.default-modifiers), stage C case H2, `20261113T204152Z-stagec`).
 
 ### settings.install-flags
 
