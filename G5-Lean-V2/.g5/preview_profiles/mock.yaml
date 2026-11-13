@@ -1,0 +1,23 @@
+# =============================================================================
+# .g5/preview_profiles/mock.yaml — the clickable review mocks, served static
+# =============================================================================
+# Serves this repository's design mocks (`docs/mocks/<topic>/`, the mocks
+# convention; `docs/mocks/index.html` links each topic) as plain files: no
+# build, no API, no containers. The mocks are review artifacts, not product
+# code.
+#
+# Until 2026-10-26 the profile served one workspace's Project Docs mocks
+# (`../docs/docs/<workspace id>/mocks`, the Home page tiles); any workspace
+# clicking Preview saw those unrelated pages. A workspace whose mocks live in
+# its Project Docs can link them from the repository index or serve that
+# directory from its own profile.
+#
+# `g5d preview-serve` runs `command` via /bin/sh -c in this repository's root
+# and forces PORT=<port>. The command fails loudly if the directory or its
+# index is missing, rather than serving an empty listing. Closing the preview
+# stops the process group; nothing is left behind, so there is no cleanup
+# command.
+
+description: Clickable HTML design mocks from docs/mocks (static files; no API, no stack)
+port: 18080
+command: 'dir="docs/mocks"; [ -f "$dir/index.html" ] || { echo "mock directory not found: $dir" >&2; exit 1; }; exec python3 -m http.server "$PORT" --bind 127.0.0.1 --directory "$dir"'

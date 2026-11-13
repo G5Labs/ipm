@@ -1,0 +1,43 @@
+[package]
+name = "g5d-dispatch"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[features]
+default = []
+# Process fixtures only; never a production isolation backend.
+test-support = ["g5d-foundation/test-helpers", "g5-contracts/terminal-test-hooks"]
+
+[dependencies]
+g5-scm = { path = "../g5-scm", default-features = false, features = ["native"] }
+g5-internal-api = { path = "../g5-internal-api", features = ["stream-mux", "http-client"] }
+g5-contracts = { path = "../g5-contracts" }
+g5d-foundation = { path = "../g5d-foundation" }
+g5d-agent = { path = "../g5d-agent" }
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+uuid = { workspace = true }
+tracing = { workspace = true }
+sha2 = { workspace = true }
+base64 = "0.22"
+sha1 = "0.10"
+libc = "0.2"
+url = "2"
+thiserror = "2"
+anyhow = "1"
+# `.gitignore` semantics for the live Files tree (`file_tree`).
+ignore = "0.4"
+notify = "6"
+tokio-util = { version = "0.7.18", features = ["io", "rt"] }
+# Loopback smart-HTTP relay for the token-isolated internal Git transport.
+hyper = { version = "1", features = ["server", "http1"] }
+hyper-util = { version = "0.1", features = ["tokio"] }
+http-body-util = "0.1"
+bytes = "1"
+futures-util = "0.3"
+reqwest = { workspace = true }
+tempfile = { workspace = true }
+
+[dev-dependencies]

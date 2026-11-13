@@ -1,0 +1,124 @@
+# =============================================================================
+# Caddyfile — G5 Edge Gateway Configuration
+# =============================================================================
+# Reverse-proxies /api/* and /ws/* to g5-api upstream.
+# SPA fallback: all non-asset routes serve index.html.
+#
+# The route set lives in the `g5_edge` snippet so that an extra site can
+# reuse it: production serves plain :80 behind a TLS-terminating ingress,
+# while the CI stacks add an HTTPS site (infra/docker/caddy-ci-tls.caddyfile,
+# placed in /etc/caddy/sites.d/) that also routes per-preview hosts to the
+# API, the way the Helm ingress does for `*.<G5_PREVIEW_HOST_SUFFIX>`.
+# =============================================================================
+
+(g5_edge) {
+    log {
+        output stdout
+        format console
+    }
+
+    # -------------------------------------------------------------------------
+    # Maintenance / Coming-Soon Mode
+    # Set G5_MAINTENANCE_MODE=true to serve the coming-soon page for /landing.
+    # The authenticated app and API routes continue to work.
+    # -------------------------------------------------------------------------
+
+    # Healthcheck endpoint — always available (even in maintenance mode)
+    handle /healthz {
+        respond "OK" 200
+    }
+
+    # Maintenance mode: replace only the public landing route with coming-soon.
+    @maintenance_landing {
+        expression {env.G5_MAINTENANCE_MODE} == "true"
+        path /landing /landing/
+    }
+    handle @maintenance_landing {
+        root * /srv
+        rewrite * /coming-soon.html
+        file_server
+        header Cache-Control "no-cache, no-store, must-revalidate"
+    }
+
+    # API reverse proxy
+    handle /api/* {
+        reverse_proxy {$G5_API_URL:http://g5-api:7500}
+    }
+
+    # Git smart HTTP reverse proxy
+    handle /git/* {
+        reverse_proxy {$G5_API_URL:http://g5-api:7500}
+    }
+
+    # WebSocket reverse proxy
+    handle /ws/* {
+        reverse_proxy {$G5_API_URL:http://g5-api:7500}
+    }
+
+    # Auth reverse proxy
+    handle /auth/* {
+        reverse_proxy {$G5_API_URL:http://g5-api:7500}
+    }
+
+    # Static hashed frontend assets should either exist or 404. If they fall
+    # through to index.html, browsers can treat HTML as JS/CSS after deploys.
+    # The immutable header is scoped to files that EXIST: rolling edge updates
+    # briefly serve mixed builds, and a 404 for a new hashed chunk answered by
+    # an old pod must never be browser-cacheable, or dynamic imports keep
+    # failing until a hard refresh (issue #1540; deployment D10 — see also
+    # handle_errors below).
+    handle /assets/* {
+        root * /srv
+        @asset_exists file
+        header @asset_exists Cache-Control "public, max-age=31536000, immutable"
+        try_files {path} =404
+        file_server
+    }
+
+    # Built-in user guide Markdown/assets are rendered inside the app shell.
+    # Guide paths should serve as static assets and 404 when missing.
+    handle /user-guide/* {
+        root * /srv
+        try_files {path} =404
+        header Cache-Control "no-cache, no-store, must-revalidate"
+        file_server
+    }
+
+    # SPA fallback — serve the shell for app routes and disable caching so
+    # route HTML doesn't pin old bundle hashes across deploys.
+    handle {
+        root * /srv
+        header Cache-Control "no-cache, no-store, must-revalidate"
+        try_files {path} /index.html
+        file_server
+    }
+
+    # Caddy-origin errors (asset/user-guide/SPA file misses) must never be
+    # cacheable: RFC 9111 lets browsers cache a 404 that carries explicit
+    # freshness, which poisons chunk URLs during rolling-update skew
+    # (issue #1540; deployment_model/gcloud_hosting_environment D10).
+    handle_errors {
+        header Cache-Control "no-store"
+        respond "{err.status_code} {err.status_text}" {err.status_code}
+    }
+
+    # Compression
+    encode gzip zstd
+
+    # Security headers
+    header {
+        X-Content-Type-Options nosniff
+        Referrer-Policy strict-origin-when-cross-origin
+        # Defer until proxy headers arrive; emit one trusted policy reset.
+        >NEL `{"max_age":0}`
+        X-Frame-Options DENY
+    }
+}
+
+:80 {
+    import g5_edge
+}
+
+# Optional extra sites (none in production; the CI edge drops its TLS site
+# here). A glob that matches nothing is accepted by Caddy.
+import /etc/caddy/sites.d/*.caddyfile

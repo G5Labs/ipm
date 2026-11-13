@@ -1,0 +1,44 @@
+{{- if eq (include "g5.controlPlaneEnabled" .) "true" -}}
+{{- $apiStorageProvider := .Values.api.env.G5_STORAGE_PROVIDER | default "filestore" -}}
+{{- $apiStorageMountPoint := .Values.api.env.G5_STORAGE_MOUNT_POINT | default "/mnt/g5-repos" -}}
+{{- $apiStorageTenantPrefix := .Values.api.env.G5_STORAGE_TENANT_PREFIX | default "repos" -}}
+{{- $daemonStorageProvider := .Values.daemon.env.G5_STORAGE_PROVIDER | default "filestore" -}}
+{{- $daemonStorageMountPoint := .Values.daemon.env.G5_STORAGE_MOUNT_POINT | default "/mnt/g5-repos" -}}
+{{- $daemonStorageTenantPrefix := .Values.daemon.env.G5_STORAGE_TENANT_PREFIX | default "repos" -}}
+{{- $filestoreMountPath := .Values.api.filestore.mountPath | default "/mnt/g5-repos" -}}
+
+{{- if ne $apiStorageProvider "filestore" -}}
+{{- fail (printf "control-plane api storage must use filestore; got api.env.G5_STORAGE_PROVIDER=%q" $apiStorageProvider) -}}
+{{- end -}}
+
+{{- if not .Values.api.filestore.enabled -}}
+{{- fail "control-plane api must enable api.filestore.enabled so the shared repo volume is mounted" -}}
+{{- end -}}
+
+{{- $attachmentStoreDir := .Values.api.env.G5_ATTACHMENT_STORE_DIR | default "" -}}
+{{- $attachmentsMountPath := .Values.api.filestore.attachments.mountPath | default "" -}}
+{{- if or (eq $attachmentStoreDir "") (ne $attachmentStoreDir $attachmentsMountPath) -}}
+{{- fail (printf "api.env.G5_ATTACHMENT_STORE_DIR=%q must be set to api.filestore.attachments.mountPath=%q so attachment bytes live on their own Filestore mount (g5.issue.native.attachment-store)" $attachmentStoreDir $attachmentsMountPath) -}}
+{{- end -}}
+
+{{- $attachmentsSubPath := toString (.Values.api.filestore.attachments.subPath | default "") -}}
+{{- if or (eq $attachmentsSubPath "") (eq $attachmentsSubPath ".") (eq $attachmentsSubPath "..") (eq $attachmentsSubPath (toString $apiStorageTenantPrefix)) (contains "/" $attachmentsSubPath) -}}
+{{- fail (printf "api.filestore.attachments.subPath=%q must be one directory name other than the repository prefix %q" $attachmentsSubPath $apiStorageTenantPrefix) -}}
+{{- end -}}
+
+{{- if ne $apiStorageMountPoint $filestoreMountPath -}}
+{{- fail (printf "api.env.G5_STORAGE_MOUNT_POINT=%q must match api.filestore.mountPath=%q" $apiStorageMountPoint $filestoreMountPath) -}}
+{{- end -}}
+
+{{- if and .Values.daemon.enabled (ne $daemonStorageProvider "filestore") -}}
+{{- fail (printf "control-plane daemon storage must use filestore; got daemon.env.G5_STORAGE_PROVIDER=%q" $daemonStorageProvider) -}}
+{{- end -}}
+
+{{- if and .Values.daemon.enabled (ne $daemonStorageMountPoint $filestoreMountPath) -}}
+{{- fail (printf "daemon.env.G5_STORAGE_MOUNT_POINT=%q must match api.filestore.mountPath=%q" $daemonStorageMountPoint $filestoreMountPath) -}}
+{{- end -}}
+
+{{- if and .Values.daemon.enabled (ne $daemonStorageTenantPrefix $apiStorageTenantPrefix) -}}
+{{- fail (printf "daemon.env.G5_STORAGE_TENANT_PREFIX=%q must match api.env.G5_STORAGE_TENANT_PREFIX=%q" $daemonStorageTenantPrefix $apiStorageTenantPrefix) -}}
+{{- end -}}
+{{- end -}}

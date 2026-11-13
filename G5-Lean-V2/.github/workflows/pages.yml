@@ -1,0 +1,118 @@
+name: Publish docs
+
+# Manual only: the user-guide site is not published from G5-Lean automatically.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - run: python -m pip install markdown
+
+      - name: Build static Pages artifact
+        run: |
+          python <<'PY'
+          from pathlib import Path
+          import html
+          import os
+          import shutil
+          import markdown
+
+          roots = [
+              Path("archived_aux_files_readonly"),
+              Path("frontend/public/user-guide"),
+          ]
+
+          site = Path("_site")
+          if site.exists():
+              shutil.rmtree(site)
+          site.mkdir(parents=True)
+
+          (site / ".nojekyll").write_text("")
+          (site / "assets").mkdir()
+          (site / "assets" / "docs.css").write_text(
+              "body{max-width:920px;margin:40px auto;padding:0 20px;"
+              "font:16px/1.55 system-ui,sans-serif;color:#1f2328}"
+              "pre{overflow:auto;padding:12px;background:#f6f8fa}"
+              "code{background:#f6f8fa;padding:2px 4px}"
+              "img{max-width:100%} table{border-collapse:collapse}"
+              "td,th{border:1px solid #d0d7de;padding:6px}"
+          )
+
+          def title_for(text, fallback):
+              for line in text.splitlines():
+                  if line.startswith("# "):
+                      return line[2:].strip()
+              return fallback
+
+          for root in roots:
+              for src in root.rglob("*"):
+                  if src.is_dir():
+                      continue
+                  rel = src.relative_to(Path("."))
+                  dst = site / rel
+
+                  if src.suffix.lower() == ".md":
+                      text = src.read_text(encoding="utf-8", errors="replace")
+                      body = markdown.markdown(
+                          text,
+                          extensions=["extra", "toc", "sane_lists"],
+                          output_format="html5",
+                      )
+                      dst = dst.with_suffix(".html")
+                      dst.parent.mkdir(parents=True, exist_ok=True)
+                      css = os.path.relpath(site / "assets" / "docs.css", dst.parent)
+                      title = html.escape(title_for(text, dst.stem))
+                      dst.write_text(
+                          f"<!doctype html><html><head><meta charset='utf-8'>"
+                          f"<meta name='viewport' content='width=device-width,initial-scale=1'>"
+                          f"<title>{title}</title><link rel='stylesheet' href='{css}'>"
+                          f"</head><body>{body}</body></html>",
+                          encoding="utf-8",
+                      )
+                  else:
+                      dst.parent.mkdir(parents=True, exist_ok=True)
+                      shutil.copy2(src, dst)
+
+          (site / "index.html").write_text(
+              "<!doctype html><html><body>"
+              "<h1>G5 Docs</h1>"
+              "<ul>"
+              "<li><a href='archived_aux_files_readonly/'>archived_aux_files_readonly</a></li>"
+              "<li><a href='frontend/public/user-guide/getting-started.html'>User Guide</a></li>"
+              "</ul>"
+              "</body></html>",
+              encoding="utf-8",
+          )
+          PY
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en" data-theme="editor" data-mode="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- Non-render-blocking font loading: print→all swap avoids blocking first paint -->
+    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Fira+Code:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Inter+Tight:wght@400;500;600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Libre+Baskerville:wght@400;700&family=Nunito+Sans:wght@400;600;700&family=Outfit:wght@400;500;600;700&family=Playfair+Display:wght@400;700&family=Roboto+Condensed:wght@400;500;700&family=Space+Grotesk:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Fira+Code:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Inter+Tight:wght@400;500;600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Libre+Baskerville:wght@400;700&family=Nunito+Sans:wght@400;600;700&family=Outfit:wght@400;500;600;700&family=Playfair+Display:wght@400;700&family=Roboto+Condensed:wght@400;500;700&family=Space+Grotesk:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" /></noscript>
+    <link rel="icon" type="image/svg+xml" href="/g5-logo.svg" />
+    <title>G5 — Ontology-Centric Agentic Development</title>
+    <!-- Boot-screen colors until index.css loads. :where() gives them zero
+         specificity, so the active theme's body rules always win afterwards:
+         content portaled onto <body> (dialogs, popovers, drawers) inherits the
+         theme's text color. An inline body style would override every theme. -->
+    <style>
+      :where(body) { margin: 0; background-color: #1e1e2e; color: #cdd6f4; }
+    </style>
+  </head>
+  <body>
+    <div id="root">
+      <div id="boot-msg" style="display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;gap:8px;">
+        <p style="font-size:18px;">G5 Loading…</p>
+        <p id="boot-error" style="color:#f38ba8;font-size:13px;max-width:600px;word-break:break-all;"></p>
+      </div>
+    </div>
+    <script>
+      window.__G5_BOOT_ERRORS = [];
+      window.addEventListener('error', function(e) {
+        var msg = 'JS Error: ' + e.message + ' @ ' + e.filename + ':' + e.lineno;
+        window.__G5_BOOT_ERRORS.push(msg);
+        var el = document.getElementById('boot-error');
+        if (el) el.textContent = window.__G5_BOOT_ERRORS.join('\n');
+      });
+      window.addEventListener('unhandledrejection', function(e) {
+        var msg = 'Promise Error: ' + (e.reason?.message || e.reason || 'unknown');
+        window.__G5_BOOT_ERRORS.push(msg);
+        var el = document.getElementById('boot-error');
+        if (el) el.textContent = window.__G5_BOOT_ERRORS.join('\n');
+      });
+      // Detect full page navigations (log only — no alert in production)
+      window.addEventListener('beforeunload', function(e) {
+        console.warn('[NAV] Page unloading. Current URL:', window.location.href);
+      });
+      setTimeout(function() {
+        var el = document.getElementById('boot-msg');
+        if (el && el.style.display !== 'none') {
+          el.innerHTML += '<p style="color:#fab387;font-size:13px;margin-top:12px;">React has not mounted after 5s.</p>';
+        }
+      }, 5000);
+    </script>
+    <script type="module" src="/e2e/fixtures/issue841.tsx"></script>
+  </body>
+</html>
+

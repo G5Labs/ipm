@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="editor" data-mode="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mock K — Guided Panel as a Flowchart (Mock F/G phases, gates &amp; steps)</title>
+<style>
+  :root {
+    --g5-bg0: rgb(10 12 16);
+    --g5-bg1: rgb(14 17 24);
+    --g5-bg2: rgb(18 22 31);
+    --g5-stroke: rgb(255 255 255 / 0.08);
+    --g5-stroke-2: rgb(255 255 255 / 0.18);
+    --g5-text0: rgb(236 242 255);
+    --g5-text1: rgb(236 242 255 / 0.72);
+    --g5-text2: rgb(236 242 255 / 0.52);
+    --g5-active: rgb(103 164 255);
+    --g5-ok: rgb(113 201 136);
+    --g5-info: rgb(103 164 255);
+    --g5-blocked: rgb(255 107 107);
+    --g5-overlay: rgb(255 255 255 / 0.05);
+    --g5-overlay-hover: rgb(255 255 255 / 0.08);
+    --radius-sm: 4px; --radius-md: 6px; --radius-lg: 8px;
+    --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --font-mono: "JetBrains Mono", "Fira Code", ui-monospace, monospace;
+    /* flowchart geometry: one left spine every main edge sits on */
+    --spine: 34px;
+    --loop-gutter: 18px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--font-sans); background: var(--g5-bg0); color: var(--g5-text0);
+    display: flex; height: 100vh; overflow: hidden; font-size: 13px;
+  }
+  /* ---- left icon rail (existing) ---- */
+  .rail {
+    width: 48px; background: var(--g5-bg1); border-right: 1px solid var(--g5-stroke);
+    display: flex; flex-direction: column; align-items: center; padding-top: 10px; gap: 6px; flex-shrink: 0;
+  }
+  .rail-btn {
+    width: 34px; height: 34px; border-radius: var(--radius-md);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--g5-text2); font-size: 16px; cursor: pointer;
+  }
+  .rail-btn:hover { background: var(--g5-overlay-hover); }
+  .rail-btn.active { background: var(--g5-overlay); color: var(--g5-active); box-shadow: inset 2px 0 0 var(--g5-active); }
+  /* ---- guided panel ---- */
+  .panel {
+    width: 364px; background: var(--g5-bg1); border-right: 1px solid var(--g5-stroke);
+    display: flex; flex-direction: column; flex-shrink: 0;
+  }
+  .panel-header { padding: 12px 14px 10px; border-bottom: 1px solid var(--g5-stroke); }
+  .panel-title-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .panel-title { font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--g5-text1); }
+  .default-tag {
+    font-size: 9px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+    color: var(--g5-info); background: rgb(103 164 255 / 0.12);
+    border: 1px solid rgb(103 164 255 / 0.3); border-radius: 999px; padding: 2px 7px;
+  }
+  .panel-sub { margin-top: 6px; font-size: 11.5px; color: var(--g5-text2); }
+  .progress-wrap { margin-top: 10px; }
+  .progress-label { display: flex; justify-content: space-between; font-size: 10.5px; color: var(--g5-text2); margin-bottom: 4px; }
+  .progress-bar { height: 4px; background: var(--g5-overlay); border-radius: 999px; overflow: hidden; }
+  .progress-fill { height: 100%; width: 4%; background: linear-gradient(90deg, var(--g5-ok), var(--g5-active)); border-radius: 999px; transition: width .5s ease; }
+  /* ---- journey summary (Mock F/G) ---- */
+  .suggest {
+    margin: 12px 14px 0; background: rgb(103 164 255 / 0.08); border: 1px solid rgb(103 164 255 / 0.3);
+    border-radius: var(--radius-lg); padding: 10px 12px;
+  }
+  .suggest-head { display: flex; align-items: center; gap: 6px; font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--g5-info); }
+  .suggest-body { font-size: 12px; color: var(--g5-text1); margin-top: 5px; line-height: 1.45; }
+  .suggest .btn { margin-top: 9px; }
+  .panel-body { flex: 1; overflow-y: auto; padding: 14px 14px 20px; }
+
+  /* =====================================================================
+     FLOWCHART
+     Top-to-bottom. One spine (x = --spine) carries every forward edge.
+     A gutter on the left carries the dashed "no" loop edges from each
+     approval diamond back into the phase it guards.
+     ===================================================================== */
+  .flow { position: relative; padding-left: var(--loop-gutter); }
+  /* forward edge: vertical line + arrowhead, sitting on the spine */
+  .edge {
+    position: relative; height: 22px; width: 2px; background: var(--g5-stroke-2);
+    margin-left: calc(var(--spine) - 1px);
+  }
+  .edge::after {
+    content: ""; position: absolute; left: -4px; bottom: -1px;
+    border-left: 5px solid transparent; border-right: 5px solid transparent;
+    border-top: 7px solid var(--g5-stroke-2);
+  }
+  .edge.ok, .edge.ok::after { background: var(--g5-ok); border-top-color: var(--g5-ok); }
+  .edge.live { background: var(--g5-active); }
+  .edge.live::after { border-top-color: var(--g5-active); }
+  .edge.dim { opacity: .45; }
+  .edge.gap { height: 30px; }
+  .edge .elbl {
+    position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+    font-family: var(--font-mono); font-size: 9.5px; color: var(--g5-text2); white-space: nowrap;
+  }
+  .edge.ok .elbl { color: var(--g5-ok); }
+  .edge.live .elbl { color: var(--g5-active); }
+  /* terminal node (stadium) */
+  .terminal {
+    display: flex; align-items: center; gap: 6px;
+    border: 1.5px solid var(--g5-stroke-2); border-radius: 999px; background: var(--g5-bg2);
+    padding: 5px 12px; font-size: 11px; font-weight: 600; color: var(--g5-text1);
+    width: fit-content; margin-left: var(--spine); transform: translateX(-50%);
+  }
+  .terminal.ok { border-color: var(--g5-ok); color: var(--g5-ok); }
+  .terminal.dim { opacity: .45; border-style: dashed; }
+  /* phase subgraph container */
+  .lane { position: relative; }
+  .subgraph {
+    position: relative; border: 1px dashed var(--g5-stroke-2); border-radius: var(--radius-lg);
+    background: rgb(255 255 255 / 0.015); padding: 18px 10px 10px;
+  }
+  .subgraph.active { border-style: solid; border-color: rgb(103 164 255 / 0.55); background: rgb(103 164 255 / 0.04); }
+  .subgraph.done { border-style: solid; border-color: rgb(113 201 136 / 0.45); }
+  .subgraph.upnext { opacity: .55; }
+  .sg-title {
+    position: absolute; top: -8px; left: 10px; background: var(--g5-bg1); padding: 0 6px;
+    font-size: 10px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--g5-text2);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .subgraph.active .sg-title { color: var(--g5-active); }
+  .subgraph.done .sg-title { color: var(--g5-ok); }
+  .sg-num {
+    width: 15px; height: 15px; border-radius: 50%; border: 1.5px solid currentColor;
+    display: inline-flex; align-items: center; justify-content: center; font-size: 9px;
+  }
+  .subgraph.done .sg-num { background: var(--g5-ok); border-color: var(--g5-ok); color: rgb(10 12 16); }
+  .sg-tag { position: absolute; top: -7px; right: 10px; background: var(--g5-bg1); padding: 0 5px; font-size: 9.5px; color: var(--g5-text2); }
+  /* process node (a step) */
+  .snode {
+    position: relative; border: 1px solid var(--g5-stroke-2); border-radius: var(--radius-md);
+    background: var(--g5-bg2); padding: 7px 9px 8px;
+  }
+  .snode-row { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: var(--g5-text1); }
+  .snode .dot {
+    width: 14px; height: 14px; border-radius: 3px; border: 1.5px solid var(--g5-stroke-2);
+    flex-shrink: 0; margin-top: 1px; display: flex; align-items: center; justify-content: center; font-size: 9px;
+  }
+  .snode.done { border-color: rgb(113 201 136 / 0.5); }
+  .snode.done .snode-row { color: var(--g5-text2); text-decoration: line-through; }
+  .snode.done .dot { background: var(--g5-ok); border-color: var(--g5-ok); color: rgb(10 12 16); text-decoration: none; }
+  .snode.current { border-color: var(--g5-active); box-shadow: 0 0 0 3px rgb(103 164 255 / 0.15); }
+  .snode.current .snode-row { color: var(--g5-text0); font-weight: 500; }
+  .snode.current .dot { border-color: var(--g5-active); }
+  .snode.todo { border-style: dashed; }
+  .snode.todo .dot { border-style: dashed; }
+  .snode.reopened { border-color: var(--g5-blocked); box-shadow: 0 0 0 3px rgb(255 107 107 / 0.15); }
+  .snode-note { font-size: 10px; color: var(--g5-text2); margin: 1px 0 0 22px; }
+  .snode.done .snode-note { text-decoration: none; opacity: .7; }
+  .reopen-tag { font-size: 10px; color: var(--g5-blocked); margin: 2px 0 0 22px; }
+  /* step-to-step edge inside a subgraph (shorter) */
+  .sedge { height: 12px; margin-left: calc(var(--spine) - 12px); }
+  /* buttons live under each step; visible while the phase is active (R15) */
+  .step-actions { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 1px 22px; }
+  .btn {
+    border: 1px solid var(--g5-stroke); background: var(--g5-overlay);
+    color: var(--g5-text0); font-size: 11.5px; font-weight: 500;
+    padding: 5px 11px; border-radius: var(--radius-md); cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn:hover { background: var(--g5-overlay-hover); }
+  .btn.primary { background: var(--g5-active); border-color: var(--g5-active); color: rgb(10 12 16); font-weight: 600; }
+  .btn.ghost { color: var(--g5-text1); }
+  .btn.danger { color: var(--g5-blocked); border-color: rgb(255 107 107 / 0.35); }
+  .btn[disabled] { opacity: .45; cursor: default; }
+  .btn[disabled]:hover { background: var(--g5-overlay); }
+  .snode.done .btn { opacity: .5; }
+  .step-done-when { font-size: 10px; color: var(--g5-ok); margin: 4px 0 0 22px; text-decoration: none; }
+  /* artifact citation chips (Mock G) */
+  .artifact-chips { display: flex; flex-wrap: wrap; gap: 4px; margin: 5px 0 1px 22px; max-width: 92%; }
+  .file-cite {
+    display: inline-flex; align-items: center; gap: 4px; padding: 2px 6px; font-size: 10px;
+    border: none; border-radius: var(--radius-sm); cursor: pointer; background: var(--g5-bg1); color: var(--g5-info);
+    transition: background .15s; text-decoration: none; font-family: var(--font-sans);
+  }
+  .file-cite:hover { background: rgb(103 164 255 / 0.1); }
+  .file-cite span { white-space: nowrap; max-width: 180px; overflow: hidden; text-overflow: ellipsis; }
+
+  /* ---- approval gate = decision diamond + roster ---- */
+  .gate { position: relative; }
+  .gate-row { display: flex; align-items: center; gap: 10px; padding: 2px 6px 2px 0; border-radius: var(--radius-md); }
+  .gate:hover .gate-row { background: var(--g5-overlay); }
+  .diamond { position: relative; width: 68px; height: 68px; flex-shrink: 0; }
+  .diamond .shape, .diamond .shape-in { position: absolute; clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); }
+  .diamond .shape { inset: 0; background: var(--g5-stroke-2); }
+  .diamond .shape-in { inset: 1.5px; background: var(--g5-bg2); }
+  .diamond .dlabel {
+    position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-size: 8.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--g5-text2); line-height: 1.2;
+  }
+  .diamond .dlabel b { font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--g5-text1); }
+  .gate.waiting .diamond { opacity: .55; }
+  .gate.waiting .diamond .shape { background: var(--g5-stroke); }
+  .gate.armed .diamond .shape { background: var(--g5-active); }
+  .gate.armed .diamond { filter: drop-shadow(0 0 6px rgb(103 164 255 / 0.45)); }
+  .gate.armed .dlabel, .gate.armed .dlabel b { color: var(--g5-active); }
+  .gate.passed .diamond .shape { background: var(--g5-ok); }
+  .gate.passed .dlabel, .gate.passed .dlabel b { color: var(--g5-ok); }
+  .gate.rejected .diamond .shape { background: var(--g5-blocked); }
+  .gate.rejected .dlabel, .gate.rejected .dlabel b { color: var(--g5-blocked); }
+  .gate-side { min-width: 0; flex: 1; }
+  .gate-who { display: flex; align-items: center; gap: 8px; }
+  .gate-hint { font-size: 10px; color: var(--g5-text2); margin-top: 4px; line-height: 1.35; }
+  /* roster (Mock F) */
+  .cluster { display: flex; align-items: center; }
+  .chip {
+    position: relative; width: 24px; height: 24px; border-radius: 50%;
+    border: 2px solid var(--g5-bg1); flex-shrink: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 9px; font-weight: 700; color: rgb(8 12 24);
+    margin-left: -8px; transition: margin .15s, opacity .15s;
+  }
+  .cluster .chip:first-child { margin-left: 0; }
+  .gate:hover .cluster .chip { margin-left: 2px; }
+  .chip.approved { box-shadow: 0 0 0 1.5px var(--g5-ok); }
+  .chip.rejected { box-shadow: 0 0 0 1.5px var(--g5-blocked); }
+  .chip.pending { box-shadow: 0 0 0 1.5px rgb(236 242 255 / 0.24); opacity: .45; }
+  .gate:hover .chip.pending { opacity: .8; }
+  .chip.bot { background: rgb(192 132 252 / 0.15); color: rgb(206 160 252); font-size: 7.5px; letter-spacing: .03em; }
+  .chip.bot::after { content: ""; position: absolute; inset: 0; border-radius: 50%; border: 1px solid rgb(192 132 252 / 0.3); }
+  .badge {
+    position: absolute; bottom: -2px; right: -3px; width: 11px; height: 11px;
+    border-radius: 50%; background: var(--g5-ok); border: 1px solid var(--g5-bg1);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 7px; font-weight: 800; color: rgb(8 12 24); z-index: 1;
+  }
+  .badge.no { background: var(--g5-blocked); }
+  .appr-count { font-size: 10.5px; color: var(--g5-text2); white-space: nowrap; }
+  .appr-count b { color: var(--g5-ok); font-weight: 600; }
+  .appr-caret { margin-left: auto; font-size: 8px; color: var(--g5-text2); opacity: 0; transition: opacity .15s; }
+  .gate:hover .appr-caret { opacity: .7; }
+  .appr-detail {
+    max-height: 0; opacity: 0; overflow: hidden;
+    transition: max-height .25s ease, opacity .2s ease, margin-top .25s ease; margin-top: 0;
+  }
+  .gate:hover .appr-detail, .gate.open .appr-detail { max-height: 300px; opacity: 1; margin-top: 6px; }
+  .gate.open .gate-row { background: var(--g5-overlay); }
+  .gate-row { cursor: pointer; }
+  .appr-pop {
+    background: var(--g5-bg2); border: 1px solid var(--g5-stroke); border-radius: var(--radius-lg);
+    padding: 8px 0; box-shadow: 0 12px 32px rgb(0 0 0 / 0.55);
+  }
+  .pop-h { padding: 0 12px 4px; font-size: 10px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--g5-text2); }
+  .pop-h + .pop-h, .pop-row + .pop-h { padding-top: 8px; }
+  .pop-row { display: flex; align-items: center; gap: 9px; padding: 4px 12px; font-size: 12px; }
+  .pop-row .chip { margin-left: 0; opacity: 1; }
+  .pop-main { min-width: 0; flex: 1; }
+  .pop-name { display: block; font-size: 11.5px; font-weight: 600; color: var(--g5-text0); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pop-def { display: block; font-size: 10px; color: var(--g5-text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pop-state { flex-shrink: 0; font-size: 10.5px; }
+  .pop-state.ok { color: var(--g5-ok); }
+  .pop-state.wait { color: var(--g5-active); }
+  .pop-state.no { color: var(--g5-blocked); }
+  .pop-actions { padding: 8px 12px 2px; display: flex; gap: 6px; flex-wrap: wrap; }
+  .pop-note { padding: 4px 12px 2px; font-size: 10.5px; color: var(--g5-text2); line-height: 1.45; }
+
+  /* ---- the "no" loop edge: diamond → back into the phase it guards ---- */
+  .loop {
+    position: absolute; left: calc(6px - var(--loop-gutter)); width: calc(var(--loop-gutter) - 6px);
+    border: 2px dashed var(--g5-stroke-2); border-right: none; border-radius: 6px 0 0 6px;
+    opacity: .55; pointer-events: none; transition: opacity .2s, border-color .2s;
+  }
+  .loop::before { /* arrowhead pointing right, into the subgraph */
+    content: ""; position: absolute; top: -6px; right: -2px;
+    border-top: 5px solid transparent; border-bottom: 5px solid transparent;
+    border-left: 7px solid var(--g5-stroke-2);
+  }
+  .loop .llbl {
+    position: absolute; left: -9px; top: 50%; transform: translateY(-50%);
+    writing-mode: vertical-rl; transform: translateY(-50%) rotate(180deg);
+    font-family: var(--font-mono); font-size: 8.5px; color: var(--g5-text2);
+    background: var(--g5-bg1); padding: 4px 0; white-space: nowrap;
+  }
+  .lane.armed .loop { opacity: .9; border-color: rgb(103 164 255 / 0.6); }
+  .lane.armed .loop::before { border-left-color: rgb(103 164 255 / 0.8); }
+  .lane.flash .loop { opacity: 1; border-color: var(--g5-blocked); }
+  .lane.flash .loop::before { border-left-color: var(--g5-blocked); }
+  .lane.flash .loop .llbl { color: var(--g5-blocked); }
+  /* legend */
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 10px 14px; margin-top: 18px; padding-top: 10px;
+    border-top: 1px solid var(--g5-stroke); font-size: 10px; color: var(--g5-text2);
+  }
+  .legend span { display: inline-flex; align-items: center; gap: 5px; }
+  .lg-rect { width: 14px; height: 9px; border: 1.5px solid var(--g5-stroke-2); border-radius: 2px; }
+  .lg-dia { width: 10px; height: 10px; background: var(--g5-stroke-2); clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); }
+  .lg-pill { width: 16px; height: 9px; border: 1.5px solid var(--g5-stroke-2); border-radius: 999px; }
+  .lg-dash { width: 16px; border-top: 2px dashed var(--g5-stroke-2); }
+
+  /* ---- faded center content ---- */
+  .center { flex: 1; display: flex; flex-direction: column; opacity: .35; pointer-events: none; }
+  .statusband {
+    height: 44px; background: var(--g5-bg1); border-bottom: 1px solid var(--g5-stroke);
+    display: flex; align-items: center; gap: 8px; padding: 0 16px; font-size: 12px; color: var(--g5-text2);
+  }
+  .pill { border: 1px solid var(--g5-stroke); border-radius: 999px; padding: 4px 12px; }
+  .editor-ph { flex: 1; background: var(--g5-bg0); display: flex; align-items: center; justify-content: center; color: var(--g5-text2); font-family: var(--font-mono); font-size: 12px; }
+  .mock-banner {
+    position: fixed; bottom: 14px; right: 16px; background: var(--g5-bg2);
+    border: 1px solid var(--g5-stroke); border-radius: var(--radius-lg);
+    padding: 10px 14px; font-size: 11px; color: var(--g5-text1); max-width: 380px;
+    box-shadow: 0 12px 40px rgb(0 0 0 / 0.35); line-height: 1.5;
+  }
+  .mock-banner b { color: var(--g5-active); }
+  .toast {
+    position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%) translateY(8px);
+    background: var(--g5-bg2); border: 1px solid var(--g5-stroke); border-radius: var(--radius-md);
+    padding: 8px 14px; font-size: 12px; color: var(--g5-text0); opacity: 0;
+    transition: opacity .18s, transform .18s; pointer-events: none; z-index: 50; white-space: nowrap;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%); }
+</style>
+</head>
+<body>
+
+  <!-- existing left icon rail; Guided is the default-active entry -->
+  <div class="rail">
+    <div class="rail-btn active" title="Guided">➤</div>
+    <div class="rail-btn" title="Core Ontology">◈</div>
+    <div class="rail-btn" title="Project Docs">🗎</div>
+    <div class="rail-btn" title="Explainers">✦</div>
+    <div class="rail-btn" title="Source Control">⎇</div>
+  </div>
+
+  <!-- Guided panel — the body is a flowchart -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title-row">
+        <div class="panel-title">Guided</div>
+        <span class="default-tag" title="This panel is the one that opens by default when you open or fork a workspace">Default on open</span>
+      </div>
+      <div class="panel-sub">Feature: <span style="color:var(--g5-text0)">Customer onboarding revamp</span></div>
+      <div class="progress-wrap">
+        <div class="progress-label"><span>Overall progress</span><span id="phase-label">Phase 1 of 4</span></div>
+        <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+      </div>
+    </div>
+
+    <div class="suggest">
+      <div class="suggest-head">✦ Journey summary</div>
+      <div class="suggest-body" id="summary-body">—</div>
+      <button class="btn primary" id="summary-btn" style="flex:none; padding:5px 14px;">▸ —</button>
+    </div>
+
+    <div class="panel-body">
+      <div class="flow" id="flow"><!-- rendered by script --></div>
+      <div class="legend">
+        <span><i class="lg-pill"></i> start / end</span>
+        <span><i class="lg-rect"></i> step (bound to a workspace action)</span>
+        <span><i class="lg-dia"></i> approval gate</span>
+        <span><i class="lg-dash"></i> changes requested → back into the phase</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- faded center: existing workspace -->
+  <div class="center">
+    <div class="statusband">
+      <span class="pill">Upload docs</span>
+      <span class="pill">Generate</span>
+      <span class="pill">View changes</span>
+      <span style="margin-left:auto" class="pill">Prepare to ship</span>
+    </div>
+    <div class="editor-ph">— existing workspace content (ontology editor / docs / preview) —</div>
+  </div>
+
+  <div class="mock-banner">
+    <b>Mock K — Guided Panel as a Flowchart.</b>
+    Same phases, steps, step-bound buttons, artifact chips (Mock G) and roster
+    approvals (Mock F) — but drawn as a top-to-bottom flowchart instead of a
+    timeline: stadium start/end terminals, each phase a dashed subgraph of
+    process-node steps, each approval a decision diamond whose <i>yes</i> edge
+    continues down the spine and whose dashed <i>no</i> edge loops back into the
+    phase it guards. Hover a diamond for the Still missing / Approved popover;
+    once armed it offers both <b>Approve</b> and <b>Request changes</b> — the
+    latter actually takes the loop edge and reopens the phase's last step.
+  </div>
+
+<script>
+(function () {
+  // ---------------- state (identical shape to Mock G) ----------------
+  const PHASES = [
+    {
+      name: 'Business Engineering', tag: 'Business alignment',
+      steps: [
+        { label: 'Upload a doc or draft it in chat',
+          note: 'Bring the business intent in — file upload or a chat draft',
+          buttons: [ { label: '⬆ Upload doc', primary: true }, { label: '✎ Draft in chat' } ] },
+        { label: 'Generate open questions & conflict intents',
+          note: 'Today’s “Generate” button — produces the questions/conflicts doc',
+          buttons: [ { label: '▸ Generate', primary: true } ],
+          artifacts: [ 'onboarding-open-questions.md' ] },
+        { label: 'Generate mocks',
+          note: 'UI mocks generated from the aligned business intent',
+          buttons: [ { label: '▸ Generate mocks', primary: true } ],
+          artifacts: [ 'mock-onboarding-a.html', 'mock-onboarding-b.html' ] },
+      ],
+    },
+    {
+      name: 'System Engineering', tag: 'System alignment',
+      steps: [
+        { label: 'Generate the ontology', buttons: [ { label: '▸ Generate ontology', primary: true } ] },
+        { label: 'Generate design doc & implementation plan', buttons: [ { label: '▸ Generate plan', primary: true } ] },
+        { label: 'Generate an explainer', buttons: [ { label: '✦ Generate explainer', primary: true } ],
+          artifacts: [ 'onboarding-revamp-explainer.html' ] },
+        { label: 'Review the ontology diffs', note: 'Same as “View Diff Graph” in the side panel today',
+          buttons: [ { label: '⧉ View Diff Graph', primary: true } ] },
+      ],
+    },
+    {
+      name: 'Integration Engineering', tag: 'Architecture integration',
+      steps: [
+        { label: 'Generate the code', buttons: [ { label: '▸ Generate code', primary: true } ] },
+        { label: 'Start a preview', note: 'The existing preview button', buttons: [ { label: '▶ Preview', primary: true } ] },
+        { label: 'Start a code review', note: 'The review skill (today: review-workspace-button)',
+          buttons: [ { label: '✓ Review', primary: true, testid: 'review-workspace-button' } ] },
+      ],
+    },
+    {
+      name: 'Operations', tag: 'Prepare to ship',
+      steps: [
+        { label: 'Rebase on the target', buttons: [ { label: '⇅ Rebase', primary: true } ] },
+        { label: 'Open a PR', buttons: [ { label: '⎇ Open PR', primary: true } ] },
+        { label: 'Merge the PR in the target', buttons: [ { label: '⇥ Merge PR', primary: true } ] },
+      ],
+    },
+  ];
+
+  // Approval gates BETWEEN phases (gate i guards the exit of phase i).
+  // Gate states: waiting | armed | passed | rejected (took the "no" edge).
+  const GATES = [
+    { state: 'waiting', entries: [
+      { name: 'Jada Torres', initials: 'JT', color: 'rgb(103 164 255)', def: 'Business alignment', state: 'pending' },
+      { name: 'Priya Shah', initials: 'PS', color: 'rgb(103 232 249)', def: 'Mock & questions sign-off', state: 'pending' },
+    ] },
+    { state: 'waiting', entries: [
+      { name: 'Jada Torres', initials: 'JT', color: 'rgb(103 164 255)', def: 'System alignment', state: 'pending' },
+      { name: 'Zhengchun Liu', initials: 'ZL', color: 'rgb(113 201 136)', def: 'Ontology diff review', state: 'pending' },
+    ] },
+    { state: 'waiting', entries: [
+      { name: 'Davide Pagano', initials: 'DP', color: 'rgb(192 132 252)', def: 'Integration sign-off', state: 'pending' },
+      { name: 'G5 Agent', initials: 'AI', kind: 'bot', def: 'Automated review & preview evidence', state: 'pending' },
+    ] },
+  ];
+
+  const state = {
+    phase: 0,                        // active phase index; PHASES.length => done
+    stepDone: PHASES.map(() => 0),   // completed steps per phase
+    reopened: PHASES.map(() => -1),  // step index reopened by a "no" edge, else -1
+    running: false,
+  };
+
+  // ---------------- toast ----------------
+  const toastEl = document.createElement('div');
+  toastEl.className = 'toast';
+  document.body.appendChild(toastEl);
+  let toastTimer;
+  const toast = (msg) => {
+    toastEl.textContent = msg; toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2200);
+  };
+
+  // ---------------- helpers ----------------
+  const armedGate = () => GATES.findIndex(g => g.state === 'armed');
+  const phaseCls = (pi) => pi < state.phase ? 'done' : (pi === state.phase ? 'active' : 'upnext');
+
+  function chipHtml(e) {
+    const cls = 'chip ' + e.state + (e.kind === 'bot' ? ' bot' : '');
+    const style = e.kind === 'bot' ? '' : ' style="background:' + e.color + '"';
+    return '<span class="' + cls + '"' + style +
+      ' title="' + e.name + ' · ' + e.state + ' · ' + e.def + '">' + e.initials +
+      (e.state === 'approved' ? '<span class="badge">✓</span>' : '') +
+      (e.state === 'rejected' ? '<span class="badge no">✕</span>' : '') + '</span>';
+  }
+
+  const FILE_ICON = '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"></path><path d="M14 2v5a1 1 0 0 0 1 1h5"></path><path d="M10 9H8"></path><path d="M16 13H8"></path><path d="M16 17H8"></path></svg>';
+  function citeHtml(name) {
+    return '<button type="button" data-testid="chat-message-citation" class="file-cite" data-cite="' + name + '"' +
+      ' title="' + name + ' — docs/Davide-guided/' + name + '">' + FILE_ICON + '<span>' + name + '</span></button>';
+  }
+  function chipsHtml(step, done) {
+    if (!done || !step.artifacts) return '';
+    return '<div class="artifact-chips">' + step.artifacts.map(citeHtml).join('') + '</div>';
+  }
+
+  function stepButtonsHtml(pi, si, current) {
+    const step = PHASES[pi].steps[si];
+    return '<div class="step-actions">' + step.buttons.map((b, bi) =>
+      '<button class="btn' + (b.primary && current ? ' primary' : '') + (current ? '' : ' ghost') + '"' +
+      (b.testid ? ' data-testid="' + b.testid + '"' : '') +
+      ' data-step-btn data-p="' + pi + '" data-s="' + si + '" data-b="' + bi + '"' +
+      (current ? '' : ' disabled') + '>' + b.label + '</button>').join('') + '</div>';
+  }
+
+  // ---- flowchart node builders ----
+  function edge(cls, label) {
+    return '<div class="edge ' + (cls || '') + '">' + (label ? '<span class="elbl">' + label + '</span>' : '') + '</div>';
+  }
+
+  function stepNode(pi, si, cls) {
+    const s = PHASES[pi].steps[si];
+    const done = si < state.stepDone[pi];
+    const current = cls === 'active' && si === state.stepDone[pi];
+    const reopened = state.reopened[pi] === si && current;
+    const ncls = done ? 'done' : current ? 'current' : 'todo';
+    return '<div class="snode ' + ncls + (reopened ? ' reopened' : '') + '">' +
+      '<div class="snode-row"><span class="dot">' + (done ? '✓' : current ? '▸' : '') + '</span><span>' + s.label + '</span></div>' +
+      (s.note ? '<div class="snode-note">' + s.note + '</div>' : '') +
+      (reopened ? '<div class="reopen-tag">↺ reopened — changes requested at the gate below</div>' : '') +
+      (cls === 'active' ? stepButtonsHtml(pi, si, current) : '') +
+      (done && cls === 'active' ? '<div class="step-done-when">✓ done</div>' : '') +
+      chipsHtml(s, done) +
+      '</div>';
+  }
+
+  function subgraph(pi) {
+    const cls = phaseCls(pi);
+    const suffix = cls === 'done' ? 'completed' : cls === 'active' ? 'in progress' : 'up next';
+    const inner = PHASES[pi].steps.map((s, si) => {
+      const done = si < state.stepDone[pi];
+      const nextDone = si + 1 < state.stepDone[pi];
+      const ecls = done && nextDone ? 'ok' : (done ? 'live' : (cls === 'upnext' ? 'dim' : ''));
+      return (si > 0 ? '<div class="edge sedge ' + ecls + '"></div>' : '') + stepNode(pi, si, cls);
+    }).join('');
+    return '<div class="subgraph ' + cls + '" data-sg="' + pi + '" title="' + PHASES[pi].tag + '">' +
+      '<div class="sg-title"><span class="sg-num">' + (cls === 'done' ? '✓' : pi + 1) + '</span>' + PHASES[pi].name + '</div>' +
+      '<div class="sg-tag">' + suffix + '</div>' +
+      inner + '</div>';
+  }
+
+  function gateNode(gi) {
+    const g = GATES[gi];
+    const approved = g.entries.filter(e => e.state === 'approved');
+    const missing = g.entries.filter(e => e.state !== 'approved');
+    const rows = (list) => list.map(e =>
+      '<div class="pop-row">' + chipHtml(e) +
+      '<span class="pop-main"><span class="pop-name">' + e.name + '</span><span class="pop-def">' + e.def + '</span></span>' +
+      '<span class="pop-state ' + (e.state === 'approved' ? 'ok' : e.state === 'rejected' ? 'no' : 'wait') + '">' +
+      (e.state === 'approved' ? (e.when || 'approved') : e.state === 'rejected' ? 'changes requested' : 'waiting') + '</span></div>').join('');
+    let pop = '';
+    if (missing.length) pop += '<h4 class="pop-h">Still missing</h4>' + rows(missing);
+    if (approved.length) pop += '<h4 class="pop-h">Approved</h4>' + rows(approved);
+    if (g.state === 'armed') {
+      const next = missing.find(e => e.kind !== 'bot');
+      if (next) pop += '<div class="pop-actions">' +
+        '<button class="btn primary" data-approve="' + gi + '">✓ Approve as ' + next.name.split(' ')[0] + '</button>' +
+        '<button class="btn danger" data-reject="' + gi + '">↺ Request changes</button></div>';
+    }
+    if (g.state === 'waiting') pop += '<div class="pop-note">Readies once ' + PHASES[gi].name + ' completes its steps.</div>';
+    if (g.state === 'rejected') pop += '<div class="pop-note">Took the “no” edge — ' + PHASES[gi].name + ' reopened its last step. Re-arms when it completes again.</div>';
+    const hint = g.state === 'passed' ? 'yes → ' + PHASES[gi + 1].name
+      : g.state === 'armed' ? 'collecting approvals — hover for who is missing'
+      : g.state === 'rejected' ? 'no → back into ' + PHASES[gi].name
+      : 'guards the exit of ' + PHASES[gi].name;
+    return '<div class="gate ' + g.state + '" data-gate="' + gi + '">' +
+      '<div class="gate-row">' +
+        '<div class="diamond"><div class="shape"></div><div class="shape-in"></div>' +
+          '<div class="dlabel">' + (g.state === 'passed' ? '<b>✓</b>approved' : g.state === 'rejected' ? '<b>✕</b>revise' : 'approved?<b>' + approved.length + '/' + g.entries.length + '</b>') + '</div></div>' +
+        '<div class="gate-side">' +
+          '<div class="gate-who"><span class="cluster">' + g.entries.map(chipHtml).join('') + '</span>' +
+          '<span class="appr-count"><b>' + approved.length + '</b> of ' + g.entries.length + ' approved</span>' +
+          '<span class="appr-caret">▾</span></div>' +
+          '<div class="gate-hint">' + hint + '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="appr-detail"><div class="appr-pop">' + pop + '</div></div>' +
+      '</div>';
+  }
+
+  // ---------------- render ----------------
+  function render() {
+    const flow = document.getElementById('flow');
+    const journeyDone = state.phase >= PHASES.length;
+    let html = '<div class="terminal' + (state.phase > 0 || state.stepDone[0] > 0 ? ' ok' : '') + '">⎇ Workspace opened</div>' +
+      edge(state.stepDone[0] > 0 || state.phase > 0 ? 'ok' : 'live');
+    PHASES.forEach((p, pi) => {
+      const cls = phaseCls(pi);
+      const hasGate = pi < GATES.length;
+      // a lane = subgraph + its guarding gate + the loop edge between them
+      html += '<div class="lane' + (hasGate && GATES[pi].state === 'armed' ? ' armed' : '') + '" data-lane="' + pi + '">' +
+        subgraph(pi);
+      if (hasGate) {
+        const g = GATES[pi];
+        const ecls = g.state === 'passed' ? 'ok' : g.state === 'armed' ? 'live' : cls === 'upnext' ? 'dim' : '';
+        html += edge(ecls) + gateNode(pi) +
+          '<div class="loop"><span class="llbl">no · changes requested</span></div>';
+      }
+      html += '</div>';
+      if (hasGate) {
+        const g = GATES[pi];
+        html += edge('gap ' + (g.state === 'passed' ? 'ok' : (g.state === 'armed' ? '' : 'dim')), 'yes');
+      } else {
+        html += edge(journeyDone ? 'ok' : (cls === 'active' ? 'live' : 'dim'));
+      }
+    });
+    html += '<div class="terminal' + (journeyDone ? ' ok' : ' dim') + '">' + (journeyDone ? '✓ Shipped to target' : '⇥ Shipped to target') + '</div>';
+    const pinned = [...flow.querySelectorAll('.gate.open')].map(g => g.dataset.gate);
+    flow.innerHTML = html;
+    pinned.forEach(id => { const g = flow.querySelector('.gate[data-gate="' + id + '"]'); if (g) g.classList.add('open'); });
+    layoutLoops();
+
+    // header progress
+    const label = document.getElementById('phase-label');
+    const fill = document.getElementById('progress-fill');
+    if (journeyDone) {
+      label.textContent = 'Complete'; fill.style.width = '100%';
+    } else {
+      label.textContent = 'Phase ' + (state.phase + 1) + ' of ' + PHASES.length;
+      const totalSteps = PHASES.reduce((n, p) => n + p.steps.length, 0);
+      const doneSteps = state.stepDone.reduce((a, b) => a + b, 0);
+      fill.style.width = Math.max(4, Math.round(100 * doneSteps / totalSteps)) + '%';
+    }
+    updateSummary();
+  }
+
+  // The loop edge is geometry-dependent: it starts at the diamond's left
+  // vertex and ends (arrowhead) at the vertical middle of the subgraph it
+  // guards. Measured after render so step cards of any height work.
+  function layoutLoops() {
+    document.querySelectorAll('.lane').forEach(lane => {
+      const loop = lane.querySelector('.loop');
+      if (!loop) return;
+      const laneTop = lane.getBoundingClientRect().top;
+      const sg = lane.querySelector('.subgraph').getBoundingClientRect();
+      const dia = lane.querySelector('.diamond').getBoundingClientRect();
+      const top = sg.top - laneTop + sg.height / 2;
+      const bottom = dia.top - laneTop + dia.height / 2;
+      loop.style.top = top + 'px';
+      loop.style.height = Math.max(0, bottom - top) + 'px';
+    });
+  }
+  window.addEventListener('resize', layoutLoops);
+
+  function updateSummary() {
+    const body = document.getElementById('summary-body');
+    const btn = document.getElementById('summary-btn');
+    const gi = armedGate();
+    if (gi >= 0) {
+      const g = GATES[gi];
+      const approved = g.entries.filter(e => e.state === 'approved').length;
+      const next = g.entries.find(e => e.state !== 'approved' && e.kind !== 'bot');
+      body.textContent = PHASES[gi].name + ' complete — at the approval gate, ' + approved + ' of ' +
+        g.entries.length + ' recorded. Hover the diamond for who is still missing.';
+      btn.textContent = next ? '✓ Approve (' + next.name.split(' ')[0] + ')' : '…waiting on automated evidence';
+      return;
+    }
+    if (state.phase >= PHASES.length) {
+      body.textContent = 'All phases complete and approvals recorded — shipped to the target.';
+      btn.textContent = '✓ Journey complete';
+      return;
+    }
+    const p = PHASES[state.phase];
+    const si = state.stepDone[state.phase];
+    const reopened = state.reopened[state.phase] === si;
+    body.textContent = p.name + ' in progress — ' + si + ' of ' + p.steps.length +
+      ' steps done. ' + (reopened ? 'Changes requested: redo ' : 'Next: ') + p.steps[si].label.toLowerCase() + '.';
+    btn.textContent = '▸ ' + p.steps[si].buttons[0].label.replace(/^[^\w]*\s*/, '');
+  }
+
+  // ---------------- actions ----------------
+  function runStep(pi, si, bi, btnEl) {
+    if (state.running || pi !== state.phase || si !== state.stepDone[pi]) return;
+    state.running = true;
+    const original = btnEl ? btnEl.textContent : '';
+    if (btnEl) { btnEl.disabled = true; btnEl.textContent = 'Working…'; }
+    setTimeout(() => {
+      state.running = false;
+      state.stepDone[pi] += 1;
+      state.reopened[pi] = -1;
+      if (btnEl) btnEl.textContent = original;
+      const doneStep = PHASES[pi].steps[si];
+      if (state.stepDone[pi] >= PHASES[pi].steps.length) {
+        phaseComplete(pi);
+      } else {
+        toast(doneStep.artifacts
+          ? 'Generated ' + doneStep.artifacts.join(', ')
+          : 'Step complete — next: ' + PHASES[pi].steps[state.stepDone[pi]].label);
+        render();
+      }
+    }, 900);
+  }
+
+  function phaseComplete(pi) {
+    if (pi < GATES.length) {
+      const g = GATES[pi];
+      g.state = 'armed';
+      g.entries.forEach(e => { if (e.state === 'rejected') e.state = 'pending'; });
+      toast(PHASES[pi].name + ' steps complete — at the approval gate');
+      g.entries.filter(e => e.kind === 'bot').forEach(e => {
+        setTimeout(() => {
+          if (e.state === 'approved' || g.state !== 'armed') return;
+          e.state = 'approved'; e.when = 'auto';
+          toast(e.name + ' recorded automated approval evidence');
+          if (g.entries.every(x => x.state === 'approved')) passGate(pi);
+          else render();
+        }, 1400);
+      });
+    } else {
+      state.phase = PHASES.length;
+      toast('PR merged — journey complete');
+    }
+    render();
+  }
+
+  function approveNext(gi) {
+    const g = GATES[gi];
+    if (g.state !== 'armed') return;
+    const next = g.entries.find(e => e.state !== 'approved' && e.kind !== 'bot');
+    if (!next) { toast('Waiting on automated approval evidence'); return; }
+    next.state = 'approved'; next.when = 'just now';
+    toast('Approved by ' + next.name);
+    if (g.entries.every(e => e.state === 'approved')) passGate(gi);
+    else render();
+  }
+
+  // The "no" edge: reject at the gate, loop back into the guarded phase,
+  // reopening its last step. The gate re-arms when the phase completes again.
+  function requestChanges(gi) {
+    const g = GATES[gi];
+    if (g.state !== 'armed') return;
+    const who = g.entries.find(e => e.state !== 'approved' && e.kind !== 'bot');
+    if (who) who.state = 'rejected';
+    g.state = 'rejected';
+    const last = PHASES[gi].steps.length - 1;
+    state.stepDone[gi] = last;
+    state.reopened[gi] = last;
+    state.phase = gi;
+    toast((who ? who.name : 'Reviewer') + ' requested changes — back to “' + PHASES[gi].steps[last].label + '”');
+    render();
+    const lane = document.querySelector('.lane[data-lane="' + gi + '"]');
+    if (lane) { lane.classList.add('flash'); setTimeout(() => lane.classList.remove('flash'), 1600); }
+  }
+
+  function passGate(gi) {
+    GATES[gi].state = 'passed';
+    state.phase = gi + 1;
+    toast('All approvals in — ' + PHASES[state.phase].name + ' started');
+    render();
+  }
+
+  // ---------------- wiring ----------------
+  document.getElementById('summary-btn').addEventListener('click', () => {
+    const gi = armedGate();
+    if (gi >= 0) { approveNext(gi); return; }
+    if (state.phase >= PHASES.length) { toast('Journey complete'); return; }
+    const pi = state.phase, si = state.stepDone[pi];
+    const el = document.querySelector('[data-step-btn][data-p="' + pi + '"][data-s="' + si + '"][data-b="0"]');
+    runStep(pi, si, 0, el);
+  });
+
+  document.body.addEventListener('click', (e) => {
+    const cite = e.target.closest('[data-cite]');
+    if (cite) { toast('(mock) opens ' + cite.dataset.cite + ' in the workspace'); return; }
+    const ap = e.target.closest('[data-approve]');
+    if (ap) { approveNext(+ap.dataset.approve); return; }
+    const rj = e.target.closest('[data-reject]');
+    if (rj) { requestChanges(+rj.dataset.reject); return; }
+    const sb = e.target.closest('[data-step-btn]');
+    if (sb) {
+      if (sb.disabled) return;
+      runStep(+sb.dataset.p, +sb.dataset.s, +sb.dataset.b, sb);
+      return;
+    }
+    const row = e.target.closest('.gate-row');
+    if (row) { // click a diamond to pin its popover open (hover also works)
+      const gate = row.parentElement;
+      gate.classList.toggle('open');
+      if (gate.classList.contains('waiting')) toast('Gate readies once the phase above completes its steps');
+      return;
+    }
+    const upnext = e.target.closest('.subgraph.upnext');
+    if (upnext) { toast('Up next — starts once the gate above passes'); return; }
+    const term = e.target.closest('.terminal.dim');
+    if (term) { toast('End of the journey — reached after the Operations phase'); return; }
+  });
+
+  // Rail buttons move the active highlight; Guided is the default entry.
+  document.querySelectorAll('.rail-btn').forEach(b => b.addEventListener('click', () => {
+    document.querySelector('.rail-btn.active').classList.remove('active');
+    b.classList.add('active');
+    toast(b.title + ' panel (mock)' + (b.title === 'Guided' ? ' — default on workspace open/fork' : ''));
+  }));
+
+  render();
+})();
+</script>
+</body>
+</html>

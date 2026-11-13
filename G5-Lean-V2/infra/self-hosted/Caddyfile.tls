@@ -1,0 +1,98 @@
+# G5 self-hosted edge with operator-provisioned TLS material.
+# The compose TLS overlay mounts the certificate and key read-only at the
+# stable paths below. Certificate issuance and renewal remain operator-owned.
+
+:80 {
+	handle /healthz {
+		respond "OK" 200
+	}
+	handle {
+		redir https://{host}{uri} permanent
+	}
+}
+
+:443 {
+	tls /etc/caddy/tls/fullchain.pem /etc/caddy/tls/privkey.pem
+
+	log {
+		output stdout
+		format console
+	}
+
+	handle /healthz {
+		respond "OK" 200
+	}
+
+	@maintenance_landing {
+		expression {env.G5_MAINTENANCE_MODE} == "true"
+		path /landing /landing/
+	}
+	handle @maintenance_landing {
+		root * /srv
+		rewrite * /coming-soon.html
+		file_server
+		header Cache-Control "no-cache, no-store, must-revalidate"
+	}
+
+	# Per-preview hosts (https://<task-id>.<G5_PREVIEW_HOST_SUFFIX>/) go to
+	# the API for every path, like the Helm ingress wildcard rule. The
+	# certificate above must cover *.<suffix>; the default pattern matches
+	# nothing while the suffix is unset.
+	@preview host *.{$G5_PREVIEW_HOST_SUFFIX:preview.invalid}
+	handle @preview {
+		reverse_proxy {$G5_API_URL:http://g5-api:7500}
+	}
+
+	handle /api/* {
+		reverse_proxy {$G5_API_URL:http://g5-api:7500}
+	}
+
+	handle /git/* {
+		reverse_proxy {$G5_API_URL:http://g5-api:7500}
+	}
+
+	handle /ws/* {
+		reverse_proxy {$G5_API_URL:http://g5-api:7500}
+	}
+
+	handle /auth/* {
+		reverse_proxy {$G5_API_URL:http://g5-api:7500}
+	}
+
+	handle /assets/* {
+		root * /srv
+		@asset_exists file
+		header @asset_exists Cache-Control "public, max-age=31536000, immutable"
+		try_files {path} =404
+		file_server
+	}
+
+	handle /user-guide/* {
+		root * /srv
+		try_files {path} =404
+		header Cache-Control "no-cache, no-store, must-revalidate"
+		file_server
+	}
+
+	handle {
+		root * /srv
+		header Cache-Control "no-cache, no-store, must-revalidate"
+		try_files {path} /index.html
+		file_server
+	}
+
+	handle_errors {
+		header Cache-Control "no-store"
+		respond "{err.status_code} {err.status_text}" {err.status_code}
+	}
+
+	encode gzip zstd
+
+	header {
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		# Defer until proxy headers arrive; emit one trusted policy reset.
+		>NEL `{"max_age":0}`
+		X-Frame-Options DENY
+	}
+}

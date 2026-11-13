@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE tasks t\n        SET\n            cost_usd = agg.sum_cost,\n            input_tokens = agg.sum_input,\n            output_tokens = agg.sum_output\n        FROM (\n            SELECT\n                task_id,\n                COALESCE(SUM(cost_usd), 0) AS sum_cost,\n                COALESCE(SUM(input_tokens), 0) AS sum_input,\n                COALESCE(SUM(output_tokens), 0) AS sum_output\n            FROM usage_records\n            WHERE task_id IS NOT NULL\n            GROUP BY task_id\n        ) agg\n        WHERE t.id = agg.task_id\n          AND (\n              t.cost_usd IS DISTINCT FROM agg.sum_cost\n              OR t.input_tokens IS DISTINCT FROM agg.sum_input\n              OR t.output_tokens IS DISTINCT FROM agg.sum_output\n          )\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "f8bd57d19a76f68f5585896d9a888b2a2d9f8e80c057d3d3c1b661cc730940ff"
+}

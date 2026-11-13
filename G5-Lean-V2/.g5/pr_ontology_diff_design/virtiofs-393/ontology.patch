@@ -1,0 +1,88 @@
+diff --git a/.g5/ontology/concepts/deployment.g5.md b/.g5/ontology/concepts/deployment.g5.md
+index 670514da..3d8ec6d6 100644
+--- a/.g5/ontology/concepts/deployment.g5.md
++++ b/.g5/ontology/concepts/deployment.g5.md
+@@ -120,0 +121,14 @@ Development or validation work does not itself authorize deployment.
++## Prepare workload templates before provisioning hosts
++
++[D · g5.scope.deployment.workload_templates]
++
++The worker-image build may precompute disposable workload templates from pinned OCI
++environments and explicitly scoped committed repository inputs, so new hosts validate
++and reuse them before registration. Keep [shared platform packaging](#share-platform-packaging-across-customers):
++templates are optional rebuildable cache data, not customer-specific platform behavior.
++Distribute repository-bearing artifacts only to infrastructure authorized for those
++sources; [repository seed eligibility](../software_architecture/worker_host.g5.md#seed-only-authorized-repository-members)
++separately governs guest exposure. Build-time caches contain no credentials or working
++state. Hosts retain runtime identity, capacity, isolation and readiness checks when
++using prebuilt data; missing or incompatible templates do not bypass those checks.
++
+@@ -224,0 +239,6 @@ Development or validation work does not itself authorize deployment.
++
++### g5.scope.deployment.workload_templates
++
++- human-verified
++- Explicitly requested by the user on 2026-10-14; [same design amendment](../../pr_ontology_diff_design/virtiofs-393/ontology-plan.md#repository-seed-and-delivery-preparation-amendment--2026-10-14).
++- Implemented by `g5d oci prepare-workload`, the scoped Git exporter and optional Packer phase 85. Qualification exercised the actual preparation script, old-fails/new-passes release CLI regression and post-reboot template reuse (0.171 s check, unchanged disk inodes). The public qualification image is not the production development image. Full Cloud Build/Packer publication, distribution and first boot of a newly published image remain unexecuted; no rollout. Generic templates are the recommended performance path; the measured seed variant is slower.
+diff --git a/.g5/ontology/software_architecture/worker_host.g5.md b/.g5/ontology/software_architecture/worker_host.g5.md
+index 233e8a98..4ed16f00 100644
+--- a/.g5/ontology/software_architecture/worker_host.g5.md
++++ b/.g5/ontology/software_architecture/worker_host.g5.md
+@@ -65,0 +66,42 @@ Lost persistence is repaired by the [linkage rule](#keep-live-hosts-linked-to-th
++### Keep accelerated workload storage guest-private and disposable
++
++[D · g5.architecture.build_scratch]
++
++For new opt-in Linux microVM boots, place the complete workload on one private,
++ephemeral block filesystem within the published scratch capacity. Preserve guest
++paths, creation permissions, isolation and the independent read-only [runtime bundle](runtime.g5.md#the-platform-supplies-its-complete-runtime).
++Prepare a pristine image before guest ownership; finish fresh workspace import and
++per-VM configuration during bootstrap before hooks, workload execution or readiness.
++Only pristine image templates and access-scoped committed repository seeds may be shared;
++each guest writes a private clone. Repository seeds follow the [seed contract](#seed-only-authorized-repository-members). The
++host template owner bounds cached variants and accounts for full-slot capacity plus
++template preparation before activation. The host never mounts a guest-written filesystem.
++Existing [fresh materialization](runtime.g5.md#every-start-builds-a-fresh-workspace-root),
++[complete Git receipts](durability.g5.md#only-verified-complete-capture-advances-recovery)
++and [exit-proven disposal](runtime.g5.md#delete-a-workspace-root-when-its-vm-is-released)
++remain authoritative; no guest image is retained for reuse or recovery. Reject
++unsupported boot modes or preparation failures rather than silently falling back.
++Qualify startup, workflow/recovery, full-slot capacity and block flush behavior
++before widening rollout; disk sizing and custody retain their existing owners.
++
++### Seed only authorized repository members
++
++[D · g5.architecture.workload_repo_seed]
++
++A deployment-built repository seed is a rebuildable accelerator, never a saved workspace.
++Bind it to the resolved environment/capacity/layout and exact authorized organization,
++cache generation, with every seeded member exactly matching an authorized repository
++ID, root and Git endpoint; additional workspace members are freshly imported. Never
++attach its disk to a nonmatching workspace: deleting files does not erase raw blocks.
++Build only from pinned committed sources, without credentials or guest-written state.
++Before attachment, require each baseline commit in the independently restored authorized
++repository object store; an absent baseline is a generic miss.
++Keep [fresh materialization](runtime.g5.md#every-start-builds-a-fresh-workspace-root) and
++complete receipt restoration on the host; bootstrap must transform the private seed
++clone into that exact restored tree before hooks or readiness, including deletions and
++Git metadata. Publish the immutable disk and its comparison baseline together. Bound
++the owner to one generic and one repository variant, with staging and full-slot capacity
++accounted for; mismatches retain the generic path and failed import cannot become Ready.
++Enable repository seeds for rollout only after demonstrating a startup benefit and
++qualifying the affected workspace flows on the target workload.
++
+@@ -90,0 +133,14 @@ Lost persistence is repaired by the [linkage rule](#keep-live-hosts-linked-to-th
++
++### g5.architecture.build_scratch
++
++- human-verified
++- Startup amendment is an agent decision within the [authorized experiment and implementation request](../../pr_ontology_diff_design/virtiofs-393/ontology-plan.md#startup-implementation-amendment--2026-10-14); runtime `4a8e2f60` implements pristine-template startup and passes direct startup/build, two-slot capacity and Linux checks. Final qualification passes 24 core and 21 provider-continuity browser journeys without retries/skips, two-VM/Docker checks, five recovery cases and ten actual KVM/host failure probes, as summarized in the [startup review](../../pr_ontology_diff_design/virtiofs-393/review.md#pristine-template-startup-conformance-review--2026-10-14). The earlier evidence below applies to full per-start population.
++- Explicitly requested by the user on 2026-10-13; implementation decisions are recorded in the [same design](../../pr_ontology_diff_design/virtiofs-393/ontology-plan.md#implementation-amendment--2026-10-13).
++- Review categories: [system]
++- Opt-in implementation: `backend/g5d-isolation/src/isolation/{microvm,libkrun,workload_root}.rs` and host configuration/runtime; [current checks and remaining qualification](../../pr_ontology_diff_design/virtiofs-393/ontology-plan.md#implementation-amendment--2026-10-13) are based on main `4eff3a2b`. Local and Linux preparation/isolation/host checks, actual KVM read-only-runtime probes, the development-image two-VM Files/terminal/receipt/Stop/Start journey, Docker overlay2 writes and bounded bootstrap/guest-capacity failure probes pass. Historical matched chroot Cargo/FULL results support the direction. The corrected runtime passes 24 core and 21 provider continuity browser journeys without retries/skips; ten matched runtime performance arms passed with 57.46% lower median fresh-check time, and five final receipt/terminal/host-loss recovery journeys passed. Both frontend layouts reproduced default Node heap exhaustion; an explicit 4 GiB heap passed build/preview and all 4,672 frontend tests without skips. Bounded sparse outer-filesystem exhaustion reports guest I/O failure and cleans up after exit. Browser testing exposed an inherited bootstrap umask defect, corrected and verified by actual old/new KVM probes, Project Doc Save and the component reruns. Full-slot production capacity remains unqualified. See the same plan for preserved failures and exact evidence scope.
++
++### g5.architecture.workload_repo_seed
++
++- human-verified
++- Explicitly requested by the user on 2026-10-14; mechanism and bounds are agent decisions in the [same plan amendment](../../pr_ontology_diff_design/virtiofs-393/ontology-plan.md#repository-seed-and-delivery-preparation-amendment--2026-10-14).
++- Implemented in runtime `51b816ee`; [qualification decision and remaining gaps](../../pr_ontology_diff_design/virtiofs-393/ontology-plan.md#repository-seed-and-delivery-preparation-amendment--2026-10-14). Direct KVM tree/Git, cross-scope fallback, concurrent private writes, corrupt-input refusal, detached/interrupted second-repository state and post-reboot reuse pass. The seeded startup median is 35.8% slower than generic in the measured source-plus-synthetic fixture, so keep seeds disabled. Seeded API/browser/complete-receipt recovery, production-image build/Docker/PTY/Preview, cancellation/full-slot capacity and published-image first-boot qualification remain gaps; old generic evidence does not qualify these paths.

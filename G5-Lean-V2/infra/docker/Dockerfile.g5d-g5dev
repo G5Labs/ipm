@@ -1,0 +1,765 @@
+# syntax=docker/dockerfile:1
+# =============================================================================
+# Dockerfile.g5d-g5dev
+#
+# G5-on-G5 self-development runtime for G5 workspace VMs. This image is a
+# customer base_image rootfs whose "customer" repository is the G5 source tree
+# itself: G5 binaries are mounted from the signed workspace host at /opt/g5/bin,
+# while this image supplies the guest-side tool surface for the repository's
+# local dev stack, Rust/native test execution, and the G5-on-G5 full-stack
+# preview (ontology: software_architecture/infra/docker_images D9 + I31).
+#
+# Preview cold-boot acceleration (I31): the full-stack preview compiles g5-api
+# and g5d from the materialized workspace on EVERY boot. This image therefore
+# bakes the pinned Rust toolchain, sccache, Node 22, the preview's service
+# packages (postgres/pgvector/caddy), and a warm dependency compile
+# cache primed by a discarded build stage. Correctness: only $CARGO_HOME
+# registry/git sources and the sccache object cache ship — never a prebuilt
+# backend/g5-api/g5d binary and never local-crate target artifacts — so cache reuse is
+# keyed on byte-identical compile inputs and every boot still builds a
+# brand-new G5 from the current source. A stale baked cache only slows boots;
+# it can never serve stale code.
+# =============================================================================
+
+# Global ARG defaults — every stage that consumes one re-declares it below
+# (Docker ARGs are stage-scoped).
+ARG JUST_VERSION=1.55.1
+ARG JUST_SHA256=b0ef600f0df20d5ae91ae931627c499fc52b477ffe5f5ea7b7b3ec616b16c778
+# Rust pin matches the worker toolchain generation (g5d-base) and the preview
+# boot contract; bumping it invalidates the warm cache by construction.
+ARG RUST_VERSION=1.97.1
+ARG SCCACHE_VERSION=v0.10.0
+ARG SCCACHE_SHA256=1fbb35e135660d04a2d5e42b59c7874d39b3deb17de56330b25b713ec59f849b
+ARG CARGO_CHEF_VERSION=0.1.77
+ARG PG_MAJOR=16
+# Playwright pin matches the client lockfile's resolved @playwright/test
+# version (frontend/package-lock.json). The bake only accelerates:
+# browsers live in a world-writable PLAYWRIGHT_BROWSERS_PATH, so a client
+# bump can still download a newer revision at runtime (I32).
+ARG PLAYWRIGHT_VERSION=1.58.2
+# helm: pinned upstream release, checksum-verified (same discipline as just).
+ARG HELM_VERSION=v3.19.0
+ARG HELM_SHA256=a7f81ce08007091b86d8bd696eb4d86b8d0f2e1b9f6c714be62f82f96a594496
+# Common base ([D18]/[D19] integration-stack/docker_images): perl-free git,
+# Ubuntu 26.04 (glibc 2.43). This guest rootfs may safely sit above the
+# host-mounted g5d ABI floor (build old / run new — microvm_execution_boundary
+# [D10]).
+ARG BASE_IMAGE=g5/base:26.04
+# Keep the binary source aligned with both edge Dockerfiles.
+ARG CADDY_IMAGE=caddy:2.11.4-alpine@sha256:6aeddd44c3078b0f9a35206472a11420648a79c184603ef95957d0a20044cb2b
+
+FROM ${CADDY_IMAGE} AS caddy-source
+
+FROM ${BASE_IMAGE} AS g5dev-base
+
+ARG JUST_VERSION
+ARG JUST_SHA256
+ARG RUST_VERSION
+ARG SCCACHE_VERSION
+ARG SCCACHE_SHA256
+ARG CARGO_CHEF_VERSION
+ARG PG_MAJOR
+ARG PLAYWRIGHT_VERSION
+ARG HELM_VERSION
+ARG HELM_SHA256
+
+LABEL org.opencontainers.image.title="G5 Self-Development Runtime" \
+      org.opencontainers.image.description="G5-on-G5 microVM base with just, Docker Engine + Compose for the `just dev-up` local stack, git, native C/glibc build deps, pinned Rust (rustfmt+clippy) + sccache + warm dependency cache, Node 22, baked Playwright Chromium, helm, Postgres/pgvector/Caddy for the full-stack preview plus a no-sudo test-DB helper, and writable UID-1000 runtime paths" \
+      com.g5labs.runtime.schema="v1" \
+      com.g5labs.runtime.workload="g5-selfdev-dev-up" \
+      com.g5labs.runtime.base_image="ubuntu-26.04-glibc-2.43" \
+      com.g5labs.runtime.workload.class="g5-source-just-dev-up" \
+      com.g5labs.runtime.just="${JUST_VERSION}" \
+      com.g5labs.runtime.docker.engine="true" \
+      com.g5labs.runtime.rust="${RUST_VERSION}" \
+      com.g5labs.runtime.sccache="${SCCACHE_VERSION}" \
+      com.g5labs.runtime.node="22" \
+      com.g5labs.runtime.playwright="${PLAYWRIGHT_VERSION}" \
+      com.g5labs.runtime.helm="${HELM_VERSION}" \
+      com.g5labs.runtime.preview_services="postgresql-${PG_MAJOR}-pgvector-caddy" \
+      com.g5labs.runtime.native_build_deps="gcc-g++-binutils-make-cmake-pkg-config-glibc-dev-openssl-sqlite-zstd" \
+      com.g5labs.runtime.kernel.features="netfilter-iptables-required-for-in-guest-dockerd" \
+      com.g5labs.runtime.testcontainers.enabled="false" \
+      com.g5labs.runtime.external_services="none-dev-up-compose-stack-is-self-contained"
+
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+USER root
+
+# Keep the image env small: g5d merges OCI config env into microVM launches and
+# the task PATH overrides image PATH, so launchers live in /usr/local/bin or
+# /usr/bin instead of relying on ENV PATH. The Rust/sccache vars below are the
+# deliberate exception (I31): they are cache-key identity — warm (image prime)
+# and live (preview boot) compiles must resolve the same CARGO_HOME registry
+# paths and the same wrapper, and CARGO_INCREMENTAL=0 must accompany
+# RUSTC_WRAPPER=sccache everywhere because sccache rejects incremental
+# compilation. Do NOT add RUSTFLAGS here: the workspace .cargo/config.toml
+# rustflags are the single source of truth, and an env RUSTFLAGS would
+# silently override them and fork the cache keys.
+# PLAYWRIGHT_BROWSERS_PATH is the second exception (I32): Playwright resolves
+# browsers per-invocation from this env var, so without it every guest
+# `npx playwright test` would ignore the baked browsers and re-download.
+#
+# This ENV reaches root boot paths and image-build stages only. The guest
+# runtime starts agent turns, terminals and previews with a cleared
+# environment (PATH, HOME and Git identity), so agents never see it; the
+# Rust launchers installed below and the pre-created /home/agent re-supply
+# the same identity without environment (ontology concepts/deployment
+# g5.scope.deployment.images.g5dev-toolchain). Keep the three toolchain
+# paths here and in infra/docker/g5-dev-rust-launcher.sh identical.
+ENV LANG=en_US.UTF-8 \
+    LC_ALL=en_US.UTF-8 \
+    RUSTUP_HOME=/usr/local/rustup \
+    CARGO_HOME=/usr/local/cargo \
+    RUSTC_WRAPPER=sccache \
+    SCCACHE_DIR=/opt/g5-build-cache/sccache \
+    CARGO_INCREMENTAL=0 \
+    PLAYWRIGHT_BROWSERS_PATH=/opt/ms-playwright
+
+RUN apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        bash \
+        binutils \
+        ca-certificates \
+        cmake \
+        curl \
+        g++ \
+        gcc \
+        gnupg \
+        jq \
+        less \
+        libc6-dev \
+        libffi-dev \
+        libsqlite3-dev \
+        libssl-dev \
+        libzstd-dev \
+        locales \
+        make \
+        netcat-openbsd \
+        nftables \
+        openssh-client \
+        pkg-config \
+        procps \
+        python3 \
+        rsync \
+        sudo \
+        tar \
+        unzip \
+        xfsprogs \
+        xz-utils \
+        zlib1g-dev \
+        zip \
+    && sed -i 's/^# *\(en_US.UTF-8 UTF-8\)/\1/' /etc/locale.gen \
+    && locale-gen en_US.UTF-8 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Docker Engine + Compose (I32), from the installer shared with the PairSoft
+# image so keyring, suite and package set stay identical across in-guest
+# dockerd images.
+COPY infra/docker/g5-docker-engine-install.sh /usr/local/share/g5/docker-engine-install.sh
+RUN bash /usr/local/share/g5/docker-engine-install.sh
+
+# Preview service packages (I31): the full-stack preview boot previously
+# apt-installed these at every boot (~1-2 min + registry availability risk).
+# Baked here, the boot script's `command -v` / extension-file guards skip the
+# installs entirely. postgresql-16-pgvector ships vector.control for
+# `CREATE EXTENSION vector` (g5-api migrations require it).
+#
+# The PostgreSQL major stays pinned at 16 (I31), but the common base
+# (ubuntu:26.04) ships PostgreSQL 18 in its own archive and carries no
+# postgresql-16, so the pinned major comes from the keyring-verified PGDG apt
+# repository (suite <codename>-pgdg; same keyring+source pattern as
+# docker.list). The contrib extension modules ship inside the
+# postgresql-16 package itself, so no separate postgresql-contrib metapackage
+# is installed — installing it on 26.04 would pull PostgreSQL 18 and break the
+# pin.
+RUN install -d /usr/share/postgresql-common/pgdg \
+    && curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc \
+        -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc \
+    && echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo "${VERSION_CODENAME}")-pgdg main" \
+        > /etc/apt/sources.list.d/pgdg.list \
+    && apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        "postgresql-${PG_MAJOR}" \
+        "postgresql-${PG_MAJOR}-pgvector" \
+    && rm -rf /var/lib/apt/lists/*
+
+# Caddy (preview edge + published-port gateway): the same pinned upstream
+# static binary as both edge runtimes, copied onto the common G5 base.
+COPY --from=caddy-source /usr/bin/caddy /usr/bin/caddy
+RUN caddy version
+
+# Node.js 22 + npm for the preview's client build (`npm ci` + vite). Pinned
+# nodejs.org tarball with per-arch sha256 (docker_images [D18]; same pins as
+# Dockerfile.base-node) — replaces the mutable NodeSource setup script.
+ARG NODE_VERSION=22.23.4
+ARG NODE_SHA256_X64=1805bcd35e6815559bd2eb97db438d3fdb0eb3a5e6a977b7c1badca76337e9ce
+ARG NODE_SHA256_ARM64=6287aa46b6c375d816e63ae66d024fbbfd70404825aabdfdf898a970871d2f4b
+RUN set -eux; \
+    NARCH="$(case "$(uname -m)" in aarch64|arm64) echo arm64 ;; *) echo x64 ;; esac)"; \
+    case "$NARCH" in \
+      arm64) NODE_SHA256="${NODE_SHA256_ARM64}" ;; \
+      x64)   NODE_SHA256="${NODE_SHA256_X64}" ;; \
+    esac; \
+    curl -fsSLo /tmp/node.tar.xz "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-${NARCH}.tar.xz"; \
+    echo "${NODE_SHA256}  /tmp/node.tar.xz" | sha256sum -c -; \
+    tar -xJf /tmp/node.tar.xz -C /usr/local --strip-components=1 --no-same-owner; \
+    rm -f /tmp/node.tar.xz
+
+# Playwright browser test surface (I32): Chromium's system libraries as an
+# explicit enumerated apt set — `playwright install-deps` is deliberately NOT
+# used (its distro map refuses the 26.04 codename at this pin and its
+# resolution is unpinned; the no-distro-git gate below still applies; full
+# perl is a documented [D19] exception on this image), then the pinned
+# Playwright's Chromium browsers baked at the world-writable
+# PLAYWRIGHT_BROWSERS_PATH so `npx playwright test` runs offline-by-default.
+# A "future revision fetched at runtime" is only half-usable: the guest is
+# non-root, so a newer revision that needs a system lib outside this set has
+# no runtime remedy (2026-08-26 microVM spike) — any revision bump lands here,
+# through the enumerated set and the gate. The client lockfile pin (test
+# surface) is baked. The final-stage gate ldd-verifies the set against EVERY
+# baked chrome and headless_shell binary. libxi6/libxcb-randr0/libwayland-server0
+# (headless_shell) and libavahi-client3/libavahi-common3 (full chrome) enter
+# the set for the Chromium 152 line; ldd-verified in the spike.
+# The 1.58 line hard-refuses Ubuntu 26.04 outright ("Playwright does not
+# support chromium on ubuntu26.04-x64" — deploy build 2459128f, fixed for
+# PNC in #2242), so its install runs under
+# PLAYWRIGHT_HOST_PLATFORM_OVERRIDE=ubuntu24.04-<arch> (arch-resolved like
+# the rustup pins below; deploy's amd64 build resolves to ubuntu24.04-x64
+# exactly as #2242 verified): the registry accepts the platform and the 24.04
+# Chromium runs on 26.04 via the safe build-old/run-new glibc direction
+# (microvm_execution_boundary D12). Retire the override once the client
+# @playwright/test pin reaches >= 1.61 (first 26.04-aware line).
+RUN apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        fonts-liberation \
+        fonts-unifont \
+        libasound2t64 \
+        libatk-bridge2.0-0t64 \
+        libatk1.0-0t64 \
+        libatspi2.0-0t64 \
+        libavahi-client3 \
+        libavahi-common3 \
+        libcairo2 \
+        libcups2t64 \
+        libdbus-1-3 \
+        libdrm2 \
+        libgbm1 \
+        libglib2.0-0t64 \
+        libnspr4 \
+        libnss3 \
+        libpango-1.0-0 \
+        libpangocairo-1.0-0 \
+        libwayland-server0 \
+        libx11-6 \
+        libxcb-randr0 \
+        libxcb1 \
+        libxcomposite1 \
+        libxdamage1 \
+        libxext6 \
+        libxfixes3 \
+        libxi6 \
+        libxkbcommon0 \
+        libxrandr2 \
+        libxrender1 \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /opt/ms-playwright \
+    && PW_ARCH="$(case "$(uname -m)" in aarch64|arm64) echo arm64 ;; *) echo x64 ;; esac)" \
+    && PLAYWRIGHT_HOST_PLATFORM_OVERRIDE="ubuntu24.04-${PW_ARCH}" \
+       npx -y "playwright@${PLAYWRIGHT_VERSION}" install chromium \
+    && chmod -R a+rwX /opt/ms-playwright \
+    && rm -rf /root/.npm
+
+# Pinned Rust toolchain at the fixed CARGO_HOME/RUSTUP_HOME identity paths
+# (I31: registry source paths are cache-key inputs — warm and live must
+# match). Minimal profile plus rustfmt+clippy (I32): the preview needs cargo
+# build only, but in-guest agents run `cargo fmt`/`cargo clippy` as CI
+# pre-gates, and the root-owned RUSTUP_HOME cannot accept an agent-side
+# `rustup component add`. Entry points land in /usr/local/bin per this
+# image's no-ENV-PATH convention, as the self-configuring launcher below.
+# Pinned rustup-init BINARY with per-arch sha256 (docker_images [D18]; same
+# pins as Dockerfile.base-rust) — never `curl | sh` of the mutable script.
+ARG RUSTUP_VERSION=1.29.0
+ARG RUSTUP_SHA256_X86_64=4acc9acc76d5079515b46346a485974457b5a79893cfb01112423c89aeb5aa10
+ARG RUSTUP_SHA256_AARCH64=9732d6c5e2a098d3521fca8145d826ae0aaa067ef2385ead08e6feac88fa5792
+RUN set -eux; \
+    RTARGET="$(case "$(uname -m)" in aarch64|arm64) echo aarch64-unknown-linux-gnu ;; *) echo x86_64-unknown-linux-gnu ;; esac)"; \
+    case "$RTARGET" in \
+      aarch64-*) RUSTUP_SHA256="${RUSTUP_SHA256_AARCH64}" ;; \
+      *)         RUSTUP_SHA256="${RUSTUP_SHA256_X86_64}" ;; \
+    esac; \
+    curl -fsSLo /tmp/rustup-init "https://static.rust-lang.org/rustup/archive/${RUSTUP_VERSION}/${RTARGET}/rustup-init"; \
+    echo "${RUSTUP_SHA256}  /tmp/rustup-init" | sha256sum -c -; \
+    chmod +x /tmp/rustup-init; \
+    /tmp/rustup-init -y --default-toolchain "${RUST_VERSION}" --profile minimal --no-modify-path; \
+    /usr/local/cargo/bin/rustup component add rustfmt clippy; \
+    rm -f /tmp/rustup-init
+
+# Self-configuring Rust entry points (ontology concepts/deployment
+# g5.scope.deployment.images.g5dev-toolchain). The guest runtime clears the
+# environment before every agent turn, terminal and preview, so a plain
+# symlink to the rustup proxy failed in QA with "rustup could not choose a
+# version of cargo to run" (ten workspaces, 2026-09-29 to 10-08), agents then
+# installed unpinned toolchains per VM, and the baked sccache cache went
+# unused. Each entry point is the launcher under its own name: it fills
+# RUSTUP_HOME, CARGO_HOME, RUSTC_WRAPPER, SCCACHE_DIR and CARGO_INCREMENTAL
+# only when unset, then execs the rustup proxy of the same name.
+COPY infra/docker/g5-dev-rust-launcher.sh /usr/local/bin/g5-dev-rust-launcher
+RUN chmod 0755 /usr/local/bin/g5-dev-rust-launcher \
+    && for tool in cargo rustc rustup cargo-fmt rustfmt cargo-clippy clippy-driver; do \
+         test -x "/usr/local/cargo/bin/${tool}" || { echo "FATAL: rustup proxy ${tool} is missing" >&2; exit 1; }; \
+         ln -s /usr/local/bin/g5-dev-rust-launcher "/usr/local/bin/${tool}"; \
+       done
+
+# sccache: pinned upstream musl release, checksum-verified (same discipline as
+# the `just` install above).
+RUN curl -fsSLo /tmp/sccache.tar.gz \
+        "https://github.com/mozilla/sccache/releases/download/${SCCACHE_VERSION}/sccache-${SCCACHE_VERSION}-x86_64-unknown-linux-musl.tar.gz" \
+    && echo "${SCCACHE_SHA256}  /tmp/sccache.tar.gz" | sha256sum -c - \
+    && tar -xzf /tmp/sccache.tar.gz --strip-components=1 -C /usr/local/bin --wildcards '*/sccache' \
+    && chmod 0755 /usr/local/bin/sccache \
+    && rm -f /tmp/sccache.tar.gz
+
+# cargo-chef: pinned, --locked. Used only by the discarded planner/prime
+# stages (I31): `prepare` distills the compile-relevant workspace shape into
+# recipe.json — the Cargo manifests + lockfile, .cargo/config.toml,
+# rust-toolchain*, and the auto-discovered target topology — so the expensive
+# cook layer below re-runs only when that recipe changes; edits to existing
+# source files still cache-hit. RUSTC_WRAPPER is cleared for the install so
+# tool compilation doesn't seed the shipped preview cache.
+RUN RUSTC_WRAPPER="" cargo install cargo-chef --locked --version "${CARGO_CHEF_VERSION}" \
+    && ln -s /usr/local/cargo/bin/cargo-chef /usr/local/bin/cargo-chef
+
+# just is the repository's task-runner entrypoint (`just dev-up`). Pinned
+# upstream musl release with checksum verification; noble's apt package lags.
+RUN curl -fsSLo /tmp/just.tar.gz \
+        "https://github.com/casey/just/releases/download/${JUST_VERSION}/just-${JUST_VERSION}-x86_64-unknown-linux-musl.tar.gz" \
+    && echo "${JUST_SHA256}  /tmp/just.tar.gz" | sha256sum -c - \
+    && tar -xzf /tmp/just.tar.gz -C /usr/local/bin just \
+    && chmod 0755 /usr/local/bin/just \
+    && rm -f /tmp/just.tar.gz
+
+# helm (I32): chart lint/template work in-guest. Pinned upstream release
+# tarball, checksum-verified — same discipline as just/sccache above. The
+# fetch retries transient failures in the Dockerfile.base mirror-loop shape
+# (get.helm.sh reset the single attempt in dev deploy df723b21, 2026-09-01);
+# the sha256 pin stays the only acceptance gate, so an exhausted budget fails
+# closed at checksum verification with no half-installed helm.
+RUN for attempt in 1 2 3 4 5; do \
+      if curl -fsSL --connect-timeout 20 --max-time 300 -o /tmp/helm.tar.gz \
+           "https://get.helm.sh/helm-${HELM_VERSION}-linux-amd64.tar.gz"; then \
+        break; \
+      fi; \
+      rm -f /tmp/helm.tar.gz; \
+      if [ "$attempt" -lt 5 ]; then \
+        echo "WARN: helm download failed (attempt ${attempt}/5); retrying in 10s" >&2; \
+        sleep 10; \
+      fi; \
+    done \
+    && echo "${HELM_SHA256}  /tmp/helm.tar.gz" | sha256sum -c - \
+    && tar -xzf /tmp/helm.tar.gz --strip-components=1 -C /usr/local/bin linux-amd64/helm \
+    && chmod 0755 /usr/local/bin/helm \
+    && rm -f /tmp/helm.tar.gz
+
+# The launcher selects overlay2 for the private ext4 workload disk before
+# starting Docker. Keep vfs as the portable image default for explicitly
+# supported process-mode environments with other backing filesystems.
+# The socket group is gid 1000 because the agent uses an explicit uid:gid.
+COPY infra/docker/g5-dockerd-daemon.json /etc/docker/daemon.json
+
+# MicroVM guests have no systemd and the in-VM agent runs as UID 1000, so
+# dockerd needs an explicit root-owned starter with its own scoped rule (D25).
+COPY infra/docker/g5-dev-dockerd-start.sh /usr/local/bin/g5-dev-dockerd-start
+COPY infra/docker/g5-dev-dockerd.sudoers /etc/sudoers.d/g5-dev-dockerd
+RUN chmod 0755 /usr/local/bin/g5-dev-dockerd-start \
+    && chmod 0440 /etc/sudoers.d/g5-dev-dockerd \
+    && visudo -cf /etc/sudoers.d/g5-dev-dockerd
+
+# MVP scope decision (v9 amendment row 14, 2026-09-23): the agent keeps running
+# as UID 1000 — the Claude CLI refuses `bypassPermissions` as root — but gets
+# passwordless sudo for everything else it needs root for. The separate
+# trusted-runtime UID isolation returns with P8.11; until then this image is
+# not a production-isolation image. Sudo itself is installed above; OCI
+# extraction on the host keeps root ownership and the setuid bit.
+RUN printf '%s\n' 'ubuntu ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/g5-agent \
+    && chmod 0440 /etc/sudoers.d/g5-agent \
+    && visudo -cf /etc/sudoers.d/g5-agent
+
+# Guest boot hook (microvm_runtime D57 + I32): the entry script runs this as
+# root, backgrounded, BEFORE the task env is sourced — so dev-org agents find
+# the Docker daemon already up instead of rediscovering the sudo helper every
+# session. Failure is logged to /var/log/g5-guest-boot.log, never boot-fatal.
+RUN printf '%s\n' \
+        '#!/usr/bin/env bash' \
+        '# Image boot hook (microvm_runtime D57): start dockerd at guest boot.' \
+        'set -euo pipefail' \
+        '/usr/local/bin/g5-dev-dockerd-start' \
+        > /usr/local/bin/g5-guest-boot \
+    && chmod 0755 /usr/local/bin/g5-guest-boot
+# The cold-tax telemetry sink (warm_cache_goldens D13) is NOT pre-created here:
+# it lives under the host-visible /work mount (/work/.g5/telemetry), which is not
+# guaranteed mounted at this boot-hook point, and a root-created dir on the
+# pre-mount rootfs would be shadowed once /work mounts. The uid-1000 shim creates
+# it with `mkdir -p` at first use, when /work is mounted and owned by the agent.
+
+# No-sudo throwaway Postgres for DB-backed test runs (I32): agents kept
+# skipping integration suites as "needs a live Postgres" even though the
+# service packages are baked — this helper makes them one command.
+COPY infra/docker/g5-dev-testdb-start.sh /usr/local/bin/g5-dev-testdb-start
+RUN chmod 0755 /usr/local/bin/g5-dev-testdb-start
+
+# Checkout-owned frontend dependency bootstrap. Repository node_modules is
+# never baked into this generic image; the helper consumes the materialized
+# lockfile and records its idempotency stamp under the excluded node_modules.
+COPY infra/docker/g5-dev-frontend-bootstrap /usr/local/bin/g5-dev-frontend-bootstrap
+RUN chmod 0755 /usr/local/bin/g5-dev-frontend-bootstrap
+
+# UID/GID 1000 is the in-VM agent identity (ubuntu:26.04 ships it as `ubuntu`).
+# Give it a writable home and writable /work caches so dev-up runs without
+# per-command HOME/ownership overrides. Docker socket access comes from the
+# daemon.json "group": "ubuntu" setting above, not docker-group membership.
+RUN if ! getent group 1000 >/dev/null; then groupadd --gid 1000 ubuntu; fi \
+    && if ! getent passwd 1000 >/dev/null; then \
+         useradd --uid 1000 --gid 1000 --create-home --shell /bin/bash ubuntu; \
+       fi \
+    && mkdir -p /home/ubuntu /work/.cache \
+    && chown -R 1000:1000 /home/ubuntu /work \
+    && chmod 0700 /home/ubuntu \
+    && chmod 1777 /tmp
+
+# Inner microvm host identities (g5.architecture.microvm_backend.nested): on a
+# nested-enabled host the full-stack preview's worker host runs real guests,
+# and the in-guest `g5d vm-exec` drops passt to g5-passt and the VMM to g5-vmm
+# in the kvm group, exactly the accounts 58-install-passt.sh and
+# install-cloud-hypervisor-platform.sh create on hosts. No passt build,
+# AppArmor profile or kernel here: the runtime disk ships the platform under
+# /opt/g5/platform. `nftables` is the egress policy's nft, `xfsprogs` makes
+# the reflink root (scripts/dev-host-reflink-root.sh) on the ext4 guest disk.
+RUN (getent group kvm >/dev/null || groupadd --system kvm) \
+    && (getent passwd g5-passt >/dev/null || useradd --system --no-create-home --shell /usr/sbin/nologin g5-passt) \
+    && (getent group g5-vmm >/dev/null || groupadd --system g5-vmm) \
+    && (id g5-vmm >/dev/null 2>&1 || useradd --system --gid g5-vmm --no-create-home --shell /usr/sbin/nologin g5-vmm) \
+    && usermod --append --groups kvm g5-vmm \
+    && [ "$(id -u g5-passt)" != 0 ] && [ "$(id -g g5-passt)" != 0 ] \
+    && [ "$(id -u g5-vmm)" != 0 ] && [ "$(id -g g5-vmm)" != 0 ] \
+    && id -nG g5-vmm | tr ' ' '\n' | grep -qx kvm \
+    && test -x /usr/sbin/nft && test -x /usr/sbin/mkfs.xfs
+
+# The guest runtime gives agents HOME=/home/agent (not /home/ubuntu) and no
+# PLAYWRIGHT_BROWSERS_PATH, so Playwright falls back to ~/.cache/ms-playwright.
+# Pre-create that home for uid 1000 with the baked browsers at the default
+# lookup path (g5.scope.deployment.images.g5dev-toolchain). The dispatcher's
+# ensure_directory accepts an existing physical directory and its chown walk
+# does not follow the link.
+RUN mkdir -p /home/agent/.cache \
+    && ln -s /opt/ms-playwright /home/agent/.cache/ms-playwright \
+    && chown -R 1000:1000 /home/agent \
+    && chmod 0700 /home/agent
+
+# =============================================================================
+# planner + prime — DISCARDED stages that warm the dependency compile cache
+# (I31), manifest-scoped so ordinary commits don't re-compile.
+#
+# planner copies the source (build context = ; .dockerignore
+# excludes target/ and node_modules) and distills the dependency set into
+# recipe.json via pinned cargo-chef. prime cooks the dependency tree for the
+# preview's EXACT package shapes (-p g5-api / -p g5d --no-default-features,
+# debug profile) from that content-stable recipe, so the expensive compile
+# layer re-runs only when the recipe changes — chef serializes the Cargo
+# manifests + lockfile, .cargo/config.toml, rust-toolchain*, and the
+# workspace's target topology (auto-discovered bins/tests/examples/benches/
+# build scripts); edits to EXISTING source files leave it cache-hit. Only
+# $CARGO_HOME/registry+git and the sccache object cache survive into the
+# final image; recipe, skeleton, and prime CARGO_TARGET_DIR are discarded, so
+# no local-crate artifacts and no app binaries ship (cook's dummy-source
+# local-crate cache entries are dead — real sources never match them). At
+# preview boot, cargo/sccache fingerprints still recompile anything that
+# differs from the booted commit. CARGO_BUILD_JOBS overrides the workspace
+# .cargo/config.toml `jobs = 2` devcontainer cap for the image builder only.
+# =============================================================================
+FROM g5dev-base AS planner
+
+COPY . /plan-src
+
+# `cargo chef prepare` distills the compile-relevant workspace shape into
+# recipe.json (manifests + lockfile, .cargo/config.toml, rust-toolchain*, and
+# target topology). The workspace .cargo/config.toml is also exported
+# alongside so the cook below compiles with the same rustflags as live preview
+# builds (cache-key identity; experience
+# cloudbuild_workspace_hides_baked_cargo_home). This stage re-runs on every
+# commit but costs seconds — no compilation happens here.
+RUN cd /plan-src \
+    && RUSTC_WRAPPER="" cargo chef prepare --recipe-path /recipe.json \
+    && cp .cargo/config.toml /cargo-config.toml \
+    && cp Cargo.toml /workspace-manifest.toml \
+    && cp Cargo.lock /workspace-lock.toml \
+    && rm -rf /plan-src
+
+FROM g5dev-base AS prime
+
+# BuildKit content-addresses these COPYs: when the recipe and config bytes
+# are unchanged (no manifest/lockfile/.cargo-config/toolchain/target-topology
+# change), the cook layer below is a CACHE HIT and a commit that only edits
+# existing source files skips the whole dependency compile. The mode=max registry cache in
+# docker-build-with-registry-cache.sh persists that layer across ephemeral
+# Cloud Build workers.
+COPY --from=planner /recipe.json /prime-cook/recipe.json
+COPY --from=planner /cargo-config.toml /prime-cook/.cargo/config.toml
+
+# The first two cooks are the preview boot's exact shapes. The rest warm what
+# `just test` and `just check` compile in the guest
+# (g5.scope.deployment.images.g5dev-toolchain), one cook per package set the
+# runner actually invokes (scripts/test-parallel.sh: the compile phase, the
+# four unit groups, the two integration shapes) plus `just check`'s two
+# shapes in check mode. Cargo unifies dependency features per package set
+# and sccache keys on the resulting flags, so a single combined cook would
+# warm a feature mix no runner invocation uses (codex review). Named
+# packages rather than --workspace so the feature sets match the runner's
+# actual invocations instead of warming unrelated platform crates. Later cooks
+# reuse the prime target dir, so each adds only its differently-featured
+# dependencies. In QA, cold whole-workspace compiles blew the ten-minute
+# agent turn limit because none of this was primed.
+#
+# Job count and target dir go through cook flags, never CARGO_BUILD_JOBS or
+# CARGO_TARGET_DIR in the environment: sccache folds every CARGO_* variable
+# rustc inherits into its cache key, and the guest's cleared environment has
+# neither, so an export here would make every warmed object miss at runtime
+# (codex review P1). The copied workspace config's `jobs = 2` is a
+# devcontainer cap; -j overrides it for the image builder only. The same
+# reasoning applies to build ARGs: a stage-scoped ARG such as
+# CARGO_CHEF_VERSION is an environment variable during RUN, so the cook env
+# is gated to exactly the CARGO_* keys the guest launchers set (CARGO_HOME,
+# CARGO_INCREMENTAL); anything else fails the build rather than silently
+# forking every key. The final stage proves a prime-to-guest hit.
+RUN mkdir -p "${SCCACHE_DIR}" "${CARGO_HOME}/registry" "${CARGO_HOME}/git" \
+    && cd /prime-cook \
+    && export SQLX_OFFLINE=true \
+    && unset CARGO_CHEF_VERSION \
+    && if env | grep -E '^CARGO_' | grep -v -E '^CARGO_(HOME|INCREMENTAL)='; then \
+         echo "FATAL: stray CARGO_* variable in the prime environment would fork the sccache keys the guest uses" >&2; exit 1; \
+       fi \
+    && cook() { cargo chef cook --recipe-path recipe.json -j "$(nproc)" --target-dir /prime-target "$@"; } \
+    && cook -p g5-api \
+    && cook -p g5d --no-default-features \
+    # compile phase: `cargo test --workspace --exclude g5d --exclude g5-e2e --no-run`
+    && cook --all-targets \
+         -p g5-contracts -p g5-auth -p g5-storage -p g5-semantic -p g5-scm -p g5-internal-api -p g5-authz \
+         -p g5-api-foundation -p g5-api-data -p g5-api-core -p g5-api-routes -p g5-api \
+         -p g5d-foundation -p g5d-isolation -p g5d-agent -p g5d-host -p g5d-dispatch \
+         -p fake-provider-cli \
+    # unit groups
+    && cook --all-targets \
+         -p g5-contracts -p g5-auth -p g5-storage -p g5-semantic -p g5-scm -p g5-internal-api \
+    && cook --all-targets \
+         -p g5-api-foundation -p g5-api-data -p g5-api-core -p g5-api-routes -p g5-api \
+    && cook --all-targets \
+         -p g5d-foundation -p g5d-isolation -p g5d-agent -p g5d-host -p g5d-dispatch \
+    && cook --all-targets \
+         -p g5d --no-default-features --features test-helpers \
+    # integration shapes
+    && cook --all-targets \
+         -p g5d-dispatch -p g5d --no-default-features --features test-helpers \
+    && cook --all-targets -p g5-api \
+    # `just check`: `cargo check --workspace --exclude g5d`, then g5d with test-helpers
+    && cook --check \
+         -p g5-contracts -p g5-auth -p g5-storage -p g5-semantic -p g5-scm -p g5-internal-api -p g5-authz \
+         -p g5-api-foundation -p g5-api-data -p g5-api-core -p g5-api-routes -p g5-api \
+         -p g5d-foundation -p g5d-isolation -p g5d-agent -p g5d-host -p g5d-dispatch \
+         -p g5-e2e -p fake-provider-cli \
+    && cook --check \
+         -p g5d --no-default-features --features test-helpers \
+    && sccache --show-stats \
+    && (sccache --stop-server || true) \
+    && rm -rf /prime-target /prime-cook
+
+# =============================================================================
+# final — g5dev-base plus warmed caches and interactive shell defaults.
+# =============================================================================
+FROM g5dev-base
+
+ARG JUST_VERSION
+ARG RUST_VERSION
+ARG SCCACHE_VERSION
+ARG PG_MAJOR
+ARG HELM_VERSION
+
+COPY --from=prime /usr/local/cargo/registry /usr/local/cargo/registry
+COPY --from=prime /usr/local/cargo/git /usr/local/cargo/git
+COPY --from=prime /opt/g5-build-cache/sccache /opt/g5-build-cache/sccache
+# The workspace cargo config and root manifest the prime cooked under
+# (rustflags and the [profile.dev] settings are part of every sccache key);
+# the dispatcher-environment gate below builds its smoke crate under the same
+# config and profile so a prime-to-guest cache hit can be required.
+COPY --from=planner /cargo-config.toml /usr/local/share/g5/prime-cargo-config.toml
+COPY --from=planner /workspace-manifest.toml /usr/local/share/g5/prime-workspace-manifest.toml
+# The lockfile the prime cooked under: the gate pins its smoke dependency to
+# the exact version recorded here. An unpinned requirement resolves OFFLINE
+# to the newest crate present in the registry cache, and the cargo-chef
+# install earlier in this image leaves newer versions of common crates there
+# than the workspace locks, so the prime never cooked them (QA deploy
+# 14052d2e: cfg-if 1.0.5 picked, 1.0.4 cooked, zero hits).
+COPY --from=planner /workspace-lock.toml /usr/local/share/g5/prime-workspace-lock.toml
+
+# Modules run as uid 1000, so the caches must be writable for the non-root
+# agent path (registry lock files + new-dep downloads + new sccache objects
+# are all runtime writes). Surgical uid-1000 writability (I32): cargo
+# takes the $CARGO_HOME/.package-cache lock on EVERY registry access — a
+# root-owned lock forced agents into CARGO_HOME=/tmp forks that abandon this
+# warm registry. Pre-create it world-writable, likewise the .global-cache
+# tracker the root-run cargo-chef install left behind, and make $CARGO_HOME
+# itself sticky-writable (/tmp semantics: create yes, rename/delete root
+# entries no).
+# $RUSTUP_HOME and $CARGO_HOME/bin deliberately STAY root-owned: a
+# uid-1000-writable toolchain binary would be a root-escalation vector inside
+# the guest.
+# This layer changes modes on trees earlier layers created (and pre-creates
+# two lock files), so it is recorded as directory entries with the new mode
+# plus re-emitted files; the host's rootfs assembly
+# applies them (ontology software_architecture/runtime
+# g5.runtime.boot.image.rootfs). Before that fix every guest saw these
+# directories as 0755 root and cargo could not download a crate the image had
+# not baked (QA, 2026-10-14). scripts/test_g5dev_cache_writability.py keeps
+# this line covering every cache tree the final stage copies from prime.
+RUN chmod -R a+rwX /opt/g5-build-cache /usr/local/cargo/registry /usr/local/cargo/git \
+    && touch /usr/local/cargo/.package-cache /usr/local/cargo/.global-cache \
+    && chmod 0666 /usr/local/cargo/.package-cache /usr/local/cargo/.global-cache \
+    && chmod a+wt /usr/local/cargo
+
+RUN just --version | grep -F "${JUST_VERSION}" \
+    && docker --version \
+    && docker compose version \
+    && docker buildx version \
+    && dockerd --version \
+    && git --version \
+    && if dpkg-query -W -f='${Status}' git 2>/dev/null | grep -q 'install ok installed'; then \
+         echo "FATAL: the distribution git package is installed; git must be inherited perl-free from the common base ([D19])" >&2; exit 1; \
+       fi \
+    && for p in dpkg-dev libdpkg-perl; do \
+         if dpkg-query -W -f='${Status}' "$p" 2>/dev/null | grep -q 'install ok installed'; then \
+           echo "FATAL: $p is installed; this image installs the compiler subset, not build-essential ([D19])" >&2; exit 1; \
+         fi; \
+       done \
+    # Full perl is deliberately NOT gated here, unlike the sibling guest
+    # images: postgresql-16 hard-depends on postgresql-common, whose cluster
+    # tooling (pg_wrapper, pg_createcluster) is perl — the documented
+    # g5d-g5dev exception in [D19] (deploy build 8cc3f948). The no-distro-git
+    # gate above still guarantees no git operation invokes perl.
+
+    && jq --version \
+    && curl --version >/dev/null \
+    && python3 --version \
+    && for tool in cc gcc g++ ld make cmake pkg-config; do command -v "$tool"; done \
+    && multiarch="$(gcc -dumpmachine)" \
+    && test -e "/usr/lib/${multiarch}/crt1.o" \
+    && test -e "/usr/lib/${multiarch}/crti.o" \
+    && test -e "/usr/lib/${multiarch}/libc.so" \
+    && printf 'int main(void) { return 0; }\n' > /tmp/g5-link-smoke.c \
+    && cc /tmp/g5-link-smoke.c -o /tmp/g5-link-smoke \
+    && /tmp/g5-link-smoke \
+    && rm -f /tmp/g5-link-smoke.c /tmp/g5-link-smoke \
+    && test -x /usr/local/bin/g5-dev-dockerd-start \
+    && test -x /usr/local/bin/g5-guest-boot \
+    && id -u g5-passt >/dev/null && id -u g5-vmm >/dev/null \
+    && id -nG g5-vmm | tr ' ' '\n' | grep -qx kvm \
+    && nft --version >/dev/null \
+    && mkfs.xfs -V >/dev/null \
+    && /usr/local/bin/g5-dev-frontend-bootstrap --help \
+    && rustc --version | grep -F "${RUST_VERSION}" \
+    && cargo --version | grep -F "${RUST_VERSION}" \
+    && cargo fmt --version \
+    && cargo clippy --version \
+    && sccache --version | grep -F "${SCCACHE_VERSION#v}" \
+    && helm version --short | grep -F "${HELM_VERSION}" \
+    && node --version | grep -E '^v22\.' \
+    && npm --version >/dev/null \
+    && psql --version \
+    && test -x "/usr/lib/postgresql/${PG_MAJOR}/bin/postgres" \
+    && test -f "/usr/share/postgresql/${PG_MAJOR}/extension/vector.control" \
+    && caddy version \
+    && find "${SCCACHE_DIR}" -mindepth 1 -type f -print -quit | grep -q . \
+    && find "${CARGO_HOME}/registry" -mindepth 1 -print -quit | grep -q .
+
+# Agent-identity gates (I32; test_contract/base_image_consolidation D6): the
+# failures these guard fire only for uid 1000, so root-run checks above cannot
+# catch them. Playwright completeness is proven by the shared ldd gate (both
+# browser types present, no unresolved library in the baked browsers); the
+# testdb helper is proven by a real start → SELECT 1 → stop round-trip, then
+# its scratch data is removed from the layer.
+COPY infra/docker/g5-browser-ldd-gate.sh /usr/local/bin/g5-browser-ldd-gate
+RUN chmod 0755 /usr/local/bin/g5-browser-ldd-gate
+RUN set -eux \
+    && runuser -u ubuntu -- cargo fmt --version \
+    && runuser -u ubuntu -- bash -c ': >> /usr/local/cargo/.package-cache' \
+    && runuser -u ubuntu -- bash -c 'touch /usr/local/cargo/registry/.g5-write-probe /usr/local/cargo/git/.g5-write-probe && rm /usr/local/cargo/registry/.g5-write-probe /usr/local/cargo/git/.g5-write-probe' \
+    && /usr/local/bin/g5-browser-ldd-gate /opt/ms-playwright \
+    && runuser -u ubuntu -- /usr/local/bin/g5-dev-testdb-start \
+    && runuser -u ubuntu -- psql -h 127.0.0.1 -U g5 -d g5_dev -tAc 'SELECT 1' | grep -q 1 \
+    && runuser -u ubuntu -- /usr/local/bin/g5-dev-testdb-start --stop \
+    && rm -rf /tmp/g5-testdb
+
+# Dispatcher-environment gate (g5.scope.deployment.images.g5dev-toolchain):
+# the guest runtime hands agents only PATH and HOME, so the checks above, run
+# with the image ENV, cannot catch a toolchain that depends on it. Repeat the
+# toolchain surface as uid 1000 under `env -i` with the runtime's PATH shape
+# (launcher directory first, bundle appended) and the runtime's home: pinned
+# versions through the launchers, fmt and clippy, a smoke crate that pulls one
+# baked dependency offline (so the warm registry is read and its lock taken
+# as uid 1000) and compiles twice through sccache under the same workspace
+# cargo config the prime cooked with: the FIRST build is expected to hit for
+# that dependency (the prime-to-guest proof that the cached keys match what
+# an agent's cargo produces). QA deploy 14052d2e showed zero hits there, so
+# until the key mismatch is understood that check only prints the full
+# statistics and a warning into the build log; the build must still
+# record zero cache write errors against the shipped cache location (sccache
+# tolerates write failures silently, so request counts alone would pass a
+# broken cache); the rebuild after dropping the target must hit again; then
+# the baked browsers are found through the home link. The smoke crate's
+# objects stay in the shipped cache (harmless); the server is stopped so no
+# process or socket outlives the layer.
+RUN set -eux \
+    && runuser -u ubuntu -- env -i \
+         PATH=/var/lib/g5d/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/g5/bin \
+         HOME=/home/agent \
+         G5_EXPECT_RUST="${RUST_VERSION}" \
+         G5_EXPECT_SCCACHE_DIR="${SCCACHE_DIR}" \
+         bash -euo pipefail -c '\
+           cargo --version | grep -F "$G5_EXPECT_RUST" \
+           && rustc --version | grep -F "$G5_EXPECT_RUST" \
+           && rustup show active-toolchain | grep -F "$G5_EXPECT_RUST" \
+           && cargo fmt --version \
+           && cargo clippy --version \
+           && find -L "$HOME/.cache/ms-playwright" -type f -name chrome -path "*chrome-linux*" -print -quit | grep -q . \
+           && smoke="$(mktemp -d)" \
+           && cargo new --quiet --vcs none --bin "$smoke/g5-launcher-smoke" \
+           && cd "$smoke/g5-launcher-smoke" \
+           && mkdir -p .cargo \
+           && cp /usr/local/share/g5/prime-cargo-config.toml .cargo/config.toml \
+           && locked="$(awk "/^name = \"cfg-if\"$/{getline; sub(/version = /, \"\"); gsub(/\"/, \"\"); print; exit}" /usr/local/share/g5/prime-workspace-lock.toml)" \
+           && test -n "$locked" \
+           && printf "cfg-if = \"=%s\"\n\n" "$locked" >> Cargo.toml \
+           && sed -n "/^\[profile\.dev\]$/,/^$/p" /usr/local/share/g5/prime-workspace-manifest.toml >> Cargo.toml \
+           && grep -q "^\[profile\.dev\]$" Cargo.toml \
+           && cargo build --quiet --offline \
+           && ./target/debug/g5-launcher-smoke \
+           && sccache --show-stats > "$smoke/stats-1" \
+           && cat "$smoke/stats-1" \
+           && grep -E "^Compile requests +[1-9]" "$smoke/stats-1" \
+           && { grep -E "^Cache hits +[1-9]" "$smoke/stats-1" || echo "WARN: no prime-to-guest sccache hit on the first build; the prime keys do not match an agent compile (deploy 14052d2e failed on this as a gate)"; } \
+           && grep -E "^Cache write errors +0$" "$smoke/stats-1" \
+           && grep -F "Local disk: \"$G5_EXPECT_SCCACHE_DIR\"" "$smoke/stats-1" \
+           && rm -rf target \
+           && cargo build --quiet --offline \
+           && sccache --show-stats > "$smoke/stats-2" \
+           && grep -E "^Cache hits +[1-9]" "$smoke/stats-2" \
+           && grep -E "^Cache write errors +0$" "$smoke/stats-2" \
+           && sccache --stop-server >/dev/null \
+           && rm -rf "$smoke"'
+
+# The Terminal starts a non-login Bash with HOME=/home/agent. Install its
+# editable defaults after the toolchain gates so appearance changes reuse the
+# expensive build layers. Non-interactive shells skip these settings.
+COPY --chown=1000:1000 --chmod=0644 infra/docker/g5-dev.bashrc /home/agent/.bashrc
+
+WORKDIR /work
+
+USER 1000:1000

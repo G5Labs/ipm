@@ -1,0 +1,13 @@
+# Port of G5's Terraform source carrier; Lean also needs its relative script
+# dependencies alongside the infrastructure tree.
+ARG BASE_IMAGE=g5/base:26.04
+FROM ${BASE_IMAGE} AS final
+
+WORKDIR /bundle
+
+COPY infra /bundle/infra
+COPY scripts /bundle/scripts
+# Existing External Secrets contract tests read this configuration schema.
+COPY backend/g5-api-foundation/src/config.rs /bundle/backend/g5-api-foundation/src/config.rs
+
+CMD ["sh"]

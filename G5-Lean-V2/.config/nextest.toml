@@ -1,0 +1,20 @@
+# Harness-level hang guard for every nextest lane (local and g5-ci).
+#
+# Tests must not carry per-test wall-clock join timeouts around awaits whose
+# correctness is already proven by event/state assertions — those bounds flake
+# under loaded CI runners (issue #1067). Instead, a test that stops making
+# progress is flagged SLOW at each 60s period and killed after 12 periods
+# (720s), with per-test attribution in the nextest output. The D33 live-microVM
+# value-loop scenario owns a 600s in-test diagnostic deadline, so the harness
+# guard must leave that failure path time to emit its evidence. Keep the outer
+# guard above every legitimate in-test deadline rather than adding a shorter
+# competing timeout inside the test.
+[profile.default]
+slow-timeout = { period = "60s", terminate-after = 12 }
+
+[[profile.default.overrides]]
+filter = 'test(=live_microvm_budget_exhaustion_blocks_then_resumes_preserved_task)'
+# The scenario owns one 900s absolute deadline spanning host readiness,
+# bootstrap, budget blockage, and replacement completion. Keep nextest's outer
+# hang guard above that diagnostic bound so it cannot kill the evidence path.
+slow-timeout = { period = "60s", terminate-after = 18 }

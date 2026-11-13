@@ -1,0 +1,684 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>G5 State Machines Slides</title>
+<style>
+/* Layout: 1280x720 slides shown one at a time and scaled to the window; under 700px wide the slides stack as cards you scroll. */
+:root {
+  --stage: #e6eaf0;
+  --bg: #ffffff;
+  --panel: #f3f5f8;
+  --fg: #1c2330;
+  --muted: #5a6475;
+  --rule: #d9dee6;
+  --accent: #28588f;
+  --accent-soft: #e4ecf6;
+  --crit: #a3292b;
+  --crit-soft: #f8e5e4;
+  --warn: #8a5a00;
+  --warn-soft: #f7ecd6;
+  --ok: #276b45;
+  --ok-soft: #e1f0e6;
+  --code-bg: #eef1f5;
+  --shadow: rgba(20, 30, 50, 0.12);
+  --font-display: "Iowan Old Style", Charter, "Palatino Linotype", Palatino, Georgia, serif;
+  --font-body: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  --scale: 1;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --stage: #0b0f14; --bg: #1a2029; --panel: #212833; --fg: #e3e7ee; --muted: #9aa4b4; --rule: #2e3643;
+    --accent: #8db6e6; --accent-soft: #1f2d40; --crit: #f08a86; --crit-soft: #3a1f21;
+    --warn: #e2b660; --warn-soft: #3a2e17; --ok: #7fcf9f; --ok-soft: #1a3325; --code-bg: #262e3a;
+    --shadow: rgba(0, 0, 0, 0.5);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --stage: #0b0f14; --bg: #1a2029; --panel: #212833; --fg: #e3e7ee; --muted: #9aa4b4; --rule: #2e3643;
+  --accent: #8db6e6; --accent-soft: #1f2d40; --crit: #f08a86; --crit-soft: #3a1f21;
+  --warn: #e2b660; --warn-soft: #3a2e17; --ok: #7fcf9f; --ok-soft: #1a3325; --code-bg: #262e3a;
+  --shadow: rgba(0, 0, 0, 0.5);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--stage); color: var(--fg); font-family: var(--font-body); -webkit-font-smoothing: antialiased; }
+[hidden] { display: none !important; }
+
+/* Stacked mode (default, and on narrow screens) */
+.deck { max-width: 920px; margin: 0 auto; padding-inline: 16px; padding-block: 16px 32px; display: grid; gap: 16px; }
+.slide {
+  --u: 0.74px;
+  position: relative; background: var(--bg); border: 1px solid var(--rule); border-radius: 10px;
+  padding: 22px 20px 0; display: flex; flex-direction: column; gap: calc(26 * var(--u)); min-width: 0; overflow: hidden;
+}
+@media (max-width: 440px) { .slide { --u: 0.7px; } }
+
+/* One-at-a-time mode */
+.canvas body { overflow: hidden; }
+.canvas .deck { position: fixed; inset: 0; max-width: none; margin: 0; padding: 0; display: block; }
+.canvas .slide {
+  --u: 1px;
+  position: absolute; left: 50%; top: 50%; width: 1280px; height: 720px;
+  padding: 52px 72px 0; border: 0; border-radius: 4px;
+  transform: translate(-50%, -50%) scale(var(--scale));
+  box-shadow: 0 2px 6px var(--shadow), 0 12px 40px var(--shadow);
+}
+.canvas .slide:not(.active) { display: none; }
+
+/* Slide parts */
+.head { display: grid; gap: calc(8 * var(--u)); }
+.eyebrow { font-family: var(--font-mono); font-size: max(11px, calc(15 * var(--u))); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.slide h2 { margin: 0; font: 600 calc(40 * var(--u))/1.15 var(--font-display); letter-spacing: -0.005em; text-wrap: balance; }
+.slide h2.story { font-size: calc(36 * var(--u)); }
+.slide h3 { margin: 0; font: 600 calc(25 * var(--u))/1.25 var(--font-display); text-wrap: balance; }
+.main { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: calc(24 * var(--u)); font-size: calc(22 * var(--u)); line-height: 1.45; }
+p { margin: 0; }
+.muted { color: var(--muted); }
+.small { font-size: max(12px, calc(17 * var(--u))); line-height: 1.4; }
+.foot {
+  display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  border-top: 1px solid var(--rule); padding-block: calc(12 * var(--u));
+  font-size: max(11px, calc(14 * var(--u))); color: var(--muted);
+}
+.canvas .foot { height: 56px; padding-block: 0; }
+.pager { display: flex; align-items: center; gap: 10px; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.nav-btn { display: none; }
+.canvas .nav-btn {
+  display: inline-grid; place-items: center; width: 32px; height: 32px; padding: 0;
+  border-radius: 6px; border: 1px solid var(--rule); background: var(--bg); color: var(--fg);
+  font: 18px/1 var(--font-body); cursor: pointer;
+}
+.canvas .nav-btn:hover { background: var(--accent-soft); color: var(--accent); }
+.nav-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.nav-btn:disabled { opacity: 0.35; cursor: default; }
+
+code { font-family: var(--font-mono); font-size: 0.84em; background: var(--code-bg); padding: 0.06em 0.3em; border-radius: 4px; overflow-wrap: anywhere; }
+
+/* Grids */
+.cols { display: grid; gap: calc(28 * var(--u)); min-width: 0; }
+.cols > * { min-width: 0; }
+.canvas .cols.two { grid-template-columns: 1fr 1fr; gap: 56px; }
+.canvas .cols.story { grid-template-columns: 1.4fr 1fr; gap: 56px; }
+.canvas .cols.diagram { grid-template-columns: 560px 1fr; gap: 52px; align-items: center; }
+.canvas .cols.check { grid-template-columns: 1fr 470px; gap: 56px; align-items: start; }
+
+/* Lists */
+.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: calc(14 * var(--u)); counter-reset: s; }
+.steps > li { counter-increment: s; display: grid; grid-template-columns: calc(34 * var(--u)) 1fr; gap: calc(10 * var(--u)); }
+.steps > li::before { content: counter(s); font-family: var(--font-mono); font-weight: 600; color: var(--accent); font-size: 0.9em; padding-top: 0.08em; }
+.steps > li > span { min-width: 0; }
+.steps.compact { gap: calc(10 * var(--u)); font-size: calc(19 * var(--u)); line-height: 1.42; }
+.bul { list-style: none; margin: 0; padding: 0; display: grid; gap: calc(14 * var(--u)); }
+.bul > li { position: relative; padding-left: calc(22 * var(--u)); }
+.bul > li::before { content: ""; position: absolute; left: 0; top: 0.62em; width: calc(8 * var(--u)); height: calc(8 * var(--u)); border-radius: 50%; background: var(--accent); }
+.bul.warnb > li::before { background: var(--warn); }
+.bul.dense { gap: calc(12 * var(--u)); font-size: calc(19 * var(--u)); line-height: 1.42; }
+
+/* Quotes, stats, chips */
+.rule { margin: 0; border-left: calc(4 * var(--u)) solid var(--accent); padding: calc(2 * var(--u)) 0 calc(2 * var(--u)) calc(18 * var(--u)); font-family: var(--font-display); font-size: calc(22 * var(--u)); line-height: 1.4; }
+.rule cite { display: block; margin-top: calc(8 * var(--u)); font: normal max(11px, calc(15 * var(--u)))/1.3 var(--font-mono); color: var(--muted); }
+.rule.ours { border-left-color: var(--muted); }
+.side { display: grid; gap: calc(26 * var(--u)); align-content: start; }
+.stat { display: grid; gap: calc(4 * var(--u)); }
+.stat b { font: 600 calc(50 * var(--u))/1 var(--font-display); font-variant-numeric: lining-nums tabular-nums; color: var(--accent); }
+.stat.crit b { color: var(--crit); }
+.stat span { font-size: max(12px, calc(17 * var(--u))); line-height: 1.38; color: var(--muted); }
+.stats2 { display: grid; grid-template-columns: 1fr 1fr; gap: calc(20 * var(--u)); }
+.chip { display: inline-block; font: 600 max(10px, calc(14 * var(--u)))/1.45 var(--font-body); letter-spacing: 0.03em; padding: calc(2 * var(--u)) calc(10 * var(--u)); border-radius: 999px; white-space: nowrap; }
+.chip.crit { background: var(--crit-soft); color: var(--crit); }
+.chip.warn { background: var(--warn-soft); color: var(--warn); }
+.chip.acc { background: var(--accent-soft); color: var(--accent); }
+.chip.mut { background: var(--code-bg); color: var(--muted); }
+.chip.ok { background: var(--ok-soft); color: var(--ok); }
+.tags { display: flex; flex-wrap: wrap; gap: calc(10 * var(--u)); align-items: center; }
+.tags .model { font-family: var(--font-mono); font-size: max(11px, calc(15 * var(--u))); color: var(--muted); }
+.note { background: var(--panel); border-radius: 8px; padding: calc(14 * var(--u)) calc(18 * var(--u)); font-size: max(12px, calc(18 * var(--u))); line-height: 1.42; }
+
+/* Tables */
+.tbl { overflow-x: auto; min-width: 0; }
+table { border-collapse: collapse; width: 100%; font-size: calc(19 * var(--u)); line-height: 1.35; }
+.tbl table { min-width: 520px; }
+.canvas .tbl table { min-width: 0; }
+th, td { text-align: left; padding: calc(9 * var(--u)) calc(12 * var(--u)); border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { font-size: max(10px, calc(13 * var(--u))); letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+td.num, th.num { text-align: right; font-family: var(--font-mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+td.model { font-family: var(--font-mono); font-size: 0.84em; color: var(--muted); white-space: nowrap; }
+table.tight td, table.tight th { padding-block: calc(7 * var(--u)); }
+
+/* Bars */
+.bars { display: grid; gap: calc(12 * var(--u)); }
+.bar { display: grid; grid-template-columns: calc(210 * var(--u)) 1fr calc(40 * var(--u)); gap: calc(12 * var(--u)); align-items: center; font-size: calc(19 * var(--u)); }
+.track { height: calc(22 * var(--u)); background: var(--code-bg); border-radius: 4px; overflow: hidden; }
+.fill { height: 100%; background: var(--accent); }
+.fill.crit { background: var(--crit); }
+.fill.warn { background: var(--warn); }
+.fill.mut { background: var(--muted); }
+.bar .v { font-family: var(--font-mono); font-variant-numeric: tabular-nums; text-align: right; font-weight: 600; }
+
+/* Title slide */
+.title .main { justify-content: center; gap: calc(26 * var(--u)); }
+.title h1 { margin: 0; font: 600 calc(68 * var(--u))/1.05 var(--font-display); letter-spacing: -0.015em; text-wrap: balance; }
+.title .lead { font-size: calc(28 * var(--u)); color: var(--muted); max-width: calc(930 * var(--u)); line-height: 1.4; }
+.statrow { display: grid; grid-template-columns: repeat(2, 1fr); gap: calc(24 * var(--u)); border-top: 1px solid var(--rule); padding-top: calc(28 * var(--u)); margin-top: calc(10 * var(--u)); }
+.canvas .statrow { grid-template-columns: repeat(4, 1fr); }
+
+/* Process rows */
+.rows { display: grid; }
+.rows > div { display: grid; grid-template-columns: calc(34 * var(--u)) 1fr; gap: calc(6 * var(--u)) calc(10 * var(--u)); padding-block: calc(12 * var(--u)); border-top: 1px solid var(--rule); font-size: calc(20 * var(--u)); line-height: 1.4; }
+.canvas .rows > div { grid-template-columns: 34px 380px 1fr; gap: 16px; }
+.rows .n { font-family: var(--font-mono); font-weight: 600; color: var(--accent); }
+.rows b { font-weight: 600; }
+.rows .d { color: var(--muted); grid-column: 2; }
+.canvas .rows .d { grid-column: auto; }
+
+/* Code, model, rule, result strip */
+.strip { display: grid; gap: calc(10 * var(--u)); }
+.canvas .strip { grid-template-columns: 1fr 22px 0.8fr 22px 1.35fr 22px 0.75fr; align-items: stretch; gap: 10px; }
+.strip .box { background: var(--panel); border-radius: 8px; padding: calc(14 * var(--u)) calc(16 * var(--u)); display: grid; gap: calc(6 * var(--u)); align-content: start; font-size: calc(18 * var(--u)); line-height: 1.4; min-width: 0; }
+.strip .box.bad { background: var(--crit-soft); }
+.strip .arrow { align-self: center; justify-self: center; color: var(--muted); font-family: var(--font-mono); transform: rotate(90deg); }
+.canvas .strip .arrow { transform: none; }
+
+/* State diagram */
+.fsm { display: block; width: 100%; max-width: 560px; height: auto; }
+.canvas .fsm { width: 560px; }
+.fsm .node rect { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 2; }
+.fsm .node.fail rect { fill: var(--crit-soft); stroke: var(--crit); }
+.fsm .node text { fill: var(--fg); font: 600 19px var(--font-body); text-anchor: middle; }
+.fsm .edge { stroke: var(--muted); stroke-width: 2; fill: none; }
+.fsm .edge.fail { stroke: var(--crit); stroke-dasharray: 7 6; }
+.fsm .ah { fill: var(--muted); }
+.fsm .ah-crit { fill: var(--crit); }
+.fsm .lbl { fill: var(--muted); font: 16px var(--font-body); }
+.fsm .lbl.crit { fill: var(--crit); }
+pre { margin: 0; background: var(--panel); border-radius: 8px; padding: calc(12 * var(--u)) calc(16 * var(--u)); overflow-x: auto; font: max(11px, calc(16 * var(--u)))/1.55 var(--font-mono); }
+
+@media (prefers-reduced-motion: no-preference) {
+  .canvas .slide.active { animation: enter 180ms ease-out; }
+  @keyframes enter { from { opacity: 0.4; } to { opacity: 1; } }
+}
+</style>
+<script>
+  if (window.innerWidth >= 700) {
+    document.documentElement.classList.add('canvas');
+    document.documentElement.style.setProperty('--scale', Math.min(window.innerWidth / 1280, window.innerHeight / 720));
+  }
+</script>
+
+<div class="deck" id="deck">
+
+  <!-- 1 -->
+  <section class="slide title active" aria-label="Slide 1: G5 state machines in TLA+">
+    <div class="main">
+      <div class="eyebrow">G5-Lean · main @ 412cccae · 29 Sep 2026</div>
+      <h1>G5 state machines in TLA+</h1>
+      <p class="lead">We modelled eight parts of G5 that move through states, let a checker try every order of events, and found 18 problems in the code.</p>
+      <div class="statrow">
+        <div class="stat"><b>8</b><span>models, one per state machine</span></div>
+        <div class="stat"><b>19.8 M</b><span>situations checked by the 21 normal checks</span></div>
+        <div class="stat crit"><b>18</b><span>problems found in the code</span></div>
+        <div class="stat"><b>11</b><span>of them break a rule written in the ontology</span></div>
+      </div>
+    </div>
+    <footer class="foot"><span>G5 state machines in TLA+</span><span class="pager"><button class="nav-btn" data-go="prev" aria-label="Previous slide">‹</button><span>1 / 16</span><button class="nav-btn" data-go="next" aria-label="Next slide">›</button></span></footer>
+  </section>
+
+  <!-- 2 -->
+  <section class="slide" aria-label="Slide 2: A model is a list of states and allowed steps">
+    <div class="head"><div class="eyebrow">How it works</div><h2>A model is a list of states and allowed steps</h2></div>
+    <div class="main">
+      <div class="cols diagram">
+        <div>
+          <svg class="fsm" viewBox="0 0 560 400" role="img" aria-label="Workspace VM states: stopped, starting, running, stopping and failed, with the main steps between them">
+            <defs>
+              <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker>
+              <marker id="ahc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah-crit" d="M0,0 L10,5 L0,10 z"/></marker>
+            </defs>
+            <line class="edge" x1="187" y1="60" x2="372" y2="60" marker-end="url(#ah)"/>
+            <text class="lbl" x="280" y="48" text-anchor="middle">Start</text>
+            <line class="edge" x1="450" y1="90" x2="450" y2="309" marker-end="url(#ah)"/>
+            <text class="lbl" x="462" y="205">VM ready</text>
+            <line class="edge" x1="373" y1="340" x2="188" y2="340" marker-end="url(#ah)"/>
+            <text class="lbl" x="280" y="330" text-anchor="middle">Stop</text>
+            <line class="edge" x1="110" y1="310" x2="110" y2="91" marker-end="url(#ah)"/>
+            <text class="lbl" x="122" y="150">VM stopped</text>
+            <line class="edge fail" x1="398" y1="90" x2="339" y2="169" marker-end="url(#ahc)"/>
+            <line class="edge" x1="318" y1="170" x2="377" y2="91" marker-end="url(#ah)"/>
+            <text class="lbl" x="300" y="122" text-anchor="end">Start again</text>
+            <line class="edge fail" x1="398" y1="310" x2="339" y2="231" marker-end="url(#ahc)"/>
+            <line class="edge fail" x1="162" y1="310" x2="221" y2="231" marker-end="url(#ahc)"/>
+            <g class="node"><rect x="35" y="32" width="150" height="56" rx="10"/><text x="110" y="66">stopped</text></g>
+            <g class="node"><rect x="375" y="32" width="150" height="56" rx="10"/><text x="450" y="66">starting</text></g>
+            <g class="node"><rect x="375" y="312" width="150" height="56" rx="10"/><text x="450" y="346">running</text></g>
+            <g class="node"><rect x="35" y="312" width="150" height="56" rx="10"/><text x="110" y="346">stopping</text></g>
+            <g class="node fail"><rect x="205" y="172" width="150" height="56" rx="10"/><text x="280" y="206">failed</text></g>
+            <line class="edge fail" x1="35" y1="392" x2="75" y2="392"/>
+            <text class="lbl crit" x="84" y="397">the VM fails or dies</text>
+          </svg>
+          <p class="small muted" style="margin-top:10px">Workspace VM, main steps only. The code allows 11 changes between these states. The 3 rarer ones are not drawn, for example stopping → running when saving fails before the VM is told to stop.</p>
+        </div>
+        <ul class="bul">
+          <li><b>States come from the database.</b> A workspace VM is always exactly one of these 5 values.</li>
+          <li><b>Steps come from the code.</b> Each place in the code that changes the state became one step. This model cites 31 code locations.</li>
+          <li><b>Rules come from the ontology.</b> For example, a Stop must also cancel a Start that is still waiting in the queue (<code>g5.lifecycle.stop</code>).</li>
+        </ul>
+      </div>
+    </div>
+    <footer class="foot"><span>G5 state machines in TLA+</span><span class="pager"><button class="nav-btn" data-go="prev" aria-label="Previous slide">‹</button><span>2 / 16</span><button class="nav-btn" data-go="next" aria-label="Next slide">›</button></span></footer>
+  </section>
+
+  <!-- 3 -->
+  <section class="slide" aria-label="Slide 3: The checker tries every order of events">
+    <div class="head"><div class="eyebrow">How it works</div><h2>The checker tries every order of events</h2></div>
+    <div class="main">
+      <div class="cols check">
+        <ol class="steps">
+          <li><span>TLC starts from the first situation, for example "both workspaces stopped".</span></li>
+          <li><span>It applies every allowed step, in every possible order, until no new situation appears.</span></li>
+          <li><span>If any situation breaks a rule, it stops and prints the shortest list of steps that leads there.</span></li>
+        </ol>
+        <div class="note" style="display:grid;gap:16px">
+          <div class="eyebrow">Example: the WorkspaceVm check</div>
+          <div class="small"><b>Limits:</b> 2 workspaces, an org that may run 1 VM at a time, a host with 2 slots, at most 2 starts in total.</div>
+          <div class="stat"><b>1,024,237</b><span>different situations</span></div>
+          <div class="stat"><b>~1.5 min</b><span>to check them all</span></div>
+        </div>
+      </div>
+      <p class="small muted">Across all eight models, the 21 normal checks cover about 19.8 million situations. Normal tests run one order of events each; the checker covers every order within the limits.</p>
+    </div>
+    <footer class="foot"><span>G5 state machines in TLA+</span><span class="pager"><button class="nav-btn" data-go="prev" aria-label="Previous slide">‹</button><span>3 / 16</span><button class="nav-btn" data-go="next" aria-label="Next slide">›</button></span></footer>
+  </section>
+
+  <!-- 4 -->
+  <section class="slide" aria-label="Slide 4: What we did">
+    <div class="head"><div class="eyebrow">1 · What we did</div><h2>What we did</h2></div>
+    <div class="main">
+      <div class="rows">
+        <div><span class="n">1</span><b>Read the code that changes each state</b><span class="d">About 220 code locations cited. Every step in a model names its file and line.</span></div>
+        <div><span class="n">2</span><b>Read the ontology for the same area</b><span class="d">25 rules used, for example "Allow three definite outer Start failures before exhausting consent".</span></div>
+        <div><span class="n">3</span><b>Write the model and its rules</b><span class="d">5,132 lines of TLA+ in 8 models.</span></div>
+        <div><span class="n">4</span><b>Run TLC and judge each failure</b><span class="d">Re-read the code to decide whether the model or the code is wrong. Fixing the model was allowed. Deleting a rule to get a pass was not.</span></div>
+        <div><span class="n">5</span><b>Save each problem as its own check</b><span class="d">31 problem checks. Each one fails and prints its steps, so anyone can rerun it.</span></div>
+      </div>
+      <p class="small muted">Eight helper agents worked in parallel, one per model. Claude chose the areas, wrote their shared instructions, and reran all 21 normal checks (all pass) and all 31 problem checks (all fail as intended).</p>
+    </div>
+    <footer class="foot"><span>G5 state machines in TLA+</span><span class="pager"><button class="nav-btn" data-go="prev" aria-label="Previous slide">‹</button><span>4 / 16</span><button class="nav-btn" data-go="next" aria-label="Next slide">›</button></span></footer>
+  </section>
+
+  <!-- 5 -->
+  <section class="slide" aria-label="Slide 5: Eight models">
+    <div class="head"><div class="eyebrow">1 · What we did</div><h2>Eight models</h2></div>
+    <div class="main">
+      <div class="tbl">
+        <table class="tight">
+          <thead><tr><th>Model</th><th>What it covers</th><th class="num">Situations checked</th><th class="num">Rules</th></tr></thead>
+          <tbody>
+            <tr><td><b>TaskLifecycle</b></td><td>A task from queued to done: retries, cancel, dependencies</td><td class="num">656,526</td><td class="num">14</td></tr>
+            <tr><td><b>WorkspaceVm</b></td><td>Starting and stopping a workspace VM, the start queue</td><td class="num">1,024,237</td><td class="num">14</td></tr>
+            <tr><td><b>HostVm</b></td><td>How a worker host boots, stops and cleans up a VM</td><td class="num">866,348</td><td class="num">14</td></tr>
+            <tr><td><b>WorkerHost</b></td><td>Adding, draining, rotating and removing hosts</td><td class="num">10,346,514</td><td class="num">10</td></tr>
+            <tr><td><b>WorkspaceFlush</b></td><td>Saving Git state before shutdown or fork</td><td class="num">66,215</td><td class="num">16</td></tr>
+            <tr><td><b>WorkspaceTransfer</b></td><td>Handing a workspace to a new owner</td><td class="num">19,852</td><td class="num">10</td></tr>
+            <tr><td><b>WorkspaceFork</b></td><td>Creating a fork of a workspace</td><td class="num">406,248</td><td class="num">7</td></tr>
+            <tr><td><b>ProviderRequest</b></td><td>An agent asks the user a question and waits</td><td class="num">1,652,488</td><td class="num">10</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="small muted">Numbers are for the main check of each model. Not covered: publishing comments to GitHub and org invitations, which were started and then stopped.</p>
+    </div>
+    <footer class="foot"><span>G5 state machines in TLA+</span><span class="pager"><button class="nav-btn" data-go="prev" aria-label="Previous slide">‹</button><span>5 / 16</span><button class="nav-btn" data-go="next" aria-label="Next slide">›</button></span></footer>
+  </section>
+
+  <!-- 6 -->
+  <section class="slide" aria-label="Slide 6: 18 problems at a glance">
+    <div class="head"><div class="eyebrow">2 · What we found</div><h2>18 problems at a glance</h2></div>
+    <div class="main">
+      <div class="cols two">
+        <div style="display:grid;gap:16px">
+          <h3>How serious</h3>
+          <div class="bars" role="img" aria-label="Severity: 5 high, 8 medium, 2 low, 3 unsure">
+            <div class="bar"><span>High</span><div class="track"><div class="fill crit" style="width:45%"></div></div><span class="v">5</span></div>
+            <div class="bar"><span>Medium</span><div class="track"><div class="fill warn" style="width:73%"></div></div><span class="v">8</span></div>
+            <div class="bar"><span>Low</span><div class="track"><div class="fill" style="width:18%"></div></div><span class="v">2</span></div>
+            <div class="bar"><span>Unsure</span><div class="track"><div class="fill mut" style="width:27%"></div></div><span class="v">3</span></div>
+          </div>
+        </div>
+        <div style="display:grid;gap:16px">
+          <h3>Where the broken rule comes from</h3>
+          <div class="bars" role="img" aria-label="Source of the rule: 11 ontology, 5 our own general rules, 2 design document">
+            <div class="bar"><span>Ontology</span><div class="track"><div class="fill" style="width:100%"></div></div><span class="v">11</span></div>
+            <div class="bar"><span>Our general rules</span><div class="track"><div class="fill mut" style="width:45%"></div></div><span class="v">5</span></div>
+            <div class="bar"><span>v9 design doc</span><div class="track"><div class="fill mut" style="width:18%"></div></div><span class="v">2</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="statrow" style="margin-top:0">
+        <div class="stat"><b>2–16</b><span>steps in each failing sequence</span></div>
+        <div class="stat"><b>≤ 1 s</b><span>for TLC to find each one</span></div>
+        <div class="stat"><b>0</b><span>reproduced on a running system so far</span></div>
+        <div class="stat"><b>6</b><span>shown step by step on the next slides</span></div>
+      </div>
+    </div>
+    <footer class="foot"><span>G5 state machines in TLA+</span><span class="pager"><button class="nav-btn" data-go="prev" aria-label="Previous slide">‹</button><span>6 / 16</span><button class="nav-btn" data-go="next" aria-label="Next slide">›</button></span></footer>
+  </section>
+
+  <!-- 7 -->
+  <section class="slide" aria-label="Slide 7: A stopped VM can keep running after its slot is freed">
+    <div class="head"><div class="tags"><span class="chip crit">high</span><span class="model">HostVm</span></div><h2 class="story">A stopped VM can keep running after its slot is freed</h2></div>
+    <div class="main">
+      <div class="cols story">
+        <ol class="steps compact">
+          <li><span>The host starts booting a VM for workspace A.</span></li>
+          <li><span>A Stop arrives while the VM is still booting.</span></li>
+          <li><span>Boot finishes anyway. The host deletes its record of the VM (<code>workspace_vm.rs:349</code>), then sends the kill (<code>:351</code>) without checking the result.</span></li>
+          <li><span>Until the kill completes, the VM is alive but its slot counts as free. A start for workspace B passes the slot check (<code>:283</code>): 2 VMs on a 1-slot host.</span></li>
+        </ol>
+        <div class="side">
+          <div class="stats2">
+            <div class="stat crit"><b>11</b><span>steps to free the slot early, with no failure, only timing</span></div>
+            <div class="stat crit"><b>16</b><span>steps to run 2 VMs on a 1-slot host</span></div>
+          </div>
+          <blockquote class="rule">"Retain the VM handle, port, slot and workspace exclusion until child reap or valid independent exit proof, including failed boot/cancellation."<cite>g5.runtime.custody</cite></blockquote>
+          <p class="small muted">The ontology's history already records this risk as R01, for the case where boot clean-up fails. The model shows it also happens when nothing fails.</p>
+        </div>
+      </div>
+    </div>
+    <footer class="foot"><span>G5 state machines in TLA+</span><span class="pager"><button class="nav-btn" data-go="prev" aria-label="Previous slide">‹</button><span>7 / 16</span><button class="nav-btn" data-go="next" aria-label="Next slide">›</button></span></footer>
+  </section>
+
+  <!-- 8 -->
+  <section class="slide" aria-label="Slide 8: Stop does not cancel a Start waiting in the queue">
+    <div class="head"><div class="tags"><span class="chip crit">high</span><span class="model">WorkspaceVm</span></div><h2 class="story">Stop does not cancel a Start waiting in the queue</h2></div>
+    <div class="main">
+      <div class="cols story">
+        <ol class="steps compact">
+          <li><span>The user presses Start. The Start waits in the queue, for example because the org is at its VM limit.</span></li>
+          <li><span>The user changes their mind and presses Stop. The code sees the VM is already stopped and answers "already stopped" (<code>workspace_vm_service.rs:2685</code>). The queued Start stays.</span></li>
+          <li><span>A slot frees up. The queue job (<code>:2100</code>) starts the workspace the user just stopped.</span></li>
+        </ol>
+        <div class="side">
+          <div class="stat crit"><b>3</b><span>steps. No existing test covers this case.</span></div>
+          <blockquote class="rule">"This fencing also applies when compute is already stopped but Start remains queued."<cite>g5.lifecycle.stop</cite></blockquote>
+        </div>
+      </div>
+    </div>
+    <footer class="foot"><span>G5 state machines in TLA+</span><span class="pager"><button class="nav-btn" data-go="prev" aria-label="Previous slide">‹</button><span>8 / 16</span><button class="nav-btn" data-go="next" aria-label="Next slide">›</button></span></footer>
+  </section>
+
+  <!-- 9 -->
+  <section class="slide" aria-label="Slide 9: Cancelling a running agent task can be lost">
+    <div class="head"><div class="tags"><span class="chip crit">high</span><span class="model">TaskLifecycle</span></div><h2 class="story">Cancelling a running agent task can be lost</h2></div>
+    <div class="main">
+      <div class="cols story">
+        <ol class="steps compact">
+          <li><span>An agent task is running. The dispatcher restarts, so the attempt ends as <code>interrupted</code>.</span></li>
+          <li><span>Before that result is recorded, the user presses Cancel. The task still shows as running, so the code only sets a "cancel requested" flag.</span></li>
+          <li><span>The result is recorded. For <code>interrupted</code>, the code moves the task to <code>waiting</code> and ignores the flag (<code>task_lifecycle.rs:3600</code>).</span></li>
+          <li><span>The user presses Continue, or the VM restarts. The flag is cleared and a new attempt runs.</span></li>
+        </ol>
+        <div class="side">
+          <div class="stat crit"><b>9</b><span>steps. The same happens when a question to the user times out. Command tasks are not affected.</span></div>
+          <blockquote class="rule">"Cancellation forbids continuation of that task."<cite>g5.agents.lifecycle.cancel</cite></blockquote>
+        </div>
+      </div>
+    </div>
+    <footer class="foot"><span>G5 state machines in TLA+</span><span class="pager"><button class="nav-btn" data-go="prev" aria-label="Previous slide">‹</button><span>9 / 16</span><button class="nav-btn" data-go="next" aria-label="Next slide">›</button></span></footer>
+  </section>
+
+  <!-- 10 -->
+  <section class="slide" aria-label="Slide 10: Deleting a host can remove it while a VM lands on it">
+    <div class="head"><div class="tags"><span class="chip crit">high</span><span class="model">WorkerHost</span></div><h2 class="story">Deleting a host can remove it while a VM lands on it</h2></div>
+    <div class="main">
+      <div class="cols story">
+        <ol class="steps compact">
+          <li><span>An admin deletes host h1. The code counts h1's VMs, finds 0 (<code>worker_hosts.rs:1118</code>), and does not lock the host.</span></li>
+          <li><span>At the same moment, workspace w1 is placed on h1 and saved.</span></li>
+          <li><span>The delete goes on and marks h1 terminated (<code>worker_host_service.rs:824</code>) without counting again.</span></li>
+          <li><span>w1 is now recorded on a host that no longer exists.</span></li>
+        </ol>
+        <div class="side">
+          <div class="stat crit"><b>5</b><span>steps</span></div>
+          <blockquote class="rule ours">A VM is never left on a removed host.<cite>rule we wrote for this model</cite></blockquote>
+          <p class="small"><b>Fix checked before coding it:</b> count again just before terminating. With this fix, plus one for a related drain race, the rule holds across 8.6 million situations.</p>
+        </div>
+      </div>
+    </div>
+    <footer class="foot"><span>G5 state machines in TLA+</span><span class="pager"><button class="nav-btn" data-go="prev" aria-label="Previous slide">‹</button><span>10 / 16</span><button class="nav-btn" data-go="next" aria-label="Next slide">›</button></span></footer>
+  </section>
+
+  <!-- 11 -->
+  <section class="slide" aria-label="Slide 11: Two ways work gets stuck">
+    <div class="head"><div class="tags"><span class="chip warn">medium</span></div><h2 class="story">Two ways work gets stuck</h2></div>
+    <div class="main">
+      <div class="cols two">
+        <div style="display:grid;gap:14px;align-content:start">
+          <div class="tags"><span class="model">TaskLifecycle</span></div>
+          <h3>A task that depends on a failed task waits forever</h3>
+          <ol class="steps compact">
+            <li><span>Task 1 is cancelled. Tasks already waiting on it fail with it.</span></li>
+            <li><span>A new task 3 is created that waits on task 1 (<code>job_service.rs:811</code>). Nothing checks that task 1 already failed.</span></li>
+            <li><span>Task 3 waits for a success that cannot happen. It stays queued until someone cancels it.</span></li>
+          </ol>
+          <blockquote class="rule" style="font-size:19px">"As an owner, I can see downstream work fail when its prerequisite permanently fails."<cite>g5.story.dependency-failure · 2 steps</cite></blockquote>
+        </div>
+        <div style="display:grid;gap:14px;align-content:start">
+          <div class="tags"><span class="model">WorkspaceFlush</span></div>
+          <h3>A failed save blocks every later Stop</h3>
+          <ol class="steps compact">
+            <li><span>The user presses Stop. The system opens a save record and starts saving the workspace's Git state.</span></li>
+            <li><span>The save hits a temporary error. After its retries the Stop gives up, but the save record stays open.</span></li>
+            <li><span>Every later Stop, idle stop or fork needs a new save record. Only one may be open, so each is refused, until the VM dies or its lease runs out.</span></li>
+          </ol>
+          <blockquote class="rule" style="font-size:19px">"Freeze one flush ID and repository vector across capture retries."<cite>g5.git.flush.identity · shortest case 6 steps</cite></blockquote>
+        </div>
+      </div>
+    </div>
+    <footer class="foot"><span>G5 state machines in TLA+</span><span class="pager"><button class="nav-btn" data-go="prev" aria-label="Previous slide">‹</button><span>11 / 16</span><button class="nav-btn" data-go="next" aria-label="Next slide">›</button></span></footer>
+  </section>
+
+  <!-- 12 -->
+  <section class="slide" aria-label="Slide 12: The other 12 problems">
+    <div class="head"><div class="eyebrow">2 · What we found</div><h2>The other 12 problems</h2></div>
+    <div class="main">
+      <div class="tbl">
+        <table class="tight" style="font-size:17px">
+          <thead><tr><th>Severity</th><th>Model</th><th>Problem</th></tr></thead>
+          <tbody>
+            <tr><td><span class="chip crit">high</span></td><td class="model">WorkspaceVm</td><td>A late start message (the API waits 120 s, sending can take 250 s) can boot an uncounted VM</td></tr>
+            <tr><td><span class="chip warn">medium</span></td><td class="model">WorkspaceVm</td><td>A Start cancelled by a transfer comes back if the transfer then fails</td></tr>
+            <tr><td><span class="chip warn">medium</span></td><td class="model">WorkspaceVm</td><td>A new Start can skip ahead of an older Start already waiting in the queue</td></tr>
+            <tr><td><span class="chip warn">medium</span></td><td class="model">WorkspaceVm</td><td>The first failed start gives up; the rule says three. The attempt count is never read.</td></tr>
+            <tr><td><span class="chip warn">medium</span></td><td class="model">WorkspaceFlush</td><td>An old VM's unfinished save blocks the new VM's stops and forks for 30+ minutes</td></tr>
+            <tr><td><span class="chip warn">medium</span></td><td class="model">WorkspaceTransfer</td><td>Two transfers can be pending; a stale a→b can complete after the owner went a→b→a</td></tr>
+            <tr><td><span class="chip warn">medium</span></td><td class="model">WorkspaceFork</td><td>A fork can be accepted after its source was deleted, and keep its name reserved</td></tr>
+            <tr><td><span class="chip acc">low</span></td><td class="model">WorkspaceFlush</td><td>A clean-up job overwrites the reason a save was refused as too large</td></tr>
+            <tr><td><span class="chip acc">low</span></td><td class="model">ProviderRequest</td><td>Two questions sent with the same id: the second answer is refused, then times out</td></tr>
+            <tr><td><span class="chip mut">unsure</span></td><td class="model">WorkerHost</td><td>A background drain may remove a host that just got a VM (Postgres locking, untested)</td></tr>
+            <tr><td><span class="chip mut">unsure</span></td><td class="model">WorkerHost</td><td>Rotation may drain the old host before the new one is ready</td></tr>
+            <tr><td><span class="chip mut">unsure</span></td><td class="model">ProviderRequest</td><td>If the provider reuses a question id, recording that task's results stalls</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <footer class="foot"><span>G5 state machines in TLA+</span><span class="pager"><button class="nav-btn" data-go="prev" aria-label="Previous slide">‹</button><span>12 / 16</span><button class="nav-btn" data-go="next" aria-label="Next slide">›</button></span></footer>
+  </section>
+
+  <!-- 13 -->
+  <section class="slide" aria-label="Slide 13: How we used the code and the ontology">
+    <div class="head"><div class="eyebrow">3 · Code and ontology</div><h2>How we used the code and the ontology</h2></div>
+    <div class="main">
+      <div class="cols two">
+        <div style="display:grid;gap:10px;align-content:start">
+          <h3>The code: what can happen</h3>
+          <ul class="bul dense">
+            <li>The states, from the database. Example: <code>stopped</code>, <code>starting</code>, <code>running</code>, <code>stopping</code>, <code>failed</code>.</li>
+            <li>Every step and its conditions. Example: an "exited" event only counts if its VM id is the current one. About 220 locations cited.</li>
+          </ul>
+        </div>
+        <div style="display:grid;gap:10px;align-content:start">
+          <h3>The ontology: what must be true</h3>
+          <ul class="bul dense">
+            <li>25 different rules used. WorkspaceFork alone used 9, such as <code>g5.fork.names.collision</code>.</li>
+            <li>It decides who is wrong. When code and ontology disagree, the project treats the code as wrong.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="strip" role="group" aria-label="Example: the retry rule">
+        <div class="box"><span class="eyebrow">Code</span><span><code>workspace_vm_service.rs:2588</code> gives up on the first failed start</span></div>
+        <span class="arrow" aria-hidden="true">→</span>
+        <div class="box"><span class="eyebrow">Model</span><span>does exactly the same</span></div>
+        <span class="arrow" aria-hidden="true">→</span>
+        <div class="box"><span class="eyebrow">Ontology rule</span><span>"Allow three definite outer Start failures before exhausting consent" <code>g5.lifecycle.retry</code></span></div>
+        <span class="arrow" aria-hidden="true">→</span>
+        <div class="box bad"><span class="eyebrow">TLC</span><span>rule broken in 4 steps</span></div>
+      </div>
+      <p class="small muted">We always modelled the code as it is. Where it differs from the ontology, the difference is the finding.</p>
+    </div>
+    <footer class="foot"><span>G5 state machines in TLA+</span><span class="pager"><button class="nav-btn" data-go="prev" aria-label="Previous slide">‹</button><span>13 / 16</span><button class="nav-btn" data-go="next" aria-label="Next slide">›</button></span></footer>
+  </section>
+
+  <!-- 14 -->
+  <section class="slide" aria-label="Slide 14: Was the ontology useful?">
+    <div class="head"><div class="eyebrow">4 · Was the ontology useful?</div><h2>Yes, as the source of the rules</h2></div>
+    <div class="main">
+      <div class="cols two">
+        <div style="display:grid;gap:12px;align-content:start">
+          <div><span class="chip ok">Where it helped</span></div>
+          <ul class="bul dense">
+            <li><b>Rules with exact wording.</b> 11 of the 18 problems break a written rule, such as "Cancellation forbids continuation of that task."</li>
+            <li><b>A known risk to aim at.</b> Risk R01 pointed at the VM clean-up path, where the most serious problem was.</li>
+            <li><b>A name for each problem.</b> Every finding cites one rule ID, so a reviewer goes from rule to steps to code line.</li>
+          </ul>
+        </div>
+        <div style="display:grid;gap:12px;align-content:start">
+          <div><span class="chip warn">Where it fell short</span></div>
+          <ul class="bul dense warnb">
+            <li><b>No list of states.</b> Real database values such as <code>reply_pending</code> and <code>queued_for_capacity</code> never appear in it.</li>
+            <li><b>Missing decisions.</b> If Cancel and Success arrive together, which wins? No rule says. The code lets Success win.</li>
+            <li><b>Unclear conflicts.</b> A clean-up for silent hosts can never run, and nothing else removes unreachable hosts. Which is intended?</li>
+            <li><b>Rules kept elsewhere.</b> Most save (flush) rules live in the v9 design document.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <footer class="foot"><span>G5 state machines in TLA+</span><span class="pager"><button class="nav-btn" data-go="prev" aria-label="Previous slide">‹</button><span>14 / 16</span><button class="nav-btn" data-go="next" aria-label="Next slide">›</button></span></footer>
+  </section>
+
+  <!-- 15 -->
+  <section class="slide" aria-label="Slide 15: What we could not do without the ontology">
+    <div class="head"><div class="eyebrow">5 · Without the ontology</div><h2>What we could not do without the ontology</h2></div>
+    <div class="main">
+      <div class="tbl">
+        <table class="tight" style="font-size:18px">
+          <thead><tr><th>Task</th><th>Without it</th><th>Example from this work</th></tr></thead>
+          <tbody>
+            <tr><td><b>Say whether a behaviour is a bug</b></td><td><span class="chip crit">not possible</span></td><td>From the code alone, "Stop leaves a queued Start in place" is just how Stop works. Only <code>g5.lifecycle.stop</code> says it must not.</td></tr>
+            <tr><td><b>Know the code dropped an intent</b></td><td><span class="chip crit">not possible</span></td><td>The code counts start attempts and never reads the count. Only <code>g5.lifecycle.retry</code> shows three attempts were intended.</td></tr>
+            <tr><td><b>Notice a decision was never made</b></td><td><span class="chip crit">not possible</span></td><td>The code always does something, so the missing Cancel-versus-Success decision shows up only as a missing rule.</td></tr>
+            <tr><td><b>Choose which rules to check</b></td><td><span class="chip warn">much worse</span></td><td>Without rules the model only repeats the code. We would have found at most the 5 problems that break our own general rules.</td></tr>
+            <tr><td><b>Know where to look first</b></td><td><span class="chip warn">worse</span></td><td>Risk R01 pointed straight at the VM clean-up path.</td></tr>
+            <tr><td><b>Agree on a fix</b></td><td><span class="chip warn">worse</span></td><td>Each problem points at one written rule, so the discussion is about the rule, not about whose reading of the code is right.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <footer class="foot"><span>G5 state machines in TLA+</span><span class="pager"><button class="nav-btn" data-go="prev" aria-label="Previous slide">‹</button><span>15 / 16</span><button class="nav-btn" data-go="next" aria-label="Next slide">›</button></span></footer>
+  </section>
+
+  <!-- 16 -->
+  <section class="slide" aria-label="Slide 16: Limits and next steps">
+    <div class="head"><div class="eyebrow">Wrap-up</div><h2>Limits and next steps</h2></div>
+    <div class="main">
+      <div class="cols two">
+        <div style="display:grid;gap:12px;align-content:start">
+          <h3>Limits</h3>
+          <ul class="bul dense">
+            <li>Small limits, for example 2 workspaces, 2 hosts or 3 tasks. A pass means no problem within those limits.</li>
+            <li>The models are written by hand from the code. When a cited line changes, the model needs updating.</li>
+            <li>No problem has been reproduced on a running system yet.</li>
+          </ul>
+        </div>
+        <div style="display:grid;gap:12px;align-content:start">
+          <h3>Next steps</h3>
+          <ol class="steps compact">
+            <li><span>Turn each failing sequence into a test that fails before the fix. Start with the VM that keeps running and the Stop that ignores a queued Start.</span></li>
+            <li><span>After each fix, rerun that problem's check. It should now pass.</span></li>
+            <li><span>Add state lists and the missing decisions, starting with Cancel versus Success, to the ontology.</span></li>
+          </ol>
+        </div>
+      </div>
+      <pre>TLA2TOOLS_JAR=/path/to/tla2tools.jar docs/tla/run-tlc.sh    # runs the 21 normal checks</pre>
+    </div>
+    <footer class="foot"><span>G5 state machines in TLA+</span><span class="pager"><button class="nav-btn" data-go="prev" aria-label="Previous slide">‹</button><span>16 / 16</span><button class="nav-btn" data-go="next" aria-label="Next slide">›</button></span></footer>
+  </section>
+
+</div>
+
+<script>
+(function () {
+  var root = document.documentElement;
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var current = 0;
+
+  function isCanvas() { return root.classList.contains('canvas'); }
+
+  function layout() {
+    var wide = window.innerWidth >= 700;
+    root.classList.toggle('canvas', wide);
+    if (wide) root.style.setProperty('--scale', Math.min(window.innerWidth / 1280, window.innerHeight / 720));
+  }
+
+  function show(n) {
+    current = Math.max(0, Math.min(slides.length - 1, n));
+    slides.forEach(function (el, k) {
+      el.classList.toggle('active', k === current);
+      var prev = el.querySelector('[data-go="prev"]');
+      var next = el.querySelector('[data-go="next"]');
+      if (prev) prev.disabled = k === 0;
+      if (next) next.disabled = k === slides.length - 1;
+    });
+    try { history.replaceState(null, '', '#s' + (current + 1)); } catch (e) {}
+  }
+
+  var m = /^#s(\d+)$/.exec(window.location.hash);
+  show(m ? parseInt(m[1], 10) - 1 : 0);
+  layout();
+  if (!isCanvas() && m) { try { slides[current].scrollIntoView(); } catch (e) {} }
+  window.addEventListener('resize', layout);
+
+  document.addEventListener('keydown', function (e) {
+    if (!isCanvas() || e.altKey || e.ctrlKey || e.metaKey) return;
+    var k = e.key;
+    var onButton = e.target && e.target.closest && e.target.closest('button');
+    if ((k === ' ' || k === 'Enter') && onButton) return;
+    if (k === 'ArrowRight' || k === 'ArrowDown' || k === 'PageDown' || k === ' ' || k === 'Enter') { e.preventDefault(); show(current + 1); }
+    else if (k === 'ArrowLeft' || k === 'ArrowUp' || k === 'PageUp' || k === 'Backspace') { e.preventDefault(); show(current - 1); }
+    else if (k === 'Home') { e.preventDefault(); show(0); }
+    else if (k === 'End') { e.preventDefault(); show(slides.length - 1); }
+    else if (k === 'f' || k === 'F') {
+      try {
+        if (document.fullscreenElement) document.exitFullscreen();
+        else if (root.requestFullscreen) { var p = root.requestFullscreen(); if (p && p.catch) p.catch(function () {}); }
+      } catch (err) {}
+    }
+  });
+
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest && e.target.closest('[data-go]');
+    if (!b) return;
+    show(current + (b.getAttribute('data-go') === 'next' ? 1 : -1));
+  });
+
+  var x0 = null;
+  document.addEventListener('touchstart', function (e) { x0 = e.touches[0].clientX; }, { passive: true });
+  document.addEventListener('touchend', function (e) {
+    if (x0 === null || !isCanvas()) { x0 = null; return; }
+    var dx = e.changedTouches[0].clientX - x0;
+    if (Math.abs(dx) > 50) show(current + (dx < 0 ? 1 : -1));
+    x0 = null;
+  }, { passive: true });
+})();
+</script>

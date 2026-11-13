@@ -1,0 +1,109 @@
+# =============================================================================
+# .g5/preview_profiles/full-stack.yaml — the whole G5 stack with a worker
+# =============================================================================
+# Runs `just dev-up` inside the preview: the Docker Compose part of the stack
+# (Postgres, API, Edge) plus the previewed instance's own workspace host, in
+# the default microvm isolation mode. The preview is the localhost of the
+# instance it previews, with VM isolation: on a host whose nested
+# virtualization switch is on (ontology g5.architecture.microvm_backend.nested)
+# the workspace VM has /dev/kvm, the runtime disk ships the host's own pinned
+# Cloud Hypervisor, kernel, initramfs and passt under /opt/g5/platform, and the
+# previewed host boots real guests with the unmodified `g5d vm-exec` launch
+# (Landlock, the passt identity, the egress policy). `dev-up` publishes the UI
+# only once that host is attached (host binary built first at every core,
+# containers up without the edge, host registered, edge last), so "preview
+# up" means workspaces can be opened. For the process-mode stack (macOS, ARM,
+# or a host with the switch off) use the `full-stack-process` profile; for the
+# containers alone `full-stack-no-worker`; for the client alone `frontend-only`.
+#
+# `scripts/preview-microvm-host.sh` runs first and fails with the reason,
+# naming the process-mode sibling, when this VM cannot run a microvm host
+# (no /dev/kvm, no platform, an older guest image). There is no fallback
+# (g5.host.isolation). It then mounts the reflink root the microvm host
+# requires (a sparse XFS image under /var/lib/g5-dev-host, outside the archived
+# /work, through scripts/dev-host-reflink-root.sh; the ext4 workspace disk has
+# no reflinks) and, once per VM, stages the inner host's Linux guest runtime
+# with `just worker-host-setup`; later opens in the same VM reuse it. The host
+# directory is that mount (G5_DEV_HOST_DIR below), so the host's state, VM
+# templates, caches and workspace roots live on reflink-capable storage.
+#
+# Root boundary: `dev-up` runs as the agent user; only the `g5d host` process
+# (passt and VMM identity drops, nft) and the signals that stop it run as root,
+# through the worker-host recipes' helper. Cargo, Docker Compose, the staged
+# runtime, `.dev/`, `target/` and the cargo caches stay owned by uid 1000.
+#
+# `g5d preview-serve` reads these TOP-LEVEL fields as a PreviewWorkspaceConfig
+# (command, port, working_dir, env, cleanup_command — no enclosing `preview:`
+# key), runs `command` via /bin/sh -c in `working_dir` (relative to this
+# repository's root; omitted here because the Cargo workspace, justfile and
+# compose files live at the root of this checkout), and forces PORT=<port>.
+# The published listener is this stack's edge (13000). A bounded sleep loop
+# keeps the foreground command alive after dev-up returns.
+#
+# Closing the preview stops this command's process group and then runs
+# `cleanup_command` with the same shell, cwd and env: `just dev-down` stops
+# the previewed instance's worker host (the one recorded under this
+# profile's host directory, never the developer's: the stray reaper scopes by
+# that directory) and its inner VMs, then tears this stack's containers down
+# and drops its volumes (`just dev-stack-down`). Cleanup also runs when
+# `command` exits on its own, so a failed start leaves nothing serving. The
+# preview shares its VM with chat and the terminal, so only one preview runs
+# at a time: close it before starting another.
+#
+# Seed two interactive landing examples after startup: preview-issue-only
+# and preview-issue-and-pr, with G5 issues and Alex/Jordan conversations.
+# The seed is repeatable and needs no GitHub connection.
+#
+# `setsid` starts dockerd in its own session: the daemon must outlive this
+# command's process group, or Close would kill it before the cleanup can
+# reach it. dockerd is single-flight and stays up for the VM's life anyway.
+#
+# Once the host is ready, seed two Alex-owned forks of Base:
+# /g5labs/source-control-no-pr and /g5labs/source-control-with-pr. Each has
+# four pushed Code commits, three pushed Docs commits, one local commit per
+# repository and dirty files.
+# The latter has an open G5 PR capturing only its pushed heads (local preview
+# repositories have no GitHub provider). Log in as Alex to inspect local work.
+# Existing examples are preserved on reruns, including user edits. A fresh
+# preview recreates them; `node scripts/seed-source-control-preview.mjs --verify`
+# checks their initial state without saving. Only the worker-backed profiles
+# seed them; ordinary dev-up and the containers-only profile do not.
+#
+# The workspace preview dialog lists this profile as "full-stack" with the
+# description below, next to any `preview:` block in .g5/workspace.yaml, and
+# keeps showing the name while the preview runs.
+
+description: Whole G5 stack with an attached microvm worker host (workspaces run in real guests) via `just dev-up`
+# The preview stack is its own Compose stack (ontology
+# g5.runtime.boot.backend.process-local): project and volumes named after this
+# incarnation, its own image tag and ports off the defaults, so Close's
+# `just dev-down` removes only this preview's host, containers and volumes.
+# The published listener is this stack's edge on 13000, never the developer's
+# UI on 3000.
+port: 13000
+env:
+  G5_PORT_EDGE: "13000"
+  G5_PORT_API: "17500"
+  G5_PORT_POSTGRES: "15433"
+  G5_PORT_OAUTH_STUB: "19876"
+  G5_IMAGE_TAG: preview
+  # Keep both Source Control examples running, with a slot for normal browsing.
+  G5D_HOST_MAX_MICROVMS: "3"
+  # Three live guests and their templates stay within the reflink image.
+  G5D_SCRATCH_DISK_MIB: "6144"
+  # The reflink root scripts/preview-microvm-host.sh mounts; every host-scoped
+  # path (state, caches, workspace roots, rootfs templates, staged runtime)
+  # lives under it, outside the archived /work.
+  G5_DEV_HOST_DIR: /var/lib/g5-dev-host/root
+  # Ordinary tests may build g5d without VM support. They must not replace
+  # the running preview host's executable when it re-executes itself.
+  G5_DEV_HOST_CARGO_TARGET_DIR: /var/lib/g5-dev-host/root/host-build
+# `G5D_PROCESS_INCARNATION` is the incarnation marker a process host gives
+# every preview process; a guest has none and uses `vm`. The isolation mode is
+# pinned to microvm in the preview's own shell and the process acknowledgement
+# is cleared, so an ambient selection cannot reach the recipes; a checkout
+# .env selecting another mode is refused by the prerequisite check. The
+# lifetime loop is portable: Apple's `sleep` refuses `infinity`, so a bounded
+# sleep repeats.
+command: 'export PATH="/usr/local/bin:$PATH" G5_COMPOSE_PROJECT="g5-preview-${G5D_PROCESS_INCARNATION:-vm}" G5D_ISOLATION_MODE=microvm; unset G5D_ALLOW_PROCESS_ISOLATION; export G5_COMPOSE_VOLUMES="$G5_COMPOSE_PROJECT"; if command -v g5-dev-dockerd-start >/dev/null 2>&1; then setsid g5-dev-dockerd-start || exit 1; fi; scripts/preview-microvm-host.sh && just dev-up && { node scripts/seed-source-control-preview.mjs || echo "Source Control preview seeding failed; the stack stays up" >&2; } && { python3 scripts/seed-preview-workspaces.py || echo "preview seeding failed; the stack stays up without sample workspaces" >&2; } && while :; do sleep 3600; done'
+cleanup_command: 'export PATH="/usr/local/bin:$PATH" G5_COMPOSE_PROJECT="g5-preview-${G5D_PROCESS_INCARNATION:-vm}" G5D_ISOLATION_MODE=microvm; unset G5D_ALLOW_PROCESS_ISOLATION; export G5_COMPOSE_VOLUMES="$G5_COMPOSE_PROJECT"; just dev-down'

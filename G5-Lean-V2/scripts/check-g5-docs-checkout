@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# Classify the local g5_docs mount without changing its Git state.
+set -euo pipefail
+
+if [ "$#" -ne 1 ]; then
+  echo "usage: $0 <g5-docs-path>" >&2
+  exit 2
+fi
+
+docs_root="$1"
+
+fail_checkout() {
+  echo "g5/docs-checkout: invalid or missing independent docs checkout at $docs_root" >&2
+  echo "g5/docs-checkout: run: git clone git@github.com:G5Labs/G5_Docs.git '$docs_root'" >&2
+  exit 1
+}
+
+if [ ! -d "$docs_root/.git" ] && [ ! -f "$docs_root/.git" ]; then
+  fail_checkout
+fi
+
+docs_top="$(git -C "$docs_root" rev-parse --show-toplevel 2>/dev/null)" || fail_checkout
+docs_real="$(cd "$docs_root" 2>/dev/null && pwd -P)" || fail_checkout
+top_real="$(cd "$docs_top" 2>/dev/null && pwd -P)" || fail_checkout
+[ "$docs_real" = "$top_real" ] || fail_checkout
+
+if [ -d "$docs_root/.git" ]; then
+  printf '%s\n' "independent"
+else
+  printf '%s\n' "legacy-gitfile"
+fi

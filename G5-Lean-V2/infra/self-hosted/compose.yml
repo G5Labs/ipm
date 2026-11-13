@@ -1,0 +1,193 @@
+name: ${G5_COMPOSE_PROJECT:-g5-self-hosted}
+
+services:
+  postgres:
+    image: ${G5_IMAGE_POSTGRES:-pgvector/pgvector:pg17}
+    restart: unless-stopped
+    # Postgres keeps its dynamic shared memory (parallel-query segments) in
+    # /dev/shm; Docker's 64 MB default fails under load with SQLSTATE 53100
+    # "could not resize shared memory segment". tmpfs only uses what it needs.
+    shm_size: 1gb
+    environment:
+      POSTGRES_DB: ${G5_DB_NAME:-g5}
+      POSTGRES_USER: ${G5_DB_USER:-g5}
+      POSTGRES_PASSWORD: ${G5_DB_PASSWORD:?G5_DB_PASSWORD is required}
+    volumes:
+      - ${G5_DATA_DIR:-/var/lib/g5}/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    networks:
+      - g5
+
+  db-migrate:
+    image: ${G5_IMAGE_MIGRATION:-${G5_IMAGE_API:?G5_IMAGE_API is required}}
+    restart: "no"
+    entrypoint: ["/bin/sh", "-ceu"]
+    command:
+      - |
+        attempt=1
+        status=1
+        while [ "$$attempt" -le 30 ]; do
+          if G5_MIGRATION_SOURCE=/app/migrations g5-db-migrate; then
+            exit 0
+          else
+            status=$$?
+          fi
+          echo "g5-db-migrate failed (attempt $${attempt}/30, exit $${status}); retrying in 2s"
+          attempt=$$((attempt + 1))
+          sleep 2
+        done
+        exit "$$status"
+    environment:
+      DATABASE_URL: ${G5_DATABASE_URL:-postgres://${G5_DB_USER:-g5}:${G5_DB_PASSWORD}@postgres:5432/${G5_DB_NAME:-g5}}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - g5
+
+  g5-api:
+    image: ${G5_IMAGE_API:?G5_IMAGE_API is required}
+    restart: unless-stopped
+    environment:
+      G5_DATABASE_URL: ${G5_DATABASE_URL:-postgres://${G5_DB_USER:-g5}:${G5_DB_PASSWORD}@postgres:5432/${G5_DB_NAME:-g5}}
+      # Rollback compatibility for the upgrade from a bundle before
+      # 2026-10-09: a failed upgrade recreates the previous release's images
+      # from this file with the previous .env, which still names its Redis.
+      # The current release ignores the variable.
+      G5_REDIS_URL: ${G5_REDIS_URL:-}
+      G5_HOST: 0.0.0.0
+      G5_PORT: "7500"
+      G5_EXTERNAL_URL: ${G5_EXTERNAL_URL:?G5_EXTERNAL_URL is required}
+      G5_GIT_EXTERNAL_URL: ${G5_GIT_EXTERNAL_URL:-${G5_EXTERNAL_URL}}
+      # Previews are served only from https://<task-id>.<suffix>/ hosts that
+      # share the platform's registrable domain. Blank leaves the platform
+      # running with previews unavailable (PREVIEW_ORIGIN_UNCONFIGURED).
+      G5_PREVIEW_HOST_SUFFIX: ${G5_PREVIEW_HOST_SUFFIX:-}
+      G5_REPOS_BASE_DIR: /data/repos
+      G5_STORAGE_PROVIDER: local
+      G5_STORAGE_BASE_DIR: /data/repos
+      G5_STORAGE_WORKTREE_DIR: /data/worktrees
+      G5_JWT_SECRET: ${G5_JWT_PRIVATE_KEY:?G5_JWT_PRIVATE_KEY is required}
+      G5_JWT_PRIVATE_KEY: ${G5_JWT_PRIVATE_KEY:?G5_JWT_PRIVATE_KEY is required}
+      G5_JWT_PUBLIC_KEY: ${G5_JWT_PUBLIC_KEY:?G5_JWT_PUBLIC_KEY is required}
+      G5_SCM_ENCRYPTION_KEY: ${G5_SCM_ENCRYPTION_KEY:?G5_SCM_ENCRYPTION_KEY is required}
+      G5_COOKIE_SECURE: ${G5_COOKIE_SECURE:-true}
+      G5_CORS_ALLOWED_ORIGINS: ${G5_CORS_ALLOWED_ORIGINS:-${G5_EXTERNAL_URL}}
+      # Only the fixed edge address may supply client IP; other containers
+      # (including direct callers on the database network) are untrusted.
+      G5_TRUSTED_PROXY_CIDRS: ${G5_EDGE_IP:-172.30.254.2}/32
+      G5_TRUSTED_PROXY_XFF_HOPS: "1"
+      G5_RATE_LIMIT_ENABLED: ${G5_RATE_LIMIT_ENABLED:-true}
+      G5_RATE_LIMIT_RPM: ${G5_RATE_LIMIT_RPM:-20000}
+      SELF_HOSTED: ${SELF_HOSTED:-true}
+      ENABLE_CLOUD_FEATURES: ${ENABLE_CLOUD_FEATURES:-false}
+      G5_EMAIL_TRANSPORT: ${G5_EMAIL_TRANSPORT:-disabled}
+      G5_EMAIL_FROM_DOMAIN: ${G5_EMAIL_FROM_DOMAIN:-}
+      G5_EMAIL_FROM_NAME: ${G5_EMAIL_FROM_NAME:-G5}
+      G5_EMAIL_RESEND_API_KEY: ${G5_EMAIL_RESEND_API_KEY:-}
+      G5_GITHUB_CLIENT_ID: ${G5_GITHUB_CLIENT_ID:-}
+      G5_GITHUB_CLIENT_SECRET: ${G5_GITHUB_CLIENT_SECRET:-}
+      G5_GITHUB_AUTHORIZE_URL: ${G5_GITHUB_AUTHORIZE_URL:-}
+      G5_GITHUB_TOKEN_URL: ${G5_GITHUB_TOKEN_URL:-}
+      G5_GITHUB_USERINFO_URL: ${G5_GITHUB_USERINFO_URL:-}
+      G5_MICROSOFT_CLIENT_ID: ${G5_MICROSOFT_CLIENT_ID:-}
+      G5_MICROSOFT_CLIENT_SECRET: ${G5_MICROSOFT_CLIENT_SECRET:-}
+      G5_MICROSOFT_TENANT_ID: ${G5_MICROSOFT_TENANT_ID:-}
+      G5_MICROSOFT_AUTHORIZE_URL: ${G5_MICROSOFT_AUTHORIZE_URL:-}
+      G5_MICROSOFT_TOKEN_URL: ${G5_MICROSOFT_TOKEN_URL:-}
+      G5_MICROSOFT_JWKS_URL: ${G5_MICROSOFT_JWKS_URL:-}
+      G5_SCM_GITLAB_CLIENT_ID: ${G5_SCM_GITLAB_CLIENT_ID:-}
+      G5_SCM_GITLAB_CLIENT_SECRET: ${G5_SCM_GITLAB_CLIENT_SECRET:-}
+      G5_SCM_GITLAB_AUTHORIZE_URL: ${G5_SCM_GITLAB_AUTHORIZE_URL:-}
+      G5_SCM_GITLAB_TOKEN_URL: ${G5_SCM_GITLAB_TOKEN_URL:-}
+      G5_SCM_GITLAB_USERINFO_URL: ${G5_SCM_GITLAB_USERINFO_URL:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      RUST_LOG: ${RUST_LOG:-info}
+    volumes:
+      - ${G5_DATA_DIR:-/var/lib/g5}/storage/repos:/data/repos
+      - ${G5_DATA_DIR:-/var/lib/g5}/storage/worktrees:/data/worktrees
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:7500/healthz"]
+      interval: 5s
+      timeout: 5s
+      retries: 24
+    networks:
+      g5: {}
+      edge:
+        ipv4_address: ${G5_API_EDGE_IP:-172.30.254.3}
+
+  g5-daemon:
+    image: ${G5_IMAGE_API:?G5_IMAGE_API is required}
+    restart: unless-stopped
+    environment:
+      G5_ROLE: daemon
+      # The daemon sends the email the API records; same settings.
+      G5_EMAIL_TRANSPORT: ${G5_EMAIL_TRANSPORT:-disabled}
+      G5_EMAIL_FROM_DOMAIN: ${G5_EMAIL_FROM_DOMAIN:-}
+      G5_EMAIL_FROM_NAME: ${G5_EMAIL_FROM_NAME:-G5}
+      G5_EMAIL_RESEND_API_KEY: ${G5_EMAIL_RESEND_API_KEY:-}
+      G5_DATABASE_URL: ${G5_DATABASE_URL:-postgres://${G5_DB_USER:-g5}:${G5_DB_PASSWORD}@postgres:5432/${G5_DB_NAME:-g5}}
+      G5_REDIS_URL: ${G5_REDIS_URL:-} # rollback compatibility, see g5-api
+      G5_REPOS_BASE_DIR: /data/repos
+      G5_STORAGE_PROVIDER: local
+      G5_STORAGE_BASE_DIR: /data/repos
+      G5_STORAGE_WORKTREE_DIR: /data/worktrees
+      G5_JWT_SECRET: ${G5_JWT_PRIVATE_KEY:?G5_JWT_PRIVATE_KEY is required}
+      G5_JWT_PRIVATE_KEY: ${G5_JWT_PRIVATE_KEY:?G5_JWT_PRIVATE_KEY is required}
+      G5_JWT_PUBLIC_KEY: ${G5_JWT_PUBLIC_KEY:?G5_JWT_PUBLIC_KEY is required}
+      G5_SCM_ENCRYPTION_KEY: ${G5_SCM_ENCRYPTION_KEY:?G5_SCM_ENCRYPTION_KEY is required}
+      G5_RATE_LIMIT_ENABLED: ${G5_RATE_LIMIT_ENABLED:-true}
+      G5_RATE_LIMIT_RPM: ${G5_RATE_LIMIT_RPM:-20000}
+      SELF_HOSTED: ${SELF_HOSTED:-true}
+      ENABLE_CLOUD_FEATURES: ${ENABLE_CLOUD_FEATURES:-false}
+      RUST_LOG: ${RUST_LOG:-info}
+    volumes:
+      - ${G5_DATA_DIR:-/var/lib/g5}/storage/repos:/data/repos
+      - ${G5_DATA_DIR:-/var/lib/g5}/storage/worktrees:/data/worktrees
+    depends_on:
+      g5-api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "test -r /proc/1/status"]
+      interval: 5s
+      timeout: 5s
+      retries: 24
+    networks:
+      - g5
+
+  edge:
+    image: ${G5_IMAGE_EDGE:?G5_IMAGE_EDGE is required}
+    restart: unless-stopped
+    environment:
+      G5_API_URL: http://g5-api:7500
+      # The TLS overlay routes *.<suffix> to the API (Caddyfile.tls).
+      G5_PREVIEW_HOST_SUFFIX: ${G5_PREVIEW_HOST_SUFFIX:-}
+    ports:
+      - ${G5_HTTP_PORT:-80}:80
+      - ${G5_HTTPS_PORT:-443}:443
+    depends_on:
+      g5-api:
+        condition: service_healthy
+    networks:
+      edge:
+        ipv4_address: ${G5_EDGE_IP:-172.30.254.2}
+
+networks:
+  g5:
+    driver: bridge
+  # Separate from the existing database bridge so upgrades do not need to
+  # replace that network. Operators can move this small subnet if it overlaps.
+  edge:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: ${G5_EDGE_SUBNET:-172.30.254.0/29}

@@ -1,0 +1,343 @@
+# =============================================================================
+# Docker Compose — Development Stack
+# =============================================================================
+# Full local dev stack: Postgres, g5-api, and Edge (client + reverse proxy).
+# One command to get everything running:
+#   just demo-up        → brings up stack, seeds demo data, opens http://localhost:3000
+#   just dev-up         → brings up stack without seeding
+# =============================================================================
+
+name: g5-dev
+
+x-platform-issue-reporting-env: &platform_issue_reporting_env
+  # Disabled by default. `just dev-up` sources the ignored local overlay before
+  # Compose interpolation, preserving the App PEM's newline bytes.
+  G5_PLATFORM_ISSUE_REPORTING_ENABLED: "${G5_PLATFORM_ISSUE_REPORTING_ENABLED:-false}"
+  G5_PLATFORM_ISSUE_GITHUB_REPO: "${G5_PLATFORM_ISSUE_GITHUB_REPO:-}"
+  G5_PLATFORM_ISSUE_GITHUB_APP_ID: "${G5_PLATFORM_ISSUE_GITHUB_APP_ID:-}"
+  G5_PLATFORM_ISSUE_GITHUB_APP_INSTALLATION_ID: "${G5_PLATFORM_ISSUE_GITHUB_APP_INSTALLATION_ID:-}"
+  G5_PLATFORM_ISSUE_GITHUB_APP_PRIVATE_KEY: "${G5_PLATFORM_ISSUE_GITHUB_APP_PRIVATE_KEY:-}"
+  G5_PLATFORM_ISSUE_GITHUB_API_BASE_URL: "${G5_PLATFORM_ISSUE_GITHUB_API_BASE_URL:-https://api.github.com}"
+
+x-email-env: &email_env
+  # Outbound email (invitations) goes to the hermetic provider stub's
+  # Resend-compatible API; read what was "sent" with
+  #   curl http://localhost:9876/__e2e/emails
+  # Set G5_EMAIL_TRANSPORT=capture to log messages instead, or point the
+  # variables at a real Resend account (docs/email-delivery.md).
+  G5_EMAIL_TRANSPORT: "${G5_EMAIL_TRANSPORT:-resend}"
+  G5_EMAIL_FROM_DOMAIN: "${G5_EMAIL_FROM_DOMAIN:-mail.g5.localhost.test}"
+  G5_EMAIL_FROM_NAME: "${G5_EMAIL_FROM_NAME:-G5}"
+  G5_EMAIL_RESEND_API_KEY: "${G5_EMAIL_RESEND_API_KEY:-re_stub_key}"
+  G5_EMAIL_RESEND_API_URL: "${G5_EMAIL_RESEND_API_URL:-http://oauth-stub:9876}"
+  # Local stacks lift per-organization volume limits (the 100 invitation emails
+  # per day); startup refuses `off` against Resend's public API.
+  G5_EMAIL_VOLUME_LIMITS: "${G5_EMAIL_VOLUME_LIMITS:-off}"
+
+x-github-app-env: &github_app_env
+  # Optional G5-owned GitHub App for organization bindings. Unavailable unless
+  # every required value is set; `just dev-up` sources the ignored
+  # .env.github-app.local overlay before Compose interpolation.
+  G5_GITHUB_APP_ID: "${G5_GITHUB_APP_ID:-}"
+  G5_GITHUB_APP_PRIVATE_KEY: "${G5_GITHUB_APP_PRIVATE_KEY:-}"
+  G5_GITHUB_APP_SLUG: "${G5_GITHUB_APP_SLUG:-}"
+  G5_GITHUB_APP_OAUTH_CLIENT_ID: "${G5_GITHUB_APP_OAUTH_CLIENT_ID:-}"
+  G5_GITHUB_APP_OAUTH_CLIENT_SECRET: "${G5_GITHUB_APP_OAUTH_CLIENT_SECRET:-}"
+  G5_GITHUB_APP_OAUTH_CALLBACK_URL: "${G5_GITHUB_APP_OAUTH_CALLBACK_URL:-}"
+  G5_GITHUB_APP_CONNECTION_STATE_SECRET: "${G5_GITHUB_APP_CONNECTION_STATE_SECRET:-}"
+  G5_GITHUB_APP_API_BASE_URL: "${G5_GITHUB_APP_API_BASE_URL:-https://api.github.com}"
+  G5_GITHUB_APP_WEB_BASE_URL: "${G5_GITHUB_APP_WEB_BASE_URL:-https://github.com}"
+
+services:
+  # ---------------------------------------------------------------------------
+  # PostgreSQL 17 with pgvector extension
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: pgvector/pgvector:pg17@sha256:cf134a767f474095eeba57e0117be8e568e011a63f33fbf252f14c9b760f8e6f
+    container_name: ${G5_COMPOSE_PROJECT:-g5-dev}-postgres
+    restart: unless-stopped
+    # Postgres keeps its dynamic shared memory (parallel-query segments) in
+    # /dev/shm; Docker's 64 MB default fails under load with SQLSTATE 53100
+    # "could not resize shared memory segment". tmpfs only uses what it needs.
+    shm_size: 1gb
+    environment:
+      POSTGRES_DB: g5_dev
+      POSTGRES_USER: g5
+      POSTGRES_PASSWORD: g5_dev
+    ports:
+      - "${G5_PORT_POSTGRES:-5432}:5432"
+    volumes:
+      - pgdata_dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U g5 -d g5_dev"]
+      interval: 2s
+      timeout: 5s
+      retries: 10
+    networks:
+      - g5-dev
+
+  # ---------------------------------------------------------------------------
+  # OAuth Stub — Local OAuth Identity Provider
+  # ---------------------------------------------------------------------------
+  # Lightweight OAuth 2.0 server mimicking GitHub's API surface.
+  # Enables local development and demo with real OAuth login flow.
+  # Set OAUTH_AUTO_APPROVE=false for interactive consent screen.
+  # ---------------------------------------------------------------------------
+  oauth-stub:
+    build:
+      context: oauth-stub
+      dockerfile: Dockerfile
+    container_name: ${G5_COMPOSE_PROJECT:-g5-dev}-oauth-stub
+    restart: unless-stopped
+    environment:
+      OAUTH_PORT: "9876"
+      OAUTH_AUTO_APPROVE: "false"
+      OAUTH_CLIENT_ID: local-oauth-client-id
+      OAUTH_CLIENT_SECRET: local-oauth-client-secret
+      # Local dev personas: the default identity is the seeded org admin
+      # (demo@g5labs.ai stays its email because the seed scripts key on it);
+      # extra identities are offered on the consent page. scripts/seed-dev-org.sh
+      # reads this roster from the stub, seeds each persona's profile and applies
+      # its `role`. Keep DEV_LOGIN_USERS in frontend/src/App.tsx in step. Never
+      # reuse a stub `id` for a different email: an existing dev DB links each
+      # id to the first account that signed in with it. Extra personas use the
+      # 1500xx range: Playwright identities in frontend/e2e/oauth.ts (1000xx)
+      # also sign in to this stack via scripts/run-dev-stack-tests.sh, and the
+      # stub derives ids from 200000 up for other emails typed at consent.
+      OAUTH_USER_EMAIL: "demo@g5labs.ai"
+      OAUTH_USER_LOGIN: "alex-admin"
+      OAUTH_USER_NAME: "Alex"
+      OAUTH_USER_AVATAR: "https://i.pravatar.cc/150?u=alex-admin"
+      OAUTH_USER_ROLE: "admin"
+      OAUTH_EXTRA_USERS: '[{"id":150001,"login":"jordan-member","email":"member@g5labs.ai","name":"Jordan","avatar_url":"https://i.pravatar.cc/150?u=jordan-member","role":"member"},{"id":150002,"login":"vera-viewer","email":"viewer@g5labs.ai","name":"Vera","avatar_url":"https://i.pravatar.cc/150?u=vera-viewer","role":"viewer"}]'
+    ports:
+      - "${G5_PORT_OAUTH_STUB:-9876}:9876"
+    healthcheck:
+      test: ["CMD", "node", "-e", "const h=require('http');h.get('http://localhost:9876/healthz',r=>{process.exit(r.statusCode===200?0:1)}).on('error',()=>process.exit(1))"]
+      interval: 2s
+      timeout: 5s
+      retries: 10
+    networks:
+      - g5-dev
+
+  # ---------------------------------------------------------------------------
+  # db-migrate — Run SQL migrations before the API starts
+  # ---------------------------------------------------------------------------
+  # One-shot init container: runs repair-aware migrations, exits 0, then dependents start.
+  # Uses the same g5-api image (which ships g5-db-migrate).
+  # ---------------------------------------------------------------------------
+  db-migrate:
+    # Reuse the API image built by the g5-api service; this container only
+    # changes entrypoint/command.
+    image: g5/api:${G5_IMAGE_TAG:-dev}
+    pull_policy: never
+    container_name: ${G5_COMPOSE_PROJECT:-g5-dev}-migrate
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        attempt=1
+        status=1
+        while [ "$$attempt" -le 30 ]; do
+          if G5_MIGRATION_SOURCE=/app/migrations g5-db-migrate; then
+            exit 0
+          else
+            status=$$?
+          fi
+          echo "g5-db-migrate failed (attempt $${attempt}/30, exit $${status}); retrying in 2s"
+          attempt=$$((attempt + 1))
+          sleep 2
+        done
+        exit "$$status"
+    healthcheck:
+      disable: true
+    environment:
+      DATABASE_URL: postgres://g5:g5_dev@postgres:5432/g5_dev
+    depends_on:
+      postgres: { condition: service_healthy }
+    networks:
+      - g5-dev
+
+  # ---------------------------------------------------------------------------
+  # g5-api — API Server
+  # ---------------------------------------------------------------------------
+  g5-api:
+    image: g5/api:${G5_IMAGE_TAG:-dev}
+    pull_policy: never
+    build:
+      context: ../..
+      dockerfile: infra/docker/Dockerfile.g5-api
+      args:
+        G5D_BUILD_FEATURE_FLAGS: ${G5_DEV_DOCKER_G5D_FEATURE_FLAGS:---no-default-features}
+        G5_CARGO_PROFILE: ${G5_DEV_DOCKER_CARGO_PROFILE:-g5-dev}
+    container_name: ${G5_COMPOSE_PROJECT:-g5-dev}-api
+    user: "0:0"  # Run as root in dev to access bind-mounted repos
+    environment:
+      <<: [*platform_issue_reporting_env, *github_app_env, *email_env]
+      G5_ROLE: api
+      G5_DATABASE_URL: postgres://g5:g5_dev@postgres:5432/g5_dev
+      G5_JWT_SECRET: "${G5_JWT_SECRET:-}"
+      G5_JWT_PUBLIC_KEY: "${G5_JWT_PUBLIC_KEY:-}"
+      G5_JWT_PRIVATE_KEY: "${G5_JWT_PRIVATE_KEY:-}"
+      G5_HOST: 0.0.0.0
+      G5_PORT: "7500"
+      G5_E2E_AUTH: "true"
+      # Admit `isolation:process` worker hosts (g5.runtime.boot.backend.process-local)
+      # only while this developer selected process mode for the host: `dev-stack-up`
+      # derives the value from G5D_ISOLATION_MODE plus its acknowledgement and nothing
+      # else sets it; cloud and self-hosted control planes never do.
+      G5_ALLOW_PROCESS_ISOLATION_HOSTS: "${G5_ALLOW_PROCESS_ISOLATION_HOSTS:-false}"
+      G5_REPOS_BASE_DIR: /data/repos
+      G5_EXTERNAL_URL: "${G5_EXTERNAL_URL:-http://localhost:${G5_PORT_EDGE:-3000}}"
+      # Trusted browser origins besides G5_EXTERNAL_URL (cookie refresh and
+      # CORS). Inside a full-stack preview `dev-stack-up` appends the preview's
+      # own origin (G5D_PREVIEW_ORIGIN) so org switching works there.
+      G5_CORS_ALLOWED_ORIGINS: "${G5_CORS_ALLOWED_ORIGINS:-http://localhost:5173}"
+      # The preview relay never relays a `g5_` cookie (the platform's names),
+      # so inside a preview `dev-stack-up` renames the refresh cookie.
+      G5_REFRESH_COOKIE_NAME: "${G5_REFRESH_COOKIE_NAME:-g5_refresh}"
+      # No G5_PREVIEW_HOST_SUFFIX: previews need HTTPS per-preview hosts on a
+      # registrable domain, which plain-HTTP localhost cannot provide, so the
+      # local stack runs with previews unavailable (503 PREVIEW_ORIGIN_UNCONFIGURED).
+      # The dispatcher requires member Git URLs to share its G5D_API_URL origin.
+      G5_GIT_EXTERNAL_URL: "${G5_GIT_EXTERNAL_URL:-http://localhost:${G5_PORT_API:-7500}}"
+      # Bootstrap supplies retained deployment credentials before startup.
+      G5_SCM_ENCRYPTION_KEY: ${G5_SCM_ENCRYPTION_KEY:-}
+      # Local dev provisions a native workspace host without a GCP provider.
+      # Opt in only when testing cloud provisioning with GCP configured.
+      ENABLE_CLOUD_FEATURES: ${ENABLE_CLOUD_FEATURES:-false}
+      G5_NEW_ORG_DEFAULT_IMAGE_TRACK: ${G5_NEW_ORG_DEFAULT_IMAGE_TRACK:-}
+      G5_PROMOTED_BASE_IMAGES: ${G5_PROMOTED_BASE_IMAGES:-}
+      # Guided journey section kill switch (ui g5.ui.guided-toggle):
+      # advertised unless exactly "false"; the explicit default here is
+      # documentation only.
+      G5_GUIDED_JOURNEY_ENABLED: ${G5_GUIDED_JOURNEY_ENABLED:-true}
+      # Provider Accounts kill switch (config_safe_defaults D6): unset/any value
+      # keeps the Accounts surfaces on; exactly "false" hides them.
+      G5_ENABLE_PROVIDER_ACCOUNTS: ${G5_ENABLE_PROVIDER_ACCOUNTS:-true}
+      # Issue #1081 compatibility-removal posture. Default-off preserves
+      # legacy matching hints; opt in locally to run the gate-on E2E matrix.
+      G5_REJECT_LEGACY_REPO_HINTS: "${G5_REJECT_LEGACY_REPO_HINTS:-false}"
+      # Local dev runs over HTTP; omit Secure so browsers persist g5_refresh.
+      G5_COOKIE_SECURE: "false"
+      G5_RATE_LIMIT_ENABLED: "false"
+      G5D_ORG_ID: ${G5D_ORG_ID:-}
+      RUST_LOG: g5_api=debug,tower_http=debug
+      # LLM credentials — forwarded from host .env via variable interpolation
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      # -- Local OAuth provider (GitHub-compatible stub) --
+      G5_GITHUB_CLIENT_ID: local-oauth-client-id
+      G5_GITHUB_CLIENT_SECRET: local-oauth-client-secret
+      # authorize_url must be browser-reachable (host network)
+      G5_GITHUB_AUTHORIZE_URL: "http://localhost:${G5_PORT_OAUTH_STUB:-9876}/login/oauth/authorize"
+      # token_url and userinfo_url are server-to-server (docker network)
+      G5_GITHUB_TOKEN_URL: "http://oauth-stub:9876/login/oauth/access_token"
+      G5_GITHUB_USERINFO_URL: "http://oauth-stub:9876/user"
+      # Fine-grained PAT validation base URL (SCM connect). Defaults to real
+      # api.github.com so a human dev can connect a real PAT. Local e2e makes
+      # connect hermetic by exporting
+      #   G5_SCM_GITHUB_API_BASE_URL=http://oauth-stub:9876
+      # before bringing the stack up. CI uses docker-compose.test.yml, which
+      # hardcodes the stub.
+      G5_SCM_GITHUB_API_BASE_URL: "${G5_SCM_GITHUB_API_BASE_URL:-https://api.github.com}"
+      G5_SCM_GITHUB_WEB_BASE_URL: "${G5_SCM_GITHUB_WEB_BASE_URL:-https://github.com}"
+    ports:
+      - "${G5_PORT_API:-7500}:7500"
+    volumes:
+      - api_repos:/data/repos
+    depends_on:
+      db-migrate: { condition: service_completed_successfully }
+      oauth-stub: { condition: service_healthy }
+    networks:
+      - g5-dev
+
+  # ---------------------------------------------------------------------------
+  # g5-daemon — Background maintenance (G5_ROLE=daemon)
+  # ---------------------------------------------------------------------------
+  # Runs the same g5-api binary in daemon mode: no HTTP listener, only the
+  # MaintenanceRunner (provider synchronization, repository GC, outbox delivery,
+  # and other background sweeps).
+  # Separated from the API server so the daemon can be scaled/restarted
+  # independently without dropping HTTP traffic.
+  # ---------------------------------------------------------------------------
+  g5-daemon:
+    # Same binary/runtime as g5-api, with G5_ROLE=daemon.
+    image: g5/api:${G5_IMAGE_TAG:-dev}
+    pull_policy: never
+    container_name: ${G5_COMPOSE_PROJECT:-g5-dev}-daemon
+    user: "0:0"
+    # The Dockerfile has a HEALTHCHECK that curls :7500/healthz, but the
+    # daemon role has no HTTP listener.  Disable it so `wait-for-healthy.sh`
+    # treats this container as "no-healthcheck → accept running".
+    healthcheck:
+      disable: true
+    environment:
+      # Background provider fetch/push uses the same App binding as API requests.
+      <<: [*platform_issue_reporting_env, *github_app_env, *email_env]
+      G5_ROLE: daemon
+      G5_DATABASE_URL: postgres://g5:g5_dev@postgres:5432/g5_dev
+      G5_JWT_SECRET: "${G5_JWT_SECRET:-}"
+      G5_JWT_PUBLIC_KEY: "${G5_JWT_PUBLIC_KEY:-}"
+      G5_JWT_PRIVATE_KEY: "${G5_JWT_PRIVATE_KEY:-}"
+      G5_REPOS_BASE_DIR: /data/repos
+      # Keep daemon-produced Git URLs on the same origin as workspace VMs.
+      G5_GIT_EXTERNAL_URL: "${G5_GIT_EXTERNAL_URL:-http://localhost:${G5_PORT_API:-7500}}"
+      # Keep the daemon on the same secret-decryption key as the API.
+      G5_SCM_ENCRYPTION_KEY: ${G5_SCM_ENCRYPTION_KEY:-}
+      ENABLE_CLOUD_FEATURES: ${ENABLE_CLOUD_FEATURES:-false}
+      G5_NEW_ORG_DEFAULT_IMAGE_TRACK: ${G5_NEW_ORG_DEFAULT_IMAGE_TRACK:-}
+      G5_PROMOTED_BASE_IMAGES: ${G5_PROMOTED_BASE_IMAGES:-}
+      RUST_LOG: g5_api=debug
+    volumes:
+      - api_repos:/data/repos
+    depends_on:
+      db-migrate: { condition: service_completed_successfully }
+    restart: unless-stopped
+    networks:
+      - g5-dev
+
+  # ---------------------------------------------------------------------------
+  # edge — Client UI + Reverse Proxy (Caddy)
+  # ---------------------------------------------------------------------------
+  # Builds the React client into static assets, serves them via Caddy,
+  # and reverse-proxies /api/* and /ws/* to g5-api.
+  # Access the full app at http://localhost:3000
+  # ---------------------------------------------------------------------------
+  edge:
+    build:
+      context: ../..
+      dockerfile: infra/docker/Dockerfile.edge
+      args:
+        VITE_G5_ENABLE_CLOUD_WORKSPACE_WORKFLOWS: ${VITE_G5_ENABLE_CLOUD_WORKSPACE_WORKFLOWS:-true}
+        VITE_G5_ENABLE_INTENT_LOG_VIEWER: ${VITE_G5_ENABLE_INTENT_LOG_VIEWER:-false}
+    container_name: ${G5_COMPOSE_PROJECT:-g5-dev}-edge
+    ports:
+      - "${G5_PORT_EDGE:-3000}:80"
+    environment:
+      G5_API_URL: http://g5-api:7500
+      G5_MAINTENANCE_MODE: "true"
+    depends_on:
+      g5-api: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:80/healthz"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - g5-dev
+
+volumes:
+  pgdata_dev:
+    # Lean uses fresh storage; the original G5 volumes remain available. A
+    # second stack beside this one (the `full-stack` preview profile on a process
+    # host) names its own volumes through G5_COMPOSE_VOLUMES, so its `down -v`
+    # can never delete the developer's database.
+    name: ${G5_COMPOSE_VOLUMES:-g5-lean}_pgdata_dev
+    driver: local
+  api_repos:
+    name: ${G5_COMPOSE_VOLUMES:-g5-lean}_api_repos
+    driver: local
+networks:
+  g5-dev:
+    driver: bridge

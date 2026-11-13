@@ -1,0 +1,49 @@
+apiVersion: cloud-build-notifiers/v1
+kind: SlackNotifier
+metadata:
+  name: g5-cloudbuild-slack-notifier
+spec:
+  notification:
+    # build.status is the Build.Status enum: a string literal such as 'FAILURE'
+    # never matches, and the notifier deploys but never posts. CANCELLED is
+    # left out because superseded builds are cancelled on purpose. For gated
+    # staging jobs, WORKING covers human and train approval without also posting
+    # on QUEUED. Pub/Sub redelivery can still repeat a notification.
+    filter: (build.substitutions['TRIGGER_NAME'] in [${TRIGGER_NAMES_CEL}] && build.status in [Build.Status.FAILURE, Build.Status.INTERNAL_ERROR, Build.Status.TIMEOUT, Build.Status.EXPIRED]) || (build.substitutions['TRIGGER_NAME'] in [${APPROVAL_TRIGGER_NAMES_CEL}] && build.status == Build.Status.WORKING)
+    delivery:
+      webhookUrl:
+        secretRef: webhook-url
+    # The image hands the rendered template to slack.Blocks.UnmarshalJSON,
+    # which takes a bare JSON array of blocks; a {"blocks": [...]} wrapper
+    # fails to unmarshal and the notifier retries forever without posting.
+    # The json helper normalizes js's apostrophe escape to valid JSON. Apply it
+    # to every event string, including the free-text approval comment.
+    template:
+      type: golang
+      content: |
+        [
+          {
+            "type": "header",
+            "text": {
+              "type": "plain_text",
+              "text": "{{if eq .Build.Status.String "WORKING"}}:rocket: Release job approved & running{{else}}:x: Cloud Build failed: {{template "json" (index .Build.Substitutions "TRIGGER_NAME")}}{{end}}"
+            }
+          },
+          {
+            "type": "section",
+            "fields": [
+              {{if eq .Build.Status.String "WORKING"}}
+              {"type": "mrkdwn", "text": "*Approved by:*\n{{with .Build.Approval}}{{with .Result}}{{if .ApproverAccount}}{{template "json" .ApproverAccount}}{{else if .Comment}}{{template "json" .Comment}}{{else}}unknown{{end}}{{else}}unknown{{end}}{{else}}unknown{{end}}"},
+              {{end}}
+              {"type": "mrkdwn", "text": "*Status:*\n{{.Build.Status}}"},
+              {"type": "mrkdwn", "text": "*Trigger:*\n{{template "json" (index .Build.Substitutions "TRIGGER_NAME")}}"},
+              {"type": "mrkdwn", "text": "*Build:*\n<{{template "json" .Build.LogUrl}}|{{template "json" .Build.Id}}>"},
+              {"type": "mrkdwn", "text": "*Commit:*\n{{template "json" (index .Build.Substitutions "COMMIT_SHA")}}"},
+              {"type": "mrkdwn", "text": "*Branch:*\n{{template "json" (index .Build.Substitutions "BRANCH_NAME")}}"}
+            ]
+          }
+        ]
+        {{define "json"}}{{replace (js .) "\\'" "\\u0027"}}{{end}}
+  secrets:
+    - name: webhook-url
+      value: ${WEBHOOK_SECRET_RESOURCE}

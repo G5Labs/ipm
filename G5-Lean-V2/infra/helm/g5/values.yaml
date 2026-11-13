@@ -1,0 +1,374 @@
+# =============================================================================
+# G5 Helm Chart — Default Values
+# =============================================================================
+# The QA deploy layers values-qa.yaml and values-control-plane.yaml on top.
+# =============================================================================
+
+# -- Global settings
+global:
+  # GCP project ID (required)
+  projectId: ""
+  # Primary environment cluster name. Used when deriving default GCP service
+  # account emails for Workload Identity.
+  clusterName: ""
+  # GCP region
+  region: us-central1
+  # Container registry (Artifact Registry — set by Cloud Build deploy)
+  # Format: {region}-docker.pkg.dev/{project}/g5
+  registry: ""  # overridden by deploy pipeline: --set global.registry=...
+  # Image tag (overridden by CI --set global.imageTag=...)
+  imageTag: latest
+
+# -- Namespace
+namespace: g5
+
+# -- Release topology
+topology:
+  # "full" = complete control plane in one cluster
+  # "control-plane" = api/edge/daemon/migrations only
+  mode: full
+
+# -- Filestore NFS settings (for PV in pvc-repos.yaml)
+# Set filestore.ip and filestore.shareName via --set or env values file
+filestore:
+  ip: ""
+  shareName: g5_repos
+  pvName: g5-repos-pv
+  storage: 1Ti
+
+# =============================================================================
+# g5-api — Stateful API Server
+# =============================================================================
+api:
+  replicaCount: 1
+
+  image:
+    reference: ""  # exact image ref, e.g. .../api@sha256:...
+    repository: ""  # set by deploy: {region}-docker.pkg.dev/{project}/g5/api
+    tag: ""  # defaults to global.imageTag
+    pullPolicy: IfNotPresent
+
+  service:
+    type: ClusterIP
+    port: 7500
+
+  backendConfig:
+    sessionAffinity:
+      enabled: true
+      affinityType: GENERATED_COOKIE
+      affinityCookieTtlSec: 3600
+
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
+    limits:
+      cpu: "2"
+      memory: 2Gi
+
+  # -- Environment variables
+  # G5_PROMOTED_BASE_IMAGES is injected by the cloudbuild-deploy helm step only
+  # when a run carries freshly promoted customer runtime digests (infra ontology
+  # D27); it must have NO default here — absence means "keep existing org
+  # defaults" (worker_hosts D52 seeding).
+  env:
+    G5_HOST: "0.0.0.0"
+    G5_PORT: "7500"
+    G5_ROLE: api
+    RUST_LOG: "g5_api=info,tower_http=info,g5_audit=info"
+    G5_LOG_FORMAT: "json"
+    G5_RATE_LIMIT_ENABLED: "true"
+    # GCE Ingress reaches NEG endpoints directly from these GFE ranges and
+    # appends client,frontend to XFF. Never trust arbitrary pod/private CIDRs.
+    # Custom ingress deployments must override BOTH settings for their path.
+    G5_TRUSTED_PROXY_CIDRS: "130.211.0.0/22,35.191.0.0/16"
+    G5_TRUSTED_PROXY_XFF_HOPS: "2"
+    G5_STORAGE_PROVIDER: filestore
+    G5_STORAGE_MOUNT_POINT: /mnt/g5-repos
+    G5_STORAGE_TENANT_PREFIX: repos
+    G5_STORAGE_WORKTREE_DIR: /tmp/g5-api-storage-worktrees
+    G5_ATTACHMENT_STORE_DIR: /mnt/g5-attachments
+
+  # -- Secrets (referenced from K8s secrets)
+  secrets:
+    # Name of the K8s Secret containing sensitive env vars
+    secretName: g5-api-secrets
+    # Deployed environments must source this from External Secrets Operator.
+    externalSecretsEnabled: true
+    # Keys mapped from the secret:
+    #   G5_DATABASE_URL, G5_JWT_SECRET,
+    #   G5_JWT_PUBLIC_KEY,
+    #   G5_SCM_ENCRYPTION_KEY, G5_EXTERNAL_URL,
+    #   G5_LICENSE_ADMIN_TOKEN_SHA256,
+    #   G5_GITHUB_CLIENT_ID, G5_GITHUB_CLIENT_SECRET,
+    #   (optional, not wired into hosted secrets) G5_MICROSOFT_CLIENT_ID,
+    #   G5_MICROSOFT_CLIENT_SECRET, G5_MICROSOFT_TENANT_ID,
+    #   ANTHROPIC_API_KEY, OPENAI_API_KEY, OPENROUTER_API_KEY
+
+  # -- Volume mounts (Filestore NFS for shared repo storage)
+  filestore:
+    enabled: true
+    mountPath: /mnt/g5-repos
+    # PVC name created by Terraform filestore module or manually
+    pvcName: g5-repos-pvc
+    # Attachment bytes (g5.issue.native.attachment-store): a subdirectory of
+    # the same share, mounted only into the API. The repository mount is
+    # narrowed to the tenant prefix's subdirectory, so neither reaches the
+    # other's files.
+    attachments:
+      subPath: attachments
+      mountPath: /mnt/g5-attachments
+
+  # -- Pod disruption budget
+  pdb:
+    # Single-replica mitigation: replicaCount keeps one desired pod, while a
+    # relaxed PDB lets node drains proceed instead of deadlocking on eviction.
+    minAvailable: 0
+
+  # -- Node selector
+  nodeSelector:
+    g5/pool: system
+
+  # -- Tolerations
+  tolerations: []
+
+  # -- Pod annotations
+  podAnnotations: {}
+
+  # -- Service account
+  serviceAccount:
+    name: g5-api
+    annotations: {}
+    # Defaults to "{clusterName}-api@{projectId}.iam.gserviceaccount.com"
+    # when left empty.
+    gcpServiceAccountEmail: ""
+
+  # -- Probes
+  # /healthz is a trivial static handler (returns "OK"); a slow response means
+  # the Tokio runtime is momentarily starved, not that the process is dead — so
+  # liveness uses a tolerant timeout + failure budget to avoid SIGKILL loops.
+  # (timeoutSeconds defaults to 1s when unset, which is too tight under load.)
+  livenessProbe:
+    httpGet:
+      path: /healthz
+      port: 7500
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 6
+
+  readinessProbe:
+    httpGet:
+      path: /healthz
+      port: 7500
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+  # startupProbe decouples slow first boot (DB pools + pre-deploy migration hook
+  # + Filestore mount warmup) from steady-state liveness: liveness/readiness do
+  # not start until startup succeeds, allowing ~150s (30 × 5s) to come up.
+  startupProbe:
+    httpGet:
+      path: /healthz
+      port: 7500
+    periodSeconds: 5
+    timeoutSeconds: 5
+    failureThreshold: 30
+
+# =============================================================================
+# g5-daemon — Background maintenance (same binary, G5_ROLE=daemon)
+# =============================================================================
+daemon:
+  enabled: true
+  replicaCount: 1
+
+  image:
+    reference: ""
+    repository: ""  # set by deploy: {region}-docker.pkg.dev/{project}/g5/api
+    tag: ""
+    pullPolicy: IfNotPresent
+
+  resources:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+    limits:
+      cpu: "1"
+      memory: 8Gi
+
+  env:
+    G5_ROLE: daemon
+    RUST_LOG: "g5_api=info,g5_audit=info"
+    G5_STORAGE_PROVIDER: filestore
+    G5_STORAGE_MOUNT_POINT: /mnt/g5-repos
+    G5_STORAGE_TENANT_PREFIX: repos
+    G5_STORAGE_WORKTREE_DIR: /tmp/g5-daemon-storage-worktrees
+
+  nodeSelector:
+    g5/pool: system
+
+# =============================================================================
+# edge — Caddy reverse proxy + static frontend
+# =============================================================================
+edge:
+  replicaCount: 2
+
+  image:
+    reference: ""
+    repository: ""  # set by deploy: {region}-docker.pkg.dev/{project}/g5/edge
+    tag: ""
+    pullPolicy: IfNotPresent
+
+  service:
+    type: ClusterIP
+    port: 80
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 64Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+
+  env:
+    G5_API_URL: "http://g5-api:7500"
+    # Set to "true" to show the coming-soon page instead of the app.
+    # Set to "false" (or remove) when ready to go live.
+    G5_MAINTENANCE_MODE: "true"
+
+  nodeSelector:
+    g5/pool: system
+
+# =============================================================================
+# Ingress — GCE Ingress Controller with managed TLS
+# =============================================================================
+ingress:
+  # Release target fallback for an empty host below; explicit QA hosts win.
+  host: ""
+  enabled: true
+  className: gce
+  annotations:
+    kubernetes.io/ingress.global-static-ip-name: g5-ip
+    networking.gke.io/managed-certificates: g5-cert
+  hosts:
+    - host: ""  # Set in values-{env}.yaml
+      paths:
+        # API routes — direct to g5-api for proper LB health checks, timeouts,
+        # and API BackendConfig affinity. The wildcard is required because the
+        # exact "/api" rule does not match REST subpaths such as /api/v1/....
+        - path: /api
+          pathType: ImplementationSpecific
+          service: g5-api
+          port: 7500
+        - path: /api/*
+          pathType: ImplementationSpecific
+          service: g5-api
+          port: 7500
+        - path: /v1
+          pathType: ImplementationSpecific
+          service: g5-api
+          port: 7500
+        # Git smart HTTP uses concrete repo subpaths such as
+        # /git/<repo-id>/git-upload-pack; route those directly to g5-api so
+        # large pack streams inherit the API backend timeout (3600s), not edge's 30s.
+        - path: /git/*
+          pathType: ImplementationSpecific
+          service: g5-api
+          port: 7500
+        - path: /ws
+          pathType: ImplementationSpecific
+          service: g5-api
+          port: 7500
+        - path: /healthz
+          pathType: ImplementationSpecific
+          service: g5-api
+          port: 7500
+        - path: /auth
+          pathType: ImplementationSpecific
+          service: g5-api
+          port: 7500
+        # Long-lived WebSockets: keep explicit direct-to-API routes so they use
+        # the API backend timeout/affinity even if path ordering changes.
+        - path: /api/v1/ws
+          pathType: ImplementationSpecific
+          service: g5-api
+          port: 7500
+        # Everything else — edge (Caddy serves frontend static assets)
+        - path: /*
+          pathType: ImplementationSpecific
+          service: g5-edge
+          port: 80
+  tls: []
+
+  # Google-managed TLS certificate
+  managedCertificate:
+    enabled: true
+    name: g5-cert
+    domains: []  # Set in values-{env}.yaml, e.g. ["dev.g5labs.ai"]
+
+  # GCP SSL Policy (restrict to TLS 1.2+ with modern ciphers)
+  # Create via: gcloud compute ssl-policies create g5-ssl-policy \
+  #   --profile MODERN --min-tls-version 1.2
+  sslPolicy: ""
+
+  # Cloud CDN (disabled by default)
+  cdn:
+    enabled: false
+
+# =============================================================================
+# Per-preview wildcard origins (issue #935)
+# =============================================================================
+# Serves each preview microVM from its own hostname
+# (https://<job-id>.<hostSuffix>/) so SPA dev servers' root-absolute asset URLs
+# stay inside the preview origin. One flag flips three coupled pieces together:
+# the *.<hostSuffix> Ingress host rule (all paths -> g5-api), the
+# networking.gke.io/certmap annotation, and G5_PREVIEW_HOST_SUFFIX in the API
+# env. The managed-certificates annotation stays: the GKE Ingress controller
+# does not act on certmap, so the Certificate Manager map is attached to the
+# HTTPS target proxy out of band (gcloud) after the flip — see
+# infra/qa/README.md "Per-preview wildcard origins".
+#
+# PREREQUISITE: Terraform `preview_subdomain_bases` must be applied for this
+# environment and the Certificate Manager certificate ACTIVE before enabling.
+# Previews are served only from these per-preview hosts
+# (`g5.security.mvp-exposure.preview`): while this stays disabled the API
+# boots and answers 503 PREVIEW_ORIGIN_UNCONFIGURED when a preview is opened.
+# There is no platform-origin fallback.
+previewWildcard:
+  enabled: false
+  # e.g. "preview.dev.g5labs.ai" — previews serve at https://<job-id>.<hostSuffix>/
+  hostSuffix: ""
+  # Certificate Manager map name from Terraform (output preview_certificate_map_name,
+  # "<static-ip-name>-cert-map"), e.g. "g5-dev-ip-cert-map"
+  certMapName: ""
+
+# =============================================================================
+# Database Migration Job
+# =============================================================================
+migration:
+  # Run as a pre-install/pre-upgrade Helm hook
+  enabled: true
+  # Some upgrades need to apply a backlog of migrations plus role bootstrap work
+  # before the app pods can roll forward.
+  activeDeadlineSeconds: 1800
+  serviceAccount:
+    name: g5-migrate
+  image:
+    reference: ""
+    repository: ""  # set by deploy: {region}-docker.pkg.dev/{project}/g5/api
+    tag: ""
+  command: ["/usr/local/bin/g5-db-migrate"]
+  env:
+    RUST_LOG: "info"
+  secrets:
+    secretName: g5-api-secrets
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi

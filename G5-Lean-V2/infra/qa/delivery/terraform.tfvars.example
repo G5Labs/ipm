@@ -1,0 +1,54 @@
+# Enable after the QA build identities, registry and KVM pool are ready.
+enable_application_triggers = false
+
+# Keep existing ownership until admin resources, trusted publishers and all
+# consumer reads are verified. This single switch controls all artifact paths;
+# it does not move Cloud Build, state, old QA artifacts or their IAM.
+artifact_project = "g5-qa-1ccc"
+# artifact_project = "g5lean-admin-1ccc"
+
+# Supply both target bindings after bootstrap/platform outputs and DNS review.
+# Enable promotion after acceptance; the weekly G5 schedule is already selected
+# and becomes effective when the release targets and promotion are enabled.
+qa_release_authority_reviewed = false
+enable_release_bootstrap = false
+enable_promotion         = false
+enable_release_train = true
+promotion_targets    = {}
+
+# Approved names; replace the identity placeholders with reviewed target outputs.
+# promotion_targets = {
+#   staging = {
+#     project_id            = "g5lean-staging-1ccc"
+#     region                = "us-central1"
+#     cluster               = "g5-lean-staging"
+#     filestore_instance    = "g5-lean-staging-repos"
+#     filestore_zone        = "us-central1-a"
+#     release_check_base_url = "https://lean.g5labs.ai"
+#     release_check_secret   = "g5-release-checks"
+#     artifact_readers       = ["serviceAccount:STAGING_COMPUTE_SA", "serviceAccount:STAGING_API_SA", "serviceAccount:STAGING_HOST_SA"]
+#     terraform_settings     = {
+#       enable_release_check_fixture = true
+#       external_access_enabled = false
+#       app_hostname            = "lean.g5labs.ai"
+#       preview_hostname        = "preview.lean.g5labs.ai"
+#     }
+#   }
+#   prod = {
+#     project_id            = "g5lean-prod-1ccc"
+#     region                = "us-central1"
+#     cluster               = "g5-lean-prod"
+#     filestore_instance    = "g5-lean-prod-repos"
+#     filestore_zone        = "us-central1-a"
+#     release_check_base_url = "https://app.g5labs.ai"
+#     release_check_secret   = "g5-release-checks"
+#     artifact_readers       = ["serviceAccount:PROD_COMPUTE_SA", "serviceAccount:PROD_API_SA", "serviceAccount:PROD_HOST_SA"]
+#     terraform_settings     = {
+#       pod_cidr                = "10.72.0.0/14" # Match the deployed production platform.
+#       enable_release_check_fixture = true
+#       external_access_enabled = false
+#       app_hostname            = "app.g5labs.ai"
+#       preview_hostname        = "preview.app.g5labs.ai"
+#     }
+#   }
+# }

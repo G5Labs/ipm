@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO user_scm_connections\n                (id, user_id, provider, provider_user_id, provider_username,\n                 access_token_enc, refresh_token_enc, token_expires_at, scopes, auth_method)\n            VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, NULL, $6, $7, 'pat')\n            ON CONFLICT (user_id, provider) DO UPDATE SET\n                access_token_enc = EXCLUDED.access_token_enc,\n                refresh_token_enc = NULL,\n                token_expires_at = EXCLUDED.token_expires_at,\n                scopes = EXCLUDED.scopes,\n                provider_user_id = EXCLUDED.provider_user_id,\n                provider_username = EXCLUDED.provider_username,\n                auth_method = 'pat',\n                updated_at = now()\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Text",
+        "Text",
+        "Bytea",
+        "Timestamptz",
+        "TextArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "2a15692eccc975ba1002ef0e8673e628815009bcd0baec10cd49250cf570e27c"
+}

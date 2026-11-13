@@ -1,0 +1,126 @@
+# syntax=docker/dockerfile:1
+# =============================================================================
+# Dockerfile.g5d-prebuilt - CI runtime packaging for prebuilt host artifacts
+# =============================================================================
+# Cloud CI builds the Cloud Hypervisor-enabled g5d binary once in the Rust release
+# artifact step, then this Dockerfile layers it onto the published host base.
+# It intentionally runs no Cargo/Rust compilation.
+# =============================================================================
+
+ARG BASE_IMAGE=g5/g5d-base:latest
+
+FROM ${BASE_IMAGE} AS runtime-base
+
+USER root
+
+# xfsprogs (mkfs.xfs) for the CI workspace-VM host: workspace materialization
+# is reflink-or-fail-loud (g5/g5d/workspace D6), so the CI host container loop-
+# mounts an XFS-reflink store at /var/g5d-data (scripts/ci-host-xfs-entrypoint.sh)
+# to mirror the XFS-reflink root production hosts boot with. Installed here in
+# the per-build runtime layer (not the cached host base, which is pulled, not
+# rebuilt) so it is reliably present; mount/util-linux already ship in the base.
+# Harmless in prod (the prod root is already XFS-reflink). See integration-stack
+# ontology §6.0.
+RUN apt-get update && apt-get install -y --no-install-recommends xfsprogs \
+    && rm -rf /var/lib/apt/lists/*
+
+# The harness G5 provides in every workspace: the dedicated workspace
+# instructions and skills, unchanged. Worker staging copies this directory into
+# the runtime each workspace VM mounts at /opt/g5.
+COPY .agents/AGENTS.md /usr/local/assets/harness/AGENTS.md
+COPY .agents/skills/ /usr/local/assets/harness/.agents/skills/
+COPY .agents/guidance/ /usr/local/assets/harness/.agents/guidance/
+COPY infra/docker/g5d-provider-env.sh /usr/local/bin/g5d-provider-env
+COPY infra/docker/g5d-host-entrypoint.sh /usr/local/bin/g5d-host-entrypoint
+
+# Codex CLI (@openai/codex) — byte-identical to Dockerfile.g5d (no-drift sibling
+# contract, docker_images I3/D6). The provider runner spawns one attempt-scoped
+# `codex app-server` per turn, so the runtime must ship the real CLI or Codex readiness fails
+# closed and no `agent_provider:codex` capability is advertised
+# (provided_agent_runtime D31A).
+# Pin from the single-source scripts/codex-cli-version (fail closed on an empty
+# pin); the --version + `app-server --help` (--listen) gate and the
+# launch-surface check fail the build early rather than deferring to a silent
+# runtime readiness miss.
+COPY scripts/codex-cli-version /tmp/codex-cli-version
+COPY scripts/check-codex-cli-flags.sh /tmp/check-codex-cli-flags.sh
+RUN set -eu; \
+    CODEX_VERSION="$(tr -d '[:space:]' < /tmp/codex-cli-version)"; \
+    if [ -z "$CODEX_VERSION" ]; then \
+        echo "FATAL: scripts/codex-cli-version is empty; refusing to float @openai/codex to npm latest" >&2; \
+        exit 2; \
+    fi; \
+    echo "[g5d] npm install -g @openai/codex@${CODEX_VERSION}"; \
+    npm install -g --prefix /usr/local --no-audit --no-fund "@openai/codex@${CODEX_VERSION}"; \
+    [ -x /usr/local/bin/codex ] || { echo "FATAL: /usr/local/bin/codex missing after npm install" >&2; exit 1; }; \
+    /usr/local/bin/codex --version; \
+    sh /tmp/check-codex-cli-flags.sh /usr/local/bin/codex "$CODEX_VERSION"; \
+    codex_help="$(/usr/local/bin/codex app-server --help 2>&1)" \
+        || { echo "FATAL: 'codex app-server --help' failed (worker readiness requires a runnable CLI):" >&2; echo "$codex_help" >&2; exit 1; }; \
+    printf '%s\n' "$codex_help" | grep -q -- '--listen' \
+        || { echo "FATAL: installed codex lacks 'app-server --listen' (worker readiness requires it)" >&2; exit 1; }; \
+    chmod -R a+rX /usr/local/lib/node_modules/@openai; \
+    npm cache clean --force; \
+    rm -f /tmp/codex-cli-version /tmp/check-codex-cli-flags.sh
+
+# Claude Code CLI (@anthropic-ai/claude-code): the Phase 3 provider runner spawns
+# `claude -p` per turn (design v6 §8.3), so the worker ships the pinned native
+# CLI at /usr/local/bin/claude and g5d-provider-env points G5_CLAUDE_PATH at it.
+# Pin from the single-source scripts/claude-code-cli-version (fail closed on an
+# empty pin, mirroring the Codex block above and
+# infra/packer/g5-worker/scripts/40-install-claude.sh). The npm bin is the
+# platform-native binary the package's postinstall lands at bin/claude.exe.
+# scripts/check-claude-cli-flags.sh proves the installed binary carries every
+# flag the runner passes (docs/lean-provider-cli-contract.md) so a pin bump
+# that lost a flag fails the build, not the first chat turn. Kept byte-identical
+# in Dockerfile.g5d-prebuilt.
+COPY scripts/claude-code-cli-version /tmp/claude-code-cli-version
+COPY scripts/check-claude-cli-flags.sh /tmp/check-claude-cli-flags.sh
+RUN set -eu; \
+    CLAUDE_CODE_VERSION="$(tr -d '[:space:]' < /tmp/claude-code-cli-version)"; \
+    if [ -z "$CLAUDE_CODE_VERSION" ]; then \
+        echo "FATAL: scripts/claude-code-cli-version is empty; refusing to float @anthropic-ai/claude-code to npm latest" >&2; \
+        exit 2; \
+    fi; \
+    echo "[g5d] npm install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}"; \
+    npm install -g --prefix /usr/local --no-audit --no-fund "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}"; \
+    [ -x /usr/local/bin/claude ] || { echo "FATAL: /usr/local/bin/claude missing after npm install" >&2; exit 1; }; \
+    sh /tmp/check-claude-cli-flags.sh /usr/local/bin/claude "$CLAUDE_CODE_VERSION"; \
+    chmod -R a+rX /usr/local/lib/node_modules/@anthropic-ai; \
+    npm cache clean --force; \
+    rm -f /tmp/claude-code-cli-version /tmp/check-claude-cli-flags.sh
+
+RUN chmod +x /usr/local/bin/g5d-provider-env /usr/local/bin/g5d-host-entrypoint && \
+    chmod -R a+rX /usr/local/assets/harness && \
+    mkdir -p /mnt/g5-repos/repos && \
+    mkdir -p /data && \
+    chown -R g5:g5 /mnt/g5-repos && \
+    ln -s /mnt/g5-repos/repos /data/repos
+
+USER g5
+WORKDIR /workspace
+
+RUN git config --global --add safe.directory /workspace && \
+    git config --global --add safe.directory '*'
+
+ENV RUST_LOG=info
+FROM runtime-base AS runtime
+
+USER root
+COPY .ci-release-artifacts/worker/g5d /usr/local/bin/g5d
+# Fake provider CLIs (plan P3.1/P3.2): resolved beside `g5d` only under
+# `G5_CLAUDE_CODE_FAKE=1` / `G5_CODEX_FAKE=1` (the deterministic CI lane).
+COPY .ci-release-artifacts/worker/fake-claude .ci-release-artifacts/worker/fake-codex .ci-release-artifacts/worker/fake-g5-tools /usr/local/bin/
+RUN chmod +x /usr/local/bin/g5d /usr/local/bin/fake-claude /usr/local/bin/fake-codex /usr/local/bin/fake-g5-tools && \
+    ldd /usr/local/bin/g5d | tee /tmp/g5d.ldd && \
+    ! grep -E 'libkrunfw\.so|libkrun\.so|not found' /tmp/g5d.ldd
+# Declared-module catalog + pin at the path `g5d dispatch` loads it from and
+# the host runtime staging copies it from (plan P4.2b item 13) — the same pair
+# Dockerfile.g5d exports through its guest-artifacts stage, verified here too
+# so a drifted pin fails the build, not the first module launch.
+COPY backend/g5d-dispatch/modules/catalog.json backend/g5d-dispatch/modules/catalog.sha256 /opt/g5/modules/
+RUN echo "$(tr -d '[:space:]' < /opt/g5/modules/catalog.sha256)  /opt/g5/modules/catalog.json" | sha256sum -c - >/dev/null && \
+    chmod 0755 /opt/g5/modules && chmod 0644 /opt/g5/modules/catalog.json /opt/g5/modules/catalog.sha256
+USER g5
+
+ENTRYPOINT ["/usr/local/bin/g5d-host-entrypoint"]

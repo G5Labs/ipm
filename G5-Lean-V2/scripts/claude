@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Launch ordinary Claude Code in this checkout; no legacy G5 service preparation.
+set -euo pipefail
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+if [ "${1:-}" = "--dry-run" ]; then
+  printf 'Ordinary Claude Code; checkout: %s\nNo generated config, hooks or MCP preparation.\n' "$repo_root"
+  exit 0
+fi
+cli="$(command -v claude || true)"
+if [ -z "$cli" ] || [ "$cli" -ef "${BASH_SOURCE[0]}" ]; then
+  printf 'Resolve the native claude executable on PATH before using this wrapper.\n' >&2
+  exit 1
+fi
+cd "$repo_root"
+exec "$cli" "$@"

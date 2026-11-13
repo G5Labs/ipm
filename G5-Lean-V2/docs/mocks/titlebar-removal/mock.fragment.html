@@ -1,0 +1,746 @@
+<title>Title Bar Removal</title>
+<style>
+/* Layout: a mock toolbar, then one app frame rendered from state, then the design notes.
+   Tokens are the G5 "editor" theme (frontend/src/index.css) so the frame reads as the app. */
+:root {
+  color-scheme: light;
+  --g5-bg0: rgb(248 249 252);
+  --g5-bg1: rgb(255 255 255);
+  --g5-bg2: rgb(240 242 247);
+  --g5-stroke: rgb(0 0 0 / 0.08);
+  --g5-text0: rgb(17 24 39);
+  --g5-text1: rgb(17 24 39 / 0.72);
+  --g5-text2: rgb(17 24 39 / 0.64);
+  --g5-active: rgb(180 140 40);
+  --g5-ok: rgb(22 163 74);
+  --g5-info: rgb(59 130 246);
+  --g5-warn: rgb(217 119 6);
+  --g5-blocked: rgb(220 38 38);
+  --g5-overlay-hover: rgb(0 0 0 / 0.06);
+  --g5-phase-be: rgb(47 111 99);
+  --g5-phase-be-soft: rgb(227 239 236);
+  --g5-phase-se: rgb(43 94 150);
+  --g5-phase-se-soft: rgb(227 236 247);
+  --g5-phase-ie: rgb(106 78 150);
+  --g5-phase-ie-soft: rgb(235 230 246);
+  --note-bg: rgb(255 251 235);
+  --note-stroke: rgb(217 119 6 / 0.35);
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: "JetBrains Mono", "SF Mono", ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --g5-bg0: rgb(10 12 16);
+    --g5-bg1: rgb(14 17 24);
+    --g5-bg2: rgb(18 22 31);
+    --g5-stroke: rgb(255 255 255 / 0.08);
+    --g5-text0: rgb(236 242 255);
+    --g5-text1: rgb(236 242 255 / 0.72);
+    --g5-text2: rgb(236 242 255 / 0.52);
+    --g5-active: rgb(235 199 94);
+    --g5-ok: rgb(113 201 136);
+    --g5-info: rgb(103 164 255);
+    --g5-warn: rgb(242 162 73);
+    --g5-blocked: rgb(255 107 107);
+    --g5-overlay-hover: rgb(255 255 255 / 0.08);
+    --g5-phase-be: rgb(111 188 174);
+    --g5-phase-be-soft: rgb(18 48 42);
+    --g5-phase-se: rgb(121 175 227);
+    --g5-phase-se-soft: rgb(18 39 57);
+    --g5-phase-ie: rgb(172 149 218);
+    --g5-phase-ie-soft: rgb(34 28 52);
+    --note-bg: rgb(48 36 10);
+    --note-stroke: rgb(242 162 73 / 0.4);
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --g5-bg0: rgb(10 12 16);
+  --g5-bg1: rgb(14 17 24);
+  --g5-bg2: rgb(18 22 31);
+  --g5-stroke: rgb(255 255 255 / 0.08);
+  --g5-text0: rgb(236 242 255);
+  --g5-text1: rgb(236 242 255 / 0.72);
+  --g5-text2: rgb(236 242 255 / 0.52);
+  --g5-active: rgb(235 199 94);
+  --g5-ok: rgb(113 201 136);
+  --g5-info: rgb(103 164 255);
+  --g5-warn: rgb(242 162 73);
+  --g5-blocked: rgb(255 107 107);
+  --g5-overlay-hover: rgb(255 255 255 / 0.08);
+  --g5-phase-be: rgb(111 188 174);
+  --g5-phase-be-soft: rgb(18 48 42);
+  --g5-phase-se: rgb(121 175 227);
+  --g5-phase-se-soft: rgb(18 39 57);
+  --g5-phase-ie: rgb(172 149 218);
+  --g5-phase-ie-soft: rgb(34 28 52);
+  --note-bg: rgb(48 36 10);
+  --note-stroke: rgb(242 162 73 / 0.4);
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--g5-bg0); color: var(--g5-text0); font: 14px/1.45 var(--font); }
+.wrap { max-width: 1400px; margin: 0 auto; padding-inline: 16px; padding-block: 20px 48px; }
+h1 { font-size: 18px; margin: 0 0 4px; font-weight: 650; letter-spacing: -0.01em; }
+.lede { margin: 0 0 16px; color: var(--g5-text1); max-width: 70ch; }
+code { font: 12px var(--mono); background: var(--g5-bg2); padding: 1px 4px; border-radius: 3px; }
+
+/* ---- mock toolbar ---- */
+.bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; padding: 10px 12px; border: 1px solid var(--g5-stroke); border-radius: 8px; background: var(--g5-bg1); margin-bottom: 14px; }
+.bar label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--g5-text2); display: flex; align-items: center; gap: 6px; }
+.seg { display: inline-flex; border: 1px solid var(--g5-stroke); border-radius: 6px; overflow: hidden; }
+.seg button { font: 12px/1 var(--font); padding: 7px 10px; border: 0; background: transparent; color: var(--g5-text1); cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--g5-stroke); }
+.seg button[aria-pressed="true"] { background: var(--g5-info); color: #fff; }
+.seg button:focus-visible, .app button:focus-visible, .app input:focus-visible { outline: 2px solid var(--g5-info); outline-offset: 1px; }
+select { font: 12px var(--font); padding: 6px 8px; border-radius: 6px; border: 1px solid var(--g5-stroke); background: var(--g5-bg0); color: var(--g5-text0); }
+
+/* ---- app frame ---- */
+.frame { border: 1px solid var(--g5-stroke); border-radius: 10px; overflow-x: auto; background: var(--g5-bg0); box-shadow: 0 10px 30px rgb(0 0 0 / 0.12); }
+.app { min-width: 1180px; height: 600px; display: flex; flex-direction: column; font-size: 13px; color: var(--g5-text0); position: relative; }
+.app button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; padding: 0; }
+.app svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+
+/* tab strip (WorkspaceTabStrip) */
+.tabs { display: flex; align-items: flex-end; gap: 2px; padding: 6px 8px 0; background: var(--g5-bg2); border-bottom: 1px solid var(--g5-stroke); user-select: none; }
+.tab { position: relative; display: inline-flex; align-items: center; gap: 8px; height: 32px; padding: 0 12px; border-radius: 8px 8px 0 0; border: 1px solid transparent; border-bottom: 0; font-size: 12px; color: var(--g5-text2); max-width: 220px; }
+.tab:hover { background: var(--g5-bg1); color: var(--g5-text1); }
+.tab.active { background: var(--g5-bg0); border-color: var(--g5-stroke); color: var(--g5-text0); z-index: 1; }
+.tab.active::after { content: ""; position: absolute; inset-inline: 0; bottom: -1px; height: 1px; background: var(--g5-bg0); }
+.tab svg { width: 13px; height: 13px; }
+.tab .ws { color: var(--g5-info); }
+.tab .close { width: 18px; height: 18px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-left: 2px; color: var(--g5-text2); }
+.tab .close svg { width: 11px; height: 11px; }
+.tab .close:hover { background: var(--g5-bg1); color: var(--g5-text0); }
+.tab-add { width: 28px; height: 28px; margin: 0 0 3px 4px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; color: var(--g5-text2); }
+.tab-add:hover { background: var(--g5-bg1); color: var(--g5-text0); }
+.tab-add svg { width: 14px; height: 14px; }
+.strip-icons { margin-left: auto; display: inline-flex; align-items: center; gap: 2px; padding: 0 2px 4px; position: relative; }
+.strip-icons .ibtn { width: 28px; height: 28px; }
+.strip-icons .ibtn svg { width: 15px; height: 15px; }
+.strip-icons .ibtn .badge { top: -2px; right: -2px; width: 15px; height: 15px; }
+.strip-icons.hot { box-shadow: inset 0 0 0 2px var(--g5-info); border-radius: 6px; }
+.tab-add.hot { box-shadow: 0 0 0 2px var(--g5-info); color: var(--g5-info); }
+
+/* old title bar (Before only) */
+.titlebar { height: 44px; display: flex; align-items: center; gap: 8px; padding: 0 12px; background: var(--g5-bg0); border-bottom: 1px solid var(--g5-stroke); position: relative; }
+.titlebar.cut { outline: 2px dashed var(--g5-blocked); outline-offset: -2px; }
+.titlebar .cutlabel { position: absolute; right: 50%; transform: translateX(50%); top: -1px; font-size: 10px; background: var(--g5-blocked); color: #fff; padding: 1px 8px; border-radius: 0 0 6px 6px; letter-spacing: 0.04em; text-transform: uppercase; }
+.brand { font-weight: 700; font-size: 13px; }
+.switcher { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 4px; font-weight: 500; max-width: 200px; }
+.switcher:hover { background: var(--g5-bg1); }
+.switcher svg { width: 14px; height: 14px; color: var(--g5-text2); }
+.ibtn { width: 32px; height: 32px; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; color: var(--g5-text1); position: relative; }
+.ibtn:hover { background: var(--g5-bg1); color: var(--g5-text0); }
+.ibtn .badge { position: absolute; top: -4px; right: -4px; width: 16px; height: 16px; border-radius: 50%; background: var(--g5-blocked); color: #fff; font-size: 10px; font-weight: 500; display: flex; align-items: center; justify-content: center; }
+.pill { white-space: nowrap; border-radius: 999px; padding: 2px 8px; font-weight: 500; font-size: 12px; background: var(--g5-bg2); color: var(--g5-text1); }
+.pill.ok { background: color-mix(in srgb, var(--g5-ok) 15%, transparent); color: var(--g5-ok); }
+.chip { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 8px; border-radius: 999px; border: 1px solid var(--g5-stroke); background: var(--g5-bg1); font-size: 12px; font-weight: 500; }
+.chip svg { width: 13px; height: 13px; color: var(--g5-ok); }
+.chip small { font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--g5-text2); }
+.strip { display: contents; font-size: 12px; }
+.strip .owner { display: inline-flex; align-items: center; gap: 4px; color: var(--g5-text1); white-space: nowrap; }
+.strip .owner svg { width: 14px; height: 14px; }
+.strip select { width: 7.5rem; padding: 3px 8px; font-size: 12px; }
+.strip .txt { padding: 4px 8px; border-radius: 4px; color: var(--g5-active); }
+.strip .txt.muted { color: var(--g5-text1); display: inline-flex; gap: 4px; align-items: center; }
+.strip .txt svg { width: 14px; height: 14px; }
+
+/* workbench header: chevrons + ribbon */
+.chevrons { display: flex; align-items: stretch; height: 40px; background: var(--g5-bg1); border-bottom: 1px solid var(--g5-stroke); padding: 0 12px; }
+.chev { display: flex; align-items: center; gap: 8px; padding: 0 22px 0 26px; font-size: 12px; font-weight: 500; color: var(--g5-text2); clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 50%, calc(100% - 14px) 100%, 0 100%, 14px 50%); background: var(--g5-bg2); margin-right: -8px; min-width: 220px; }
+.chev:first-child { clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 50%, calc(100% - 14px) 100%, 0 100%); padding-left: 14px; }
+.chev.active { background: var(--g5-phase-be-soft); color: var(--g5-phase-be); }
+.chev .idx { font: 11px var(--mono); opacity: 0.75; }
+.chev .meter { margin-left: auto; font: 11px var(--mono); padding: 1px 6px; border-radius: 999px; background: var(--g5-bg1); color: var(--g5-text1); }
+
+.ribbon { display: flex; flex-wrap: nowrap; align-items: flex-start; background: var(--g5-bg1); border-bottom: 1px solid var(--g5-stroke); padding: 6px 12px; gap: 0; min-height: 60px; }
+.ribbon .groups { display: flex; flex-wrap: wrap; align-items: stretch; min-width: 0; flex: 1 1 0; }
+.group { display: flex; align-items: flex-start; gap: 2px; padding: 0 10px; border-right: 1px solid var(--g5-stroke); }
+.group:first-child { padding-left: 0; }
+.group:last-child { border-right: 0; }
+.rb { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 76px; padding: 6px 4px; border-radius: 4px; font-size: 11px; font-weight: 500; line-height: 1.15; color: var(--g5-text1); text-align: center; }
+.rb svg { width: 22px; height: 22px; }
+.rb:hover { background: var(--g5-overlay-hover); color: var(--g5-text0); }
+.rb.primary { color: var(--g5-phase-be); }
+.rb[disabled] { opacity: 0.6; cursor: not-allowed; }
+.rb .cap { display: inline-flex; align-items: center; gap: 2px; }
+.rb .cap svg { width: 12px; height: 12px; }
+
+/* the new right cluster */
+.cluster { display: flex; align-items: center; gap: 2px; margin-left: auto; padding-left: 10px; border-left: 1px solid var(--g5-stroke); flex: none; position: relative; align-self: flex-start; }
+.cluster.hot { box-shadow: inset 0 0 0 2px var(--g5-info); border-radius: 6px; border-left-color: transparent; padding: 0 6px 0 8px; }
+.cluster .divider { width: 1px; align-self: stretch; margin: 6px 4px; background: var(--g5-stroke); }
+.cluster .rb { width: auto; min-width: 52px; padding-inline: 4px; }
+.cluster .rb .badge { position: absolute; top: 2px; right: 8px; width: 16px; height: 16px; border-radius: 50%; background: var(--g5-blocked); color: #fff; font-size: 10px; font-weight: 500; display: flex; align-items: center; justify-content: center; }
+.cluster .rb.vm { color: var(--g5-active); }
+.cluster .rb.vm.stop { color: var(--g5-text1); }
+.cluster .rb.vm.busy { opacity: 0.7; cursor: progress; }
+.cluster .rb.vm.busy svg { animation: spin 1s linear infinite; }
+.cluster .rb .dot { position: absolute; width: 7px; height: 7px; border-radius: 50%; top: 7px; right: 10px; background: var(--g5-text2); }
+.cluster .rb .dot.run { background: var(--g5-ok); }
+.cluster .rb .dot.bad { background: var(--g5-blocked); }
+.cluster .rb .dot.wait { background: var(--g5-warn); }
+.cluster .rb { position: relative; }
+.cluster .ibtn .dot { position: absolute; width: 7px; height: 7px; border-radius: 50%; top: 3px; right: 3px; background: var(--g5-text2); }
+.cluster .ibtn .dot.run { background: var(--g5-ok); }
+.cluster .ibtn .dot.bad { background: var(--g5-blocked); }
+.cluster .ibtn .dot.wait { background: var(--g5-warn); }
+.cluster .ibtn.vm { color: var(--g5-active); }
+.cluster .ibtn.vm.stop { color: var(--g5-text1); }
+.cluster .ibtn.vm.busy svg { animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .cluster .busy svg { animation: none; } }
+.owner-ic { width: 22px; height: 22px; }
+.rb .owner-ic { width: 22px; height: 22px; }
+.ibtn .owner-ic { width: 17px; height: 17px; }
+.avatars { display: inline-flex; align-items: center; margin-right: 6px; }
+.avatars span { width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--g5-bg1); font-size: 10px; font-weight: 500; display: inline-flex; align-items: center; justify-content: center; margin-left: -6px; }
+.avatars span:first-child { margin-left: 0; }
+.avatars em { font-style: normal; font-size: 10px; color: var(--g5-text2); margin-left: 8px; }
+
+/* owner dropdown */
+.menu { position: absolute; top: calc(100% + 4px); right: 0; z-index: 20; min-width: 224px; background: var(--g5-bg1); border: 1px solid var(--g5-stroke); border-radius: 6px; box-shadow: 0 12px 32px rgb(0 0 0 / 0.25); padding: 6px; font-size: 12px; text-align: left; }
+.menu.left { right: auto; left: 0; }
+.menu .hd { padding: 6px 8px 8px; color: var(--g5-text1); border-bottom: 1px solid var(--g5-stroke); display: flex; align-items: center; gap: 8px; }
+.menu .hd b { color: var(--g5-text0); font-weight: 600; }
+.menu .hd svg { width: 16px; height: 16px; }
+.menu .lbl { padding: 8px 8px 4px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--g5-text2); }
+.menu .it { display: flex; width: 100%; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 4px; color: var(--g5-text1); }
+.menu .it:hover { background: var(--g5-bg2); color: var(--g5-text0); }
+.menu .it .av { width: 20px; height: 20px; border-radius: 50%; font-size: 10px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; }
+.menu .it small { margin-left: auto; color: var(--g5-text2); font-size: 11px; }
+.menu .confirm { margin: 6px 2px 2px; padding: 8px; border-radius: 4px; background: var(--g5-bg2); color: var(--g5-text1); }
+.menu .confirm .row { display: flex; gap: 6px; margin-top: 8px; }
+.btn { font-size: 12px; font-weight: 500; padding: 5px 10px; border-radius: 4px; border: 1px solid var(--g5-stroke); background: var(--g5-bg1); color: var(--g5-text0); }
+.btn.primary { background: var(--g5-info); border-color: var(--g5-info); color: #fff; }
+.btn.sm { padding: 3px 8px; font-size: 11px; }
+.btn svg { width: 13px; height: 13px; vertical-align: -2px; margin-right: 4px; }
+.btn[disabled] { opacity: 0.5; cursor: not-allowed; }
+
+/* body */
+.body { flex: 1; display: flex; min-height: 0; }
+.rail { width: 220px; flex: none; border-right: 1px solid var(--g5-stroke); background: var(--g5-bg1); padding: 8px 6px; }
+.rail .r { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 4px; color: var(--g5-text1); font-size: 12px; }
+.rail .r.on { background: var(--g5-bg2); color: var(--g5-text0); }
+.rail .r svg { width: 14px; height: 14px; color: var(--g5-text2); }
+.rail .r.on svg { color: var(--g5-info); }
+.center { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.ctabs { display: flex; gap: 2px; padding: 6px 10px 0; border-bottom: 1px solid var(--g5-stroke); background: var(--g5-bg1); }
+.ctabs span { padding: 6px 12px; font-size: 12px; color: var(--g5-text2); border-radius: 6px 6px 0 0; }
+.ctabs span.on { color: var(--g5-text0); background: var(--g5-bg0); border: 1px solid var(--g5-stroke); border-bottom-color: var(--g5-bg0); margin-bottom: -1px; }
+.timeline { padding: 16px 20px; color: var(--g5-text2); font-size: 12px; }
+.timeline .ev { display: grid; grid-template-columns: 56px 1fr; gap: 10px; padding: 7px 0; border-bottom: 1px dashed var(--g5-stroke); }
+.timeline .ev b { color: var(--g5-text1); font-weight: 500; }
+
+/* Home + fork picker pages */
+.page { flex: 1; min-height: 0; overflow: auto; padding: 18px 24px; }
+.page .inner { max-width: 960px; margin: 0 auto; }
+.page h2 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--g5-text2); margin: 0; font-weight: 600; }
+.page p.sub { margin: 4px 0 0; color: var(--g5-text2); font-size: 12px; }
+.headrow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.headrow .spacer { flex: 1; }
+.search { display: inline-flex; align-items: center; gap: 8px; height: 32px; padding: 0 10px; border-radius: 6px; border: 1px solid var(--g5-stroke); background: var(--g5-bg1); color: var(--g5-text2); min-width: 320px; }
+.search.hot { box-shadow: 0 0 0 2px var(--g5-info); }
+.search input { flex: 1; border: 0; background: transparent; font: inherit; color: var(--g5-text0); min-width: 0; outline: none; }
+.search svg { width: 14px; height: 14px; }
+.search kbd { font: 10px var(--mono); border: 1px solid var(--g5-stroke); border-radius: 3px; padding: 1px 4px; color: var(--g5-text2); }
+.tiles { display: grid; grid-template-columns: 1.4fr 1fr; gap: 14px; margin-top: 14px; }
+.tile { border: 1px solid var(--g5-stroke); border-radius: 6px; background: var(--g5-bg1); overflow: hidden; }
+.tile .th { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-bottom: 1px solid var(--g5-stroke); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--g5-text2); font-weight: 600; }
+.tile .th .spacer { flex: 1; }
+.row { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-bottom: 1px solid var(--g5-stroke); font-size: 12px; position: relative; }
+.row:last-child { border-bottom: 0; }
+.row:hover { background: var(--g5-bg2); }
+.row svg { width: 13px; height: 13px; color: var(--g5-text2); }
+.row .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--g5-text0); }
+.row .nm b { font-weight: 600; }
+.row .nm mark { background: color-mix(in srgb, var(--g5-info) 25%, transparent); color: inherit; border-radius: 2px; }
+.row .meta { color: var(--g5-text2); font-size: 11px; white-space: nowrap; }
+.row .acts { display: inline-flex; gap: 4px; }
+.row .acts .btn { padding: 3px 8px; font-size: 11px; }
+.row .elbow { position: absolute; left: var(--x); top: 0; height: 50%; width: 10px; border-left: 1px solid var(--g5-stroke); border-bottom: 1px solid var(--g5-stroke); border-bottom-left-radius: 4px; }
+.phase-chips { display: inline-flex; gap: 3px; }
+.phase-chips i { font: 10px var(--mono); font-style: normal; padding: 1px 6px; border-radius: 999px; background: var(--g5-bg2); color: var(--g5-text2); }
+.phase-chips i.on { background: var(--g5-phase-be-soft); color: var(--g5-phase-be); }
+.phase-chips i.done { color: var(--g5-ok); }
+.empty { padding: 20px 12px; color: var(--g5-text2); font-size: 12px; text-align: center; }
+.org { border: 1px solid var(--g5-stroke); border-radius: 6px; background: var(--g5-bg1); padding: 12px 14px; margin-top: 12px; }
+.org .oh { display: flex; align-items: center; gap: 8px; font-weight: 600; margin-bottom: 4px; }
+.org .oh .pill { font-size: 10px; }
+.org .row { padding: 6px 4px; border-bottom: 0; border-radius: 4px; }
+
+/* callouts inside the frame */
+.callout { position: absolute; z-index: 30; background: var(--g5-info); color: #fff; font-size: 11px; font-weight: 500; padding: 3px 8px; border-radius: 4px; pointer-events: none; white-space: nowrap; box-shadow: 0 4px 12px rgb(0 0 0 / 0.25); }
+.callout::before { content: ""; position: absolute; width: 8px; height: 8px; background: inherit; transform: rotate(45deg); }
+.callout.up::before { top: -4px; left: 14px; }
+.callout.upr::before { top: -4px; right: 14px; }
+.callout.down::before { bottom: -4px; left: 14px; }
+.callout.lft::before { left: -4px; top: 50%; margin-top: -4px; }
+
+/* notes */
+.notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; margin-top: 22px; }
+.note { border: 1px solid var(--g5-stroke); border-radius: 8px; padding: 14px 16px; background: var(--g5-bg1); }
+.note.q { background: var(--note-bg); border-color: var(--note-stroke); }
+.note h3 { margin: 0 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--g5-text2); }
+.note ul { margin: 0; padding-left: 18px; }
+.note li { margin: 5px 0; color: var(--g5-text1); }
+.note li b { color: var(--g5-text0); font-weight: 600; }
+.hint { font-size: 12px; color: var(--g5-text2); margin: 8px 2px 0; }
+@media (max-width: 720px) { .search { min-width: 0; width: 100%; } .tiles { grid-template-columns: 1fr; } }
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-house" viewBox="0 0 24 24"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
+  <symbol id="i-layers" viewBox="0 0 24 24"><path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z"/><path d="M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12"/><path d="M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5v14"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+  <symbol id="i-stamp" viewBox="0 0 24 24"><path d="M14 13V8.5C14 7 15 7 15 5a3 3 0 0 0-6 0c0 2 1 2 1 3.5V13"/><path d="M20 15.5a2.5 2.5 0 0 0-2.5-2.5h-11A2.5 2.5 0 0 0 4 15.5V17a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1z"/><path d="M5 22h14"/></symbol>
+  <symbol id="i-fileplus" viewBox="0 0 24 24"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M9 15h6"/><path d="M12 18v-6"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></symbol>
+  <symbol id="i-import" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></symbol>
+  <symbol id="i-hammer" viewBox="0 0 24 24"><path d="m15 12-8.373 8.373a1 1 0 1 1-3-3L12 9"/><path d="m18 15 4-4"/><path d="m21.5 11.5-1.914-1.914A2 2 0 0 1 19 8.172V7l-2.26-2.26a6 6 0 0 0-4.202-1.756L9 2.96l.92.82A6.18 6.18 0 0 1 12 8.4V10l2 2h1.172a2 2 0 0 1 1.414.586L18.5 14.5"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-server" viewBox="0 0 24 24"><rect width="20" height="8" x="2" y="2" rx="2" ry="2"/><rect width="20" height="8" x="2" y="14" rx="2" ry="2"/><line x1="6" x2="6.01" y1="6" y2="6"/><line x1="6" x2="6.01" y1="18" y2="18"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></symbol>
+  <symbol id="i-bug" viewBox="0 0 24 24"><path d="m8 2 1.88 1.88"/><path d="M14.12 3.88 16 2"/><path d="M9 7.13v-1a3.003 3.003 0 1 1 6 0v1"/><path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6"/><path d="M12 20v-9"/><path d="M6.53 9C4.6 8.8 3 7.1 3 5"/><path d="M6 13H2"/><path d="M3 21c0-2.1 1.7-3.9 3.8-4"/><path d="M20.97 5c0 2.1-1.6 3.8-3.5 4"/><path d="M22 13h-4"/><path d="M17.2 17c2.1.1 3.8 1.9 3.8 4"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></symbol>
+  <symbol id="i-settings" viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-account" viewBox="0 0 24 24"><path d="M18 20a6 6 0 0 0-12 0"/><circle cx="12" cy="10" r="4"/><circle cx="12" cy="12" r="10"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></symbol>
+  <symbol id="i-square" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2"/></symbol>
+  <symbol id="i-term" viewBox="0 0 24 24"><path d="m7 11 2-2-2-2"/><path d="M11 13h4"/><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="i-fork" viewBox="0 0 24 24"><circle cx="12" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/><path d="M18 9v2c0 .6-.4 1-1 1H7c-.6 0-1-.4-1-1V9"/><path d="M12 12v3"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-loader" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></symbol>
+  <symbol id="i-activity" viewBox="0 0 24 24"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"/></symbol>
+  <symbol id="i-dot" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="1"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></symbol>
+  <symbol id="i-doc" viewBox="0 0 24 24"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></symbol>
+  <symbol id="i-tree" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 16h3"/><path d="M7 11h6"/><path d="M7 6h10"/></symbol>
+  <symbol id="i-folder" viewBox="0 0 24 24"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24"><path d="M3 6h.01"/><path d="M8 6h13"/><path d="M3 12h.01"/><path d="M8 12h13"/><path d="M3 18h.01"/><path d="M8 18h13"/></symbol>
+  <symbol id="i-jobs" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
+  <!-- Owner: user silhouette with a key badge (the reference image) -->
+  <symbol id="i-owner" viewBox="0 0 24 24"><circle cx="10" cy="7" r="4"/><path d="M2.5 21a7.5 7.5 0 0 1 12.6-5.5"/><circle cx="17.5" cy="17.5" r="4.5" fill="currentColor" stroke="none"/><g stroke="var(--g5-bg1)" stroke-width="1.4" fill="none"><circle cx="16.3" cy="16.3" r="1.4"/><path d="m17.3 17.3 2.6 2.6"/><path d="m19 19 .9-.9"/></g></symbol>
+</svg>
+
+<div class="wrap">
+  <h1>Title Bar Removal</h1>
+  <p class="lede">The 44px workspace title bar goes away under the alignment layout. Its controls move into the ribbon row's right end; workspace discovery and fork move to Home and to the "+" tab. Pick a screen and poke the controls.</p>
+
+  <div class="bar" role="group" aria-label="Mock controls">
+    <label>Screen
+      <span class="seg" id="screens">
+        <button type="button" data-screen="workspace" aria-pressed="true">Workspace (after)</button>
+        <button type="button" data-screen="home" aria-pressed="false">Home</button>
+        <button type="button" data-screen="fork" aria-pressed="false">"+" new tab</button>
+        <button type="button" data-screen="before" aria-pressed="false">Before</button>
+      </span>
+    </label>
+    <label>Variant
+      <span class="seg" id="variant">
+        <button type="button" data-variant="ribbon" aria-pressed="true">A · all in ribbon</button>
+        <button type="button" data-variant="strip" aria-pressed="false">B · global icons in tab strip</button>
+      </span>
+    </label>
+    <label for="vm">VM
+      <select id="vm">
+        <option value="stopped">Stopped</option>
+        <option value="starting">Starting</option>
+        <option value="queued_for_capacity">Waiting for capacity</option>
+        <option value="running" selected>Running</option>
+        <option value="stopping">Stopping</option>
+        <option value="failed">Failed</option>
+      </select>
+    </label>
+    <label>Viewer
+      <span class="seg" id="role">
+        <button type="button" data-role="owner" aria-pressed="true">Owner</button>
+        <button type="button" data-role="admin" aria-pressed="false">Org admin</button>
+        <button type="button" data-role="member" aria-pressed="false">Member</button>
+      </span>
+    </label>
+    <label><input type="checkbox" id="callouts" checked> Callouts</label>
+  </div>
+
+  <div class="frame"><div class="app" id="app"></div></div>
+  <p class="hint" id="hint"></p>
+
+  <div class="notes">
+    <div class="note">
+      <h3>What moves where</h3>
+      <ul>
+        <li><b>Title bar</b> removed under the alignment layout (desktop). The tab strip stays as the top edge.</li>
+        <li><b>Two variants.</b> A: everything from the old bar joins the ribbon's right end. B (chosen 2026-10-11): the five global controls (Workers, Notifications, Report, Settings, Account) sit at the right end of the tab strip as small icons, on every page, while Owner, Start/Stop and workspace Details stay in the ribbon. B keeps the ribbon shorter and gives Home and the "+" page the same global icons without a header row of their own.</li>
+        <li><b>Right cluster</b> (variant A) appended to the ribbon row after the last group, right-aligned, in the ribbon's own button format (22px glyph, label under it): owner, Start/Stop, then Workers, Notifications, Report, Details, Settings, Account. Chat toggle joins it only when the tab bar setting is off. Base shows the cluster alone, since Base has no ribbon.</li>
+        <li><b>Owner + Transfer</b> become one control: the user-with-key icon labelled "Owner: name"; for people who may transfer, it is a dropdown listing the other org members, click a name to transfer (with an inline confirm).</li>
+        <li><b>VM pill + Start/Stop</b> become one button whose label follows the status: Start (stopped, failed), Stop (running), Starting… / Waiting… / Stopping… (disabled, spinner). The status colour is a dot on the button; the full status text is the tooltip. Owner only, as today.</li>
+        <li><b>Workspace switcher and Fork</b> leave the workspace page. Home gets a search box over the full workspace tree with Open / Fork per row and a "New workspace" button; the "+" fork picker gets the same search over every organization.</li>
+        <li><b>Activity</b> button removed (the rail's Activity row already opens it). <b>Home</b> button stays removed (the strip owns it).</li>
+      </ul>
+    </div>
+    <div class="note q">
+      <h3>Assumptions to confirm</h3>
+      <ul>
+        <li><b>Primary issue chip</b> and <b>collaborator avatars</b> ("2 online") are dropped with the bar (decided 2026-10-11). The rail's Issues section still lists the primary issue.</li>
+        <li><b>Home's own top bar</b> (G5 · Workspaces dropdown · bug · account) is removed too for consistency; its controls land in Home's header row. If Home should keep its bar, only the search box changes.</li>
+        <li><b>Cluster style</b> follows the person's "Action bar" setting like every other ribbon button: icon-only under <code>minimal-icons</code>, text buttons under <code>extended-text</code>. The mock shows the default <code>extended-icons</code>.</li>
+        <li><b>Other layouts</b> (classic, both, simple) keep the title bar unchanged; this change is alignment-only. Mobile keeps its own header.</li>
+        <li><b>Terminal</b> button is dropped from the bar (decided 2026-10-11); the Terminal center tab stays reachable from the rail and chat.</li>
+      </ul>
+    </div>
+    <div class="note">
+      <h3>Interactions in this mock</h3>
+      <ul>
+        <li>Click the owner control to open Transfer ownership; pick a name, confirm. Switch Viewer to see the read-only owner badge and the hidden VM button.</li>
+        <li>Change VM status to see the button relabel. Click Start/Stop to simulate the transition.</li>
+        <li>Type in Home's or the "+" page's search box to filter the lineage tree; matches highlight, parents stay visible.</li>
+        <li>"Before" shows the current bar with the removed region outlined.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const S = {
+    screen: "workspace",
+    cluster: "labels",
+    variant: "ribbon",
+    vm: "running",
+    role: "owner",
+    callouts: true,
+    ownerMenu: false,
+    transferPick: null,
+    owner: "dvd-g5",
+    q: "",
+    qfork: "",
+  };
+  const MEMBERS = [
+    { id: "dvd-g5", name: "dvd-g5", email: "dvd@g5labs.ai", color: "#2f6f63" },
+    { id: "zcl", name: "zcl", email: "zcl@g5labs.ai", color: "#2b5e96" },
+    { id: "rahul", name: "rahul", email: "rahul@g5labs.ai", color: "#6a4e96" },
+    { id: "ben", name: "ben", email: "ben@g5labs.ai", color: "#b48c28" },
+  ];
+  const WS = [
+    { id: "base", name: "Base", base: true, depth: 0, phase: 0, owner: "zcl", updated: "2h ago" },
+    { id: "wv", name: "workspace-vote", depth: 1, phase: 1, owner: "dvd-g5", updated: "12 min ago", working: true },
+    { id: "wv2", name: "vote-page-polish", depth: 2, phase: 0, owner: "dvd-g5", updated: "yesterday" },
+    { id: "aero", name: "aero-glass-theme", depth: 1, phase: 2, owner: "dvd-g5", updated: "3 days ago" },
+    { id: "deploy", name: "issue-343-deploy-removals", depth: 1, phase: 2, owner: "rahul", updated: "1h ago", working: true },
+    { id: "harness", name: "agent-harness-source", depth: 1, phase: 1, owner: "ben", updated: "5 days ago" },
+  ];
+  const WS_OTHER = [
+    { id: "o-base", name: "Base", base: true, depth: 0, phase: 0, owner: "ben", updated: "1 week ago" },
+    { id: "o-1", name: "pricing-experiments", depth: 1, phase: 0, owner: "ben", updated: "2 days ago" },
+  ];
+  const VM = {
+    stopped: { label: "Start", icon: "i-play", cls: "", dot: "", title: "VM: Stopped · Start the workspace VM" },
+    failed: { label: "Start", icon: "i-play", cls: "", dot: "bad", title: "VM: Failed · Start the workspace VM again" },
+    starting: { label: "Starting…", icon: "i-loader", cls: "busy", dot: "wait", title: "VM: Starting", disabled: true },
+    queued_for_capacity: { label: "Waiting…", icon: "i-loader", cls: "busy", dot: "wait", title: "VM: Waiting for capacity", disabled: true },
+    running: { label: "Stop", icon: "i-square", cls: "stop", dot: "run", title: "VM: Running · Stop the workspace VM" },
+    stopping: { label: "Stopping…", icon: "i-loader", cls: "busy stop", dot: "wait", title: "VM: Stopping", disabled: true },
+  };
+
+  const ic = (id, cls) => `<svg class="${cls || ""}" aria-hidden="true"><use href="#${id}"/></svg>`;
+  const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const canTransfer = () => S.role === "owner" || S.role === "admin";
+  const isOwner = () => S.role === "owner";
+  const callout = (txt, style, dir) => S.callouts ? `<div class="callout ${dir || "up"}" style="${style}">${txt}</div>` : "";
+
+  // ---------- pieces ----------
+  function tabStrip(active) {
+    const t = (cls, inner, extra) => `<div class="tab ${cls}" ${extra || ""}>${inner}</div>`;
+    return `<div class="tabs" role="tablist" aria-label="Open workspaces">
+      ${t(active === "home" ? "active" : "", `<button type="button" role="tab" aria-selected="${active === "home"}" data-go="home" title="Home">${ic("i-house")}</button>`)}
+      ${t(active === "workspace" ? "active" : "", `<button type="button" role="tab" aria-selected="${active === "workspace"}" data-go="workspace">${ic("i-layers", "ws")}<span>workspace-vote</span></button><button type="button" class="close" aria-label="Close workspace-vote">${ic("i-x")}</button>`)}
+      ${t("", `<button type="button" role="tab" aria-selected="false" data-go="workspace">${ic("i-layers", "ws")}<span>aero-glass-theme</span></button><button type="button" class="close" aria-label="Close aero-glass-theme">${ic("i-x")}</button>`)}
+      ${active === "fork" ? t("active", `<span role="tab" aria-selected="true" aria-disabled="true">${ic("i-plus")}<span>New tab</span></span>`) : ""}
+      <button type="button" class="tab-add ${active === "workspace" && S.callouts ? "hot" : ""}" aria-label="New tab" title="New tab" data-go="fork">${ic("i-plus")}</button>
+      ${active === "workspace" ? callout("Search + fork live here (and on Home)", "left:388px;top:9px;", "lft") : ""}
+      ${S.variant === "strip" && active !== "before" ? stripIcons() : ""}
+    </div>`;
+  }
+
+  function stripIcons() {
+    const ib = (icon, label, extra) => `<button type="button" class="ibtn" title="${label}" aria-label="${label}">${ic(icon)}${extra || ""}</button>`;
+    return `<div class="strip-icons ${S.callouts && S.screen === "workspace" ? "hot" : ""}" role="group" aria-label="Global controls">
+      ${ib("i-server", "Workers")}${ib("i-bell", "Notifications", '<span class="badge">3</span>')}${ib("i-bug", "Report a problem")}${ib("i-settings", "Settings")}${ib("i-account", "Account")}
+      ${S.screen === "workspace" ? callout("Global controls live in the tab strip", "right:0;top:36px;", "upr") : ""}
+    </div>`;
+  }
+
+  function chevrons() {
+    const c = (idx, name, meter, cls) => `<div class="chev ${cls}"><span class="idx">${idx}</span><span>${name}</span>${meter ? `<span class="meter">${meter}</span>` : ""}</div>`;
+    return `<div class="chevrons" aria-label="Workspace phase">${c("01", "Business Engineering", "1/2", "active")}${c("02", "System Engineering", "0/1", "")}${c("03", "Integration Engineering", "", "")}</div>`;
+  }
+
+  function ribbonGroups() {
+    const b = (icon, label, cls, extra) => `<button type="button" class="rb ${cls || ""}" ${extra || ""}>${ic(icon)}<span>${label}</span></button>`;
+    return `<div class="groups">
+      <div class="group" role="group" aria-label="Author">${b("i-fileplus", "New doc")}${b("i-upload", "Upload file")}${b("i-import", "Import")}</div>
+      <div class="group" role="group" aria-label="Analysis">${b("i-search", "Analyze")}${b("i-chart", "Progress overview")}</div>
+      <div class="group" role="group" aria-label="Mock">${b("i-hammer", "Build mock", "primary")}${b("i-eye", "Preview mock", "", 'disabled title="No mock exists yet"')}</div>
+      <div class="group" role="group" aria-label="Alignment">${b("i-stamp", "Approvals")}</div>
+    </div>`;
+  }
+
+  function ownerControl(labels) {
+    const owner = MEMBERS.find((m) => m.id === S.owner);
+    const dropdown = canTransfer();
+    const name = `Owner: ${owner.name}`;
+    const inner = labels
+      ? `${ic("i-owner", "owner-ic")}<span class="cap">${esc(name)}${dropdown ? ic("i-chev") : ""}</span>`
+      : `${ic("i-owner", "owner-ic")}`;
+    const btn = `<button type="button" class="${labels ? "rb" : "ibtn"}" data-act="owner" title="${esc(name)}${dropdown ? " · Transfer ownership" : ""}" aria-label="${esc(name)}" ${dropdown ? `aria-haspopup="menu" aria-expanded="${S.ownerMenu}"` : "aria-disabled=\"true\" style=\"cursor:default\""}>${inner}</button>`;
+    let menu = "";
+    if (dropdown && S.ownerMenu) {
+      const others = MEMBERS.filter((m) => m.id !== S.owner);
+      const pick = S.transferPick ? MEMBERS.find((m) => m.id === S.transferPick) : null;
+      menu = `<div class="menu" role="menu" aria-label="Transfer ownership">
+        <div class="hd">${ic("i-owner")}<span>Owner <b>${esc(owner.name)}</b></span></div>
+        <div class="lbl">Transfer ownership to</div>
+        ${others.map((m) => `<button type="button" class="it" role="menuitem" data-act="pick" data-id="${m.id}"><span class="av" style="background:${m.color}30;color:${m.color}">${m.name[0].toUpperCase()}</span><span>${esc(m.name)}</span><small>${esc(m.email)}</small></button>`).join("")}
+        ${pick ? `<div class="confirm">Transfer <b>workspace-vote</b> to <b>${esc(pick.name)}</b>? You keep access as a member; the VM controls move to them.<div class="row"><button type="button" class="btn primary sm" data-act="transfer">Transfer</button><button type="button" class="btn sm" data-act="cancel">Cancel</button></div></div>` : ""}
+      </div>`;
+    }
+    return `<span style="position:relative;display:inline-flex">${btn}${menu}</span>`;
+  }
+
+  function vmControl(labels) {
+    if (!isOwner()) return "";
+    const v = VM[S.vm];
+    const cls = `${labels ? "rb" : "ibtn"} vm ${v.cls}`;
+    return `<button type="button" class="${cls}" data-act="vm" title="${v.title}" aria-label="${v.label.replace("…", "")} workspace" ${v.disabled ? 'aria-disabled="true"' : ""}>${ic(v.icon)}${labels ? `<span>${v.label}</span>` : ""}<span class="dot ${v.dot}"></span></button>`;
+  }
+
+  function cluster() {
+    const labels = true;
+    const b = (icon, label, extra) => `<button type="button" class="rb" title="${label}" aria-label="${label}">${ic(icon)}<span>${label}</span>${extra || ""}</button>`;
+    return `<div class="cluster ${S.callouts && S.screen === "workspace" ? "hot" : ""}" role="group" aria-label="Workspace controls">
+      ${ownerControl(labels)}
+      ${vmControl(labels)}
+      ${b("i-info", "Details")}
+      ${S.variant === "strip" ? "" : `<span class="divider"></span>
+      ${b("i-server", "Workers")}
+      ${b("i-bell", "Notifications", '<span class="badge">3</span>')}
+      ${b("i-bug", "Report")}
+      ${b("i-settings", "Settings")}
+      ${b("i-account", "Account")}`}
+    </div>`;
+  }
+
+  function body() {
+    const r = (icon, label, on) => `<div class="r ${on ? "on" : ""}">${ic(icon)}<span>${label}</span></div>`;
+    return `<div class="body">
+      <div class="rail">${r("i-activity", "Activity", true)}${r("i-doc", "Project docs")}${r("i-tree", "Ontology")}${r("i-folder", "Files")}${r("i-list", "Issues & tasks")}${r("i-jobs", "Jobs")}</div>
+      <div class="center">
+        <div class="ctabs"><span>Chat</span><span class="on">Timeline</span><span>Approvals</span></div>
+        <div class="timeline">
+          <div class="ev"><span>17:02</span><span><b>Approval requested</b> · BE requirement "Vote page copy" · 1 of 2 approved</span></div>
+          <div class="ev"><span>16:41</span><span><b>Build mock</b> chat finished · docs/mocks/vote-page/index.html</span></div>
+          <div class="ev"><span>16:10</span><span><b>Phase moved</b> to Business Engineering by dvd-g5</span></div>
+          <div class="ev"><span>15:58</span><span><b>Forked</b> from Base · workspace-vote</span></div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  // ---------- screens ----------
+  function workspaceAfter() {
+    return `${tabStrip("workspace")}${chevrons()}
+      <div class="ribbon" role="toolbar" aria-label="Business Engineering actions" style="position:relative">
+        ${ribbonGroups()}${cluster()}
+        ${callout(S.variant === "strip" ? "Owner menu, VM button and Details stay in the ribbon" : "Former title-bar controls, owner menu and VM button", "right:12px;bottom:-14px;", "upr")}
+      </div>${body()}`;
+  }
+
+  function before() {
+    const owner = MEMBERS.find((m) => m.id === S.owner);
+    const vmPill = isOwner() ? `<span class="pill ${S.vm === "running" ? "ok" : ""}">VM: ${S.vm === "queued_for_capacity" ? "Waiting for capacity" : S.vm[0].toUpperCase() + S.vm.slice(1)}</span>` : "";
+    const start = isOwner() ? (S.vm === "running" ? `<button type="button" class="txt muted">${ic("i-square")} Stop</button>` : S.vm === "stopped" || S.vm === "failed" ? `<button type="button" class="txt">${ic("i-play")} Start</button>` : "") : "";
+    return `${tabStrip("workspace")}
+      <div class="titlebar cut" data-surface="titlebar"><span class="cutlabel">removed</span>
+        <span class="brand">G5</span>
+        <button type="button" class="switcher">${ic("i-layers")}<span>workspace-vote</span>${ic("i-chev")}</button>
+        <button type="button" class="ibtn" title="Workspace details">${ic("i-info")}</button>
+        <button type="button" class="ibtn" title="Fork current project">${ic("i-fork")}</button>
+        <button type="button" class="ibtn" title="Activity">${ic("i-activity")}</button>
+        <button type="button" class="chip">${ic("i-dot")}<span>#343</span><small>Open</small></button>
+        <div class="strip">
+          <span class="owner">${ic("i-user")}Owner: ${esc(owner.name)}</span>
+          ${canTransfer() ? `<select aria-label="Transfer workspace owner"><option>Transfer to…</option></select><button type="button" class="txt" disabled style="opacity:.5">Transfer</button>` : ""}
+          ${vmPill}
+          ${isOwner() ? `<button type="button" class="txt muted" ${S.vm === "running" ? "" : 'disabled style="opacity:.5"'}>${ic("i-term")}</button>` : ""}
+          ${start}
+        </div>
+        <div style="flex:1"></div>
+        <span class="avatars"><span style="background:#2b5e9630;color:#2b5e96">Z</span><span style="background:#6a4e9630;color:#6a4e96">R</span><em>2 online</em></span>
+        <button type="button" class="ibtn" title="Workers">${ic("i-server")}</button>
+        <button type="button" class="ibtn" title="Notifications">${ic("i-bell")}<span class="badge">3</span></button>
+        <button type="button" class="ibtn" title="Report a problem">${ic("i-bug")}</button>
+        <button type="button" class="ibtn" title="Settings">${ic("i-settings")}</button>
+        <button type="button" class="ibtn" title="Org management">${ic("i-account")}</button>
+      </div>
+      ${chevrons()}
+      <div class="ribbon" role="toolbar" aria-label="Business Engineering actions">${ribbonGroups()}</div>${body()}`;
+  }
+
+  function treeRows(list, q, opts) {
+    const query = q.trim().toLowerCase();
+    let visible = list;
+    if (query) {
+      const keep = new Set();
+      list.forEach((w, i) => {
+        if (w.name.toLowerCase().includes(query)) {
+          keep.add(i);
+          // keep ancestors so the lineage reads
+          let d = w.depth;
+          for (let j = i - 1; j >= 0 && d > 0; j--) if (list[j].depth < d) { keep.add(j); d = list[j].depth; }
+        }
+      });
+      visible = list.filter((_, i) => keep.has(i));
+    }
+    if (!visible.length) return `<div class="empty">No workspace matches "${esc(q)}".</div>`;
+    const hl = (name) => {
+      if (!query) return esc(name);
+      const i = name.toLowerCase().indexOf(query);
+      return esc(name.slice(0, i)) + "<mark>" + esc(name.slice(i, i + query.length)) + "</mark>" + esc(name.slice(i + query.length));
+    };
+    return visible.map((w) => {
+      const phases = ["BE", "SE", "IE"].map((p, i) => `<i class="${i < w.phase ? "done" : i === w.phase ? "on" : ""}">${i < w.phase ? "✓ " : ""}${p}</i>`).join("");
+      const acts = w.base
+        ? `<button type="button" class="btn sm">${ic("i-fork")}Fork</button>`
+        : `${opts.open ? `<button type="button" class="btn sm" data-go="workspace">Open</button>` : ""}<button type="button" class="btn sm">${ic("i-fork")}Fork</button>`;
+      return `<div class="row" style="padding-left:${12 + w.depth * 22}px">
+        ${w.depth ? `<span class="elbow" style="--x:${w.depth * 22 - 2}px"></span>` : ""}
+        ${ic("i-layers")}<span class="nm">${w.base ? "<b>Base</b>" : hl(w.name)}</span>
+        ${w.base ? "" : `<span class="phase-chips">${phases}</span>`}
+        <span class="meta">${w.working ? "● Working · " : ""}${esc(w.owner)} · ${w.updated}</span>
+        <span class="acts">${acts}</span>
+      </div>`;
+    }).join("");
+  }
+
+  function home() {
+    return `${tabStrip("home")}
+      <div class="page"><div class="inner">
+        <div class="headrow" style="position:relative">
+          <div><h2>G5 Labs · Home</h2><p class="sub">Find, open or fork any workspace in this organization.</p></div>
+          <span class="spacer"></span>
+          <label class="search ${S.callouts ? "hot" : ""}">${ic("i-search")}<input id="home-q" type="search" placeholder="Search workspaces…" value="${esc(S.q)}" aria-label="Search workspaces"><kbd>/</kbd></label>
+          <button type="button" class="btn primary">${ic("i-plus")}New workspace</button>
+          ${S.variant === "strip" ? "" : `<span class="divider" style="width:1px;height:24px;background:var(--g5-stroke)"></span>
+          <button type="button" class="ibtn" title="Notifications">${ic("i-bell")}<span class="badge">3</span></button>
+          <button type="button" class="ibtn" title="Report a problem">${ic("i-bug")}</button>
+          <button type="button" class="ibtn" title="Account and organizations">${ic("i-account")}</button>`}
+          ${callout("Replaces the Workspaces dropdown: same search, same tree, Open + Fork", "right:0;top:44px;", "upr")}
+        </div>
+        <div class="tiles">
+          <div class="tile">
+            <div class="th">${ic("i-layers")} Workspaces <span class="spacer"></span><span>${WS.length} in lineage</span></div>
+            ${treeRows(WS, S.q, { open: true })}
+          </div>
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div class="tile"><div class="th">Needs attention <span class="spacer"></span><span>All · Mine</span></div>
+              <div class="row">${ic("i-stamp")}<span class="nm">Approval pending · workspace-vote · BE</span><span class="meta">17:02</span></div>
+              <div class="row">${ic("i-chat")}<span class="nm">Needs user input · issue-343-deploy-removals</span><span class="meta">1h</span></div>
+            </div>
+            <div class="tile"><div class="th">Issues <span class="spacer"></span><span>Assigned to me</span></div>
+              <div class="row">${ic("i-dot")}<span class="nm">#343 Remove deploy targets</span><span class="meta">open</span></div>
+              <div class="row">${ic("i-dot")}<span class="nm">#427 Question votes</span><span class="meta">open</span></div>
+            </div>
+            <div class="tile"><div class="th">Running compute</div>
+              <div class="row">${ic("i-server")}<span class="nm">workspace-vote · 4 vCPU · 16 GiB</span><span class="acts"><button type="button" class="btn sm">Shut down</button></span></div>
+            </div>
+          </div>
+        </div>
+      </div></div>`;
+  }
+
+  function fork() {
+    return `${tabStrip("fork")}
+      <div class="page"><div class="inner">
+        <div class="headrow" style="position:relative">
+          <div><h2>Organizations</h2><p class="sub">Choose a workspace to fork into a new tab, or start one from scratch.</p></div>
+          <span class="spacer"></span>
+          <label class="search ${S.callouts ? "hot" : ""}">${ic("i-search")}<input id="fork-q" type="search" placeholder="Search workspaces in every organization…" value="${esc(S.qfork)}" aria-label="Search workspaces"></label>
+          <button type="button" class="btn">${ic("i-plus")}Create Organization</button>
+          ${callout("New: search across organizations", "right:140px;top:44px;", "upr")}
+        </div>
+        <div class="org">
+          <div class="oh">G5 Labs <span class="pill">Owner</span><span class="spacer" style="flex:1"></span><button type="button" class="btn sm">${ic("i-plus")}New workspace</button></div>
+          ${treeRows(WS, S.qfork, { open: false })}
+        </div>
+        <div class="org">
+          <div class="oh">Acme Pilot <span class="pill">Member</span><span class="spacer" style="flex:1"></span><button type="button" class="btn sm">${ic("i-plus")}New workspace</button></div>
+          ${treeRows(WS_OTHER, S.qfork, { open: false })}
+        </div>
+      </div></div>`;
+  }
+
+  // ---------- render ----------
+  const app = document.getElementById("app");
+  const hint = document.getElementById("hint");
+  const HINTS = {
+    workspace: "Ribbon row: action groups on the left, the former title-bar controls on the right. Base workspaces show only the right cluster. Variant B lifts the six global icons into the tab strip; owner and VM stay in the ribbon.",
+    home: "Home carries workspace discovery: search the lineage tree, Open or Fork a row, or start a new workspace.",
+    fork: "The “+” tab keeps the fork picker and gains the same search, across every organization you belong to.",
+    before: "Current alignment layout for reference. The dashed region is removed; its controls are redistributed.",
+  };
+  function render() {
+    const views = { workspace: workspaceAfter, home, fork, before };
+    const focusId = document.activeElement && document.activeElement.id;
+    const sel = document.activeElement && document.activeElement.selectionStart;
+    app.innerHTML = views[S.screen]();
+    hint.textContent = HINTS[S.screen];
+    if (focusId) { const el = document.getElementById(focusId); if (el) { el.focus(); try { el.setSelectionRange(sel, sel); } catch (e) {} } }
+    document.querySelectorAll("#screens button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.screen === S.screen)));
+    document.querySelectorAll("#variant button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.variant === S.variant)));
+    document.querySelectorAll("#role button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.role === S.role)));
+    document.getElementById("vm").value = S.vm;
+  }
+
+  document.getElementById("screens").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; S.screen = b.dataset.screen; S.ownerMenu = false; render(); });
+  document.getElementById("variant").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; S.variant = b.dataset.variant; S.ownerMenu = false; render(); });
+  document.getElementById("role").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; S.role = b.dataset.role; S.ownerMenu = false; render(); });
+  document.getElementById("vm").addEventListener("change", (e) => { S.vm = e.target.value; render(); });
+  document.getElementById("callouts").addEventListener("change", (e) => { S.callouts = e.target.checked; render(); });
+
+  let timer = null;
+  app.addEventListener("click", (e) => {
+    const go = e.target.closest("[data-go]");
+    if (go) { S.screen = go.dataset.go; S.ownerMenu = false; render(); return; }
+    const a = e.target.closest("[data-act]");
+    if (!a) { if (S.ownerMenu && !e.target.closest(".menu")) { S.ownerMenu = false; S.transferPick = null; render(); } return; }
+    switch (a.dataset.act) {
+      case "owner": if (canTransfer()) { S.ownerMenu = !S.ownerMenu; S.transferPick = null; } break;
+      case "pick": S.transferPick = a.dataset.id; break;
+      case "cancel": S.transferPick = null; break;
+      case "transfer": S.owner = S.transferPick; S.transferPick = null; S.ownerMenu = false; S.role = "member"; break;
+      case "vm": {
+        if (VM[S.vm].disabled) return;
+        clearTimeout(timer);
+        if (S.vm === "running") { S.vm = "stopping"; timer = setTimeout(() => { S.vm = "stopped"; render(); }, 1600); }
+        else { S.vm = "starting"; timer = setTimeout(() => { S.vm = "running"; render(); }, 1600); }
+        break;
+      }
+    }
+    render();
+  });
+  app.addEventListener("input", (e) => {
+    if (e.target.id === "home-q") { S.q = e.target.value; render(); }
+    if (e.target.id === "fork-q") { S.qfork = e.target.value; render(); }
+  });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && S.ownerMenu) { S.ownerMenu = false; S.transferPick = null; render(); } });
+
+  render();
+})();
+</script>

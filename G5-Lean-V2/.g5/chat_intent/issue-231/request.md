@@ -1,0 +1,3 @@
+# Issue 231 attachment delivery request
+
+The user requested implementation of [issue 231](https://github.com/G5Labs/G5-Lean/issues/231) from the latest `origin/main` in a separate branch and worktree. The issue requires typed text/image/file/reference content to reach active Claude and Codex invocations, with authorized integrity-checked materialization, explicit unsupported-content failure, and production-path acceptance for queued input, retry, recovery and fork. The user specified local validation order, independent Claude CLI review after checks, no more than six review rounds, and final Cloud Rust and E2E CI on the PR.

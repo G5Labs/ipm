@@ -1,0 +1,707 @@
+{
+  "reason": "Ben’s source remains immutable. Editorial/reference transformations preserve meaning; human-authorized-amendment entries separately record later governing decisions, their authority and reason.",
+  "edits": {
+    "g5.team.onboarding": {
+      "kind": [
+        "export-format"
+      ],
+      "canonical": "- Organization creation commits its owner membership, dedicated docs repository and Base workspace metadata together so setup cannot leave a partly created team.",
+      "source_line": 32
+    },
+    "g5.user.settings": {
+      "kind": [
+        "export-format",
+        "plain-language-edit"
+      ],
+      "canonical": "- Each user has organization-specific settings for model selection, keys and interface preferences.",
+      "source_line": 39
+    },
+    "g5.workspace.fork-state": {
+      "kind": [
+        "export-format"
+      ],
+      "canonical": "- When a workspace is forked from a parent, it forks the branch state of the parent workspace branches. It \\[optionally\\] inherits any dirty file state from the parent at the instant it was forked.",
+      "source_line": 57
+    },
+    "g5.security.owner": {
+      "kind": [
+        "export-format"
+      ],
+      "canonical": "- Only the current active owner may mutate or use VM files, logs, execution, terminal or preview; administrator status, creation, invitation and past ownership confer no bypass. Transfer is the explicit authority change.",
+      "source_line": 89
+    },
+    "g5.data.identity.incarnation": {
+      "kind": [
+        "export-format"
+      ],
+      "canonical": "- A command or result for one VM instance must never be applied to its replacement. Late results must not overwrite the replacement's current editor, proposal or operation state; they may still be kept as history.",
+      "source_line": 91
+    },
+    "g5.security.credentials.publication": {
+      "kind": [
+        "export-format"
+      ],
+      "canonical": "- Git-provider credentials remain server-side rather than entering the guest environment.",
+      "source_line": 92
+    },
+    "g5.security.credentials.reserved-env": {
+      "kind": [
+        "export-format"
+      ],
+      "canonical": "- User settings and secrets must not override reserved platform identity, runtime or provider-home environment keys.",
+      "source_line": 93
+    },
+    "g5.documents.read.live-cache": {
+      "kind": [
+        "export-format",
+        "repair-link"
+      ],
+      "canonical": "- Bind live caches and streams to the owner and VM incarnation, invalidating them before rendering read-only content after stop, transfer or revocation. Read and Save completions follow the [VM instance invariant](#g5.data.identity.incarnation). Also discard late results after Stop, ownership transfer or access revocation. [Durable reader authority](../features/workspaces.g5.md#g5.workspace.durable-read) forbids a live fallback.",
+      "source_line": 94
+    },
+    "g5.documents.save": {
+      "kind": [
+        "export-format",
+        "repair-link"
+      ],
+      "canonical": "- File mutation preconditions include the editor's observed VM instance, under the [VM instance invariant](#g5.data.identity.incarnation).",
+      "source_line": 95
+    },
+    "g5.documents.save.acknowledgment": {
+      "kind": [
+        "export-format"
+      ],
+      "canonical": "- A successful Save acknowledges only the submitted content, preserving later edits and leaving them unsaved when they differ.",
+      "source_line": 96
+    },
+    "g5.preview.service": {
+      "kind": [
+        "export-format"
+      ],
+      "canonical": "- Preview is a visible cancellable service under live-access authority, exempt from bounded-work slots and wall-clock limits.",
+      "source_line": 98
+    },
+    "g5.provider.credential-files": {
+      "kind": [
+        "export-format"
+      ],
+      "canonical": "- Native subscription credentials remain in the owner VM home with restrictive permissions. Transfer purge owns release before an ownership change.",
+      "source_line": 100
+    },
+    "g5.provider.credential-files.import": {
+      "kind": [
+        "export-format"
+      ],
+      "canonical": "- Reject and scrub retired CODEX\\_AUTH\\_JSON instead of materializing uploaded or copied subscription credentials.",
+      "source_line": 101
+    },
+    "g5.provider.credential-files.cache": {
+      "kind": [
+        "export-format"
+      ],
+      "canonical": "- The native login cache may be read by tools running as that owner and may disappear with VM replacement; it is not durable platform credential authority. This developer-desktop trust model provides neither a credential broker nor isolation from other tools running as the owner.",
+      "source_line": 102
+    },
+    "g5.host.image-tiers": {
+      "kind": [
+        "export-format"
+      ],
+      "canonical": "- Base image tiers are prebuilt images keyed on their recipe inputs (Dockerfiles, lockfiles, build configuration, toolchain), never on source files; a VM pulls a published key through the door and builds an unpublished one locally.",
+      "source_line": 134
+    },
+    "g5.host.isolation": {
+      "kind": [
+        "export-format"
+      ],
+      "canonical": "- Workspace execution uses an isolated libkrun microVM; backend failure never falls back to an unisolated process.",
+      "source_line": 135
+    },
+    "g5.host.compile-cache": {
+      "kind": [
+        "export-format"
+      ],
+      "canonical": "- The guest image ships a baked compile cache for the dependency graph; cargo builds in the VM read further objects through the host's cache door, hitting the organization's own crates only at commits a trusted producer has built.",
+      "source_line": 142
+    },
+    "g5.host.readiness": {
+      "kind": [
+        "export-format"
+      ],
+      "canonical": "- Missing or incompatible runtime components prevent readiness.",
+      "source_line": 143
+    },
+    "g5.runtime.placement.sizing": {
+      "kind": [
+        "export-format"
+      ],
+      "canonical": "- At startup the host divides its measured CPU and RAM budget equally by the configured maximum VM count, using integer division. Reserve RAM for the host: at least 1536 MiB or ten percent of measured RAM, capped at half of RAM. Reject unsupported or impossible sizes before registration instead of silently oversubscribing or substituting fixed defaults. Explicit CPU/RAM overrides remain available within the same aggregate budget.",
+      "source_line": 147
+    },
+    "g5.runtime.control.versions": {
+      "kind": [
+        "export-format"
+      ],
+      "canonical": "- Negotiate host protocol and VM specification independently and reject unsupported versions.",
+      "source_line": 148
+    },
+    "g5.git.credentials": {
+      "kind": [
+        "deduplicate"
+      ],
+      "canonical": "- See the [server-side publication credential boundary](workspace_vm.g5.md#g5.security.credentials.publication).",
+      "source_line": 173,
+      "owner": "g5.security.credentials.publication"
+    },
+    "g5.git.pr-save": {
+      "kind": [
+        "consolidate"
+      ],
+      "canonical": "- Creating or updating a pull request saves and pushes pending source work before publishing an exact committed version.",
+      "source_line": 178,
+      "owner": "g5.git.pr-update"
+    },
+    "g5.git.pr-update": {
+      "kind": [
+        "deduplicate"
+      ],
+      "canonical": "- PR creation and update follow [save-before-publication](#g5.git.pr-save).",
+      "source_line": 183,
+      "owner": "g5.git.pr-save"
+    },
+    "g5.git.server-credentials": {
+      "kind": [
+        "deduplicate"
+      ],
+      "canonical": "- GitHub publication follows the [server-side publication credential boundary](workspace_vm.g5.md#g5.security.credentials.publication).",
+      "source_line": 205,
+      "owner": "g5.security.credentials.publication"
+    },
+    "g5.git.receipt.limits": {
+      "kind": [
+        "export-format"
+      ],
+      "canonical": "- Default capture limits are 100 MiB per file and 2 GiB per tree/pack, with oversize failing rather than silently excluding content.",
+      "source_line": 207
+    },
+    "g5.git.network.lease": {
+      "kind": [
+        "export-format"
+      ],
+      "canonical": "- Agent profiles require force-with-lease because the server cannot prove that the client incorporated a prior head.",
+      "source_line": 208
+    },
+    "g5.architecture.git_owner": {
+      "kind": [
+        "export-format"
+      ],
+      "canonical": "- Git owners expose checked receive-pack, publication and merge operations over reusable RepoStorage, GitRepo and workspace Git mechanisms, all executed through the Git execution layer. Retained remote integration owns provider forwarding and incoming publication behavior.",
+      "source_line": 209
+    },
+    "g5.architecture.repository_credentials": {
+      "kind": [
+        "export-format"
+      ],
+      "canonical": "- RepositoryCredentials resolves repository and operation authority for Git/governance callers. Binding snapshots, installation IDs, permission mapping, token minting and caches stay private to that service and its provider adapter.",
+      "source_line": 210
+    },
+    "g5.architecture.governance_owner": {
+      "kind": [
+        "export-format"
+      ],
+      "canonical": "- Git/governance coordinates publication and merge over exact Git versions through prepare/apply/land operations and separately authorized approval decisions.",
+      "source_line": 211
+    },
+    "g5.architecture.git_execution": {
+      "kind": [
+        "export-format"
+      ],
+      "canonical": "- g5-scm is the only platform code that opens repositories, links libgit2 or starts the git program. Its public operations use owned Git inputs and outcomes, keeping backend handles, command arguments and environment assembly private. Policy owners compose complete operations without their own libgit2 access; entry adapters call those owners. The native and libgit2 implementations share backend-independent types, and native-only consumers need not link libgit2. Application content consumers retain the authorized reader, which uses this layer without relinquishing source selection, pinning or read authority. Projection maintenance uses its declared typed-reader path. Moving a raw read into g5-scm does not authorize a caller to bypass either owner. This hides the libgit2-versus-native variation (stable abstractions) and gives credentials, environment and ref safety one home. Git that users and agents run interactively in the guest is their own tool (familiar Git), not platform code.",
+      "source_line": 212
+    },
+    "g5.architecture.scm_provider_client": {
+      "kind": [
+        "export-format"
+      ],
+      "canonical": "- Each repository provider (GitHub, GitLab) has one client behind ScmProvider that owns its provider operations, pagination and error meaning. Pull-request reads and lifecycle, merges, external issues, App installation binding, user repository-access checks, SCM-connection validation, organization/group listing and remote integrations request its typed operations; no caller receives its raw HTTP client or branches on the provider name itself. Clients consume credentials scoped to the requested operation. They own provider protocol and provider-specific errors; account, installation-binding and publication policy remains with their existing owners. Provider selection belongs at the composition boundary, not in each consumer. Two owners stay outside it because their credential and authority differ: OAuth login identity (authorize, token exchange, user and email lookup) in AuthService, and platform bug reports in PlatformIssueGithubClient. Calls that use a stored SCM connection token are provider operations, even when AuthService exposes them.",
+      "source_line": 213
+    },
+    "g5.settings.github-connection": {
+      "kind": [
+        "export-format"
+      ],
+      "canonical": "- When the deployment offers the GitHub App, offer disconnected users optional GitHub authorization after login, preserving their intended destination and allowing them to continue without connecting. Account settings owns connected-account status, connection, reconnection and disconnection. PR and external-issue surfaces direct users to this shared account connection; neither creates its own grant. Connection errors do not prevent platform sign-in, and a stored grant is not proof of current repository access.",
+      "source_line": 215
+    },
+    "g5.purpose.agents": {
+      "kind": [
+        "export-format"
+      ],
+      "canonical": "- Chat's goal is to support people asking coding agents to investigate and change their workspace through conversations.",
+      "source_line": 219
+    },
+    "g5.chat.adapters": {
+      "kind": [
+        "consolidate"
+      ],
+      "canonical": "- Provider adapters translate native Claude and Codex output into shared delivery, messages, tool activity, usage, questions, execution events and outcome records.",
+      "source_line": 242,
+      "owner": "g5.chat.translation"
+    },
+    "g5.chat.module-input": {
+      "kind": [
+        "deduplicate"
+      ],
+      "canonical": "- The platform supplies agent.turn with the [frozen attempt input](#g5.chat.frozen-attempt): prompt, attachments, provider configuration, permissions and limits.",
+      "source_line": 261,
+      "owner": "g5.chat.frozen-attempt"
+    },
+    "g5.chat.translation": {
+      "kind": [
+        "deduplicate"
+      ],
+      "canonical": "- Native output uses the shared records owned by [provider adapters](#g5.chat.adapters).",
+      "source_line": 263,
+      "owner": "g5.chat.adapters"
+    },
+    "g5.story.reuse-native-memory": {
+      "kind": [
+        "export-format"
+      ],
+      "canonical": "- Reuse native memory across sessions and teammates through the codebase's Git, without an additional harness. The agent controls reading, saving, consolidation and pruning; G5 adds no cross-provider reconciliation, semantic conflict resolution or extra pruning.",
+      "source_line": 269
+    },
+    "g5.terminal.image-tools": {
+      "kind": [
+        "deduplicate"
+      ],
+      "canonical": "- Terminal sessions use the [image environment](../software_architecture/hosts.g5.md#g5.host.environment) and [image/runtime tool precedence](../software_architecture/hosts.g5.md#g5.host.tool-path).",
+      "source_line": 280,
+      "owner": "g5.host.environment; g5.host.tool-path"
+    },
+    "g5.security.tenant.rls": {
+      "kind": [
+        "export-format",
+        "plain-language-edit"
+      ],
+      "canonical": "- Force row-level security (RLS) on tenant tables and use scoped transactions. Even privileged system-role operations require explicit typed organization, owner and resource checks. Deployment table-owner remediation uses the bounded cleanup form or an explicitly identified historical execution context; neither grants runtime access, and both restore FORCE RLS atomically without disabling RLS.",
+      "source_line": 288
+    },
+    "g5.workflow.ontology": {
+      "kind": [
+        "export-format",
+        "plain-language-edit"
+      ],
+      "canonical": "- Keep one consistent, nonduplicated account of consequential human intent and design, including important decisions made by agents.",
+      "source_line": 311
+    },
+    "g5.ontology.minimalism": {
+      "kind": [
+        "export-format",
+        "plain-language-edit"
+      ],
+      "canonical": "- Explain the essential intent and decisions briefly. Omit details that code already explains, but retain conditions, exceptions and reasons that change a rule’s meaning.",
+      "source_line": 312
+    },
+    "g5.ontology.lineage": {
+      "kind": [
+        "export-format",
+        "plain-language-edit"
+      ],
+      "canonical": "- Keep sources and attribution so readers can trace conflicting statements. When code and intent disagree, reconcile them without discarding valid intent.",
+      "source_line": 313
+    },
+    "g5.ontology.design-principles": {
+      "kind": [
+        "export-format",
+        "plain-language-edit"
+      ],
+      "canonical": "- Use sound design and clear abstractions. Record system invariants and policies so agents can apply them when generating code.",
+      "source_line": 314
+    },
+    "g5.ontology.formal-verification": {
+      "kind": [
+        "export-format",
+        "plain-language-edit"
+      ],
+      "canonical": "- Use the ontology to choose what matters for formal specifications and verification. Distinguish what tests, human checks, agent review and formal methods establish, and keep every claim tied to its evidence.",
+      "source_line": 315
+    },
+    "g5.ontology.sharing": {
+      "kind": [
+        "export-format",
+        "plain-language-edit"
+      ],
+      "canonical": "- Make important invariants, boundaries, data models and design and coding principles reusable across projects in an organization. Keep shared meaning consistent, avoid duplication and make responsibilities explicit.",
+      "source_line": 316
+    },
+    "g5.harness.human-readable-plan": {
+      "kind": [
+        "export-format",
+        "plain-language-edit"
+      ],
+      "canonical": "- A person reading the design and plan must be able to understand the request and the proposed implementation at a high level.",
+      "source_line": 317
+    },
+    "g5.workflow.ontology.review.conformance": {
+      "kind": [
+        "export-format",
+        "plain-language-edit"
+      ],
+      "canonical": "- Review the implementation against all relevant ontology rules, including unchanged rules. Follow the callers and consumers that could affect whether those rules hold.",
+      "source_line": 318
+    },
+    "g5.workflow.ontology.review.architecture": {
+      "kind": [
+        "export-format",
+        "plain-language-edit"
+      ],
+      "canonical": "- Review both the design and its implementation against the [system design principles](../concepts/system_design_principles.g5.md), including whether a simpler design meets the same requirements.",
+      "source_line": 319
+    },
+    "g5.design.minimal-mechanism": {
+      "kind": [
+        "export-format",
+        "relocate",
+        "plain-language-edit"
+      ],
+      "canonical": "- Choose a clear design with as little state and machinery as the requirements allow. Justify new state, migrations or mechanisms against simpler use of existing operations. Keep the implementation, integration, risk controls and tests complete; fewest lines is not the goal.",
+      "source_line": 333
+    },
+    "g5.design.abstraction": {
+      "kind": [
+        "export-format",
+        "relocate",
+        "plain-language-edit"
+      ],
+      "canonical": "- Let callers ask for meaningful work without knowing how it is done. Hide repeated complexity behind stable concepts, so replacing a provider, transport or store does not change unrelated workspace or task rules.",
+      "source_line": 334
+    },
+    "g5.design.durability": {
+      "kind": [
+        "export-format",
+        "relocate",
+        "plain-language-edit"
+      ],
+      "canonical": "- Decide whether data must survive a process crash before choosing its cache, journal or store. Respect existing durability rules; asynchronous work or a progress display does not by itself require persistence or stronger recovery.",
+      "source_line": 335
+    },
+    "g5.security.tenant": {
+      "kind": [
+        "export-format",
+        "plain-language-edit"
+      ],
+      "canonical": "- Keep records, references, events and resource access within their organization. Knowing another organization’s identifier never grants access, even through privileged operations.",
+      "source_line": 337
+    },
+    "g5.architecture.commands": {
+      "kind": [
+        "export-format",
+        "plain-language-edit"
+      ],
+      "canonical": "- Every entry path, including routes, hosts, callbacks, CLI and MCP, must use the responsible component’s operations or documented transaction steps. Callers must not recreate its rules, locks or raw writes; access and dependency boundaries should prevent this bypass. Existing functions or modules can own these operations without a new service. Preserve the documented dispatch steps and the flush callback-lock exception.",
+      "source_line": 338
+    },
+    "g5.chat.queue": {
+      "kind": [
+        "human-authorized-amendment"
+      ],
+      "canonical": "- Follow-up inputs queue without interrupting the current attempt and remain editable or withdrawable until reserved. Eligible [native Claude steering](#g5.conversation.delivery.steering) may reserve and deliver an input within the running attempt.",
+      "source_line": 227,
+      "authority": ".g5/chat_intent/issue-544/request.md @ 3d17915df39bcf4cbe0cabc08500de63ff46fbb2",
+      "reason": "The later explicit owner decision adopts native Claude steering, flush delivery and its bounded queue fallback; preserve the original source and the initial-input rule."
+    },
+    "g5.chat.uncertain-delivery": {
+      "kind": [
+        "human-authorized-amendment"
+      ],
+      "canonical": "- Uncertain initial-input delivery remains explicit; possible duplicate redelivery requires the owner’s choice. [Native steering fallback](#g5.conversation.delivery.steering-recovery) is the explicit exception: its ambiguous send may remain queued with accepted duplicate risk.",
+      "source_line": 229,
+      "authority": ".g5/chat_intent/issue-544/request.md @ 3d17915df39bcf4cbe0cabc08500de63ff46fbb2",
+      "reason": "The later explicit owner decision adopts native Claude steering, flush delivery and its bounded queue fallback; preserve the original source and the initial-input rule."
+    },
+    "g5.chat.frozen-attempt": {
+      "kind": [
+        "human-authorized-amendment"
+      ],
+      "canonical": "- Each attempt freezes its initial input revision, attachments, provider configuration, permissions and execution limits. [Native steering](#g5.conversation.delivery.steering) binds additional immutable input revisions individually without replacing that frozen configuration.",
+      "source_line": 239,
+      "authority": ".g5/chat_intent/issue-544/request.md @ 3d17915df39bcf4cbe0cabc08500de63ff46fbb2",
+      "reason": "The later explicit owner decision adopts native Claude steering, flush delivery and its bounded queue fallback; preserve the original source and the initial-input rule."
+    },
+    "g5.chat.background-work": {
+      "kind": [
+        "human-authorized-amendment"
+      ],
+      "canonical": "- After a run-ending result, the Claude adapter keeps the attempt and Claude's input open while Claude reports background tasks or background sub-agents that it owns. Input admission and closing share the [steering decision](#g5.conversation.delivery.steering); close only between turns with no remaining reported background work, native request or pending stdin write. A flushed input needs no consumption acknowledgement or extra hold; exit, harvest and settlement then proceed normally. The agent, not the platform, decides whether its background work continues or stops.",
+      "source_line": 265,
+      "authority": ".g5/chat_intent/issue-544/request.md @ 3d17915df39bcf4cbe0cabc08500de63ff46fbb2",
+      "reason": "The later explicit owner decision adopts native Claude steering, flush delivery and its bounded queue fallback; preserve the original source and the initial-input rule."
+    },
+    "g5.purpose.enterprise-personas": {
+      "kind": [
+        "plain-language-edit"
+      ],
+      "source_line": 5,
+      "canonical": "- Enable people across enterprise roles, from less technical product owners to experienced developers, to build complex software with agents."
+    },
+    "g5.purpose.intent-guidance": {
+      "kind": [
+        "plain-language-edit"
+      ],
+      "source_line": 6,
+      "canonical": "- Let people guide development by stating and evaluating high-level intent. Keep that intent and its history so agents can build software that follows it."
+    },
+    "g5.purpose.alignment": {
+      "kind": [
+        "plain-language-edit"
+      ],
+      "source_line": 7,
+      "canonical": "- Help people in different enterprise roles agree on what the software should do."
+    },
+    "g5.purpose.software-quality": {
+      "kind": [
+        "plain-language-edit"
+      ],
+      "source_line": 8,
+      "canonical": "- Produce well-designed, maintainable software that follows the agreed intent."
+    },
+    "g5.purpose.thin-client": {
+      "kind": [
+        "plain-language-edit"
+      ],
+      "source_line": 9,
+      "canonical": "- Require only a thin client; host all development resources remotely."
+    },
+    "g5.purpose.enterprise-integration": {
+      "kind": [
+        "plain-language-edit"
+      ],
+      "source_line": 10,
+      "canonical": "- Integrate with the infrastructure enterprises use to develop and deliver software."
+    },
+    "g5.purpose.models": {
+      "kind": [
+        "plain-language-edit"
+      ],
+      "source_line": 11,
+      "canonical": "- Support a choice of models and adapt as models improve."
+    },
+    "g5.concept.organization": {
+      "kind": [
+        "plain-language-edit"
+      ],
+      "source_line": 15,
+      "canonical": "- An organization is a group of people building enterprise software under shared policies. It is a strict boundary for data and metadata, governed by [tenant isolation](system_invariants.g5.md#g5.security.tenant)."
+    },
+    "g5.concept.repo": {
+      "kind": [
+        "plain-language-edit"
+      ],
+      "source_line": 16,
+      "canonical": "- A repository stores an organization’s source code and intent documents in Git."
+    },
+    "g5.concept.workspace": {
+      "kind": [
+        "plain-language-edit"
+      ],
+      "source_line": 17,
+      "canonical": "- A workspace is an isolated place to propose, discuss, implement and approve software changes. It owns repository branches and has a defined, configurable lifecycle. Resource isolation and approvals make experimentation safe; collaboration follows the workspace’s access rules."
+    },
+    "g5.concept.workspace-vm": {
+      "kind": [
+        "plain-language-edit"
+      ],
+      "source_line": 18,
+      "canonical": "- A workspace has at most one VM: the compute resources that modify its repositories and provide an API for resource-intensive tasks. VM failure can lose work that has not been pushed to a repository."
+    },
+    "g5.concept.host": {
+      "kind": [
+        "plain-language-edit"
+      ],
+      "source_line": 19,
+      "canonical": "- A host provides compute resources for one organization and keeps its workspace VMs isolated from each other."
+    },
+    "g5.concept.ontology": {
+      "kind": [
+        "plain-language-edit"
+      ],
+      "source_line": 20,
+      "canonical": "- The ontology is a minimal description, in English, of the system’s intent and design. Agents must keep the code consistent with it."
+    },
+    "g5.concept.issue": {
+      "kind": [
+        "plain-language-edit"
+      ],
+      "source_line": 21,
+      "canonical": "- An issue tracks a bug, feature, task or other planned work and connects it to the enterprise’s work-tracking process."
+    },
+    "g5.organization.membership": {
+      "kind": [
+        "plain-language-edit"
+      ],
+      "source_line": 25,
+      "canonical": "- Each organization lists the users authorized to use its G5 resources according to their role: admin, member or viewer."
+    },
+    "g5.organization.viewers": {
+      "kind": [
+        "plain-language-edit"
+      ],
+      "source_line": 26,
+      "canonical": "- Organization viewers may observe resources they can access but cannot be granted write permission on anything."
+    },
+    "g5.organization.admins": {
+      "kind": [
+        "plain-language-edit"
+      ],
+      "source_line": 28,
+      "canonical": "- Organization admins can do everything a member can, invite users, change other users' roles, remove other users, change organization settings, and grant or revoke permissions on organization-owned entities for themselves or others."
+    },
+    "g5.organization.invites": {
+      "kind": [
+        "plain-language-edit"
+      ],
+      "source_line": 29,
+      "canonical": "- Organization invitations become memberships when the invited user logs in, or expire after a reasonable time."
+    },
+    "g5.organization.host-limits": {
+      "kind": [
+        "plain-language-edit"
+      ],
+      "source_line": 30,
+      "canonical": "- Organization policies include scaling limits on the number of hosts."
+    },
+    "g5.organization.tenancy": {
+      "kind": [
+        "plain-language-edit"
+      ],
+      "source_line": 31,
+      "canonical": "- An organization is a strong tenancy boundary: its resources are inaccessible to other organizations. Examples include workspaces, hosts, workspace VMs and repositories. Every store of organization-specific information must protect that boundary, for example through database [row-level access control](../concepts/security.g5.md#g5.security.tenant.rls) or separate host pools."
+    },
+    "g5.user.identity": {
+      "kind": [
+        "plain-language-edit"
+      ],
+      "source_line": 36,
+      "canonical": "- A user is identified by an email address and has basic profile information and notification settings."
+    },
+    "g5.user.memberships": {
+      "kind": [
+        "plain-language-edit"
+      ],
+      "source_line": 37,
+      "canonical": "- A user belongs to one or more organizations."
+    },
+    "g5.user.authentication": {
+      "kind": [
+        "plain-language-edit"
+      ],
+      "source_line": 38,
+      "canonical": "- Users authenticate to the platform through an external OAuth service such as GitHub."
+    },
+    "g5.repo.ownership": {
+      "kind": [
+        "plain-language-edit"
+      ],
+      "source_line": 43,
+      "canonical": "- Each repository belongs to an organization, has a name and stores its complete Git history. An organization may have several repositories."
+    },
+    "g5.repo.management": {
+      "kind": [
+        "plain-language-edit"
+      ],
+      "source_line": 44,
+      "canonical": "- An organization can add and remove repositories."
+    },
+    "g5.repo.durability": {
+      "kind": [
+        "plain-language-edit"
+      ],
+      "source_line": 45,
+      "canonical": "- Repositories must withstand G5 infrastructure failures and should be backed up."
+    },
+    "g5.repo.git-interface": {
+      "kind": [
+        "plain-language-edit"
+      ],
+      "source_line": 46,
+      "canonical": "- Serve repositories through the standard Git interface."
+    },
+    "g5.repo.permissions": {
+      "kind": [
+        "plain-language-edit"
+      ],
+      "source_line": 47,
+      "canonical": "- Only authorized organization users may read a repository. Only authorized workspaces and the central API may write to it."
+    },
+    "g5.repo.external-binding": {
+      "kind": [
+        "plain-language-edit"
+      ],
+      "source_line": 48,
+      "canonical": "- A repository may connect to an external repository."
+    },
+    "g5.repo.docs": {
+      "kind": [
+        "plain-language-edit"
+      ],
+      "source_line": 49,
+      "canonical": "- Each organization has a docs repository for alignment documents. Every workspace includes it."
+    },
+    "g5.security.encryption": {
+      "kind": [
+        "plain-language-edit"
+      ],
+      "source_line": 287,
+      "canonical": "- Secrets stored in the database are encrypted."
+    },
+    "g5.issue.providers": {
+      "kind": [
+        "plain-language-edit"
+      ],
+      "source_line": 293,
+      "canonical": "- Support GitHub Issues; Jira Cloud support is planned."
+    },
+    "g5.issue.platform-bug": {
+      "kind": [
+        "plain-language-edit"
+      ],
+      "source_line": 307,
+      "canonical": "- Any user can report a platform bug with a “Bug” button, available in all practical UI states. Create these clearly labeled reports under separate deployment authority, with an optional screenshot assembled asynchronously from the page content."
+    },
+    "g5.ontology.material-change": {
+      "kind": [
+        "plain-language-edit"
+      ],
+      "source_line": 320,
+      "canonical": "- Add ontology only when work materially changes the design’s intent or introduces a significant concept."
+    },
+    "g5.ui.unavailable-actions": {
+      "kind": [
+        "plain-language-edit"
+      ],
+      "source_line": 326,
+      "canonical": "- Disable unavailable actions and explain why they are unavailable and how the user can enable them, using a tooltip or similar help."
+    },
+    "g5.ui.api-parity": {
+      "kind": [
+        "plain-language-edit"
+      ],
+      "source_line": 327,
+      "canonical": "- Make almost every UI action available to chat agents through the same backend API. Add commands to `g5d` where needed."
+    },
+    "g5.ui.launched-chat": {
+      "kind": [
+        "plain-language-edit"
+      ],
+      "source_line": 328,
+      "canonical": "- A chat started by a UI action behaves like any other chat and clearly identifies where it was launched."
+    },
+    "g5.invariant.migrations": {
+      "kind": [
+        "plain-language-edit"
+      ],
+      "source_line": 336,
+      "canonical": "- Do not edit existing migration SQL or checksums, except for migrations added on the current feature branch. Use a new numbered migration to change stored schema or data. A behavior change alone does not require new storage."
+    }
+  }
+}

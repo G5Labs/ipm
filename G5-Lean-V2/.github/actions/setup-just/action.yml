@@ -1,0 +1,140 @@
+name: Setup pinned just
+description: Install the checksum-verified just release used by self-hosted CI
+
+runs:
+  using: composite
+  steps:
+    - name: Resolve pinned release
+      id: release
+      shell: bash
+      env:
+        JUST_VERSION: "1.55.1"
+        JUST_TARBALL_X64: just-1.55.1-x86_64-unknown-linux-musl.tar.gz
+        JUST_SHA256_X64: b0ef600f0df20d5ae91ae931627c499fc52b477ffe5f5ea7b7b3ec616b16c778
+      run: |
+        set -euo pipefail
+
+        if [[ "${RUNNER_OS}" != "Linux" || "${RUNNER_ARCH}" != "X64" ]]; then
+          echo "FATAL: pinned just installer supports only Linux X64; got ${RUNNER_OS}/${RUNNER_ARCH}" >&2
+          exit 1
+        fi
+
+        tarball="${JUST_TARBALL_X64}"
+        cache_dir="${RUNNER_TEMP}/g5-tools/just"
+        mkdir -p "${cache_dir}"
+        {
+          echo "version=${JUST_VERSION}"
+          echo "sha256=${JUST_SHA256_X64}"
+          echo "tarball=${tarball}"
+          echo "archive=${cache_dir}/${tarball}"
+        } >> "${GITHUB_OUTPUT}"
+
+    - name: Restore pinned release cache
+      uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+      with:
+        path: ${{ steps.release.outputs.archive }}
+        key: g5-just-${{ runner.os }}-${{ runner.arch }}-${{ steps.release.outputs.version }}-${{ steps.release.outputs.sha256 }}
+
+    - name: Verify and install pinned release
+      shell: bash
+      env:
+        JUST_ARCHIVE: ${{ steps.release.outputs.archive }}
+        JUST_SHA256: ${{ steps.release.outputs.sha256 }}
+        JUST_TARBALL: ${{ steps.release.outputs.tarball }}
+        JUST_VERSION: ${{ steps.release.outputs.version }}
+      run: |
+        set -euo pipefail
+
+        just_url="https://github.com/casey/just/releases/download/${JUST_VERSION}/${JUST_TARBALL}"
+        partial_archive="${JUST_ARCHIVE}.part"
+
+        verify_archive() {
+          printf '%s  %s\n' "${JUST_SHA256}" "${JUST_ARCHIVE}" | sha256sum --check --status
+        }
+
+        download_archive() {
+          local attempt curl_exit delay http_code
+          rm -f "${partial_archive}"
+          for attempt in 1 2 3 4; do
+            if http_code="$(curl \
+              --fail \
+              --location \
+              --silent \
+              --show-error \
+              --proto '=https' \
+              --tlsv1.2 \
+              --connect-timeout 20 \
+              --max-time 300 \
+              --speed-limit 51200 \
+              --speed-time 60 \
+              --write-out '%{http_code}' \
+              --output "${partial_archive}" \
+              "${just_url}")"; then
+              mv "${partial_archive}" "${JUST_ARCHIVE}"
+              return 0
+            else
+              curl_exit=$?
+            fi
+
+            rm -f "${partial_archive}"
+            case "${curl_exit}" in
+              5|6|7|18|28|35|52|55|56|92)
+                ;;
+              22)
+                case "${http_code}" in
+                  408|429|5??)
+                    ;;
+                  *)
+                    echo "FATAL: ${just_url} returned permanent HTTP ${http_code}; not retrying" >&2
+                    return "${curl_exit}"
+                    ;;
+                esac
+                ;;
+              *)
+                echo "FATAL: ${just_url} failed with non-transient curl exit ${curl_exit}; not retrying" >&2
+                return "${curl_exit}"
+                ;;
+            esac
+
+            if [[ "${attempt}" == "4" ]]; then
+              echo "FATAL: ${just_url} failed after 4 attempts (curl_exit=${curl_exit}, http=${http_code})" >&2
+              return "${curl_exit}"
+            fi
+            delay=$((5 * (1 << (attempt - 1))))
+            echo "${just_url} transient failure (curl_exit=${curl_exit}, http=${http_code}); retrying in ${delay}s" >&2
+            sleep "${delay}"
+          done
+        }
+
+        if [[ -f "${JUST_ARCHIVE}" ]]; then
+          if verify_archive; then
+            echo "Using checksum-verified cached ${JUST_TARBALL}"
+          else
+            echo "Cached ${JUST_TARBALL} failed checksum verification; downloading a clean copy" >&2
+            rm -f "${JUST_ARCHIVE}"
+          fi
+        fi
+
+        if [[ ! -f "${JUST_ARCHIVE}" ]]; then
+          download_archive
+        fi
+        if ! verify_archive; then
+          echo "FATAL: ${JUST_TARBALL} sha256 mismatch; expected ${JUST_SHA256}" >&2
+          exit 1
+        fi
+
+        extract_dir="$(mktemp -d "${RUNNER_TEMP}/g5-just.XXXXXX")"
+        trap 'rm -rf "${extract_dir}" "${partial_archive}"' EXIT
+        tar -xzf "${JUST_ARCHIVE}" -C "${extract_dir}" just
+        if [[ ! -x "${extract_dir}/just" ]]; then
+          echo "FATAL: ${JUST_TARBALL} did not contain an executable just binary" >&2
+          exit 1
+        fi
+        sudo install -m 0755 "${extract_dir}/just" /usr/local/bin/just
+
+        actual_version="$(/usr/local/bin/just --version)"
+        if [[ "${actual_version}" != "just ${JUST_VERSION}" ]]; then
+          echo "FATAL: installed just version mismatch; expected 'just ${JUST_VERSION}', got '${actual_version}'" >&2
+          exit 1
+        fi
+        echo "Installed ${actual_version}"

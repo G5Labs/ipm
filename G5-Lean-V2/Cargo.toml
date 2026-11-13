@@ -1,0 +1,108 @@
+[workspace]
+resolver = "2"
+members = [
+    "backend/g5-contracts",
+    "backend/g5-auth",
+    "backend/g5-storage",
+    "backend/g5-semantic",
+    "backend/g5-scm",
+    "backend/g5-internal-api",
+    "backend/g5-authz",
+    "backend/g5-api-foundation",
+    "backend/g5-api-data",
+    "backend/g5-api-core",
+    "backend/g5-api-routes",
+    "backend/g5-api",
+    "backend/g5d",
+    "backend/g5d-agent",
+    "backend/g5d-dispatch",
+    "backend/g5d-foundation",
+    "backend/g5d-isolation",
+    "backend/g5d-host",
+    "tests/e2e",
+    "tools/fake-provider-cli",
+]
+
+[profile.g5-dev]
+inherits = "dev"
+debug = 0
+incremental = true
+
+[workspace.dependencies]
+# Async runtime
+tokio = { version = "1", features = ["full"] }
+
+# Scoped temporary files/directories (regeneration scratch stores, tests)
+tempfile = "3"
+
+# Web framework
+axum = { version = "0.7", features = ["ws", "macros", "multipart"] }
+
+# Database
+sqlx = { version = "0.8", features = [
+    "runtime-tokio",
+    "tls-rustls-ring-native-roots",
+    "postgres",
+    "uuid",
+    "chrono",
+    "json",
+    "migrate",
+    "rust_decimal",
+] }
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
+
+# Enum variant iteration (closed-vocabulary coverage contracts)
+strum = { version = "0.27", features = ["derive"] }
+
+# Identifiers
+uuid = { version = "1", features = ["v4", "v5", "v7", "serde"] }
+
+# Observability
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+
+# CLI
+clap = { version = "4", features = ["derive", "env"] }
+
+# HTTP middleware / tower
+tower = { version = "0.5", features = ["full"] }
+tower-http = { version = "0.6", features = ["cors", "compression-gzip", "trace", "request-id", "limit"] }
+
+# Auth
+jsonwebtoken = "9"
+
+# HTTP client
+reqwest = { version = "0.12", features = ["json", "rustls-tls", "stream"], default-features = false }
+
+# Retry/backoff policy
+backon = { version = "1", features = ["tokio-sleep"] }
+
+# Time
+chrono = { version = "0.4", features = ["serde"] }
+
+# Markdown parsing
+pulldown-cmark = "0.13"
+
+# Code parsing (tree-sitter)
+tree-sitter = "0.26"
+tree-sitter-rust = "0.24"
+tree-sitter-python = "0.25"
+tree-sitter-typescript = "0.23"
+tree-sitter-javascript = "0.25"
+tree-sitter-go = "0.25"
+tree-sitter-java = "0.23"
+tree-sitter-c = "0.24"
+tree-sitter-cpp = "0.23"
+
+# Workspace-wide debuginfo level (system_invariants/rust_workspace_manifest_policy D5):
+# line tables only. Full debuginfo (=2) OOM-killed rustc on the 2 GB/vCPU CI
+# workers during coverage test compiles, and per-step CARGO_PROFILE_* overrides
+# fork Cargo's fingerprint families between baked warmup and live CI compiles.
+# The test profile inherits this. Restore variable inspection locally with:
+#   cargo build --config profile.dev.debug=2
+[profile.dev]
+debug = 1

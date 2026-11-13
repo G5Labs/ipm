@@ -1,0 +1,71 @@
+[Unit]
+Description=G5 worker host supervisor (rev 7)
+Documentation=https://github.com/g5-ai/g5
+After=network-online.target
+Wants=network-online.target
+# Guard against a half-baked image where 60-layout-dirs.sh did not run, or
+# the g5d binary wasn't staged. Without these the unit would start, fail
+# fast in the wrapper, and (with Restart=on-failure) churn the journal.
+ConditionPathExists=/var/g5d-data/.g5-layout-v7
+ConditionPathExists=/opt/g5-host/bin/g5d
+ConditionPathExists=/var/g5d-data/runtime/bin/g5d
+
+[Service]
+Type=simple
+EnvironmentFile=-/etc/g5/host.env
+
+# The wrapper probes `g5d host --help` and either execs into the real
+# supervisor (PR-rev7-3) or exits 0 cleanly (today). See files/g5d-host
+# for rationale.
+ExecStart=/usr/local/libexec/g5d-host
+
+WorkingDirectory=/var/g5d-data
+RuntimeDirectory=g5d
+StateDirectory=g5d
+LogsDirectory=g5d
+
+# Concurrent dispatch, Git and filesystem preparation helpers.
+LimitNOFILE=1048576
+
+# Restart policy: PR-rev7-3's supervisor crashes are recoverable. RestartSec
+# is intentionally long (30s) so a tight crash loop can't flood the journal
+# faster than it can be rotated.
+Restart=on-failure
+RestartSec=30s
+
+# TimeoutStopSec MUST exceed the supervisor's drain timeout (default 1800s in
+# `g5d host`) or systemd will SIGKILL the supervisor mid-drain and orphan
+# in-flight customer microVMs. 2100s (35 min) gives the supervisor's drain
+# 1800s + a 300s buffer for slow g5-api report_exited round-trips.
+# Codex final-review B4 of PR #117 flagged this gap.
+TimeoutStopSec=2100s
+KillSignal=SIGTERM
+
+# Policy installation, private input ownership and non-root child supervision.
+# Guest filesystem operations execute in the VM and need no host mount privileges.
+AmbientCapabilities=CAP_NET_ADMIN CAP_CHOWN CAP_DAC_OVERRIDE CAP_FOWNER CAP_SETUID CAP_SETGID CAP_KILL
+CapabilityBoundingSet=CAP_NET_ADMIN CAP_SYS_RESOURCE CAP_CHOWN CAP_DAC_OVERRIDE CAP_FOWNER CAP_SETUID CAP_SETGID CAP_KILL
+KillMode=control-group
+Delegate=yes
+DelegateSubgroup=supervisor
+
+# The host executable bundle stays outside the writable data tree.
+# The separate guest bundle is immutable even to the host service.
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/var/g5d-data /var/lib/g5d/rootfs
+ReadOnlyPaths=/opt/g5-host /var/g5d-data/runtime
+PrivateTmp=true
+ProtectHome=true
+
+# Cloud Hypervisor opens KVM under its dedicated non-root identity.
+DeviceAllow=/dev/kvm rw
+
+# Logging: structured + tagged so the customer-operated deployments can
+# route to their own log stack without parsing.
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=g5d-host
+
+[Install]
+WantedBy=multi-user.target

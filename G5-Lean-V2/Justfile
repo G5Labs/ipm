@@ -1,0 +1,2982 @@
+# G5 Development Task Runner
+# Run `just` to see all available recipes.
+# Run `just <recipe>` to execute a recipe.
+
+set dotenv-load := false
+set shell := ["bash", "-euo", "pipefail", "-c"]
+
+# SQLx offline mode — use cached .sqlx/ query data instead of live database
+export SQLX_OFFLINE := "true"
+
+# Requested spelling; retain ci-docker and its arguments for existing callers.
+alias docker-ci := ci-docker
+
+# Default: list all recipes
+default:
+    @just --list
+
+# Verify relocated source, embedded asset, and Docker build paths without starting services.
+layout-check:
+    python3 scripts/check-layout.py
+
+# Validate every recipe's shell syntax, script entry points and Rust test targets.
+commands-check:
+    python3 scripts/check-just-commands.py
+
+# ═══════════════════════════════════════════════
+# Setup
+# ═══════════════════════════════════════════════
+
+# Initialize dev environment (run after container creation)
+setup:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "=== Installing client dependencies ==="
+    cd frontend && npm ci
+    echo "=== Installing Playwright browsers ==="
+    if [ -d /opt/ms-playwright ]; then
+        # g5d-g5dev guest: only Chromium's system libraries and the pinned
+        # Chromium are baked (infra/docker/Dockerfile.g5d-g5dev), so install
+        # Chromium alone and run browser tests with --project=chromium there;
+        # Firefox/WebKit would download but fail to launch without their
+        # libraries. The 1.58 line refuses Ubuntu 26.04 without the same
+        # platform override the image build uses; the installer skips a
+        # revision already present. --with-deps is omitted because it would
+        # re-run apt against a distro map that has no 26.04 entry.
+        case "$(uname -m)" in aarch64|arm64) pw_arch=arm64 ;; *) pw_arch=x64 ;; esac
+        PLAYWRIGHT_HOST_PLATFORM_OVERRIDE="ubuntu24.04-${pw_arch}" npx playwright install chromium
+    else
+        npx playwright install --with-deps
+    fi
+    cd ..
+    echo "=== Setup complete ==="
+
+# ═══════════════════════════════════════════════
+# Development
+# ═══════════════════════════════════════════════
+
+# Start the compose dev stack only (Postgres + g5-api + Edge client)
+# and seed the G5 Labs org. No native workspace-VM host: this is the part of
+# `dev-up` that can run anywhere docker runs, including inside a workspace
+# preview microVM: the `full-stack-no-worker` profile
+# (.g5/preview_profiles/full-stack-no-worker.yaml) runs exactly this, and the
+# `full-stack` profile runs `dev-up`, whose worker is a process-mode host
+# because a microVM has no nested virtualization.
+dev-stack-up *FLAGS:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # A stack identity exported by the caller (the preview profile beside the
+    # developer's stack) survives every dotenv sourced below (review R22).
+    source scripts/lib/stack-identity.sh
+    g5_pin_stack_identity
+    # Source .env so LLM keys are available to docker compose interpolation
+    if [[ -f .env ]]; then
+      set -a; source .env; set +a
+    fi
+    # One stack identity for every Compose consumer (ontology
+    # g5.runtime.boot.backend.process-local): the project, the container
+    # names, the volume names, the image tag and the published ports all
+    # follow G5_COMPOSE_PROJECT / G5_COMPOSE_VOLUMES / G5_IMAGE_TAG /
+    # G5_PORT_*, so a preview of this stack beside the developer's own stack
+    # never reuses or deletes the developer's containers and database.
+    export G5_COMPOSE_PROJECT="${G5_COMPOSE_PROJECT:-g5-dev}"
+    # The local API admits a process-isolation host only while this developer
+    # selected process mode for the host (ontology
+    # g5.runtime.boot.backend.process-local): the same two flags that start
+    # such a host open the admission, and nothing else sets it. An ambient or
+    # dotenv value is never honoured.
+    export G5_ALLOW_PROCESS_ISOLATION_HOSTS=false
+    if [[ "${G5D_ISOLATION_MODE:-microvm}" == "process" ]]; then
+      case "${G5D_ALLOW_PROCESS_ISOLATION:-}" in
+        1|true) export G5_ALLOW_PROCESS_ISOLATION_HOSTS=true ;;
+      esac
+    fi
+    # Cache door profile (ontology g5.runtime.cache.door): inside a workspace
+    # VM whose host published one, G5_BASE_IMAGE_REGISTRY names the door's
+    # pull-through of the tiers delivery already built, so
+    # docker-build-common-base pulls them instead of building them here.
+    # Explicit values in the environment or .env win over the profile.
+    source scripts/lib/dev-cache-profile.sh
+    g5_load_dev_cache_profile
+    # Optional local-only GitHub App settings for platform issue reporting.
+    # Source after .env so its real secret values override any empty examples.
+    platform_issue_env_file="${G5_DEV_PLATFORM_ISSUE_ENV_FILE:-.env.platform-issue.local}"
+    if [[ -f "$platform_issue_env_file" ]]; then
+      set -a; source "$platform_issue_env_file"; set +a
+    fi
+    # Optional local-only G5 GitHub App settings for organization bindings.
+    github_app_env_file="${G5_DEV_GITHUB_APP_ENV_FILE:-.env.github-app.local}"
+    if [[ -f "$github_app_env_file" ]]; then
+      set -a; source "$github_app_env_file"; set +a
+    fi
+    g5_restore_stack_identity
+    # Inside a full-stack preview the browser reaches this stack from the
+    # preview's isolated origin, which g5d exports as G5D_PREVIEW_ORIGIN
+    # (ontology g5.workspace.preview-origin-security). The API trusts it for
+    # the cookie refresh that org switching uses, beside the Vite default,
+    # and names that cookie outside `g5_`, which the preview relay reserves
+    # for the platform and never relays.
+    if [[ -n "${G5D_PREVIEW_ORIGIN:-}" ]]; then
+      export G5_CORS_ALLOWED_ORIGINS="${G5_CORS_ALLOWED_ORIGINS:-http://localhost:5173},${G5D_PREVIEW_ORIGIN}"
+      export G5_REFRESH_COOKIE_NAME="${G5_REFRESH_COOKIE_NAME:-preview_refresh}"
+    fi
+    # G5_DEV_WITHDRAW_EDGE=1 removes a published edge and nothing else, under
+    # the same identity, before dev-up stops or replaces what stands behind
+    # it. It needs no secrets or image settings, so it runs before they are
+    # loaded: a secrets failure must not leave the edge published.
+    if [[ "${G5_DEV_WITHDRAW_EDGE:-0}" == "1" ]]; then
+      docker compose -p "${G5_COMPOSE_PROJECT:-g5-dev}" -f infra/docker/docker-compose.dev.yml rm -sf edge
+      exit 0
+    fi
+    source scripts/lib/local-stack-secrets.sh
+    g5_load_local_stack_secrets
+    source scripts/dev-workspace-image-env.sh
+    EXTRA=""
+    for flag in {{FLAGS}}; do
+      case "$flag" in
+        --no-cache) EXTRA="--no-cache" ;;
+      esac
+    done
+    # G5_DEV_EDGE_ONLY=1 is the second half of a deferred start (dev-up): the
+    # edge alone, under the same identity, overlays and secrets as the first
+    # half, with --no-deps so this phase can never recreate the API beneath
+    # it with a differently configured environment. Forwarding runs again so
+    # a devcontainer gets the UI port it could not forward before.
+    if [[ "${G5_DEV_EDGE_ONLY:-0}" == "1" ]]; then
+      docker compose -p "${G5_COMPOSE_PROJECT:-g5-dev}" -f infra/docker/docker-compose.dev.yml up -d --no-build --no-deps edge
+      # The edge publishes its port the moment it starts; an edge that never
+      # becomes healthy must not stay published and hold the port.
+      if ! ./scripts/wait-for-healthy.sh infra/docker/docker-compose.dev.yml 90; then
+        docker compose -p "${G5_COMPOSE_PROJECT:-g5-dev}" -f infra/docker/docker-compose.dev.yml rm -sf edge || true
+        exit 1
+      fi
+      if [[ -n "${REMOTE_CONTAINERS:-}" || -n "${CODESPACES:-}" || -f /.dockerenv ]]; then
+        command -v socat >/dev/null 2>&1 && ./scripts/forward-ports.sh || true
+      fi
+      echo "Edge published: http://localhost:${G5_PORT_EDGE:-3000}"
+      exit 0
+    fi
+    just docker-build-common-base
+    if [[ "${COMPOSE_PARALLEL_LIMIT:-}" == "1" ]]; then
+      # One image at a time (a workspace VM sets this above): compose v2 builds
+      # the services through BuildKit concurrently otherwise, and the Rust
+      # compile plus the vite build would compete for the guest's memory.
+      for service in oauth-stub g5-api edge; do
+        docker compose -p "${G5_COMPOSE_PROJECT:-g5-dev}" -f infra/docker/docker-compose.dev.yml build $EXTRA "$service"
+      done
+    else
+      docker compose -p "${G5_COMPOSE_PROJECT:-g5-dev}" -f infra/docker/docker-compose.dev.yml build $EXTRA oauth-stub g5-api edge
+    fi
+    # Startup-only up phase: --no-build keeps the build set owned by the two
+    # build commands above. No global --pull never here — the local-only
+    # g5/api:dev services already pin pull_policy:never in the compose file,
+    # and the image-only infra service (postgres) needs compose's
+    # default missing-image pull on fresh daemons (preview VMs) — see D5.
+    # --remove-orphans retires containers of services the file no longer
+    # defines (the redis container of stacks started before 2026-10-09).
+    # G5_DEV_DEFER_EDGE=1 leaves the edge (the published UI port) for the
+    # caller to start once a workspace host is attached (dev-up).
+    DEV_STACK_SERVICES="postgres oauth-stub g5-api g5-daemon edge"
+    if [[ "${G5_DEV_DEFER_EDGE:-0}" == "1" ]]; then
+      DEV_STACK_SERVICES="postgres oauth-stub g5-api g5-daemon"
+      # A rerun must not keep publishing the previous edge while the API is
+      # replaced and the host restarts: remove it now, the caller republishes.
+      # An absent edge is fine (rm reports nothing to remove); a removal that
+      # fails stops the start here rather than leaving the UI published.
+      docker compose -p "${G5_COMPOSE_PROJECT:-g5-dev}" -f infra/docker/docker-compose.dev.yml rm -sf edge
+    fi
+    docker compose -p "${G5_COMPOSE_PROJECT:-g5-dev}" -f infra/docker/docker-compose.dev.yml up -d --no-build --remove-orphans $DEV_STACK_SERVICES
+    ./scripts/wait-for-healthy.sh infra/docker/docker-compose.dev.yml 90
+    # In devcontainers (Docker-outside-of-Docker), container port bindings
+    # land on the host, not inside the devcontainer.  Proxy them so VS Code
+    # can auto-forward the ports to the user's browser.
+    if [[ -n "${REMOTE_CONTAINERS:-}" || -n "${CODESPACES:-}" || -f /.dockerenv ]]; then
+      command -v socat >/dev/null 2>&1 && ./scripts/forward-ports.sh || true
+    fi
+    # Seed the G5 Labs org so the UI is functional out of the box
+    SEED_WS_ID=$(./scripts/seed-dev-org.sh auto)
+    echo ""
+    echo "Dev stack (containers only) ready."
+    echo "  App:      http://localhost:${G5_PORT_EDGE:-3000}  (login via OAuth)"
+    echo "  API:      http://localhost:${G5_PORT_API:-7500}"
+
+# Tear down the containers of one stack identity and nothing else: the
+# counterpart of dev-stack-up, what the `full-stack-no-worker` profile's Close
+# runs and the last step of `dev-down` (the `full-stack` profile's Close), so a preview on a process-isolation host never reaches the developer's
+# own worker host (ontology g5.runtime.boot.backend.process-local).
+dev-stack-down:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # Teardown addresses the stack startup selected (review R24): the exported
+    # identity first, then the identity `.env` names, then the defaults, so a
+    # developer stack started from a custom dotenv is the one torn down and a
+    # preview's Close keeps its own exports.
+    source scripts/lib/stack-identity.sh
+    g5_pin_stack_identity
+    if [[ -f .env ]]; then
+      set -a; source .env; set +a
+    fi
+    g5_restore_stack_identity
+    docker compose -p "${G5_COMPOSE_PROJECT:-g5-dev}" -f infra/docker/docker-compose.dev.yml --profile demo down -v --remove-orphans
+
+# Start dev stack (Postgres + g5-api + workspace host + Edge client)
+# Reads LLM API keys from .env and forwards them to containers.
+# Seeds the G5 Labs org and starts one workspace host. Login via OAuth at :3000.
+# "Up" means a workspace can be opened: the host binary is built first, the
+# containers come up without the edge, the host starts and registers, and the
+# edge (the published UI) is started last, so the port answers only with a
+# worker behind it (ontology g5.runtime.boot.backend.process-local; the
+# `full-stack` preview profile relies on this).
+dev-up *FLAGS:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # .env still feeds this recipe's own knobs (G5_WORKER_ORGS,
+    # G5D_HOST_MAX_MICROVMS); the compose stack sources it again itself. An
+    # exported stack identity stays ahead of it (review R22/R24).
+    source scripts/lib/stack-identity.sh
+    g5_pin_stack_identity
+    if [[ -f .env ]]; then
+      set -a; source .env; set +a
+    fi
+    g5_restore_stack_identity
+    # Withdraw a previously published UI before anything below can stop its
+    # worker (a mode switch stops the old host before the build) or replace
+    # its API: the port answers again only once a host is attached.
+    G5_DEV_WITHDRAW_EDGE=1 just dev-stack-up
+    just worker-host-build
+    G5_DEV_DEFER_EDGE=1 just dev-stack-up {{FLAGS}}
+    # The recipe derives its org solely from its positional argument
+    # (empty ⇒ default org), so ambient env can never redirect the
+    # default host; G5_WORKER_ORGS below is the only dev-up knob for
+    # extra org hosts.
+    just worker-host-start
+    # The host log's "started" line precedes its registration: prove through
+    # the selected API that the host just started or reused (its id is in the
+    # env file worker-host-start wrote) is ready and live before publishing
+    # the UI. A host stopped moments ago still reads as live and must not
+    # stand in for it.
+    STARTED_HOST_ID="$(sed -n 's/^G5D_HOST_ID=//p' infra/docker/demo-worker.env 2>/dev/null | head -1 || true)"
+    ./scripts/wait-for-worker-host.sh "${G5_WORKER_HOST_API_URL:-http://localhost:${G5_PORT_API:-7500}}" 120 "${STARTED_HOST_ID}"
+    G5_DEV_EDGE_ONLY=1 just dev-stack-up
+    # Process isolation (g5.runtime.boot.backend.process-local) is a
+    # localhost-only developer choice: G5D_ISOLATION_MODE=process
+    # G5D_ALLOW_PROCESS_ISOLATION=1 just dev-up runs workspaces as host
+    # processes; the default is unchanged.
+    if [[ "${G5D_ISOLATION_MODE:-microvm}" == "process" ]]; then
+      WORKER_LINE="native process-isolation host (unisolated host processes, ${G5D_HOST_MAX_MICROVMS:-1} slot)"
+    else
+      WORKER_LINE="native workspace-VM host (${G5D_HOST_MAX_MICROVMS:-2} VM slots)"
+    fi
+    # Opt-in per-org host instances (justfile spec D5): G5_WORKER_ORGS
+    # lists extra org slugs (comma/space separated, typically set in .env) to
+    # start a native host for after the default worker. A slug missing from
+    # the current DB generation is skipped with a warning (a fresh
+    # `dev-down -v` DB only has the seeded G5 Labs org until others are
+    # recreated); secondary start failures warn-and-continue — only the
+    # default host start above is fatal to dev-up.
+    if [[ -n "${G5_WORKER_ORGS:-}" ]]; then
+        # Discovery must fail LOUDLY, never as "org not found": an API/auth
+        # outage yielding an empty org list would silently skip every host
+        # while dev-up reports ready (PR #1530 review). Bounded fail-on-error
+        # curl; on discovery failure skip the whole roster with an explicit
+        # message instead of misreporting orgs as absent.
+        DISCOVERY_OK=1
+        # The roster comes from the selected stack's API, the same address the
+        # worker recipes register with (review R33): the dedicated override,
+        # otherwise the selected API port.
+        DISCOVERY_API_URL="${G5_WORKER_HOST_API_URL:-http://localhost:${G5_PORT_API:-7500}}"
+        SLUG_JWT=$(curl -fsS --retry 3 --retry-all-errors --connect-timeout 5 --max-time 30 \
+          -X POST "${DISCOVERY_API_URL}/api/v1/auth/test-token" \
+          -H 'content-type: application/json' -d '{"email":"demo@g5.dev"}' 2>/dev/null \
+          | jq -r '.data.jwt // empty' 2>/dev/null) || DISCOVERY_OK=0
+        [[ -n "${SLUG_JWT:-}" ]] || DISCOVERY_OK=0
+        AVAILABLE_SLUGS=""
+        if [[ "$DISCOVERY_OK" == "1" ]]; then
+          AVAILABLE_SLUGS=$(curl -fsS --retry 3 --retry-all-errors --connect-timeout 5 --max-time 30 \
+            -H "Authorization: Bearer ${SLUG_JWT}" "${DISCOVERY_API_URL}/api/v1/orgs" 2>/dev/null \
+            | jq -r '.data[].orgSlug' 2>/dev/null) || DISCOVERY_OK=0
+        fi
+        if [[ "$DISCOVERY_OK" != "1" ]]; then
+          echo "⚠  org discovery failed (API/auth error) — NOT starting G5_WORKER_ORGS hosts; start manually once the API is reachable: just worker-host-start <org>"
+        else
+          # The slug-less default host above already serves the seeded default
+          # org (g5labs when present, else the first org) — starting a
+          # roster host for the same org would double-host it (spec D7:
+          # one instance per org identity).
+          if grep -qx "g5labs" <<<"$AVAILABLE_SLUGS"; then
+            DEFAULT_ORG_SLUG="g5labs"
+          else
+            DEFAULT_ORG_SLUG=$(head -1 <<<"$AVAILABLE_SLUGS")
+          fi
+          # read -a splits without pathname expansion (a literal '*' in the
+          # list must never glob into filenames — PR #1530 review).
+          IFS=', ' read -r -a ORG_ROSTER <<< "${G5_WORKER_ORGS}"
+          for slug in "${ORG_ROSTER[@]}"; do
+            [[ -n "$slug" ]] || continue
+            if [[ ! "$slug" =~ ^[a-z0-9][a-z0-9-]*$ ]]; then
+              echo "⚠  invalid org slug '$slug' in G5_WORKER_ORGS — skipping"
+              continue
+            fi
+            if [[ "$slug" == "$DEFAULT_ORG_SLUG" ]]; then
+              echo "⚠  org '$slug' is already served by the default worker host — skipping duplicate"
+              continue
+            fi
+            if ! grep -qx "$slug" <<<"$AVAILABLE_SLUGS"; then
+              echo "⚠  org '$slug' not in this DB generation — skipping its worker host (recreate the org, then: just worker-host-start $slug)"
+              continue
+            fi
+            echo "→ starting per-org worker host '$slug'"
+            if just worker-host-start "$slug"; then
+              WORKER_LINE="${WORKER_LINE} + org host '$slug'"
+            else
+              echo "⚠  per-org worker host '$slug' failed to start — continuing (retry: just worker-host-start $slug)"
+            fi
+          done
+        fi
+    fi
+    echo ""
+    echo "Dev stack ready."
+    echo "  App:      http://localhost:${G5_PORT_EDGE:-3000}  (login via OAuth)"
+    echo "  API:      http://localhost:${G5_PORT_API:-7500}"
+    echo "  Host:     ${WORKER_LINE}"
+
+# Stop dev stack (including workers — native host first, then containers)
+dev-down:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # The stack identity is resolved once by each recipe below, so the host
+    # stopped and the containers torn down belong to the same stack.
+    just worker-host-stop || echo "⚠  worker host stop reported failures — continuing container teardown"
+    just dev-stack-down
+
+# Fully reset and re-seed the dev stack for a fresh manual end-user eval.
+eval-end-user-fresh *FLAGS:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    just dev-down 2>/dev/null || true
+    just dev-up {{FLAGS}}
+    echo ""
+    echo "Fresh end-user eval stack ready."
+    echo "Use a private/incognito browser window (or clear site data for localhost:3000 and localhost:7500)."
+    echo "Use a clean managed workspace checkout directory for any local CLI/manual workflow."
+
+# Start dev stack with clean Docker build (no layer cache)
+dev-rebuild: (dev-up "--no-cache")
+
+# Start dev stack (alias kept for muscle-memory — same as dev-up)
+dev: dev-up
+
+# Rebuild/recreate API services from current Rust source without resetting dev volumes. Supports --no-cache.
+dev-restart-backend *FLAGS:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # The restart addresses the stack startup selected: an exported identity
+    # stays ahead of every dotenv sourced here (review R24).
+    source scripts/lib/stack-identity.sh
+    g5_pin_stack_identity
+    if [[ -f .env ]]; then
+      set -a; source .env; set +a
+    fi
+    # Keep backend recreates on the same optional local platform-issue overlay
+    # as `dev-up`, including its multiline GitHub App PEM value.
+    platform_issue_env_file="${G5_DEV_PLATFORM_ISSUE_ENV_FILE:-.env.platform-issue.local}"
+    if [[ -f "$platform_issue_env_file" ]]; then
+      set -a; source "$platform_issue_env_file"; set +a
+    fi
+    # Optional local-only G5 GitHub App settings for organization bindings.
+    github_app_env_file="${G5_DEV_GITHUB_APP_ENV_FILE:-.env.github-app.local}"
+    if [[ -f "$github_app_env_file" ]]; then
+      set -a; source "$github_app_env_file"; set +a
+    fi
+    g5_restore_stack_identity
+    source scripts/lib/local-stack-secrets.sh
+    g5_load_local_stack_secrets
+    source scripts/dev-workspace-image-env.sh
+    EXTRA=""
+    for flag in {{FLAGS}}; do
+      case "$flag" in
+        --no-cache) EXTRA="--no-cache" ;;
+        *) echo "Unknown flag for dev-restart-backend: $flag" >&2; exit 2 ;;
+      esac
+    done
+    docker compose -p "${G5_COMPOSE_PROJECT:-g5-dev}" -f infra/docker/docker-compose.dev.yml up -d --no-build --remove-orphans postgres oauth-stub
+    just docker-build-common-base
+    docker compose -p "${G5_COMPOSE_PROJECT:-g5-dev}" -f infra/docker/docker-compose.dev.yml build $EXTRA g5-api
+    docker compose -p "${G5_COMPOSE_PROJECT:-g5-dev}" -f infra/docker/docker-compose.dev.yml run --rm --no-deps db-migrate
+    docker compose -p "${G5_COMPOSE_PROJECT:-g5-dev}" -f infra/docker/docker-compose.dev.yml up -d --no-build --no-deps --force-recreate --remove-orphans g5-api g5-daemon
+    ./scripts/wait-for-healthy.sh infra/docker/docker-compose.dev.yml 90
+    echo "Backend restarted from rebuilt g5-api image."
+
+# Rebuild/recreate Docker edge from current client source without resetting dev volumes. Supports --no-cache.
+dev-restart-frontend *FLAGS:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # The restart addresses the stack startup selected (review R24).
+    source scripts/lib/stack-identity.sh
+    g5_pin_stack_identity
+    if [[ -f .env ]]; then
+      set -a; source .env; set +a
+    fi
+    g5_restore_stack_identity
+    EXTRA=""
+    for flag in {{FLAGS}}; do
+      case "$flag" in
+        --no-cache) EXTRA="--no-cache" ;;
+        *) echo "Unknown flag for dev-restart-frontend: $flag" >&2; exit 2 ;;
+      esac
+    done
+    just docker-build-common-base
+    docker compose -p "${G5_COMPOSE_PROJECT:-g5-dev}" -f infra/docker/docker-compose.dev.yml build $EXTRA edge
+    docker compose -p "${G5_COMPOSE_PROJECT:-g5-dev}" -f infra/docker/docker-compose.dev.yml up -d --no-build --no-deps --force-recreate edge
+    ./scripts/wait-for-healthy.sh infra/docker/docker-compose.dev.yml 90
+    echo "Frontend edge restarted from rebuilt client image."
+
+# Rebuild/recreate backend and Docker frontend without resetting dev volumes.
+dev-restart *FLAGS:
+    just dev-restart-backend {{FLAGS}}
+    just dev-restart-frontend {{FLAGS}}
+
+# Seed a compliance workspace from prepared repos using the native Git publish seed path
+seed-compliance-workspace *ARGS:
+  bash ./scripts/seed-compliance-workspace.sh {{ARGS}}
+
+# Seed the local gitignored TimSystem fixture using the shared native publish seed path
+seed-timsystem-workspace *ARGS:
+  bash ./scripts/seed-timsystem-workspace.sh {{ARGS}}
+
+# Seed only the BankWorkflow v4 ontology into an existing workspace
+seed-bankworkflow-new-ontology-workspace *ARGS:
+  bash ./scripts/seed-bankworkflow-new-ontology-workspace.sh {{ARGS}}
+
+# Seed local committed HEAD with history into an independent Lean workspace (running dev stack)
+seed-lean-workspace *ARGS:
+  bash ./scripts/seed-lean-workspace.sh {{ARGS}}
+
+# Prepare a local g5_workspace folder in the same docs/code repo shape
+prepare-g5-workspace *ARGS:
+  bash ./scripts/prepare-g5-workspace.sh {{ARGS}}
+
+# Seed the prepared G5 workspace using the shared native publish seed path
+seed-g5-workspace *ARGS:
+  bash ./scripts/seed-g5-workspace.sh {{ARGS}}
+
+# ═══════════════════════════════════════════════
+# Local Worker Host (Linux/KVM or explicit local process mode)
+# ═══════════════════════════════════════════════
+# Linux uses Cloud Hypervisor with a staged read-only guest runtime.
+# macOS development requires acknowledged process mode; there is no VM fallback.
+# One-time bootstrap: platform checks, host g5d build and runtime staging.
+worker-host-setup org="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # Org comes ONLY from the positional argument (G5_WORKER_ORGS is the sole
+    # env knob, consumed by dev-up); export the internal plumbing var and source
+    # the env helper NOW so the runtime staging below lands in the org's host
+    # dir, not the default one.
+    export G5_WORKER_ORG={{quote(org)}}
+    source scripts/worker-host-env.sh
+    fail() { echo "✗ $*" >&2; exit 1; }
+    # Process mode (g5.runtime.boot.backend.process-local) uses no VMM
+    # or Docker-staged Linux guest bundle: build the
+    # host g5d and stage the host-native runtime directory from this
+    # machine's own tools.
+    if [[ "$G5D_ISOLATION_MODE" == "process" ]]; then
+      command -v cargo >/dev/null || fail "cargo required"
+      g5_worker_host_check_state_ownership || fail "a root microvm host's state blocks an unprivileged process host"
+      g5_worker_host_build
+      g5_worker_host_stage_process_runtime
+      echo ""
+      echo "✓ worker-host setup complete (process isolation, localhost only). Start the stack with:"
+      echo "  G5D_ISOLATION_MODE=process G5D_ALLOW_PROCESS_ISOLATION=1 just dev-up"
+      exit 0
+    fi
+    [[ "$(uname -s)" == Linux && "$(uname -m)" == x86_64 ]] || fail "Cloud Hypervisor requires Linux x86_64/KVM"
+    [[ -r /dev/kvm && -w /dev/kvm ]] || fail "Read/write access to /dev/kvm is required"
+    command -v cargo >/dev/null || fail "cargo required"
+    # A microvm host needs a reflink-capable host directory; inside a workspace
+    # VM the preview mounts one (scripts/dev-host-reflink-root.sh).
+    g5_worker_host_check_reflink_root || fail "G5_DEV_HOST_DIR=$G5_DEV_HOST_DIR must support reflinks"
+    g5_worker_host_build
+    g5_worker_host_check_host_vm_exec || fail "Install the platform VMM/kernel/initramfs with scripts/build-cloud-hypervisor-runtime.sh first (a workspace VM's runtime disk supplies it under /opt/g5/platform)"
+    # --- Linux guest runtime (Docker-staged) ---
+    echo "=== Staging Linux guest runtime ==="
+    ./scripts/stage-local-worker-runtime.sh
+    # Record the guest-runtime source-hash stamp now that the runtime is freshly
+    # staged. Without it, the FIRST `worker-host-start`/`dev-up` sees a missing
+    # stamp as false "source drift" (g5_worker_host_ensure_runtime) and restages
+    # the whole guest runtime. Mirrors ensure_runtime's own stage-then-stamp on
+    # a redeploy.
+    source scripts/worker-host-env.sh
+    g5_worker_host_write_runtime_source_hash
+    echo ""
+    echo "✓ worker-host setup complete. Start the stack with: just dev-up (or just demo-up)"
+
+# Run the native worker host in the FOREGROUND (debugging; Ctrl-C to drain).
+worker-host org="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # The host joins the stack the caller selected (review R29): the identity,
+    # the API port included, is resolved like every stack recipe and kept ahead
+    # of the dotenv sourced for this recipe's own knobs.
+    source scripts/lib/stack-identity.sh
+    g5_pin_stack_identity
+    if [[ -f .env ]]; then set -a; source .env; set +a; fi
+    g5_restore_stack_identity
+    # Org comes ONLY from the positional argument — always override ambient env.
+    export G5_WORKER_ORG={{quote(org)}}
+    source scripts/worker-host-env.sh
+    g5_worker_host_build
+    g5_worker_host_prepare_runtime
+    g5_worker_host_seed_token "$G5D_API_URL"
+    # A Linux microvm host runs as root (passt/VMM identity drops, nft); the
+    # helper adds sudo only then and preserves this recipe's environment.
+    g5_worker_host_exec_as_root "$G5_WORKER_HOST_G5D" host
+
+# Build the native host binary for the configured isolation mode without
+# starting it (dev-up builds it before the containers come up).
+worker-host-build org="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    source scripts/lib/stack-identity.sh
+    g5_pin_stack_identity
+    if [[ -f .env ]]; then set -a; source .env; set +a; fi
+    g5_restore_stack_identity
+    export G5_WORKER_ORG={{quote(org)}}
+    # The default instance's directory as this caller selected it, kept
+    # before the helper replaces G5_DEV_HOST_DIR with a per-org directory.
+    DEFAULT_HOST_DIR_OVERRIDE="${G5_DEV_HOST_DIR:-}"
+    source scripts/worker-host-env.sh
+    # Instances using this binary path share it across modes. A live host of
+    # another mode keeps spawning
+    # from it (a microvm host runs `g5d vm-exec` from its own path), so every
+    # tracked instance is inspected, whichever one this build is for, and an
+    # incompatible live host is stopped, with the instances that share the
+    # path, before the build replaces what they would spawn.
+    INCOMPATIBLE_LIVE_HOST=""
+    for instance_dir in "${DEFAULT_HOST_DIR_OVERRIDE:-${GEN_ROOT}/.dev/g5d-host}" "${GEN_ROOT}/.dev"/g5d-host-*; do
+      [[ -f "$instance_dir/host.pid" ]] || continue
+      running_command="$(ps -o command= -p "$(cat "$instance_dir/host.pid")" 2>/dev/null || true)"
+      case "$running_command" in
+        "$G5_WORKER_HOST_G5D host"|"$G5_WORKER_HOST_G5D host "*) ;;
+        *) continue ;;
+      esac
+      running_mode="$(cat "$instance_dir/host.mode" 2>/dev/null || echo unknown)"
+      if [[ "$running_mode" != "$G5D_ISOLATION_MODE" ]]; then
+        INCOMPATIBLE_LIVE_HOST="${instance_dir##*/} (${running_mode})"
+        break
+      fi
+    done
+    if [[ -n "$INCOMPATIBLE_LIVE_HOST" ]]; then
+      echo "↻ worker host ${INCOMPATIBLE_LIVE_HOST} is live but config is now '${G5D_ISOLATION_MODE}' — stopping every instance before the shared binary is replaced" >&2
+      # The slug-less stop addresses the default instance and sweeps the
+      # per-org ones; it must see the caller's default directory, not the
+      # per-org directory the helper exported for this build.
+      if [[ -n "$DEFAULT_HOST_DIR_OVERRIDE" ]]; then
+        G5_DEV_HOST_DIR="$DEFAULT_HOST_DIR_OVERRIDE" just worker-host-stop
+      else
+        env -u G5_DEV_HOST_DIR just worker-host-stop
+      fi
+    fi
+    g5_worker_host_build
+
+# Start the native worker host in the BACKGROUND (used by dev-up/demo-up).
+worker-host-start org="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # The host joins the stack the caller selected (review R29): the identity,
+    # the API port included, is resolved like every stack recipe and kept ahead
+    # of the dotenv sourced for this recipe's own knobs.
+    source scripts/lib/stack-identity.sh
+    g5_pin_stack_identity
+    if [[ -f .env ]]; then set -a; source .env; set +a; fi
+    g5_restore_stack_identity
+    # Org comes ONLY from the positional argument — always override ambient env.
+    export G5_WORKER_ORG={{quote(org)}}
+    source scripts/worker-host-env.sh
+    HOST_BINARY_CURRENT=0
+    if [[ -f "$G5_WORKER_HOST_PID_FILE" ]] \
+       && ps -o command= -p "$(cat "$G5_WORKER_HOST_PID_FILE")" 2>/dev/null | grep -q "g5d host"; then
+      HOST_PID="$(cat "$G5_WORKER_HOST_PID_FILE")"
+      RUNNING_MODE="$(cat "$G5_WORKER_HOST_MODE_FILE" 2>/dev/null || true)"
+      if [[ "$RUNNING_MODE" != "$G5D_ISOLATION_MODE" ]]; then
+        # A host from a different isolation mode is live (e.g. a pre-flip
+        # microvm-agent supervisor after switching to microvm). Reporting "running"
+        # here would leave the OLD mode serving tasks; fall through to reap + relaunch
+        # so the flip actually applies (Codex PR review).
+        echo "↻ worker host is running in '${RUNNING_MODE:-unknown}' mode but config is now '${G5D_ISOLATION_MODE}' — restarting" >&2
+      else
+        # A live pid file is not enough: a previous dev-up may have launched a
+        # stale host binary that can register but cannot spawn
+        # `g5d vm-exec`. Prove the current replacement is good before touching the
+        # running host, then compare the recorded launch fingerprint.
+        g5_worker_host_build
+        HOST_BINARY_CURRENT=1
+        if [[ "$G5D_ISOLATION_MODE" == "microvm" ]]; then
+          g5_worker_host_check_host_vm_exec
+        fi
+        CURRENT_FINGERPRINT="$(g5_worker_host_launch_fingerprint)"
+        RECORDED_FINGERPRINT="$(cat "$G5_WORKER_HOST_LAUNCH_FINGERPRINT_FILE" 2>/dev/null || true)"
+        if [[ -n "$RECORDED_FINGERPRINT" && "$RECORDED_FINGERPRINT" == "$CURRENT_FINGERPRINT" ]]; then
+          echo "✓ native worker host already running (pid $HOST_PID, ${G5D_ISOLATION_MODE})"
+          exit 0
+        fi
+        echo "→ native worker host is stale or predates launch fingerprinting — restarting (pid $HOST_PID)" >&2
+      fi
+      g5_worker_host_kill -TERM "$HOST_PID" 2>/dev/null || true
+      for _ in $(seq 1 60); do
+        g5_worker_host_alive "$HOST_PID" || break
+        sleep 1
+      done
+      if g5_worker_host_alive "$HOST_PID"; then
+        echo "⚠  drain did not finish in 60s — SIGKILL" >&2
+        g5_worker_host_kill -KILL "$HOST_PID" 2>/dev/null || true
+      fi
+      rm -f "$G5_WORKER_HOST_PID_FILE" "$G5_WORKER_HOST_MODE_FILE" "$G5_WORKER_HOST_LAUNCH_FINGERPRINT_FILE"
+      g5_worker_host_reap_strays "$HOST_PID"
+    fi
+    rm -f "$G5_WORKER_HOST_PID_FILE" "$G5_WORKER_HOST_MODE_FILE" "$G5_WORKER_HOST_LAUNCH_FINGERPRINT_FILE"
+    # Starting fresh: the recorded host is dead/absent, so any leftover host
+    # or VM for THIS repo is an orphan that would contend on the control plane.
+    # Reap before launch so exactly one host comes up (prevents the duplicate
+    # worker-registration that routes chat turns to a stale/pre-fix host).
+    g5_worker_host_reap_strays
+    if [[ "$HOST_BINARY_CURRENT" != "1" ]]; then
+      g5_worker_host_build
+    fi
+    g5_worker_host_prepare_runtime
+    HOST_LAUNCH_FINGERPRINT="$(g5_worker_host_launch_fingerprint)"
+    g5_worker_host_seed_token "$G5D_API_URL"
+    # Rotate the log so the registration gate below can only match THIS run —
+    # an appended log let a stale "Host registered" line mask an instant crash.
+    if [[ -f "$G5_WORKER_HOST_LOG_FILE" ]]; then
+      mv "$G5_WORKER_HOST_LOG_FILE" "${G5_WORKER_HOST_LOG_FILE}.1"
+    fi
+    # The recipe shell exits as soon as the control-plane session connects.
+    # Ask the host to ignore SIGHUP so it survives that shell/session closing; do not
+    # inherit a terminal controlling session.
+    export G5D_HOST_IGNORE_SIGHUP=1
+    # The exec helper leaves the host (under sudo on a Linux microvm host,
+    # directly otherwise), not a wrapper subshell, at $!; the log is opened by
+    # this unprivileged shell, so it stays the caller's file.
+    g5_worker_host_exec_as_root "$G5_WORKER_HOST_G5D" host </dev/null >> "$G5_WORKER_HOST_LOG_FILE" 2>&1 &
+    LAUNCH_PID=$!
+    disown "$LAUNCH_PID" 2>/dev/null || true
+    # Under sudo the launch pid is sudo's supervisor; record the host itself
+    # so a forced stop cannot orphan it.
+    HOST_PID="$(g5_worker_host_resolve_launched_pid "$LAUNCH_PID")"
+    echo "$HOST_PID" > "$G5_WORKER_HOST_PID_FILE"
+    # Record the mode this host was launched with so a later `worker-host-start`
+    # after a config flip restarts instead of falsely reporting the new mode.
+    echo "$G5D_ISOLATION_MODE" > "$G5_WORKER_HOST_MODE_FILE"
+    # Allow the 600s image-preparation budget plus 60s to start the carrier.
+    for _ in $(seq 1 660); do
+      if ! g5_worker_host_alive "$HOST_PID"; then
+        echo "✗ worker host exited during startup — last log lines:" >&2
+        tail -n 25 "$G5_WORKER_HOST_LOG_FILE" >&2 || true
+        rm -f "$G5_WORKER_HOST_PID_FILE" "$G5_WORKER_HOST_MODE_FILE" "$G5_WORKER_HOST_LAUNCH_FINGERPRINT_FILE"
+        exit 1
+      fi
+      if grep -q "workspace VM host started" "$G5_WORKER_HOST_LOG_FILE" 2>/dev/null; then
+        g5_worker_host_write_launch_fingerprint "$HOST_LAUNCH_FINGERPRINT"
+        if [[ "$G5D_ISOLATION_MODE" == "process" ]]; then
+          echo "✓ native process-isolation worker host running (pid $HOST_PID, $G5D_HOST_MAX_MICROVMS slot(s); workspaces are unisolated host processes — localhost only)"
+        else
+          echo "✓ native microVM worker host running (pid $HOST_PID, $G5D_HOST_MAX_MICROVMS VM slots)"
+        fi
+        echo "  log: $G5_WORKER_HOST_LOG_FILE"
+        exit 0
+      fi
+      sleep 1
+    done
+    echo "✗ worker host did not register within 660s — killing it; last log lines:" >&2
+    tail -n 25 "$G5_WORKER_HOST_LOG_FILE" >&2 || true
+    g5_worker_host_kill -TERM "$HOST_PID" 2>/dev/null || true
+    sleep 2
+    g5_worker_host_kill -KILL "$HOST_PID" 2>/dev/null || true
+    rm -f "$G5_WORKER_HOST_PID_FILE" "$G5_WORKER_HOST_MODE_FILE" "$G5_WORKER_HOST_LAUNCH_FINGERPRINT_FILE"
+    exit 1
+
+# Stop the native worker host (SIGTERM drain, bounded wait). Idempotent.
+worker-host-stop org="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # The host joins the stack the caller selected (review R29): the identity,
+    # the API port included, is resolved like every stack recipe and kept ahead
+    # of the dotenv sourced for this recipe's own knobs.
+    source scripts/lib/stack-identity.sh
+    g5_pin_stack_identity
+    if [[ -f .env ]]; then set -a; source .env; set +a; fi
+    g5_restore_stack_identity
+    # Org comes ONLY from the positional argument — always override ambient env.
+    export G5_WORKER_ORG={{quote(org)}}
+    source scripts/worker-host-env.sh
+    # A slug-less stop also sweeps every per-org host instance
+    # (.dev/g5d-host-<slug>) so dev-down cannot strand an org host polling a
+    # reset control plane whose reseeded org ids no longer match its token.
+    # Children re-enter this recipe with the slug set and never sweep, so the
+    # recursion is bounded at one level.
+    stop_per_org_instances() {
+      [[ -n "${G5_WORKER_ORG:-}" ]] && return 0
+      local d slug failed=0
+      for d in "${GEN_ROOT}/.dev"/g5d-host-*; do
+        [[ -d "$d" ]] || continue
+        slug="${d##*/g5d-host-}"
+        [[ -n "$slug" ]] || continue
+        echo "→ stopping per-org worker host '${slug}'"
+        # One failing instance must not abort the sweep — attempt every
+        # discovered host, then report collected failures (PR #1530 review).
+        if ! just worker-host-stop "$slug"; then
+          echo "⚠  failed to stop per-org worker host '${slug}' — continuing sweep" >&2
+          failed=$((failed + 1))
+        fi
+      done
+      if (( failed > 0 )); then
+        echo "⚠  ${failed} per-org worker host(s) failed to stop" >&2
+        return 1
+      fi
+    }
+    if [[ ! -f "$G5_WORKER_HOST_PID_FILE" ]]; then
+      echo "native worker host not running (no PID file)"
+      # The PID file only ever tracked ONE host; orphaned VMs or an extra
+      # host from a prior dev-up can still be alive (and still polling the
+      # control plane). Reap this repo's strays even with no PID file.
+      g5_worker_host_reap_strays
+      stop_per_org_instances
+      exit 0
+    fi
+    HOST_PID="$(cat "$G5_WORKER_HOST_PID_FILE")"
+    # Never signal a recycled PID: require the command to actually be
+    # g5d host, same guard as worker-host-start (codex PR review P2).
+    if ! ps -o command= -p "$HOST_PID" 2>/dev/null | grep -q "g5d host"; then
+      echo "native worker host not running (stale PID file removed)"
+      rm -f "$G5_WORKER_HOST_PID_FILE" "$G5_WORKER_HOST_MODE_FILE" "$G5_WORKER_HOST_LAUNCH_FINGERPRINT_FILE"
+      g5_worker_host_reap_strays
+      stop_per_org_instances
+      exit 0
+    fi
+    # The process can exit between the liveness check and this signal; a
+    # failed TERM must not abort the stop path under set -e (PR #1530 review).
+    # A Linux microvm host is root: the signal helper adds sudo when the
+    # recorded host belongs to another user, whatever mode is selected now.
+    g5_worker_host_kill -TERM "$HOST_PID" 2>/dev/null || true
+    for _ in $(seq 1 60); do
+      g5_worker_host_alive "$HOST_PID" || break
+      sleep 1
+    done
+    if g5_worker_host_alive "$HOST_PID"; then
+      echo "⚠  drain did not finish in 60s — SIGKILL" >&2
+      g5_worker_host_kill -KILL "$HOST_PID" 2>/dev/null || true
+    fi
+    rm -f "$G5_WORKER_HOST_PID_FILE" "$G5_WORKER_HOST_MODE_FILE" "$G5_WORKER_HOST_LAUNCH_FINGERPRINT_FILE"
+    # A wedged in-VM task can make the graceful drain time out → the host is
+    # SIGKILLed above and its child VMs reparent to init and keep running. Reap
+    # them (and any orphan host) so dev-down truly closes this repo's VMs.
+    g5_worker_host_reap_strays "$HOST_PID"
+    stop_per_org_instances
+    echo "✓ native worker host stopped"
+
+# ═══════════════════════════════════════════════
+# Testing
+# ═══════════════════════════════════════════════
+
+# Run all tests (parallel phased: compile → unit → integration → doc)
+test:
+    ./scripts/test-parallel.sh all
+
+# Compile check only (catches errors fast, no test execution)
+test-compile:
+    ./scripts/test-parallel.sh compile
+
+# Unit tests only (per-crate, parallel)
+test-unit:
+    ./scripts/test-parallel.sh unit
+
+# Integration tests only (serial, shared resources)
+test-integration:
+    ./scripts/run-integration.sh
+
+# Doc tests only (per-crate, parallel)
+test-doc:
+    ./scripts/test-parallel.sh doc
+
+# Run tests for a single crate
+test-crate crate:
+    cargo test -p {{crate}} --lib
+
+# Run a single test by name
+test-one name:
+    cargo test --workspace -- {{name}} --exact
+
+# Regenerate the committed client harness-catalog data file from the Rust catalog (g5-contracts model catalog, formerly g5-common/core D8)
+gen-model-catalog:
+    cargo run -p g5-contracts --bin gen_model_catalog
+
+# Native HTTP-provider recording was retired; use test-live-e2e for Claude/Codex.
+
+# Run ALL cross-component tests (integration + E2E + smoke + Playwright)
+# Requires: just e2e-up  (the full test stack must be running)
+test-cross:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    source scripts/resolve-e2e-url.sh
+    # Integration tests use sqlx::query! macros not in the .sqlx cache,
+    # so they need the live database. Run inside Docker network.
+    echo "=== Phase 1: Integration tests (g5-api + g5d cross-crate) ==="
+    bash scripts/ensure-base-images.sh base-rust
+    docker run --rm \
+      -v "$(pwd):/build" \
+      -v g5-ci-cargo-registry:/usr/local/cargo/registry \
+      -v g5-ci-cargo-git:/usr/local/cargo/git \
+      -v g5-ci-target:/build/target \
+      -w /build \
+      -e SQLX_OFFLINE=false \
+      -e DATABASE_URL="postgres://g5:g5_test@postgres:5432/g5_test" \
+      --network "${TEST_COMPOSE_PROJECT}_g5-test" \
+      g5/base-rust:26.04 \
+      sh -c "apt-get update -qq && apt-get install -y -qq pkg-config libssl-dev cmake >/dev/null 2>&1 && \
+             cargo test -p g5-api --test '*' -- --test-threads=1 && \
+             cargo test -p g5d-dispatch -p g5d --test '*' -- --test-threads=1"
+    echo "=== Phase 2: Rust E2E scenarios ==="
+    ./scripts/run-rust-e2e-lanes.sh
+    echo "=== Phase 3: API smoke tests (Zod schema validation) ==="
+    cd frontend && npx vitest run -c vitest.config.smoke.ts && cd ..
+    echo "=== Phase 4: Playwright browser E2E ==="
+    cd frontend && npx playwright test
+    echo "=== All cross-component tests passed ==="
+
+# Run full E2E test suite (builds stack, runs tests, tears down)
+test-e2e:
+    bash ./scripts/run-e2e.sh
+
+# Run API smoke tests — validates live response shapes against Zod schemas
+# Requires: just e2e-up
+api-smoke *ARGS:
+    source scripts/resolve-e2e-url.sh && cd frontend && npx vitest run -c vitest.config.smoke.ts {{ARGS}}
+
+# Run Playwright browser E2E tests (requires running stack)
+test-playwright:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    source scripts/resolve-e2e-url.sh
+    cd frontend
+    # The guided-journey spec gates on G5_GUIDED_JOURNEY_ENABLED in the Node
+    # process (ui g5.ui.guided-toggle); the test stack runs the API gate on.
+    E2E_USE_OAUTH=true G5_GUIDED_JOURNEY_ENABLED="${G5_GUIDED_JOURNEY_ENABLED:-true}" npx playwright test
+
+# Run Rust E2E tests against the already-running dev stack.
+# Refreshes only the isolated e2e-test fixture workspace and keeps its bound
+# workspace host running throughout the retained scenario set.
+dev-e2e *ARGS:
+    ./scripts/run-dev-stack-tests.sh rust {{ARGS}}
+
+# Run Playwright tests against the already-running dev stack.
+# Defaults to Chromium so the command mirrors the shared phase-7 browser slice.
+dev-playwright *ARGS:
+    ./scripts/run-dev-stack-tests.sh playwright {{ARGS}}
+
+# ═══════════════════════════════════════════════
+# Building
+# ═══════════════════════════════════════════════
+
+# Build all crates (release)
+build:
+    cargo build --workspace --release
+
+# Build all crates (debug)
+build-debug:
+    cargo build --workspace
+
+# Check all crates with the default VM backend, then the feature-disabled CLI.
+# Neither compilation path requires a VMM installation or a running guest.
+check:
+    cargo check --workspace
+    cargo check -p g5d --no-default-features --features test-helpers
+
+# ═══════════════════════════════════════════════
+# Code Quality
+# ═══════════════════════════════════════════════
+
+# Lint with clippy and frontend lint; failures are blocking.
+lint:
+    cargo clippy --workspace --exclude g5d --exclude g5-e2e -- -D warnings
+    cargo clippy -p g5d --no-default-features --features test-helpers -- -D warnings
+    cd frontend && npm run lint
+
+# Check formatting
+fmt-check:
+    cargo fmt --all -- --check
+    cd frontend && npm run format:check
+
+# Auto-format Rust and frontend sources checked by fmt-check.
+fmt:
+    cargo fmt --all
+    cd frontend && npm run format
+
+# Full CI check (format + contract checks + lint + test)
+ci: fmt-check worker-provider-env-check dev-build-profile-check lint test
+
+# Check managed-worker provider bootstrap shell behavior
+worker-provider-env-check:
+    ./infra/docker/test-g5d-provider-env.sh
+
+# Check local-dev Cargo profile, cache sharing, and mode-scoped Docker builds
+dev-build-profile-check:
+    ./infra/docker/test-dev-build-profile.sh
+
+# Auto-format using the workspace-pinned toolchain in Docker (use before ci-docker)
+# Runs on the shared base-rust tier (docker_images [D18]) so the rustfmt version
+# is the SAME 1.97.1 the CI image checks with; the former rust:1.93-bookworm
+# container could format differently from the cloud RUST_FMT gate.
+ci-fmt:
+    bash scripts/ensure-base-images.sh base-rust
+    docker run --rm -v "$(pwd):/build" -w /build g5/base-rust:26.04 \
+      sh -c "cargo fmt --all"
+    @echo "Formatted with the base-rust tier's pinned rustfmt"
+
+# ═══════════════════════════════════════════════
+# Docker
+# ═══════════════════════════════════════════════
+
+# Build all Docker images
+docker-build *FLAGS:
+    just docker-build-common-base
+    just docker-build-base {{FLAGS}}
+    docker compose -p g5-test -f infra/docker/docker-compose.test.yml build {{FLAGS}} --parallel
+
+# Build g5-api image only
+docker-build-api:
+    just docker-build-common-base
+    docker build -f infra/docker/Dockerfile.g5-api -t g5/api:dev .
+
+# Build g5d image only
+docker-build-g5d *FLAGS:
+    just docker-build-common-base
+    just docker-build-base {{FLAGS}}
+    docker build {{FLAGS}} -f infra/docker/Dockerfile.g5d -t g5/g5d:dev .
+
+# Build the g5d worker base image (host plane: g5/base:26.04 + toolchains)
+# FROMs the common base ([D18]), whose tag is local-only ([D5]) — ensure it
+# first so a standalone invocation resolves the base ARG. Idempotent.
+docker-build-base *FLAGS:
+    bash scripts/ensure-base-images.sh base
+    docker build {{FLAGS}} -f infra/docker/Dockerfile.g5d-base -t g5/g5d-base:latest .
+
+# Build the single common base + toolchain tiers ONCE, in dependency order
+# (integration-stack/docker_images [D18]/[D5]). Every migrated image FROMs these
+# tiers, so building them here means the shared OS + perl-free-git + toolchain
+# layers are built a single time and reused across api/edge/ci/terraform/oauth
+# instead of each image pulling or rebuilding its own base. Idempotent: each
+# tier is skipped when its tag already exists locally.
+# Leaves before base: a leaf pulled from the mirror by its key needs no parent
+# locally, so a workspace guest never downloads base-rust; `base` comes last
+# for the leaf images' runtime stages. Lineage is keyed, not layered, so a
+# parent from another same-key build never forces a rebuild. (`ci-docker`
+# asks for the whole chain parent-first under strict lineage instead, because
+# it runs the single-base oracle.)
+docker-build-common-base:
+    bash scripts/ensure-base-images.sh base-rust-warm base-node base
+
+# Build edge/client image
+docker-build-edge:
+    just docker-build-common-base
+    docker build --build-arg=VITE_G5_ENABLE_CLOUD_WORKSPACE_WORKFLOWS=true -f infra/docker/Dockerfile.edge -t g5/edge:dev .
+
+# ═══════════════════════════════════════════════
+# E2E Stack
+# ═══════════════════════════════════════════════
+
+# Start full E2E test stack
+e2e-up:
+    just ci-docker-prepare
+
+# Stop E2E test stack
+e2e-down:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    COMPOSE_PROJECT="${G5_CI_COMPOSE_PROJECT:-g5-test}"
+    export COMPOSE_PROJECT_NAME="$COMPOSE_PROJECT"
+    export POSTGRES_CONTAINER="${COMPOSE_PROJECT}-postgres"
+    docker compose -p "$COMPOSE_PROJECT" -f infra/docker/docker-compose.test.yml down -v --remove-orphans 2>/dev/null || true
+    for cid in $(docker ps -aq --filter "label=com.docker.compose.project=${COMPOSE_PROJECT}"); do
+      docker rm -f "$cid" >/dev/null 2>&1 || true
+    done
+
+# One-time macOS host NFS bootstrap for optional ci-docker parity runs.
+ci-docker-nfs-init:
+    ./scripts/ci-docker-host-nfs.sh init-host
+
+# Run E2E tests (stack must be running)
+e2e-run *ARGS:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ -f .env ]]; then set -a; source .env; set +a; fi
+    if [[ -f .env.test ]]; then set -a; source .env.test; set +a; fi
+    if [[ -z "${G5_E2E_JWT_PRIVATE_KEY:-}" ]]; then
+      source scripts/lib/local-stack-secrets.sh
+      g5_load_local_stack_secrets
+    fi
+    source scripts/resolve-e2e-url.sh
+    cargo test -p g5-e2e {{ARGS}} -- --test-threads=1
+
+# Run a live E2E slice with stack lifecycle managed in one command.
+e2e-live filter="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ -f .env ]]; then set -a; source .env; set +a; fi
+    source scripts/lib/local-stack-secrets.sh
+    g5_load_local_stack_secrets
+    cleanup() {
+      just e2e-down >/dev/null 2>&1 || true
+    }
+    trap cleanup EXIT
+    just e2e-up
+    if [[ -f .env.test ]]; then set -a; source .env.test; set +a; fi
+    source scripts/resolve-e2e-url.sh
+    if [[ -n "{{filter}}" ]]; then
+      cargo test -p g5-e2e "{{filter}}" -- --test-threads=1
+    else
+      cargo test -p g5-e2e -- --test-threads=1
+    fi
+
+# Verify retained Ontology Uplift validation against a gate-on E2E API process.
+e2e-live-repo-hint-gate:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    cleanup() {
+      just e2e-down >/dev/null 2>&1 || true
+    }
+    trap cleanup EXIT
+    export G5_REJECT_LEGACY_REPO_HINTS=true
+    just e2e-up
+    if [[ -f .env.test ]]; then set -a; source .env.test; set +a; fi
+    source scripts/resolve-e2e-url.sh
+    cargo test -p g5-e2e e2e_ontology_uplift_preserves_validation_with_repo_hint_gate_enabled -- --ignored --test-threads=1
+
+# Run g5d unit/integration tests in Docker (avoids devcontainer OOM)
+# Dockerfile.test-runner is FROM g5/base-rust:26.04 ([D18]); the tier tag is
+# local-only ([D5]), so ensure it before the compose build resolves the ARG.
+test-g5d-docker *ARGS:
+    bash scripts/ensure-base-images.sh base-rust
+    docker compose -p g5-test -f infra/docker/docker-compose.test.yml --profile test-runner run --rm --build test-runner {{ARGS}}
+
+# Run full workspace tests in Docker (shared crates + g5-api + g5d)
+test-all-docker:
+    bash scripts/ensure-base-images.sh base-rust
+    docker compose -p g5-test -f infra/docker/docker-compose.test.yml --profile test-runner run --rm --build test-runner --workspace -- --test-threads=2
+
+# Run isolation tests in Docker
+test-isolation-docker:
+    bash scripts/ensure-base-images.sh base-rust
+    docker compose -p g5-test -f infra/docker/docker-compose.test.yml --profile test-runner run --rm --build test-runner -p g5d-isolation --lib --all-features -- isolation --test-threads=2
+    docker compose -p g5-test -f infra/docker/docker-compose.test.yml --profile test-runner run --rm test-runner -p g5d --test isolation_backends --all-features -- --test-threads=1
+
+# Run portable isolation tests natively; real VM cases require Linux/KVM
+# and the installed Cloud Hypervisor platform.
+test-isolation-native:
+    SQLX_OFFLINE=true cargo test -p g5d --test isolation_backends --all-features --no-fail-fast -- --test-threads=1
+    SQLX_OFFLINE=true cargo test -p g5d-isolation --lib --all-features -- isolation --test-threads=2
+
+# ═══════════════════════════════════════════════
+# Demo Workspace
+# ═══════════════════════════════════════════════
+
+# Start dev stack + seed a self-referential demo workspace for E2E demos
+# Everything runs in containers — open http://localhost:3000 when done.
+demo-up:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # Always tear down first for idempotent runs (stale DB data causes 409s)
+    echo "=== Cleaning up previous demo (if any) ==="
+    just demo-down 2>/dev/null || true
+    echo ""
+    echo "=== Bringing up dev stack ==="
+    just dev-up
+    echo ""
+    echo "=== Seeding demo workspace ==="
+    ./scripts/seed-demo.sh auto "$(pwd)/demo-workspace"
+    echo ""
+    echo "=== Starting 1 managed Provided-Agent worker ==="
+    # Source .env so LLM keys are available to the worker recipes
+    if [[ -f .env ]]; then
+      set -a; source .env; set +a
+    fi
+    just worker-host-start
+    # Process isolation (g5.runtime.boot.backend.process-local) is a
+    # localhost-only developer choice: G5D_ISOLATION_MODE=process
+    # G5D_ALLOW_PROCESS_ISOLATION=1 just dev-up runs workspaces as host
+    # processes; the default is unchanged.
+    if [[ "${G5D_ISOLATION_MODE:-microvm}" == "process" ]]; then
+      WORKER_LINE="native process-isolation host (unisolated host processes, ${G5D_HOST_MAX_MICROVMS:-1} slot)"
+    else
+      WORKER_LINE="native workspace-VM host (${G5D_HOST_MAX_MICROVMS:-2} VM slots)"
+    fi
+    echo ""
+    echo "=== Demo ready ==="
+    echo "  App:       http://localhost:3000"
+    echo "  API:       http://localhost:7500"
+    echo "  Host:      ${WORKER_LINE}"
+    echo "  Workspace: demo-workspace/"
+    echo "  Tear down: just demo-down"
+
+# Alias for demo-up (full reset + seed + workers)
+demo-start: demo-up
+
+# Tear down demo workspace + dev stack (native host first, then containers)
+demo-down:
+    #!/usr/bin/env bash
+    set -uo pipefail
+    # Same stack selection as dev-down (review R24).
+    source scripts/lib/stack-identity.sh
+    g5_pin_stack_identity
+    if [[ -f .env ]]; then
+      set -a; source .env; set +a
+    fi
+    g5_restore_stack_identity
+    just worker-host-stop 2>/dev/null || true
+    docker compose -p "${G5_COMPOSE_PROJECT:-g5-dev}" -f infra/docker/docker-compose.dev.yml --profile demo down -v --remove-orphans 2>/dev/null || true
+    rm -rf demo-workspace demo-repos
+    just dev-down 2>/dev/null || true
+    echo "Demo workspace removed and dev stack stopped."
+
+# Re-seed demo workspace (dev stack must be running)
+demo-seed:
+    ./scripts/seed-demo.sh auto "$(pwd)/demo-workspace"
+
+# Seed the E2E test workspace (dev stack must be running).
+# Writes G5_E2E_TEST_WORKSPACE_ID and G5_E2E_TEST_REPO_ID to .env.test.
+# Safe to re-run: tears down the previous test workspace first.
+test-seed:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ -f .env ]]; then set -a; source .env; set +a; fi
+    API_PORT="${G5_PORT_API:-7500}"
+    ./scripts/seed-test-workspace.sh "http://localhost:${API_PORT}"
+
+# Seed the TinyDB live-uplift workspace (dev stack must be running).
+# Writes G5_TINYDB_TEST_WORKSPACE_ID and G5_TINYDB_TEST_REPO_ID to .env.tinydb.test.
+# Safe to re-run: tears down the previous TinyDB workspace first.
+tinydb-seed:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ -f .env ]]; then set -a; source .env; set +a; fi
+    API_PORT="${G5_PORT_API:-7500}"
+    ./scripts/seed-tinydb-workspace.sh "http://localhost:${API_PORT}"
+
+# Seed the TinyDB commit0 synthesis workspace: docs design + root spec + tests,
+# with no implementation. Creates separate materialized code and docs repos.
+tinydb-commit0-seed:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ -f .env ]]; then set -a; source .env; set +a; fi
+    API_PORT="${G5_PORT_API:-7500}"
+    ./scripts/seed-tinydb-commit0-workspace.sh "http://localhost:${API_PORT}"
+
+# Run live-LLM E2E tests (requires test-seed + running dev stack with workers)
+test-live-e2e *ARGS:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ -f .env ]]; then set -a; source .env; set +a; fi
+    if [[ -f .env.test ]]; then set -a; source .env.test; set +a; fi
+    if [[ -z "${G5_E2E_JWT_PRIVATE_KEY:-}" ]]; then
+      source scripts/lib/local-stack-secrets.sh
+      g5_load_local_stack_secrets
+    fi
+    cargo test -p g5-e2e --features live-llm -- --test-threads=1 {{ARGS}}
+
+# Seed codex demo (3 workspaces: empty → uplifted + views → downlifted)
+# Starts dev stack, seeds 3 codex workspaces, starts one managed worker.
+# Open http://localhost:3000 when done.
+demo-codex:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ -f .env ]]; then set -a; source .env; set +a; fi
+    ./scripts/seed-demo-multi.sh --check-source
+    # Always tear down first for idempotent runs (stale DB data causes 409s)
+    echo "=== Cleaning up previous demo (if any) ==="
+    just demo-down 2>/dev/null || true
+    echo ""
+    echo "=== Bringing up dev stack ==="
+    just dev-up
+    echo ""
+    echo "=== Seeding 3 codex workspaces ==="
+    ./scripts/seed-demo-multi.sh auto
+    echo ""
+    echo "=== Starting 1 managed Provided-Agent worker ==="
+    # Source .env so LLM keys are available to the worker recipes
+    if [[ -f .env ]]; then
+      set -a; source .env; set +a
+    fi
+    just worker-host-start
+    # Process isolation (g5.runtime.boot.backend.process-local) is a
+    # localhost-only developer choice: G5D_ISOLATION_MODE=process
+    # G5D_ALLOW_PROCESS_ISOLATION=1 just dev-up runs workspaces as host
+    # processes; the default is unchanged.
+    if [[ "${G5D_ISOLATION_MODE:-microvm}" == "process" ]]; then
+      WORKER_LINE="native process-isolation host (unisolated host processes, ${G5D_HOST_MAX_MICROVMS:-1} slot)"
+    else
+      WORKER_LINE="native workspace-VM host (${G5D_HOST_MAX_MICROVMS:-2} VM slots)"
+    fi
+    echo ""
+    echo "=== Codex demo ready ==="
+    echo "  App:       http://localhost:3000"
+    echo "  API:       http://localhost:7500"
+    echo "  Host:      ${WORKER_LINE}"
+    echo "  Workspaces: codex-empty, codex-uplifted, codex-refactored"
+    echo "  Tear down:  just demo-down"
+
+# ═══════════════════════════════════════════════
+# Full CI (Docker Compose)
+# ═══════════════════════════════════════════════
+
+# Run the full CI pipeline: build Docker images → start stack → run all tests → tear down
+# Requires: docker compose
+#
+# start_phase: run this phase and its prerequisites (default: "0" = run everything).
+#   Valid values: 0, 0b, 1, 1b, 2, 3, 4, 4a, 4b, 4c, 5, 5b, 5c, 6, 6b, 7
+#   Dependencies are resolved automatically — e.g. requesting phase 6
+#   will also run phases 0, 3, 4, 4a, 4b, 4c.
+#   Shorthand: if this is not a known phase, ci-docker treats it as a
+#   targeted Rust/Playwright selector and infers the phase automatically.
+# e2e_filter: optional Rust test selector.
+#   Phase 5: nextest expression applied to integration tests.
+#   Phase 6: cargo test filter applied to Rust E2E tests.
+# playwright_filter: optional selector args applied to Phase 7 Chromium
+#   Playwright tests, e.g. `e2e/flows/login.spec.ts` or
+#   `--grep "Login Flow" e2e/flows/login.spec.ts`.
+# reuse_stack: `auto` (default) reuses an already-running seeded stack for
+#   targeted Phase 5/6/7 slices, `true` forces reuse, `false` always rebuilds.
+[positional-arguments]
+ci-docker start_phase="0" live_llm="false" e2e_filter="" playwright_filter="" reuse_stack="auto":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    exec python3 scripts/local_validation.py run "$@"
+
+# Run source-only checks before building images or starting services.
+validation-preflight:
+    python3 scripts/local_validation.py preflight
+
+# Build and seed a candidate stack, prepare browser dependencies, and retain it.
+ci-docker-prepare:
+    python3 scripts/local_validation.py prepare
+
+# Remove this worktree's validation services, disposable volumes and image tags.
+ci-docker-down:
+    python3 scripts/local_validation.py down
+
+# Preview image tags left by deleted worktrees; pass true to remove them.
+[positional-arguments]
+ci-docker-gc prune="false":
+    #!/usr/bin/env bash
+    exec python3 scripts/local_validation.py gc "$@"
+
+# Recommend focused checks for committed, staged, unstaged and untracked changes.
+[positional-arguments]
+validation-recommend base="main":
+    #!/usr/bin/env bash
+    exec python3 scripts/local_validation.py recommend "$@"
+
+[private]
+[positional-arguments]
+_ci-docker start_phase="0" live_llm="false" e2e_filter="" playwright_filter="" reuse_stack="auto":
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    START_PHASE="$1"
+    : "${G5_CI_VALIDATION_MANAGED:?Use just ci-docker to run preflight and acquire the validation lock}"
+    # ci-docker intentionally runs deterministic E2E only. Full LLM execution
+    # belongs to `test-live-e2e` / `e2e-live`, not blocking Docker CI.
+    LIVE_LLM_MODE="$2"
+    E2E_FILTER="$3"
+    PLAYWRIGHT_FILTER="$4"
+    REUSE_STACK_MODE="$5"
+    CI_DOCKER_STARTED_AT="$(date +%s)"
+
+    ci_section() {
+      printf '\n=== %s ===\n' "$*"
+    }
+
+    ci_info() {
+      printf '  %s\n' "$*"
+    }
+
+    ci_kv() {
+      printf '  %-20s %s\n' "$1:" "$2"
+    }
+
+    ci_warn() {
+      printf 'WARN: %s\n' "$*" >&2
+    }
+
+    ci_error() {
+      printf 'ERROR: %s\n' "$*" >&2
+    }
+
+    format_duration() {
+      local seconds="$1"
+      printf '%02d:%02d:%02d' "$((seconds / 3600))" "$(((seconds % 3600) / 60))" "$((seconds % 60))"
+    }
+
+    is_known_phase() {
+      case "$1" in
+        0|0b|1|1b|2|3|4|4a|4b|4c|5|5b|5c|6|6b|7) return 0 ;;
+        *) return 1 ;;
+      esac
+    }
+
+    infer_selector_phase() {
+      case "$1" in
+        *.spec.ts|e2e/*|frontend/e2e/*|--grep*|*--grep*|*playwright*)
+          echo "7"
+          ;;
+        *binary\(*|*package\(*|*kind\(*|*platform\(*|*test\(*|*::*)
+          echo "5"
+          ;;
+        *)
+          echo "6"
+          ;;
+      esac
+    }
+
+    apply_selector_shorthand() {
+      local selector="$1"
+      local target_phase="$2"
+      case "$target_phase" in
+        5)
+          E2E_FILTER="$selector"
+          ;;
+        6)
+          E2E_FILTER="$selector"
+          ;;
+        7)
+          PLAYWRIGHT_FILTER="$selector"
+          ;;
+        *)
+          echo "ERROR: selector shorthand only supports phases 5, 6, and 7 (got '$target_phase')." >&2
+          exit 1
+          ;;
+      esac
+      START_PHASE="$target_phase"
+      LIVE_LLM_MODE="false"
+    }
+
+    normalize_ci_docker_args() {
+      if is_known_phase "$START_PHASE"; then
+        if [[ -z "$E2E_FILTER" && -z "$PLAYWRIGHT_FILTER" && "$LIVE_LLM_MODE" != "true" && "$LIVE_LLM_MODE" != "false" ]]; then
+          case "$START_PHASE" in
+            5|6|7)
+              ci_section "ci-docker shorthand"
+              ci_info "treating second argument as Phase ${START_PHASE} selector"
+              apply_selector_shorthand "$LIVE_LLM_MODE" "$START_PHASE"
+              ;;
+            *)
+              ci_error "phase '$START_PHASE' does not support selector shorthand in the second positional argument."
+              echo 'Hint: use `just ci-docker 5 false "<nextest expr>"`, `just ci-docker 6 false "<rust filter>"`, or `just ci-docker 7 false "" "<playwright filter>"`.' >&2
+              exit 1
+              ;;
+          esac
+        fi
+        return
+      fi
+
+      if [[ -n "$E2E_FILTER" || -n "$PLAYWRIGHT_FILTER" || "$LIVE_LLM_MODE" != "false" ]]; then
+        ci_error "selector shorthand only supports \`just ci-docker <selector>\` when the other positional args are omitted."
+        echo 'Hint: use `just ci-docker 5 false "<nextest expr>"`, `just ci-docker 6 false "<rust filter>"`, or `just ci-docker 7 false "" "<playwright filter>"` for the explicit form.' >&2
+        exit 1
+      fi
+
+      local selector="$START_PHASE"
+      local inferred_phase
+      inferred_phase="$(infer_selector_phase "$selector")"
+      ci_section "ci-docker shorthand"
+      ci_info "inferred Phase ${inferred_phase} for selector '$selector'"
+      apply_selector_shorthand "$selector" "$inferred_phase"
+    }
+
+    normalize_ci_docker_args
+    if [[ "$LIVE_LLM_MODE" == "true" ]]; then
+      ci_error "ci-docker does not run live-LLM/full execution tests. Use 'just test-live-e2e' or 'just e2e-live' instead."
+      exit 1
+    fi
+
+    # ── Phase dependency graph & resolution ──
+    # Each phase declares its direct dependencies.  When a specific phase
+    # is requested, we compute the transitive closure and run only those
+    # phases.  Phase "0" (the default) means "run everything".
+    #
+    # Dependency map (direct prerequisites):
+    #   0:  (none)          0b: 0
+    #   1:  0               1b: 0
+    #   2:  (none)          3:  (none)
+    #   4:  3               4a: 4
+    #   4b: 4a              4c: 4b
+    #   5:  0 4a            5b: 0
+    #   5c: 1 5             6:  0 4b 4c
+    #   6b: 4               7:  4c
+    phase_deps() {
+      case "$1" in
+        0)  echo ""        ;; 0b) echo "0"       ;;
+        1)  echo "0"       ;; 1b) echo "0"       ;;
+        2)  echo ""        ;; 3)  echo ""        ;;
+        4)  echo "3"       ;; 4a) echo "4"       ;;
+        4b) echo "4a"      ;; 4c) echo "4b"      ;;
+        5)  echo "0 4a"    ;; 5b) echo "0"       ;;
+        5c) echo "1 5"     ;; 6)  echo "0 4b 4c" ;;
+        6b) echo "4"       ;; 7)  echo "4c"       ;;
+        *)  echo "ERROR: unknown phase '$1'" >&2; exit 1 ;;
+      esac
+    }
+
+    ALL_PHASES="0 0b 1 1b 2 3 4 4a 4b 4c 5 5b 5c 6 6b 7"
+    # Space-delimited set of phases to run (bash 3.x compatible — no assoc arrays).
+    _RUN_PHASES=" "
+
+    _has_phase() { [[ "$_RUN_PHASES" == *" $1 "* ]]; }
+
+    resolve_deps() {
+      local phase="$1"
+      _has_phase "$phase" && return
+      _RUN_PHASES="${_RUN_PHASES}${phase} "
+      local dep
+      for dep in $(phase_deps "$phase"); do
+        resolve_deps "$dep"
+      done
+    }
+
+    if [[ "$START_PHASE" == "0" ]]; then
+      # Default: run every phase
+      for p in $ALL_PHASES; do _RUN_PHASES="${_RUN_PHASES}${p} "; done
+    else
+      resolve_deps "$START_PHASE"
+    fi
+
+    should_run() {
+      _has_phase "$1"
+    }
+
+    remove_phase() {
+      local phase="$1"
+      _RUN_PHASES="${_RUN_PHASES// $phase / }"
+    }
+
+    resolved_phase_list() {
+      local resolved=""
+      local p
+      for p in $ALL_PHASES; do
+        if _has_phase "$p"; then
+          if [[ -z "$resolved" ]]; then
+            resolved="$p"
+          else
+            resolved="$resolved $p"
+          fi
+        fi
+      done
+      printf '%s' "$resolved"
+    }
+
+    print_ci_docker_plan() {
+      local resolved
+      resolved="$(resolved_phase_list)"
+      ci_section "ci-docker run plan"
+      ci_kv "requested phase" "$START_PHASE"
+      ci_kv "resolved phases" "$resolved"
+      ci_kv "reuse stack" "$REUSE_STACK_MODE"
+      ci_kv "repo volume" "$REPOS_VOLUME_BACKEND"
+      ci_kv "target volume" "$CI_TARGET_VOLUME"
+      ci_kv "coverage" "$CI_DOCKER_COVERAGE_LABEL"
+      ci_kv "log dir" "$CI_DOCKER_LOG_DIR"
+      if [[ -n "$E2E_FILTER" ]]; then
+        ci_kv "rust filter" "$E2E_FILTER"
+      fi
+      if [[ -n "$PLAYWRIGHT_FILTER" ]]; then
+        ci_kv "playwright filter" "$PLAYWRIGHT_FILTER"
+      fi
+      return 0
+    }
+
+    # Source .env for LLM API keys (if present)
+    if [[ -f .env ]]; then
+      set -a; source .env; set +a
+    fi
+    source scripts/lib/local-stack-secrets.sh
+    g5_load_local_stack_secrets
+
+    COMPOSE_FILE="infra/docker/docker-compose.test.yml"
+    COMPOSE_PROJECT="${G5_CI_COMPOSE_PROJECT:?}"
+    export COMPOSE_PROJECT_NAME="$COMPOSE_PROJECT"
+    export POSTGRES_CONTAINER="${COMPOSE_PROJECT}-postgres"
+    export API_CONTAINER="${COMPOSE_PROJECT}-api"
+    export G5_TEST_API_IMAGE="${COMPOSE_PROJECT}/api:test"
+    REPOS_VOLUME="${COMPOSE_PROJECT}_repos_data"
+    REPOS_VOLUME_BACKEND="${G5_CI_DOCKER_REPOS_BACKEND:-local}"
+    CI_TARGET_VOLUME="${G5_CI_TARGET_VOLUME:-g5-ci-target}"
+    CI_DOCKER_COVERAGE_MODE="${G5_CI_DOCKER_COVERAGE:-false}"
+    case "$CI_DOCKER_COVERAGE_MODE" in
+      true|1|yes|on)
+        CI_DOCKER_COVERAGE_ENABLED=1
+        CI_DOCKER_COVERAGE_LABEL="enabled"
+        ;;
+      false|0|no|off)
+        CI_DOCKER_COVERAGE_ENABLED=0
+        CI_DOCKER_COVERAGE_LABEL="disabled"
+        ;;
+      *)
+        ci_warn "unknown G5_CI_DOCKER_COVERAGE='$CI_DOCKER_COVERAGE_MODE' — disabling coverage for local ci-docker"
+        CI_DOCKER_COVERAGE_ENABLED=0
+        CI_DOCKER_COVERAGE_LABEL="disabled"
+        ;;
+    esac
+    # docker-compose.test.yml defines a `g5-test` network key under the
+    # `g5-test` compose project. Docker Compose materializes that as the
+    # concrete network name `g5-test_g5-test`.
+    COMPOSE_NETWORK="${COMPOSE_PROJECT}_g5-test"
+    CI_IMAGE="${G5_CI_IMAGE:-g5-ci-runner}"
+    # The source mount and cache volumes follow Dockerfile.ci-builder's
+    # workspace and baked dependency paths. Every phase uses these variables.
+    CI_CONTAINER_WORKSPACE="/workspace"
+    CI_CONTAINER_CARGO_HOME="/opt/g5-cargo-home"
+    CI_CONTAINER_TARGET="/opt/g5-rust-target-cache/target"
+    CI_CACHE_LAYOUT_VERSION="ci-builder-lean-paths-v3"
+    CI_CACHE_LAYOUT_MARKER=".g5-local-cache-layout"
+    CI_DOCKER_LOG_DIR="${G5_CI_DOCKER_LOG_DIR:-outputs/ci-logs}"
+
+    existing_published_port() {
+      local container_name="$1"
+      local container_port="$2"
+      docker port "$container_name" "${container_port}/tcp" 2>/dev/null | awk -F: 'NR==1 {print $NF}'
+    }
+
+    choose_free_host_port() {
+      local preferred="$1"
+      local python_bin=""
+      if command -v python3 >/dev/null 2>&1; then
+        python_bin="python3"
+      elif command -v python >/dev/null 2>&1; then
+        python_bin="python"
+      else
+        echo "ERROR: python3 or python is required to resolve a free ci-docker host port" >&2
+        exit 1
+      fi
+
+      "$python_bin" -c $'import socket\nimport sys\n\n\ndef bind_candidate(port):\n    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)\n    try:\n        sock.bind(("0.0.0.0", port))\n        return sock.getsockname()[1]\n    finally:\n        sock.close()\n\n\npreferred = int(sys.argv[1])\ntry:\n    print(bind_candidate(preferred))\nexcept OSError:\n    print(bind_candidate(0))\n' "$preferred"
+    }
+
+    hash_stdin() {
+      local python_bin=""
+      if command -v python3 >/dev/null 2>&1; then
+        python_bin="python3"
+      elif command -v python >/dev/null 2>&1; then
+        python_bin="python"
+      else
+        echo "ERROR: python3 or python is required to hash ci-docker cache stamps" >&2
+        exit 1
+      fi
+
+      "$python_bin" -c 'import hashlib, sys; print(hashlib.sha256(sys.stdin.buffer.read()).hexdigest())'
+    }
+
+    pick_ci_host_port() {
+      local env_name="$1"
+      local preferred="$2"
+      local selected="${!env_name:-}"
+      if [[ -z "$selected" ]]; then
+        selected="$(choose_free_host_port "$preferred")"
+      fi
+      printf -v "$env_name" '%s' "$selected"
+      export "$env_name"
+    }
+
+    # Use distinct host ports so the test stack doesn't conflict with a
+    # running dev stack (which defaults to 5433/6381/7500/3000). If the
+    # preferred test ports are already occupied, pick free replacements.
+    select_ci_host_ports() {
+      pick_ci_host_port G5_TEST_PORT_POSTGRES 5434
+      pick_ci_host_port G5_TEST_PORT_API 7501
+      pick_ci_host_port G5_TEST_PORT_EDGE 3001
+      CI_HOST_API_URL="http://localhost:${G5_TEST_PORT_API}"
+      echo "Selected ci-docker host ports: postgres=${G5_TEST_PORT_POSTGRES} api=${G5_TEST_PORT_API} edge=${G5_TEST_PORT_EDGE}"
+    }
+
+    refresh_ci_host_ports_from_running_stack() {
+      local postgres_port api_port edge_port
+      postgres_port="$(existing_published_port "${COMPOSE_PROJECT}-postgres" 5432)"
+      api_port="$(existing_published_port "${COMPOSE_PROJECT}-api" 7500)"
+      edge_port="$(existing_published_port "${COMPOSE_PROJECT}-client" 80)"
+
+      [[ -n "$postgres_port" ]] && export G5_TEST_PORT_POSTGRES="$postgres_port"
+      [[ -n "$api_port" ]] && export G5_TEST_PORT_API="$api_port"
+      [[ -n "$edge_port" ]] && export G5_TEST_PORT_EDGE="$edge_port"
+
+      CI_HOST_API_URL="http://localhost:${G5_TEST_PORT_API}"
+      export G5_TEST_PORT_POSTGRES G5_TEST_PORT_API G5_TEST_PORT_EDGE
+      ci_section "ci-docker host ports"
+      ci_kv "postgres" "$G5_TEST_PORT_POSTGRES"
+      ci_kv "api" "$G5_TEST_PORT_API"
+      ci_kv "edge" "$G5_TEST_PORT_EDGE"
+    }
+
+    # ── Host path resolution for devcontainer environments ──
+    # When running inside a devcontainer (Docker-outside-of-Docker),
+    # $(pwd) returns a container-internal path that the Docker daemon
+    # on the host cannot mount.  Resolve to the host-side equivalent.
+    resolve_host_path() {
+      local container_path="$1"
+      # Detect devcontainer: /.dockerenv exists AND /proc/1/mountinfo has
+      # a /workspaces bind mount.  This works under sudo (env vars like
+      # REMOTE_CONTAINERS are stripped by sudo).
+      if [[ ! -f /.dockerenv ]]; then
+        echo "$container_path"
+        return
+      fi
+      # Parse /proc/1/mountinfo for the workspace bind mount.
+      # Format: ... <root> <mount_point> ... - <fstype> <source> ...
+      local ws_root="/workspaces/g5"
+      local mount_line
+      mount_line=$(awk -v mp="$ws_root" '$5 == mp { print; exit }' /proc/1/mountinfo 2>/dev/null || true)
+      if [[ -z "$mount_line" ]]; then
+        echo "$container_path"
+        return
+      fi
+      # Extract the mount source prefix and sub-path
+      local mount_source sub_path
+      mount_source=$(echo "$mount_line" | awk '{for(i=1;i<=NF;i++){if($i=="-"){print $(i+2); exit}}}')
+      sub_path=$(echo "$mount_line" | awk '{print $4}')
+      # mount_source is e.g. /run/host_mark/Users, sub_path is e.g. /lumost/workspace/g5
+      # The actual host path is the basename of mount_source + sub_path
+      local host_prefix
+      host_prefix="/$(basename "$mount_source")"  # e.g. /Users
+      local host_ws="${host_prefix}${sub_path}"    # e.g. /Users/lumost/workspace/g5
+      # Replace the workspace root prefix with the host equivalent
+      echo "${container_path/#$ws_root/$host_ws}"
+    }
+
+    HOST_SRC="$(resolve_host_path "$(pwd)")"
+    ci_section "ci-docker workspace"
+    ci_kv "container path" "$(pwd)"
+    ci_kv "host mount" "$HOST_SRC"
+    if [[ ! -d "$HOST_SRC/tests/fixtures/security" ]]; then
+      ci_error "expected tests/fixtures/security in the repository for route auth static tests"
+      exit 1
+    fi
+
+    # Remove orphaned containers only when Compose labels prove ownership.
+    _force_remove_project_containers() {
+      local stale
+      stale="$(docker ps -aq --filter "label=com.docker.compose.project=${COMPOSE_PROJECT}" 2>/dev/null || true)"
+      if [[ -n "$stale" ]]; then
+        ci_info "removing stale containers: $stale"
+        docker rm -f $stale 2>/dev/null || true
+      fi
+    }
+
+    dump_ci_docker_diagnostics() {
+      local status="$1"
+      local ts outdir
+      ts="$(date +%Y%m%d%H%M%S)"
+      outdir="$CI_DOCKER_LOG_DIR"
+      mkdir -p "$outdir" 2>/dev/null || true
+
+      ci_section "ci-docker failure diagnostics"
+      ci_kv "exit code" "$status"
+      ci_kv "compose logs" "${outdir}/ci-docker-${ts}-compose.log"
+      ci_kv "container ps" "${outdir}/ci-docker-${ts}-ps.txt"
+
+      docker compose -p "$COMPOSE_PROJECT" -f "$COMPOSE_FILE" logs --tail=400 --no-color \
+        >"${outdir}/ci-docker-${ts}-compose.log" 2>&1 || true
+      docker compose -p "$COMPOSE_PROJECT" -f "$COMPOSE_FILE" ps -a \
+        >"${outdir}/ci-docker-${ts}-ps.txt" 2>&1 || true
+      docker ps -a --filter "label=com.docker.compose.project=${COMPOSE_PROJECT}" \
+        --format 'table {{"{{"}}.Names{{"}}"}}\t{{"{{"}}.Status{{"}}"}}\t{{"{{"}}.Image{{"}}"}}' \
+        >>"${outdir}/ci-docker-${ts}-ps.txt" 2>&1 || true
+    }
+
+    cleanup() {
+      local status="${1:-$?}"
+      if [[ "$status" -ne 0 ]]; then
+        dump_ci_docker_diagnostics "$status"
+      fi
+      ci_section "ci-docker cleanup"
+      if [[ "${G5_CI_KEEP_STACK:-on-failure}" == "always" || ( "$status" -ne 0 && "${G5_CI_KEEP_STACK:-on-failure}" == "on-failure" ) ]]; then
+        ci_info "retaining project ${COMPOSE_PROJECT}; stop it with just ci-docker-down"
+        return "$status"
+      fi
+      python3 scripts/local_validation.py invalidate-stack
+      ci_info "tearing down test stack"
+      docker compose -p "$COMPOSE_PROJECT" -f "$COMPOSE_FILE" down -v --remove-orphans 2>/dev/null || true
+      cleanup_named_test_containers
+      _force_remove_project_containers
+      cleanup_repos_volume
+      return "$status"
+    }
+
+    cleanup_named_test_containers() {
+      # Labels are the ownership boundary; never remove a sibling project's containers.
+      _force_remove_project_containers
+    }
+
+    container_ip() {
+      docker inspect "$1" 2>/dev/null | jq -r '.[0].NetworkSettings.Networks[]?.IPAddress' | head -n1
+    }
+
+    list_g5d_host_containers() {
+      docker ps --filter "label=com.docker.compose.project=${COMPOSE_PROJECT}" --filter "label=com.docker.compose.service=g5d-host" --format "{{"{{"}}.Names{{"}}"}}"
+    }
+
+    refresh_ci_e2e_urls() {
+      # Use stable compose service/container hostnames on the shared network
+      # instead of raw container IPs. Docker's embedded DNS resolves these
+      # consistently across the ephemeral test-runner containers, and it avoids
+      # failures when a specific service inspect shape omits an IP temporarily.
+      CI_E2E_API_URL="http://g5-api:7500"
+      CI_E2E_CLIENT_URL="http://client"
+      # Phase 7 browser auth must stay on the same origin that the API uses
+      # for OAuth callback redirects, otherwise the saved cookie/localStorage
+      # state is captured for one origin and the browser tests later navigate
+      # to another. That origin is the edge's HTTPS alias (compose `client`),
+      # so previews run on isolated https://<task>.preview.g5-e2e.test/ hosts;
+      # Chromium maps that wildcard to the edge (Docker DNS cannot).
+      CI_E2E_BROWSER_URL="https://app.g5-e2e.test"
+      CI_E2E_PREVIEW_HOST_RESOLVER="MAP *.preview.g5-e2e.test client"
+      # Use the compose service alias here as well. Standalone `docker run`
+      # containers attached to the compose network reliably resolve service
+      # names, while the explicit container name is not guaranteed to be
+      # present in embedded DNS.
+      CI_E2E_OAUTH_URL="http://oauth-stub:9876"
+      CI_E2E_DATABASE_URL="postgres://g5:g5_test@postgres:5432/g5_test"
+
+      export CI_E2E_API_URL CI_E2E_CLIENT_URL CI_E2E_BROWSER_URL CI_E2E_PREVIEW_HOST_RESOLVER CI_E2E_OAUTH_URL CI_E2E_DATABASE_URL
+      echo "Resolved CI E2E URLs: API=$CI_E2E_API_URL Client=$CI_E2E_CLIENT_URL Browser=$CI_E2E_BROWSER_URL OAuth=$CI_E2E_OAUTH_URL DB=$CI_E2E_DATABASE_URL"
+    }
+
+    prepare_playwright_image() {
+    PLAYWRIGHT_RUNNER_IMAGE="${G5_CI_PLAYWRIGHT_IMAGE:-${COMPOSE_PROJECT}-playwright:ci}"
+    if [[ "${CI_STACK_REUSED:-0}" == "1" ]]; then
+      docker image inspect "$PLAYWRIGHT_RUNNER_IMAGE" >/dev/null
+      return 0
+    fi
+    docker build \
+      --label "io.g5.validation.worktree=${G5_LOCAL_VALIDATION_WORKTREE:-}" \
+      --label "io.g5.validation.project=${G5_CI_COMPOSE_PROJECT:-}" \
+      --build-arg "PLAYWRIGHT_BASE_IMAGE=${G5_CI_PLAYWRIGHT_BASE_IMAGE:-mcr.microsoft.com/playwright:v1.58.2-noble@sha256:6446946a1d9fd62d9ae501312a2d76a43ee688542b21622056a372959b65d63d}" \
+      -f infra/docker/Dockerfile.playwright-runner \
+      -t "$PLAYWRIGHT_RUNNER_IMAGE" .
+
+    }
+
+    use_host_nfs_repos_volume() {
+      case "$REPOS_VOLUME_BACKEND" in
+        host-nfs)
+          return 0
+          ;;
+        local)
+          return 1
+          ;;
+        auto|"")
+          return 1
+          ;;
+        *)
+          echo "WARN: unknown G5_CI_DOCKER_REPOS_BACKEND='$REPOS_VOLUME_BACKEND' — falling back to local"
+          return 1
+          ;;
+      esac
+    }
+
+    prepare_repos_volume() {
+      if use_host_nfs_repos_volume; then
+        echo "=== Preparing host-backed NFS repos volume (${REPOS_VOLUME}) ==="
+        ./scripts/ci-docker-host-nfs.sh prepare-volume "$REPOS_VOLUME"
+        return
+      fi
+
+      docker volume rm "$REPOS_VOLUME" >/dev/null 2>&1 || true
+    }
+
+    finish_ci_docker_success() {
+      local elapsed
+      elapsed="$(($(date +%s) - CI_DOCKER_STARTED_AT))"
+      ci_section "ci-docker complete"
+      ci_kv "elapsed" "$(format_duration "$elapsed")"
+      ci_kv "log dir" "$CI_DOCKER_LOG_DIR"
+    }
+
+    cleanup_repos_volume() {
+      if use_host_nfs_repos_volume; then
+        ./scripts/ci-docker-host-nfs.sh cleanup-volume "$REPOS_VOLUME" >/dev/null 2>&1 || true
+        return
+      fi
+
+      docker volume rm "$REPOS_VOLUME" >/dev/null 2>&1 || true
+    }
+
+    should_attempt_stack_reuse() {
+      case "$REUSE_STACK_MODE" in
+        true|1|yes|always)
+          return 0
+          ;;
+        false|0|no|never)
+          return 1
+          ;;
+        auto|"")
+          case "$START_PHASE" in
+            5) [[ -n "$E2E_FILTER" ]] ;;
+            6) [[ -n "$E2E_FILTER" ]] ;;
+            7) [[ -n "$PLAYWRIGHT_FILTER" ]] ;;
+            *) return 1 ;;
+          esac
+          ;;
+        *)
+          echo "WARN: unknown reuse_stack mode '$REUSE_STACK_MODE' — falling back to auto"
+          case "$START_PHASE" in
+            5) [[ -n "$E2E_FILTER" ]] ;;
+            6) [[ -n "$E2E_FILTER" ]] ;;
+            7) [[ -n "$PLAYWRIGHT_FILTER" ]] ;;
+            *) return 1 ;;
+          esac
+          ;;
+      esac
+    }
+
+    load_seeded_fixture_env() {
+      # seed-test-workspace.sh owns the fixture identities. Keep its complete
+      # environment instead of guessing a repo among several main branches.
+      [[ -f .env.test ]] || return 1
+      set -a
+      source .env.test
+      set +a
+      : "${G5_E2E_TEST_WORKSPACE_ID:?seeded workspace is missing}"
+      : "${G5_E2E_TEST_REPO_ID:?seeded repository is missing}"
+      : "${G5_E2E_TEST_ORG_ID:?seeded organization is missing}"
+      export G5D_ORG_ID="$G5_E2E_TEST_ORG_ID"
+      echo "    loaded fixture env: org=${G5_E2E_TEST_ORG_ID} workspace=${G5_E2E_TEST_WORKSPACE_ID}"
+    }
+
+    running_stack_is_ready() {
+      ./scripts/wait-for-healthy.sh "$COMPOSE_FILE" 5 "$COMPOSE_PROJECT" >/dev/null 2>&1 || return 1
+
+      case "$START_PHASE" in
+        5)
+          true
+          ;;
+        6)
+          docker ps --filter "label=com.docker.compose.project=${COMPOSE_PROJECT}" --filter "label=com.docker.compose.service=g5d-host" --format "{{"{{"}}.Names{{"}}"}}" 2>/dev/null | grep -q .
+          ;;
+        7)
+          true
+          ;;
+      esac
+    }
+
+    activate_stack_reuse() {
+      ci_section "ci-docker stack reuse"
+      ci_info "reusing running test stack for targeted Phase ${START_PHASE} slice"
+      ci_info "fast path: skipping image rebuild and reseed; use reuse_stack=false for a fresh stack"
+      refresh_ci_host_ports_from_running_stack
+      refresh_ci_e2e_urls
+      if [[ "$START_PHASE" == "5" ]]; then
+        CI_STACK_REUSED=1
+        remove_phase 0; remove_phase 3; remove_phase 4; remove_phase 4a
+        return 0
+      fi
+      load_seeded_fixture_env || return 1
+      CI_STACK_REUSED=1
+      remove_phase 0
+      remove_phase 3
+      remove_phase 4
+      remove_phase 4a
+      remove_phase 4b
+      remove_phase 4c
+    }
+
+    if should_attempt_stack_reuse; then
+      if python3 scripts/local_validation.py check-stack "$START_PHASE" && running_stack_is_ready && activate_stack_reuse; then
+        :
+      elif [[ "$REUSE_STACK_MODE" == "true" || "$REUSE_STACK_MODE" == "1" || "$REUSE_STACK_MODE" == "yes" || "$REUSE_STACK_MODE" == "always" ]]; then
+        ci_error "reuse_stack requested, but the ci-docker stack is not healthy/seeded."
+        echo "Hint: run 'just ci-docker-prepare' first, or rerun with reuse_stack=false."
+        exit 1
+      else
+        ci_section "ci-docker stack setup"
+        ci_info "running fresh stack setup (reuse conditions not met)"
+      fi
+    fi
+
+    print_ci_docker_plan
+    # Only set the cleanup trap and pre-cleanup when Phase 4 (start stack)
+    # will run — otherwise we'd tear down a stack we didn't start.
+    if should_run 4; then
+      trap cleanup EXIT
+
+      python3 scripts/local_validation.py invalidate-stack
+      # Pre-cleanup: tear down any stale stack from a previous run that
+      # wasn't cleaned up properly (e.g. killed CI, trap didn't fire).
+      ci_section "ci-docker pre-cleanup"
+      ci_info "removing stale containers"
+      docker compose -p "$COMPOSE_PROJECT" -f "$COMPOSE_FILE" down -v --remove-orphans 2>/dev/null || true
+      cleanup_named_test_containers
+      _force_remove_project_containers
+      prepare_repos_volume
+    else
+      if [[ "${CI_STACK_REUSED:-0}" == "1" ]]; then
+        # An explicitly prepared stack stays warm across successful reruns too.
+        if [[ "${G5_CI_KEEP_STACK:-on-failure}" != "never" ]]; then G5_CI_KEEP_STACK=always; fi
+        trap 'cleanup "$?"' EXIT
+      else
+        trap 'status=$?; if [[ "$status" -ne 0 ]]; then dump_ci_docker_diagnostics "$status"; fi' EXIT
+      fi
+    fi
+
+    ci_section "G5 Docker CI"
+
+    # Pinned third-party downloads (operations
+    # g5.quality.delivery.pinned-third-party-tools, G5Labs/G5-Lean#527): no
+    # recipe or privileged install script pipes a download into a shell or
+    # archive extractor. Runs once, before Phase 0 builds the CI image or any
+    # phase prepares a base tier, so a piped download can never execute
+    # before the guard reports it; scripts/test_verify_pinned_downloads.py
+    # covers the guard itself.
+    bash scripts/verify-pinned-downloads.sh
+
+    # Phase 0: Build a lightweight CI image (cached)
+    # Uses infra/docker/Dockerfile.ci-builder — single source of truth shared with Cloud Build
+    prepare_ci_image() {
+      # Dockerfile.ci-builder is FROM g5/base-rust-warm:26.04 (integration-stack/
+      # docker_images [D20]); ensure the chain parent-first (idempotent, [D5]) so
+      # the CI image layers onto the same base every other migrated image uses
+      # and the Phase 3 single-base oracle holds for it (a leaf pulled without
+      # its parents is keyed, not layered).
+      G5_BASE_IMAGE_STRICT_LINEAGE=1 bash scripts/ensure-base-images.sh base base-rust base-rust-warm
+      # Reuse only when every Dockerfile COPY input, ignore file, parent image
+      # identity and local warmup option matches. The Dockerfile owns the input
+      # inventory; adding a tool manifest or build.rs cannot bypass this key.
+      CI_IMAGE_INPUTS_SHA="$(python3 scripts/local_validation.py builder-key "$CI_DOCKER_COVERAGE_ENABLED" "${G5_CI_DOCKER_RELEASE_WARMUP:-0}")"
+      CI_IMAGE_PREV_INPUTS_SHA=""
+      if docker image inspect "$CI_IMAGE" >/dev/null 2>&1; then
+        CI_IMAGE_PREV_INPUTS_SHA="$(docker image inspect "$CI_IMAGE" 2>/dev/null | jq -r '.[0].Config.Labels["g5.ci.inputs_sha"] // ""' 2>/dev/null || true)"
+      fi
+      if [[ "${G5_CI_REBUILD_IMAGE:-0}" != "1" && -n "$CI_IMAGE_PREV_INPUTS_SHA" && "$CI_IMAGE_PREV_INPUTS_SHA" == "$CI_IMAGE_INPUTS_SHA" ]]; then
+        echo "CI image up to date (inputs unchanged) — reusing $CI_IMAGE (set G5_CI_REBUILD_IMAGE=1 to force a rebuild)"
+      else
+        echo "CI image inputs changed or image missing — building $CI_IMAGE"
+        docker build --label "g5.ci.inputs_sha=${CI_IMAGE_INPUTS_SHA}" --build-arg "G5_CI_BUILDER_COVERAGE=${CI_DOCKER_COVERAGE_ENABLED}" --build-arg "G5_CI_BUILDER_RELEASE_WARMUP=${G5_CI_DOCKER_RELEASE_WARMUP:-0}" -t "$CI_IMAGE" -f infra/docker/Dockerfile.ci-builder .
+      fi
+
+      # Detect if the CI image changed without treating every warm-layer change
+      # as a reason to cold-compile Rust again. The OCI index digest (`.Id`) can
+      # change across cached rebuilds even when the unpacked image content is
+      # identical, and the RootFS layer list changes whenever Dockerfile warm
+      # layers churn. Cargo can invalidate source/dependency artifacts itself;
+      # the named target volume only needs to be cleared when the build
+      # environment changes (toolchain, cargo subcommands, system-library paths).
+      CI_IMAGE_ID="$(docker image inspect "$CI_IMAGE" --format '{{"{{"}}.Id{{"}}"}}' 2>/dev/null || echo unknown)"
+      CI_IMAGE_CONTENT_FINGERPRINT="$(
+        docker image inspect "$CI_IMAGE" 2>/dev/null \
+          | jq -rc '
+              .[0]
+              | "content-v2|" + ({
+                  rootfs: (.RootFS.Layers // []),
+                  env: (.Config.Env // []),
+                  cmd: (.Config.Cmd // []),
+                  workdir: (.Config.WorkingDir // ""),
+                  arch: (.Architecture // ""),
+                  os: (.Os // "")
+                } | tostring)
+            ' \
+          | hash_stdin \
+          || echo unknown
+      )"
+      CI_IMAGE_BUILD_ENV_RAW="$(
+        docker run --rm "$CI_IMAGE" sh -lc '
+          set +e
+          printf "build-env-v1\n"
+          rustc -Vv
+          cargo -V
+          cargo nextest --version
+          cargo llvm-cov --version
+          printf "G5_CI_BUILDER_COVERAGE=%s\n" "${G5_CI_BUILDER_COVERAGE:-}"
+          cargo deny --version
+          sqlx --version
+          printf "PKG_CONFIG_PATH=%s\n" "${PKG_CONFIG_PATH:-}"
+          printf "LIBRARY_PATH=%s\n" "${LIBRARY_PATH:-}"
+          printf "LD_LIBRARY_PATH=%s\n" "${LD_LIBRARY_PATH:-}"
+          printf "CARGO_HOME=%s\n" "${CARGO_HOME:-}"
+          printf "CARGO_TARGET_DIR=%s\n" "${CARGO_TARGET_DIR:-}"
+        ' 2>/dev/null || true
+      )"
+      if [[ -n "$CI_IMAGE_BUILD_ENV_RAW" ]]; then
+        CI_IMAGE_BUILD_ENV_FINGERPRINT="$(printf '%s' "$CI_IMAGE_BUILD_ENV_RAW" | hash_stdin)"
+      else
+        CI_IMAGE_BUILD_ENV_FINGERPRINT="unknown"
+      fi
+
+      CI_IMAGE_STAMP_KEY="$(printf '%s\n%s\n' "$CI_IMAGE" "$CI_TARGET_VOLUME" | hash_stdin)"
+      CI_IMAGE_CONTENT_STAMP_FILE="/tmp/.g5-ci-image-content-stamp-${CI_IMAGE_STAMP_KEY}"
+      CI_IMAGE_BUILD_ENV_STAMP_FILE="/tmp/.g5-ci-image-build-env-stamp-${CI_IMAGE_STAMP_KEY}"
+      CI_IMAGE_BUILD_ENV_CHANGED="false"
+
+      if [[ -f "$CI_IMAGE_BUILD_ENV_STAMP_FILE" ]]; then
+        PREV_BUILD_ENV_STAMP="$(cat "$CI_IMAGE_BUILD_ENV_STAMP_FILE")"
+        if [[ "$CI_IMAGE_BUILD_ENV_FINGERPRINT" != "$PREV_BUILD_ENV_STAMP" ]]; then
+          if [[ "$CI_IMAGE_BUILD_ENV_FINGERPRINT" == "unknown" ]]; then
+            echo "CI image build environment fingerprint unavailable — preserving target cache"
+          else
+            echo "CI image build environment changed — clearing stale target cache"
+            docker volume rm "$CI_TARGET_VOLUME" 2>/dev/null || true
+            CI_IMAGE_BUILD_ENV_CHANGED="true"
+          fi
+        fi
+      else
+        echo "CI image build environment stamp initialized — preserving target cache"
+      fi
+      if [[ "$CI_IMAGE_BUILD_ENV_FINGERPRINT" != "unknown" ]]; then
+        echo "$CI_IMAGE_BUILD_ENV_FINGERPRINT" > "$CI_IMAGE_BUILD_ENV_STAMP_FILE"
+      fi
+
+      if [[ -f "$CI_IMAGE_CONTENT_STAMP_FILE" ]]; then
+        PREV_CONTENT_STAMP="$(cat "$CI_IMAGE_CONTENT_STAMP_FILE")"
+        if [[ "$CI_IMAGE_CONTENT_FINGERPRINT" != "$PREV_CONTENT_STAMP" ]]; then
+          if [[ "$CI_IMAGE_BUILD_ENV_CHANGED" == "true" ]]; then
+            echo "CI image content changed with build environment change"
+          else
+            echo "CI image content changed; build environment stable — preserving target cache"
+          fi
+        fi
+      elif [[ -f /tmp/.g5-ci-image-stamp ]]; then
+        echo "CI image stamp upgraded — preserving target cache"
+      fi
+      if [[ "$CI_IMAGE_CONTENT_FINGERPRINT" == "unknown" ]]; then
+        echo "$CI_IMAGE_ID" > "$CI_IMAGE_CONTENT_STAMP_FILE"
+      else
+        echo "$CI_IMAGE_CONTENT_FINGERPRINT" > "$CI_IMAGE_CONTENT_STAMP_FILE"
+      fi
+    }
+
+    prepare_local_ci_cache_layout() {
+      local current_layout=""
+      if docker volume inspect "$CI_TARGET_VOLUME" >/dev/null 2>&1; then
+        current_layout="$(
+          docker run --rm \
+            -v "${CI_TARGET_VOLUME}:/cache:ro" \
+            -e G5_CI_LOCAL_CACHE_MARKER="$CI_CACHE_LAYOUT_MARKER" \
+            "$CI_IMAGE" \
+            sh -c 'cat "/cache/${G5_CI_LOCAL_CACHE_MARKER}" 2>/dev/null || true'
+        )"
+        if [[ "$current_layout" != "$CI_CACHE_LAYOUT_VERSION" ]]; then
+          echo "CI target cache layout changed — replacing stale volume"
+          docker volume rm "$CI_TARGET_VOLUME"
+        fi
+      fi
+
+      # Mounting a new volume over the image's populated target path copies the
+      # baked dependency baseline into the volume before this marker is written.
+      # -e CARGO_TARGET_DIR is REQUIRED: the ci-builder image overrides its
+      # inherited env to the cloud-canonical /opt/g5-rust-target-cache path, so
+      # writing through the image env would miss the volume mounted at
+      # $CI_CONTAINER_TARGET and every next run would judge the cache stale.
+      docker run --rm \
+        -v "${CI_TARGET_VOLUME}:${CI_CONTAINER_TARGET}" \
+        -e CARGO_TARGET_DIR="$CI_CONTAINER_TARGET" \
+        -e G5_CI_LOCAL_CACHE_LAYOUT="$CI_CACHE_LAYOUT_VERSION" \
+        -e G5_CI_LOCAL_CACHE_MARKER="$CI_CACHE_LAYOUT_MARKER" \
+        "$CI_IMAGE" \
+        sh -c 'printf "%s\n" "$G5_CI_LOCAL_CACHE_LAYOUT" > "${CARGO_TARGET_DIR}/${G5_CI_LOCAL_CACHE_MARKER}"'
+    }
+
+    if should_run 0; then
+    echo "=== Phase 0: Preparing CI image ==="
+    prepare_ci_image
+    elif should_run 6; then
+    # Targeted Phase 6 reuse intentionally skips Phase 0; lazily ensure the
+    # shared CI runner image exists so we can mount the live workspace onto
+    # the compose network instead of rebuilding a source-copying test image.
+    if docker image inspect "$CI_IMAGE" >/dev/null 2>&1; then
+      echo "=== Phase 6 prerequisite: reusing existing CI image ==="
+    else
+      echo "=== Phase 6 prerequisite: preparing missing CI image ==="
+      prepare_ci_image
+    fi
+    fi  # Phase 0 / Phase 6 prerequisite
+
+    if should_run 0 || should_run 0b || should_run 1 || should_run 1b || \
+       should_run 5 || should_run 5b || should_run 5c || should_run 6; then
+      prepare_local_ci_cache_layout
+    fi
+
+    # CI_RUN: volume-mounts the host source so tests see real files.
+    # A named volume caches the cargo registry + target dir between CI runs.
+    # CARGO_BUILD_JOBS=2 limits compiler parallelism to prevent OOM in Docker.
+    # g5-api is the heaviest crate — it gets -j1 to avoid dual-linker OOM.
+    # Conditionally pass --device /dev/kvm so microvm integration tests can
+    # execute real VMs when the host has KVM support (GitHub runners do).
+    KVM_FLAG=""
+    SCCACHE_VOL=""
+    SCCACHE_ENV=""
+    CI_VOLS=""
+    CI_ENV_BASE=""
+    CI_RUN=":"
+    CI_RUN_LOW=":"
+    if should_run 0 || should_run 0b || should_run 1 || should_run 1b || should_run 5 || should_run 5b || should_run 5c || should_run 6; then
+      if [[ -r /dev/kvm ]]; then
+        KVM_FLAG="--device /dev/kvm"
+        echo "KVM detected — microvm tests will execute real VMs"
+      else
+        echo "KVM not available — microvm tests will skip at runtime"
+      fi
+
+      # ── sccache flags ──
+      # Local `just ci-docker` runs execute cargo inside short-lived `docker run`
+      # containers. Keep the compiled object cache on a shared volume, but pin
+      # the sccache control socket inside each container's `/tmp` so ephemeral
+      # runs do not inherit stale daemon state from previous containers.
+      # sccache is ON by default for the gate phases so they reuse the dependency
+      # objects baked into base-rust-warm's /opt/g5-sccache (now incl. dev-deps
+      # via the `--all-targets --all-features` cook) — a cold target volume no
+      # longer rebuilds the whole dependency graph. Safe by construction: sccache
+      # is content-addressed, so a source change changes the key and forces a
+      # recompile — it cannot mask a source-shape change
+      # (integration-stack/docker_images#D14: build-cache is an acceleration
+      # contract, never a correctness one). The former opt-out cited "stale
+      # rmeta", but that is the reused target-dir VOLUME's cargo fingerprints —
+      # orthogonal to (content-addressed) sccache and present with or without it.
+      # Force off with G5_CI_USE_SCCACHE=false.
+      SCCACHE_MODE="${G5_CI_USE_SCCACHE:-true}"
+      if docker run --rm "$CI_IMAGE" which sccache >/dev/null 2>&1; then
+        if [[ "$SCCACHE_MODE" == "false" || "$SCCACHE_MODE" == "0" || "$SCCACHE_MODE" == "off" ]]; then
+          echo "sccache: disabled for this ci-docker run (G5_CI_USE_SCCACHE=$SCCACHE_MODE)"
+          SCCACHE_ENV="-e RUSTC_WRAPPER="
+        else
+          # Point at the warm baked cache inherited from base-rust-warm so gate
+          # compiles hit the cooked dependency objects; per-container /tmp socket
+          # so ephemeral runs don't inherit stale daemon state.
+          echo "sccache: enabled → warm /opt/g5-sccache (set G5_CI_USE_SCCACHE=false to disable)"
+          SCCACHE_ENV="-e RUSTC_WRAPPER=sccache -e SCCACHE_DIR=/opt/g5-sccache -e SCCACHE_SERVER_UDS=/tmp/sccache.sock -e SCCACHE_IGNORE_SERVER_IO_ERROR=1"
+          if [[ -n "${SCCACHE_GCS_BUCKET:-}" ]]; then
+            SCCACHE_ENV="$SCCACHE_ENV -e SCCACHE_GCS_BUCKET=${SCCACHE_GCS_BUCKET}"
+            SCCACHE_ENV="$SCCACHE_ENV -e SCCACHE_GCS_RW_MODE=${SCCACHE_GCS_RW_MODE:-READ_WRITE}"
+            [[ -n "${SCCACHE_GCS_KEY_PREFIX:-}" ]] && SCCACHE_ENV="$SCCACHE_ENV -e SCCACHE_GCS_KEY_PREFIX=${SCCACHE_GCS_KEY_PREFIX}"
+            [[ -n "${GOOGLE_APPLICATION_CREDENTIALS:-}" ]] && SCCACHE_ENV="$SCCACHE_ENV -e GOOGLE_APPLICATION_CREDENTIALS=/gcp/sa.json -v ${GOOGLE_APPLICATION_CREDENTIALS}:/gcp/sa.json:ro"
+            echo "sccache: GCS backend → ${SCCACHE_GCS_BUCKET} (per-container socket)"
+          else
+            echo "sccache: local volume via per-container socket (set SCCACHE_GCS_BUCKET in .env for cloud cache)"
+          fi
+        fi
+      else
+        echo "sccache: not found in CI image — skipping (rebuild image to enable)"
+      fi
+
+      # One root mount includes crates, shipped profiles, fixtures, .github,
+      # scripts and tools at the same relative paths used on the host.
+      if should_run 0b || should_run 6; then
+        for gh_asset in \
+          "$HOST_SRC/.github/workflows/self-hosted-install.yml" \
+          "$HOST_SRC/.github/actions/setup-just/action.yml"; do
+          if [[ ! -f "$gh_asset" ]]; then
+            ci_error "ci-docker Phase 0b/6 require repo-root .github asset '$gh_asset' for the g5-e2e supply-chain guard"
+            exit 1
+          fi
+        done
+      fi
+      CI_VOLS="-v $HOST_SRC:$CI_CONTAINER_WORKSPACE -v g5-ci-cargo-registry:$CI_CONTAINER_CARGO_HOME/registry -v g5-ci-cargo-git:$CI_CONTAINER_CARGO_HOME/git -v ${CI_TARGET_VOLUME}:$CI_CONTAINER_TARGET $SCCACHE_VOL"
+      CI_ENV_BASE="$SCCACHE_ENV -e SQLX_OFFLINE=true -e CARGO_HOME=$CI_CONTAINER_CARGO_HOME -e CARGO_TARGET_DIR=$CI_CONTAINER_TARGET -e CARGO_INCREMENTAL=${CARGO_INCREMENTAL:-0}"
+      # Default cargo job count to the runner's core count. Was hardcoded 2 (a
+      # small-container OOM guard); CI/build hosts have ample RAM and on 8-32
+      # core Cloud Build runners jobs=2 wasted most cores. Override with
+      # G5_CI_CARGO_JOBS on a memory-starved runner. jobs is not part of the
+      # sccache key, so this does not affect cross-context cache hits. The
+      # heaviest-link phases still drop to CI_RUN_LOW (jobs=1) explicitly.
+      # `nproc` is GNU coreutils and is absent on a stock macOS host, where
+      # ci-docker is a supported parity lane (see ci-docker-nfs-init); fall back
+      # to the BSD equivalent rather than aborting under `set -e`.
+      CI_CARGO_JOBS="${G5_CI_CARGO_JOBS:-$(nproc 2>/dev/null || sysctl -n hw.ncpu)}"
+      CI_RUN="docker run --rm --init --cgroupns=host -v /sys/fs/cgroup:/sys/fs/cgroup:ro $KVM_FLAG $CI_VOLS -w $CI_CONTAINER_WORKSPACE $CI_ENV_BASE -e CARGO_BUILD_JOBS=${CI_CARGO_JOBS} $CI_IMAGE"
+      CI_RUN_LOW="docker run --rm --init --cgroupns=host -v /sys/fs/cgroup:/sys/fs/cgroup:ro $KVM_FLAG $CI_VOLS -w $CI_CONTAINER_WORKSPACE $CI_ENV_BASE -e CARGO_BUILD_JOBS=1 $CI_IMAGE"
+      G5D_CI_FEATURES="${G5_CI_G5D_FEATURES:-test-helpers,microvm-e2e}"
+      echo "g5d ci features: ${G5D_CI_FEATURES} (set G5_CI_G5D_FEATURES to override)"
+    fi
+
+    # Phase 0b: Format check + Clippy lint + frontend lint + Dependency audit
+    if should_run 0b; then
+    echo "=== Phase 0b: fmt + clippy + frontend lint + npm audit + guards + deny ==="
+    python3 scripts/run-ci-script-tests.py
+    $CI_RUN cargo fmt --all -- --check
+    $CI_RUN_LOW cargo clippy --workspace --all-targets -- -D warnings
+    $CI_RUN cargo test -p g5-api-routes --lib "guards::tests"
+    # Plain Node task (eslint + npm audit), so it runs on the shared Node tier rather than a
+    # separate `node:22-alpine` external base ([D18]). base-node is already
+    # built for the other phases, so the marginal cost here is zero layers,
+    # whereas alpine is a whole extra image to pull. Phase 0b does not depend on
+    # Phase 3, so ensure the tier here — idempotent ([D5]).
+    bash scripts/ensure-base-images.sh base-node
+    # npm audit is the client-side counterpart of `cargo deny check` below: it
+    # reads package-lock.json against the GitHub Advisory Database and fails on
+    # high/critical findings in shipped (non-dev) dependencies. It runs in the
+    # same container as lint so the `npm ci` tree is reused.
+    docker run --rm \
+      -v "$HOST_SRC/frontend:/app" \
+      -v /app/node_modules \
+      -w /app \
+      g5/base-node:26.04 \
+      sh -c "npm ci --ignore-scripts && npm run lint && npm audit --omit=dev --audit-level=high" || {
+      echo "FAIL: Phase 0b — client lint or npm audit failed"
+      exit 1
+    }
+    $CI_RUN cargo deny check
+    fi  # Phase 0b
+
+    # Phase 1: Unit + bin + doc tests (offline, no live DB needed)
+    # g5d uses an explicit CI-safe feature set instead of --all-features:
+    # workspace-integration is a hard reflink/XFS assertion and should only be
+    # opt-in on local ci-docker hosts that provide a reflink-capable temp root.
+    # The shared crates and g5-api still use --all-features.
+    # The CI image supplies the pinned Cloud Hypervisor platform binaries.
+    # In CI, /dev/kvm is passed through when available so microvm tests can
+    # execute real VMs; tests needing hardware/keys skip gracefully at runtime.
+    # Build crates sequentially to avoid OOM from parallel linker invocations.
+    # The E2E crate is excluded here — it runs in Phase 6 against the live stack.
+    if should_run 1; then
+    if [[ "$CI_DOCKER_COVERAGE_ENABLED" == "1" ]]; then
+      echo "=== Phase 1: Unit, bin & doc tests (with coverage) ==="
+    else
+      echo "=== Phase 1: Unit, bin & doc tests (coverage disabled) ==="
+    fi
+    # The real dispatcher process suite needs no DB and gates Phase 1.
+    # Other integration tests in tests/ run later against the Phase 5 stack.
+    # Nextest flags (-j, --no-fail-fast) go before the "--" separator.
+    # Use --no-report to accumulate profdata; merged LCOV reports are generated
+    # in Phase 5c after integration tests add their profdata too.
+    #
+    # Clear the instrumented coverage target, not just profraw/profdata. The
+    # shared ci-docker target volume can retain stale rmeta after branch-shape
+    # changes; correctness is more important than reusing those artifacts.
+    if [[ "$CI_DOCKER_COVERAGE_ENABLED" == "1" ]]; then
+      $CI_RUN sh -c "rm -rf target/llvm-cov-target; find target -name '*.profraw' -delete 2>/dev/null; find target -name '*.profdata' -delete 2>/dev/null" || true
+      $CI_RUN sh -c "cargo llvm-cov nextest --no-report -p g5-contracts -p g5-auth -p g5-authz -p g5-storage -p g5-semantic -p g5-scm -p g5-internal-api -p fake-provider-cli --lib --bins --all-features -j2 --no-fail-fast"
+      $CI_RUN_LOW sh -c "cargo llvm-cov nextest --no-report -p g5-api-foundation -p g5-api-data -p g5-api-core -p g5-api-routes -p g5-api --lib --bins --all-features -j1 --no-fail-fast"
+      $CI_RUN_LOW sh -c "cargo llvm-cov nextest --no-report -p g5d-foundation -p g5d-isolation -p g5d-agent -p g5d-host -p g5d-dispatch --lib --bins --all-features -j1 --no-fail-fast"
+      $CI_RUN_LOW sh -c "cargo llvm-cov nextest --no-report -p g5d --lib --bins --test dispatch --features ${G5D_CI_FEATURES} -j1 --no-fail-fast"
+    else
+      $CI_RUN sh -c "cargo nextest run -p g5-contracts -p g5-auth -p g5-authz -p g5-storage -p g5-semantic -p g5-scm -p g5-internal-api -p fake-provider-cli --lib --bins --all-features -j2 --no-fail-fast"
+      $CI_RUN_LOW sh -c "cargo nextest run -p g5-api-foundation -p g5-api-data -p g5-api-core -p g5-api-routes -p g5-api --lib --bins --all-features -j1 --no-fail-fast"
+      $CI_RUN_LOW sh -c "cargo nextest run -p g5d-foundation -p g5d-isolation -p g5d-agent -p g5d-host -p g5d-dispatch --lib --bins --all-features -j1 --no-fail-fast"
+      $CI_RUN_LOW sh -c "cargo nextest run -p g5d --lib --bins --test dispatch --features ${G5D_CI_FEATURES} -j1 --no-fail-fast"
+    fi
+    $CI_RUN cargo test -j2 -p g5-contracts -p g5-auth -p g5-authz -p g5-storage -p g5-semantic -p g5-scm -p g5-internal-api -p fake-provider-cli --all-features --doc
+    $CI_RUN_LOW cargo test -j1 -p g5-api-foundation -p g5-api-data -p g5-api-core -p g5-api-routes -p g5-api --all-features --doc -- --test-threads=1
+    $CI_RUN_LOW cargo test -j1 -p g5d-foundation -p g5d-isolation -p g5d-agent -p g5d-host -p g5d-dispatch --all-features --doc -- --test-threads=1
+    $CI_RUN sh -c "cargo test -j2 -p g5d --features ${G5D_CI_FEATURES} --doc"
+    fi  # Phase 1
+
+    # Phase 1b: Isolation backend tests (offline, no live DB needed)
+    # Runs the full isolation_backends integration test suite.  Process backend
+    # tests execute real child processes. The strict Cloud Hypervisor gate
+    # separately owns real KVM boots with explicit platform/OCI fixtures.
+    # Separated from Phase 1 to make isolation coverage visible in CI output when enabled.
+    if should_run 1b; then
+    echo "=== Phase 1b: Isolation backend tests ==="
+    if [[ "$CI_DOCKER_COVERAGE_ENABLED" == "1" ]]; then
+      ISOLATION_NEXTEST="cargo llvm-cov nextest --no-report"
+    else
+      ISOLATION_NEXTEST="cargo nextest run"
+    fi
+    $CI_RUN sh -c "$ISOLATION_NEXTEST -p g5d --test isolation_backends --features ${G5D_CI_FEATURES} -j2 --no-fail-fast" || {
+      echo "FAIL: Phase 1b — isolation backend tests had failures"
+      exit 1
+    }
+    # Also run the in-crate isolation unit tests explicitly (config, serde,
+    # error paths, IsolationManager delegation, probe fallback logic).
+    $CI_RUN sh -c "$ISOLATION_NEXTEST -p g5d-isolation --lib --all-features -j2 --no-fail-fast" || {
+      echo "FAIL: Phase 1b — isolation unit tests had failures"
+      exit 1
+    }
+    fi  # Phase 1b
+
+    # Phase 2: Client unit + contract tests (offline, no stack needed)
+    # Runs inside the Node builder stage of the client image — reuses
+    # package-lock.json cache.  Includes Zod contract tests, route-contract
+    # tests, and all 500+ vitest suites.
+    if should_run 2; then
+    echo "=== Phase 2: Client unit & contract tests ==="
+    if [[ ! -f "$HOST_SRC/Justfile" ]]; then
+      ci_error "expected root Justfile at $HOST_SRC/Justfile for client guide tests"
+      exit 1
+    fi
+    CLIENT_VITEST_CMD="npx vitest run --reporter=default"
+    if [[ "$CI_DOCKER_COVERAGE_ENABLED" == "1" ]]; then
+      CLIENT_VITEST_CMD="$CLIENT_VITEST_CMD --coverage --coverage.provider=v8 --coverage.reporter=text-summary"
+    fi
+    # Plain Node task (vitest, no browsers), so it runs on the shared Node tier
+    # instead of a separate `node:22-bookworm` external base ([D18]). Same Node
+    # major (base-node pins NODE_MAJOR=22 and gates on it). Phase 2 has no
+    # dependency on Phase 3, so ensure the tier here — it is idempotent ([D5]).
+    bash scripts/ensure-base-images.sh base-node
+    # The client vitest suite raw-imports a crate fixture via
+    # ../../../backend/g5-semantic/tests/fixtures/... which resolves to /backend/g5-semantic/...
+    # inside the container. main moved this fixture into g5-semantic during the
+    # crate split, so mount the path the tests actually reference. NOTE: keep
+    # comments OUT of the `docker run \` continuation below — a `#` line there
+    # terminates the continuation and docker loses its arguments.
+    docker run --rm \
+      -v "$HOST_SRC/frontend:/app" \
+      -v "$HOST_SRC/infra/docker:/g5-generation/infra/docker:ro" \
+      -v "$HOST_SRC/Justfile:/g5-generation/Justfile:ro" \
+      -v "$HOST_SRC/backend/g5-semantic/tests/fixtures:/backend/g5-semantic/tests/fixtures:ro" \
+      -v /app/node_modules \
+      -w /app \
+      -e G5_GENERATION_DIR=/g5-generation \
+      g5/base-node:26.04 \
+      sh -c "npm ci --prefer-offline && ${CLIENT_VITEST_CMD}" || {
+      echo "FAIL: Phase 2 — client vitest tests failed"
+      exit 1
+    }
+    fi  # Phase 2
+
+    # Phase 3: Build service Docker images
+    if should_run 3; then
+    echo "=== Phase 3: Building service images ==="
+    # backend/g5-api/edge are FROM the shared 26.04 tiers ([D18]); ensure the
+    # whole chain, parent-first, so every tier layers on the local base and the
+    # single-base oracle below holds (a leaf pulled without its parent is
+    # keyed, not layered); idempotent ([D5]) regardless of start_phase.
+    G5_BASE_IMAGE_STRICT_LINEAGE=1 bash scripts/ensure-base-images.sh base base-rust base-rust-warm base-node
+    docker build -f infra/docker/Dockerfile.g5d-base -t g5/g5d-base:latest .
+    if [[ "${G5_CI_COMPOSE_BUILD_PARALLEL:-false}" == "true" || "${G5_CI_COMPOSE_BUILD_PARALLEL:-false}" == "1" || "${G5_CI_COMPOSE_BUILD_PARALLEL:-false}" == "on" ]]; then
+      echo "compose build: parallel enabled via G5_CI_COMPOSE_BUILD_PARALLEL"
+      docker compose -p "$COMPOSE_PROJECT" -f "$COMPOSE_FILE" build --parallel
+    else
+      echo "compose build: sequential for local Docker Desktop stability (set G5_CI_COMPOSE_BUILD_PARALLEL=true to opt in)"
+      for service in oauth-stub client g5-api g5d-host; do
+        docker compose -p "$COMPOSE_PROJECT" -f "$COMPOSE_FILE" build "$service"
+      done
+    fi
+    # Single-external-base oracle (test_contract/base_image_consolidation [D2]):
+    # every image this phase just built must carry the current g5/base tier's
+    # RootFS layers as an exact prefix. This is the fleet-ancestry digest check
+    # the contract names; the exclusion list (postgres, the public
+    # customer default, the Playwright runner, the tungsten maven builder
+    # stage) is simply not passed in ([D18]).
+    bash scripts/verify-base-digest-identity.sh --static-scan infra/docker
+    BUILT_IMAGES=(g5/g5d-base:latest "$G5_TEST_API_IMAGE" "${COMPOSE_PROJECT}-oauth-stub" "${COMPOSE_PROJECT}-client" "${COMPOSE_PROJECT}-g5d-host" g5/base-rust:26.04 g5/base-rust-warm:26.04 g5/base-node:26.04)
+    if should_run 0; then BUILT_IMAGES+=("$CI_IMAGE"); fi
+    bash scripts/verify-base-digest-identity.sh "${BUILT_IMAGES[@]}"
+    fi  # Phase 3
+
+    # Keep build layers across iterations. Explicit disk recovery is available
+    # with G5_CI_INTERPHASE_PRUNE=1 and only runs after fresh service builds.
+    if [[ "${G5_CI_INTERPHASE_PRUNE:-0}" == "1" ]] && should_run 3; then
+      echo "=== inter-phase cleanup: reclaiming build cache before the stack/integration phases ==="
+      docker builder prune -f >/dev/null 2>&1 || true
+      docker image prune -f >/dev/null 2>&1 || true
+      df -h /var/lib/docker | awk 'NR==2{print "  /var/lib/docker: "$4" free ("$5" used)"}' || true
+    fi
+
+    # Phase 4: Start test stack
+    # Start the control plane first, seed the org and its bound workspace host,
+    # then start that host with the returned host JWT.
+    if should_run 4; then
+    echo "=== Phase 4: Starting test stack ==="
+    # ci-docker is the DETERMINISTIC lane (see the live_llm guard at the top:
+    # full LLM execution belongs to `test-live-e2e`). Default the provided-agent
+    # fake on so the @long Claude Code / Codex specs exercise the real carrier
+    # and isolation path with no credential and no LLM call, instead of
+    # attempting a device-code login and timing out on "userCode". The Cloud
+    # Build e2e lane sets the same variable on its worker/host container.
+    # Explicitly exported values still win.
+    export G5_CLAUDE_CODE_FAKE="${G5_CLAUDE_CODE_FAKE:-1}"
+    export G5_CODEX_FAKE="${G5_CODEX_FAKE:-1}"
+    ci_kv "claude code agent" "fake=${G5_CLAUDE_CODE_FAKE} (deterministic lane)"
+    ci_kv "codex agent" "fake=${G5_CODEX_FAKE} (deterministic lane)"
+    select_ci_host_ports
+    docker compose -p "$COMPOSE_PROJECT" -f "$COMPOSE_FILE" down --remove-orphans 2>/dev/null || true
+    _force_remove_project_containers
+    docker compose -p "$COMPOSE_PROJECT" -f "$COMPOSE_FILE" up -d --force-recreate postgres oauth-stub db-migrate g5-api
+    ./scripts/wait-for-healthy.sh "$COMPOSE_FILE" 120 "$COMPOSE_PROJECT"
+    if ! docker compose -p "$COMPOSE_PROJECT" -f "$COMPOSE_FILE" logs --tail=80 --no-color g5-api 2>&1 | grep -F '[g5-api] storage initialized (Filestore { mount_point: "/mnt/g5-repos", tenant_prefix: "repos", worktree_dir: "/tmp/g5-api-storage-worktrees" })' >/dev/null; then
+      echo "FAIL: Phase 4 — g5-api did not boot with the filestore-style storage configuration"
+      docker compose -p "$COMPOSE_PROJECT" -f "$COMPOSE_FILE" logs --tail=120 --no-color g5-api 2>&1 || true
+      exit 1
+    fi
+    if ! docker compose -p "$COMPOSE_PROJECT" -f "$COMPOSE_FILE" exec -T g5-api curl -sf http://localhost:7500/api/v1/instance/health \
+      | grep -E '"database"[[:space:]]*:[[:space:]]*"healthy"' >/dev/null; then
+      echo "FAIL: Phase 4 — g5-api database health check did not pass"
+      docker compose -p "$COMPOSE_PROJECT" -f "$COMPOSE_FILE" logs --tail=120 --no-color g5-api 2>&1 || true
+      exit 1
+    fi
+    docker compose -p "$COMPOSE_PROJECT" -f "$COMPOSE_FILE" up -d --force-recreate --no-deps client
+    ./scripts/wait-for-healthy.sh "$COMPOSE_FILE" 120 "$COMPOSE_PROJECT"
+    refresh_ci_host_ports_from_running_stack
+    refresh_ci_e2e_urls
+    fi  # Phase 4
+
+    # Phase 4a: Seed the CI org and provision its bound workspace host.
+    if should_run 4a; then
+    echo "=== Phase 4a: Seeding CI org ==="
+    seed_env="$(G5_E2E_API_URL="${CI_HOST_API_URL}" G5_E2E_PROVISION_WORKER_HOST=1 ./scripts/seed-ci-org.sh)"
+    eval "$seed_env"
+    : "${G5D_ORG_ID:?seed-ci-org.sh did not export G5D_ORG_ID}"
+    : "${G5D_REPO_ID:?seed-ci-org.sh did not export G5D_REPO_ID}"
+    : "${G5D_HOST_ID:?seed-ci-org.sh did not export G5D_HOST_ID}"
+    : "${G5_HOST_JWT:?seed-ci-org.sh did not export G5_HOST_JWT}"
+    echo "  G5D_ORG_ID=$G5D_ORG_ID"
+    echo "  G5D_REPO_ID=$G5D_REPO_ID"
+    echo "  G5D_HOST_ID=$G5D_HOST_ID"
+    if should_run 0 && ! should_run 4c; then
+      python3 scripts/local_validation.py record-stack 5
+    fi
+    fi  # Phase 4a
+
+    # Phase 4b: Start the bound workspace host on the real KVM substrate.
+    if should_run 4b; then
+    echo "=== Phase 4b: Starting workspace host ==="
+    # Re-seed when Phase 4a was skipped because host JWTs are deliberately not
+    # recoverable from the database.
+    if [[ -z "${G5D_ORG_ID:-}" || -z "${G5D_HOST_ID:-}" || -z "${G5_HOST_JWT:-}" ]]; then
+      seed_env="$(G5_E2E_API_URL="${CI_HOST_API_URL}" G5_E2E_PROVISION_WORKER_HOST=1 ./scripts/seed-ci-org.sh)"
+      eval "$seed_env"
+      : "${G5D_ORG_ID:?seed-ci-org.sh did not export G5D_ORG_ID}"
+      : "${G5D_REPO_ID:?seed-ci-org.sh did not export G5D_REPO_ID}"
+      : "${G5D_HOST_ID:?seed-ci-org.sh did not export G5D_HOST_ID}"
+      : "${G5_HOST_JWT:?seed-ci-org.sh did not export G5_HOST_JWT}"
+      echo "  Seeded G5D_ORG_ID=$G5D_ORG_ID for host startup"
+    fi
+    export G5D_ORG_ID G5D_REPO_ID G5D_HOST_ID G5_HOST_JWT
+    if ! docker run --rm --device /dev/kvm "${COMPOSE_PROJECT}-g5d-host" test -c /dev/kvm; then
+      echo "FAIL: Phase 4b requires /dev/kvm; workspace-VM validation has no process fallback"
+      exit 1
+    fi
+    G5D_HOST_BASE_IMAGE="${G5D_HOST_BASE_IMAGE:-mirror.gcr.io/library/buildpack-deps:resolute}"
+    export G5D_HOST_BASE_IMAGE
+    ./scripts/verify-worker-base-image.sh "$G5D_HOST_BASE_IMAGE"
+    RUNTIME_ARCH="$(docker image inspect "${COMPOSE_PROJECT}-g5d-host" --format '{{"{{"}}.Architecture{{"}}"}}')"
+    case "$RUNTIME_ARCH" in
+      amd64) RUNTIME_ARCH=x64 ;;
+      arm64) ;;
+      *) echo "FAIL: unsupported workspace-host image architecture: $RUNTIME_ARCH"; exit 1 ;;
+    esac
+    RUNTIME_STAGE="$(mktemp -d "${TMPDIR:-/tmp}/g5-ci-host-runtime.XXXXXX")"
+    RUNTIME_STAGING_IMAGE=g5/g5d-base:latest \
+    RUNTIME_STAGING_PACKAGES_PREINSTALLED=1 \
+      ./scripts/stage-local-worker-runtime.sh \
+        --arch "$RUNTIME_ARCH" \
+        --out "$RUNTIME_STAGE" \
+        --g5d-from-image "${COMPOSE_PROJECT}-g5d-host"
+    HOST_RUNTIME_VOLUME="${COMPOSE_PROJECT}_host_runtime"
+    docker volume rm -f "$HOST_RUNTIME_VOLUME" >/dev/null 2>&1 || true
+    docker volume create \
+      --label "com.docker.compose.project=${COMPOSE_PROJECT}" \
+      --label "com.docker.compose.volume=host_runtime" \
+      "$HOST_RUNTIME_VOLUME" >/dev/null
+    RUNTIME_COPY_CID="$(docker create -v "${HOST_RUNTIME_VOLUME}:/runtime" ubuntu:24.04 true)"
+    docker cp "$RUNTIME_STAGE/runtime/." "$RUNTIME_COPY_CID:/runtime/"
+    docker rm "$RUNTIME_COPY_CID" >/dev/null
+    rm -rf "$RUNTIME_STAGE"
+    docker compose -p "$COMPOSE_PROJECT" -f "$COMPOSE_FILE" up -d --force-recreate --no-deps g5d-host
+    HOST_READY=0
+    # Image preparation happens before registration (600s plus 60s margin).
+    for _ in $(seq 1 330); do
+      HOST_CONTAINER_STATE="$(docker inspect --format '{{"{{"}}.State.Status{{"}}"}}' "${COMPOSE_PROJECT}-host-1" 2>/dev/null || echo missing)"
+      case "$HOST_CONTAINER_STATE" in
+        exited|dead|missing)
+          echo "FAIL: workspace host container is $HOST_CONTAINER_STATE during preparation"
+          break
+          ;;
+      esac
+      HOST_COUNT="$(docker exec "${COMPOSE_PROJECT}-postgres" psql -U g5 -d g5_test -tAc \
+        "SELECT COUNT(*) FROM worker_hosts WHERE org_id = '${G5D_ORG_ID}' AND host_id = '${G5D_HOST_ID}' AND status = 'ready' AND last_heartbeat IS NOT NULL" | tr -d '[:space:]')"
+      if [[ "${HOST_COUNT:-0}" == "1" ]]; then
+        HOST_READY=1
+        break
+      fi
+      sleep 2
+    done
+    if [[ "$HOST_READY" != "1" ]]; then
+      docker compose -p "$COMPOSE_PROJECT" -f "$COMPOSE_FILE" logs --tail=200 --no-color g5d-host 2>&1 || true
+      echo "FAIL: bound workspace host did not become ready"
+      exit 1
+    fi
+    fi  # Phase 4b
+
+    # Phase 4c: Seed the durable browser/E2E fixture workspace. Workspace VMs
+    # materialize their own roots from the API; no host-container filesystem
+    # seeding is permitted.
+    if should_run 4c; then
+    echo "=== Phase 4c: Seeding browser workspace ==="
+    REPOS_VOLUME="${REPOS_VOLUME}" \
+    PG_CONTAINER="${COMPOSE_PROJECT}-postgres" \
+    DB_NAME="g5_test" \
+    G5_E2E_TEST_EMAIL="e2e-test@g5.dev" \
+    ./scripts/seed-test-workspace.sh "${CI_HOST_API_URL}"
+    load_seeded_fixture_env
+    if [[ "${G5_CI_PREPARE_ONLY:-0}" == "1" ]]; then
+      prepare_playwright_image
+    fi
+    if should_run 0; then
+      python3 scripts/local_validation.py record-stack 6
+    fi
+    if [[ "${G5_CI_PREPARE_ONLY:-0}" == "1" ]]; then
+      finish_ci_docker_success
+      exit 0
+    fi
+    fi  # Phase 4c
+
+    # Phase 5: Integration tests (need live DB — connect via compose network).
+    # When coverage is enabled, instrument with cargo llvm-cov --no-report so
+    # profdata merges with Phase 1 lib/bin coverage. Merged LCOV reports are
+    # generated in Phase 5c.
+    if should_run 5; then
+    echo "=== Phase 5: Integration tests ==="
+    if [[ -n "$E2E_FILTER" ]]; then
+      echo "    nextest filter: $E2E_FILTER"
+    fi
+    if [[ "$CI_DOCKER_COVERAGE_ENABLED" == "1" ]]; then
+      INTEGRATION_NEXTEST="cargo llvm-cov nextest --no-report"
+    else
+      INTEGRATION_NEXTEST="cargo nextest run"
+    fi
+    echo "=== Phase 5 execution ready ==="
+    docker run --rm --init \
+      $KVM_FLAG $CI_VOLS \
+      -w "$CI_CONTAINER_WORKSPACE" \
+      $SCCACHE_ENV \
+      -e E2E_FILTER="$E2E_FILTER" \
+      -e G5_CI_INTEGRATION_ARGS="${G5_CI_INTEGRATION_ARGS:-[]}" \
+      -e INTEGRATION_NEXTEST="$INTEGRATION_NEXTEST" \
+      -e SQLX_OFFLINE=false \
+      -e CARGO_HOME="$CI_CONTAINER_CARGO_HOME" \
+      -e CARGO_TARGET_DIR="$CI_CONTAINER_TARGET" \
+      -e CARGO_INCREMENTAL="${CARGO_INCREMENTAL:-0}" \
+      -e CARGO_BUILD_JOBS=1 \
+      -e DATABASE_URL="postgres://g5:g5_test@postgres:5432/g5_test" \
+      -e TEST_DATABASE_URL="postgres://g5:g5_test@postgres:5432/g5_test" \
+      -e ANTHROPIC_API_KEY="${ANTHROPIC_API_KEY:-}" \
+      -e OPENAI_API_KEY="${OPENAI_API_KEY:-}" \
+      -e OPENROUTER_API_KEY="${OPENROUTER_API_KEY:-}" \
+      -e G5D_LLM_PROVIDER="${G5D_LLM_PROVIDER:-}" \
+      --network "${COMPOSE_NETWORK}" \
+      "$CI_IMAGE" \
+      bash -c 'set -euo pipefail; \
+             status=0; \
+             FILTER_ARGS=(); \
+             if [[ -n "$E2E_FILTER" ]]; then FILTER_ARGS=(--no-tests warn -E "$E2E_FILTER"); fi; \
+             node -e "for (const arg of JSON.parse(process.env.G5_CI_INTEGRATION_ARGS)) process.stdout.write(arg + String.fromCharCode(0));" > /tmp/g5-integration-args; \
+             mapfile -d "" -t TARGET_ARGS < /tmp/g5-integration-args; \
+             if (( ${#TARGET_ARGS[@]} )); then \
+               ${INTEGRATION_NEXTEST} "${TARGET_ARGS[@]}" --all-features -j1 --no-fail-fast "${FILTER_ARGS[@]}" || status=$?; \
+             else \
+             ${INTEGRATION_NEXTEST} -p g5-contracts -p g5-semantic -p g5-scm -p fake-provider-cli -p g5d-agent -p g5-api --test "*" --all-features -j1 --no-fail-fast "${FILTER_ARGS[@]}" 2>&1 || status=$?; \
+             ${INTEGRATION_NEXTEST} -p g5d-dispatch -p g5d --test "*" --all-features -j1 --no-fail-fast "${FILTER_ARGS[@]}" || status=$?; \
+             fi; \
+             exit $status' || {
+      echo "=== Integration failures detected — dumping g5-api & workspace-host logs ==="
+      echo "--- g5-api logs (last 200 lines) ---"
+      docker compose -p "$COMPOSE_PROJECT" -f "$COMPOSE_FILE" logs --tail=200 --no-color g5-api 2>&1 || true
+      echo "--- g5d-host logs (last 200 lines) ---"
+      docker compose -p "$COMPOSE_PROJECT" -f "$COMPOSE_FILE" logs --tail=200 --no-color g5d-host 2>&1 || true
+      echo "--- container status ---"
+      docker compose -p "$COMPOSE_PROJECT" -f "$COMPOSE_FILE" ps -a 2>&1 || true
+      echo "FAIL: Phase 5 — integration tests failed"
+      exit 1
+    }
+    fi  # Phase 5
+
+    # Phase 5b: Claude/Codex provider protocol, parsing, and lifecycle tests.
+    if should_run 5b; then
+      echo "=== Phase 5b: LLM provider replay tests (no live provider calls) ==="
+      $CI_RUN sh -c "cargo test -j2 -p g5d-agent --lib" || {
+        echo "FAIL: Phase 5b — LLM provider replay tests failed"
+        exit 1
+      }
+      echo "Live Claude/Codex execution is available through just test-live-e2e"
+    fi  # Phase 5b
+
+    # Phase 5c: Generate merged LCOV coverage reports
+    # Merges profdata from Phase 1 (lib/bin) + Phase 5 (integration) into single
+    # per-crate LCOV files.  The shared target volume ensures all .profraw files
+    # are visible to the report command.
+    if should_run 5c; then
+    if [[ "$CI_DOCKER_COVERAGE_ENABLED" == "1" ]]; then
+      echo "=== Phase 5c: Generating merged LCOV coverage reports ==="
+      $CI_RUN sh -c "cargo llvm-cov report -p g5-contracts -p g5-auth -p g5-authz -p g5-storage -p g5-semantic -p g5-scm -p g5-internal-api -p fake-provider-cli --lcov --output-path $CI_CONTAINER_WORKSPACE/lcov-g5-shared.info"
+      $CI_RUN sh -c "cargo llvm-cov report -p g5-api-foundation -p g5-api-data -p g5-api-core -p g5-api-routes -p g5-api --lcov --output-path $CI_CONTAINER_WORKSPACE/lcov-g5-api.info"
+      $CI_RUN sh -c "cargo llvm-cov report -p g5d-foundation -p g5d-isolation -p g5d-agent -p g5d-host -p g5d-dispatch -p g5d --lcov --output-path $CI_CONTAINER_WORKSPACE/lcov-g5d.info"
+    else
+      echo "=== Phase 5c: Skipping LCOV coverage reports (G5_CI_DOCKER_COVERAGE=false) ==="
+    fi
+    fi  # Phase 5c
+
+    # Phase 6: Rust E2E scenarios (mounted workspace runner on compose network).
+    # Runs deterministic system tests only; live-LLM/full execution is excluded
+    # from ci-docker and should use `test-live-e2e` / `e2e-live`.
+    # Use the shared CI image + mounted source/target volumes so targeted reruns
+    # reuse the live stack and cargo caches without rebuilding test-runner.
+    if should_run 6; then
+    echo "=== Phase 6: Rust E2E tests ==="
+    if [[ -n "$E2E_FILTER" ]]; then
+      echo "    cargo test filter: $E2E_FILTER"
+    fi
+    # Some live-host scenarios inspect the stack through Docker. The workspace
+    # host remains running throughout Phase 6; there is no legacy worker race
+    # to suppress.
+    PHASE6_DOCKER_SOCKET_FLAG="-v /var/run/docker.sock:/var/run/docker.sock -e DOCKER_API_VERSION=1.44"
+    PHASE6_HOST_CONTAINERS="$(list_g5d_host_containers)"
+    if [[ -z "$PHASE6_HOST_CONTAINERS" ]]; then
+      echo "FAIL: Phase 6 requires this test stack's workspace host"
+      exit 1
+    fi
+    if [[ -n "$E2E_FILTER" ]]; then
+      if [[ "$E2E_FILTER" == *"view_sync_wiring"* || "$E2E_FILTER" == *"tc_vsw_"* ]]; then
+        echo "    targeted filter matches a retired view-sync slice" >&2
+        exit 1
+      elif [[ "$E2E_FILTER" == *"live_host_budget_resume"* || "$E2E_FILTER" == *"live_host_chat"* || "$E2E_FILTER" == *"approval_review_live"* ]]; then
+        PHASE6_DOCKER_SOCKET_FLAG="-v /var/run/docker.sock:/var/run/docker.sock -e DOCKER_API_VERSION=1.44"
+        echo "    targeted filter requires the candidate workspace-host Docker harness"
+      fi
+    fi
+
+    run_phase6_container() {
+      local command="$1"
+      echo "=== Phase 6 execution ready ==="
+      set +x
+      docker run --rm --init \
+        $KVM_FLAG \
+        $PHASE6_DOCKER_SOCKET_FLAG \
+        $CI_VOLS \
+        -w "$CI_CONTAINER_WORKSPACE" \
+        $SCCACHE_ENV \
+        -e SQLX_OFFLINE=true \
+        -e CARGO_HOME="$CI_CONTAINER_CARGO_HOME" \
+        -e CARGO_TARGET_DIR="$CI_CONTAINER_TARGET" \
+        -e CARGO_INCREMENTAL="${CARGO_INCREMENTAL:-0}" \
+        -e DATABASE_URL="${CI_E2E_DATABASE_URL}" \
+        -e E2E_FILTER="${E2E_FILTER}" \
+        -e G5_CI_RUST_ARGS="${G5_CI_RUST_ARGS}" \
+        -e G5_E2E_JWT_PRIVATE_KEY \
+        -e G5_E2E_HOST_CONTAINERS="$PHASE6_HOST_CONTAINERS" \
+        -e G5_E2E_API_URL="${CI_E2E_API_URL}" \
+        -e E2E_API_CONTAINER="${COMPOSE_PROJECT}-api" \
+        -e G5_E2E_DATABASE_URL="${CI_E2E_DATABASE_URL}" \
+        -e G5_E2E_AUTH_MODE=oauth \
+        -e G5_E2E_OAUTH_STUB_URL="${CI_E2E_OAUTH_URL}" \
+        -e G5_E2E_REQUIRE_LIVE_PROVIDED_AGENT="${G5_E2E_REQUIRE_LIVE_PROVIDED_AGENT:-}" \
+        -e G5_E2E_REQUIRE_LIVE_APPROVAL_REVIEW="${G5_E2E_REQUIRE_LIVE_APPROVAL_REVIEW:-}" \
+        -e G5D_ORG_ID="${G5D_ORG_ID:-}" \
+        -e ANTHROPIC_API_KEY="${ANTHROPIC_API_KEY:-}" \
+        -e OPENROUTER_API_KEY="${OPENROUTER_API_KEY:-}" \
+        -e OPENAI_API_KEY="${OPENAI_API_KEY:-}" \
+        --network "${COMPOSE_NETWORK}" \
+        "$CI_IMAGE" \
+        bash -c "$command"
+    }
+
+    dump_phase6_logs() {
+      echo "=== E2E failures detected — dumping g5-api & workspace-host logs ==="
+      echo "--- g5-api logs (last 200 lines) ---"
+      docker compose -p "$COMPOSE_PROJECT" -f "$COMPOSE_FILE" logs --tail=200 --no-color g5-api 2>&1 || true
+      echo "--- g5d-host logs (last 200 lines) ---"
+      docker compose -p "$COMPOSE_PROJECT" -f "$COMPOSE_FILE" logs --tail=200 --no-color g5d-host 2>&1 || true
+      echo "--- container status ---"
+      docker compose -p "$COMPOSE_PROJECT" -f "$COMPOSE_FILE" ps -a 2>&1 || true
+    }
+
+    if true; then
+      # The platform VM backend is enabled by g5d's default features.
+      # The fake provider CLIs build beside g5d so the deterministic chat-turn
+      # scenarios can run `fake-claude` / `fake-codex` (plan P3.2).
+      run_phase6_container 'set -euo pipefail; cargo build -j2 -p g5d -p fake-provider-cli --bins' || {
+        dump_phase6_logs
+        echo "FAIL: Phase 6 — Rust E2E tests failed"
+        exit 1
+      }
+
+      if [[ -z "$E2E_FILTER" ]]; then
+        echo "--- Phase 6 step 1: deterministic workspace-VM E2E tests ---"
+        run_phase6_container 'set -euo pipefail; G5_E2E_NO_COMPILE=true G5_E2E_CARGO_JOBS=2 ./scripts/run-rust-e2e-lanes.sh' || {
+          dump_phase6_logs
+          echo "FAIL: Phase 6 — Rust E2E tests failed"
+          exit 1
+        }
+      else
+        PHASE6_PRIMARY_STATUS=0
+        run_phase6_container 'set -euo pipefail; \
+            FILTER_ARGS=(); \
+            node -e "for (const arg of JSON.parse(process.env.G5_CI_RUST_ARGS)) process.stdout.write(arg + String.fromCharCode(0));" > /tmp/g5-rust-args; \
+            mapfile -d "" -t FILTER_ARGS < /tmp/g5-rust-args; \
+            cargo test -j2 -p g5-e2e "${FILTER_ARGS[@]}" -- --test-threads=1' || PHASE6_PRIMARY_STATUS=$?
+        if (( PHASE6_PRIMARY_STATUS != 0 )); then
+          dump_phase6_logs
+          echo "FAIL: Phase 6 — Rust E2E tests failed"
+          exit 1
+        fi
+      fi
+    fi
+
+    fi  # Phase 6
+
+    # Phase 6b: API smoke tests — validate live API responses against Zod schemas
+    # Runs from the host (needs localhost:7500 exposed by the test stack).
+    if should_run 6b; then
+    echo "=== Phase 6b: API smoke tests ==="
+    docker run --rm --init \
+      -v "$HOST_SRC/frontend:/app" \
+      -v /app/node_modules \
+      -w /app \
+      -e E2E_API_URL="${CI_E2E_API_URL}" \
+      --network "${COMPOSE_NETWORK}" \
+      g5/base-node:26.04 \
+      sh -c "npm ci --ignore-scripts && npx vitest run -c vitest.config.smoke.ts --reporter=verbose" || {
+      echo "FAIL: Phase 6b — API smoke tests had failures"
+      exit 1
+    }
+    fi  # Phase 6b
+
+    # Phase 7: Playwright browser E2E
+    # Run inside a Node container on the compose network so Playwright can
+    # reach the client and API over the compose network without needing host
+    # port mappings. Use the compose service hostname (client) instead of
+    # the raw client container IP so OAuth callback redirects, cookies, and
+    # localStorage all stay on the same origin across setup + test phases.
+    if should_run 7; then
+    echo "=== Phase 7: Playwright E2E ==="
+    if [[ -n "$PLAYWRIGHT_FILTER" ]]; then
+      echo "    playwright filter: $PLAYWRIGHT_FILTER"
+    fi
+    CANDIDATE_G5D_DIR="$(mktemp -d "${TMPDIR:-/tmp}/g5-value-loop-g5d.XXXXXX")"
+    CANDIDATE_G5D="$CANDIDATE_G5D_DIR/g5d"
+    docker cp "${COMPOSE_PROJECT}-api:/usr/local/bin/g5d" "$CANDIDATE_G5D"
+    chmod 0555 "$CANDIDATE_G5D"
+    # Workspace-VM provider adapters resolve `fake-claude` / `fake-codex`
+    # beside g5d and fail closed without them (plan P3.2). The API image ships
+    # no fakes, so stage them from the workspace-host image (built on the same
+    # rust-warm builder) next to the candidate and mount the directory whole.
+    CANDIDATE_FAKES=(fake-claude fake-codex fake-g5-tools)
+    FAKE_SOURCE_CID="$(docker create --entrypoint /usr/local/bin/g5d "${COMPOSE_PROJECT}-g5d-host")"
+    for fake in "${CANDIDATE_FAKES[@]}"; do
+      docker cp "$FAKE_SOURCE_CID:/usr/local/bin/$fake" "$CANDIDATE_G5D_DIR/$fake"
+      chmod 0555 "$CANDIDATE_G5D_DIR/$fake"
+    done
+    docker rm "$FAKE_SOURCE_CID" >/dev/null
+    # Keep the runner on the compose network and resolve services through
+    # Docker's embedded DNS. Pinning service names to container IPs can leave
+    # setup pointed at stale addresses after force-recreate or restart cycles.
+    # Run the browser suite in OUR runner image, not a bare `node:22-bookworm`.
+    # That image was a third external base nobody tracked, and it lacks the
+    # docker CLI the remote-tracking git fixture needs
+    # (e2e/fixtures/remote-repo-server.ts drives `docker exec <api> git …`),
+    # which is why coordinated-repo-sync failed locally with `spawn docker
+    # ENOENT` while passing in Cloud Build. Dockerfile.playwright-runner already
+    # bakes the docker CLI, the browsers, and a package-lock-keyed node_modules,
+    # and it is the same image the Cloud Build browser lane uses — so this also
+    # gives local/remote parity and skips the per-run `npm ci` + browser
+    # download. It stays on the Playwright vendor base rather than moving to
+    # g5/base-node:26.04: infra/docker_images [I19] records that the locked
+    # Playwright 1.58.x refuses Ubuntu 26.04 outright (no 26.04 browser builds
+    # published), so migrating it is gated on raising Playwright to >= 1.61.
+    prepare_playwright_image
+    python3 scripts/local_validation.py record-stack 7
+
+    mkdir -p "$CI_DOCKER_LOG_DIR/playwright"
+    PLAYWRIGHT_STATUS=0
+    echo "=== Phase 7 execution ready ==="
+    docker run --rm --init \
+      -v "$HOST_SRC/frontend:/app" \
+      -v "$(resolve_host_path "$CI_DOCKER_LOG_DIR/playwright"):/artifacts" \
+      -v /app/node_modules \
+      -v "$CANDIDATE_G5D_DIR:/opt/g5-candidate:ro" \
+      -v /var/run/docker.sock:/var/run/docker.sock \
+      -w /app \
+      -e E2E_API_CONTAINER="${COMPOSE_PROJECT}-api" \
+      -e E2E_BASE_URL="${CI_E2E_BROWSER_URL}" \
+      -e E2E_PREVIEW_HOST_RESOLVER="${CI_E2E_PREVIEW_HOST_RESOLVER}" \
+      -e E2E_API_URL="${CI_E2E_API_URL}" \
+      -e E2E_OAUTH_STUB_URL="${CI_E2E_OAUTH_URL}" \
+      -e E2E_DATABASE_URL="postgres://g5:g5_test@postgres:5432/g5_test" \
+      -e E2E_USE_OAUTH=true \
+      -e G5_E2E_COMPLIANCE_ORG="g5labs" \
+      -e G5_E2E_COMPLIANCE_WORKSPACE="e2e-test" \
+      -e G5_E2E_CLAUDE_CODE_V1_ENABLED=true \
+      -e G5_E2E_CODEX_V1_ENABLED=true \
+      -e G5_E2E_CODEX_ROUTING_ENABLED=true \
+      -e G5_E2E_CODEX_FAKE=true \
+      -e G5_E2E_CODEX_SETTINGS=true \
+      -e G5_GUIDED_JOURNEY_ENABLED=true \
+      -e G5_E2E_VALUE_LOOP_LIVE_MICROVM="${G5_E2E_VALUE_LOOP_LIVE_MICROVM:-false}" \
+      -e G5D_UNDER_TEST=/opt/g5-candidate/g5d \
+      -e PLAYWRIGHT_WORKERS=1 \
+      -e G5_CI_PLAYWRIGHT_ARGS="${G5_CI_PLAYWRIGHT_ARGS}" \
+      -e CI=true \
+      --network "${COMPOSE_NETWORK}" \
+      "$PLAYWRIGHT_RUNNER_IMAGE" \
+      bash -lc 'set -euo pipefail; \
+        RUN_DIR=/tmp/g5-playwright-client; \
+        trap "cp -a /tmp/g5-playwright-client/test-results /artifacts/ 2>/dev/null || true" EXIT; \
+        rm -rf "$RUN_DIR"; mkdir -p "$RUN_DIR"; \
+        tar -C /app \
+          --exclude=./node_modules --exclude=./coverage --exclude=./dist \
+          --exclude=./playwright-report --exclude=./test-results \
+          -cf - . | tar -C "$RUN_DIR" -xf -; \
+        cd "$RUN_DIR"; \
+        ln -s /opt/g5-playwright-client/node_modules node_modules; \
+        mkdir -p tests/e2e/.auth; \
+        rm -rf tests/e2e/.auth; \
+        mkdir -p tests/e2e/.auth; \
+        ./node_modules/.bin/playwright test --project=setup --reporter=list e2e/auth.setup.ts; \
+        test -s e2e/.auth/user.json; \
+        node -e "for (const arg of JSON.parse(process.env.G5_CI_PLAYWRIGHT_ARGS)) process.stdout.write(arg + String.fromCharCode(0));" > /tmp/g5-playwright-args; \
+        mapfile -d "" -t FILTER_ARGS < /tmp/g5-playwright-args; \
+        echo "=== Chromium tests ==="; \
+        ./node_modules/.bin/playwright test --project=chromium --no-deps --reporter=list "${FILTER_ARGS[@]}"; \
+        test -s e2e/.auth/user.json' || PLAYWRIGHT_STATUS=$?
+    rm -f "$CANDIDATE_G5D"
+    for fake in "${CANDIDATE_FAKES[@]}"; do rm -f "$CANDIDATE_G5D_DIR/$fake"; done
+    rmdir "$CANDIDATE_G5D_DIR"
+    if (( PLAYWRIGHT_STATUS != 0 )); then
+      echo "=== Playwright failures detected — dumping browser stack logs ==="
+      echo "--- g5-api logs (last 200 lines) ---"
+      docker compose -p "$COMPOSE_PROJECT" -f "$COMPOSE_FILE" logs --tail=200 --no-color g5-api 2>&1 || true
+      echo "--- client logs (last 200 lines) ---"
+      docker compose -p "$COMPOSE_PROJECT" -f "$COMPOSE_FILE" logs --tail=200 --no-color client 2>&1 || true
+      echo "--- g5d-host logs (last 200 lines) ---"
+      docker compose -p "$COMPOSE_PROJECT" -f "$COMPOSE_FILE" logs --tail=200 --no-color g5d-host 2>&1 || true
+      echo "--- container status ---"
+      docker compose -p "$COMPOSE_PROJECT" -f "$COMPOSE_FILE" ps -a 2>&1 || true
+      echo "FAIL: Phase 7 — Playwright E2E tests failed"
+      exit 1
+    fi
+    fi  # Phase 7
+
+    # Print sccache stats so cache hit rates are visible in CI output.
+    if [[ -n "$SCCACHE_ENV" ]]; then
+      $CI_RUN sccache --show-stats 2>/dev/null || true
+    fi
+
+    finish_ci_docker_success
+
+
+# Print manual Provided Agents/Fake-provider E2E command blocks and checklist.
+provided-agents-manual-e2e mode="single-api":
+    ./scripts/provided-agents-manual-e2e.sh --mode "{{mode}}"
+
+# ═══════════════════════════════════════════════
+# Database
+# ═══════════════════════════════════════════════
+
+# Run database migrations
+db-migrate:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ -f .env ]]; then set -a; source .env; set +a; fi
+    export DATABASE_URL="${DATABASE_URL:-postgres://g5:g5_dev@localhost:${G5_PORT_POSTGRES:-5432}/g5_dev}"
+    G5_MIGRATION_SOURCE=backend/g5-api/src/db/migrations \
+      cargo run --locked --package g5-api --bin g5-db-migrate
+
+# Generate SQLx offline query data for the full workspace, including tests/bins/examples
+db-prepare:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ -f .env ]]; then set -a; source .env; set +a; fi
+    export DATABASE_URL="${DATABASE_URL:-postgres://g5:g5_dev@localhost:${G5_PORT_POSTGRES:-5432}/g5_dev}"
+    SQLX_OFFLINE=false cargo sqlx prepare --workspace -- --all-targets
+
+# Run just the Phase 5 integration step, optionally filtered to a specific test.
+[positional-arguments]
+ci-docker-5 integration_filter="" reuse_stack="auto":
+    #!/usr/bin/env bash
+    exec just ci-docker 5 false "$1" "" "$2"
+
+# Run just the Phase 6 deterministic Rust E2E step, optionally filtered to a specific test.
+# The live_llm argument is kept for backwards compatibility but true is rejected.
+[positional-arguments]
+ci-docker-6 e2e_filter="" live_llm="false" reuse_stack="auto":
+    #!/usr/bin/env bash
+    exec just ci-docker 6 "$2" "$1" "" "$3"
+
+# Run just the Phase 7 Playwright browser step, optionally filtered to a file
+# or grep selector for faster UI debugging.
+[positional-arguments]
+ci-docker-7 playwright_filter="" reuse_stack="auto":
+    #!/usr/bin/env bash
+    exec just ci-docker 7 false "" "$1" "$2"
+
+# Execute all issue-1329 selectors through their explicit Docker profiles and
+# validate the exact-candidate machine-readable receipt.
+value-loop-matrix reuse_stack="auto":
+    ./scripts/run-value-loop-matrix.sh "{{reuse_stack}}"
+
+# ═══════════════════════════════════════════════
+# Infrastructure & Deployment (GCP Cloud Build)
+# ═══════════════════════════════════════════════
+# CI/CD runs via Cloud Build triggers, NOT locally.
+# These targets are for local validation / debugging only.
+
+# Helm lint with a local preview worker image; accepts a real image reference too.
+helm-lint env="qa" worker_image="projects/g5-local-preview/global/images/g5-worker-preview":
+    ./scripts/helm-local.sh lint infra/helm/g5 -f infra/helm/g5/values-{{env}}.yaml --set-string api.env.G5_WORKER_IMAGE="{{worker_image}}"
+
+# Helm template for local inspection; the default worker image is a placeholder.
+helm-template env="qa" tag="latest" worker_image="projects/g5-local-preview/global/images/g5-worker-preview":
+    ./scripts/helm-local.sh template g5 infra/helm/g5 \
+      -f infra/helm/g5/values-{{env}}.yaml \
+      --set global.imageTag={{tag}} \
+      --set-string api.env.G5_WORKER_IMAGE="{{worker_image}}"
+
+# Get GKE credentials for kubectl
+gke-auth env="dev":
+    gcloud container clusters get-credentials g5-{{env}} --region us-central1
+
+# Check deployment status (read-only, safe locally)
+deploy-status:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "=== Deployments ==="
+    kubectl get deployments -o wide
+    echo ""
+    echo "=== Pods ==="
+    kubectl get pods -o wide
+    echo ""
+    echo "=== Services ==="
+    kubectl get svc
+    echo ""
+    echo "=== Ingress ==="
+    kubectl get ingress
+
+# Trigger both retained Cloud Build CI lanes.
+cb-ci branch="main": (cb-ci-rust branch) (cb-ci-e2e branch)
+
+# Trigger the Rust CI lane.
+cb-ci-rust branch="main":
+    gcloud builds triggers run g5-ci-rust --branch="{{branch}}" --region="${G5_CLOUD_BUILD_REGION:-us-central1}"
+
+# Trigger the E2E CI lane.
+cb-ci-e2e branch="main":
+    gcloud builds triggers run g5-ci-e2e --branch="{{branch}}" --region="${G5_CLOUD_BUILD_REGION:-us-central1}"
+
+# Deploy a branch to QA through the g5-deploy-qa trigger in g5-qa-1ccc. QA is the only
+# environment this repository delivers to (infra/ci/cloudbuild-deploy.yaml guard).
+cb-deploy env="qa" branch="main":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ "{{env}}" != "qa" ]]; then
+      echo "This repository deploys only to qa (g5-deploy-qa in g5-qa-1ccc); got env={{env}}." >&2
+      exit 2
+    fi
+    gcloud builds triggers run g5-deploy-qa --project=g5-qa-1ccc --branch="{{branch}}" --region="${G5_CLOUD_BUILD_REGION:-us-central1}"
+
+# List recent Cloud Build runs
+cb-list:
+    gcloud builds list --region="${G5_CLOUD_BUILD_REGION:-us-central1}" --limit=10 --format='table(id,status,source.repoSource.branchName,createTime,duration)'
+
+# Stream Cloud Build logs
+cb-logs build_id:
+    gcloud builds log "{{build_id}}" --region="${G5_CLOUD_BUILD_REGION:-us-central1}" --stream
+
+# Show Artifact Registry images
+ar-images:
+    gcloud artifacts docker images list us-central1-docker.pkg.dev/$(gcloud config get-value project)/g5 --format='table(package,tags,createTime)'
+
+# Wipe & regenerate the CLOUD dev environment (dev.g5labs.ai) to a clean slate,
+# in two steps. Step 1 backs up first, TRUNCATEs all tenant data, re-runs the
+# platform seed (operator org + operator invitation) and stops. After the
+# operator signs in again, `--regenerate --members-file=<snapshot>` creates an
+# empty `internal-g5-devs` org via POST /api/v1/platform/orgs and re-invites
+# today's members. DESTRUCTIVE — preview with `--dry-run`. Step 1 needs
+# DEFAULT_ADMIN_EMAIL or G5D_TOKEN and either --proxy (auto cloud-sql-proxy) or
+# USE_K8S_PSQL=1 DB_HOST=<private-ip>; step 2 needs a fresh operator G5D_TOKEN.
+reset-dev-environment *ARGS:
+    bash ./scripts/reset-dev-environment.sh {{ARGS}}

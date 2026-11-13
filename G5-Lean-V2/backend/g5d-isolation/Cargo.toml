@@ -1,0 +1,46 @@
+[package]
+name = "g5d-isolation"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[features]
+default = []
+cloud-hypervisor = []
+test-helpers = []
+
+[dependencies]
+g5-contracts = { path = "../g5-contracts" }
+g5-internal-api = { path = "../g5-internal-api" }
+g5d-foundation = { path = "../g5d-foundation" }
+g5-scm = { path = "../g5-scm", default-features = false, features = ["native"] }
+
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+uuid = { workspace = true }
+tracing = { workspace = true }
+clap = { workspace = true }
+
+anyhow = "1"
+async-trait = "0.1"
+http = "1"
+libc = "0.2"
+sha2 = "0.10"
+flate2 = "1"
+tar = "0.4"
+futures-util = "0.3"
+socket2 = "0.5"
+tokio-util = { version = "0.7.18", features = ["rt"] }
+thiserror = "2"
+
+[dev-dependencies]
+g5d-foundation = { path = "../g5d-foundation", features = ["test-helpers"] }
+reqwest = { workspace = true }
+wiremock = "0.6"
+tempfile = "3"
+serial_test = "3"
+tokio = { workspace = true, features = ["test-util"] }
+# Minimal OCI image-layout fixtures for resolve_rootfs routing tests: same
+# versions the foundation extractor itself uses.
+hex = "0.4"

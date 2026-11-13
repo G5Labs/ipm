@@ -1,0 +1,102 @@
+[package]
+name = "g5-api"
+version = "0.1.0"
+edition = "2021"
+publish = false
+# One integration-test binary instead of one per file under tests/ (#585).
+autotests = false
+
+[[test]]
+name = "integration"
+path = "tests/main.rs"
+
+[features]
+default = []
+
+[dependencies]
+# Internal crate dependency
+g5-contracts = { path = "../g5-contracts", features = ["sqlx", "tracing-compat"] }
+g5-auth = { path = "../g5-auth", features = ["sqlx"] }
+g5-storage = { path = "../g5-storage" }
+g5-semantic = { path = "../g5-semantic" }
+g5-scm = { path = "../g5-scm" }
+g5-authz = { path = "../g5-authz" }
+g5-api-foundation = { path = "../g5-api-foundation" }
+g5-api-data = { path = "../g5-api-data" }
+g5-api-core = { path = "../g5-api-core" }
+g5-api-routes = { path = "../g5-api-routes" }
+
+# Workspace dependencies (version inherited from root Cargo.toml)
+tokio = { workspace = true }
+axum = { workspace = true }
+sqlx = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+uuid = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+clap = { workspace = true }
+tower = { workspace = true }
+tower-http = { workspace = true }
+jsonwebtoken = { workspace = true }
+reqwest = { workspace = true, features = ["cookies"] }
+pulldown-cmark = { workspace = true }
+
+# Local dependencies (not in workspace [workspace.dependencies])
+thiserror = "2"
+bytes = "1"
+http = "1"
+# Preview reverse-proxy (routes/preview [D19]): the upstream HTTP exchange is
+# driven by hyper's HTTP/1 client connection over the host reverse tunnel;
+# http-body/-util provide the typed request bodies the relay hands to hyper.
+hyper = { version = "1", features = ["http1", "client"] }
+hyper-util = { version = "0.1", features = ["tokio"] }
+http-body = "1"
+http-body-util = "0.1"
+time = "0.3"
+rand = "0.8.6"
+base64 = "0.22"
+tokio-tungstenite = "0.24"
+aes-gcm = "0.10"
+async-trait = "0.1"
+chrono = { version = "0.4", features = ["serde"] }
+dashmap = "6"
+futures = "0.3"
+futures-util = "0.3"
+hex = "0.4"
+image = { version = "0.25", default-features = false, features = ["png"] }
+nanoid = "0.4"
+regex = "1"
+rust_decimal = { version = "1", features = ["serde-with-str"] }
+sha2 = "0.10"
+serde_yaml = "0.9"
+tokio-util = "0.7"
+url = "2"
+psl = "2"
+flate2 = "1"
+tempfile = "3"
+walkdir = "2"
+zip = { version = "9.0.3", default-features = false, features = ["deflate-flate2-zlib-rs", "time"] }
+governor = "0.10"
+
+[dev-dependencies]
+g5-scm = { path = "../g5-scm", features = ["test-helpers"] }
+git2 = { version = "0.21.0", features = ["https", "ssh"] }
+g5-api-core = { path = "../g5-api-core", features = ["execution-lifecycle-test-support", "test-helpers"] }
+g5-contracts = { path = "../g5-contracts", features = ["sqlx", "test-helpers"] }
+g5-internal-api = { path = "../g5-internal-api", features = ["http-client", "stream-mux", "test-support"] }
+# test-util enables tokio::time::pause/start_paused so the preview relay
+# send-half-guard test (routes/preview [D11]) waits deterministically, same
+# pattern as g5d's tunnel keepalive tests.
+tokio = { workspace = true, features = ["test-util"] }
+g5d = { path = "../g5d", default-features = false, features = ["test-helpers"] }
+# The runtime test peer applies the production dispatcher's method-level
+# authority rule (g5d_dispatch::protocol::Context::authorize) to every
+# envelope the API sends.
+g5d-dispatch = { path = "../g5d-dispatch" }
+wiremock = "0.6"
+tempfile = "3"
+serial_test = { version = "3", features = ["file_locks"] }
+tree-sitter = { workspace = true }
+tree-sitter-rust = { workspace = true }
+

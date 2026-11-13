@@ -1,0 +1,305 @@
+# =============================================================================
+# Dockerfile.ci-builder — CI image for Cloud Build and local `just ci-docker`
+# =============================================================================
+# Single source of truth for the CI toolchain. Used by:
+#   - Cloud Build (infra/ci/cloudbuild-ci-rust.yaml / infra/ci/cloudbuild-ci-e2e.yaml, step: build-ci-image)
+#   - Local CI    (Justfile, `just ci-docker` — Phase 0)
+# =============================================================================
+
+# Rust toolchain tier + baked workspace-dependency sccache cache
+# (integration-stack/docker_images [D18]/[D20]). Replaces rust:1.93-bookworm so
+# the CI image shares the fleet's one OS/base layer set + perl-free git ([D19])
+# AND inherits the warm dependency sccache via ancestry.
+ARG BASE_IMAGE=g5/base-rust-warm:26.04
+FROM ${BASE_IMAGE}
+
+ARG G5_CI_WARM_CARGO_JOBS=44
+# Coverage instrumentation is off: nothing consumed the lcov output, and the
+# instrumented compile (plus full debuginfo) was what forced the XFS
+# orchestrator's 16-job cap and its six report passes. The warmed target and
+# the PR-path `cargo nextest` compile must use the same mode, so this default
+# and scripts/run-rust-xfs-orchestrator.sh change together. cargo-llvm-cov
+# stays installed for the local `just ci-docker` recipe and the dormant lanes.
+ARG G5_CI_BUILDER_COVERAGE=0
+ARG G5_CI_BUILDER_RELEASE_WARMUP=1
+
+# Keep the Rust image PATH for local `docker run` users. Cloud Build injects its
+# own PATH for build steps, so Rust tools are also linked into /usr/local/bin
+# after installation below.
+ENV PATH="/usr/local/cargo/bin:${PATH}"
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+# git is NOT installed here: the common base ([D19]) already provides a
+# perl-free git and installing the distro package would drag perl back in.
+    pkg-config libssl-dev cmake gcc patchelf \
+    curl jq python3 nodejs docker.io \
+    && node --version \
+    && rm -rf /var/lib/apt/lists/*
+
+# Pin the Docker client API version. Ubuntu 26.04 ships a much newer docker CLI
+# than the bookworm base this image used to inherit, and Cloud Build's daemon
+# still caps at 1.41, so the newer client refuses outright:
+#   client version 1.52 is too new. Maximum supported API version is 1.41
+# That broke every `docker` invocation made from a CI step. These steps use
+# only basic run/exec/ps verbs, which 1.41 covers.
+ENV DOCKER_API_VERSION=1.41
+
+# Pinned VMM/kernel/init and passt packaging shared with the worker-image path.
+COPY infra/guest/ /opt/g5-platform-src/infra/guest/
+COPY scripts/build-cloud-hypervisor-runtime.sh scripts/install-cloud-hypervisor-platform.sh /opt/g5-platform-src/scripts/
+COPY infra/packer/g5-worker/scripts/58-install-passt.sh /opt/g5-platform-src/infra/packer/g5-worker/scripts/
+COPY infra/packer/g5-worker/scripts/lib/download-with-retry.sh /opt/g5-platform-src/infra/packer/g5-worker/scripts/lib/
+RUN bash /opt/g5-platform-src/scripts/install-cloud-hypervisor-platform.sh && rm -rf /opt/g5-platform-src
+
+# Install cargo-llvm-cov for coverage, cargo-deny for audits, cargo-nextest for test runner,
+# sccache for cross-run compilation caching (local disk or GCS/S3 backend).
+ENV SQLX_CLI_VERSION="=0.8.6"
+# Exact pins ([D18]): --locked alone does not pin WHICH release cargo selects.
+# nextest/deny track the fleet pins (worker-host-env.sh dl-cache / g5d-base).
+# ARGs, deliberately NOT ENV: image ENV persists into every container run from
+# this image, and the '=x.y.z' cargo-install syntax leaked into the staging
+# scripts' CARGO_NEXTEST_VERSION contract, 404ing the start-workers download
+# (cargo-nextest-=0.9.138). Build args vanish after the build.
+ARG G5_CI_CARGO_LLVM_COV_PIN="=0.9.0"
+ARG G5_CI_CARGO_DENY_PIN="=0.19.0"
+ARG G5_CI_CARGO_NEXTEST_PIN="=0.9.138"
+RUN rustup component add llvm-tools-preview rustfmt clippy && \
+    cargo install cargo-llvm-cov --version "$G5_CI_CARGO_LLVM_COV_PIN" --locked && \
+    cargo install cargo-deny --version "$G5_CI_CARGO_DENY_PIN" --locked && \
+    cargo install cargo-nextest --version "$G5_CI_CARGO_NEXTEST_PIN" --locked && \
+    cargo install sqlx-cli --version "$SQLX_CLI_VERSION" --locked --no-default-features --features postgres
+
+# Cloud Build's injected PATH keeps /usr/local/bin but drops /usr/local/cargo/bin.
+# Expose Rust and cargo-installed tools through a stable PATH directory for build
+# steps that invoke `cargo`, `rustc`, `sccache`, or cargo subcommands directly.
+RUN for tool in /usr/local/cargo/bin/*; do \
+      ln -sf "$tool" "/usr/local/bin/$(basename "$tool")"; \
+    done
+
+WORKDIR /workspace
+
+# Prewarm a local sccache and a Cargo target directory inside the image for
+# dependency-heavy CI compiles.
+# Cloud Build mounts the checkout at /workspace, so warm from the
+# same absolute path to keep path-sensitive Rust cache keys reusable. The target
+# directory itself lives under /opt so Cloud Build's source checkout mount does
+# not hide it at runtime. Each build step writes to its own container overlay,
+# giving parallel Rust lanes copy-on-write target isolation without a per-lane
+# untar. The real source tree is mounted at runtime; this layer only copies
+# manifests and dummy sources so dependency artifacts are reusable. The first
+# command family warms sccache; the second bakes target/ with RUSTC_WRAPPER
+# cleared and CARGO_INCREMENTAL disabled to match the default PR Rust compile
+# mode without carrying incremental state in the image layer. Release-profile
+# dependencies are warmed too because PR image packaging now consumes prebuilt
+# `g5-api`/`g5d` release artifacts instead of compiling inside Dockerfiles.
+# cargo clean excludes local workspace crate artifacts so dummy source metadata
+# is never reused against the real checkout. Debuginfo level is owned by the
+# workspace manifest ([profile.dev] debug = 1, in the CI image content hash);
+# never add per-family CARGO_PROFILE_* overrides here — Cargo fingerprints
+# include the debug level, so drift silently cold-starts the warmed tree.
+ENV RUSTC_WRAPPER="sccache"
+ENV SCCACHE_DIR="/opt/g5-sccache"
+ENV SCCACHE_CACHE_SIZE="20G"
+ENV SCCACHE_IGNORE_SERVER_IO_ERROR="1"
+ENV G5_CI_CARGO_HOME="/opt/g5-cargo-home"
+ENV CARGO_HOME="${G5_CI_CARGO_HOME}"
+ENV CARGO_TARGET_DIR="/opt/g5-rust-target-cache/target"
+ENV G5_CI_BUILDER_COVERAGE="${G5_CI_BUILDER_COVERAGE}"
+
+COPY .cargo/ .cargo/
+COPY Cargo.toml Cargo.lock ./
+COPY .sqlx/ .sqlx/
+COPY backend/g5-contracts/Cargo.toml backend/g5-contracts/Cargo.toml
+COPY backend/g5-auth/Cargo.toml backend/g5-auth/Cargo.toml
+COPY backend/g5-storage/Cargo.toml backend/g5-storage/Cargo.toml
+COPY backend/g5-semantic/Cargo.toml backend/g5-semantic/Cargo.toml
+COPY backend/g5-scm/Cargo.toml backend/g5-scm/Cargo.toml
+COPY backend/g5-internal-api/Cargo.toml backend/g5-internal-api/Cargo.toml
+COPY backend/g5-authz/Cargo.toml backend/g5-authz/Cargo.toml
+COPY backend/g5-api-foundation/Cargo.toml backend/g5-api-foundation/Cargo.toml
+COPY backend/g5-api-data/Cargo.toml backend/g5-api-data/Cargo.toml
+COPY backend/g5-api-core/Cargo.toml backend/g5-api-core/Cargo.toml
+COPY backend/g5-api-routes/Cargo.toml backend/g5-api-routes/Cargo.toml
+COPY backend/g5-api/Cargo.toml backend/g5-api/Cargo.toml
+COPY backend/g5-api/build.rs backend/g5-api/build.rs
+COPY backend/g5d-foundation/Cargo.toml backend/g5d-foundation/Cargo.toml
+COPY backend/g5d-isolation/Cargo.toml backend/g5d-isolation/Cargo.toml
+COPY backend/g5d-agent/Cargo.toml backend/g5d-agent/Cargo.toml
+COPY backend/g5d-host/Cargo.toml backend/g5d-host/Cargo.toml
+COPY backend/g5d-dispatch/Cargo.toml backend/g5d-dispatch/Cargo.toml
+COPY backend/g5d/Cargo.toml backend/g5d/Cargo.toml
+COPY tests/e2e/Cargo.toml tests/e2e/Cargo.toml
+COPY tools/fake-provider-cli/Cargo.toml tools/fake-provider-cli/Cargo.toml
+
+RUN mkdir -p \
+      "$CARGO_HOME" \
+      "$SCCACHE_DIR" \
+      backend/g5-contracts/src \
+      backend/g5-auth/src \
+      backend/g5-storage/src \
+      backend/g5-semantic/src \
+      backend/g5-scm/src \
+      backend/g5-internal-api/src \
+      backend/g5-authz/src \
+      backend/g5-api-foundation/src \
+      backend/g5-api-data/src \
+      backend/g5-api-core/src \
+      backend/g5-api-routes/src \
+      backend/g5-api/src \
+      backend/g5-api/tests \
+      backend/g5d-foundation/src \
+      backend/g5d-isolation/src \
+      backend/g5d-agent/src \
+      backend/g5d-host/src \
+      backend/g5d-dispatch/src \
+      backend/g5d/src \
+      backend/g5d/tests \
+      tests/e2e/src \
+      tools/fake-provider-cli/src/bin && \
+    printf '' > backend/g5-contracts/src/lib.rs && \
+    printf '' > backend/g5-auth/src/lib.rs && \
+    printf '' > backend/g5-storage/src/lib.rs && \
+    printf '' > backend/g5-semantic/src/lib.rs && \
+    printf '' > backend/g5-scm/src/lib.rs && \
+    printf '' > backend/g5-internal-api/src/lib.rs && \
+    printf '' > backend/g5-authz/src/lib.rs && \
+    printf '' > backend/g5-api-foundation/src/lib.rs && \
+    printf '' > backend/g5-api-data/src/lib.rs && \
+    printf '' > backend/g5-api-core/src/lib.rs && \
+    printf '' > backend/g5-api-routes/src/lib.rs && \
+    printf '' > backend/g5-api/src/lib.rs && \
+    printf 'fn main() {}\n' > backend/g5-api/src/main.rs && \
+    printf '' > backend/g5d-foundation/src/lib.rs && \
+    printf '' > backend/g5d-isolation/src/lib.rs && \
+    printf '' > backend/g5d-agent/src/lib.rs && \
+    printf '' > backend/g5d-host/src/lib.rs && \
+    printf '' > backend/g5d-dispatch/src/lib.rs && \
+    printf '#[allow(unused_imports)]\nuse g5_api as _;\nuse g5d as _;\nuse git2 as _;\nuse serial_test as _;\nuse tempfile as _;\nuse wiremock as _;\n#[test]\nfn warm_ci_api_integration_target() {}\n' > backend/g5-api/tests/main.rs && \
+    printf '' > backend/g5d/src/lib.rs && \
+    printf 'fn main() {}\n' > backend/g5d/src/main.rs && \
+    printf '#[allow(unused_imports)]\nuse assert_cmd as _;\nuse g5d as _;\nuse predicates as _;\nuse serial_test as _;\nuse tempfile as _;\n#[test]\nfn warm_ci_g5d_integration_target() {}\n' > backend/g5d/tests/ci_warm.rs && \
+    printf '#[allow(unused_imports)]\nuse g5d as _;\n#[test]\nfn warm_ci_isolation_backend_target() {}\n' > backend/g5d/tests/isolation_backends.rs && \
+    printf '' > tests/e2e/src/main.rs && \
+    printf '' > tools/fake-provider-cli/src/lib.rs && \
+    printf 'fn main() {}\n' > tools/fake-provider-cli/src/bin/fake-claude.rs && \
+    printf 'fn main() {}\n' > tools/fake-provider-cli/src/bin/fake-codex.rs && \
+    printf 'fn main() {}\n' > tools/fake-provider-cli/src/bin/fake-g5-tools.rs && \
+    if [ "$G5_CI_BUILDER_COVERAGE" = "1" ]; then \
+      echo "CI builder warmup coverage: enabled"; \
+    else \
+      echo "CI builder warmup coverage: disabled"; \
+    fi && \
+    run_warm_nextest() { \
+      if [ "$G5_CI_BUILDER_COVERAGE" = "1" ]; then \
+        cargo llvm-cov nextest --no-report "$@"; \
+      else \
+        cargo nextest run "$@"; \
+      fi; \
+    } && \
+    SQLX_OFFLINE=true cargo metadata --locked --all-features --format-version 1 >/tmp/g5-cargo-metadata.json && \
+    SQLX_OFFLINE=true CARGO_BUILD_JOBS="$G5_CI_WARM_CARGO_JOBS" \
+      cargo clippy --locked --workspace --all-targets -- -D warnings && \
+    rm -rf "$CARGO_TARGET_DIR" && \
+    SQLX_OFFLINE=true CARGO_BUILD_JOBS="$G5_CI_WARM_CARGO_JOBS" \
+      run_warm_nextest -p g5-contracts -p g5-auth -p g5-storage -p g5-semantic -p g5-scm -p g5-internal-api --lib --bins --all-features --locked --no-fail-fast --no-tests warn && \
+    SQLX_OFFLINE=true CARGO_BUILD_JOBS="$G5_CI_WARM_CARGO_JOBS" \
+      run_warm_nextest -p g5-api-foundation -p g5-api-data -p g5-api-core -p g5-api-routes -p g5-api --lib --bins --all-features --locked --no-fail-fast --no-tests warn && \
+    SQLX_OFFLINE=true CARGO_BUILD_JOBS="$G5_CI_WARM_CARGO_JOBS" \
+      run_warm_nextest -p g5d-foundation -p g5d-isolation -p g5d-agent -p g5d-host -p g5d-dispatch -p g5d --lib --bins --all-features --locked --no-fail-fast --no-tests warn && \
+    rm -rf "$CARGO_TARGET_DIR" && \
+    SQLX_OFFLINE=true CARGO_BUILD_JOBS="$G5_CI_WARM_CARGO_JOBS" \
+      cargo test --workspace --exclude g5-e2e --doc --locked -j1 && \
+    rm -rf "$CARGO_TARGET_DIR" && \
+    SQLX_OFFLINE=true CARGO_BUILD_JOBS="$G5_CI_WARM_CARGO_JOBS" \
+      cargo build -j"$G5_CI_WARM_CARGO_JOBS" -p g5d --locked && \
+    SQLX_OFFLINE=true CARGO_BUILD_JOBS="$G5_CI_WARM_CARGO_JOBS" \
+      cargo test -j"$G5_CI_WARM_CARGO_JOBS" -p g5-e2e --locked --no-run && \
+    sccache --show-stats && \
+    (sccache --stop-server || true) && \
+    rm -rf "$CARGO_TARGET_DIR" && \
+    RUSTC_WRAPPER= CARGO_INCREMENTAL=0 SQLX_OFFLINE=true CARGO_BUILD_JOBS="$G5_CI_WARM_CARGO_JOBS" \
+      cargo clippy --locked --workspace --all-targets -- -D warnings && \
+    RUSTC_WRAPPER= CARGO_INCREMENTAL=0 SQLX_OFFLINE=true CARGO_BUILD_JOBS="$G5_CI_WARM_CARGO_JOBS" \
+      cargo check --locked --workspace --all-targets && \
+    RUSTC_WRAPPER= CARGO_INCREMENTAL=0 SQLX_OFFLINE=true CARGO_BUILD_JOBS="$G5_CI_WARM_CARGO_JOBS" \
+      run_warm_nextest -p g5-contracts -p g5-auth -p g5-storage -p g5-semantic -p g5-scm -p g5-internal-api --lib --bins --all-features --locked --no-fail-fast --no-tests warn && \
+    RUSTC_WRAPPER= CARGO_INCREMENTAL=0 SQLX_OFFLINE=true CARGO_BUILD_JOBS="$G5_CI_WARM_CARGO_JOBS" \
+      run_warm_nextest -p g5-api-foundation -p g5-api-data -p g5-api-core -p g5-api-routes -p g5-api --lib --bins --all-features --locked --no-fail-fast --no-tests warn && \
+    RUSTC_WRAPPER= CARGO_INCREMENTAL=0 SQLX_OFFLINE=true CARGO_BUILD_JOBS="$G5_CI_WARM_CARGO_JOBS" \
+      run_warm_nextest -p g5d-foundation -p g5d-isolation -p g5d-agent -p g5d-host -p g5d-dispatch -p g5d --lib --bins --all-features --locked --no-fail-fast --no-tests warn && \
+    RUSTC_WRAPPER= CARGO_INCREMENTAL=0 SQLX_OFFLINE=true CARGO_BUILD_JOBS="$G5_CI_WARM_CARGO_JOBS" \
+      run_warm_nextest -p g5-api --test '*' --all-features --locked --no-fail-fast -j1 --no-tests warn && \
+    RUSTC_WRAPPER= CARGO_INCREMENTAL=0 SQLX_OFFLINE=true CARGO_BUILD_JOBS="$G5_CI_WARM_CARGO_JOBS" \
+      run_warm_nextest -p g5d --test '*' --all-features --locked --no-fail-fast -j1 --no-tests warn && \
+    RUSTC_WRAPPER= CARGO_INCREMENTAL=0 SQLX_OFFLINE=true CARGO_BUILD_JOBS="$G5_CI_WARM_CARGO_JOBS" \
+      cargo test --locked -p g5-api-routes --lib "guards::tests" && \
+    RUSTC_WRAPPER= CARGO_INCREMENTAL=0 SQLX_OFFLINE=true CARGO_BUILD_JOBS="$G5_CI_WARM_CARGO_JOBS" \
+      cargo test --workspace --exclude g5-e2e --doc --locked -j1 && \
+    RUSTC_WRAPPER= CARGO_INCREMENTAL=0 SQLX_OFFLINE=true CARGO_BUILD_JOBS="$G5_CI_WARM_CARGO_JOBS" \
+      run_warm_nextest -p g5d --test isolation_backends --all-features --locked --no-fail-fast --test-threads=1 --no-tests warn && \
+    RUSTC_WRAPPER= CARGO_INCREMENTAL=0 SQLX_OFFLINE=true CARGO_BUILD_JOBS="$G5_CI_WARM_CARGO_JOBS" \
+      run_warm_nextest -p g5d-isolation --lib --all-features --locked --no-fail-fast -j2 -E 'test(isolation)' --no-tests warn && \
+    RUSTC_WRAPPER= CARGO_INCREMENTAL=0 SQLX_OFFLINE=true CARGO_BUILD_JOBS="$G5_CI_WARM_CARGO_JOBS" \
+      cargo build -j"$G5_CI_WARM_CARGO_JOBS" -p g5d --locked && \
+    RUSTC_WRAPPER= CARGO_INCREMENTAL=0 SQLX_OFFLINE=true CARGO_BUILD_JOBS="$G5_CI_WARM_CARGO_JOBS" \
+      cargo test -j"$G5_CI_WARM_CARGO_JOBS" -p g5-e2e --locked --no-run && \
+    cargo clean \
+      -p g5-contracts \
+      -p g5-auth \
+      -p g5-storage \
+      -p g5-semantic \
+      -p g5-scm \
+      -p g5-internal-api \
+      -p fake-provider-cli \
+      -p g5-authz \
+      -p g5-api-foundation \
+      -p g5-api-data \
+      -p g5-api-core \
+      -p g5-api-routes \
+      -p g5-api \
+      -p g5d-foundation \
+      -p g5d-isolation \
+      -p g5d-agent \
+      -p g5d-host \
+      -p g5d-dispatch \
+      -p g5d \
+      -p g5-e2e && \
+    du -sh "$CARGO_TARGET_DIR"
+
+# Keep release-profile warmup in a separate layer so a new CI-image hash can
+# reuse the expensive dev/test/coverage warmup layer from the previous image.
+# Authoritative Cloud Build keeps the default enabled for release-artifact
+# lanes; local ci-docker disables it because its runtime images use g5-dev.
+RUN if [ "$G5_CI_BUILDER_RELEASE_WARMUP" = "1" ]; then \
+      RUSTC_WRAPPER= CARGO_INCREMENTAL=0 SQLX_OFFLINE=true CARGO_BUILD_JOBS="$G5_CI_WARM_CARGO_JOBS" \
+        cargo build --release --locked -j"$G5_CI_WARM_CARGO_JOBS" -p g5-api -p g5d && \
+      cargo clean \
+        -p g5-contracts \
+        -p g5-auth \
+        -p g5-storage \
+        -p g5-semantic \
+        -p g5-scm \
+        -p g5-internal-api \
+        -p fake-provider-cli \
+        -p g5-authz \
+        -p g5-api-foundation \
+        -p g5-api-data \
+        -p g5-api-core \
+        -p g5-api-routes \
+        -p g5-api \
+        -p g5d-foundation \
+        -p g5d-isolation \
+        -p g5d-agent \
+        -p g5d-host \
+        -p g5d-dispatch \
+        -p g5d \
+        -p g5-e2e; \
+    else \
+      echo "Skipping release-profile warmup for local ci-docker"; \
+    fi && \
+    du -sh "$CARGO_TARGET_DIR"
+
+# Guest exec/health qualification needs Compose. Keep this test-only dependency
+# after the expensive kernel and Rust layers so adding it preserves their cache.
+RUN apt-get update && apt-get install -y --no-install-recommends docker-compose-v2 \
+    && rm -rf /var/lib/apt/lists/*

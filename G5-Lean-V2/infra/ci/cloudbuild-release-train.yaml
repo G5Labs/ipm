@@ -1,0 +1,76 @@
+# Weekly prod release train (cloudbuild_pipelines ontology [D25]).
+#
+# Run on a Cloud Scheduler cadence through the manual `g5-release-train`
+# trigger (modules/cloudbuild [D19]). The single step executes the checked-in
+# approver, which approves the pending g5-terraform-apply-staging and
+# g5-promote-staging builds for the newest artifacts merged at or before the
+# shared cutoff (end of _CUTOFF_DAY in _CUTOFF_TZ), terraform first. The
+# green staging apply auto-chains the approval-free g5-terraform-apply-prod;
+# the train polls that chained apply to success too, and a failed or
+# unresolvable apply in either environment halts the train before the app
+# queue is touched (2026-07-27 gate move, cloudbuild_pipelines [D25]). The
+# approved staging deploy then auto-chains g5-promote-prod. Set
+# _DRY_RUN=true on a manual trigger run to log both queue plans without
+# creating or rejecting any approval.
+steps:
+  - id: release-train
+    name: gcr.io/cloud-builders/gcloud
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        # The gcloud builder image ships Python 3.10 whose zoneinfo has NO
+        # IANA database (first firing 2026-07-16 died with
+        # ZoneInfoNotFoundError before any decision); install OS tzdata so
+        # the cutoff math can resolve the configured time zone.
+        # DEBIAN_FRONTEND=noninteractive is LOAD-BEARING: tzdata's configure
+        # step otherwise prompts for a timezone on stdin and hangs the build
+        # forever (two silent multi-minute stalls on 2026-07-17 before the
+        # cause was isolated in the exact image).
+        DEBIAN_FRONTEND=noninteractive apt-get update -qq >/dev/null
+        DEBIAN_FRONTEND=noninteractive apt-get install -y -qq tzdata >/dev/null
+        cd scripts
+        # -u: Python block-buffers piped stdout; without it NOTHING prints to
+        # the build log until process exit (proven on the first two firings).
+        python3 -u approve_release_train.py \
+          --project "$PROJECT_ID" \
+          --region "${_REGION}" \
+          --cutoff-day "${_CUTOFF_DAY}" \
+          --cutoff-tz "${_CUTOFF_TZ}" \
+          --tf-trigger "${_TF_TRIGGER}" \
+          --tf-origin-trigger "${_TF_ORIGIN_TRIGGER}" \
+          --tf-chained-trigger "${_TF_CHAINED_TRIGGER}" \
+          --app-trigger "${_APP_TRIGGER}" \
+          --app-origin-trigger "${_APP_ORIGIN_TRIGGER}" \
+          --tf-wait-timeout-seconds "${_TF_WAIT_TIMEOUT_SECONDS}" \
+          --poll-seconds "${_POLL_SECONDS}" \
+          --dry-run "${_DRY_RUN}"
+
+substitutions:
+  _REGION: 'us-central1'
+  _CUTOFF_DAY: 'tuesday'
+  _CUTOFF_TZ: 'America/Los_Angeles'
+  _TF_TRIGGER: 'g5-terraform-apply-staging'
+  _TF_ORIGIN_TRIGGER: 'g5-terraform-apply-qa'
+  # The approval-free prod apply the green staging apply auto-chains; the
+  # train polls it to success before approving the app queue.
+  _TF_CHAINED_TRIGGER: 'g5-terraform-apply-prod'
+  _APP_TRIGGER: 'g5-promote-staging'
+  _APP_ORIGIN_TRIGGER: 'g5-deploy-qa'
+  # 4h child terraform pipeline cap + queue-delay headroom: the child's
+  # timeout only starts counting at its startTime, so the wait must budget
+  # for queue time on top of the full child runtime.
+  _TF_WAIT_TIMEOUT_SECONDS: '18000'
+  _POLL_SECONDS: '60'
+  _DRY_RUN: 'false'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  dynamic_substitutions: true
+
+# The train now waits on TWO sequential terraform applies (staging, then the
+# chained prod apply), each of which can legitimately take hours (the child
+# pipeline cap is 4h for zonal capacity churn, counted from its startTime);
+# 12h covers two 5h wait budgets plus this build's own overhead.
+timeout: 43200s

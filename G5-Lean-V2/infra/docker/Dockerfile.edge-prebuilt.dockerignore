@@ -1,0 +1,16 @@
+# Build-context filter for Dockerfile.edge-prebuilt only.
+#
+# BuildKit reads `<Dockerfile name>.dockerignore` from the Dockerfile's own
+# directory in preference to the repository-root .dockerignore. The root file
+# excludes every `dist` directory so that a stale build output can never land
+# in the source-built images (Dockerfile.edge rebuilds the frontend itself;
+# base-rust-warm and g5d-g5dev COPY the whole tree). This image is the one
+# consumer of a prebuilt frontend/dist (written by the CI `frontend-build` step
+# and by the self-hosted install workflow), so admit exactly the paths its COPY
+# lines read and nothing else. Keep this list in step with the COPY lines in
+# Dockerfile.edge-prebuilt; scripts/test_edge_prebuilt_dockerignore.py checks it.
+*
+!frontend/dist
+!infra/docker/Caddyfile
+!infra/docker/caddy-ci-tls.caddyfile
+!infra/docker/edge-entrypoint.sh

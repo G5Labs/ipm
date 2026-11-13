@@ -1,0 +1,49 @@
+[package]
+name = "g5d-host"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[features]
+default = []
+test-helpers = ["g5d-isolation/test-helpers"]
+
+[dependencies]
+# The cache door (cache_door/) serves the host loopback with axum and reads
+# the fleet tier with reqwest.
+axum = { workspace = true }
+bytes = "1"
+reqwest = { workspace = true }
+g5-scm = { path = "../g5-scm", default-features = false, features = ["native"] }
+chrono = { workspace = true }
+anyhow = "1"
+async-trait = "0.1"
+g5-contracts = { path = "../g5-contracts" }
+g5-internal-api = { path = "../g5-internal-api", features = ["http-client", "stream-mux"] }
+g5d-foundation = { path = "../g5d-foundation" }
+g5d-isolation = { path = "../g5d-isolation" }
+
+tokio = { workspace = true }
+uuid = { workspace = true }
+tracing = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+base64 = "0.22"
+sha2 = { workspace = true }
+http = "1"
+tempfile = "3"
+
+futures-util = "0.3"
+getrandom = "0.2"
+hex = "0.4"
+libc = "0.2"
+tokio-tungstenite = { version = "0.24", features = ["connect", "rustls-tls-native-roots"] }
+tokio-util = { version = "0.7.18", features = ["rt", "io"] }
+
+[dev-dependencies]
+g5d-foundation = { path = "../g5d-foundation", features = ["test-helpers"] }
+g5d-isolation = { path = "../g5d-isolation", features = ["test-helpers"] }
+serial_test = "3"
+tokio = { workspace = true, features = ["test-util"] }
+tower = { workspace = true }
+wiremock = "0.6"

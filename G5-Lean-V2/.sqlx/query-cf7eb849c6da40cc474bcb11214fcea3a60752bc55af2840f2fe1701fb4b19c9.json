@@ -1,0 +1,46 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT o.id AS org_id, o.name AS org_name, o.slug AS org_slug, om.role,\n                   o.kind AS org_kind\n            FROM org_memberships om\n            JOIN orgs o ON o.id = om.org_id\n            WHERE om.user_id = $1 AND om.deactivated_at IS NULL\n            ORDER BY om.created_at ASC\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "org_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "org_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "org_slug",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "role",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "org_kind",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "cf7eb849c6da40cc474bcb11214fcea3a60752bc55af2840f2fe1701fb4b19c9"
+}

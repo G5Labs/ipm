@@ -1,0 +1,42 @@
+# =============================================================================
+# NetworkPolicy — control-plane ingress
+# =============================================================================
+{{- if eq (include "g5.controlPlaneEnabled" .) "true" }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: g5-api-ingress
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "g5.labels" . | nindent 4 }}
+    app.kubernetes.io/component: api
+spec:
+  podSelector:
+    matchLabels:
+      app: g5-api
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: g5-edge
+      ports:
+        - port: 7500
+          protocol: TCP
+    - from:
+        - podSelector:
+            matchLabels:
+              "g5.cloud/smoke-test": "true"
+      ports:
+        - port: 7500
+          protocol: TCP
+    - from:
+        - ipBlock:
+            cidr: 130.211.0.0/22
+        - ipBlock:
+            cidr: 35.191.0.0/16
+      ports:
+        - port: 7500
+          protocol: TCP
+{{- end }}

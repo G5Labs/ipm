@@ -1,0 +1,54 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT COALESCE(SUM(cost_usd), 0) AS \"total_cost_usd!\", COALESCE(SUM(input_tokens), 0)::bigint AS \"total_input_tokens!\", COALESCE(SUM(output_tokens), 0)::bigint AS \"total_output_tokens!\", COALESCE(SUM(cache_creation_tokens), 0)::bigint AS \"total_cache_creation_tokens!\", COALESCE(SUM(cache_read_tokens), 0)::bigint AS \"total_cache_read_tokens!\", COUNT(*) AS \"record_count!\" FROM usage_records WHERE workspace_id = $1 AND created_at >= $2 AND created_at < $3",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "total_cost_usd!",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 1,
+        "name": "total_input_tokens!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "total_output_tokens!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "total_cache_creation_tokens!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 4,
+        "name": "total_cache_read_tokens!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 5,
+        "name": "record_count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Timestamptz",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "036b200d13e994ba7c304a24a84f11b753e7f8017ac97d36536724b389b291c5"
+}

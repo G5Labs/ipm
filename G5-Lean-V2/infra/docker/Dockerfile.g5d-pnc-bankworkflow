@@ -1,0 +1,244 @@
+# syntax=docker/dockerfile:1
+# =============================================================================
+# Dockerfile.g5d-pnc-bankworkflow
+#
+# PNC BankWorkflow runtime for G5 workspace VMs. This image is a customer
+# base_image rootfs: G5 binaries are mounted from the signed workspace host at
+# /opt/g5/bin, while this image supplies BankWorkflow's source-level toolchains.
+# =============================================================================
+
+# Common base ([D18]/[D19] integration-stack/docker_images): perl-free git,
+# Ubuntu 26.04 (glibc 2.43). This guest rootfs sits above the host-mounted g5d
+# ABI floor (build old / run new — microvm_execution_boundary [D12]). The
+# eclipse-temurin image previously supplied JDK 21 under /opt/java/openjdk; JDK
+# 21 is now installed onto the common base from the Ubuntu archive ([D18]) and
+# the stable /opt/java/openjdk location is recreated below.
+ARG BASE_IMAGE=g5/base:26.04
+FROM ${BASE_IMAGE}
+
+ARG MAVEN_VERSION=3.9.6
+ARG MAVEN_SHA512=706f01b20dec0305a822ab614d51f32b07ee11d0218175e55450242e49d2156386483b506b3a4e8a03ac8611bae96395fd5eec15f50d3013d5deed6d1ee18224
+ARG NODE_VERSION=22.23.4
+ARG NODE_SHA256=1805bcd35e6815559bd2eb97db438d3fdb0eb3a5e6a977b7c1badca76337e9ce
+ARG PLAYWRIGHT_VERSION=1.58.1
+# MongoDB is baked in so workspace VMs run a local standalone mongod without
+# re-downloading the server tarball on every boot. The ubuntu2204 server build
+# is the same artifact BankWorkflow previously fetched at runtime; its older
+# glibc links forward-compatibly onto this common base (Ubuntu 26.04, glibc
+# 2.43).
+ARG MONGODB_VERSION=7.0.14
+ARG MONGODB_SHA256=b4cf8caae108785135ecc8b86ad8ed6df5d6efb84b9b95a50ecba2fc246ce084
+
+LABEL org.opencontainers.image.title="G5 PNC BankWorkflow Runtime" \
+      org.opencontainers.image.description="PNC BankWorkflow microVM base with Java 21, Maven 3.9.6, Node 22.23.4, Angular 21 tooling support, Playwright Chromium, MongoDB 7.0.14 server, Docker client tooling, and git" \
+      com.g5labs.runtime.schema="v1" \
+      com.g5labs.runtime.base_image="ubuntu-26.04-glibc-2.43" \
+      com.g5labs.runtime.workload.class="java21-spring-boot-3.4-angular-21" \
+      com.g5labs.runtime.kernel.features="cloud-hypervisor" \
+      com.g5labs.runtime.testcontainers.enabled="false" \
+      com.g5labs.runtime.java="21" \
+      com.g5labs.runtime.maven="${MAVEN_VERSION}" \
+      com.g5labs.runtime.node="${NODE_VERSION}" \
+      com.g5labs.runtime.playwright="${PLAYWRIGHT_VERSION}" \
+      com.g5labs.runtime.mongodb="${MONGODB_VERSION}" \
+      com.g5labs.runtime.external_services="mongodb-in-image-redis-kafka-compose-or-testcontainers-require-brokered-docker"
+
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+USER root
+
+# Keep the image env small and put tool launchers in /usr/local/bin because G5
+# task env supplies its own PATH and may override image PATH.
+ENV MAVEN_HOME=/opt/apache-maven \
+    MAVEN_CONFIG=/work/.m2 \
+    NPM_CONFIG_CACHE=/work/.npm \
+    PLAYWRIGHT_BROWSERS_PATH=/ms-playwright \
+    JAVA_HOME=/opt/java/openjdk \
+    LANG=en_US.UTF-8 \
+    LC_ALL=en_US.UTF-8
+
+RUN apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        bash \
+        gcc \
+        g++ \
+        make \
+        libc6-dev \
+        ca-certificates \
+        curl \
+        fontconfig \
+        fonts-dejavu-core \
+        fonts-liberation \
+        gnupg \
+        libasound2t64 \
+        libatk-bridge2.0-0t64 \
+        libatk1.0-0t64 \
+        libatspi2.0-0t64 \
+        libcairo2 \
+        libcups2t64 \
+        libdbus-1-3 \
+        libdrm2 \
+        libgbm1 \
+        libglib2.0-0t64 \
+        libnspr4 \
+        libnss3 \
+        libpango-1.0-0 \
+        libx11-6 \
+        libxcb1 \
+        libxcomposite1 \
+        libxdamage1 \
+        libxext6 \
+        libxfixes3 \
+        libxkbcommon0 \
+        libxrandr2 \
+        jq \
+        less \
+        locales \
+        netcat-openbsd \
+        openjdk-21-jdk-headless \
+        openssh-client \
+        procps \
+        python3 \
+        tar \
+        unzip \
+        xz-utils \
+        zip \
+    && sed -i 's/^# *\(en_US.UTF-8 UTF-8\)/\1/' /etc/locale.gen \
+    && locale-gen en_US.UTF-8 \
+    && install -m 0755 -d /etc/apt/keyrings \
+    && curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc \
+    && chmod a+r /etc/apt/keyrings/docker.asc \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu resolute stable" \
+        > /etc/apt/sources.list.d/docker.list \
+    && apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        docker-ce-cli \
+        docker-buildx-plugin \
+        docker-compose-plugin \
+    && rm -rf /var/lib/apt/lists/*
+
+# Maven 3.9.6 matches the repository wrapper and satisfies the Maven enforcer
+# rule requiring Maven 3.9+.
+#
+# Maven comes from Maven Central (repo.maven.apache.org), which serves the
+# release binaries through a CDN; archive.apache.org is a single origin and
+# timed out (curl exit 28) in QA deploy build 5ba2a296 on 2026-11-06, as it
+# had for Dockerfile.g5d-pnc-cash-receipt in build 2c3bf5ba the day before.
+# The fetch retries curl's transient errors (timeouts, HTTP 408/429/5xx) with
+# a bounded budget of 5 attempts 10s apart; each attempt is capped at 20s to
+# connect, 300s in total, and a stall under 50 KiB/s for 60s counts as a
+# timeout, matching the dl-cache fetch in Dockerfile.g5d-base. Because curl
+# honours a server's Retry-After over --retry-delay, --retry-max-time also
+# stops new attempts after 20 minutes, so with the 300s per-attempt cap the
+# fetch ends within 25 minutes and a sustained 429 cannot hold the build
+# step until the Cloud Build deadline. Definitive errors such as a
+# 404 for a wrong MAVEN_VERSION fail immediately. The
+# transport is best-effort; the pinned SHA-512 below is the only acceptance
+# gate, so an exhausted budget or a tampered mirror fails the build closed.
+RUN curl -fsSL --retry 4 --retry-delay 10 --retry-max-time 1200 \
+        --connect-timeout 20 --max-time 300 --speed-limit 51200 --speed-time 60 \
+        -o /tmp/apache-maven.tar.gz \
+        "https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/${MAVEN_VERSION}/apache-maven-${MAVEN_VERSION}-bin.tar.gz" \
+    && echo "${MAVEN_SHA512}  /tmp/apache-maven.tar.gz" | sha512sum -c - \
+    && mkdir -p /opt \
+    && tar -xzf /tmp/apache-maven.tar.gz -C /opt \
+    && ln -sfn "/opt/apache-maven-${MAVEN_VERSION}" "${MAVEN_HOME}" \
+    && ln -sf "${MAVEN_HOME}/bin/mvn" /usr/local/bin/mvn \
+    && ln -sf "${MAVEN_HOME}/bin/mvnDebug" /usr/local/bin/mvnDebug \
+    && rm -f /tmp/apache-maven.tar.gz
+
+# eclipse-temurin installed the JDK at /opt/java/openjdk; apt openjdk-21 lands
+# under an arch-specific /usr/lib/jvm path, so recreate the stable
+# /opt/java/openjdk location (= JAVA_HOME) by resolving the real JDK home from
+# the java binary, then expose launchers through /usr/local/bin because the
+# microVM task PATH (supplied by G5) can override the image PATH.
+RUN JHOME="$(dirname "$(dirname "$(readlink -f "$(command -v java)")")")" \
+    && mkdir -p /opt/java \
+    && ln -sfn "${JHOME}" /opt/java/openjdk \
+    && ln -sf /opt/java/openjdk/bin/java /usr/local/bin/java \
+    && ln -sf /opt/java/openjdk/bin/javac /usr/local/bin/javac
+
+# Node 22.x is required by PNC's .nvmrc/.node-version and the package.json
+# engine check for Angular and Playwright commands. The patch level follows
+# the fleet Node pin: 22.23.4 ships the NSS 3.131.1 root store (no emSign
+# ECC Root CA - G3) and rejects the compromised eMudhra intermediate keys.
+RUN curl -fsSLo /tmp/node.tar.xz \
+        "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz" \
+    && echo "${NODE_SHA256}  /tmp/node.tar.xz" | sha256sum -c - \
+    && tar -xJf /tmp/node.tar.xz -C /usr/local --strip-components=1 --no-same-owner \
+    && rm -f /tmp/node.tar.xz \
+    && ln -sf /usr/local/bin/node /usr/bin/node \
+    && ln -sf /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm \
+    && ln -sf /usr/local/lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx \
+    && if [[ -e /usr/local/lib/node_modules/corepack/dist/corepack.js ]]; then \
+         ln -sf /usr/local/lib/node_modules/corepack/dist/corepack.js /usr/local/bin/corepack; \
+       fi
+
+# Preinstall the Chromium browser revision for the repo's Playwright version.
+# The local @playwright/test install will reuse PLAYWRIGHT_BROWSERS_PATH.
+# `playwright install --with-deps` REFUSES Ubuntu 26.04 at the pinned 1.58
+# ("Playwright does not support chromium on ubuntu26.04-x64" — first hit in
+# the post-merge g5-deploy-dev build 2459128f). The pin tracks the PNC
+# project's locked @playwright/test, so it cannot be bumped to a 26.04-aware
+# release unilaterally. Instead: the chromium runtime libraries are installed
+# explicitly in the apt set above (what --with-deps used to do), and the
+# platform override makes the 1.58 registry treat the host as ubuntu24.04 —
+# whose chromium build runs on 26.04 via the safe build-old/run-new glibc
+# direction (microvm [D12]). Verified on real ubuntu:26.04: install exits 0
+# and host-requirements validation passes with this library set. Retire the
+# override when PNC's Playwright pin reaches >= 1.61 (first 26.04-aware line).
+RUN npm install -g "@playwright/test@${PLAYWRIGHT_VERSION}" \
+    && PLAYWRIGHT_HOST_PLATFORM_OVERRIDE=ubuntu24.04-x64 playwright install chromium \
+    && npm cache clean --force \
+    && chmod -R a+rX "${PLAYWRIGHT_BROWSERS_PATH}"
+
+# MongoDB 7.0.14 server, baked in so each workspace VM starts a local
+# standalone mongod (127.0.0.1) from the cached rootfs instead of downloading
+# the ~80MB server tarball on every boot. Only mongod is kept; the router
+# (mongos) and installer helper are dropped to keep the layer lean.
+RUN curl -fsSLo /tmp/mongodb.tgz \
+        "https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-ubuntu2204-${MONGODB_VERSION}.tgz" \
+    && echo "${MONGODB_SHA256}  /tmp/mongodb.tgz" | sha256sum -c - \
+    && mkdir -p /opt/mongodb \
+    && tar -xzf /tmp/mongodb.tgz -C /opt/mongodb --strip-components=1 \
+    && ln -sf /opt/mongodb/bin/mongod /usr/local/bin/mongod \
+    && rm -f /tmp/mongodb.tgz /opt/mongodb/bin/mongos /opt/mongodb/bin/install_compass
+
+# UID/GID 1000 is the in-VM agent identity. Give it stable passwd/group entries
+# and writable caches so Maven, npm, and browser tests work without per-command
+# HOME overrides.
+RUN if ! getent group 1000 >/dev/null; then groupadd --gid 1000 ubuntu; fi \
+    && if ! getent passwd 1000 >/dev/null; then \
+         useradd --uid 1000 --gid 1000 --create-home --shell /bin/bash ubuntu; \
+       fi \
+    && mkdir -p /home/ubuntu /work/.m2 /work/.npm /work/.cache /tmp/chrome-user-data \
+    && chown -R 1000:1000 /home/ubuntu /work /tmp/chrome-user-data \
+    && chmod 0700 /home/ubuntu \
+    && chmod 1777 /tmp /tmp/chrome-user-data
+
+RUN export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/g5/bin" \
+    && java -version \
+    && javac -version \
+    && mvn -version | grep -F "Apache Maven ${MAVEN_VERSION}" \
+    && node --version | grep -F "v${NODE_VERSION}" \
+    && npm --version \
+    && playwright --version | grep -F "Version ${PLAYWRIGHT_VERSION}" \
+    && test -d "${PLAYWRIGHT_BROWSERS_PATH}" \
+    && mongod --version | grep -F "db version v${MONGODB_VERSION}" \
+    && docker --version \
+    && docker compose version \
+    && git --version \
+    && for p in perl dpkg-dev libdpkg-perl; do \
+         if dpkg-query -W -f='${Status}' "$p" 2>/dev/null | grep -q 'install ok installed'; then \
+           echo "FATAL: $p is installed; this image installs the compiler subset, not build-essential, to stay free of the full perl ([D19])" >&2; exit 1; \
+         fi; \
+       done \
+    && bad="$(dpkg-query -W -f='${Package} ${Status}\n' 2>/dev/null \
+                | awk '$NF == "installed" && ($1 ~ /^perl-modules-/ || $1 ~ /^libperl[0-9]/) { print $1 }')" \
+    && if [ -n "$bad" ]; then \
+         echo "FATAL: versioned perl package(s) installed: $bad ([D19])" >&2; exit 1; \
+       fi
+
+WORKDIR /work
+
+USER 1000:1000

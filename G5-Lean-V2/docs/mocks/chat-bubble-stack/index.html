@@ -1,0 +1,401 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chat bubble stack — ongoing chats above the corner button</title>
+</head>
+<body>
+<style>
+/* Layout: a mock toolbar, a workspace frame whose bottom-right corner carries the Chat
+   corner button and the stacked chat bubbles, a strip with every state of the chosen
+   style, the settings control, then the design notes. Tokens are the G5 "editor"
+   theme (frontend/src/index.css) so the frames read as the app. */
+:root {
+  color-scheme: light;
+  --g5-bg0: rgb(248 249 252);
+  --g5-bg1: rgb(255 255 255);
+  --g5-bg2: rgb(240 242 247);
+  --g5-stroke: rgb(0 0 0 / 0.08);
+  --g5-text0: rgb(17 24 39);
+  --g5-text1: rgb(17 24 39 / 0.72);
+  --g5-text2: rgb(17 24 39 / 0.64);
+  --g5-ok: rgb(22 163 74);
+  --g5-info: rgb(59 130 246);
+  --g5-warn: rgb(217 119 6);
+  --g5-blocked: rgb(220 38 38);
+  --g5-overlay-hover: rgb(0 0 0 / 0.06);
+  --note-bg: rgb(255 251 235);
+  --note-stroke: rgb(217 119 6 / 0.35);
+  --font: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Liberation Sans", "DejaVu Sans", "Noto Sans", system-ui, sans-serif;
+  --mono: "JetBrains Mono", "SF Mono", ui-monospace, Menlo, Consolas, "Liberation Mono", "DejaVu Sans Mono", "Noto Sans Mono", monospace;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --g5-bg0: rgb(10 12 16);
+  --g5-bg1: rgb(14 17 24);
+  --g5-bg2: rgb(18 22 31);
+  --g5-stroke: rgb(255 255 255 / 0.08);
+  --g5-text0: rgb(236 242 255);
+  --g5-text1: rgb(236 242 255 / 0.72);
+  --g5-text2: rgb(236 242 255 / 0.52);
+  --g5-ok: rgb(113 201 136);
+  --g5-info: rgb(103 164 255);
+  --g5-warn: rgb(242 162 73);
+  --g5-blocked: rgb(255 107 107);
+  --g5-overlay-hover: rgb(255 255 255 / 0.08);
+  --note-bg: rgb(48 36 10);
+  --note-stroke: rgb(242 162 73 / 0.4);
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--g5-bg0); color: var(--g5-text0); font: 14px/1.45 var(--font); }
+.wrap { max-width: 1180px; margin: 0 auto; padding: 20px 16px 48px; }
+h1 { font-size: 18px; margin: 0 0 4px; font-weight: 650; letter-spacing: -0.01em; }
+h2 { font-size: 13px; margin: 22px 0 8px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--g5-text2); font-weight: 600; }
+.lede { margin: 0 0 16px; color: var(--g5-text1); max-width: 78ch; }
+code { font: 12px var(--mono); background: var(--g5-bg2); padding: 1px 4px; border-radius: 3px; }
+
+/* ---- mock toolbar ---- */
+.bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; padding: 10px 12px; border: 1px solid var(--g5-stroke); border-radius: 8px; background: var(--g5-bg1); margin-bottom: 14px; }
+.bar label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--g5-text2); display: flex; align-items: center; gap: 6px; }
+.seg { display: inline-flex; border: 1px solid var(--g5-stroke); border-radius: 6px; overflow: hidden; }
+.seg button { font: 12px/1 var(--font); padding: 7px 10px; border: 0; background: transparent; color: var(--g5-text1); cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--g5-stroke); }
+.seg button[aria-pressed="true"] { background: var(--g5-info); color: #fff; }
+button:focus-visible { outline: 2px solid var(--g5-info); outline-offset: 1px; }
+
+/* ---- app frames ---- */
+.frame { border: 1px solid var(--g5-stroke); border-radius: 10px; background: var(--g5-bg0); box-shadow: 0 10px 30px rgb(0 0 0 / 0.12); padding: 14px; }
+.app { font-size: 13px; color: var(--g5-text0); }
+.app button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; padding: 0; }
+.app svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.caption { font-size: 11px; color: var(--g5-text2); margin: 0 0 8px; }
+
+/* The workspace viewport: tab strip, a doc in the center, the corner buttons. */
+.viewport { position: relative; height: 480px; overflow: hidden; border: 1px solid var(--g5-stroke); border-radius: 8px; background: var(--g5-bg0); }
+.tabs { display: flex; align-items: center; gap: 2px; height: 36px; padding: 0 8px; background: var(--g5-bg1); border-bottom: 1px solid var(--g5-stroke); }
+.tab { display: flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border-radius: 6px; color: var(--g5-text1); font-size: 12px; }
+.tab.on { background: var(--g5-bg2); color: var(--g5-text0); }
+.tabs .spacer { flex: 1; }
+.tabs .icons { display: flex; gap: 8px; color: var(--g5-text2); }
+.doc { padding: 22px 28px; max-width: 640px; color: var(--g5-text1); }
+.doc h3 { margin: 0 0 8px; font-size: 16px; color: var(--g5-text0); }
+.doc p { margin: 0 0 10px; }
+.doc .ph { height: 10px; border-radius: 4px; background: var(--g5-bg2); margin: 8px 0; }
+.corner-left { position: absolute; left: 16px; bottom: 16px; }
+
+/* ---- the corner button and the bubble stack (CornerButton.tsx: h-10 w-10, rounded-full, border, shadow-md) ---- */
+.corner { position: absolute; right: 16px; bottom: 16px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.rb { display: inline-flex; width: 40px; height: 40px; align-items: center; justify-content: center; border-radius: 50%; border: 1px solid var(--g5-stroke); background: var(--g5-bg1); color: var(--g5-text1); box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); }
+.rb:hover { color: var(--g5-text0); }
+.rb svg { width: 20px; height: 20px; }
+
+.stack { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.bubble { position: relative; width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--g5-stroke); background: var(--g5-bg1); box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); display: inline-flex; align-items: center; justify-content: center; transition: transform 120ms ease; }
+.bubble:hover { transform: scale(1.08); }
+.bubble .face { position: absolute; inset: 0; border-radius: 50%; overflow: hidden; }
+/* The art is a circle on a white square; scaling a touch past the circle's edge crops the corners. */
+.bubble .face img { position: absolute; left: 50%; top: 50%; width: 107%; height: 107%; transform: translate(-50%, -50%); display: block; }
+.bubble .face img.alt { opacity: 0; }
+/* State ring: working = info, waiting for an answer = warn, idle = none. */
+.bubble[data-state="working"] { box-shadow: 0 0 0 2px var(--g5-info), 0 4px 6px -1px rgb(0 0 0 / 0.1); }
+.bubble[data-state="question"] { box-shadow: 0 0 0 2px var(--g5-warn), 0 4px 6px -1px rgb(0 0 0 / 0.1); }
+.bubble[data-state="question"] { animation: ring 1.6s ease-in-out infinite; }
+@keyframes ring { 0%, 100% { box-shadow: 0 0 0 2px var(--g5-warn), 0 4px 6px -1px rgb(0 0 0 / 0.1); } 50% { box-shadow: 0 0 0 4px rgb(217 119 6 / 0.35), 0 4px 6px -1px rgb(0 0 0 / 0.1); } }
+.bubble[data-state="idle"] .face { opacity: 0.82; }
+/* Corner badge for a chat you have not looked at since its last result. */
+.bubble .badge { position: absolute; top: -2px; right: -2px; width: 10px; height: 10px; border-radius: 50%; background: var(--g5-info); box-shadow: 0 0 0 2px var(--g5-bg1); }
+.bubble[data-state="question"] .badge { background: var(--g5-warn); }
+/* Hover label to the left of the bubble, like a title tooltip but visible in the mock. */
+.bubble .tip { position: absolute; right: 48px; top: 50%; transform: translateY(-50%); white-space: nowrap; font-size: 12px; padding: 5px 9px; border-radius: 6px; background: var(--g5-bg1); color: var(--g5-text0); border: 1px solid var(--g5-stroke); box-shadow: 0 4px 12px rgb(0 0 0 / 0.14); opacity: 0; pointer-events: none; transition: opacity 120ms; }
+.bubble .tip .st { color: var(--g5-text2); margin-left: 6px; }
+.bubble:hover .tip, .bubble.show-tip .tip { opacity: 1; }
+
+/* Animated: the two frames alternate by stepping opacity. */
+:root[data-style="animated"] .bubble .face img.alt { animation: flip 1.1s steps(1) infinite; }
+:root[data-style="animated"] .bubble[data-state="question"] .face img.alt { animation-duration: 1.4s; }
+:root[data-style="animated"] .bubble[data-state="idle"] .face img.alt { animation-duration: 2.4s; }
+@keyframes flip { 0% { opacity: 0; } 50% { opacity: 1; } 100% { opacity: 0; } }
+:root[data-motion="reduce"] .bubble *, :root[data-motion="reduce"] .bubble { animation: none !important; }
+
+/* Collapsed layout: a single bubble for the most urgent chat with a count; the column unfolds on hover. */
+.corner[data-layout="collapsed"] .stack .bubble:not(:first-child) { display: none; }
+.corner[data-layout="collapsed"]:hover .stack .bubble { display: inline-flex; }
+.corner[data-layout="collapsed"] .count { position: absolute; left: -4px; bottom: -4px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px; background: var(--g5-text0); color: var(--g5-bg1); font-size: 10px; font-weight: 600; line-height: 16px; text-align: center; box-shadow: 0 0 0 2px var(--g5-bg1); }
+.corner[data-layout="collapsed"]:hover .count, .corner[data-layout="column"] .count { display: none; }
+
+/* 3D (robot-heads): the canvas sits in the same circle. */
+.bubble .face canvas { display: block; }
+.bubble .face.r3d { background: radial-gradient(circle at 50% 40%, rgb(60 80 140), rgb(24 32 60)); }
+
+/* ---- states strip ---- */
+.states { display: flex; gap: 28px; align-items: flex-end; flex-wrap: wrap; }
+.state { display: flex; flex-direction: column; align-items: center; gap: 8px; font-size: 11px; color: var(--g5-text2); }
+.state .big { transform: scale(1.6); margin: 14px; }
+.state .big:hover { transform: scale(1.6); }
+.state .row { display: flex; gap: 14px; align-items: center; }
+
+/* ---- settings control (WorkspaceSettingsContent: label, help text, segmented choice) ---- */
+.setting { display: grid; grid-template-columns: 220px 1fr; gap: 16px; align-items: start; padding: 14px 0; border-top: 1px solid var(--g5-stroke); }
+.setting:first-child { border-top: 0; }
+.setting .k { font-weight: 600; font-size: 13px; }
+.setting .k small { display: block; font-weight: 400; color: var(--g5-text2); margin-top: 3px; line-height: 1.4; }
+.choice { display: inline-flex; border: 1px solid var(--g5-stroke); border-radius: 6px; overflow: hidden; }
+.choice button { font: 12px/1 var(--font); padding: 7px 12px; color: var(--g5-text1); }
+.choice button + button { border-left: 1px solid var(--g5-stroke); }
+.choice button.on { background: var(--g5-bg2); color: var(--g5-text0); font-weight: 600; }
+.help { font-size: 12px; color: var(--g5-text2); margin: 8px 0 0; }
+.alt-names { font-size: 12px; color: var(--g5-text1); margin: 10px 0 0; }
+.alt-names b { color: var(--g5-text0); }
+
+/* ---- notes ---- */
+.notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 12px; margin-top: 18px; }
+.note { background: var(--note-bg); border: 1px solid var(--note-stroke); border-radius: 8px; padding: 10px 12px; font-size: 12.5px; }
+.note h4 { margin: 0 0 6px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
+.note ul { margin: 0; padding-left: 18px; }
+.note li { margin: 4px 0; }
+.note.q { background: var(--g5-bg1); border-color: var(--g5-stroke); }
+</style>
+
+<div class="wrap">
+  <h1>Chat bubble stack</h1>
+  <p class="lede">Every ongoing chat of the workspace gets its own round bubble above the bottom-right Chat corner button. The bubble's face shows what the chat is doing: <b>working</b>, <b>waiting for your answer</b> (a question or an approval), or <b>idle</b> (waiting for your next command). The style is a user setting: Off (today's button only), Still, Animated, or 3D; the stack layout is a second setting (column by default). Hover a bubble to see its label; click it to open that chat in the floating panel.</p>
+
+  <div class="bar" role="toolbar" aria-label="Mock controls">
+    <label>Style <span class="seg" data-key="style"><button data-v="off">Off</button><button data-v="static" aria-pressed="true">Still</button><button data-v="animated">Animated</button><button data-v="3d">3D</button></span></label>
+    <label>Chats <span class="seg" data-key="chats"><button data-v="1">1</button><button data-v="3" aria-pressed="true">3</button><button data-v="5">5</button></span></label>
+    <label>Stack <span class="seg" data-key="layout"><button data-v="column" aria-pressed="true">column</button><button data-v="collapsed">collapsed</button></span></label>
+    <label>3D head <span class="seg" data-key="shape"><button data-v="rectangle" aria-pressed="true">TV</button><button data-v="circle">round</button></span></label>
+    <label>Theme <span class="seg" data-key="theme"><button data-v="light" aria-pressed="true">light</button><button data-v="dark">dark</button></span></label>
+    <label>Motion <span class="seg" data-key="motion"><button data-v="normal" aria-pressed="true">normal</button><button data-v="reduce">reduced</button></span></label>
+    <label>Labels <span class="seg" data-key="tips"><button data-v="hover" aria-pressed="true">on hover</button><button data-v="shown">shown</button></span></label>
+  </div>
+
+  <h2>1 · The workspace corner</h2>
+  <div class="frame app">
+    <p class="caption" id="corner-caption"></p>
+    <div class="viewport">
+      <div class="tabs">
+        <span class="tab on"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>preview-run-log.md</span>
+        <span class="tab"><svg viewBox="0 0 24 24"><path d="m16 18 6-6-6-6"/><path d="m8 6-6 6 6 6"/></svg>PreviewControl.tsx</span>
+        <span class="spacer"></span>
+        <span class="icons"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
+      </div>
+      <div class="doc">
+        <h3>Preview run log</h3>
+        <p>Sample-data prototype for two changes to the workspace preview control. The trigger shows whether a preview is running without opening the dialog, and the dialog gets a Log toggle beside Close preview.</p>
+        <div class="ph" style="width:92%"></div><div class="ph" style="width:76%"></div><div class="ph" style="width:84%"></div><div class="ph" style="width:40%"></div>
+        <div class="ph" style="width:88%; margin-top:18px"></div><div class="ph" style="width:66%"></div><div class="ph" style="width:71%"></div>
+      </div>
+      <button class="rb corner-left" title="Report a platform issue" aria-label="Report a platform issue"><svg viewBox="0 0 24 24"><path d="m8 2 1.88 1.88"/><path d="M14.12 3.88 16 2"/><path d="M9 7.13v-1a3.003 3.003 0 1 1 6 0v1"/><path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6"/><path d="M12 20v-9"/><path d="M6.53 9C4.6 8.8 3 7.1 3 5"/><path d="M6 13H2"/><path d="M3 21c0-2.1 1.7-3.9 3.8-4"/><path d="M20.97 5c0 2.1-1.6 3.8-3.5 4"/><path d="M22 13h-4"/><path d="M17.2 17c2.1.1 3.8 1.9 3.8 4"/></svg></button>
+      <div class="corner" id="corner" data-layout="column">
+        <div class="stack" id="stack"></div>
+        <button class="rb" id="chat-btn" title="Open chat beside the content" aria-label="Open chat beside the content"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>
+      </div>
+    </div>
+  </div>
+
+  <h2>2 · Every state of the chosen style</h2>
+  <div class="frame app">
+    <p class="caption" id="states-caption"></p>
+    <div class="states" id="states"></div>
+  </div>
+
+  <h2>3 · The setting (User settings · Appearance)</h2>
+  <div class="frame app">
+    <div class="setting">
+      <div class="k">Chat bubbles<small>Ongoing chats as bubbles above the Chat button, with a face that shows what each one is doing.</small></div>
+      <div>
+        <div class="choice" id="setting-choice"><button data-v="off">Off</button><button data-v="static">Still</button><button data-v="animated">Animated</button><button data-v="3d">3D</button></div>
+        <p class="help" id="setting-help"></p>
+        <p class="alt-names">Name alternatives considered: setting <b>Chat bubbles</b> · <b>Chat status avatars</b> · <b>Agent faces</b>; values <b>Off / Still / Animated / 3D</b> (chosen for the mock), <b>None / Static / Animated / 3D</b> (as requested), <b>Off / Picture / Motion / 3D</b>. "Still" is the common opposite of "Animated" in image settings (still image vs animated image); "3D" is a style, not a motion level, so it stays its own value. Animated and 3D obey the browser's reduced-motion preference by falling back to Still.</p>
+      </div>
+    </div>
+    <div class="setting">
+      <div class="k">Chat bubble stack<small>How the bubbles are arranged when more than one chat is ongoing.</small></div>
+      <div>
+        <div class="choice" id="layout-choice"><button data-v="column">Column</button><button data-v="collapsed">Collapsed</button></div>
+        <p class="help" id="layout-help"></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="notes">
+    <div class="note">
+      <h4>What a bubble is</h4>
+      <ul>
+        <li>One bubble per <b>ongoing</b> chat session of this workspace, from the session list the page already polls (<code>GET /workspaces/:id/sessions</code>, <code>activity</code>). A session is ongoing while a turn runs (<code>activity.activeTurnStartedAt</code>), while it waits for your answer, and while its last result is unseen (<code>activity.unseenResult</code>). An idle chat whose result you have seen has no bubble (to confirm, see questions).</li>
+        <li>Faces: <b>working</b> = gears, <b>waiting for your answer</b> = question mark (an AskUserQuestion <i>or</i> a permission/approval prompt), <b>idle</b> = sleeping (turn finished, waiting for your next command). Rings: working blue, waiting amber (pulsing), idle none. The dot marks an unseen result.</li>
+        <li>Order, bottom to top (nearest the button first): waiting for your answer, working, idle; within a group, most recent activity first.</li>
+        <li>Click opens that chat in the floating panel at the right edge, exactly like the Chat button but with that session active. Hover (or focus) shows the chat title and state. The whole corner moves together when you drag the Chat button.</li>
+        <li>Hidden with the Chat button: mobile, Chat in the center, panel open, modal overlay. In <b>Off</b>, nothing changes.</li>
+      </ul>
+    </div>
+    <div class="note">
+      <h4>Styles and assets</h4>
+      <ul>
+        <li><b>Still</b> uses gears B, question B and sleeping frame 1, scaled to 96/192 px (1x/2x). <b>Animated</b> alternates gears A/B (0.55 s per frame), question A/B (0.7 s) and sleeping 1/2 (1.2 s).</li>
+        <li><b>3D</b> draws a <a href="https://robot-heads.fayaz.workers.dev/">robot-heads</a> head (<code>npm i robot-heads</code>, MIT, React 18+, 2D canvas, no runtime deps, ~94 kB unpacked) with <code>state</code> working / happy / sleeping, <code>size</code> 40, <code>interactive</code> off, <code>antenna</code> on, <code>floorShadow</code> off. The TV head is the library's default; the round head fits the circle better.</li>
+        <li>Under <code>prefers-reduced-motion</code> Animated and 3D render as Still (3D with <code>paused</code>).</li>
+        <li>Images ship in the frontend bundle (<code>frontend/public/</code> or imported assets); nothing is fetched from the robot-heads site at run time.</li>
+      </ul>
+    </div>
+    <div class="note">
+      <h4>Data today and what is missing</h4>
+      <ul>
+        <li>"Working" and "idle with unseen result" come from the existing session <code>activity</code> (also used by the picker's spinner/dot, <code>ChatActivityIndicator</code>). The list refreshes every 15 s while a turn runs and on <code>chat.activity</code> WebSocket events.</li>
+        <li>"Waiting for your answer" is only known for the open session today (pending <code>AskUserQuestion</code> / approval in its timeline). The closest list-level signal is the task status <code>waiting</code> (activity/current), which does not separate a question from a permission prompt. The plan would add a per-session flag (for example <code>activity.awaitingInput</code>) on the server so every bubble can show the question face.</li>
+      </ul>
+    </div>
+    <div class="note q">
+      <h4>Decisions (2026-10-29) and what is left</h4>
+      <ul>
+        <li>Decided: "waiting for a question" includes permission/approval prompts; sleeping animates between the two supplied frames; the 3D question face is <code>happy</code>; the stack layout is a second setting, default column; both settings live with the other appearance settings (per browser, <code>g5-user-settings</code>).</li>
+        <li>Open: when does a <b>sleeping</b> bubble leave the stack? Mocked: it stays while the chat's last result is unseen and goes once you open that chat. The alternative, a bubble for every chat that waits for a command, would list every session of the workspace.</li>
+        <li>Open: option names, Off / Still / Animated / 3D (mocked) versus None / Static / Animated / 3D.</li>
+        <li>Open: a cap on the column (for example 5 bubbles and "+N")?</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+const SAMPLE = [
+  { title: "Preview run log", state: "working", when: "2 min", unseen: false },
+  { title: "Flaky e2e on CI", state: "question", when: "just now", unseen: true },
+  { title: "Rename the title bar", state: "idle", when: "12 min", unseen: true },
+  { title: "Spend breakdown rounding", state: "working", when: "8 min", unseen: false },
+  { title: "External issue links", state: "idle", when: "1 h", unseen: true },
+];
+const STATE_LABEL = { working: "Working", question: "Waiting for your answer", idle: "Idle · new result" };
+const STATE_ORDER = { question: 0, working: 1, idle: 2 };
+const FRAMES = {
+  static: { working: ["img/working-b"], question: ["img/question-b"], idle: ["img/sleeping-a"] },
+  animated: { working: ["img/working-b", "img/working-a"], question: ["img/question-b", "img/question-a"], idle: ["img/sleeping-a", "img/sleeping-b"] },
+};
+const R3D_STATE = { working: "working", question: "happy", idle: "sleeping" };
+const HELP = {
+  off: "Only the Chat button. Ongoing chats are listed inside the panel as today.",
+  static: "One bubble per ongoing chat, with a still face for working, waiting for your answer and idle.",
+  animated: "Like Still, with the face moving between two frames. Follows your reduced-motion setting.",
+  "3d": "A 3D robot head per chat (robot-heads). Follows your reduced-motion setting.",
+};
+const LAYOUT_HELP = {
+  column: "Every ongoing chat as its own bubble, stacked above the Chat button (default).",
+  collapsed: "One bubble for the chat that needs you most, with a count; the stack unfolds on hover.",
+};
+
+const ui = { style: "static", chats: "3", layout: "column", shape: "rectangle", theme: "light", motion: "normal", tips: "hover" };
+const root = document.documentElement;
+
+function srcset(base) { return `${base}-96.png 1x, ${base}-192.png 2x`; }
+
+function bubble(chat, { big = false } = {}) {
+  const b = document.createElement("button");
+  b.className = "bubble" + (big ? " big" : "") + (ui.tips === "shown" && !big ? " show-tip" : "");
+  b.dataset.state = chat.state;
+  b.title = `${chat.title} · ${STATE_LABEL[chat.state]}`;
+  b.setAttribute("aria-label", b.title);
+  const face = document.createElement("span");
+  face.className = "face";
+  if (ui.style === "3d") {
+    face.classList.add("r3d");
+    mount3d(face, chat.state);
+  } else {
+    const frames = FRAMES[ui.style === "off" ? "static" : ui.style][chat.state];
+    frames.forEach((f, i) => {
+      const img = document.createElement("img");
+      img.alt = ""; img.src = `${f}-96.png`; img.srcset = srcset(f);
+      if (i > 0) img.className = "alt";
+      face.appendChild(img);
+    });
+  }
+  b.appendChild(face);
+  if (chat.unseen) { const d = document.createElement("span"); d.className = "badge"; b.appendChild(d); }
+  if (!big) {
+    const tip = document.createElement("span"); tip.className = "tip";
+    tip.innerHTML = `${chat.title}<span class="st">${STATE_LABEL[chat.state]} · ${chat.when}</span>`;
+    b.appendChild(tip);
+  }
+  return b;
+}
+
+// robot-heads is loaded from esm.sh only for the 3D style, so the other styles work offline.
+let r3d = null;
+async function load3d() {
+  if (r3d) return r3d;
+  const [React, ReactDOM, heads] = await Promise.all([
+    import("https://esm.sh/react@18.3.1"),
+    import("https://esm.sh/react-dom@18.3.1/client?deps=react@18.3.1"),
+    import("https://esm.sh/robot-heads@0.3.0?deps=react@18.3.1"),
+  ]);
+  r3d = { React, ReactDOM, RobotHead: heads.RobotHead };
+  return r3d;
+}
+const roots = [];
+function mount3d(el, state) {
+  load3d().then(({ React, ReactDOM, RobotHead }) => {
+    if (!el.isConnected) return;
+    const root = ReactDOM.createRoot(el);
+    roots.push(root);
+    root.render(React.createElement(RobotHead, {
+      state: R3D_STATE[state], shape: ui.shape, size: 40, interactive: false, antenna: true, floorShadow: false,
+      paused: ui.motion === "reduce", seed: Math.random(), color: "#2b49a3", trimColor: "#93a6c8", screenColor: "#e8f2ff",
+    }));
+  }).catch((e) => { el.textContent = "3D"; el.title = String(e); });
+}
+
+function render() {
+  root.dataset.theme = ui.theme; root.dataset.style = ui.style; root.dataset.motion = ui.motion;
+  for (const seg of document.querySelectorAll(".seg")) for (const b of seg.querySelectorAll("button")) b.setAttribute("aria-pressed", String(ui[seg.dataset.key] === b.dataset.v));
+  while (roots.length) roots.pop().unmount();
+
+  const chats = SAMPLE.slice(0, Number(ui.chats)).slice().sort((a, b) => STATE_ORDER[a.state] - STATE_ORDER[b.state]);
+  const corner = document.getElementById("corner"); corner.dataset.layout = ui.layout;
+  const stack = document.getElementById("stack"); stack.replaceChildren();
+  if (ui.style !== "off") {
+    for (const c of chats) stack.appendChild(bubble(c));
+    if (ui.layout === "collapsed" && chats.length > 1) { const n = document.createElement("span"); n.className = "count"; n.textContent = String(chats.length); stack.firstChild.appendChild(n); }
+  }
+  document.getElementById("corner-caption").textContent = ui.style === "off"
+    ? "Off: today's corner button only."
+    : `${chats.length} ongoing chat${chats.length === 1 ? "" : "s"} · nearest the button is the one that needs you · ${ui.layout === "collapsed" ? "collapsed: hover the top bubble to unfold" : "column"}`;
+
+  const states = document.getElementById("states"); states.replaceChildren();
+  document.getElementById("states-caption").textContent = ui.style === "off" ? "Off has no bubbles." : "40 px as in the corner, then 64 px to inspect the face";
+  if (ui.style !== "off") for (const s of ["working", "question", "idle"]) {
+    const w = document.createElement("div"); w.className = "state";
+    const row = document.createElement("div"); row.className = "row";
+    row.appendChild(bubble({ title: STATE_LABEL[s], state: s, unseen: s === "idle" }, { big: true }));
+    w.appendChild(row);
+    const l = document.createElement("span"); l.textContent = STATE_LABEL[s]; w.appendChild(l);
+    states.appendChild(w);
+  }
+
+  for (const b of document.querySelectorAll("#setting-choice button")) b.classList.toggle("on", b.dataset.v === ui.style);
+  document.getElementById("setting-help").textContent = HELP[ui.style];
+  for (const b of document.querySelectorAll("#layout-choice button")) b.classList.toggle("on", b.dataset.v === ui.layout);
+  document.getElementById("layout-help").textContent = LAYOUT_HELP[ui.layout];
+}
+document.getElementById("layout-choice").addEventListener("click", (e) => {
+  const b = e.target.closest("button"); if (!b) return; ui.layout = b.dataset.v; render();
+});
+document.querySelectorAll(".seg").forEach((seg) => seg.addEventListener("click", (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  ui[seg.dataset.key] = b.dataset.v; render();
+}));
+document.getElementById("setting-choice").addEventListener("click", (e) => {
+  const b = e.target.closest("button"); if (!b) return; ui.style = b.dataset.v; render();
+});
+// Query parameters preselect the toolbar; only values the toolbar offers are
+// accepted, so a shared link cannot pick an unknown state or inject markup.
+const params = new URLSearchParams(location.search);
+for (const seg of document.querySelectorAll(".seg")) {
+  const key = seg.dataset.key; const value = params.get(key);
+  const allowed = [...seg.querySelectorAll("button")].map((b) => b.dataset.v);
+  if (value && allowed.includes(value)) ui[key] = value;
+}
+render();
+</script>
+</body>
+</html>

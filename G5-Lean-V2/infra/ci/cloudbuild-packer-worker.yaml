@@ -1,0 +1,1048 @@
+# =============================================================================
+# Cloud Build — G5 worker image build, sign, SBOM, image-test gate, publish
+# =============================================================================
+# Driven by the rev-7 plan (aux_files/future_implementation/microvm_completion_plan.md
+# §5.0 keystone, §5.2 CI integration directive, §6 PNC acceptance gate). PR-rev7-2
+# wires the CI side of the Packer template that PR-rev7-1 shipped at
+# infra/packer/g5-worker/.
+#
+# Phase graph (sequential unless waitFor declared):
+#
+#   [packer-init-validate]                         (also supports manual lint-only mode)
+#     └─► [packer-build]                            (boots Ubuntu autoinstall in qemu
+#           └─► [extract-g5d]                        inside a docker --device=/dev/kvm
+#                                                   child container, per PR #113)
+#                 ├─► [image-test-gate-boot]        (layer 1: boots raw disk under
+#                 │                                  qemu/KVM, SSHes in via cloud-init
+#                 │                                  NoCloud seed, runs 10 in-image
+#                 │                                  asserts + in-guest syft scan;
+#                 │                                  the gate writes the SBOM out)
+#                 └─► [image-test-gate-cloud-hypervisor]    (layer 2: runs extracted g5d
+#                                                   against the Cloud Build worker's
+#                                                   /dev/kvm — single nesting layer.
+#                                                   Avoids the L3 nested-virt path
+#                                                   GCE C3 nodes don't reliably support)
+#     └─► [push-gcs]                                 raw + tar.gz + sha256 + manifest +
+#     └─► [push-gar-oras]                            small OCI metadata artifact (GAR)
+#     └─► [cosign-sign]                              cosign sign GAR ref via gcpkms://
+#     └─► [cosign-attest-sbom]                       cosign attest SPDX SBOM predicate
+#     └─► [cosign-verify]                            in-pipeline sanity-check of the
+#                                                   signature + attestation we just made
+#     └─► [gce-image-import]                         only after cosign-verify passes —
+#                                                   never publish unsigned/unverified
+#     └─► [publish-summary]                          summary.json + latest.json pointer
+#     └─► [trigger-dev-worker-rollout]               dev Terraform apply refreshes the
+#                                                   worker-host template after import
+#
+# Trigger scope (terraform-managed; see packer_worker.tf):
+#   - Main push trigger on the included_files paths → full mode
+#     (_RUN_FULL_BUILD=true).
+#   - `_RUN_FULL_BUILD=false` remains available for manual lint-only validation;
+#     Terraform intentionally does not provision a PR trigger/status check.
+#
+# Pool: g5-ci-pool (C3 nested-virt, /dev/kvm via child docker per PR #113
+#       finding). Execution stays in the QA build project; only immutable
+#       artifact publication may select the separately approved admin project.
+#
+# Signing model (V1, per plan §5.0 + §8): cosign with the QA-local GCP KMS
+# asymmetric key (EC_SIGN_P256_SHA256). `--tlog-upload=false` end-to-end so the
+# air-gap verification posture holds. Verification uses the same key URI
+# (gcpkms://...) or an exported PEM. Keyless OIDC deferred until customer-managed
+# signing is negotiated (plan §8 open question).
+# =============================================================================
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  dynamic_substitutions: true
+  pool:
+    name: projects/${PROJECT_ID}/locations/us-central1/workerPools/g5-ci-pool
+
+substitutions:
+  # Correlate manual reset builds without enabling the automatic trigger.
+  _QA_RESET_RUN_ID: ""
+  # ---- Inputs that change per environment ---------------------------------
+  _AR_REGION: us-central1
+  _AR_REPOSITORY: g5-worker-images
+  _IMAGES_BUCKET_SUFFIX: g5-worker-images
+  _IMAGE_FAMILY: g5-worker
+  _ARTIFACT_PROJECT: g5-qa-1ccc
+  _AR_PROJECT: ${_ARTIFACT_PROJECT}
+  _GCE_IMAGE_PROJECT: ${_ARTIFACT_PROJECT}
+  # Opt-in delivery caches. The repository config names explicit authorized
+  # scope and local committed revisions; it is never inferred from CI source.
+  _WORKLOAD_TEMPLATE_IMAGE_REF: ''
+  _WORKLOAD_TEMPLATE_REPO_CONFIG: ''
+  _WORKLOAD_TEMPLATE_DISK_MIB: '32768'
+  # Increase deliberately when prebaking: template creation checks full logical
+  # capacity as well as leaving room for the seed comparison tree.
+  _WORKER_BUILD_DISK_GB: '30'
+
+  # The KMS key terraform creates (packer_worker.tf). cosign requires the
+  # `gcpkms://` scheme; the trailing `/cryptoKeyVersions/1` pins to a specific
+  # key version so signatures remain verifiable after a future key rotation.
+  _COSIGN_KMS_KEY: gcpkms://projects/${PROJECT_ID}/locations/us-central1/keyRings/g5-worker-signer/cryptoKeys/cosign/cryptoKeyVersions/1
+
+  # ---- Tool pins (override if mirroring upstream-CVE drift) ---------------
+  _PACKER_VERSION: 1.10.3
+  # cosign runs from ${_CLOUD_SDK_IMAGE} (bash + curl + gcloud ADC); the pinned
+  # static cosign binary is downloaded at step time into /workspace/bin (mirrors
+  # the oras download in push-gar-oras). The official cosign image is distroless
+  # (no shell), so it cannot run the multi-command sign/attest/verify scripts.
+  _COSIGN_VERSION: '2.4.1'
+  _SYFT_VERSION: 1.18.1
+  _ORAS_VERSION: 1.2.0
+  # Pinned by digest like every other tool here. The floating :slim tag dropped
+  # python3 between SDK 591 and 592 (slim@sha256:b38f2881… had it; slim@sha256:
+  # 08c9cb2c… does not) and broke compute-image-version. The full image for the
+  # same SDK release the worker image installs (_GCLOUD_CLI_VERSION) ships
+  # python3, git, curl, gsutil and apt; jq and oras are still fetched per step.
+  # Bump the tag and digest together: `docker buildx imagetools inspect
+  # gcr.io/google.com/cloudsdktool/cloud-sdk:<version>`.
+  _CLOUD_SDK_IMAGE: gcr.io/google.com/cloudsdktool/cloud-sdk:575.0.0@sha256:481bd8da19a980f0dba09596fed9e27755b6b16827382a8a146363c00af6a17f
+  _UBUNTU_IMAGE: ubuntu:24.04
+
+  # ---- Mode switch — set by the trigger or manual invocation --------------
+  # 'true'  → full build pipeline (main push)
+  # 'false' → lint-only validation without publishing or rollout
+  _RUN_FULL_BUILD: 'true'
+  _TRIGGER_DEV_WORKER_ROLLOUT: 'false'
+  _DEV_TERRAFORM_TRIGGER: ''
+  # ---- Pins used by packer build ------------------------------------------
+  # Claude Code and Codex CLI pins are NOT substitutions here (#1342 D-13):
+  # their single sources are the checked-in one-line files
+  # scripts/{claude-code,codex}-cli-version, resolved inside the
+  # Packer config (g5-worker.pkr.hcl locals; the install scripts fail closed
+  # on an empty pin, which would float to npm latest and break local/prod
+  # parity). Bump deliberately by editing the pin file alongside a
+  # worker-image rebuild; the in-image `claude --version` / `codex --version`
+  # smokes + A2.5 in-microVM gate verify the pinned binaries actually run.
+  _NODE_VERSION: '22.23.4'
+  _NODE_SHA256: '1805bcd35e6815559bd2eb97db438d3fdb0eb3a5e6a977b7c1badca76337e9ce'
+  _PNPM_VERSION: '11.9.0'
+  _GH_CLI_VERSION: '2.95.0'
+  _GH_CLI_SHA256: '25d1e4729e8808c9ed3d613e96ebd3f3e44446f2d368c89d878a71a36ddb3d8c'
+  _GCLOUD_CLI_VERSION: '575.0.0'
+  _GCLOUD_CLI_SHA256: 'acdc1583049121152e0c9b1017494822a6f74dbd385662e8849886143230b7a7'
+  _KUBECTL_VERSION: '1.36.2'
+  _KUBECTL_SHA256: '1e9045ec32bea85da43de85f0065358529ea7c7a152eca78154fba5b58c27d82'
+  _RUSTUP_VERSION: '1.29.0'
+  _RUSTUP_INIT_SHA256: '4acc9acc76d5079515b46346a485974457b5a79893cfb01112423c89aeb5aa10'
+  _JUST_VERSION: '1.55.1'
+  _JUST_SHA256: 'b0ef600f0df20d5ae91ae931627c499fc52b477ffe5f5ea7b7b3ec616b16c778'
+  _CARGO_NEXTEST_VERSION: '0.9.138'
+  _CARGO_NEXTEST_SHA256: '3793bf0c27607b196f502c39b2108f571de89fcda7586ae6beefa11ee177b216'
+
+# =============================================================================
+# Steps
+# =============================================================================
+steps:
+  # ---------------------------------------------------------------------------
+  # 0. Compute the deterministic image version + write to /workspace.
+  # ---------------------------------------------------------------------------
+  # Shape: g5-worker-vYYYYMMDD-HHMM-<sha5>-<build-id-without-dashes>.
+  # Full build identity prevents same-minute publication collisions. The template
+  # accepts -var image_version=... and re-uses this exact value across all
+  # subsequent steps so GCS/GCE names and the signed OCI disk pointer agree.
+  - id: compute-image-version
+    name: ${_CLOUD_SDK_IMAGE}
+    entrypoint: bash
+    args:
+      - -euo
+      - pipefail
+      - -c
+      - |
+        python3 /workspace/scripts/worker_artifacts.py layout \
+          --build-project="${PROJECT_ID}" --artifact-project="${_ARTIFACT_PROJECT}" \
+          --image-project="${_GCE_IMAGE_PROJECT}" --region="${_AR_REGION}" \
+          --repository="${_AR_REPOSITORY}" --bucket-suffix="${_IMAGES_BUCKET_SUFFIX}" \
+          --family="${_IMAGE_FAMILY}"
+        [[ "${_AR_PROJECT}" == "${_ARTIFACT_PROJECT}" ]] || exit 1
+        # KMS and mutable operational state stay with the QA build coordinator.
+        [[ "${_COSIGN_KMS_KEY}" == gcpkms://projects/${PROJECT_ID}/locations/us-central1/keyRings/g5-worker-signer/cryptoKeys/cosign/cryptoKeyVersions/* ]] || exit 1
+        FULL_SHA="${COMMIT_SHA}"
+        BUILD_UNIQUE="${BUILD_ID}"
+        [[ "$${FULL_SHA}" =~ ^[0-9a-f]{40}$$ && "$${BUILD_UNIQUE}" =~ ^[0-9a-f-]{36}$$ ]] || exit 1
+        BUILD_UNIQUE="$${BUILD_UNIQUE//-/}"
+        [[ "$${BUILD_UNIQUE}" =~ ^[0-9a-f]{32}$$ ]] || exit 1
+        SHORT_SHA_LOCAL="$${FULL_SHA:0:7}"
+        BUILD_TS="$(date -u +%Y%m%d-%H%M)"
+        IMAGE_VERSION="g5-worker-v$${BUILD_TS}-$${FULL_SHA:0:5}-$${BUILD_UNIQUE}"
+        echo "$${IMAGE_VERSION}" > /workspace/image_version.txt
+        echo "$${BUILD_TS}" > /workspace/build_timestamp.txt
+        echo "$${SHORT_SHA_LOCAL}" > /workspace/git_short_sha.txt
+        echo "Computed image_version: $${IMAGE_VERSION}"
+        echo "Run mode: _RUN_FULL_BUILD=${_RUN_FULL_BUILD}"
+
+        # Codex review N3: the top-level artifacts: block runs at build end and
+        # uploads /workspace/summary.json + image_version.txt (literal) plus
+        # output/*/manifest.json + output/*/sbom.spdx.json (globs). In
+        # PR-validate mode the full-build steps short-circuit and never create
+        # these, so the upload would fail. Seed the LITERAL summary.json here;
+        # the output/* placeholders are seeded in step 1 AFTER `packer validate`
+        # (validate requires the packer output dir to NOT pre-exist, so they
+        # cannot be created before it). The full-build path overwrites all of
+        # them in step 12 (publish-summary).
+        if [ "${_RUN_FULL_BUILD}" != "true" ]; then
+            echo '{"mode":"pr-validate","image_version":"'"$${IMAGE_VERSION}"'"}' \
+                > /workspace/summary.json
+        fi
+
+        # Stage the g5d source tarball HERE — before step 1's `packer validate`,
+        # which checks that file-provisioner sources exist. Exclude the packer
+        # output dir (holds the in-progress multi-GB raw disk; a dir upload would
+        # overflow the VM) plus .git/target/node_modules. Phase 3 uploads this one
+        # file. Runs in both modes so validate passes.
+        mkdir -p /workspace/workload-template-input
+        echo "[g5-worker] staging g5d source tarball"
+        # Write outside the source directory. Creating or growing the archive
+        # under /workspace changes the root directory while GNU tar is reading
+        # it and makes the step fail with "file changed as we read it".
+        tar czf /tmp/g5d-src.tar.gz -C /workspace \
+          --exclude=./infra/packer/g5-worker/output \
+          --exclude=.git --exclude=target --exclude=node_modules \
+          --exclude=./workload-template-input \
+          .
+        mv /tmp/g5d-src.tar.gz /workspace/g5d-src.tar.gz
+        ls -lh /workspace/g5d-src.tar.gz
+
+  # ---------------------------------------------------------------------------
+  # 1. packer init + fmt-check + validate. Runs in BOTH PR and main modes —
+  #    this is the PR's cheap pre-merge signal (~5 min total including the
+  #    image pull).
+  # ---------------------------------------------------------------------------
+  - id: packer-init-validate
+    name: hashicorp/packer:${_PACKER_VERSION}
+    dir: infra/packer/g5-worker
+    entrypoint: sh
+    args:
+      - -c
+      - |
+        set -eux
+        IMAGE_VERSION="$$(cat /workspace/image_version.txt)"
+        BUILD_TIMESTAMP="$$(cat /workspace/build_timestamp.txt)"
+        GIT_SHORT_SHA="$$(cat /workspace/git_short_sha.txt)"
+        retry_packer_init() {
+          attempt=1
+          while [ "$$attempt" -le 4 ]; do
+            if packer init .; then
+              return 0
+            else
+              rc="$$?"
+            fi
+            if [ "$$attempt" -eq 4 ]; then
+              echo "packer init failed after $$attempt attempts"
+              return "$$rc"
+            fi
+            sleep_seconds="$$((attempt * 15))"
+            echo "packer init failed on attempt $$attempt; retrying in $${sleep_seconds}s"
+            sleep "$${sleep_seconds}"
+            attempt="$$((attempt + 1))"
+          done
+        }
+        retry_packer_init
+        packer fmt -check .
+        packer validate \
+          -var "git_short_sha=$${GIT_SHORT_SHA}" \
+          -var "build_timestamp=$${BUILD_TIMESTAMP}" \
+          -var "image_version=$${IMAGE_VERSION}" \
+          -var "skip_runtime_cli_install=true" \
+          .
+
+        # PR-validate performs no build, so packer never creates its output dir.
+        # `packer validate` (above) requires that dir to NOT pre-exist, so the
+        # output/* placeholder artifacts MUST be seeded here, after validate, so
+        # the top-level artifacts globs (output/*/manifest.json +
+        # output/*/sbom.spdx.json) still match. `dir:` is the packer template
+        # root, so output/ == infra/packer/g5-worker/output/.
+        if [ "${_RUN_FULL_BUILD}" != "true" ]; then
+            OUT_DIR="output/$${IMAGE_VERSION}"
+            mkdir -p "$${OUT_DIR}"
+            cp /workspace/summary.json "$${OUT_DIR}/manifest.json"
+            echo '{"spdxVersion":"SPDX-2.3","dataLicense":"CC0-1.0","SPDXID":"SPDXRef-DOCUMENT","name":"g5-worker-pr-validate-placeholder","documentNamespace":"https://g5.dev/sbom/pr-validate/'"$${IMAGE_VERSION}"'","creationInfo":{"created":"1970-01-01T00:00:00Z","creators":["Tool: g5-cloudbuild-pr-validate"]},"packages":[]}' \
+                > "$${OUT_DIR}/sbom.spdx.json"
+        fi
+
+  # ---------------------------------------------------------------------------
+  # 2. Full packer build — boots Ubuntu autoinstall in qemu inside a docker
+  #    child container that has /dev/kvm via --device.
+  # ---------------------------------------------------------------------------
+  # Per PR #113: Cloud Build steps do NOT have direct /dev/kvm; we get KVM
+  # access by spawning a child docker container with --device=/dev/kvm. The
+  # child container needs packer + qemu-system-x86_64 + qemu-img. We build it
+  # inline (one-step Dockerfile) to avoid an out-of-band builder image.
+  # ---------------------------------------------------------------------------
+  # 1b. Stage the Ubuntu ISO. packer's qemu builder enforces a hard ~30-min ISO
+  #     download deadline the ~3 GB public mirror can't reliably meet (observed:
+  #     "error downloading ISO: context deadline exceeded"). Fetch it here with
+  #     the full step budget + retries and cache it in GCS, so the FIRST build
+  #     self-stages and every later build pulls it fast intra-GCP. packer reads
+  #     the local copy via file:// (-var ubuntu_iso_url in packer-build),
+  #     skipping its own deadline-limited download.
+  # ---------------------------------------------------------------------------
+  - id: stage-iso
+    name: ${_CLOUD_SDK_IMAGE}
+    entrypoint: bash
+    args:
+      - -euo
+      - pipefail
+      - -c
+      - |
+        if [ "${_RUN_FULL_BUILD}" != "true" ]; then
+          echo "Skipping stage-iso (lint-only mode)"
+          exit 0
+        fi
+        ISO_NAME="ubuntu-24.04.2-live-server-amd64.iso"
+        ISO_CACHE="gs://${PROJECT_ID}-${_IMAGES_BUCKET_SUFFIX}/iso/$${ISO_NAME}"
+        mkdir -p /workspace/.iso
+        if gsutil -q stat "$${ISO_CACHE}"; then
+          echo "ISO cache hit: $${ISO_CACHE}"
+          gsutil cp "$${ISO_CACHE}" "/workspace/.iso/$${ISO_NAME}"
+        else
+          echo "ISO cache miss; downloading upstream (one-time) then caching to GCS"
+          URL="https://old-releases.ubuntu.com/releases/24.04.2/$${ISO_NAME}"
+          DEST="/workspace/.iso/$${ISO_NAME}"
+          # Resume across retries (-C -), abort a stalled transfer (<50 KB/s for
+          # 120s) so --retry kicks in instead of hanging, and log the partial
+          # size every 20s so progress is actually visible (a bare curl meter
+          # updates in place via \r and never shows up in the Cloud Build log).
+          curl -fL -C - --retry 8 --retry-delay 15 --retry-all-errors \
+            --connect-timeout 30 --speed-limit 51200 --speed-time 120 \
+            -o "$${DEST}" "$${URL}" &
+          CURL_PID=$$!
+          while kill -0 "$${CURL_PID}" 2>/dev/null; do
+            sleep 20
+            [ -f "$${DEST}" ] && echo "  stage-iso: $$(du -h "$${DEST}" 2>/dev/null | cut -f1) downloaded so far"
+          done
+          wait "$${CURL_PID}"
+          echo "stage-iso: download complete ($$(du -h "$${DEST}" | cut -f1)); caching to GCS"
+          gsutil cp "$${DEST}" "$${ISO_CACHE}"
+        fi
+    # compute-image-version archives /workspace. Starting this step from the
+    # build root at the same time creates /workspace/.iso and changes the root
+    # directory while tar is reading it, which makes GNU tar fail closed.
+    # Preserve the ISO/validate parallelism, but start both only after the
+    # source archive is complete.
+    waitFor: ['compute-image-version']
+    timeout: 3600s
+
+  # ---------------------------------------------------------------------------
+  # Stage immutable OCI bytes outside the build VM. Registry credentials stay
+  # in this short-lived CI step and never enter the Packer image.
+  - id: stage-workload-template
+    name: ${_CLOUD_SDK_IMAGE}
+    entrypoint: bash
+    args:
+      - -euo
+      - pipefail
+      - -c
+      - |
+        if [ "${_RUN_FULL_BUILD}" != "true" ] || [ -z "${_WORKLOAD_TEMPLATE_IMAGE_REF}" ]; then
+          if [ -n "${_WORKLOAD_TEMPLATE_REPO_CONFIG}" ] && [ -z "${_WORKLOAD_TEMPLATE_IMAGE_REF}" ]; then
+            echo "Repository seed requires a pinned workload environment" >&2
+            exit 1
+          fi
+          exit 0
+        fi
+        IMAGE_REF="${_WORKLOAD_TEMPLATE_IMAGE_REF}"
+        [[ "$$IMAGE_REF" =~ ^${_AR_REGION}-docker\.pkg\.dev/${_ARTIFACT_PROJECT}/.+@sha256:[0-9a-f]{64}$$ ]] || {
+          echo "Workload template image must be a pinned image in the selected artifact registry" >&2
+          exit 1
+        }
+        # curl, ca-certificates, git and python3 ship in the pinned cloud-sdk
+        # image; only oras is fetched here.
+        TOOLS=$$(mktemp -d)
+        trap 'rm -rf "$$TOOLS"' EXIT
+        curl -fsSL "https://github.com/oras-project/oras/releases/download/v${_ORAS_VERSION}/oras_${_ORAS_VERSION}_linux_amd64.tar.gz" \
+          | tar -xz -C "$$TOOLS" oras
+        gcloud auth print-access-token | "$$TOOLS/oras" login \
+          --registry-config "$$TOOLS/auth.json" --username oauth2accesstoken --password-stdin "${_AR_REGION}-docker.pkg.dev"
+        "$$TOOLS/oras" cp --from-registry-config "$$TOOLS/auth.json" --to-oci-layout \
+          "$$IMAGE_REF" /workspace/workload-template-input/image:seed
+        printf '%s\n' "$$IMAGE_REF" > /workspace/workload-template-input/image-ref
+        if [ -n "${_WORKLOAD_TEMPLATE_REPO_CONFIG}" ]; then
+          python3 scripts/prepare-workload-template-input.py \
+            "${_WORKLOAD_TEMPLATE_REPO_CONFIG}" /workspace/workload-template-input/repositories --source-root /workspace
+        fi
+    waitFor: ['compute-image-version']
+    timeout: 1800s
+
+  - id: packer-build
+    name: gcr.io/cloud-builders/docker
+    entrypoint: bash
+    args:
+      - -euo
+      - pipefail
+      - -c
+      - |
+        if [ "${_RUN_FULL_BUILD}" != "true" ]; then
+          echo "Skipping packer-build (lint-only mode)"
+          exit 0
+        fi
+
+        IMAGE_VERSION="$$(cat /workspace/image_version.txt)"
+        BUILD_TIMESTAMP="$$(cat /workspace/build_timestamp.txt)"
+        GIT_SHORT_SHA="$$(cat /workspace/git_short_sha.txt)"
+
+        # Inline Dockerfile: hashicorp/packer + qemu. Heredocs in YAML literal
+        # blocks fight the closing-EOF-at-column-0 rule; emit the Dockerfile
+        # line by line via printf instead.
+        mkdir -p /workspace/.builder
+        DF=/workspace/.builder/Dockerfile
+        : > "$$DF"
+        printf '%s\n' "FROM hashicorp/packer:${_PACKER_VERSION}"                                                                                              >> "$$DF"
+        printf '%s\n' "RUN apk add --no-cache bash coreutils git curl ca-certificates qemu-system-x86_64 qemu-img openssh-client e2fsprogs xfsprogs util-linux tar python3 jq" >> "$$DF"
+        printf '%s\n' "WORKDIR /workspace"                                                                                                                   >> "$$DF"
+        # hashicorp/packer sets ENTRYPOINT ["/bin/packer"]; clear it so the
+        # `docker run g5-packer-qemu:cb <cmd>` calls below run <cmd> directly
+        # (sh -c, packer init, packer build) instead of `packer <cmd>`.
+        printf '%s\n' "ENTRYPOINT []" >> "$$DF"
+        docker build \
+          -t g5-packer-qemu:cb \
+          -f /workspace/.builder/Dockerfile \
+          /workspace/.builder
+
+        # Confirm KVM is reachable inside the child container before we spend
+        # 30-45 minutes booting a VM that would silently fall back to TCG.
+        docker run --rm --device=/dev/kvm g5-packer-qemu:cb \
+          sh -c 'test -c /dev/kvm && echo "/dev/kvm OK" || (echo "/dev/kvm missing"; exit 1)'
+
+        # Pre-init plugins under /workspace so they survive subsequent docker
+        # runs and so PACKER_PLUGIN_PATH points at a stable path. Retry boundedly
+        # because this step reaches upstream plugin registries before validation.
+        for attempt in 1 2 3 4; do
+          if docker run --rm \
+              --device=/dev/kvm \
+              -v /workspace:/workspace \
+              -w /workspace/infra/packer/g5-worker \
+              -e PACKER_LOG=1 \
+              -e PACKER_PLUGIN_PATH=/workspace/.packer-plugins \
+              g5-packer-qemu:cb \
+              packer init .; then
+            break
+          else
+            rc=$$?
+          fi
+          if [ "$${attempt}" = "4" ]; then
+            echo "packer init failed after $${attempt} attempts"
+            exit "$${rc}"
+          fi
+          sleep_seconds=$$((attempt * 15))
+          echo "packer init failed on attempt $${attempt}; retrying in $${sleep_seconds}s"
+          sleep "$${sleep_seconds}"
+        done
+
+        # NOTE: the g5d source tarball (/workspace/g5d-src.tar.gz) is staged in
+        # step #0 (compute-image-version) so it exists before step #1's
+        # `packer validate`, which checks file-provisioner sources exist.
+
+        # Mint the fat-artifact download token from the build SA's metadata
+        # (D47: the AR repo rejects unauthenticated reads). Minted here on the
+        # GCB VM because the qemu guest's slirp path to the metadata server is
+        # not guaranteed. FAIL CLOSED (CodeRabbit review): an empty token
+        # would spend 30-45 minutes of qemu build before dying inside the
+        # guest — surface the actionable failure now instead.
+        FAT_TOKEN=$$(curl -fsS -m 5 -H 'Metadata-Flavor: Google' \
+          'http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token' \
+          | sed -n 's/.*"access_token" *: *"\([^"]*\)".*/\1/p' || true)
+        if [ -z "$$FAT_TOKEN" ]; then
+          echo "FATAL: could not mint the fat-artifact token from the metadata server (D47 authenticated fetch)" >&2
+          exit 1
+        fi
+        # Transport via a 0600 var file, never argv (CodeRabbit review: -var
+        # values are world-readable in /proc on the build VM). Removed right
+        # after the build, success or failure.
+        FAT_VAR_FILE=/workspace/.fat-token.pkrvars.hcl
+        ( umask 077 && printf 'fat_auth_token = "%s"\n' "$$FAT_TOKEN" > "$$FAT_VAR_FILE" )
+        trap 'rm -f "$$FAT_VAR_FILE"' EXIT
+
+        docker run --rm \
+          --device=/dev/kvm \
+          -v /workspace:/workspace \
+          -w /workspace/infra/packer/g5-worker \
+          -e PACKER_LOG=1 \
+          -e PACKER_PLUGIN_PATH=/workspace/.packer-plugins \
+          g5-packer-qemu:cb \
+          packer build \
+            -var-file /workspace/.fat-token.pkrvars.hcl \
+            -var "git_short_sha=$${GIT_SHORT_SHA}" \
+            -var "workload_image_ref=${_WORKLOAD_TEMPLATE_IMAGE_REF}" \
+            -var "workload_disk_mib=${_WORKLOAD_TEMPLATE_DISK_MIB}" \
+            -var "disk_size_gb=${_WORKER_BUILD_DISK_GB}" \
+            -var "build_timestamp=$${BUILD_TIMESTAMP}" \
+            -var "image_version=$${IMAGE_VERSION}" \
+            -var "node_version=${_NODE_VERSION}" \
+            -var "node_sha256=${_NODE_SHA256}" \
+            -var "pnpm_version=${_PNPM_VERSION}" \
+            -var "gh_cli_version=${_GH_CLI_VERSION}" \
+            -var "gh_cli_sha256=${_GH_CLI_SHA256}" \
+            -var "gcloud_cli_version=${_GCLOUD_CLI_VERSION}" \
+            -var "gcloud_cli_sha256=${_GCLOUD_CLI_SHA256}" \
+            -var "kubectl_version=${_KUBECTL_VERSION}" \
+            -var "kubectl_sha256=${_KUBECTL_SHA256}" \
+            -var "rustup_version=${_RUSTUP_VERSION}" \
+            -var "rustup_init_sha256=${_RUSTUP_INIT_SHA256}" \
+            -var "just_version=${_JUST_VERSION}" \
+            -var "just_sha256=${_JUST_SHA256}" \
+            -var "cargo_nextest_version=${_CARGO_NEXTEST_VERSION}" \
+            -var "cargo_nextest_sha256=${_CARGO_NEXTEST_SHA256}" \
+            -var "qemu_accelerator=kvm" \
+            -var "ubuntu_iso_url=file:///workspace/.iso/ubuntu-24.04.2-live-server-amd64.iso" \
+            . || PACKER_RC=$$?
+        # Always surface the in-VM autoinstall console (captured via -serial in
+        # the packer template). On a 45-min SSH timeout this is the only in-guest
+        # signal we get; on success it's a quiet confirmation.
+        echo "=== autoinstall serial: error/failure lines ==="
+        grep -niE "error|fail|traceback|returned non-zero|non-zero exit|calledprocess|cannot|no such file|not found|exception|^E:|dpkg:|command .* (failed|returned)" /workspace/serial-console.log 2>/dev/null | tail -80 || true
+        echo "=== autoinstall serial console (last 400 lines) ==="
+        tail -n 400 /workspace/serial-console.log 2>/dev/null || echo "(serial console not captured)"
+        if [ "$${PACKER_RC:-0}" -ne 0 ]; then
+          echo "packer build FAILED (rc=$${PACKER_RC}); see serial console above"
+          exit "$${PACKER_RC}"
+        fi
+
+        echo "Packer build complete. Artifacts:"
+        ls -lh "infra/packer/g5-worker/output/$${IMAGE_VERSION}/"
+    waitFor: ['packer-init-validate', 'stage-iso', 'stage-workload-template']
+    timeout: 3600s
+
+  # ---------------------------------------------------------------------------
+  # 3. Extract g5d binary from the freshly-built raw disk for the layer-2 gate.
+  #    libguestfs reads the XFS root without booting the image (no KVM needed).
+  # ---------------------------------------------------------------------------
+  - id: extract-g5d
+    name: gcr.io/cloud-builders/docker
+    entrypoint: bash
+    args:
+      - -euo
+      - pipefail
+      - -c
+      - |
+        if [ "${_RUN_FULL_BUILD}" != "true" ]; then
+          echo "Skipping extract-g5d (lint-only mode)"
+          exit 0
+        fi
+
+        IMAGE_VERSION="$$(cat /workspace/image_version.txt)"
+        RAW_DISK="infra/packer/g5-worker/output/$${IMAGE_VERSION}/disk.raw"
+        test -f "$${RAW_DISK}" || { echo "raw disk not found: $${RAW_DISK}"; exit 1; }
+
+        mkdir -p /workspace/extracted /workspace/extracted/libs
+        docker run --rm \
+          -v /workspace:/workspace \
+          -w /workspace \
+          -e G5_RAW_DISK="$$RAW_DISK" \
+          ${_UBUNTU_IMAGE} \
+          bash -euxc '
+            export DEBIAN_FRONTEND=noninteractive
+            apt-get update -qq
+            apt-get install -y --no-install-recommends libguestfs-tools linux-image-generic
+            export LIBGUESTFS_BACKEND=direct
+            guestfish --ro -a "/workspace/$$G5_RAW_DISK" -i \
+              copy-out /var/g5d-data/runtime/bin/g5d /workspace/extracted/
+            guestfish --ro -a "/workspace/$$G5_RAW_DISK" -i \
+              copy-out /etc/g5/worker-image.json /workspace/extracted/
+            guestfish --ro -a "/workspace/$$G5_RAW_DISK" -i \
+              copy-out /opt/g5-host /workspace/extracted/
+            # Extract the complete independent runtime, including its prebuilt
+            # read-only disk, rather than a subset of provider launchers.
+            guestfish --ro -a "/workspace/$$G5_RAW_DISK" -i \
+              tar-out /var/g5d-data/runtime /workspace/extracted/runtime.tar
+            mkdir -p /workspace/extracted/runtime
+            tar -xf /workspace/extracted/runtime.tar -C /workspace/extracted/runtime
+            rm -f /workspace/extracted/runtime.tar
+          '
+
+        chmod +x /workspace/extracted/g5d
+        sha256sum /workspace/extracted/g5d > /workspace/extracted/g5d.sha256
+        cat       /workspace/extracted/worker-image.json
+    waitFor: ['packer-build']
+
+  # ---------------------------------------------------------------------------
+  # 4. Image-test gate, layer 1 — boot the raw disk in qemu, SSH in, run the
+  #    ten in-image asserts, AND generate the SBOM from inside the booted
+  #    guest (syft against `/`, more accurate than a guestfish tar-out scan
+  #    because it sees the running kernel's view of mounted filesystems).
+  # ---------------------------------------------------------------------------
+  # The boot-and-assert.sh script wraps qemu in a child docker container with
+  # /dev/kvm, injects an ephemeral cloud-init NoCloud seed for SSH access, and
+  # produces /workspace/sbom.spdx.json on success.
+  - id: image-test-gate-boot
+    name: gcr.io/cloud-builders/docker
+    entrypoint: bash
+    args:
+      - -euo
+      - pipefail
+      - -c
+      - |
+        if [ "${_RUN_FULL_BUILD}" != "true" ]; then
+          echo "Skipping image-test-gate-boot (lint-only mode)"
+          exit 0
+        fi
+
+        IMAGE_VERSION="$$(cat /workspace/image_version.txt)"
+        OUTPUT_DIR="/workspace/infra/packer/g5-worker/output/$${IMAGE_VERSION}"
+        RAW_DISK="$${OUTPUT_DIR}/disk.raw"
+        SBOM_OUT="$${OUTPUT_DIR}/sbom.spdx.json"
+        GATE_SCRIPT="/workspace/scripts/image-test-gate/boot-and-assert.sh"
+        test -f "$${RAW_DISK}"
+        test -x "$${GATE_SCRIPT}" || chmod +x "$${GATE_SCRIPT}"
+
+        if ! command -v ssh >/dev/null || ! command -v scp >/dev/null || ! command -v ssh-keygen >/dev/null || ! command -v python3 >/dev/null; then
+          if command -v apt-get >/dev/null; then
+            export DEBIAN_FRONTEND=noninteractive
+            apt-get update -qq
+            apt-get install -y --no-install-recommends openssh-client python3 >/dev/null
+          elif command -v apk >/dev/null; then
+            apk add --no-cache openssh-client python3 >/dev/null
+          else
+            echo "FAIL: openssh-client and python3 are required for image-test-gate-boot" >&2
+            exit 1
+          fi
+        fi
+
+        bash "$${GATE_SCRIPT}" \
+          --raw-disk "$${RAW_DISK}" \
+          --sbom-output "$${SBOM_OUT}" \
+          --syft-version "${_SYFT_VERSION}"
+
+        # Belt + suspenders: confirm the gate actually wrote the SBOM out.
+        test -s "$${SBOM_OUT}" || { echo "FAIL: SBOM not produced at $${SBOM_OUT}"; exit 1; }
+        sha256sum "$${SBOM_OUT}" > "$${SBOM_OUT}.sha256"
+        ls -lh "$${OUTPUT_DIR}/"
+    waitFor: ['extract-g5d']
+    timeout: 2400s
+
+  # ---------------------------------------------------------------------------
+  # 5. Image-test gate, layer 2 — run the extracted g5d against the Cloud
+  #    Use the extracted VMM, kernel, init and complete runtime on the build
+  #    worker's KVM, avoiding an unsupported third virtualization layer.
+  # ---------------------------------------------------------------------------
+  - id: image-test-gate-cloud-hypervisor
+    name: gcr.io/cloud-builders/docker
+    entrypoint: bash
+    args:
+      - -euo
+      - pipefail
+      - -c
+      - |
+        if [ "${_RUN_FULL_BUILD}" != "true" ]; then
+          echo "Skipping guest gate (lint-only mode)"
+          exit 0
+        fi
+        docker run --rm --privileged --device=/dev/kvm \
+          --ulimit nofile=1048576:1048576 \
+          -v /workspace:/workspace:ro -v /workspace/extracted:/extracted:ro \
+          -e G5D_BIN=/extracted/g5d -e G5_CH_TEST_RUNTIME=/extracted/runtime \
+          -e G5D_CLOUD_HYPERVISOR_BIN=/extracted/g5-host/bin/cloud-hypervisor \
+          -e G5D_GUEST_KERNEL=/extracted/g5-host/boot/vmlinux \
+          -e G5D_GUEST_INITRAMFS=/extracted/g5-host/boot/initramfs.cpio \
+          ${_UBUNTU_IMAGE} bash -ec '
+            apt-get update -qq
+            # git and patchelf: prepare-cloud-hypervisor-test.py always builds the minimal
+            # inner runtime through build-runtime-disk.sh (bootstrap staging needs git,
+            # the guest executable patch needs patchelf), even with G5_CH_TEST_RUNTIME.
+            # gcc and libc6-dev: test_cloud_hypervisor_seed.py compiles an image-code probe
+            # shared object with `cc`; --no-install-recommends leaves gcc without libc headers.
+            apt-get install -y --no-install-recommends python3 busybox-static e2fsprogs xfsprogs iproute2 nftables apparmor curl ca-certificates libssl3 docker.io docker-compose-v2 git patchelf gcc libc6-dev
+            # The strict gate mounts securityfs and loads the policy below.
+            G5_PASST_PROFILE_BUILD_ONLY=1 \
+              G5_DOWNLOAD_LIB=/workspace/infra/packer/g5-worker/scripts/lib/download-with-retry.sh \
+              bash /workspace/infra/packer/g5-worker/scripts/58-install-passt.sh
+            getent group kvm >/dev/null || groupadd --system kvm
+            groupadd --system g5-vmm
+            useradd --system --gid g5-vmm --groups kvm --no-create-home --shell /usr/sbin/nologin g5-vmm
+            bash /workspace/scripts/test-cloud-hypervisor-ci.sh
+          '
+    waitFor: ['extract-g5d']
+    timeout: 1800s
+
+  # ---------------------------------------------------------------------------
+  # 6. Push the raw disk + tarball + SBOM + manifest to the images GCS bucket.
+  # ---------------------------------------------------------------------------
+  # Terraform owns the destination bucket. Publish exact objects create-only;
+  # retries verify bytes/hash metadata instead of overwriting a prior version.
+  - id: push-gcs
+    name: ${_CLOUD_SDK_IMAGE}
+    entrypoint: bash
+    args:
+      - -euo
+      - pipefail
+      - -c
+      - |
+        if [ "${_RUN_FULL_BUILD}" != "true" ]; then
+          echo "Skipping push-gcs (lint-only mode)"
+          exit 0
+        fi
+
+        IMAGE_VERSION="$$(cat /workspace/image_version.txt)"
+        OUTPUT_DIR="/workspace/infra/packer/g5-worker/output/$${IMAGE_VERSION}"
+        BUCKET="gs://${_ARTIFACT_PROJECT}-${_IMAGES_BUCKET_SUFFIX}"
+        DEST="$${BUCKET}/$${IMAGE_VERSION}"
+
+        python3 /workspace/scripts/worker_artifacts.py upload \
+          --build-project="${PROJECT_ID}" --artifact-project="${_ARTIFACT_PROJECT}" \
+          --image-project="${_GCE_IMAGE_PROJECT}" --files \
+          "$${OUTPUT_DIR}/disk.raw" \
+          "$${OUTPUT_DIR}/$${IMAGE_VERSION}.tar.gz" \
+          "$${OUTPUT_DIR}/$${IMAGE_VERSION}.tar.gz.sha256" \
+          "$${OUTPUT_DIR}/manifest.json" \
+          "$${OUTPUT_DIR}/sbom.spdx.json" \
+          "$${OUTPUT_DIR}/sbom.spdx.json.sha256"
+    waitFor: ['image-test-gate-boot', 'image-test-gate-cloud-hypervisor']
+
+  # ---------------------------------------------------------------------------
+  # 7. Push a small OCI metadata artifact to GAR via ORAS. The artifact carries
+  #    manifest.json + sbom.spdx.json + the GCS URI of the raw disk. The raw
+  #    disk itself stays in GCS — too large to be useful as an OCI blob.
+  # ---------------------------------------------------------------------------
+  - id: push-gar-oras
+    name: ${_CLOUD_SDK_IMAGE}
+    entrypoint: bash
+    args:
+      - -euo
+      - pipefail
+      - -c
+      - |
+        if [ "${_RUN_FULL_BUILD}" != "true" ]; then
+          echo "Skipping push-gar-oras (lint-only mode)"
+          exit 0
+        fi
+
+        # The pinned cloud-sdk image ships neither jq nor oras; install jq here
+        # (oras is fetched via curl below). apt is available on the Debian-based image.
+        apt-get update -qq && apt-get install -y --no-install-recommends jq >/dev/null
+
+        IMAGE_VERSION="$$(cat /workspace/image_version.txt)"
+        OUTPUT_DIR="/workspace/infra/packer/g5-worker/output/$${IMAGE_VERSION}"
+        BUCKET="gs://${_ARTIFACT_PROJECT}-${_IMAGES_BUCKET_SUFFIX}"
+        DEST="$${BUCKET}/$${IMAGE_VERSION}"
+
+        STAGE=/workspace/oras-stage
+        mkdir -p "$${STAGE}"
+        cp "$${OUTPUT_DIR}/manifest.json"  "$${STAGE}/manifest.json"
+        cp "$${OUTPUT_DIR}/sbom.spdx.json" "$${STAGE}/sbom.spdx.json"
+
+        # Codex review B1: bind the ACTUAL tarball sha256 value into the
+        # signed disk-pointer.json, not just a URI to an unsigned sidecar.
+        # Otherwise a writer with GCS bucket access could swap the tarball
+        # AND the .sha256 sidecar and cosign verification would still pass.
+        TARBALL_SHA256="$$(awk '{print $$1}' "$${OUTPUT_DIR}/$${IMAGE_VERSION}.tar.gz.sha256")"
+        SBOM_SHA256="$$(awk '{print $$1}' "$${OUTPUT_DIR}/sbom.spdx.json.sha256")"
+        [ -n "$${TARBALL_SHA256}" ] || { echo "FAIL: empty tarball sha256"; exit 1; }
+        [ -n "$${SBOM_SHA256}" ]    || { echo "FAIL: empty sbom sha256"; exit 1; }
+
+        # Build disk-pointer.json via jq so we don't fight YAML's literal-block
+        # indentation rules. jq -n constructs a fresh object from the args.
+        jq -n \
+          --arg version    "$${IMAGE_VERSION}" \
+          --arg raw        "$${DEST}/disk.raw" \
+          --arg tar        "$${DEST}/$${IMAGE_VERSION}.tar.gz" \
+          --arg sha_uri    "$${DEST}/$${IMAGE_VERSION}.tar.gz.sha256" \
+          --arg sha_value  "$${TARBALL_SHA256}" \
+          --arg sbom       "$${DEST}/sbom.spdx.json" \
+          --arg sbom_sha   "$${SBOM_SHA256}" \
+          '{
+             image_version:           $$version,
+             raw_disk_gcs_uri:        $$raw,
+             tarball_gcs_uri:         $$tar,
+             tarball_sha256_gcs_uri:  $$sha_uri,
+             tarball_sha256:          $$sha_value,
+             sbom_gcs_uri:            $$sbom,
+             sbom_sha256:             $$sbom_sha
+           }' \
+          > "$${STAGE}/disk-pointer.json"
+
+        # Install oras (static binary). No GitHub-image dependency at runtime.
+        curl -fsSL "https://github.com/oras-project/oras/releases/download/v${_ORAS_VERSION}/oras_${_ORAS_VERSION}_linux_amd64.tar.gz" \
+          | tar -xz -C /usr/local/bin oras
+
+        # Authenticate to GAR via the cloudbuild SA's access token.
+        ACCESS_TOKEN="$$(gcloud auth print-access-token)"
+        echo "$${ACCESS_TOKEN}" | oras login \
+          --username oauth2accesstoken \
+          --password-stdin \
+          "${_AR_REGION}-docker.pkg.dev"
+
+        python3 /workspace/scripts/worker_artifacts.py oci \
+          --build-project="${PROJECT_ID}" --artifact-project="${_ARTIFACT_PROJECT}" \
+          --image-project="${_GCE_IMAGE_PROJECT}"
+        echo "GAR OCI artifact published by digest: $$(cat /workspace/worker-oci-ref.txt)"
+    waitFor: ['push-gcs']
+    timeout: 600s
+
+  # ---------------------------------------------------------------------------
+  # 8. cosign sign the GAR OCI ref with the GCP KMS key. Signatures are
+  #    auto-stored alongside the artifact in GAR's OCI sig store.
+  # ---------------------------------------------------------------------------
+  # The published sigstore cosign image is distroless — /bin/sh is absent;
+  # /busybox/sh is the only shell present.
+  - id: cosign-sign
+    name: ${_CLOUD_SDK_IMAGE}
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -eux
+        if [ "${_RUN_FULL_BUILD}" != "true" ]; then
+          echo "Skipping cosign-sign (lint-only mode)"
+          exit 0
+        fi
+
+        if [ ! -x /workspace/bin/cosign ]; then
+          mkdir -p /workspace/bin
+          curl -fsSL "https://github.com/sigstore/cosign/releases/download/v${_COSIGN_VERSION}/cosign-linux-amd64" -o /workspace/bin/cosign
+          chmod +x /workspace/bin/cosign
+        fi
+        export PATH="/workspace/bin:$$PATH"
+
+        IMAGE_VERSION="$$(cat /workspace/image_version.txt)"
+        GAR_REF="$$(cat /workspace/worker-oci-ref.txt)"
+
+        # --yes skips the interactive Sigstore TUF-root prompt; required in CI.
+        # --tlog-upload=false because we deliberately do NOT publish to the
+        # public Rekor transparency log (PNC air-gap posture; see plan §8).
+        cosign sign \
+          --key "${_COSIGN_KMS_KEY}" \
+          --tlog-upload=false \
+          --yes \
+          "$${GAR_REF}"
+    waitFor: ['push-gar-oras']
+
+  # ---------------------------------------------------------------------------
+  # 9. cosign attest the SPDX SBOM as a predicate against the GAR OCI ref.
+  # ---------------------------------------------------------------------------
+  - id: cosign-attest-sbom
+    name: ${_CLOUD_SDK_IMAGE}
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -eux
+        if [ "${_RUN_FULL_BUILD}" != "true" ]; then
+          echo "Skipping cosign-attest-sbom (lint-only mode)"
+          exit 0
+        fi
+
+        if [ ! -x /workspace/bin/cosign ]; then
+          mkdir -p /workspace/bin
+          curl -fsSL "https://github.com/sigstore/cosign/releases/download/v${_COSIGN_VERSION}/cosign-linux-amd64" -o /workspace/bin/cosign
+          chmod +x /workspace/bin/cosign
+        fi
+        export PATH="/workspace/bin:$$PATH"
+
+        IMAGE_VERSION="$$(cat /workspace/image_version.txt)"
+        OUTPUT_DIR="/workspace/infra/packer/g5-worker/output/$${IMAGE_VERSION}"
+        GAR_REF="$$(cat /workspace/worker-oci-ref.txt)"
+
+        cosign attest \
+          --key "${_COSIGN_KMS_KEY}" \
+          --predicate "$${OUTPUT_DIR}/sbom.spdx.json" \
+          --type spdxjson \
+          --tlog-upload=false \
+          --yes \
+          "$${GAR_REF}"
+    waitFor: ['cosign-sign']
+
+  # ---------------------------------------------------------------------------
+  # 10. cosign verify (in-pipeline) — sanity-check the signature + attestation
+  #     we just produced. If this fails, the published artifact in GAR is
+  #     unverifiable and we should NOT advance to gce-image-import.
+  # ---------------------------------------------------------------------------
+  # This is the "belt + suspenders" check that catches KMS misconfig, IAM
+  # drift, or cosign CLI regressions before downstream consumers try to verify.
+  - id: cosign-verify
+    name: ${_CLOUD_SDK_IMAGE}
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -eux
+        if [ "${_RUN_FULL_BUILD}" != "true" ]; then
+          echo "Skipping cosign-verify (lint-only mode)"
+          exit 0
+        fi
+
+        if [ ! -x /workspace/bin/cosign ]; then
+          mkdir -p /workspace/bin
+          curl -fsSL "https://github.com/sigstore/cosign/releases/download/v${_COSIGN_VERSION}/cosign-linux-amd64" -o /workspace/bin/cosign
+          chmod +x /workspace/bin/cosign
+        fi
+        export PATH="/workspace/bin:$$PATH"
+
+        IMAGE_VERSION="$$(cat /workspace/image_version.txt)"
+        GAR_REF="$$(cat /workspace/worker-oci-ref.txt)"
+
+        # --insecure-ignore-tlog matches the signing posture (--tlog-upload=false).
+        cosign verify \
+          --key "${_COSIGN_KMS_KEY}" \
+          --insecure-ignore-tlog \
+          "$${GAR_REF}"
+
+        cosign verify-attestation \
+          --key "${_COSIGN_KMS_KEY}" \
+          --type spdxjson \
+          --insecure-ignore-tlog \
+          "$${GAR_REF}"
+    waitFor: ['cosign-attest-sbom']
+
+  # ---------------------------------------------------------------------------
+  # 11. Import the raw disk into the GCE image catalog (family g5-worker).
+  #     API-provisioned worker hosts resolve the family at bring-up, so the
+  #     latest family member is what new hosts boot (plan §5.0 distribution
+  #     model).
+  # ---------------------------------------------------------------------------
+  # Gated on cosign-verify so an unverifiable artifact never shows up in the
+  # GCE image catalog where a host bring-up could pick it up. Idempotent: re-runs of
+  # the same IMAGE_VERSION must prove identical source hash and metadata.
+  - id: gce-image-import
+    name: ${_CLOUD_SDK_IMAGE}
+    entrypoint: bash
+    args:
+      - -euo
+      - pipefail
+      - -c
+      - |
+        if [ "${_RUN_FULL_BUILD}" != "true" ]; then
+          echo "Skipping gce-image-import (lint-only mode)"
+          exit 0
+        fi
+
+        python3 /workspace/scripts/worker_artifacts.py import \
+          --build-project="${PROJECT_ID}" --artifact-project="${_ARTIFACT_PROJECT}" \
+          --image-project="${_GCE_IMAGE_PROJECT}" --build-id="${BUILD_ID}" --commit="${COMMIT_SHA}"
+    waitFor: ['cosign-verify']
+
+  # ---------------------------------------------------------------------------
+  # 12. Publish a small summary JSON that downstream consumers (terraform
+  #     instance-template module, customer ops) can curl to discover the
+  #     latest g5-worker family member without listing GCE.
+  # ---------------------------------------------------------------------------
+  - id: publish-summary
+    name: ${_CLOUD_SDK_IMAGE}
+    entrypoint: bash
+    args:
+      - -euo
+      - pipefail
+      - -c
+      - |
+        if [ "${_RUN_FULL_BUILD}" != "true" ]; then
+          echo "Skipping publish-summary (lint-only mode)"
+          exit 0
+        fi
+
+        # The pinned cloud-sdk image does not ship jq; install it for the summary JSON build.
+        apt-get update -qq && apt-get install -y --no-install-recommends jq >/dev/null
+
+        IMAGE_VERSION="$$(cat /workspace/image_version.txt)"
+        BUCKET="gs://${_ARTIFACT_PROJECT}-${_IMAGES_BUCKET_SUFFIX}"
+        DEST="$${BUCKET}/$${IMAGE_VERSION}"
+        GAR_REF="$$(cat /workspace/worker-oci-ref.txt)"
+
+        TARBALL_SHA="$$(gsutil cat "$${DEST}/$${IMAGE_VERSION}.tar.gz.sha256" | awk '{print $$1}')"
+        SBOM_SHA="$$(gsutil cat   "$${DEST}/sbom.spdx.json.sha256"            | awk '{print $$1}')"
+        BUILD_TIMESTAMP="$$(cat /workspace/build_timestamp.txt)"
+        GIT_SHORT_SHA="$$(cat /workspace/git_short_sha.txt)"
+
+        jq -n \
+          --arg image_version    "$${IMAGE_VERSION}" \
+          --arg image_family     "${_IMAGE_FAMILY}" \
+          --arg gce_image        "projects/${_GCE_IMAGE_PROJECT}/global/images/$${IMAGE_VERSION}" \
+          --arg gar_ref          "$${GAR_REF}" \
+          --arg raw_disk_gcs     "$${DEST}/disk.raw" \
+          --arg tarball_gcs      "$${DEST}/$${IMAGE_VERSION}.tar.gz" \
+          --arg tarball_sha256   "$${TARBALL_SHA}" \
+          --arg sbom_gcs         "$${DEST}/sbom.spdx.json" \
+          --arg sbom_sha256      "$${SBOM_SHA}" \
+          --arg cosign_key       "${_COSIGN_KMS_KEY}" \
+          --arg build_id         "${BUILD_ID}" \
+          --arg build_project    "${PROJECT_ID}" \
+          --arg artifact_project "${_ARTIFACT_PROJECT}" \
+          --arg git_commit       "${COMMIT_SHA}" \
+          --arg build_timestamp  "$${BUILD_TIMESTAMP}" \
+          --arg git_short_sha    "$${GIT_SHORT_SHA}" \
+          '{ image_version: $$image_version, image_family: $$image_family, gce_image: $$gce_image, gar_ref: $$gar_ref, raw_disk_gcs: $$raw_disk_gcs, tarball_gcs: $$tarball_gcs, tarball_sha256: $$tarball_sha256, sbom_gcs: $$sbom_gcs, sbom_sha256: $$sbom_sha256, cosign_key: $$cosign_key, build_id: $$build_id, build_project: $$build_project, artifact_project: $$artifact_project, git_commit: $$git_commit, build_timestamp: $$build_timestamp, git_short_sha: $$git_short_sha }' \
+          > /workspace/summary.json
+
+        python3 /workspace/scripts/worker_artifacts.py upload \
+          --build-project="${PROJECT_ID}" --artifact-project="${_ARTIFACT_PROJECT}" \
+          --image-project="${_GCE_IMAGE_PROJECT}" --files /workspace/summary.json
+        # Stable "latest" pointer so downstream tooling can curl one URL to
+        # discover the most recent family member.
+        gsutil cp /workspace/summary.json "gs://${PROJECT_ID}-${_IMAGES_BUCKET_SUFFIX}/latest.json"
+        echo "Summary:"; cat /workspace/summary.json
+    waitFor: ['gce-image-import']
+
+  # ---------------------------------------------------------------------------
+  # 13. Legacy hook: re-run a Terraform trigger after the signed image import.
+  #
+  # Inherited from the original G5, where standing worker hosts were a
+  # Terraform-managed instance group that re-resolved the image family on
+  # apply. G5-Lean has no such group: worker hosts are provisioned on demand
+  # by the API and pick up the family at bring-up, so there is nothing to
+  # roll. The QA trigger (infra/qa/delivery/main.tf) keeps
+  # _TRIGGER_DEV_WORKER_ROLLOUT=false and this step is a no-op. Promotion is
+  # disabled for the follow-up apply because worker-image changes are not an
+  # infra bundle promotion event.
+  # ---------------------------------------------------------------------------
+  - id: trigger-dev-worker-rollout
+    name: ${_CLOUD_SDK_IMAGE}
+    entrypoint: bash
+    args:
+      - -euo
+      - pipefail
+      - -c
+      - |
+        if [ "${_RUN_FULL_BUILD}" != "true" ]; then
+          echo "Skipping dev worker rollout trigger (lint-only mode)"
+          exit 0
+        fi
+
+        if [ "${_TRIGGER_DEV_WORKER_ROLLOUT}" != "true" ]; then
+          echo "Skipping dev worker rollout trigger (_TRIGGER_DEV_WORKER_ROLLOUT=${_TRIGGER_DEV_WORKER_ROLLOUT})"
+          exit 0
+        fi
+
+        if [ -z "${COMMIT_SHA}" ]; then
+          echo "COMMIT_SHA is required to trigger a traceable dev worker rollout"
+          exit 1
+        fi
+
+        echo "Triggering ${_DEV_TERRAFORM_TRIGGER} to roll dev worker hosts onto the imported image"
+        gcloud builds triggers run "${_DEV_TERRAFORM_TRIGGER}" \
+          --project="${PROJECT_ID}" \
+          --region="${_AR_REGION}" \
+          --sha="${COMMIT_SHA}" \
+          --substitutions="_TF_DISABLE_PROMOTION=true,SHORT_SHA=${SHORT_SHA}"
+    waitFor: ['publish-summary']
+
+  # The gated deploy alone installs the API worker pin (cloudbuild_pipelines D35).
+  # Publishing an image must not trigger a separate API restart.
+
+# =============================================================================
+# Top-level build configuration
+# =============================================================================
+# Service account: the QA trigger g5-packer-worker-main-qa
+# (infra/qa/delivery/main.tf) sets its own service account, the g5-lean-images
+# build identity, and its builds run as that account. infra/qa/foundation grants
+# it KMS signing, object write on the image bucket and GAR writer on the image
+# repo. The account below applies only to builds started without that trigger;
+# the QA project has no g5-cloudbuild account.
+serviceAccount: projects/${PROJECT_ID}/serviceAccounts/g5-cloudbuild@${PROJECT_ID}.iam.gserviceaccount.com
+
+# Full build: packer 30-45 min, then ~25-40 min for boot-and-assert gate
+# (qemu boot + asserts + in-guest SBOM scan), then ~5 min for Cloud Hypervisor guest gate
+# and push/sign/verify/import. 7200s gives comfortable headroom; 10800s if
+# autoinstall ISO fetch is slow.
+timeout: 10800s
+
+# Cloud Build native artifact upload of the summary + manifest, in addition to
+# the explicit gsutil push in step 11/12. Belt + suspenders so a failed step 11
+# still leaves the manifest discoverable from the build record itself.
+artifacts:
+  objects:
+    location: 'gs://${PROJECT_ID}-build-artifacts/packer-worker/$BUILD_ID/'
+    paths:
+      - '/workspace/image_version.txt'
+      - '/workspace/infra/packer/g5-worker/output/*/manifest.json'
+      - '/workspace/infra/packer/g5-worker/output/*/sbom.spdx.json'
+      - '/workspace/summary.json'

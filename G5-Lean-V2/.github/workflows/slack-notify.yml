@@ -1,0 +1,74 @@
+name: Slack notify
+
+on:
+  workflow_call:
+    inputs:
+      title:
+        description: "Slack message title"
+        required: true
+        type: string
+      summary:
+        description: "Slack message summary"
+        required: true
+        type: string
+    secrets:
+      SLACK_WEBHOOK_URL:
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  notify:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Post Slack notification
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          TITLE: ${{ inputs.title }}
+          SUMMARY: ${{ inputs.summary }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          REPOSITORY: ${{ github.repository }}
+          REF_NAME: ${{ github.ref_name }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          if [ -z "${SLACK_WEBHOOK_URL:-}" ]; then
+            echo "SLACK_WEBHOOK_URL is not configured; skipping Slack notification"
+            exit 0
+          fi
+
+          payload="$(
+            python3 - <<'PY'
+          import json
+          import os
+
+          sha = os.environ["SHA"][:7]
+          print(json.dumps({
+              "blocks": [
+                  {
+                      "type": "header",
+                      "text": {
+                          "type": "plain_text",
+                          "text": os.environ["TITLE"],
+                      },
+                  },
+                  {
+                      "type": "section",
+                      "fields": [
+                          {"type": "mrkdwn", "text": f"*Summary:*\n{os.environ['SUMMARY']}"},
+                          {"type": "mrkdwn", "text": f"*Repository:*\n{os.environ['REPOSITORY']}"},
+                          {"type": "mrkdwn", "text": f"*Branch:*\n{os.environ['REF_NAME']}"},
+                          {"type": "mrkdwn", "text": f"*Commit:*\n{sha}"},
+                          {"type": "mrkdwn", "text": f"*Run:*\n<{os.environ['RUN_URL']}|{os.environ['RUN_URL'].split('/')[-1]}>"},
+                      ],
+                  },
+              ],
+          }, separators=(",", ":")))
+          PY
+          )"
+
+          curl -fsSL \
+            -H "Content-Type: application/json" \
+            -d "$payload" \
+            "$SLACK_WEBHOOK_URL"

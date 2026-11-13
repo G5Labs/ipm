@@ -1,0 +1,32 @@
+# Trusted manual bootstrap for the QA CI builder with its pinned VM platform.
+options:
+  logging: CLOUD_LOGGING_ONLY
+  dynamic_substitutions: true
+  pool:
+    name: ${_POOL}
+
+substitutions:
+  _POOL: projects/${PROJECT_ID}/locations/us-central1/workerPools/g5-ci-pool
+  _AR_REGION: us-central1
+  _AR_REPOSITORY: g5-builders
+  _IMAGE: g5-ci-builder-bootstrap
+
+steps:
+  - id: build-and-push-bootstrap-builder
+    name: gcr.io/cloud-builders/docker
+    dir: .
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        IMAGE="${_AR_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPOSITORY}/${_IMAGE}:latest"
+        bash scripts/ensure-base-images.sh base-rust-warm
+        docker build \
+          -t "$${IMAGE}" \
+          -f infra/docker/Dockerfile.ci-builder \
+          .
+        docker push "$${IMAGE}"
+        echo "Published bootstrap builder: $${IMAGE}"
+
+timeout: 5400s

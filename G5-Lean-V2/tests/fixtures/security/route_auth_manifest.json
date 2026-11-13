@@ -1,0 +1,730 @@
+[
+  {
+    "file": "routes/workspaces.rs",
+    "handler": "update_workspace_pull_request_auto_merge_settings",
+    "arguments": [
+      "path.id",
+      "path.pull_request_id"
+    ],
+    "proof": "pull_request_source checks read access to the target and resolves only a PR into that target. The route opens workspaces:write scope on its source. set_stop_vm_after_merge receives both exact path IDs and the authenticated user, rechecks source ownership under lock, and changes only that open PR's shutdown choice.",
+    "guardTokens": [
+      "pull_request_source",
+      "scoped_db_for_workspace",
+      "workspace_pull_request_auto_merge::set_stop_vm_after_merge"
+    ],
+    "guardPrecedes": [
+      "auto_merge_response"
+    ]
+  },
+  {
+    "file": "routes/workspaces.rs",
+    "handler": "record_user_activity",
+    "arguments": [
+      "body.vm_id"
+    ],
+    "proof": "The route authorizes the path workspace with workspaces:read so read-only owner interaction remains activity, then obtains that workspace's current owner handle. Both supplied VM and epoch must equal the handle before the runtime rechecks ownership, active membership and live lease while updating only that incarnation's timestamp. Reports never select a different workspace or VM.",
+    "guardTokens": [
+      "scoped_db_for_workspace",
+      "owner_handle(params.id, user.user_uuid())",
+      "handle.vm_id == body.vm_id && handle.epoch == body.epoch"
+    ],
+    "guardPrecedes": [
+      ".record_user_activity("
+    ]
+  },
+  {
+    "file": "routes/workspace_reviews.rs",
+    "handler": "add_reply",
+    "arguments": [
+      "body.edit_id"
+    ],
+    "proof": "Path-workspace read scope precedes add_reply_as with that exact workspace, parent and child. The shared reply boundary rechecks access, locks that workspace-bound parent, and ensure_edit_thread refuses a child absent from its ledger before creating or writing a thread.",
+    "guardTokens": [
+      "scoped_db_for_workspace",
+      "add_reply_as"
+    ],
+    "guardPrecedes": [
+      "ResponseEnvelope::ok"
+    ]
+  },
+  {
+    "file": "routes/workspace_reviews.rs",
+    "handler": "list_replies",
+    "arguments": [
+      "query.edit_id"
+    ],
+    "proof": "Path-workspace read scope precedes get_suggestion with both exact path identifiers. edit_thread_id selects only the requested child from that loaded parent's ledger and refuses unknown IDs before list_thread_replies reads the thread.",
+    "guardTokens": [
+      "scoped_db_for_workspace",
+      "get_suggestion",
+      "edit_thread_id"
+    ],
+    "guardPrecedes": [
+      "list_thread_replies"
+    ]
+  },
+  {
+    "file": "routes/workspace_reviews.rs",
+    "handler": "reject_suggestion",
+    "arguments": [
+      "body.edit_id"
+    ],
+    "proof": "Path-workspace write scope precedes reject_suggestion_as with that exact workspace, parent and child. The shared owner boundary locks the workspace-bound parent, selects only its own matching open children, and refuses an empty selection before decisions or thread writes.",
+    "guardTokens": [
+      "scoped_db_for_workspace",
+      "reject_suggestion_as"
+    ],
+    "guardPrecedes": [
+      "ResponseEnvelope::ok"
+    ]
+  },
+  {
+    "file": "routes/mod.rs",
+    "handler": "terminal_ws_adapter",
+    "arguments": [
+      "query.terminal_id"
+    ],
+    "proof": "The ticket is bound to the route workspace, open_owner_stream rechecks the current owner, and the guest can reattach only an identity registered in that workspace incarnation.",
+    "guardTokens": [
+      "validate_websocket_ticket",
+      "open_owner_stream",
+      "scoped_db_for_workspace"
+    ],
+    "guardPrecedes": [
+      "let terminal_id = params.terminal_id"
+    ]
+  },
+  {
+    "file": "routes/auth.rs",
+    "handler": "ws_ticket",
+    "arguments": [
+      "body.workspace_id"
+    ],
+    "proof": "Delegates workspace-scoped WebSocket ticket minting to AuthService::mint_ws_ticket, whose service-level scanner requires ensure_user_workspace_access.",
+    "guardTokens": [
+      "mint_ws_ticket"
+    ],
+    "guardPrecedes": [
+      "ResponseEnvelope::ok"
+    ]
+  },
+  {
+    "file": "routes/auth.rs",
+    "handler": "cli_device_start",
+    "arguments": [
+      "body.org_id",
+      "body.workspace_id"
+    ],
+    "proof": "Delegates pre-auth device request creation to AuthService::start_cli_device_authorization, which resolves/validates workspace-to-org routing before creating pending auth state.",
+    "guardTokens": [
+      "start_cli_device_authorization"
+    ],
+    "guardPrecedes": [
+      "verification_uri_complete"
+    ]
+  },
+  {
+    "file": "routes/worker_hosts.rs",
+    "handler": "provision_worker_host",
+    "arguments": [
+      "path.org_id"
+    ],
+    "proof": "Worker-host provisioning binds the path org through scoped_db_for_org with workers:admin before calling WorkerHostService::prepare_host, which owns host-row insertion and host_jwt credential minting.",
+    "guardTokens": [
+      "scoped_db_for_org"
+    ],
+    "guardPrecedes": [
+      "prepare_host"
+    ]
+  },
+  {
+    "file": "routes/worker_hosts.rs",
+    "handler": "deallocate_worker_host",
+    "arguments": [
+      "path.org_id",
+      "path.host_id"
+    ],
+    "proof": "Worker-host removal binds the path org through scoped_db_for_org with workers:admin, then delegates to WorkerHostService::remove_host with both host_id and org_id.",
+    "guardTokens": [
+      "scoped_db_for_org"
+    ],
+    "guardPrecedes": [
+      "remove_host"
+    ]
+  },
+  {
+    "file": "routes/worker_hosts.rs",
+    "handler": "refresh_worker_host_runtime_labels",
+    "arguments": [
+      "path.org_id",
+      "path.host_id"
+    ],
+    "proof": "Worker-host runtime-label refresh binds the path org through scoped_db_for_org with workers:admin, then delegates to WorkerHostService::get_host_for_runtime_refresh with both host_id and org_id before resolving and persisting labels.",
+    "guardTokens": [
+      "scoped_db_for_org"
+    ],
+    "guardPrecedes": [
+      "get_host_for_runtime_refresh"
+    ]
+  },
+  {
+    "file": "routes/workspaces.rs",
+    "handler": "get_open_question_metrics",
+    "arguments": [
+      "query.workspace_ids"
+    ],
+    "proof": "The handler opens an org-scoped workspaces:read connection, then WorkspaceService::open_question_metrics requires ensure_user_workspace_access for every requested workspace id before reading escalation or Project Doc data; inaccessible and cross-org ids fail closed.",
+    "guardTokens": [
+      "scoped_db_for_org",
+      "open_question_metrics"
+    ],
+    "guardPrecedes": [
+      "ResponseEnvelope::ok"
+    ]
+  },
+  {
+    "file": "routes/workspaces.rs",
+    "handler": "approved_rebase_publish",
+    "arguments": [
+      "body.expected_merge_run_id",
+      "body.expected_merge_run_ids"
+    ],
+    "proof": "The route first authorizes the path workspace through scoped_db_for_workspace with workspaces:write, then WorkspaceService::approved_rebase_publish accepts supplied merge-run ids only when their duplicate-free set exactly equals the active reset-below-baseline checkpoints of captured repository members in that authorized workspace.",
+    "guardTokens": [
+      "scoped_db_for_workspace",
+      "approved_rebase_publish"
+    ],
+    "guardPrecedes": [
+      "ResponseEnvelope::ok"
+    ]
+  },
+  {
+    "file": "routes/workspaces.rs",
+    "handler": "clone_workspace",
+    "arguments": [
+      "body.chat_session_ids"
+    ],
+    "proof": "Fork-chat carry ids (chat_service D55; workspace_fork_service D31): the route first authorizes the SOURCE workspace via scoped_db_for_workspace with workspaces:read, then forwards chat_session_ids untouched into WorkspaceForkService::fork_workspace on that same scoped connection. The carry delegates to ChatService::copy_sessions_to_workspace, whose copy query runs org-scoped and filters `workspace_id = <authorized source> AND id = ANY(chat_session_ids) AND agent_provider = 'claude_code'` \u2014 a session id from another workspace or org matches zero rows and is skipped, never carried, so the ids cannot reference anything beyond the workspace the caller already proved write access to.",
+    "guardTokens": [
+      "scoped_db_for_workspace",
+      "workspace_fork_service"
+    ],
+    "guardPrecedes": [
+      "ResponseEnvelope::ok"
+    ]
+  },
+  {
+    "file": "routes/org_approvals.rs",
+    "handler": "create_definition",
+    "arguments": [
+      "body.human_user_ids"
+    ],
+    "proof": "ApprovalDefinitionService::create delegates to validate_humans_are_members, which requires every requested approver id to be a current org_memberships row of the target org before any insert; non-members fail with a typed 422 and no row is written.",
+    "guardTokens": [
+      "create"
+    ],
+    "guardPrecedes": [
+      "ResponseEnvelope::ok"
+    ]
+  },
+  {
+    "file": "routes/org_approvals.rs",
+    "handler": "publish_definition_version",
+    "arguments": [
+      "body.human_user_ids",
+      "path.definition_id"
+    ],
+    "proof": "ApprovalDefinitionService::publish_version validates approver ids via validate_humans_are_members (current target-org members only) and resolves definition_id strictly org-scoped (WHERE org_id = $1 AND id = $2) on the tenant ScopedDb connection under forced RLS, so a cross-org definition id yields 404 and writes nothing.",
+    "guardTokens": [
+      "publish_version"
+    ],
+    "guardPrecedes": [
+      "ResponseEnvelope::ok"
+    ]
+  },
+  {
+    "file": "routes/workspace_approvals.rs",
+    "handler": "attach_requirement",
+    "arguments": [
+      "body.definition_id"
+    ],
+    "proof": "ApprovalConfigService::attach resolves the definition via ApprovalDefinitionService::get_latest strictly org-scoped on the tenant ScopedDb under forced RLS (cross-org ids 404) before inserting the config event for the already-authorized workspace.",
+    "guardTokens": [
+      "attach"
+    ],
+    "guardPrecedes": [
+      "ResponseEnvelope::ok"
+    ]
+  },
+  {
+    "file": "routes/workspace_approvals.rs",
+    "handler": "retire_requirement",
+    "arguments": [
+      "path.definition_id"
+    ],
+    "proof": "ApprovalConfigService::retire resolves the latest config event strictly (org_id, target_workspace_id, definition_id)-scoped on the tenant ScopedDb under forced RLS; never-attached or cross-org ids 404 with no write.",
+    "guardTokens": [
+      "retire"
+    ],
+    "guardPrecedes": [
+      "ResponseEnvelope::ok"
+    ]
+  },
+  {
+    "file": "routes/workspace_approvals.rs",
+    "handler": "create_human_requests",
+    "arguments": [
+      "body.client_request_id"
+    ],
+    "proof": "The route authorizes the exact workspace and owner before ApprovalConfigService namespaces the operation UUID with the source workspace, requester and explicit recipient. Retry lookup uses that derived ID with org/workspace predicates and checks the original PR, type, version, phase and actor before returning evidence; the client UUID cannot select an unrelated request or confer authority.",
+    "guardTokens": [
+      "scoped_db_for_workspace",
+      "ensure_workspace_owner",
+      "create_human_requests"
+    ],
+    "guardPrecedes": [
+      "create_human_requests_with"
+    ]
+  },
+  {
+    "file": "routes/workspace_approvals.rs",
+    "handler": "record_decision",
+    "arguments": [
+      "body.definition_id",
+      "body.request_id"
+    ],
+    "proof": "ApprovalConfigService::record_human_decision locks the supplied exact pending request under forced RLS and requires its source workspace, definition, and actor_user_id to match the already-authorized workspace and current same-organization caller before inserting a status or advancing the request; violations fail with no partial writes.",
+    "guardTokens": [
+      "record_human_decision"
+    ],
+    "guardPrecedes": [
+      "ResponseEnvelope::ok"
+    ]
+  },
+  {
+    "file": "routes/source_control_change_graph.rs",
+    "handler": "get_node_details",
+    "arguments": [
+      "path.node_id"
+    ],
+    "proof": "The handler first authorizes the path workspace through scoped_db_for_workspace with workspaces:read, then SourceControlChangeGraphService::node_details recomputes that workspace's authorized graph projection, revision-checks it, and resolves node_id only among projected nodes before returning details.",
+    "guardTokens": [
+      "scoped_db_for_workspace",
+      "node_details"
+    ],
+    "guardPrecedes": [
+      "ResponseEnvelope::ok"
+    ]
+  },
+  {
+    "file": "routes/github_app.rs",
+    "handler": "update_github_app_coverage",
+    "arguments": [
+      "body.github_repo_ids"
+    ],
+    "proof": "GitHub repository ids are not G5 tenant resources. The handler requires a path-org admin (org_admin_db), re-fetches the org's active installation repository list from GitHub, and validate_coverage_selection rejects duplicates and any id the installation cannot access before append_coverage_change writes a snapshot under the org's RLS scope with a binding-version check.",
+    "guardTokens": [
+      "org_admin_db",
+      "validate_coverage_selection"
+    ],
+    "guardPrecedes": [
+      "append_coverage_change"
+    ]
+  },
+  {
+    "file": "routes/github_app.rs",
+    "handler": "github_app_setup_callback",
+    "arguments": [
+      "query.installation_id"
+    ],
+    "proof": "GitHub's setup installation_id is untrusted. It is only bound into an HMAC-signed OAuth state after the attempt state verifies and pending_attempt matches its stored digest; the OAuth callback records a binding only after GitHub proves the OAuth user can access that installation.",
+    "guardTokens": [
+      "pending_attempt",
+      "oauth_state_for_installation"
+    ],
+    "guardPrecedes": [
+      "oauth_authorize_url"
+    ]
+  },
+  {
+    "file": "routes/external_issues.rs",
+    "handler": "create_issue_domain",
+    "arguments": [
+      "body.github_repo_id"
+    ],
+    "proof": "A GitHub repository id is not a G5 tenant resource. The handler requires a path-org admin (org_admin_db); create_github_domain then requires the org's latest GitHub App binding, read under the org's RLS scope, to be active, cover that repository id and grant Issues read before inserting the domain for the path org.",
+    "guardTokens": [
+      "org_admin_db",
+      "create_github_domain"
+    ],
+    "guardPrecedes": [
+      "db.commit()"
+    ]
+  },
+  {
+    "file": "routes/external_issues.rs",
+    "handler": "update_issue_domain",
+    "arguments": [
+      "path.domain_id"
+    ],
+    "proof": "The handler requires a path-org admin (org_admin_db) before update_domain_settings, which updates the domain only where org_id is the path org, under that org's RLS scope; any other id is not found.",
+    "guardTokens": [
+      "org_admin_db",
+      "update_domain_settings"
+    ],
+    "guardPrecedes": [
+      "db.commit()"
+    ]
+  },
+  {
+    "file": "routes/external_issues.rs",
+    "handler": "delete_issue_domain",
+    "arguments": [
+      "path.domain_id"
+    ],
+    "proof": "The handler requires a path-org admin (org_admin_db) before delete_domain, which deletes the domain only where org_id is the path org, under that org's RLS scope; any other id is not found.",
+    "guardTokens": [
+      "org_admin_db",
+      "delete_domain"
+    ],
+    "guardPrecedes": [
+      "db.commit()"
+    ]
+  },
+  {
+    "file": "routes/external_issues.rs",
+    "handler": "get_github_issue",
+    "arguments": [
+      "path.repository_id"
+    ],
+    "proof": "Organization membership is the read grant for configured issue domains. The handler loads the path org's domains under its RLS scope (scoped_db_for_org) and domain_for_repository rejects a repository id that is not one of them with outside_domain before any GitHub request.",
+    "guardTokens": [
+      "scoped_db_for_org",
+      "domain_for_repository"
+    ],
+    "guardPrecedes": [
+      "fetch_issue_detail"
+    ]
+  },
+  {
+    "file": "routes/external_issues.rs",
+    "handler": "get_github_write_target",
+    "arguments": [
+      "path.repository_id"
+    ],
+    "proof": "Organization membership is the read grant for configured issue domains. The handler loads the path org's domains under its RLS scope (scoped_db_for_org) and domain_for_repository rejects a repository id that is not one of them before any GitHub request.",
+    "guardTokens": [
+      "scoped_db_for_org",
+      "domain_for_repository"
+    ],
+    "guardPrecedes": [
+      "domain_issue"
+    ]
+  },
+  {
+    "file": "routes/external_issues.rs",
+    "handler": "edit_github_page_issue",
+    "arguments": [
+      "path.repository_id"
+    ],
+    "proof": "github_page_target opens the path org's member-write scope (scoped_db_for_org with workspaces:write), loads its domains under that RLS scope and rejects a repository id that is not one of them (domain_for_repository) before reading the issue; the handler then edits the issue only through the comment guards with the caller's own GitHub grant.",
+    "guardTokens": [
+      "github_page_target"
+    ],
+    "guardPrecedes": [
+      "edit_issue_as"
+    ]
+  },
+  {
+    "file": "routes/external_issues.rs",
+    "handler": "change_github_page_issue_state",
+    "arguments": [
+      "path.repository_id"
+    ],
+    "proof": "github_page_target opens the path org's member-write scope (scoped_db_for_org with workspaces:write), loads its domains under that RLS scope and rejects a repository id that is not one of them (domain_for_repository) before reading the issue; the handler then closes or reopens the issue only through the comment guards with the caller's own GitHub grant.",
+    "guardTokens": [
+      "github_page_target"
+    ],
+    "guardPrecedes": [
+      "change_issue_state_as"
+    ]
+  },
+  {
+    "file": "routes/external_issues.rs",
+    "handler": "post_github_page_comment",
+    "arguments": [
+      "path.repository_id"
+    ],
+    "proof": "github_page_target opens the path org's member-write scope (scoped_db_for_org with workspaces:write), loads its domains under that RLS scope and rejects a repository id that is not one of them (domain_for_repository) before reading the issue; the handler then comments on the issue only through the comment guards with the caller's own GitHub grant.",
+    "guardTokens": [
+      "github_page_target"
+    ],
+    "guardPrecedes": [
+      "publish_issue_comment"
+    ]
+  },
+  {
+    "file": "routes/external_issues.rs",
+    "handler": "edit_github_page_comment",
+    "arguments": [
+      "path.repository_id",
+      "path.comment_id"
+    ],
+    "proof": "A GitHub comment id is not a G5 tenant resource. github_page_target opens the path org's member-write scope and admits only a repository among its configured domains; edit_github_comment then reads the comment with the caller's own GitHub token and edits it only when it is on that issue and authored by the caller's GitHub account.",
+    "guardTokens": [
+      "github_page_target"
+    ],
+    "guardPrecedes": [
+      "edit_github_comment"
+    ]
+  },
+  {
+    "file": "routes/external_issues.rs",
+    "handler": "unlink_workspace_issue_link",
+    "arguments": [
+      "path.link_id"
+    ],
+    "proof": "The handler opens the path workspace's owner-checked write scope (scoped_db_for_workspace with workspaces:write), and unlink_workspace_link updates only a link whose org and workspace are that workspace's; any other id is not found.",
+    "guardTokens": [
+      "scoped_db_for_workspace",
+      "unlink_workspace_link"
+    ],
+    "guardPrecedes": [
+      "db.commit()"
+    ]
+  },
+  {
+    "file": "routes/external_issues.rs",
+    "handler": "change_linked_issue_state",
+    "arguments": [
+      "path.workspace_id",
+      "path.link_id"
+    ],
+    "proof": "The handler opens comment_db for the path workspace (workspace read scope plus the organization's workspaces:write re-check) before any work; change_linked_issue_state_as then takes the link from list_workspace_links of that org and workspace: another workspace's link id is not found. The GitHub write uses the caller's own grant (acting_user) and nothing is recorded.",
+    "guardTokens": [
+      "comment_db"
+    ],
+    "guardPrecedes": [
+      "change_linked_issue_state_as"
+    ]
+  },
+  {
+    "file": "routes/external_issues.rs",
+    "handler": "edit_workspace_comment",
+    "arguments": [
+      "path.comment_id"
+    ],
+    "proof": "A GitHub comment id is not a G5 tenant resource. The handler opens the path workspace's visibility-checked scope and rechecks current target-org write authority (comment_db) to read its primary issue; edit_github_comment then reads the comment with the caller's own GitHub token and edits it only when it is on that primary issue and authored by the caller's GitHub account.",
+    "guardTokens": [
+      "comment_db"
+    ],
+    "guardPrecedes": [
+      "edit_github_comment"
+    ]
+  },
+  {
+    "file": "routes/workspace_approvals.rs",
+    "handler": "create_review",
+    "arguments": [
+      "body.definition_id",
+      "body.retry_review_id",
+      "body.client_request_id"
+    ],
+    "proof": "Shared owner admission opens the source workspaces:write scope and checks ownership before create_review_with passes the typed request to ApprovalReviewService::admit. Fresh definitions resolve under configured-target tenant authority; retries resolve an exact failed review bound to the same source workspace and tenant before using its frozen assignment. The optional client operation UUID is namespaced by the authenticated current owner and authorized source workspace before receipt lookup; the service fences that key and checks exact normalized inputs against the retained request/run binding, including terminal receipts. It confers no independent resource authority.",
+    "guardTokens": [
+      "scoped_db_for_workspace",
+      "ensure_workspace_owner"
+    ],
+    "guardPrecedes": [
+      "create_review_with"
+    ]
+  },
+  {
+    "file": "routes/workspace_approvals.rs",
+    "handler": "get_review_report",
+    "arguments": [
+      "path.review_id"
+    ],
+    "proof": "The typed source workspace is authorized with workspaces:read before report resolves the exact review id and source workspace together under tenant RLS; evidence follows the original source audience.",
+    "guardTokens": [
+      "report"
+    ],
+    "guardPrecedes": [
+      "ResponseEnvelope::ok"
+    ]
+  },
+  {
+    "file": "routes/workspace_approvals.rs",
+    "handler": "retry_review_cleanup",
+    "arguments": [
+      "path.review_id"
+    ],
+    "proof": "The typed source workspace requires current owner/workspaces:write authority before retry_cleanup updates only the exact review bound to that same source under tenant RLS. The endpoint schedules existing review-owned cleanup and grants no direct temporary-workspace authority.",
+    "guardTokens": [
+      "retry_cleanup"
+    ],
+    "guardPrecedes": [
+      "ResponseEnvelope::ok"
+    ]
+  },
+  {
+    "file": "routes/workspace_approvals.rs",
+    "handler": "get_review_commits",
+    "arguments": [
+      "path.review_id",
+      "query.repo_id"
+    ],
+    "proof": "Current source workspaces:read authorization precedes the exact review/source lookup in the retained inspection service. Commit reads accept only assigned repository/cuts and require target read for base/diff; transcript uses only a review-bound physically read-only context and gates raw tool results per request.",
+    "guardTokens": [
+      "read_commits"
+    ],
+    "guardPrecedes": [
+      "ResponseEnvelope::ok"
+    ]
+  },
+  {
+    "file": "routes/workspace_approvals.rs",
+    "handler": "get_review_transcript",
+    "arguments": [
+      "path.review_id"
+    ],
+    "proof": "Current source workspaces:read authorization precedes the exact review/source lookup in the retained inspection service. Commit reads accept only assigned repository/cuts and require target read for base/diff; transcript uses only a review-bound physically read-only context and gates raw tool results per request.",
+    "guardTokens": [
+      "transcript"
+    ],
+    "guardPrecedes": [
+      "ResponseEnvelope::ok"
+    ]
+  },
+  {
+    "file": "routes/comments.rs",
+    "handler": "create_comment",
+    "arguments": [
+      "body.id"
+    ],
+    "proof": "Client-generated message identity is not a read selector. The scoped create_comment operation inserts or replays only an identical message in the authorized workspace by the same author, matching scope, file and anchor; conflicting identity reuse returns no other message content.",
+    "guardTokens": [
+      "scoped_db_for_workspace",
+      "create_comment"
+    ],
+    "guardPrecedes": [
+      "ResponseEnvelope::ok"
+    ]
+  },
+  {
+    "file": "routes/notifications.rs",
+    "handler": "mark_all_read",
+    "arguments": [
+      "body.ids"
+    ],
+    "proof": "A recipient-chosen set of their own notifications is not a read selector. The scoped read-all updates only unread rows in the authorized workspace addressed to the caller (workspace_id and recipient_user_id); ids outside that set match nothing, change nothing and only a count is returned (g5.user.notifications).",
+    "guardTokens": [
+      "scoped_db_for_workspace",
+      "mark_all_read"
+    ],
+    "guardPrecedes": [
+      "ResponseEnvelope::ok"
+    ]
+  },
+  {
+    "file": "routes/workspace_review_flow.rs",
+    "handler": "changes",
+    "arguments": [
+      "query.comment_id",
+      "query.definition_id",
+      "query.repo_id",
+      "query.revision_id"
+    ],
+    "proof": "Workspace read scope is established first. line_anchor binds a comment to this workspace and the exact repo/path. checkpoint binds a definition to this caller and the open source PR. revision admits only this workspace or a currently readable ancestor before its fork cut. Repository selection is intersected with those complete authorized vectors; live reads additionally require the running owner and go through workspace_runtime.review_inspect. No arbitrary ref is accepted.",
+    "guardTokens": [
+      "scoped_db_for_workspace"
+    ],
+    "guardPrecedes": [
+      "queries::line_anchor",
+      "queries::checkpoint",
+      "queries::revision",
+      "review_inspect"
+    ]
+  },
+  {
+    "file": "routes/workspace_review_flow.rs",
+    "handler": "commits",
+    "arguments": [
+      "query.repo_id",
+      "query.revision_id"
+    ],
+    "proof": "Workspace read scope precedes queries::revision, which admits only this workspace or readable ancestor history before the fork cut, or published_heads for the current cut. The selected repo must be present in that authorized vector before constructing a historical reader. Pagination is restricted to first-parent ancestry of that admitted head.",
+    "guardTokens": [
+      "scoped_db_for_workspace",
+      "queries::revision",
+      "published_heads",
+      "heads",
+      "list_first_parent_history"
+    ],
+    "guardPrecedes": [
+      "ResponseEnvelope::ok"
+    ]
+  },
+  {
+    "file": "routes/source_control_browser.rs",
+    "handler": "check",
+    "arguments": [
+      "body.selected"
+    ],
+    "proof": "Capture authorizes the path workspace and its current repository cuts. The shared refreshed_menu operation checks every supplied repository against captured authorized members before opening storage, validates selected commits against those immutable cuts, and rechecks workspace access before returning metadata. No supplied identifier selects a foreign repository or arbitrary content.",
+    "guardTokens": [
+      "capture(&state, &auth, id, false)",
+      "input.selected"
+    ],
+    "guardPrecedes": [
+      "refreshed_menu("
+    ]
+  },
+  {
+    "file": "routes/source_control_browser.rs",
+    "handler": "pushed_scope",
+    "arguments": [
+      "body.heads"
+    ],
+    "proof": "capture authorizes the path workspace and freshly captures its repository members and pushed comparison cuts. The legacy heads hint is never used to select content; only captured available members are passed to apply. No supplied repository or revision can select bytes.",
+    "guardTokens": [
+      "capture",
+      "input.heads",
+      "current.repos"
+    ],
+    "guardPrecedes": [
+      "apply("
+    ]
+  },
+  {
+    "file": "routes/source_control_browser.rs",
+    "handler": "history_page",
+    "arguments": [
+      "body.repo_id"
+    ],
+    "proof": "capture authorizes the path workspace and the requested repository must be in its member list. Source/parent cuts must equal that capture or be retained workspace revision evidence; the configured parent also requires current read access. Git paging binds the captured tip, parent, fork and cursor before returning history.",
+    "guardTokens": [
+      "capture",
+      "r.repo_id == input.repo_id"
+    ],
+    "guardPrecedes": [
+      "comparison_history"
+    ]
+  },
+  {
+    "file": "routes/workspace_review_flow.rs",
+    "handler": "changes",
+    "arguments": [
+      "query.pull_request_id"
+    ],
+    "proof": "Workspace read scope precedes comparison_cuts, whose PR query binds the ID to source_workspace_id. Merged historical parent cuts require current access to the recorded target; closed unmerged scopes have no comparison.",
+    "guardTokens": [
+      "scoped_db_for_workspace",
+      "history::comparison_cuts",
+      "q.pull_request_id"
+    ],
+    "guardPrecedes": [
+      "ResponseEnvelope::ok"
+    ]
+  }
+]

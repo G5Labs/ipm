@@ -1,0 +1,357 @@
+# syntax=docker/dockerfile:1
+# =============================================================================
+# Dockerfile.g5d — G5 workspace host and guest runtime
+# Layers g5d binary on top of g5/g5d-base
+# Size target: < 2 GB (including all toolchains from base)
+# Platforms: linux/amd64, linux/arm64
+# =============================================================================
+
+# Global ARG — must be before first FROM so it can be used in FROM instructions
+ARG BASE_IMAGE=g5/g5d-base:latest
+
+# --- Stage 1: Build g5d binary ---
+# Builder tier: shared Rust toolchain + baked workspace-dependency sccache
+# ([D18]/[D20]); replaces rust:1.93-bookworm so the g5d builder shares
+# the fleet base, inherits base-rust's Rust toolchain, and hits the
+# warm sccache. Binaries built here link glibc 2.43 — the host-plane build the
+# 26.04 base requires (system_invariants/microvm_execution_boundary#D12), made
+# safe by the fail-closed guest glibc-floor guard (provisioning_api#D57).
+ARG BUILDER_BASE_IMAGE=g5/base-rust-warm:26.04
+FROM ${BUILDER_BASE_IMAGE} AS builder
+
+WORKDIR /build
+ARG G5D_BUILD_FEATURE_FLAGS=""
+ARG G5_CARGO_PROFILE=release
+ARG G5_DOCKER_CARGO_BUILD_JOBS=2
+
+# Keep compiler/linker concurrency independent of the host's CPU count.
+# The workspace .cargo/config.toml is dev-specific and is not copied here.
+ENV CARGO_BUILD_JOBS="${G5_DOCKER_CARGO_BUILD_JOBS}"
+
+# GCS-backed sccache (integration-stack/docker_images D17). Gated on a
+# non-empty SCCACHE_GCS_BUCKET: empty (the default) leaves this build
+# operationally equivalent with caching disabled — no wrapper, no binary,
+# inert scaffolding only. Fail-open by design: an unreachable bucket
+# only slows the compile, never fails or alters it. Auth: the pipeline
+# passes SCCACHE_GCS_CREDENTIALS_URL (a token shim on the cloudbuild
+# network serving the BUILD SA's token in TaskCluster format) because the
+# host-net metadata server serves the worker VM's untrusted identity, not
+# the build SA (proven: canary aefb0909). No keys ever enter the build.
+# The binary is a pinned prebuilt
+# release — never `cargo install` (its own cold compile + MSRV-drift risk).
+# Keep this block identical to Dockerfile.g5-api's so both images share one
+# sccache key space (same WORKDIR/toolchain/CARGO_HOME).
+ARG SCCACHE_GCS_BUCKET=""
+ARG SCCACHE_GCS_CREDENTIALS_URL=""
+ARG SCCACHE_GCS_KEY_PREFIX="sccache/deploy"
+# sccache itself is INHERITED from the base-rust tier (pinned v0.17,
+# sha256-verified at tier build, first on PATH at /usr/local/cargo/bin) — this
+# leaf no longer downloads its own copy, so deploys carry no GitHub-release
+# dependency here and the preflight below always exercises the exact tier
+# binary the warm cache was cooked with ([D18]/[D20]).
+# No global RUSTC_WRAPPER: sccache_preflight runs immediately before EVERY
+# cargo invocation (a server healthy at one build can die before the next)
+# and enables the wrapper only after a STRICT `sccache --start-server`
+# succeeds, preceded by a stop so the start always re-validates the backend.
+# Strictness is load-bearing, empirically proven 2026-08-17: v0.17 validates
+# GCS only on explicit --start-server; client autostart (e.g. --show-stats)
+# is lenient, and a compile through sccache with a bad backend then FAILS
+# (request-time is fail-closed, not fail-open). The visible --show-stats at
+# the top of each preflight also brackets every invocation in the logs.
+# Degraded-mode cost: each failed strict start waits ~10s, then compiles
+# uncached — slow-but-green, never red.
+ENV SCCACHE_GCS_BUCKET="${SCCACHE_GCS_BUCKET}"
+ENV SCCACHE_GCS_CREDENTIALS_URL="${SCCACHE_GCS_CREDENTIALS_URL}"
+ENV SCCACHE_GCS_KEY_PREFIX="${SCCACHE_GCS_KEY_PREFIX}"
+ENV SCCACHE_GCS_RW_MODE="READ_WRITE"
+ENV SCCACHE_IDLE_TIMEOUT="0"
+ENV SCCACHE_IGNORE_SERVER_IO_ERROR="1"
+# Deliberately NOT setting CARGO_INCREMENTAL here: cargo treats ANY set value
+# other than "1" (including empty) as forced-off, so an unconditional env
+# would break the incremental g5-dev-profile builds local docker-compose
+# uses. Deploy/release build the release profile, which is non-incremental
+# by default — exactly what sccache requires. Do not combine a non-empty
+# SCCACHE_GCS_BUCKET with an incremental profile; sccache rejects
+# incremental compilation (cloudbuild_workspace_hides_baked_cargo_home).
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    pkg-config libssl-dev cmake \
+    && rm -rf /var/lib/apt/lists/*
+
+
+# Cache dependencies: copy only manifests first
+COPY Cargo.toml Cargo.lock ./
+COPY backend/g5-contracts/Cargo.toml backend/g5-contracts/Cargo.toml
+COPY backend/g5-auth/Cargo.toml backend/g5-auth/Cargo.toml
+COPY backend/g5-storage/Cargo.toml backend/g5-storage/Cargo.toml
+COPY backend/g5-semantic/Cargo.toml backend/g5-semantic/Cargo.toml
+COPY backend/g5-scm/Cargo.toml backend/g5-scm/Cargo.toml
+COPY backend/g5-internal-api/Cargo.toml backend/g5-internal-api/Cargo.toml
+COPY backend/g5-authz/Cargo.toml backend/g5-authz/Cargo.toml
+COPY backend/g5-api-foundation/Cargo.toml backend/g5-api-foundation/Cargo.toml
+COPY backend/g5-api-data/Cargo.toml backend/g5-api-data/Cargo.toml
+COPY backend/g5-api-core/Cargo.toml backend/g5-api-core/Cargo.toml
+COPY backend/g5-api-routes/Cargo.toml backend/g5-api-routes/Cargo.toml
+COPY backend/g5-api/Cargo.toml backend/g5-api/Cargo.toml
+COPY backend/g5d-foundation/Cargo.toml backend/g5d-foundation/Cargo.toml
+COPY backend/g5d-isolation/Cargo.toml backend/g5d-isolation/Cargo.toml
+COPY backend/g5d-agent/Cargo.toml backend/g5d-agent/Cargo.toml
+COPY backend/g5d-host/Cargo.toml backend/g5d-host/Cargo.toml
+COPY backend/g5d-dispatch/Cargo.toml backend/g5d-dispatch/Cargo.toml
+COPY backend/g5d/Cargo.toml backend/g5d/Cargo.toml
+COPY tests/e2e/Cargo.toml tests/e2e/Cargo.toml
+# Every workspace member's manifest must be present or cargo refuses to load
+# the workspace (scripts/check-layout.py enforces this list).
+COPY tools/fake-provider-cli/Cargo.toml tools/fake-provider-cli/Cargo.toml
+
+# Create dummy source files to build dependencies
+RUN mkdir -p backend/g5-contracts/src backend/g5-auth/src backend/g5-storage/src backend/g5-semantic/src backend/g5-scm/src backend/g5-internal-api/src backend/g5-authz/src backend/g5-api-foundation/src backend/g5-api-data/src backend/g5-api-core/src backend/g5-api-routes/src backend/g5-api/src backend/g5d-foundation/src backend/g5d-isolation/src backend/g5d-agent/src backend/g5d-host/src backend/g5d-dispatch/src backend/g5d/src tests/e2e/src tools/fake-provider-cli/src/bin && \
+    echo "fn main() {}" > backend/g5-api/src/main.rs && \
+    mkdir -p backend/g5-api/tests && printf '' > backend/g5-api/tests/main.rs && \
+    echo "fn main() {}" > backend/g5d/src/main.rs && \
+    echo "fn main() {}" > tests/e2e/src/main.rs && \
+    echo "" > backend/g5-contracts/src/lib.rs && \
+    echo "" > backend/g5-auth/src/lib.rs && \
+    echo "" > backend/g5-storage/src/lib.rs && \
+    echo "" > backend/g5-semantic/src/lib.rs && \
+    echo "" > backend/g5-scm/src/lib.rs && \
+    echo "" > backend/g5-internal-api/src/lib.rs && \
+    echo "" > backend/g5-authz/src/lib.rs && \
+    echo "" > backend/g5-api-foundation/src/lib.rs && \
+    echo "" > backend/g5-api-data/src/lib.rs && \
+    echo "" > backend/g5-api-core/src/lib.rs && \
+    echo "" > backend/g5-api-routes/src/lib.rs && \
+    echo "" > backend/g5d-foundation/src/lib.rs && \
+    echo "" > backend/g5d-isolation/src/lib.rs && \
+    echo "" > backend/g5d-agent/src/lib.rs && \
+    echo "" > backend/g5d-host/src/lib.rs && \
+    echo "" > backend/g5d-dispatch/src/lib.rs && \
+    echo "" > tools/fake-provider-cli/src/lib.rs && \
+    echo "fn main() {}" > tools/fake-provider-cli/src/bin/fake-claude.rs && \
+    echo "fn main() {}" > tools/fake-provider-cli/src/bin/fake-codex.rs && \
+    echo "fn main() {}" > tools/fake-provider-cli/src/bin/fake-g5-tools.rs
+
+# Build dependencies only (cached layer). Local process-mode builds can omit
+# Cloud Hypervisor support with --no-default-features.
+RUN --mount=type=cache,id=cargo-reg-g5d,target=/usr/local/cargo/registry \
+    --mount=type=cache,id=cargo-target-g5d-build,target=/build/target,sharing=locked \
+    sccache_preflight() { \
+        export RUSTC_WRAPPER=; \
+        command -v sccache >/dev/null 2>&1 || return 0; \
+        if [ -n "$SCCACHE_GCS_BUCKET" ]; then \
+            sccache --show-stats 2>/dev/null || true; \
+            sccache --stop-server >/dev/null 2>&1 || true; \
+            if sccache --start-server >/dev/null 2>&1; then \
+                export RUSTC_WRAPPER=sccache CARGO_INCREMENTAL=0; \
+            else \
+                echo "WARN: sccache backend unavailable; compiling uncached"; \
+            fi; \
+        elif [ -n "$(find "${SCCACHE_DIR:-/opt/g5-sccache}" -type f -print -quit 2>/dev/null)" ]; then \
+            # No GCS bucket but the base-rust-warm tier baked a local object \
+            # cache: arm the disk backend so local dev-up/ci image builds hit \
+            # the warmed dependencies (docker_images [D20]) instead of \
+            # compiling cold. Fail-soft like the GCS path. \
+            sccache --stop-server >/dev/null 2>&1 || true; \
+            if sccache --start-server >/dev/null 2>&1; then \
+                export RUSTC_WRAPPER=sccache CARGO_INCREMENTAL=0; \
+            fi; \
+        fi; \
+    } && \
+    sccache_preflight && \
+    cargo build --profile "$G5_CARGO_PROFILE" -p g5d ${G5D_BUILD_FEATURE_FLAGS} 2>/dev/null || true
+
+# Remove placeholder crate trees before copying real sources so deleted files
+# do not linger across cached local rebuilds.
+RUN rm -rf backend/g5-contracts backend/g5-auth backend/g5-storage backend/g5-semantic backend/g5-scm backend/g5-internal-api backend/g5-authz backend/g5d-foundation backend/g5d-isolation backend/g5d-agent backend/g5d-host backend/g5d-dispatch backend/g5d tools/fake-provider-cli
+
+# Copy actual source code
+COPY backend/g5-contracts/ backend/g5-contracts/
+COPY backend/g5-auth/ backend/g5-auth/
+COPY backend/g5-storage/ backend/g5-storage/
+COPY backend/g5-semantic/ backend/g5-semantic/
+COPY backend/g5-scm/ backend/g5-scm/
+COPY backend/g5-internal-api/ backend/g5-internal-api/
+COPY backend/g5-authz/ backend/g5-authz/
+COPY backend/g5d-foundation/ backend/g5d-foundation/
+COPY backend/g5d-isolation/ backend/g5d-isolation/
+COPY backend/g5d-agent/ backend/g5d-agent/
+COPY backend/g5d-host/ backend/g5d-host/
+COPY backend/g5d-dispatch/ backend/g5d-dispatch/
+COPY backend/g5d/ backend/g5d/
+COPY tools/fake-provider-cli/ tools/fake-provider-cli/
+# The fakes embed the provider CLI pins at build time (`include_str!` of the
+# single-source pin files), so the builder needs them beside the crate.
+COPY scripts/claude-code-cli-version scripts/codex-cli-version scripts/
+
+# Touch source files to invalidate the dummy builds
+RUN touch backend/g5-contracts/src/lib.rs backend/g5-auth/src/lib.rs backend/g5-storage/src/lib.rs backend/g5-semantic/src/lib.rs backend/g5-scm/src/lib.rs backend/g5-authz/src/lib.rs backend/g5-api-data/src/lib.rs backend/g5-api-core/src/lib.rs backend/g5-api-routes/src/lib.rs backend/g5d-foundation/src/lib.rs backend/g5d-isolation/src/lib.rs backend/g5d-agent/src/lib.rs backend/g5d-host/src/lib.rs backend/g5d-dispatch/src/lib.rs backend/g5d/src/main.rs
+
+# Build the actual binary with the selected g5d feature profile.
+RUN --mount=type=cache,id=cargo-reg-g5d,target=/usr/local/cargo/registry \
+    --mount=type=cache,id=cargo-target-g5d-build,target=/build/target,sharing=locked \
+    sccache_preflight() { \
+        export RUSTC_WRAPPER=; \
+        command -v sccache >/dev/null 2>&1 || return 0; \
+        if [ -n "$SCCACHE_GCS_BUCKET" ]; then \
+            sccache --show-stats 2>/dev/null || true; \
+            sccache --stop-server >/dev/null 2>&1 || true; \
+            if sccache --start-server >/dev/null 2>&1; then \
+                export RUSTC_WRAPPER=sccache CARGO_INCREMENTAL=0; \
+            else \
+                echo "WARN: sccache backend unavailable; compiling uncached"; \
+            fi; \
+        elif [ -n "$(find "${SCCACHE_DIR:-/opt/g5-sccache}" -type f -print -quit 2>/dev/null)" ]; then \
+            # No GCS bucket but the base-rust-warm tier baked a local object \
+            # cache: arm the disk backend so local dev-up/ci image builds hit \
+            # the warmed dependencies (docker_images [D20]) instead of \
+            # compiling cold. Fail-soft like the GCS path. \
+            sccache --stop-server >/dev/null 2>&1 || true; \
+            if sccache --start-server >/dev/null 2>&1; then \
+                export RUSTC_WRAPPER=sccache CARGO_INCREMENTAL=0; \
+            fi; \
+        fi; \
+    } && \
+    sccache_preflight && \
+    cargo build --profile "$G5_CARGO_PROFILE" -p g5d ${G5D_BUILD_FEATURE_FLAGS} && \
+    sccache_preflight && \
+    cargo build --profile "$G5_CARGO_PROFILE" -p fake-provider-cli --bins && \
+    (sccache --show-stats 2>/dev/null || true) && \
+    cp "/build/target/${G5_CARGO_PROFILE}/g5d" /usr/local/bin/g5d && \
+    for fake in fake-claude fake-codex fake-g5-tools; do \
+        cp "/build/target/${G5_CARGO_PROFILE}/$fake" "/usr/local/bin/$fake"; \
+    done
+
+# Export only guest executables, fake provider CLIs and the runtime catalog.
+RUN set -eu; \
+    mkdir -p /opt/g5-guest-artifacts/bin /opt/g5-guest-artifacts/lib /opt/g5-guest-artifacts/modules; \
+    cp /usr/local/bin/g5d /opt/g5-guest-artifacts/bin/g5d; \
+    # Declared-module catalog for the host runtime bundle mounted at /opt/g5 \
+    # (plan P4.2b item 13). The pin file is what the host hands the guest as \
+    # G5D_MODULE_CATALOG_HASH; verify the pair before exporting it. \
+    cp backend/g5d-dispatch/modules/catalog.json /opt/g5-guest-artifacts/modules/catalog.json; \
+    cp backend/g5d-dispatch/modules/catalog.sha256 /opt/g5-guest-artifacts/modules/catalog.sha256; \
+    echo "$(tr -d '[:space:]' < /opt/g5-guest-artifacts/modules/catalog.sha256)  /opt/g5-guest-artifacts/modules/catalog.json" | sha256sum -c - >/dev/null; \
+    for fake in fake-claude fake-codex fake-g5-tools; do \
+        cp "/usr/local/bin/$fake" "/opt/g5-guest-artifacts/bin/$fake"; \
+    done
+
+FROM scratch AS guest-runtime-artifacts
+COPY --from=builder /opt/g5-guest-artifacts/ /
+
+# --- Stage 2: Layer on worker base image ---
+ARG BASE_IMAGE
+FROM ${BASE_IMAGE} AS runtime
+
+USER root
+
+# Copy g5d binary and managed-worker startup assets.
+COPY --from=builder /usr/local/bin/g5d /usr/local/bin/g5d
+# Declared-module catalog + pin at the path `g5d dispatch` loads it from.
+COPY --from=builder /opt/g5-guest-artifacts/modules/ /opt/g5/modules/
+# Fake provider CLIs (plan P3.1/P3.2): `fake-claude` / `fake-codex` replay
+# recorded frames and `fake-g5-tools` is the scripted MCP stub. The worker
+# resolves them beside `g5d` only when `G5_CLAUDE_CODE_FAKE=1` /
+# `G5_CODEX_FAKE=1` (the deterministic docker-ci lane); they are inert
+# otherwise.
+COPY --from=builder /usr/local/bin/fake-claude /usr/local/bin/fake-codex /usr/local/bin/fake-g5-tools /usr/local/bin/
+# The harness G5 provides in every workspace: the dedicated workspace
+# instructions and skills, unchanged. Worker staging copies this directory into
+# the runtime each workspace VM mounts at /opt/g5.
+COPY .agents/AGENTS.md /usr/local/assets/harness/AGENTS.md
+COPY .agents/skills/ /usr/local/assets/harness/.agents/skills/
+COPY .agents/guidance/ /usr/local/assets/harness/.agents/guidance/
+COPY infra/docker/g5d-provider-env.sh /usr/local/bin/g5d-provider-env
+COPY infra/docker/g5d-host-entrypoint.sh /usr/local/bin/g5d-host-entrypoint
+
+# Codex CLI (@openai/codex): the provider runner spawns one attempt-scoped
+# `codex app-server` per turn (g5.chat.supervisor), so the worker must ship the real CLI or Codex
+# readiness fails closed and no `agent_provider:codex` capability is
+# advertised (provided_agent_runtime D31A). The npm bin is a Node ESM launcher
+# that execs its platform-native optionalDependency (musl-static, runs on this
+# glibc image); Node stays in the image for it. Pin from the single-source
+# scripts/codex-cli-version (fail closed on an empty pin, mirroring
+# infra/packer/g5-worker/scripts/50-install-codex.sh) so the Docker worker CLI
+# matches the native/microVM worker images. The --version + `app-server --help`
+# (--listen) gate and the launch-surface check fail the build early rather than
+# deferring to a silent runtime readiness miss. Kept byte-identical in
+# Dockerfile.g5d-prebuilt.
+COPY scripts/codex-cli-version /tmp/codex-cli-version
+COPY scripts/check-codex-cli-flags.sh /tmp/check-codex-cli-flags.sh
+RUN set -eu; \
+    CODEX_VERSION="$(tr -d '[:space:]' < /tmp/codex-cli-version)"; \
+    if [ -z "$CODEX_VERSION" ]; then \
+        echo "FATAL: scripts/codex-cli-version is empty; refusing to float @openai/codex to npm latest" >&2; \
+        exit 2; \
+    fi; \
+    echo "[g5d] npm install -g @openai/codex@${CODEX_VERSION}"; \
+    npm install -g --prefix /usr/local --no-audit --no-fund "@openai/codex@${CODEX_VERSION}"; \
+    [ -x /usr/local/bin/codex ] || { echo "FATAL: /usr/local/bin/codex missing after npm install" >&2; exit 1; }; \
+    /usr/local/bin/codex --version; \
+    sh /tmp/check-codex-cli-flags.sh /usr/local/bin/codex "$CODEX_VERSION"; \
+    codex_help="$(/usr/local/bin/codex app-server --help 2>&1)" \
+        || { echo "FATAL: 'codex app-server --help' failed (worker readiness requires a runnable CLI):" >&2; echo "$codex_help" >&2; exit 1; }; \
+    printf '%s\n' "$codex_help" | grep -q -- '--listen' \
+        || { echo "FATAL: installed codex lacks 'app-server --listen' (worker readiness requires it)" >&2; exit 1; }; \
+    chmod -R a+rX /usr/local/lib/node_modules/@openai; \
+    npm cache clean --force; \
+    rm -f /tmp/codex-cli-version /tmp/check-codex-cli-flags.sh
+
+# Claude Code CLI (@anthropic-ai/claude-code): the Phase 3 provider runner spawns
+# `claude -p` per turn (design v6 §8.3), so the worker ships the pinned native
+# CLI at /usr/local/bin/claude and g5d-provider-env points G5_CLAUDE_PATH at it.
+# Pin from the single-source scripts/claude-code-cli-version (fail closed on an
+# empty pin, mirroring the Codex block above and
+# infra/packer/g5-worker/scripts/40-install-claude.sh). The npm bin is the
+# platform-native binary the package's postinstall lands at bin/claude.exe.
+# scripts/check-claude-cli-flags.sh proves the installed binary carries every
+# flag the runner passes (docs/lean-provider-cli-contract.md) so a pin bump
+# that lost a flag fails the build, not the first chat turn. Kept byte-identical
+# in Dockerfile.g5d-prebuilt.
+COPY scripts/claude-code-cli-version /tmp/claude-code-cli-version
+COPY scripts/check-claude-cli-flags.sh /tmp/check-claude-cli-flags.sh
+RUN set -eu; \
+    CLAUDE_CODE_VERSION="$(tr -d '[:space:]' < /tmp/claude-code-cli-version)"; \
+    if [ -z "$CLAUDE_CODE_VERSION" ]; then \
+        echo "FATAL: scripts/claude-code-cli-version is empty; refusing to float @anthropic-ai/claude-code to npm latest" >&2; \
+        exit 2; \
+    fi; \
+    echo "[g5d] npm install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}"; \
+    npm install -g --prefix /usr/local --no-audit --no-fund "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}"; \
+    [ -x /usr/local/bin/claude ] || { echo "FATAL: /usr/local/bin/claude missing after npm install" >&2; exit 1; }; \
+    sh /tmp/check-claude-cli-flags.sh /usr/local/bin/claude "$CLAUDE_CODE_VERSION"; \
+    chmod -R a+rX /usr/local/lib/node_modules/@anthropic-ai; \
+    npm cache clean --force; \
+    rm -f /tmp/claude-code-cli-version /tmp/check-claude-cli-flags.sh
+
+# Ensure executables are executable and readable by the runtime user.
+RUN chmod +x /usr/local/bin/g5d /usr/local/bin/fake-claude /usr/local/bin/fake-codex /usr/local/bin/fake-g5-tools /usr/local/bin/g5d-provider-env /usr/local/bin/g5d-host-entrypoint && \
+    chmod -R a+rX /usr/local/assets/harness
+
+# Create the shared filestore-style repo root writable by the g5 user.
+# `/data/repos` stays as a compatibility symlink for seed helpers and legacy
+# file URLs that still point at the shared repo tree.
+RUN mkdir -p /mnt/g5-repos/repos && \
+    mkdir -p /data && \
+    chown -R g5:g5 /mnt/g5-repos && \
+    ln -s /mnt/g5-repos/repos /data/repos
+
+USER g5
+WORKDIR /workspace
+
+# Mark /workspace and the shared repo tree as safe for git — volumes may be
+# owned by a different UID when bind-mounted or shared across containers.
+RUN git config --global --add safe.directory /workspace && \
+    git config --global --add safe.directory '*'
+
+# Fallback git committer identity for the workspace VM. Agent-run raw git commands
+# (e.g. `git rebase` during a merge task) require a committer or they hard-fail
+# with "Committer identity unknown". This is the lowest-precedence (global)
+# identity and matches resolve_git_author's fallback — the execution author is still
+# applied by the G5 commit tools (GitAuthor signature), and a rebase preserves
+# the original commits' authors. Per-repo or env identity overrides this.
+RUN git config --global user.name "G5" && \
+    git config --global user.email "g5@g5labs.dev"
+
+ENV RUST_LOG=info
+ENTRYPOINT ["/usr/local/bin/g5d-host-entrypoint"]

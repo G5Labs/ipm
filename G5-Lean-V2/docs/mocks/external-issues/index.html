@@ -1,0 +1,1452 @@
+<!doctype html>
+<html lang="en" data-visualize-standalone>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; style-src 'unsafe-inline' blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; img-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; font-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; media-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; worker-src blob:; connect-src blob: data:; frame-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<title>G5 Issue Design</title>
+<style>:root{color-scheme:light dark;background:light-dark(rgb(255 255 255), rgb(24 24 24))}html,body{margin:0}body{box-sizing:border-box;padding:1rem;background:inherit}iframe{display:block;width:100%;height:calc(100vh - 2rem);margin:0 auto;border:0}</style>
+</head>
+<body>
+<iframe sandbox="allow-scripts" referrerpolicy="no-referrer" title="G5 Issue Design" srcdoc="&lt;!doctype html&gt;
+&lt;html lang=&quot;en&quot; data-visualize-standalone&gt;
+&lt;head&gt;
+&lt;meta charset=&quot;utf-8&quot;&gt;
+&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;
+&lt;meta name=&quot;referrer&quot; content=&quot;no-referrer&quot;&gt;
+&lt;meta http-equiv=&quot;Content-Security-Policy&quot; content=&quot;default-src &#x27;none&#x27;; script-src &#x27;unsafe-inline&#x27; &#x27;unsafe-eval&#x27; &#x27;wasm-unsafe-eval&#x27; blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; style-src &#x27;unsafe-inline&#x27; blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; img-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; font-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; media-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; worker-src blob:; connect-src blob: data:; frame-src &#x27;none&#x27;; object-src &#x27;none&#x27;; base-uri &#x27;none&#x27;; form-action &#x27;none&#x27;&quot;&gt;
+&lt;title&gt;G5 Issue Design&lt;/title&gt;
+&lt;style&gt;:root {
+  color-scheme: light dark;
+  background-color: var(
+    --background,
+    var(--color-background-primary, light-dark(rgb(255 255 255), rgb(24 24 24)))
+  ) !important;
+
+  /* Agent-facing contract; keep in sync with SKILL.md. */
+  --background: var(
+    --color-background-primary,
+    light-dark(rgb(255 255 255), rgb(24 24 24))
+  );
+  --foreground: var(
+    --color-text-primary,
+    light-dark(rgb(26 28 31), rgb(255 255 255))
+  );
+  --card: color-mix(in oklab, var(--foreground) 5%, var(--background));
+  --card-foreground: var(
+    --color-text-primary,
+    light-dark(rgb(26 28 31), rgb(255 255 255))
+  );
+  --popover: var(
+    --color-background-secondary,
+    light-dark(rgb(255 255 255), rgb(45 45 45))
+  );
+  --popover-foreground: var(
+    --color-text-primary,
+    light-dark(rgb(26 28 31), rgb(255 255 255))
+  );
+  --primary: var(
+    --color-text-info,
+    light-dark(rgb(51 156 255), rgb(131 195 255))
+  );
+  --primary-foreground: var(
+    --color-text-inverse,
+    light-dark(rgb(255 255 255), rgb(13 13 13))
+  );
+  --secondary: var(
+    --color-background-secondary,
+    light-dark(rgb(255 255 255 / 96%), rgb(54 54 54 / 96%))
+  );
+  --secondary-foreground: var(
+    --color-text-primary,
+    light-dark(rgb(26 28 31), rgb(255 255 255))
+  );
+  --muted: color-mix(in srgb, var(--foreground) 10%, transparent);
+  --muted-foreground: var(
+    --color-text-secondary,
+    light-dark(rgb(26 28 31 / 49.4%), rgb(255 255 255 / 49.8%))
+  );
+  --accent: var(
+    --color-background-info,
+    light-dark(rgb(229 242 255), rgb(13 39 63))
+  );
+  --accent-foreground: var(
+    --color-text-info,
+    light-dark(rgb(51 156 255), rgb(131 195 255))
+  );
+  --destructive: var(
+    --color-text-warning,
+    light-dark(rgb(226 85 7), rgb(255 133 73))
+  );
+  --border: var(
+    --color-border-secondary,
+    light-dark(rgb(26 28 31 / 8%), rgb(255 255 255 / 8.2%))
+  );
+  --input: var(
+    --color-border-primary,
+    light-dark(
+      rgb(26 28 31 / 11.8%),
+      color-mix(in oklab, rgb(0 0 0) 10%, transparent)
+    )
+  );
+  --ring: var(
+    --color-ring-primary,
+    light-dark(rgb(51 156 255), rgb(131 195 255 / 76%))
+  );
+  --font-size-base: var(--font-text-md-size, 14px);
+  --blue: light-dark(rgb(51 156 255), rgb(51 156 255));
+  --orange: light-dark(rgb(226 85 7), rgb(251 106 34));
+  --green: light-dark(rgb(0 162 64), rgb(64 201 119));
+  --red: light-dark(rgb(224 46 42), rgb(255 103 100));
+  --purple: light-dark(rgb(146 79 247), rgb(173 123 249));
+  --yellow: light-dark(rgb(255 195 0), rgb(255 210 64));
+  --viz-series-1: var(--primary);
+  --viz-series-2: light-dark(rgb(243 136 59), rgb(245 154 86));
+  --viz-series-3: light-dark(rgb(93 201 119), rgb(116 213 139));
+  --viz-series-4: light-dark(rgb(235 119 177), rgb(240 143 192));
+  --viz-series-5: light-dark(rgb(155 121 236), rgb(170 145 239));
+  --viz-series-6: light-dark(rgb(58 185 177), rgb(90 203 194));
+
+  /* Internal implementation variables; not part of the agent contract. */
+  --font-sans: -apple-system, system-ui, &quot;Segoe UI&quot;, sans-serif;
+  --font-mono:
+    ui-monospace, SFMono-Regular, &quot;SF Mono&quot;, Menlo, Consolas, &quot;Liberation Mono&quot;,
+    monospace;
+  --font-size-normal: max(11px, var(--font-size-base));
+  --font-size-tooltip: calc(var(--font-size-base) - 1px);
+  --font-size-small: max(11px, calc(var(--font-size-base) - 2px));
+  --font-size-h1: calc(var(--font-size-normal) * 1.7142857143);
+  --font-size-h2: calc(var(--font-size-normal) * 1.4285714286);
+  --font-size-h3: calc(var(--font-size-normal) * 1.2857142857);
+  --font-weight-normal: 430;
+  --font-weight-medium: 500;
+  --icon-size: 16px;
+  --line-height-normal: calc(var(--font-size-normal) * 1.5);
+  --line-height-tooltip: calc(var(--font-size-tooltip) * 1.4285714286);
+  --line-height-small: calc(var(--font-size-small) + 4px);
+  --corner-shape: round;
+  --radius: var(--border-radius-lg, 10px);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-2xl: calc(var(--radius) * 1.6);
+  --radius-full: 9999px;
+  --shadow-sm: 0 1px 2px -1px rgb(0 0 0 / 8%);
+  --checkmark-image: url(&quot;data:image/svg+xml,%3Csvg xmlns=&#x27;http://www.w3.org/2000/svg&#x27; viewBox=&#x27;0 0 17 17&#x27;%3E%3Cpath d=&#x27;M12.8961 3.64101C13.1297 3.41418 13.4984 3.37523 13.7779 3.56581C14.0571 3.75635 14.1554 4.11331 14.0299 4.41347L13.9615 4.53847L7.71151 13.7045C7.59411 13.8767 7.4063 13.9877 7.19881 14.0072C6.99136 14.0267 6.78564 13.9533 6.63826 13.806L2.88826 10.056L2.79842 9.9457C2.6192 9.67407 2.64927 9.30496 2.88826 9.06581C3.12738 8.82669 3.49647 8.79676 3.76815 8.97597L3.8785 9.06581L7.03084 12.2182L12.8053 3.74941L12.8961 3.64101Z&#x27;/%3E%3C/svg%3E&quot;);
+
+  /* Legacy aliases; not part of the current agent contract. */
+  --viz-bg: transparent;
+  --viz-panel: var(--card);
+  --viz-border: var(--border);
+  --viz-text: var(--foreground);
+  --viz-muted: var(--muted-foreground);
+  --viz-accent: var(--primary);
+  --viz-accent-text: var(--primary-foreground);
+  --viz-accent-bg: var(--accent);
+  --viz-font-size: var(--font-size-base);
+  --viz-warning: var(--destructive);
+}
+
+:root[data-theme=&quot;light&quot;] {
+  color-scheme: light;
+}
+
+:root[data-theme=&quot;dark&quot;] {
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html &gt; body {
+  /* Preserve MCP aliases for older inline renderers without creating :root cycles. */
+  --color-background-primary: var(
+    --background,
+    light-dark(rgb(255 255 255), rgb(24 24 24))
+  );
+  --color-text-primary: var(
+    --foreground,
+    light-dark(rgb(26 28 31), rgb(255 255 255))
+  );
+  --color-border-secondary: var(
+    --border,
+    light-dark(rgb(26 28 31 / 8%), rgb(255 255 255 / 8.2%))
+  );
+
+  margin: 0;
+  padding: var(--visualize-paint-gutter, 0px);
+  color: var(--foreground);
+  background: transparent !important;
+  font-family: var(--font-sans) !important;
+  font-size: var(--font-size-normal);
+  font-weight: var(--font-weight-normal);
+  line-height: var(--line-height-normal);
+}
+
+a {
+  color: color-mix(in srgb, var(--viz-accent) 80%, var(--viz-text) 20%);
+  cursor: pointer;
+  font-weight: var(--font-weight-medium, 500);
+  text-decoration: none;
+  text-underline-offset: 2px;
+}
+
+a:is(:hover, :focus-visible) {
+  text-decoration-line: underline;
+  text-decoration-style: dashed;
+  text-decoration-thickness: 0.5px;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p {
+  margin-block: 0;
+}
+
+h1 {
+  font-size: var(--font-size-h1);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.25;
+}
+
+h2 {
+  font-size: var(--font-size-h2);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.25;
+}
+
+h3,
+h4,
+h5,
+h6 {
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.3;
+}
+
+b,
+strong,
+th {
+  font-weight: var(--font-weight-medium);
+}
+
+code:not(pre code) {
+  display: inline;
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  corner-shape: var(--corner-shape);
+  background: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  overflow-wrap: anywhere;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  word-break: break-word;
+}
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  color: var(--foreground);
+  font: inherit;
+  text-align: start;
+}
+
+.table :is(th, td) {
+  padding-block: 10px;
+  padding-inline: 0 24px;
+  overflow-wrap: anywhere;
+  border-bottom: 1px solid var(--border);
+  text-align: start;
+  vertical-align: top;
+}
+
+.table-responsive &gt; .table :is(th, td) {
+  overflow-wrap: break-word;
+}
+
+.table :is(th, td):last-child {
+  padding-inline-end: 0;
+}
+
+.table :is(caption, thead th) {
+  font-weight: 600;
+}
+
+.table thead th {
+  padding-block: 8px;
+  border-bottom-color: color-mix(in srgb, var(--foreground) 16%, transparent);
+}
+
+.table tbody tr:last-child :is(th, td) {
+  border-bottom: 0;
+}
+
+.table.table-sm :is(th, td) {
+  padding-block: 6px;
+}
+
+.table.table-sm :is(th, td):not(:last-child) {
+  padding-inline-end: 16px;
+}
+
+.table :is(.text-end, [align=&quot;right&quot;]) {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+
+.table :is(.text-center, [align=&quot;center&quot;]) {
+  text-align: center;
+}
+
+.table .text-nowrap {
+  white-space: nowrap;
+}
+
+#widget {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  padding: 0;
+  background: transparent !important;
+}
+
+.card {
+  min-width: 0;
+  padding: 12px;
+  overflow: hidden;
+  overflow-wrap: break-word;
+  border-radius: var(--radius-2xl);
+  corner-shape: var(--corner-shape);
+  color: var(--card-foreground);
+  background: var(--card);
+}
+
+#widget &gt; :not(.card, .progress) {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.tooltip {
+  position: fixed;
+  z-index: 50;
+  top: 0;
+  left: 0;
+  width: max-content;
+  max-width: min(
+    20rem,
+    var(--tooltip-available-width, calc(100vw - 10px)),
+    calc(100vw - 10px)
+  );
+  max-height: min(
+    var(--tooltip-available-height, calc(100vh - 10px)),
+    calc(100vh - 10px)
+  );
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  corner-shape: var(--corner-shape);
+  color: var(--popover-foreground);
+  background: var(--popover);
+  box-shadow: none;
+  font-size: var(--font-size-tooltip);
+  line-height: var(--line-height-tooltip);
+  overflow-wrap: break-word;
+  white-space: normal;
+  pointer-events: none;
+  user-select: none;
+}
+
+.viz-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(max(180px, 24%), 1fr));
+  gap: 10px;
+}
+
+.viz-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.viz-stat-value {
+  font-size: var(--font-size-h2);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.25;
+}
+
+.viz-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+hr {
+  width: 100%;
+  height: 1px;
+  margin-block: 6px;
+  border: 0;
+  background: var(--border);
+}
+
+.nav {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 4px;
+}
+
+.progress {
+  display: flex;
+  height: 8px;
+  margin-block: calc((var(--line-height-normal, 1.5em) - 8px) / 2);
+  overflow: hidden;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: var(--muted);
+}
+
+.progress-bar:only-child {
+  border-radius: var(--radius-full);
+}
+
+.progress-bar {
+  height: 100%;
+  flex-shrink: 0;
+  border: 0;
+  background: var(--viz-series-1);
+}
+
+.viz-badge {
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  color: var(--accent-foreground);
+  background: var(--accent);
+  font-weight: var(--font-weight-medium);
+}
+
+small,
+.text-small,
+.viz-badge {
+  font-size: var(--font-size-small);
+  line-height: var(--line-height-small);
+}
+
+.text-muted {
+  color: var(--muted-foreground);
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.viz-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.viz-controls &gt; .form-label {
+  display: grid;
+  min-width: min(100%, 260px);
+  flex: 1 1 280px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 2px 12px;
+  margin-bottom: 0;
+}
+
+.viz-controls &gt; .form-label &gt; :is(.form-control, .form-range, .form-select) {
+  grid-column: 1 / -1;
+}
+
+.btn,
+.nav-link,
+.form-check-input,
+.form-control,
+.form-range,
+.form-select {
+  font: inherit;
+}
+
+.btn,
+.nav-link {
+  appearance: button;
+  display: inline-flex;
+  inline-size: fit-content;
+  max-inline-size: 100%;
+  min-height: 28px;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin: 0;
+  padding: 0 8px;
+  -webkit-app-region: no-drag;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-lg);
+  corner-shape: var(--corner-shape);
+  color: var(--secondary-foreground);
+  background: var(--secondary);
+  cursor: var(--cursor-interaction, pointer);
+  text-align: center;
+  text-decoration: none;
+  white-space: nowrap;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+.btn:is(.btn-block, .viz-tile) {
+  inline-size: 100%;
+}
+
+.btn.viz-tile {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+a.btn {
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.btn:not(:disabled):hover,
+.nav-link:not(:disabled):not([aria-disabled=&quot;true&quot;]):hover {
+  background: color-mix(in srgb, var(--foreground) 6%, var(--secondary));
+}
+
+.btn-primary {
+  border-color: transparent;
+  color: var(--primary-foreground);
+  background: var(--foreground);
+  background-clip: padding-box;
+}
+
+.btn-primary .text-muted {
+  color: color-mix(in srgb, var(--primary-foreground) 50%, transparent);
+}
+
+.btn-primary:not(:disabled):hover {
+  background: color-mix(in srgb, var(--foreground) 80%, transparent);
+  background-clip: padding-box;
+}
+
+.btn-ghost {
+  border-color: transparent;
+  color: var(--muted-foreground);
+  background: transparent;
+}
+
+.btn-ghost:not(:disabled):hover {
+  color: var(--foreground);
+  background: color-mix(in srgb, var(--foreground) 6%, var(--secondary));
+}
+
+.nav-pills .nav-link {
+  min-width: 0;
+  border-color: transparent;
+  color: var(--muted-foreground);
+  background: transparent;
+}
+
+.nav-justified .nav-link {
+  flex: 1 1 0;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.nav-pills .nav-link.active {
+  color: var(--foreground);
+  background: var(--muted);
+}
+
+.btn:disabled,
+.nav-link:disabled,
+.nav-link[aria-disabled=&quot;true&quot;] {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+[data-lucide] {
+  stroke-width: 1.6;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--foreground);
+}
+
+.form-control {
+  display: block;
+  width: 100%;
+  min-height: 28px;
+  padding: 0 8px;
+  outline: none;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-lg);
+  corner-shape: var(--corner-shape);
+  color: var(--foreground);
+  background: var(--secondary);
+}
+
+.form-control::placeholder {
+  color: var(--muted-foreground);
+}
+
+.form-control[type=&quot;file&quot;] {
+  padding: 0;
+  overflow: hidden;
+  cursor: var(--cursor-interaction, pointer);
+}
+
+.form-control[type=&quot;file&quot;]::file-selector-button {
+  min-height: 26px;
+  margin-right: 8px;
+  padding: 0 8px;
+  border: 0;
+  border-right: 1px solid var(--input);
+  color: var(--secondary-foreground);
+  background: var(--secondary);
+  cursor: inherit;
+  font: inherit;
+}
+
+.form-control[type=&quot;file&quot;]:not(:disabled):hover::file-selector-button {
+  background: color-mix(in srgb, var(--foreground) 6%, var(--secondary));
+}
+
+.form-control-color[type=&quot;color&quot;] {
+  width: 40px;
+  height: 28px;
+  padding: 3px;
+  cursor: var(--cursor-interaction, pointer);
+}
+
+.form-control-color[type=&quot;color&quot;]::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.form-control-color[type=&quot;color&quot;]::-webkit-color-swatch {
+  border: 0;
+  border-radius: calc(var(--radius-lg) - 4px);
+  corner-shape: var(--corner-shape);
+}
+
+textarea.form-control {
+  height: auto;
+  min-height: 72px;
+  padding: 8px 10px;
+  resize: vertical;
+}
+
+.form-control:focus-visible {
+  border-color: var(--ring);
+  box-shadow: inset 0 0 0 1px var(--ring);
+}
+
+.form-control:disabled,
+.form-select:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.form-select {
+  appearance: none;
+  display: block;
+  width: 100%;
+  min-height: 28px;
+  margin: 0;
+  padding: 0 32px 0 8px;
+  outline: none;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-lg);
+  corner-shape: var(--corner-shape);
+  color: var(--foreground);
+  background-color: var(--secondary);
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--muted-foreground) 50%),
+    linear-gradient(135deg, var(--muted-foreground) 50%, transparent 50%);
+  background-position:
+    calc(100% - 14px) 50%,
+    calc(100% - 10px) 50%;
+  background-repeat: no-repeat;
+  background-size: 4px 4px;
+  cursor: var(--cursor-interaction, default);
+}
+
+.form-select:not(:disabled):hover {
+  background-color: color-mix(in srgb, var(--foreground) 6%, var(--secondary));
+}
+
+.form-select:focus-visible {
+  border-color: var(--ring);
+  box-shadow: inset 0 0 0 1px var(--ring);
+}
+
+.form-check {
+  display: flex;
+  min-height: 20px;
+  align-items: center;
+  gap: 6px;
+}
+
+.form-check-input {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+  margin: 0;
+  border: 1px solid var(--input);
+  color: var(--primary-foreground);
+  background-color: transparent;
+  cursor: var(--cursor-interaction, default);
+  transition:
+    background-color 150ms,
+    border-color 150ms,
+    box-shadow 150ms;
+}
+
+.form-check:not(.form-switch) .form-check-input[type=&quot;checkbox&quot;] {
+  border-color: var(--input);
+  border-radius: var(--radius-sm);
+  corner-shape: var(--corner-shape);
+  background-color: var(--secondary);
+  box-shadow: var(--shadow-sm);
+}
+
+.form-check:not(.form-switch)
+  .form-check-input:not(:disabled):not(:checked):hover {
+  background-color: var(--card);
+}
+
+.form-check:not(.form-switch) .form-check-input[type=&quot;checkbox&quot;]:checked {
+  border-color: var(--primary);
+  background-color: var(--primary);
+}
+
+.form-check:not(.form-switch)
+  .form-check-input[type=&quot;checkbox&quot;]:checked::before {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--primary-foreground);
+  content: &quot;&quot;;
+  mask: var(--checkmark-image) center / 12px 12px no-repeat;
+}
+
+.form-check-input[type=&quot;radio&quot;] {
+  width: 14px;
+  height: 14px;
+  border-radius: var(--radius-full);
+}
+
+.form-check-input[type=&quot;radio&quot;]:checked {
+  border: 2px solid var(--primary);
+  background:
+    radial-gradient(circle, var(--primary-foreground) 0 2.5px, transparent 3px),
+    var(--primary);
+}
+
+.form-check:not(.form-switch) .form-check-input:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.form-check:not(.form-switch) .form-check-input:disabled {
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.form-check:not(.form-switch) .form-check-input:disabled + .form-check-label {
+  cursor: not-allowed;
+}
+
+.form-switch .form-check-input:disabled,
+.form-switch .form-check-input:disabled + .form-check-label {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.form-check-label {
+  color: var(--foreground);
+  cursor: var(--cursor-interaction, default);
+}
+
+.form-switch .form-check-input {
+  position: relative;
+  width: 32px;
+  height: 20px;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: var(--muted);
+  box-shadow: none;
+  transition: background-color 200ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.form-switch .form-check-input::before {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 16px;
+  height: 16px;
+  box-sizing: border-box;
+  border: 1px solid light-dark(var(--primary-foreground), var(--foreground));
+  border-radius: var(--radius-full);
+  background: light-dark(var(--primary-foreground), var(--foreground));
+  box-shadow: var(--shadow-sm);
+  content: &quot;&quot;;
+  transform: translate(2px, -50%);
+  transition: transform 200ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.form-switch .form-check-input:checked {
+  background: var(--primary);
+}
+
+.form-switch .form-check-input:checked::before {
+  transform: translate(14px, -50%);
+}
+
+.form-switch .form-check-input:focus-visible {
+  box-shadow: 0 0 0 2px var(--ring);
+}
+
+.form-range {
+  appearance: none;
+  display: block;
+  width: 100%;
+  height: 28px;
+  flex: 1;
+  margin: 0;
+  padding: 0;
+  outline: none;
+  border: 0;
+  accent-color: var(--primary);
+  background: linear-gradient(
+      color-mix(in srgb, var(--foreground) 7%, transparent),
+      color-mix(in srgb, var(--foreground) 7%, transparent)
+    )
+    center / 100% 2px no-repeat;
+}
+
+.form-range::-webkit-slider-runnable-track {
+  height: 28px;
+  background: transparent;
+}
+
+.form-range::-webkit-slider-thumb {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  margin-top: 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: light-dark(var(--primary-foreground), var(--foreground));
+}
+
+.form-range:focus-visible::-webkit-slider-thumb {
+  border-color: var(--ring);
+  box-shadow: inset 0 0 0 1px var(--ring);
+}
+
+.form-range::-moz-range-track {
+  height: 28px;
+  background: transparent;
+}
+
+.form-range::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: light-dark(var(--primary-foreground), var(--foreground));
+}
+
+.form-range:focus-visible::-moz-range-thumb {
+  border-color: var(--ring);
+  box-shadow: inset 0 0 0 1px var(--ring);
+}
+
+.form-range:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.btn:not(.btn-primary, .viz-tile):is(
+  [aria-pressed=&quot;true&quot;],
+  [aria-selected=&quot;true&quot;],
+  .is-selected
+) {
+  border-color: var(--primary);
+  color: var(--primary-foreground);
+  background: var(--primary);
+}
+
+.btn.viz-tile:is([aria-pressed=&quot;true&quot;], [aria-selected=&quot;true&quot;], .is-selected) {
+  border-color: var(--primary);
+  box-shadow: inset 0 0 0 1px var(--primary);
+}
+
+.btn:focus-visible,
+.nav-link:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+@media (pointer: coarse) {
+  .btn,
+  .nav-link,
+  .form-control,
+  .form-select {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  /* Keep small-screen WebKit from zooming when a text field receives focus. */
+  .form-control,
+  .form-select {
+    font-size: max(16px, var(--font-size-normal));
+  }
+
+  .form-control[type=&quot;file&quot;]::file-selector-button {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .form-control-color[type=&quot;color&quot;] {
+    width: 44px;
+    height: 44px;
+  }
+
+  .form-control:is(
+    [type=&quot;date&quot;],
+    [type=&quot;datetime-local&quot;],
+    [type=&quot;month&quot;],
+    [type=&quot;time&quot;],
+    [type=&quot;week&quot;]
+  ) {
+    min-width: 0;
+    max-width: 100%;
+    padding-block: 8px;
+  }
+
+  .form-check {
+    min-height: 44px;
+    padding-inline: 15px;
+  }
+
+  .form-check-input {
+    position: relative;
+  }
+
+  .form-check-input::after {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 44px;
+    height: 44px;
+    content: &quot;&quot;;
+    transform: translate(-50%, -50%);
+  }
+
+  .form-check-label {
+    display: inline-flex;
+    min-width: 44px;
+    min-height: 44px;
+    align-items: center;
+  }
+
+  .form-range {
+    height: 44px;
+    touch-action: pan-y;
+  }
+
+  .form-range::-webkit-slider-runnable-track {
+    height: 44px;
+  }
+
+  .form-range::-moz-range-track {
+    height: 44px;
+  }
+
+  .form-range::-webkit-slider-thumb {
+    margin-top: 12px;
+  }
+}
+
+svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+#widget &gt; svg {
+  width: 100%;
+}
+
+/* Model-authored chart rules can otherwise stretch icons after these styles load. */
+svg.lucide {
+  display: block;
+  width: var(--icon-size) !important;
+  height: var(--icon-size) !important;
+  flex: none;
+  margin: 0 !important;
+  stroke-width: 1.6;
+}
+
+.text-warning,
+.text-destructive {
+  color: var(--destructive);
+}
+
+html&gt;body{padding:0}&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;style&gt;
+#g5-design{--gd-bg:light-dark(#f7f8fb,#0b0e14);--gd-panel:light-dark(#fff,#121720);--gd-raised:light-dark(#eef1f6,#1b2230);--gd-border:light-dark(#dce1e9,#303b4c);--gd-text:light-dark(#1d293b,#e7edf8);--gd-muted:light-dark(#5f6b7d,#a8b5c8);--gd-blue:light-dark(#245cba,#8cb9ff);--gd-bluebg:light-dark(#eaf1ff,#1b2b45);--gd-onblue:light-dark(#fff,#0c1626);--gd-green:light-dark(#287048,#a1dbb5);--gd-greenbg:light-dark(#eaf6ef,#1a3025);--gd-warn:light-dark(#815a0a,#ebc679);--gd-warnbg:light-dark(#fff6dd,#332a16);font:14px/1.5 system-ui,-apple-system,sans-serif;color:var(--gd-text);max-width:100%;background:transparent}
+#g5-design *{box-sizing:border-box}#g5-design [hidden]{display:none!important}#g5-design button,#g5-design input,#g5-design select,#g5-design textarea{font:inherit;color:inherit}#g5-design button{cursor:pointer}#g5-design button:disabled{opacity:.5;cursor:default}#g5-design h1,#g5-design h2,#g5-design h3,#g5-design p{margin:0}#g5-design h1{font-size:23px;font-weight:500;letter-spacing:-.4px}#g5-design h2{font-size:17px;font-weight:500}#g5-design h3,#g5-design strong{font-weight:500}#g5-design h3{font-size:14px}#g5-design .muted{color:var(--gd-muted)}#g5-design .small{font-size:12px}#g5-design .mono{font:12px/1.5 ui-monospace,monospace;overflow-wrap:anywhere}#g5-design .row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}#g5-design .between{justify-content:space-between}#g5-design .stack{display:grid;gap:16px}#g5-design .grow{flex:1;min-width:0}#g5-design .demo{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;align-items:center}#g5-design .demo button{border:0;background:transparent;padding:7px 10px;border-radius:5px;color:var(--gd-muted);font-size:12px}#g5-design .demo button[aria-pressed=true]{background:var(--gd-bluebg);color:var(--gd-blue)}#g5-design .demo span{margin-left:auto;font-size:11px;color:var(--gd-muted)}#g5-design .window{background:var(--gd-bg);border:1px solid var(--gd-border);border-radius:7px;overflow:clip}#g5-design .chrome{padding:11px 16px;display:flex;align-items:center;gap:18px;background:var(--gd-raised);border-bottom:1px solid var(--gd-border)}#g5-design .brand{font-size:20px;letter-spacing:-1px}#g5-design .avatar{width:27px;height:27px;border-radius:50%;background:var(--gd-bluebg);color:var(--gd-blue);display:inline-flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0}#g5-design .content{padding:26px}#g5-design .panel{background:var(--gd-panel);border:1px solid var(--gd-border);border-radius:5px}#g5-design .pad{padding:18px}#g5-design .btn{padding:7px 11px;min-height:32px;border:1px solid var(--gd-border);border-radius:4px;background:var(--gd-panel);font-size:12px;display:inline-flex;align-items:center;justify-content:center;gap:6px}#g5-design .btn:hover{background:var(--gd-raised)}#g5-design .primary{background:var(--gd-blue);border-color:var(--gd-blue);color:var(--gd-onblue)}#g5-design .primary:hover{background:var(--gd-blue);filter:brightness(.95)}#g5-design .link{padding:0;border:0;background:transparent;color:var(--gd-blue);text-align:left}#g5-design .tag{font-size:11px;padding:2px 7px;border-radius:4px;background:var(--gd-raised);color:var(--gd-muted);display:inline-block}#g5-design .blue{background:var(--gd-bluebg);color:var(--gd-blue)}#g5-design .green{background:var(--gd-greenbg);color:var(--gd-green)}#g5-design .warn{background:var(--gd-warnbg);color:var(--gd-warn)}#g5-design input:not([type=checkbox]),#g5-design select,#g5-design textarea{width:100%;min-width:0;border:1px solid var(--gd-border);background:var(--gd-panel);padding:8px 10px;border-radius:4px;font-size:13px}#g5-design textarea{resize:vertical}#g5-design label.field{display:grid;gap:6px;font-size:12px}#g5-design .filters{display:flex;gap:8px;flex-wrap:wrap}#g5-design .filters select{width:auto;max-width:100%;font-size:12px}#g5-design .result{display:flex;gap:16px;align-items:center;padding:17px 18px;border-top:1px solid var(--gd-border)}#g5-design .result h3{margin:5px 0 7px}#g5-design .twocol{display:grid;grid-template-columns:1fr 1fr;gap:22px}#g5-design .listrow{padding:12px 0;border-bottom:1px solid var(--gd-border)}#g5-design .workspace{display:grid;grid-template-columns:156px minmax(0,1fr)}#g5-design .sidebar{padding:17px 10px;background:var(--gd-panel);border-right:1px solid var(--gd-border);font-size:12px}#g5-design .navrow{padding:8px;border-radius:4px;margin-bottom:3px}#g5-design .navrow.active{background:var(--gd-bluebg);color:var(--gd-blue)}#g5-design .tabs{padding:11px 20px;border-bottom:1px solid var(--gd-border);background:var(--gd-panel);font-size:12px}#g5-design .band{padding:9px 16px;border-bottom:1px solid var(--gd-border);background:var(--gd-panel);font-size:12px}#g5-design .dialogstage{padding:22px;background:var(--gd-raised)}#g5-design .dialog{max-width:650px;margin:auto;background:var(--gd-panel);border:1px solid var(--gd-border);border-radius:7px}#g5-design .dialoghead{padding:15px 20px;border-bottom:1px solid var(--gd-border)}#g5-design .dialogbody{padding:18px 20px;display:grid;gap:15px}#g5-design .dialogfoot{padding:14px 20px;border-top:1px solid var(--gd-border);display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}#g5-design .note{padding:10px 12px;background:var(--gd-raised);border-radius:4px;font-size:12px}#g5-design .notice{padding:11px 14px;background:var(--gd-warnbg);color:var(--gd-warn);font-size:12px;border-radius:4px}#g5-design .event{display:grid;grid-template-columns:42px 24px minmax(0,1fr);gap:10px;padding-bottom:10px;position:relative}#g5-design .event:before{content:&#x27;&#x27;;position:absolute;left:63px;top:23px;bottom:0;width:1px;background:var(--gd-border)}#g5-design .time{font-size:11px;color:var(--gd-muted);padding-top:3px}#g5-design .dot{width:24px;height:24px;border-radius:50%;background:var(--gd-raised);border:1px solid var(--gd-border);font-size:11px;display:flex;align-items:center;justify-content:center;position:relative}#g5-design .eventbody{min-width:0;font-size:13px}#g5-design .eventbody p{margin-top:6px}#g5-design .comment{background:var(--gd-panel);border:1px solid var(--gd-border);border-radius:5px;padding:12px}#g5-design .composer{margin-left:86px;display:grid;gap:9px}#g5-design .split{display:grid;grid-template-columns:minmax(0,1fr) 275px;gap:22px}#g5-design .captionline{display:flex;gap:7px;flex-wrap:wrap;font-size:11px;color:var(--gd-muted);margin-top:8px}#g5-design .statusline{padding:12px 16px;border-top:1px solid var(--gd-border);background:var(--gd-panel);font-size:12px;color:var(--gd-muted)}#g5-design .provider{padding:20px}#g5-design .provider h2{margin:8px 0 12px}#g5-design .providerhr{border-top:1px solid var(--gd-border);padding-top:18px;margin-top:18px}#g5-design #gd-outcome{margin-top:12px}#g5-design .check{display:flex;align-items:center;gap:8px;font-size:12px}#g5-design .check input{accent-color:var(--gd-blue)}#g5-design .sectiongap{margin-top:20px}#g5-design [data-panel=activity] .content.stack{gap:12px}#g5-design :focus-visible{outline:2px solid var(--gd-blue);outline-offset:3px}
+@media(max-width:750px){#g5-design .workspace{grid-template-columns:1fr}#g5-design .sidebar{display:none}#g5-design .split,#g5-design .twocol{grid-template-columns:1fr}#g5-design .content{padding:18px}#g5-design .result{flex-wrap:wrap}#g5-design .result .grow{flex-basis:65%}#g5-design .dialogstage{padding:10px}#g5-design .demo span{margin-left:0}#g5-design .composer{margin-left:0}}@media(max-width:400px){#g5-design .chrome{gap:10px;padding:10px}#g5-design .content{padding:12px}#g5-design .event{grid-template-columns:32px 20px minmax(0,1fr);gap:6px}#g5-design .event:before{left:48px}#g5-design .dot{width:20px;height:20px}#g5-design .dialogbody{padding:12px}}
+&lt;/style&gt;
+&lt;div id=&quot;g5-design&quot; aria-label=&quot;G5 external issue integration&quot;&gt;
+&lt;nav class=&quot;demo&quot; aria-label=&quot;Design screens&quot;&gt;
+&lt;button data-screen=&quot;home&quot; aria-pressed=&quot;true&quot;&gt;Home&lt;/button&gt;&lt;button data-screen=&quot;fork&quot; aria-pressed=&quot;false&quot;&gt;Fork&lt;/button&gt;&lt;button data-screen=&quot;links&quot; aria-pressed=&quot;false&quot;&gt;Linked issues&lt;/button&gt;&lt;button data-screen=&quot;activity&quot; aria-pressed=&quot;false&quot;&gt;Activity&lt;/button&gt;&lt;button data-screen=&quot;tracker&quot; aria-pressed=&quot;false&quot;&gt;Issue backlinks&lt;/button&gt;&lt;button data-screen=&quot;outage&quot; aria-pressed=&quot;false&quot;&gt;Tracker unavailable&lt;/button&gt;&lt;span&gt;Design proposal · sample data&lt;/span&gt;
+&lt;/nav&gt;
+&lt;div class=&quot;window&quot;&gt;
+&lt;header class=&quot;chrome&quot;&gt;&lt;button class=&quot;link brand&quot; data-screen=&quot;home&quot; aria-label=&quot;G5 Home&quot;&gt;G5&lt;/button&gt;&lt;span class=&quot;small grow&quot; id=&quot;gd-location&quot;&gt;Workspaces ▾&lt;/span&gt;&lt;span class=&quot;small muted&quot;&gt;Acme&lt;/span&gt;&lt;span class=&quot;avatar&quot;&gt;BV&lt;/span&gt;&lt;/header&gt;
+&lt;section data-panel=&quot;home&quot; class=&quot;content stack&quot;&gt;
+&lt;div&gt;&lt;h1&gt;Acme Home&lt;/h1&gt;&lt;p class=&quot;small muted&quot;&gt;Hi, Ben&lt;/p&gt;&lt;/div&gt;
+&lt;div class=&quot;panel&quot;&gt;&lt;div class=&quot;pad stack&quot;&gt;&lt;div class=&quot;row between&quot;&gt;&lt;h2&gt;Find an issue to work on&lt;/h2&gt;&lt;span class=&quot;small muted&quot;&gt;GitHub + Jira&lt;/span&gt;&lt;/div&gt;&lt;label class=&quot;field&quot;&gt;&lt;span class=&quot;muted&quot;&gt;Issue title, key, or URL&lt;/span&gt;&lt;input id=&quot;gd-search&quot; type=&quot;search&quot; placeholder=&quot;Search issues…&quot;&gt;&lt;/label&gt;&lt;div class=&quot;filters&quot;&gt;&lt;select id=&quot;gd-filter&quot; aria-label=&quot;Issue tracker&quot;&gt;&lt;option value=&quot;all&quot;&gt;All trackers&lt;/option&gt;&lt;option&gt;Jira&lt;/option&gt;&lt;option&gt;GitHub&lt;/option&gt;&lt;/select&gt;&lt;span class=&quot;tag&quot;&gt;Accessible to you&lt;/span&gt;&lt;/div&gt;&lt;/div&gt;&lt;div id=&quot;gd-results&quot;&gt;&lt;/div&gt;&lt;div class=&quot;statusline&quot; id=&quot;gd-search-status&quot;&gt;3 issues · Updated just now&lt;/div&gt;&lt;/div&gt;
+&lt;div class=&quot;twocol sectiongap&quot;&gt;&lt;div&gt;&lt;h3&gt;Recent workspaces&lt;/h3&gt;&lt;div class=&quot;listrow&quot;&gt;&lt;button class=&quot;link mono&quot; data-screen=&quot;activity&quot;&gt;fix/plat-248-session-refresh&lt;/button&gt;&lt;div class=&quot;small muted&quot;&gt;Primary · PLAT-248 · 1 related issue&lt;/div&gt;&lt;/div&gt;&lt;div class=&quot;listrow&quot;&gt;&lt;span class=&quot;mono&quot;&gt;feature/session-reliability&lt;/span&gt;&lt;div class=&quot;small muted&quot;&gt;Primary · PLAT-240 · 2 child workspaces&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;div&gt;&lt;h3&gt;Needs attention&lt;/h3&gt;&lt;div class=&quot;listrow&quot;&gt;&lt;button class=&quot;link&quot; data-screen=&quot;activity&quot;&gt;Session refresh is ready for review&lt;/button&gt;&lt;div class=&quot;small muted&quot;&gt;PR #438 · Required checks passed&lt;/div&gt;&lt;/div&gt;&lt;div class=&quot;listrow&quot;&gt;&lt;span class=&quot;small&quot;&gt;Agent has a question&lt;/span&gt;&lt;div class=&quot;small muted&quot;&gt;Reconnect retry behavior&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;/section&gt;
+&lt;section data-panel=&quot;fork&quot; hidden class=&quot;dialogstage&quot;&gt;
+&lt;div class=&quot;dialog&quot;&gt;&lt;header class=&quot;dialoghead&quot;&gt;&lt;h2&gt;Fork workspace&lt;/h2&gt;&lt;/header&gt;&lt;div class=&quot;dialogbody&quot;&gt;
+&lt;label class=&quot;field&quot;&gt;Source workspace&lt;select id=&quot;gd-source&quot;&gt;&lt;option value=&quot;base&quot;&gt;base · main · 2 repositories&lt;/option&gt;&lt;option value=&quot;parent&quot;&gt;feature/session-reliability · Primary PLAT-240&lt;/option&gt;&lt;/select&gt;&lt;/label&gt;
+&lt;label class=&quot;field&quot;&gt;Workspace name&lt;input id=&quot;gd-name&quot; value=&quot;fix/plat-252-refresh-race&quot; required&gt;&lt;/label&gt;
+&lt;div class=&quot;small muted&quot;&gt;The workspace name is the destination branch name in each repository.&lt;/div&gt;
+&lt;label class=&quot;field&quot;&gt;Issue&lt;select id=&quot;gd-issue-mode&quot;&gt;&lt;option value=&quot;none&quot;&gt;No issue&lt;/option&gt;&lt;option value=&quot;existing&quot; selected&gt;Link existing issue&lt;/option&gt;&lt;option value=&quot;create&quot;&gt;Create issue&lt;/option&gt;&lt;/select&gt;&lt;/label&gt;
+&lt;div id=&quot;gd-existing&quot;&gt;&lt;label class=&quot;field&quot;&gt;&lt;span id=&quot;gd-issue-role&quot;&gt;Primary issue&lt;/span&gt;&lt;select id=&quot;gd-existing-select&quot;&gt;&lt;option value=&quot;PLAT-252&quot;&gt;Jira · PLAT-252 · Prevent duplicate session refresh&lt;/option&gt;&lt;option value=&quot;PLAT-248&quot;&gt;Jira · PLAT-248 · Session refresh fails after reconnect&lt;/option&gt;&lt;option value=&quot;web#1842&quot;&gt;GitHub · web#1842 · Preserve drafts on reconnect&lt;/option&gt;&lt;/select&gt;&lt;/label&gt;&lt;div class=&quot;small muted&quot; style=&quot;margin-top:6px&quot;&gt;This issue will receive a link to the new workspace.&lt;/div&gt;&lt;/div&gt;
+&lt;div id=&quot;gd-create&quot; class=&quot;stack&quot; hidden&gt;&lt;div class=&quot;note&quot; id=&quot;gd-parent-note&quot;&gt;New Jira issue · Platform · Task&lt;/div&gt;&lt;label class=&quot;field&quot;&gt;Issue title&lt;input id=&quot;gd-issue-title&quot; value=&quot;Prevent duplicate session refresh&quot;&gt;&lt;/label&gt;&lt;label class=&quot;field&quot;&gt;Description&lt;textarea id=&quot;gd-issue-body&quot; rows=&quot;2&quot;&gt;Coalesce refresh requests during rapid reconnects. Add regression coverage.&lt;/textarea&gt;&lt;/label&gt;&lt;/div&gt;
+&lt;div id=&quot;gd-conflict&quot; class=&quot;notice&quot; role=&quot;alert&quot; hidden&gt;PLAT-248 is primary in &lt;strong&gt;fix/plat-248-session-refresh&lt;/strong&gt;.&lt;div class=&quot;row&quot; style=&quot;margin-top:8px&quot;&gt;&lt;button class=&quot;btn&quot; data-screen=&quot;activity&quot;&gt;Continue in that workspace&lt;/button&gt;&lt;button class=&quot;btn&quot; id=&quot;gd-related&quot;&gt;Use as related issue&lt;/button&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;label class=&quot;check&quot;&gt;&lt;input type=&quot;checkbox&quot; id=&quot;gd-start&quot; checked&gt;Start a chat after the workspace is ready&lt;/label&gt;
+&lt;label class=&quot;field&quot; id=&quot;gd-instruction-wrap&quot;&gt;Initial instruction&lt;textarea id=&quot;gd-instruction&quot; rows=&quot;3&quot;&gt;Implement the issue using its acceptance criteria. Inspect the code, follow workspace approvals, and validate the change.&lt;/textarea&gt;&lt;/label&gt;
+&lt;details class=&quot;small&quot;&gt;&lt;summary&gt;Repositories and governance&lt;/summary&gt;&lt;div class=&quot;note&quot; style=&quot;margin-top:8px&quot;&gt;acme/web + acme/api · Merge to source workspace · Inherit the selected workspace governance settings&lt;/div&gt;&lt;/details&gt;
+&lt;/div&gt;&lt;footer class=&quot;dialogfoot&quot;&gt;&lt;button class=&quot;btn&quot; data-screen=&quot;home&quot;&gt;Cancel&lt;/button&gt;&lt;button class=&quot;btn&quot; id=&quot;gd-fork-only&quot;&gt;Fork only&lt;/button&gt;&lt;button class=&quot;btn primary&quot; id=&quot;gd-fork-start&quot;&gt;Fork &amp;amp; start work&lt;/button&gt;&lt;/footer&gt;&lt;/div&gt;
+&lt;div id=&quot;gd-outcome&quot; class=&quot;note&quot; aria-live=&quot;polite&quot; hidden&gt;&lt;/div&gt;
+&lt;/section&gt;
+&lt;section data-panel=&quot;links&quot; hidden&gt;
+&lt;div class=&quot;band row between&quot;&gt;&lt;span class=&quot;mono&quot;&gt;fix/plat-248-session-refresh&lt;/span&gt;&lt;span class=&quot;tag blue&quot;&gt;Primary · PLAT-248&lt;/span&gt;&lt;/div&gt;
+&lt;div class=&quot;workspace&quot;&gt;&lt;aside class=&quot;sidebar&quot;&gt;&lt;div class=&quot;navrow&quot;&gt;Project docs&lt;/div&gt;&lt;div class=&quot;navrow&quot;&gt;Source control&lt;/div&gt;&lt;div class=&quot;navrow active&quot;&gt;Linked issues · 2&lt;/div&gt;&lt;div class=&quot;navrow&quot;&gt;Activity&lt;/div&gt;&lt;div class=&quot;navrow muted&quot;&gt;Issues (G5) ▸&lt;/div&gt;&lt;div class=&quot;navrow&quot;&gt;Files&lt;/div&gt;&lt;/aside&gt;&lt;main&gt;&lt;div class=&quot;tabs&quot;&gt;Linked issues&lt;/div&gt;&lt;div class=&quot;content stack&quot;&gt;&lt;div class=&quot;row between&quot;&gt;&lt;h1&gt;Linked issues&lt;/h1&gt;&lt;button class=&quot;btn&quot; id=&quot;gd-add-link&quot;&gt;Link an issue&lt;/button&gt;&lt;/div&gt;&lt;div class=&quot;panel pad stack&quot;&gt;&lt;div class=&quot;row between&quot;&gt;&lt;span class=&quot;mono&quot;&gt;Jira · PLAT-248&lt;/span&gt;&lt;span class=&quot;tag blue&quot;&gt;Primary&lt;/span&gt;&lt;/div&gt;&lt;h2&gt;Session refresh fails after reconnect&lt;/h2&gt;&lt;div class=&quot;row&quot;&gt;&lt;span class=&quot;tag blue&quot;&gt;In Review&lt;/span&gt;&lt;span class=&quot;avatar&quot;&gt;BV&lt;/span&gt;&lt;span class=&quot;small&quot;&gt;Ben Vandiver&lt;/span&gt;&lt;span class=&quot;small muted&quot;&gt;Updated just now&lt;/span&gt;&lt;/div&gt;&lt;p class=&quot;small&quot;&gt;This workspace owns G5 progress reporting and the default discussion for PLAT-248.&lt;/p&gt;&lt;div class=&quot;row&quot;&gt;&lt;button class=&quot;btn&quot; data-screen=&quot;activity&quot;&gt;View activity&lt;/button&gt;&lt;button class=&quot;btn&quot; data-screen=&quot;tracker&quot;&gt;View issue&lt;/button&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class=&quot;panel pad stack&quot;&gt;&lt;div class=&quot;row between&quot;&gt;&lt;span class=&quot;mono&quot;&gt;Jira · PLAT-240&lt;/span&gt;&lt;span class=&quot;tag&quot;&gt;Related · Parent issue&lt;/span&gt;&lt;/div&gt;&lt;h2&gt;Improve session reliability&lt;/h2&gt;&lt;div class=&quot;row&quot;&gt;&lt;span class=&quot;tag&quot;&gt;In Progress&lt;/span&gt;&lt;span class=&quot;small muted&quot;&gt;Primary in feature/session-reliability&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;row&quot;&gt;&lt;button class=&quot;btn&quot; id=&quot;gd-make-primary&quot;&gt;Make primary&lt;/button&gt;&lt;span class=&quot;small muted&quot;&gt;Owning workspace continues to report feature progress&lt;/span&gt;&lt;/div&gt;&lt;/div&gt;&lt;div id=&quot;gd-link-message&quot; class=&quot;notice&quot; hidden aria-live=&quot;polite&quot;&gt;&lt;/div&gt;&lt;/div&gt;&lt;/main&gt;&lt;/div&gt;
+&lt;/section&gt;
+&lt;section data-panel=&quot;activity&quot; hidden&gt;
+&lt;div class=&quot;band row between&quot;&gt;&lt;span class=&quot;mono&quot;&gt;fix/plat-248-session-refresh&lt;/span&gt;&lt;span class=&quot;tag blue&quot;&gt;Primary · PLAT-248 · In Review&lt;/span&gt;&lt;/div&gt;
+&lt;div class=&quot;workspace&quot;&gt;&lt;aside class=&quot;sidebar&quot;&gt;&lt;div class=&quot;navrow&quot;&gt;Project docs&lt;/div&gt;&lt;div class=&quot;navrow&quot;&gt;Source control&lt;/div&gt;&lt;div class=&quot;navrow&quot;&gt;Linked issues · 2&lt;/div&gt;&lt;div class=&quot;navrow active&quot;&gt;Activity&lt;/div&gt;&lt;div class=&quot;navrow muted&quot;&gt;Issues (G5) ▸&lt;/div&gt;&lt;div class=&quot;navrow&quot;&gt;Files&lt;/div&gt;&lt;/aside&gt;&lt;main&gt;&lt;div class=&quot;tabs&quot;&gt;Activity&lt;/div&gt;&lt;div class=&quot;content stack&quot;&gt;&lt;div class=&quot;row between&quot;&gt;&lt;h1&gt;Activity&lt;/h1&gt;&lt;button class=&quot;btn&quot; data-screen=&quot;tracker&quot; id=&quot;gd-open-issue&quot;&gt;Open PLAT-248 ↗&lt;/button&gt;&lt;/div&gt;&lt;div id=&quot;gd-outage&quot; class=&quot;notice&quot; role=&quot;status&quot; hidden&gt;&lt;strong&gt;Jira is temporarily unavailable&lt;/strong&gt;&lt;p style=&quot;margin-top:5px&quot;&gt;Last checked 12:04. Issue details below were loaded at 11:50 and may be out of date. Workspace chats, files, and validation remain available.&lt;/p&gt;&lt;div class=&quot;row&quot; style=&quot;margin-top:9px&quot;&gt;&lt;button class=&quot;btn&quot; id=&quot;gd-retry-tracker&quot;&gt;Retry connection&lt;/button&gt;&lt;span id=&quot;gd-retry-state&quot;&gt;Comments and issue updates are paused.&lt;/span&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class=&quot;note row between&quot;&gt;&lt;span&gt;Shared discussion on &lt;strong&gt;Jira · PLAT-248&lt;/strong&gt;&lt;/span&gt;&lt;span class=&quot;small muted&quot;&gt;Oldest first&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;button class=&quot;link small&quot; id=&quot;gd-earlier&quot;&gt;Load earlier activity&lt;/button&gt;&lt;/div&gt;&lt;div id=&quot;gd-timeline&quot;&gt;&lt;/div&gt;&lt;div class=&quot;composer&quot;&gt;&lt;div class=&quot;small&quot;&gt;Comment on &lt;strong&gt;PLAT-248&lt;/strong&gt; as Ben Vandiver&lt;/div&gt;&lt;textarea id=&quot;gd-comment&quot; rows=&quot;3&quot; aria-label=&quot;Comment on PLAT-248&quot; placeholder=&quot;Review this workspace or share progress…&quot;&gt;&lt;/textarea&gt;&lt;div class=&quot;row between&quot;&gt;&lt;span class=&quot;small muted&quot;&gt;Attach workspace snapshot · web 7e31b2a · api 9ad714c&lt;/span&gt;&lt;button class=&quot;btn primary&quot; id=&quot;gd-post&quot;&gt;Post to Jira&lt;/button&gt;&lt;/div&gt;&lt;div id=&quot;gd-comment-state&quot; class=&quot;small muted&quot; aria-live=&quot;polite&quot;&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;/main&gt;&lt;/div&gt;
+&lt;/section&gt;
+&lt;section data-panel=&quot;tracker&quot; hidden class=&quot;content stack&quot;&gt;&lt;div class=&quot;row between&quot;&gt;&lt;h1&gt;Issue backlinks&lt;/h1&gt;&lt;span class=&quot;small muted&quot;&gt;External tracker previews&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;twocol&quot;&gt;&lt;article class=&quot;panel provider&quot;&gt;&lt;div class=&quot;small muted&quot;&gt;Jira · Platform / PLAT-248&lt;/div&gt;&lt;h2&gt;Session refresh fails after reconnect&lt;/h2&gt;&lt;span class=&quot;tag blue&quot;&gt;In Review&lt;/span&gt;&lt;div class=&quot;providerhr&quot;&gt;&lt;h3&gt;Web links&lt;/h3&gt;&lt;div class=&quot;note sectiongap&quot;&gt;&lt;button class=&quot;link mono&quot; data-screen=&quot;activity&quot;&gt;G5 · fix/plat-248-session-refresh ↗&lt;/button&gt;&lt;div class=&quot;small muted&quot;&gt;Primary workspace · Ben Vandiver&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class=&quot;providerhr&quot;&gt;&lt;h3&gt;Comments&lt;/h3&gt;&lt;div class=&quot;small muted&quot; style=&quot;margin-top:8px&quot;&gt;G5 · 11:40&lt;/div&gt;&lt;p class=&quot;small&quot;&gt;Ready for review. PR #438 covers reconnect and preserves unsent drafts. Required checks passed; browser validation still requested.&lt;/p&gt;&lt;div id=&quot;gd-jira-comments&quot;&gt;&lt;/div&gt;&lt;/div&gt;&lt;/article&gt;&lt;article class=&quot;panel provider&quot;&gt;&lt;div class=&quot;small muted&quot;&gt;GitHub · acme/web · #1842&lt;/div&gt;&lt;h2&gt;Preserve drafts on reconnect&lt;/h2&gt;&lt;span class=&quot;tag green&quot;&gt;Open&lt;/span&gt;&lt;div class=&quot;providerhr&quot;&gt;&lt;div class=&quot;row&quot;&gt;&lt;span class=&quot;avatar&quot;&gt;G5&lt;/span&gt;&lt;strong class=&quot;small&quot;&gt;G5 bot&lt;/strong&gt;&lt;span class=&quot;tag&quot;&gt;Workspace link&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;note sectiongap&quot;&gt;&lt;button class=&quot;link mono&quot; data-screen=&quot;links&quot;&gt;G5 · investigate/draft-recovery ↗&lt;/button&gt;&lt;div class=&quot;small&quot;&gt;Related workspace · Maya Chen&lt;/div&gt;&lt;div class=&quot;small muted&quot;&gt;This workspace does not drive this issue’s status.&lt;/div&gt;&lt;/div&gt;&lt;p class=&quot;small muted sectiongap&quot;&gt;One maintained backlink comment for this association.&lt;/p&gt;&lt;/div&gt;&lt;/article&gt;&lt;/div&gt;&lt;/section&gt;
+&lt;div class=&quot;statusline&quot; id=&quot;gd-footer&quot;&gt;GitHub and Jira are the source of issue state, assignees, and comments.&lt;/div&gt;
+&lt;/div&gt;&lt;/div&gt;
+&lt;script&gt;
+(()=&gt;{
+const root=document.getElementById(&#x27;g5-design&#x27;),el=id=&gt;document.getElementById(id),esc=s=&gt;String(s).replace(/[&amp;&lt;&gt;&quot;&#x27;]/g,c=&gt;({&#x27;&amp;&#x27;:&#x27;&amp;amp;&#x27;,&#x27;&lt;&#x27;:&#x27;&amp;lt;&#x27;,&#x27;&gt;&#x27;:&#x27;&amp;gt;&#x27;,&#x27;&quot;&#x27;:&#x27;&amp;quot;&#x27;,&quot;&#x27;&quot;:&#x27;&amp;#39;&#x27;}[c]));
+const state={screen:&#x27;home&#x27;,related:false,earlier:false,failPublish:false,comments:[]};
+const issues=[{key:&#x27;PLAT-252&#x27;,provider:&#x27;Jira&#x27;,title:&#x27;Prevent duplicate session refresh&#x27;,status:&#x27;To Do&#x27;,owner:null},{key:&#x27;PLAT-248&#x27;,provider:&#x27;Jira&#x27;,title:&#x27;Session refresh fails after reconnect&#x27;,status:&#x27;In Review&#x27;,owner:&#x27;fix/plat-248-session-refresh&#x27;},{key:&#x27;web#1842&#x27;,provider:&#x27;GitHub&#x27;,title:&#x27;Preserve drafts on reconnect&#x27;,status:&#x27;Open&#x27;,owner:null}];
+function screen(s){state.screen=s;const outage=s===&#x27;outage&#x27;,view=outage?&#x27;activity&#x27;:s;root.querySelectorAll(&#x27;[data-panel]&#x27;).forEach(n=&gt;n.hidden=n.dataset.panel!==view);el(&#x27;gd-outage&#x27;).hidden=!outage;el(&#x27;gd-post&#x27;).disabled=outage;el(&#x27;gd-earlier&#x27;).disabled=outage;el(&#x27;gd-open-issue&#x27;).disabled=outage;el(&#x27;gd-post&#x27;).textContent=outage?&#x27;Jira unavailable&#x27;:&#x27;Post to Jira&#x27;;el(&#x27;gd-comment&#x27;).placeholder=outage?&#x27;Draft a comment; posting is unavailable until Jira recovers…&#x27;:&#x27;Review this workspace or share progress…&#x27;;el(&#x27;gd-comment-state&#x27;).textContent=outage?&#x27;You can keep a draft here. Nothing will be sent automatically.&#x27;:&#x27;&#x27;;el(&#x27;gd-footer&#x27;).textContent=outage?&#x27;Workspace available · Jira unavailable · Issue actions paused&#x27;:&#x27;GitHub and Jira are the source of issue state, assignees, and comments.&#x27;;root.querySelectorAll(&#x27;.demo [data-screen]&#x27;).forEach(n=&gt;n.setAttribute(&#x27;aria-pressed&#x27;,String(n.dataset.screen===s)));el(&#x27;gd-location&#x27;).textContent=[&#x27;activity&#x27;,&#x27;links&#x27;,&#x27;outage&#x27;].includes(s)?&#x27;fix/plat-248-session-refresh ▾&#x27;:&#x27;Workspaces ▾&#x27;;}
+function results(){const q=el(&#x27;gd-search&#x27;).value.toLowerCase(),p=el(&#x27;gd-filter&#x27;).value;const rows=issues.filter(i=&gt;(p===&#x27;all&#x27;||i.provider===p)&amp;&amp;(i.key+&#x27; &#x27;+i.title).toLowerCase().includes(q));el(&#x27;gd-results&#x27;).innerHTML=rows.map(i=&gt;`&lt;div class=&quot;result&quot;&gt;&lt;div class=&quot;grow&quot;&gt;&lt;div class=&quot;row&quot;&gt;&lt;span class=&quot;tag&quot;&gt;${i.provider}&lt;/span&gt;&lt;span class=&quot;mono&quot;&gt;${i.key}&lt;/span&gt;&lt;span class=&quot;tag&quot;&gt;${i.status}&lt;/span&gt;&lt;/div&gt;&lt;h3&gt;${i.title}&lt;/h3&gt;&lt;div class=&quot;small muted&quot;&gt;${i.owner?&#x27;Primary in &#x27;+i.owner:&#x27;No primary workspace&#x27;} · Assigned to you&lt;/div&gt;&lt;/div&gt;&lt;button class=&quot;btn ${i.owner?&#x27;&#x27;:&#x27;primary&#x27;}&quot; ${i.owner?&#x27;data-screen=&quot;activity&quot;&#x27;:&#x27;data-start=&quot;&#x27;+i.key+&#x27;&quot;&#x27;}&gt;${i.owner?&#x27;Continue workspace&#x27;:&#x27;Start work&#x27;}&lt;/button&gt;&lt;/div&gt;`).join(&#x27;&#x27;)||&#x27;&lt;div class=&quot;pad muted&quot;&gt;No matching issues&lt;/div&gt;&#x27;;el(&#x27;gd-search-status&#x27;).textContent=rows.length+&#x27; issues · Updated just now&#x27;;}
+function forkFields(){el(&#x27;gd-issue-role&#x27;).textContent=state.related?&#x27;Related issue&#x27;:&#x27;Primary issue&#x27;;const mode=el(&#x27;gd-issue-mode&#x27;).value,parent=el(&#x27;gd-source&#x27;).value===&#x27;parent&#x27;;el(&#x27;gd-issue-mode&#x27;).options[2].textContent=parent?&#x27;Create sub-issue&#x27;:&#x27;Create issue&#x27;;el(&#x27;gd-parent-note&#x27;).textContent=parent?&#x27;Parent · Jira PLAT-240 · Improve session reliability · New sub-task&#x27;:&#x27;New Jira issue · Platform · Task&#x27;;el(&#x27;gd-existing&#x27;).hidden=mode!==&#x27;existing&#x27;;el(&#x27;gd-create&#x27;).hidden=mode!==&#x27;create&#x27;;const conflict=mode===&#x27;existing&#x27;&amp;&amp;el(&#x27;gd-existing-select&#x27;).value===&#x27;PLAT-248&#x27;&amp;&amp;!state.related;el(&#x27;gd-conflict&#x27;).hidden=!conflict;el(&#x27;gd-fork-only&#x27;).disabled=conflict;el(&#x27;gd-fork-start&#x27;).disabled=conflict;el(&#x27;gd-instruction-wrap&#x27;).hidden=!el(&#x27;gd-start&#x27;).checked;el(&#x27;gd-fork-start&#x27;).hidden=!el(&#x27;gd-start&#x27;).checked;el(&#x27;gd-fork-only&#x27;).classList.toggle(&#x27;primary&#x27;,!el(&#x27;gd-start&#x27;).checked);}
+function event(time,mark,title,body,meta=&#x27;&#x27;,isComment=false){return `&lt;div class=&quot;event&quot;&gt;&lt;span class=&quot;time&quot;&gt;${time}&lt;/span&gt;&lt;span class=&quot;dot&quot;&gt;${mark}&lt;/span&gt;&lt;div class=&quot;eventbody ${isComment?&#x27;comment&#x27;:&#x27;&#x27;}&quot;&gt;&lt;strong&gt;${title}&lt;/strong&gt;${body?&#x27;&lt;p&gt;&#x27;+body+&#x27;&lt;/p&gt;&#x27;:&#x27;&#x27;}${meta?&#x27;&lt;div class=&quot;captionline&quot;&gt;&#x27;+meta+&#x27;&lt;/div&gt;&#x27;:&#x27;&#x27;}&lt;/div&gt;&lt;/div&gt;`;}
+function timeline(){el(&#x27;gd-timeline&#x27;).innerHTML=(state.earlier?event(&#x27;10:15&#x27;,&#x27;↳&#x27;,&#x27;Workspace forked&#x27;,&#x27;Linked PLAT-248 as primary.&#x27;,&#x27;Workspace context · existing fork record&#x27;)+event(&#x27;10:41&#x27;,&#x27;→&#x27;,&#x27;PLAT-248 moved to In Progress&#x27;,&#x27;&#x27;,&#x27;Jira · G5 workflow&#x27;):&#x27;&#x27;)+event(&#x27;10:54&#x27;,&#x27;C&#x27;,&#x27;Implementation chat&#x27;,&#x27;Updated the reconnect path and added regression coverage.&#x27;,&#x27;Workspace context · Open chat · 4 messages&#x27;)+event(&#x27;11:32&#x27;,&#x27;✓&#x27;,&#x27;Validation completed&#x27;,&#x27;18 checks passed.&#x27;,&#x27;Workspace context · Open validation results&#x27;)+event(&#x27;11:40&#x27;,&#x27;G5&#x27;,&#x27;G5 shared a progress update&#x27;,&#x27;Ready for review. PR #438 covers reconnect and preserves unsent drafts. Required checks passed; browser validation still requested.&#x27;,&#x27;Jira comment · PR #438 · Open review&#x27;,true)+event(&#x27;11:41&#x27;,&#x27;→&#x27;,&#x27;PLAT-248 moved to In Review&#x27;,&#x27;&#x27;,&#x27;Jira · G5 workflow&#x27;)+event(&#x27;11:48&#x27;,&#x27;MC&#x27;,&#x27;Maya Chen reviewed the workspace&#x27;,&#x27;The reconnect behavior looks right. Please also check two rapid disconnects while a draft is open.&#x27;,&#x27;Jira comment · Workspace snapshot · web 7e31b2a · api 9ad714c&#x27;,true)+state.comments.map(c=&gt;event(c.time,&#x27;BV&#x27;,&#x27;Ben Vandiver&#x27;,esc(c.body),&#x27;Jira comment · Workspace snapshot · web 7e31b2a · api 9ad714c&#x27;,true)).join(&#x27;&#x27;);el(&#x27;gd-jira-comments&#x27;).innerHTML=&#x27;&lt;div class=&quot;providerhr&quot;&gt;&lt;div class=&quot;small muted&quot;&gt;Maya Chen · 11:48&lt;/div&gt;&lt;p class=&quot;small&quot;&gt;The reconnect behavior looks right. Please also check two rapid disconnects while a draft is open.&lt;/p&gt;&lt;div class=&quot;captionline&quot;&gt;G5 workspace snapshot · web 7e31b2a · api 9ad714c&lt;/div&gt;&lt;/div&gt;&#x27;+state.comments.map(c=&gt;&#x27;&lt;div class=&quot;providerhr&quot;&gt;&lt;div class=&quot;small muted&quot;&gt;Ben Vandiver · &#x27;+c.time+&#x27;&lt;/div&gt;&lt;p class=&quot;small&quot;&gt;&#x27;+esc(c.body)+&#x27;&lt;/p&gt;&lt;div class=&quot;captionline&quot;&gt;G5 workspace snapshot · web 7e31b2a · api 9ad714c&lt;/div&gt;&lt;/div&gt;&#x27;).join(&#x27;&#x27;);}
+root.addEventListener(&#x27;click&#x27;,e=&gt;{const b=e.target.closest(&#x27;button&#x27;);if(!b)return;if(b.dataset.screen)screen(b.dataset.screen);if(b.dataset.start){el(&#x27;gd-existing-select&#x27;).value=b.dataset.start;el(&#x27;gd-issue-mode&#x27;).value=&#x27;existing&#x27;;el(&#x27;gd-start&#x27;).checked=true;el(&#x27;gd-name&#x27;).value=b.dataset.start===&#x27;web#1842&#x27;?&#x27;fix/draft-recovery&#x27;:&#x27;fix/plat-252-refresh-race&#x27;;state.related=false;el(&#x27;gd-outcome&#x27;).hidden=true;forkFields();screen(&#x27;fork&#x27;);}});
+el(&#x27;gd-search&#x27;).addEventListener(&#x27;input&#x27;,results);el(&#x27;gd-filter&#x27;).addEventListener(&#x27;change&#x27;,results);[&#x27;gd-source&#x27;,&#x27;gd-issue-mode&#x27;,&#x27;gd-existing-select&#x27;,&#x27;gd-start&#x27;].forEach(id=&gt;el(id).addEventListener(&#x27;change&#x27;,()=&gt;{state.related=false;forkFields();}));el(&#x27;gd-related&#x27;).onclick=()=&gt;{state.related=true;forkFields();el(&#x27;gd-outcome&#x27;).hidden=false;el(&#x27;gd-outcome&#x27;).textContent=&#x27;PLAT-248 will be related. The new workspace will have no primary issue.&#x27;;};
+function fork(start){if(!el(&#x27;gd-name&#x27;).reportValidity())return;if(el(&#x27;gd-issue-mode&#x27;).value===&#x27;create&#x27;&amp;&amp;!el(&#x27;gd-issue-title&#x27;).value.trim()){el(&#x27;gd-issue-title&#x27;).focus();return;}el(&#x27;gd-outcome&#x27;).hidden=false;const issue=el(&#x27;gd-issue-mode&#x27;).value===&#x27;none&#x27;?&#x27;No issue linked.&#x27;:el(&#x27;gd-issue-mode&#x27;).value===&#x27;create&#x27;?(el(&#x27;gd-source&#x27;).value===&#x27;parent&#x27;?&#x27;Sub-issue PLAT-253 created under PLAT-240 and linked as primary.&#x27;:&#x27;Issue PLAT-253 created and linked as primary.&#x27;):(el(&#x27;gd-existing-select&#x27;).value+(state.related?&#x27; linked as related.&#x27;:&#x27; linked as primary.&#x27;));el(&#x27;gd-outcome&#x27;).textContent=&#x27;Preview: &#x27;+el(&#x27;gd-name&#x27;).value+&#x27; is ready. &#x27;+issue+&#x27; &#x27;+(start?&#x27;Chat created with the instruction and issue context; workspace approval rules apply.&#x27;:&#x27;No chat started.&#x27;);}
+el(&#x27;gd-fork-only&#x27;).onclick=()=&gt;fork(false);el(&#x27;gd-fork-start&#x27;).onclick=()=&gt;fork(true);el(&#x27;gd-earlier&#x27;).onclick=()=&gt;{state.earlier=true;el(&#x27;gd-earlier&#x27;).hidden=true;timeline();};el(&#x27;gd-post&#x27;).onclick=()=&gt;{const body=el(&#x27;gd-comment&#x27;).value.trim();if(!body){el(&#x27;gd-comment&#x27;).focus();return;}if(state.failPublish){el(&#x27;gd-comment-state&#x27;).textContent=&#x27;Not posted to Jira. Your draft is preserved. Retry after access is restored.&#x27;;return;}state.comments.push({body,time:&#x27;11:&#x27;+String(52+state.comments.length)});el(&#x27;gd-comment&#x27;).value=&#x27;&#x27;;el(&#x27;gd-comment-state&#x27;).textContent=&#x27;Posted to PLAT-248. The same comment appears in Jira.&#x27;;timeline();};el(&#x27;gd-make-primary&#x27;).onclick=()=&gt;{el(&#x27;gd-link-message&#x27;).hidden=false;el(&#x27;gd-link-message&#x27;).textContent=&#x27;PLAT-240 already has a primary workspace: feature/session-reliability. Open that workspace, retain this related link, or explicitly transfer ownership with permission on both workspaces.&#x27;;};el(&#x27;gd-add-link&#x27;).onclick=()=&gt;{el(&#x27;gd-link-message&#x27;).hidden=false;el(&#x27;gd-link-message&#x27;).textContent=&#x27;Link picker: search an accessible issue by title, key, or URL. New associations are related unless primary is explicitly selected.&#x27;;};
+el(&#x27;gd-retry-tracker&#x27;).onclick=()=&gt;{el(&#x27;gd-retry-state&#x27;).textContent=&#x27;Jira is still unavailable. Try again later; your workspace is ready.&#x27;;};results();forkFields();timeline();if(globalThis.Tweak){const tweak=new Tweak({container:root,onChange:()=&gt;{}});tweak.addToggle(state,&#x27;failPublish&#x27;,{label:&#x27;Simulate comment publishing failure&#x27;});}
+})();
+&lt;/script&gt;
+
+&lt;script src=&quot;https://unpkg.com/@floating-ui/core@1.7.3/dist/floating-ui.core.umd.min.js&quot;&gt;&lt;/script&gt;
+&lt;script src=&quot;https://unpkg.com/@floating-ui/dom@1.7.4/dist/floating-ui.dom.umd.min.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+(() =&gt; {
+  if (window.FloatingUIDOM == null) {
+    return;
+  }
+  const { autoUpdate, computePosition, flip, offset, shift, size } =
+    window.FloatingUIDOM;
+  const tooltipPlacements = new Set([&quot;top&quot;, &quot;right&quot;, &quot;bottom&quot;, &quot;left&quot;]);
+  const tooltipId = `codex-visualization-tooltip-${
+    window.crypto?.randomUUID?.() ?? Date.now().toString(36)
+  }`;
+  const tooltipGap = 5;
+  const hoverDelay = 700;
+  const skipDelay = 300;
+  let activeTrigger = null;
+  let pendingTrigger = null;
+  let tooltip = null;
+  let openTimeout = null;
+  let autoUpdateCleanup = null;
+  let positionRequest = 0;
+  let skipDelayUntil = 0;
+  let lastPointerWasTouch = false;
+  let pinnedByTouch = false;
+
+  const getTrigger = (target) =&gt;
+    target?.nodeType === Node.ELEMENT_NODE
+      ? target.closest(&quot;[data-tooltip]&quot;)
+      : null;
+  const containsTarget = (trigger, target) =&gt;
+    target?.nodeType != null &amp;&amp; trigger.contains(target);
+  const getContent = (trigger) =&gt;
+    trigger.getAttribute(&quot;data-tooltip&quot;)?.trim() ?? &quot;&quot;;
+  const getPlacement = (trigger) =&gt; {
+    const placement = trigger.getAttribute(&quot;data-tooltip-placement&quot;);
+    return tooltipPlacements.has(placement) ? placement : &quot;top&quot;;
+  };
+  const getTooltip = () =&gt; {
+    if (tooltip == null) {
+      tooltip = document.createElement(&quot;div&quot;);
+      tooltip.id = tooltipId;
+      tooltip.className = &quot;tooltip&quot;;
+      tooltip.setAttribute(&quot;role&quot;, &quot;tooltip&quot;);
+    }
+    return tooltip;
+  };
+  const setDescribedBy = (trigger, described) =&gt; {
+    const ids = new Set(
+      (trigger.getAttribute(&quot;aria-describedby&quot;) ?? &quot;&quot;)
+        .split(/\s+/)
+        .filter(Boolean),
+    );
+    if (described) {
+      ids.add(tooltipId);
+    } else {
+      ids.delete(tooltipId);
+    }
+    if (ids.size === 0) {
+      trigger.removeAttribute(&quot;aria-describedby&quot;);
+    } else {
+      trigger.setAttribute(&quot;aria-describedby&quot;, [...ids].join(&quot; &quot;));
+    }
+  };
+  const clearOpenTimeout = () =&gt; {
+    if (openTimeout != null) {
+      window.clearTimeout(openTimeout);
+      openTimeout = null;
+    }
+    pendingTrigger = null;
+  };
+  const closeTooltip = (activateSkipDelay = true) =&gt; {
+    clearOpenTimeout();
+    pinnedByTouch = false;
+    positionRequest += 1;
+    autoUpdateCleanup?.();
+    autoUpdateCleanup = null;
+    if (activeTrigger == null) {
+      return;
+    }
+    setDescribedBy(activeTrigger, false);
+    activeTrigger = null;
+    tooltip?.remove();
+    if (activateSkipDelay) {
+      skipDelayUntil = Date.now() + skipDelay;
+    }
+  };
+  const updatePosition = (trigger, floating) =&gt; {
+    const request = ++positionRequest;
+    void computePosition(trigger, floating, {
+      middleware: [
+        offset(tooltipGap),
+        flip({ padding: tooltipGap }),
+        shift({ padding: tooltipGap }),
+        size({
+          padding: tooltipGap,
+          apply({ availableHeight, availableWidth, elements }) {
+            elements.floating.style.setProperty(
+              &quot;--tooltip-available-width&quot;,
+              `${Math.max(0, availableWidth)}px`,
+            );
+            elements.floating.style.setProperty(
+              &quot;--tooltip-available-height&quot;,
+              `${Math.max(0, availableHeight)}px`,
+            );
+          },
+        }),
+      ],
+      placement: getPlacement(trigger),
+      strategy: &quot;fixed&quot;,
+    })
+      .then(({ x, y }) =&gt; {
+        if (activeTrigger !== trigger || request !== positionRequest) {
+          return;
+        }
+        const scale = window.devicePixelRatio || 1;
+        floating.style.transform = `translate(${Math.round(x * scale) / scale}px, ${Math.round(y * scale) / scale}px)`;
+        floating.style.visibility = &quot;visible&quot;;
+      })
+      .catch(() =&gt; {
+        if (activeTrigger === trigger &amp;&amp; request === positionRequest) {
+          closeTooltip(false);
+        }
+      });
+  };
+  const openTooltip = (trigger) =&gt; {
+    const content = getContent(trigger);
+    if (!trigger.isConnected || content.length === 0) {
+      return;
+    }
+    clearOpenTimeout();
+    if (activeTrigger === trigger) {
+      return;
+    }
+    closeTooltip();
+    const floating = getTooltip();
+    floating.textContent = content;
+    floating.style.visibility = &quot;hidden&quot;;
+    floating.style.transform = &quot;translate(0, 0)&quot;;
+    document.body.appendChild(floating);
+    activeTrigger = trigger;
+    setDescribedBy(trigger, true);
+    autoUpdateCleanup = autoUpdate(trigger, floating, () =&gt; {
+      updatePosition(trigger, floating);
+    });
+  };
+  const requestOpen = (trigger, immediate = false) =&gt; {
+    if (
+      getContent(trigger).length === 0 ||
+      activeTrigger === trigger ||
+      pendingTrigger === trigger
+    ) {
+      return;
+    }
+    clearOpenTimeout();
+    pendingTrigger = trigger;
+    const delay =
+      immediate || activeTrigger != null || Date.now() &lt; skipDelayUntil
+        ? 0
+        : hoverDelay;
+    if (delay === 0) {
+      openTooltip(trigger);
+      return;
+    }
+    openTimeout = window.setTimeout(() =&gt; {
+      openTimeout = null;
+      pendingTrigger = null;
+      openTooltip(trigger);
+    }, delay);
+  };
+  const handlePointerOpen = (event) =&gt; {
+    if (event.pointerType === &quot;touch&quot;) {
+      return;
+    }
+    const trigger = getTrigger(event.target);
+    if (trigger == null || containsTarget(trigger, event.relatedTarget)) {
+      return;
+    }
+    requestOpen(trigger);
+  };
+  const handlePointer = (event) =&gt; {
+    lastPointerWasTouch =
+      event.type === &quot;pointerdown&quot; &amp;&amp; event.pointerType === &quot;touch&quot;;
+  };
+  const handleTouchClick = (event) =&gt; {
+    const isTouch = event.pointerType === &quot;touch&quot; || lastPointerWasTouch;
+    lastPointerWasTouch = false;
+    if (!isTouch || event.detail === 0) {
+      return;
+    }
+    const trigger = getTrigger(event.target);
+    if (
+      trigger == null ||
+      !trigger.isConnected ||
+      getContent(trigger).length === 0 ||
+      (pinnedByTouch &amp;&amp; activeTrigger === trigger)
+    ) {
+      if (pinnedByTouch) {
+        closeTooltip();
+      }
+      return;
+    }
+    openTooltip(trigger);
+    pinnedByTouch = activeTrigger === trigger;
+    window.setTimeout(() =&gt; {
+      if (activeTrigger === trigger &amp;&amp; !trigger.isConnected) {
+        closeTooltip(false);
+      }
+    }, 0);
+  };
+  const handleLeave = (event) =&gt; {
+    if (pinnedByTouch) {
+      return;
+    }
+    const trigger = getTrigger(event.target);
+    if (trigger == null || containsTarget(trigger, event.relatedTarget)) {
+      return;
+    }
+    if (activeTrigger === trigger || pendingTrigger === trigger) {
+      closeTooltip();
+    }
+  };
+  const handleFocusIn = (event) =&gt; {
+    const trigger = getTrigger(event.target);
+    if (trigger?.matches(&quot;:focus-visible&quot;)) {
+      requestOpen(trigger, true);
+    }
+  };
+  const handleKeyDown = (event) =&gt; {
+    if (event.key === &quot;Escape&quot;) {
+      closeTooltip();
+    }
+  };
+  const handleContextMenu = (event) =&gt; {
+    lastPointerWasTouch = false;
+    const trigger = getTrigger(event.target);
+    if (activeTrigger === trigger || pendingTrigger === trigger) {
+      closeTooltip();
+    }
+  };
+  const destroy = () =&gt; {
+    closeTooltip(false);
+    lastPointerWasTouch = false;
+    document.removeEventListener(&quot;pointerover&quot;, handlePointerOpen);
+    document.removeEventListener(&quot;pointerdown&quot;, handlePointer);
+    document.removeEventListener(&quot;pointercancel&quot;, handlePointer);
+    document.removeEventListener(&quot;click&quot;, handleTouchClick);
+    document.removeEventListener(&quot;pointerout&quot;, handleLeave);
+    document.removeEventListener(&quot;focusin&quot;, handleFocusIn);
+    document.removeEventListener(&quot;focusout&quot;, handleLeave);
+    document.removeEventListener(&quot;keydown&quot;, handleKeyDown);
+    document.removeEventListener(&quot;contextmenu&quot;, handleContextMenu);
+    tooltip = null;
+  };
+
+  document.addEventListener(&quot;pointerover&quot;, handlePointerOpen);
+  document.addEventListener(&quot;pointerdown&quot;, handlePointer);
+  document.addEventListener(&quot;pointercancel&quot;, handlePointer);
+  document.addEventListener(&quot;click&quot;, handleTouchClick);
+  document.addEventListener(&quot;pointerout&quot;, handleLeave);
+  document.addEventListener(&quot;focusin&quot;, handleFocusIn);
+  document.addEventListener(&quot;focusout&quot;, handleLeave);
+  document.addEventListener(&quot;keydown&quot;, handleKeyDown);
+  document.addEventListener(&quot;contextmenu&quot;, handleContextMenu);
+  window.addEventListener(&quot;pagehide&quot;, destroy, { once: true });
+})();
+&lt;/script&gt;
+&lt;script id=&quot;codex-visualization-tabs&quot;&gt;
+(() =&gt; {
+  const selector = &#x27;.nav[role=&quot;tablist&quot;] [role=&quot;tab&quot;]&#x27;;
+  const disabled = &#x27;:disabled,[aria-disabled=&quot;true&quot;]&#x27;;
+  const selectTab = (selected) =&gt; {
+    const panelId = selected.getAttribute(&quot;aria-controls&quot;);
+    for (const tab of selected.closest(&#x27;[role=&quot;tablist&quot;]&#x27;).querySelectorAll(&#x27;[role=&quot;tab&quot;]&#x27;)) {
+      const active = tab === selected;
+      tab.classList.toggle(&quot;active&quot;, active);
+      tab.setAttribute(&quot;aria-selected&quot;, String(active));
+      const id = tab.getAttribute(&quot;aria-controls&quot;);
+      const panel = id &amp;&amp; document.getElementById(id);
+      if (panel != null) {
+        panel.hidden = id !== panelId;
+        if (!panel.hidden &amp;&amp; selected.id) {
+          panel.setAttribute(&quot;aria-labelledby&quot;, selected.id);
+        }
+      }
+    }
+  };
+  const interact = (event) =&gt; {
+    const tab = event.target?.closest?.(selector);
+    if (event.defaultPrevented || tab == null || tab.matches(disabled)) {
+      return;
+    }
+    if (event.type === &quot;click&quot;) {
+      selectTab(tab);
+      return;
+    }
+    const tabs = Array.from(
+      tab.closest(&#x27;[role=&quot;tablist&quot;]&#x27;).querySelectorAll(&#x27;[role=&quot;tab&quot;]&#x27;),
+    ).filter((candidate) =&gt; !candidate.matches(disabled));
+    const current = tabs.indexOf(tab);
+    let next;
+    if (event.key === &quot;ArrowRight&quot; || event.key === &quot;ArrowDown&quot;) {
+      next = (current + 1) % tabs.length;
+    } else if (event.key === &quot;ArrowLeft&quot; || event.key === &quot;ArrowUp&quot;) {
+      next = (current + tabs.length - 1) % tabs.length;
+    } else if (event.key === &quot;Home&quot;) {
+      next = 0;
+    } else if (event.key === &quot;End&quot;) {
+      next = tabs.length - 1;
+    } else {
+      return;
+    }
+    event.preventDefault();
+    tabs[next].focus();
+    selectTab(tabs[next]);
+  };
+
+  for (const list of document.querySelectorAll(&#x27;.nav[role=&quot;tablist&quot;]&#x27;)) {
+    const selected =
+      list.querySelector(&#x27;[role=&quot;tab&quot;][aria-selected=&quot;true&quot;]&#x27;) ??
+      list.querySelector(&#x27;[role=&quot;tab&quot;].active&#x27;) ??
+      list.querySelector(&#x27;[role=&quot;tab&quot;]&#x27;);
+    if (selected != null) {
+      selectTab(selected);
+    }
+  }
+  document.addEventListener(&quot;click&quot;, interact);
+  document.addEventListener(&quot;keydown&quot;, interact);
+  window.addEventListener(&quot;pagehide&quot;, () =&gt; {
+    document.removeEventListener(&quot;click&quot;, interact);
+    document.removeEventListener(&quot;keydown&quot;, interact);
+  }, { once: true });
+})();
+&lt;/script&gt;
+&lt;script id=&quot;codex-visualization-lucide&quot; async src=&quot;https://unpkg.com/lucide@1.17.0/dist/umd/lucide.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+(() =&gt; {
+  const initialize = () =&gt; {
+    globalThis.lucide?.createIcons({ attrs: { width: 16, height: 16 } });
+  };
+  if (globalThis.lucide != null) {
+    initialize();
+    return;
+  }
+  document
+    .getElementById(&quot;codex-visualization-lucide&quot;)
+    ?.addEventListener(&quot;load&quot;, initialize, { once: true });
+})();
+&lt;/script&gt;
+
+&lt;/body&gt;
+&lt;/html&gt;
+"></iframe>
+</body>
+</html>

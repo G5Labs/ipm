@@ -1,0 +1,60 @@
+# =============================================================================
+# edge Deployment — Caddy reverse proxy + static frontend
+# =============================================================================
+{{- if eq (include "g5.controlPlaneEnabled" .) "true" }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: g5-edge
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "g5.labels" . | nindent 4 }}
+    app.kubernetes.io/component: edge
+spec:
+  replicas: {{ .Values.edge.replicaCount }}
+  selector:
+    matchLabels:
+      app: g5-edge
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: g5-edge
+        {{- include "g5.labels" . | nindent 8 }}
+    spec:
+      {{- with .Values.edge.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: edge
+          image: {{ include "g5.image" (dict "image" .Values.edge.image "global" .Values.global "component" "edge") | trim | quote }}
+          imagePullPolicy: {{ .Values.edge.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          env:
+            {{- range $key, $value := .Values.edge.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+          resources:
+            {{- toYaml .Values.edge.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 80
+            initialDelaySeconds: 3
+            periodSeconds: 5
+{{- end }}

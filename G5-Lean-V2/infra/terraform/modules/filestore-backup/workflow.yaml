@@ -1,0 +1,258 @@
+# Deploy once per environment with fixed user environment variables:
+# SOURCE_INSTANCE, SOURCE_SHARE, BACKUP_PARENT, BACKUP_PREFIX, RETENTION_DAYS=30.
+# SOURCE_INSTANCE must match sourceInstance returned by the native backup API.
+# Scheduler sends no execution arguments. All HTTP calls use the runtime identity.
+main:
+  steps:
+    - configure:
+        assign:
+          - source: ${sys.get_env("SOURCE_INSTANCE")}
+          - share: ${sys.get_env("SOURCE_SHARE")}
+          - parent: ${sys.get_env("BACKUP_PARENT")}
+          - prefix: ${sys.get_env("BACKUP_PREFIX")}
+          - retentionDays: ${int(sys.get_env("RETENTION_DAYS"))}
+          - started: ${sys.now()}
+          - deadline: ${started + 86400}
+          - backupId: ${prefix + "-daily-" + text.substring(time.format(started, "UTC"), 0, 10)}
+          - backupName: ${parent + "/backups/" + backupId}
+          - pageToken: ""
+          - expired: []
+          - deleted: []
+    - validate_configuration:
+        switch:
+          - condition: ${source == "" or share == "" or parent == "" or prefix == "" or retentionDays != 30 or len(backupId) > 63}
+            raise: "Missing or invalid fixed backup configuration; retention must be 30 days."
+    - create_backup:
+        try:
+          call: http.post
+          args:
+            url: ${"https://file.googleapis.com/v1/" + parent + "/backups"}
+            auth:
+              type: OAuth2
+            query:
+              backupId: ${backupId}
+            body:
+              sourceInstance: ${source}
+              sourceFileShare: ${share}
+              labels:
+                managed-by: g5-filestore-backup
+                backup-kind: daily
+          result: creation
+        # Repeating this POST uses the same name; a lost response becomes a 409.
+        retry: ${http.default_retry}
+        except:
+          as: error
+          steps:
+            - check_duplicate:
+                switch:
+                  - condition: ${map.get(error, "code") == 409}
+                    next: verify_ready
+            - creation_failed:
+                raise: ${error}
+    - wait_for_creation:
+        call: wait_operation
+        args:
+          operation: ${creation.body}
+          deadline: ${deadline}
+    - verify_ready:
+        call: wait_ready
+        args:
+          name: ${backupName}
+          source: ${source}
+          share: ${share}
+          deadline: ${deadline}
+    - retention_cutoff:
+        assign:
+          - cutoff: ${sys.now() - retentionDays * 86400}
+    # Finish pagination before deleting anything so deletion cannot shift pages.
+    - list_page:
+        try:
+          call: http.get
+          args:
+            url: ${"https://file.googleapis.com/v1/" + parent + "/backups"}
+            auth:
+              type: OAuth2
+            query:
+              pageSize: 100
+              pageToken: ${pageToken}
+          result: page
+        retry: ${http.default_retry}
+    - collect_expired:
+        for:
+          value: backup
+          in: ${default(map.get(page.body, "backups"), [])}
+          steps:
+            - check_retention:
+                call: is_expired
+                args:
+                  backup: ${backup}
+                  source: ${source}
+                  share: ${share}
+                  protectedName: ${backupName}
+                  cutoff: ${cutoff}
+                result: eligible
+            - remember_expired:
+                switch:
+                  - condition: ${eligible}
+                    assign:
+                      - expired: ${list.concat(expired, backup.name)}
+    - next_page_token:
+        assign:
+          - pageToken: ${default(map.get(page.body, "nextPageToken"), "")}
+    - more_pages:
+        switch:
+          - condition: ${pageToken != ""}
+            next: list_page
+    - prune_expired:
+        for:
+          value: name
+          in: ${expired}
+          steps:
+            - delete_if_still_expired:
+                call: delete_expired
+                args:
+                  name: ${name}
+                  source: ${source}
+                  share: ${share}
+                  protectedName: ${backupName}
+                  cutoff: ${cutoff}
+                result: removed
+            - record_deletion:
+                switch:
+                  - condition: ${removed}
+                    assign:
+                      - deleted: ${list.concat(deleted, name)}
+    - complete:
+        return:
+          backup: ${backupName}
+          state: READY
+          retentionDays: ${retentionDays}
+          deleted: ${deleted}
+
+wait_ready:
+  params: [name, source, share, deadline]
+  steps:
+    - read_backup:
+        try:
+          call: http.get
+          args:
+            url: ${"https://file.googleapis.com/v1/" + name}
+            auth:
+              type: OAuth2
+          result: current
+        retry: ${http.default_retry}
+    - validate_backup:
+        switch:
+          - condition: ${map.get(current.body, "sourceInstance") != source or map.get(current.body, "sourceFileShare") != share or map.get(current.body, ["labels", "managed-by"]) != "g5-filestore-backup" or map.get(current.body, ["labels", "backup-kind"]) != "daily"}
+            raise: ${"Backup name is occupied by an unexpected backup; refusing retention cleanup for " + name}
+          - condition: ${map.get(current.body, "state") == "READY"}
+            return: ${name}
+          - condition: ${not(map.get(current.body, "state") in ["CREATING", "FINALIZING"])}
+            raise: ${"Backup is not usable; refusing retention cleanup for " + name}
+          - condition: ${sys.now() >= deadline}
+            raise: ${"Backup did not become READY within 24 hours; refusing retention cleanup for " + name}
+    - wait_backup:
+        call: sys.sleep
+        args:
+          seconds: 60
+        next: read_backup
+
+is_expired:
+  params: [backup, source, share, protectedName, cutoff]
+  steps:
+    - preserve_unmanaged:
+        switch:
+          - condition: ${map.get(backup, "name") == protectedName or map.get(backup, "state") != "READY" or map.get(backup, "sourceInstance") != source or map.get(backup, "sourceFileShare") != share or map.get(backup, ["labels", "managed-by"]) != "g5-filestore-backup" or not(map.get(backup, ["labels", "backup-kind"]) in ["daily", "initial"]) or map.get(backup, "createTime") == null}
+            return: false
+    - compare_age:
+        return: ${time.parse(backup.createTime) < cutoff}
+
+delete_expired:
+  params: [name, source, share, protectedName, cutoff]
+  steps:
+    # Recheck ownership and state just before deletion, including duplicate runs.
+    - read_candidate:
+        try:
+          call: http.get
+          args:
+            url: ${"https://file.googleapis.com/v1/" + name}
+            auth:
+              type: OAuth2
+          result: current
+        retry: ${http.default_retry}
+        except:
+          as: error
+          steps:
+            - already_absent:
+                switch:
+                  - condition: ${map.get(error, "code") == 404}
+                    return: false
+            - read_failed:
+                raise: ${error}
+    - recheck_retention:
+        call: is_expired
+        args:
+          backup: ${current.body}
+          source: ${source}
+          share: ${share}
+          protectedName: ${protectedName}
+          cutoff: ${cutoff}
+        result: eligible
+    - preserve_candidate:
+        switch:
+          - condition: ${not(eligible)}
+            return: false
+    - delete_backup:
+        try:
+          call: http.delete
+          args:
+            url: ${"https://file.googleapis.com/v1/" + name}
+            auth:
+              type: OAuth2
+          result: deletion
+        retry: ${http.default_retry}
+        except:
+          as: error
+          steps:
+            - concurrently_deleted:
+                switch:
+                  - condition: ${map.get(error, "code") == 404}
+                    return: false
+            - deletion_failed:
+                raise: ${error}
+    - wait_for_deletion:
+        call: wait_operation
+        args:
+          operation: ${deletion.body}
+          deadline: ${sys.now() + 86400}
+    - deleted:
+        return: true
+
+wait_operation:
+  params: [operation, deadline]
+  steps:
+    - check_operation:
+        switch:
+          - condition: ${map.get(operation, "error") != null}
+            raise: ${operation.error}
+          - condition: ${map.get(operation, "done") == true}
+            return: ${operation}
+          - condition: ${sys.now() >= deadline}
+            raise: ${"Filestore operation exceeded its 24-hour deadline " + operation.name}
+    - wait_operation_poll:
+        call: sys.sleep
+        args:
+          seconds: 60
+    - read_operation:
+        try:
+          call: http.get
+          args:
+            url: ${"https://file.googleapis.com/v1/" + operation.name}
+            auth:
+              type: OAuth2
+          result: current
+        retry: ${http.default_retry}
+    - update_operation:
+        assign:
+          - operation: ${current.body}
+        next: check_operation

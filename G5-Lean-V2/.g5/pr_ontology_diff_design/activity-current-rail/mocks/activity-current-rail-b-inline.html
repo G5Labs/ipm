@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en" data-mode="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mock B — Activity newest first, ongoing work as ordinary rows</title>
+<style>
+  :root {
+    --g5-bg0: rgb(10 12 16); --g5-bg1: rgb(14 17 24); --g5-bg2: rgb(18 22 31);
+    --g5-stroke: rgb(255 255 255 / 0.08);
+    --g5-text0: rgb(236 242 255); --g5-text1: rgb(236 242 255 / 0.68); --g5-text2: rgb(236 242 255 / 0.56);
+    --g5-info: rgb(103 164 255); --g5-ok: rgb(113 201 136); --g5-warn: rgb(242 162 73); --g5-blocked: rgb(255 107 107);
+    --g5-overlay-hover: rgb(255 255 255 / 0.08);
+    --phase-se: rgb(121 175 227); --phase-se-soft: rgb(18 39 57);
+    --radius: 4px; --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; --mono: ui-monospace, Menlo, monospace;
+  }
+  html[data-mode="light"] {
+    --g5-bg0: rgb(255 255 255); --g5-bg1: rgb(246 247 250); --g5-bg2: rgb(236 239 244);
+    --g5-stroke: rgb(0 0 0 / 0.1);
+    --g5-text0: rgb(20 24 32); --g5-text1: rgb(20 24 32 / 0.72); --g5-text2: rgb(20 24 32 / 0.56);
+    --g5-info: rgb(37 99 235); --g5-ok: rgb(22 140 66); --g5-warn: rgb(190 110 20); --g5-blocked: rgb(200 40 40);
+    --g5-overlay-hover: rgb(0 0 0 / 0.06);
+    --phase-se: rgb(43 94 150); --phase-se-soft: rgb(227 236 247);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-sans); background: var(--g5-bg0); color: var(--g5-text0); font-size: 13px; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+  button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; text-align: left; }
+  a { color: var(--g5-info); text-decoration: none; } a:hover { text-decoration: underline; }
+  :focus-visible { outline: 2px solid var(--g5-info); outline-offset: 2px; border-radius: var(--radius); }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+  /* ---- mock controls ---- */
+  .mockbar { display: flex; gap: 14px; align-items: center; padding: 6px 12px; background: rgb(242 162 73 / 0.12); border-bottom: 1px solid var(--g5-stroke); font-size: 12px; color: var(--g5-text1); flex-shrink: 0; }
+  .mockbar b { color: var(--g5-text0); }
+  .mockbar label { display: inline-flex; gap: 5px; align-items: center; cursor: pointer; }
+
+  /* ---- tab strip ---- */
+  .strip { display: flex; align-items: center; height: 34px; border-bottom: 1px solid var(--g5-stroke); background: var(--g5-bg1); padding: 0 8px; gap: 2px; font-size: 12px; flex-shrink: 0; }
+  .strip .tab { padding: 0 12px; height: 26px; display: inline-flex; align-items: center; gap: 6px; border-radius: var(--radius); color: var(--g5-text1); }
+  .strip .tab.on { background: var(--g5-bg0); color: var(--g5-text0); border: 1px solid var(--g5-stroke); }
+  .strip .right { margin-left: auto; display: flex; gap: 8px; color: var(--g5-text2); }
+
+  /* ---- ribbon ---- */
+  .ribbon { display: flex; align-items: center; height: 58px; border-bottom: 1px solid var(--g5-stroke); background: var(--g5-bg1); padding: 0 12px; gap: 6px; flex-shrink: 0; }
+  .chev { display: inline-flex; align-items: center; padding: 0 14px; height: 30px; font-size: 12px; color: var(--g5-text2); border: 1px solid var(--g5-stroke); border-radius: 2px; }
+  .chev.on { color: var(--phase-se); background: var(--phase-se-soft); border-color: var(--phase-se); font-weight: 600; }
+  .ribbon .act { display: inline-flex; flex-direction: column; align-items: center; gap: 3px; width: 76px; height: 50px; justify-content: center; font-size: 10.5px; color: var(--g5-text1); border-radius: var(--radius); }
+  .ribbon .act:hover { background: var(--g5-overlay-hover); color: var(--g5-text0); }
+  .ribbon .act svg { width: 20px; height: 20px; }
+  .ribbon .sep { width: 1px; height: 36px; background: var(--g5-stroke); margin: 0 6px; }
+  .ribbon .ws { margin-left: auto; display: flex; gap: 6px; }
+
+  /* ---- shell ---- */
+  .shell { display: flex; flex: 1; min-height: 0; }
+  .sidebar { width: 318px; flex-shrink: 0; background: var(--g5-bg1); border-right: 1px solid var(--g5-stroke); display: flex; flex-direction: column; overflow-y: auto; }
+  .sec { display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 10px 0 12px; border-bottom: 1px solid var(--g5-stroke); font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--g5-text2); width: 100%; }
+  .sec:hover { background: var(--g5-overlay-hover); }
+  .sec .c { width: 12px; display: inline-flex; justify-content: center; transition: transform 120ms ease-out; }
+  .sec[aria-expanded="true"] .c { transform: rotate(90deg); }
+  .sec .ico { width: 16px; display: inline-flex; justify-content: center; }
+  .sec .t { flex: 1; }
+  .sec .trail { color: var(--g5-text2); display: inline-flex; padding: 4px; border-radius: var(--radius); }
+  .sec .trail:hover { background: var(--g5-overlay-hover); color: var(--g5-text0); }
+  .sec .n { font-size: 10.5px; font-weight: 500; letter-spacing: 0; text-transform: none; background: var(--g5-bg2); padding: 1px 6px; border-radius: 3px; }
+  .body { padding: 6px 10px 12px; border-bottom: 1px solid var(--g5-stroke); }
+  .body[hidden] { display: none; }
+
+  /* rail section */
+  .rail-top { display: flex; align-items: center; justify-content: space-between; padding: 4px 2px 8px; }
+  .rail-top a { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 500; }
+  .rail-top .meta { font-size: 11px; color: var(--g5-text2); }
+  .grp { font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--g5-text2); padding: 8px 2px 4px; display: flex; align-items: center; gap: 6px; }
+  .grp .live { width: 6px; height: 6px; border-radius: 50%; background: var(--g5-info); box-shadow: 0 0 0 3px rgb(103 164 255 / 0.2); animation: pulse 2.4s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .5; } }
+  ul.rows { list-style: none; }
+  .rrow { display: grid; grid-template-columns: 16px 1fr auto; column-gap: 8px; align-items: center; min-height: 28px; padding: 3px 4px; border-radius: var(--radius); width: 100%; }
+  .rrow:hover { background: var(--g5-overlay-hover); }
+  .rrow .k { color: var(--g5-text2); display: inline-flex; }
+  .rrow .k.run { color: var(--g5-info); } .rrow .k.ok { color: var(--g5-ok); } .rrow .k.warn { color: var(--g5-warn); } .rrow .k.bad { color: var(--g5-blocked); }
+  .rrow .x { font-size: 12.5px; line-height: 16px; color: var(--g5-text0); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+  .rrow .x b { font-weight: 500; }
+  .rrow .x i { font-style: normal; color: var(--g5-text1); }
+  .rrow .w { font-size: 11px; color: var(--g5-text2); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .rrow .w.run { color: var(--g5-info); }
+  .rrow .w.wait { color: var(--g5-warn); }
+  .spin { animation: spin 1s linear infinite; } @keyframes spin { to { transform: rotate(360deg); } }
+  .empty { font-size: 12px; color: var(--g5-text2); padding: 6px 4px; }
+
+  /* ---- center ---- */
+  .center { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .page { max-width: 896px; width: 100%; margin: 0 auto; padding: 24px 24px 0; }
+  .hdr { display: grid; grid-template-columns: auto 1fr; column-gap: 14px; row-gap: 4px; align-items: center; padding: 12px 14px; border: 1px solid var(--g5-stroke); border-radius: 6px; background: var(--g5-bg1); }
+  .ph { display: inline-flex; align-items: center; gap: 8px; color: var(--phase-se); font-weight: 600; font-size: 13px; }
+  .ph .m { font-weight: 500; font-size: 12px; color: var(--g5-text1); background: var(--phase-se-soft); padding: 1px 7px; border-radius: 10px; }
+  .hdr .iss { font-size: 13px; color: var(--g5-text0); } .hdr .iss code { font-family: var(--mono); font-size: 12px; color: var(--g5-text1); margin-right: 6px; }
+  .hdr .pur { grid-column: 1 / -1; font-size: 12.5px; color: var(--g5-text1); line-height: 18px; }
+  .filters { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 12px; color: var(--g5-text1); padding: 12px 24px 0; max-width: 896px; width: 100%; margin: 0 auto; }
+  .filters label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+  .filters label span { color: var(--g5-text2); }
+  .scroller { flex: 1; min-height: 0; overflow-y: auto; }
+  .h1row { display: flex; align-items: baseline; justify-content: space-between; margin: 8px 0 14px; }
+  h1 { font-size: 20px; font-weight: 600; }
+  .note { display: flex; align-items: center; justify-content: space-between; gap: 12px; background: var(--g5-bg1); border-radius: 6px; padding: 8px 12px; font-size: 13px; color: var(--g5-text1); margin-bottom: 14px; }
+  .note code { font-family: var(--mono); }
+  .note .o { font-size: 12px; color: var(--g5-text2); }
+
+  /* current group */
+  .current { border: 1px solid rgb(103 164 255 / 0.35); background: rgb(103 164 255 / 0.06); border-radius: 8px; padding: 10px 12px 6px; margin-bottom: 16px; }
+  .current .cttl { display: flex; align-items: center; gap: 8px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--g5-info); font-weight: 600; margin-bottom: 4px; }
+  .current .cttl .cnt { color: var(--g5-text2); font-weight: 500; letter-spacing: 0; text-transform: none; font-size: 12px; }
+  .current .cttl .ref { margin-left: auto; font-size: 11px; color: var(--g5-text2); font-weight: 400; letter-spacing: 0; text-transform: none; }
+
+  .e.cur { border-left: 2px solid var(--g5-info); margin-left: -14px; padding-left: 12px; }
+  .e .tag.cur { display: inline-flex; align-items: center; gap: 5px; }
+  .e .tag.cur::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; animation: pulse 2.4s ease-in-out infinite; }
+  .rrow.cur { border-left: 2px solid var(--g5-info); border-radius: 0 var(--radius) var(--radius) 0; }
+  /* composer */
+  .composer { border: 1px solid var(--g5-stroke); border-radius: 6px; background: var(--g5-bg1); margin-bottom: 18px; }
+  .composer textarea { width: 100%; min-height: 64px; resize: vertical; background: transparent; border: none; color: var(--g5-text0); font: inherit; padding: 10px 12px; outline: none; }
+  .composer .foot { display: flex; align-items: center; gap: 10px; padding: 6px 10px; border-top: 1px solid var(--g5-stroke); font-size: 12px; color: var(--g5-text2); }
+  .composer .send { margin-left: auto; height: 28px; padding: 0 12px; border-radius: var(--radius); background: var(--g5-info); color: rgb(10 12 16); font-weight: 600; font-size: 12px; }
+
+  /* entries */
+  ol.feed { list-style: none; }
+  .e { display: grid; grid-template-columns: 24px 1fr; column-gap: 12px; padding: 8px 0; align-items: start; }
+  .e .ic { width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--g5-stroke); background: var(--g5-bg1); display: inline-flex; align-items: center; justify-content: center; color: var(--g5-text1); margin-top: 2px; }
+  .e .ic.run { color: var(--g5-info); border-color: rgb(103 164 255 / 0.5); } .e .ic.ok { color: var(--g5-ok); } .e .ic.warn { color: var(--g5-warn); } .e .ic.bad { color: var(--g5-blocked); }
+  .e .card { min-width: 0; }
+  .e .card.box { border: 1px solid var(--g5-stroke); border-radius: 8px; background: var(--g5-bg1); padding: 10px 12px; }
+  .e .ttl { font-size: 13.5px; line-height: 20px; color: var(--g5-text0); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .e .ttl b { font-weight: 600; }
+  .e .tag { font-size: 10.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; padding: 1px 6px; border-radius: 3px; background: rgb(103 164 255 / 0.18); color: var(--g5-info); }
+  .e .tag.wait { background: rgb(242 162 73 / 0.18); color: var(--g5-warn); }
+  .e .tag.q { background: var(--g5-bg2); color: var(--g5-text1); }
+  .e .sub { font-size: 12.5px; line-height: 18px; color: var(--g5-text1); margin-top: 2px; }
+  .e .md { font-size: 13px; line-height: 19px; color: var(--g5-text0); margin-top: 6px; }
+  .e .md p + p { margin-top: 6px; }
+  .e .ft { display: flex; gap: 10px; align-items: center; font-size: 11.5px; color: var(--g5-text2); margin-top: 6px; font-variant-numeric: tabular-nums; }
+  .e .ft .src { padding: 0 5px; border-radius: 3px; background: var(--g5-bg2); }
+  .e .ft a { color: var(--g5-info); }
+  .e.dim .ttl, .e.dim .sub { color: var(--g5-text1); }
+  .e .ttl .ph { font-size: 12px; font-weight: 500; }
+  .more { display: inline-flex; align-items: center; gap: 6px; color: var(--g5-info); font-size: 13px; margin: 10px 0 28px; }
+  .av { width: 18px; height: 18px; border-radius: 50%; font-size: 8px; font-weight: 700; color: rgb(8 12 24); display: inline-flex; align-items: center; justify-content: center; }
+  .av.a { background: rgb(121 175 227); } .av.m { background: rgb(172 149 218); } .av.s { background: rgb(111 188 174); } .av.d { background: rgb(242 162 73); }
+
+  /* rail-overlay variant */
+  body.railmode .sidebar { width: 44px; }
+  body.railmode .sidebar .sec .t, body.railmode .sidebar .sec .c, body.railmode .sidebar .sec .trail, body.railmode .sidebar .sec .n, body.railmode .sidebar .body { display: none; }
+  body.railmode .sidebar .sec { justify-content: center; padding: 0; height: 36px; border-bottom: none; }
+  .overlay { display: none; position: absolute; left: 44px; top: 0; bottom: 0; width: 318px; background: var(--g5-bg1); border-right: 1px solid var(--g5-stroke); box-shadow: 8px 0 24px rgb(0 0 0 / 0.35); z-index: 5; overflow-y: auto; }
+  body.railmode .overlay { display: block; }
+  .shell { position: relative; }
+</style>
+</head>
+<body>
+<div class="mockbar">
+  <b>Mock B</b> Activity newest first · ongoing work as ordinary rows (no Current box)
+  <label><input type="checkbox" id="railmode"> Rail overlay (expand-on-hover) instead of the stacked panel</label>
+  <label><input type="checkbox" id="light"> Light mode</label>
+  <label><input type="checkbox" id="nocurrent"> Nothing running</label>
+  <label><input type="checkbox" id="railerr"> Rail read failed</label>
+</div>
+
+<div class="strip">
+  <span class="tab">Home</span>
+  <span class="tab on">task-graph-rework</span>
+  <span class="tab">davide-test</span>
+  <span class="tab">+</span>
+  <span class="right"><span>Report a problem</span><span>Account</span></span>
+</div>
+
+<div class="ribbon">
+  <span class="chev">Business Engineering</span>
+  <span class="chev on">System Engineering</span>
+  <span class="chev">Integration Engineering</span>
+  <span class="sep"></span>
+  <button class="act"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h5"/></svg>Create plan</button>
+  <button class="act"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6"/></svg>Implement</button>
+  <button class="act"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9 12l2 2 4-4"/></svg>Approval</button>
+  <button class="act"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3v12M18 9a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM6 21a3 3 0 1 0 0-6"/></svg>Rebase</button>
+  <span class="ws">
+    <button class="act"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3l14 9-14 9z"/></svg>Start</button>
+    <button class="act"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg>Details</button>
+  </span>
+</div>
+
+<div class="shell">
+  <!-- ========== LEFT SIDEBAR ========== -->
+  <aside class="sidebar">
+    <button class="sec" id="actsec" aria-expanded="true" aria-controls="actbody">
+      <span class="c">▸</span>
+      <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></span>
+      <span class="t">Activity</span>
+      <span class="trail" title="Collapse sidebar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 17l-5-5 5-5M18 17l-5-5 5-5"/></svg></span>
+    </button>
+    <div class="body" id="actbody"></div>
+
+    <button class="sec" aria-expanded="false"><span class="c">▸</span><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M15 9l-2 6-4 2 2-6z"/></svg></span><span class="t">Guided</span><span class="n">3 / 6</span></button>
+    <button class="sec" aria-expanded="false"><span class="c">▸</span><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h12l4 4v12H4z"/><path d="M8 12h8M8 16h8"/></svg></span><span class="t">Project docs</span><span class="trail">+</span></button>
+    <button class="sec" aria-expanded="false"><span class="c">▸</span><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="2"/><circle cx="18" cy="18" r="2"/><circle cx="18" cy="6" r="2"/><path d="M8 6h8M18 8v8M8 7l8 10"/></svg></span><span class="t">Ontology</span></button>
+    <button class="sec" aria-expanded="false"><span class="c">▸</span><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h6l2 2h10v10H3z"/></svg></span><span class="t">Files</span><span class="trail" title="Terminal">⌘</span></button>
+    <button class="sec" aria-expanded="false"><span class="c">▸</span><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg></span><span class="t">Issues &amp; tasks</span><span class="n">4</span></button>
+    <button class="sec" aria-expanded="false"><span class="c">▸</span><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg></span><span class="t">Tasks</span><span class="n">2</span></button>
+  </aside>
+  <div class="overlay" id="overlay">
+    <button class="sec" aria-expanded="true"><span class="c">▸</span><span class="ico">⚡</span><span class="t">Activity</span></button>
+    <div class="body" id="actbody2"></div>
+  </div>
+
+  <!-- ========== CENTER: ACTIVITY PAGE ========== -->
+  <main class="center">
+    <div class="page">
+      <div class="hdr">
+        <span class="ph">System Engineering <span class="m">Approvals 1 / 2</span></span>
+        <span class="iss"><code>G5Labs/G5-Lean#612</code>Rework the task graph scheduler so retries never starve new work</span>
+        <span class="pur">Replace the per-host queue with a fair scheduler so a retrying task cannot hold a slot that a new conversation needs. Scope: scheduler, admission, the Activity and Tasks views.</span>
+      </div>
+    </div>
+    <fieldset class="filters" style="border:none">
+      <legend class="sr-only">Show activity kinds</legend>
+      <label><input type="checkbox" checked> Issue discussion <span>5</span></label>
+      <label><input type="checkbox" checked> Conversations <span>4</span></label>
+      <label><input type="checkbox" checked> Tasks <span>3</span></label>
+      <label><input type="checkbox" checked> Commits <span>3</span></label>
+      <label><input type="checkbox" checked> Approvals <span>2</span></label>
+      <label><input type="checkbox" checked> Pull requests <span>2</span></label>
+      <label><input type="checkbox" checked> Guided steps <span>2</span></label>
+    </fieldset>
+    <div class="scroller">
+      <div class="page" style="padding-top:0; padding-bottom: 24px;">
+        <div class="h1row"><h1>Activity</h1><a href="#">Open #612 ↗</a></div>
+        <div class="note"><span>Shared discussion on GitHub · <code>G5Labs/G5-Lean#612</code></span><span class="o">Newest first · by last activity</span></div>
+
+        <!-- COMPOSER -->
+        <div class="composer">
+          <textarea placeholder="Comment on #612 as @davide …"></textarea>
+          <div class="foot"><span>Posts to GitHub as <b>davide</b></span><span>Markdown</span><button class="send">Comment</button></div>
+        </div>
+
+        <!-- RECORD -->
+        <ol class="feed" id="feed" aria-label="Activity"></ol>
+        <button class="more">Load earlier activity</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+// ---------- fake data ----------
+const ICONS = {
+  chat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="18" height="12" rx="2"/><path d="M8 7V4h8v3M9 13h.01M15 13h.01"/></svg>',
+  task: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M10 8l6 4-6 4z"/></svg>',
+  preview: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>',
+  comment: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a8 8 0 0 1-8 8H7l-4 3V12a8 8 0 0 1 8-8h2a8 8 0 0 1 8 8z"/></svg>',
+  approval: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9 12l2 2 4-4"/></svg>',
+  pr: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="2.5"/><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M6 8.5v7M18 15.5V11a3 3 0 0 0-3-3h-3"/></svg>',
+  step: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4v16M4 4h12l-2 4 2 4H4"/></svg>',
+  commit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M2 12h7M15 12h7"/></svg>',
+  event: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/></svg>',
+  spin: '<svg class="spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.2-8.6"/></svg>',
+  wait: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+  queue: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h10M4 17h6"/></svg>',
+};
+const av = (k, n) => `<span class="av ${k}" aria-hidden="true">${n}</span>`;
+
+const CURRENT = [
+  { kind: 'chat', state: 'run', title: 'Refactor task graph scheduler', sub: '14 messages · last active 2 min ago · running', link: 'Open chat', railw: 'Running' },
+  { kind: 'chat', state: 'wait', title: 'Write migration for journey skips', sub: '6 messages · last active 9 min ago · waiting for your input', link: 'Open chat', railw: 'Needs input' },
+  { kind: 'preview', state: 'run', title: 'Preview · dev profile', sub: 'running since 10:12', link: null, railw: 'Running' },
+  { kind: 'task', state: 'q', title: 'cargo test --workspace', sub: 'queued behind 1 task', link: null, railw: 'Queued' },
+];
+
+// important = comment | approval | pr | step ; the rest is unimportant
+const FEED = [
+  { imp: true,  kind: 'comment', who: 'alex', avk: 'a', when: 'Oct 20, 2026, 06:41 PM', box: true,
+    body: '<p>Scheduler fairness looks right now. One thing: the retry budget should reset on an owner <em>Stop</em>, otherwise a stopped turn still counts as a retry.</p><p>Happy to approve once that lands.</p>' },
+  { imp: true,  kind: 'approval', tone: 'warn', who: 'Sam', avk: 's', when: 'Oct 20, 2026, 06:22 PM', text: 'requested changes on <b>System Engineering</b>', sub: '“Retry budget: see my comment on #612.”' },
+  { imp: false, kind: 'commit', when: 'Oct 20, 2026, 06:10 PM', text: '<code>a3f91c2</code> fix(scheduler): reset the retry budget on owner stop', sub: 'davide · g5-lean / task-graph-rework', link: 'Open diff' },
+  { imp: true,  kind: 'pr', tone: 'bad', when: 'Oct 20, 2026, 05:58 PM', text: 'Pull request <b>#689 Task graph rework</b> · publication failed', sub: 'Failed 3 times since 05:31 PM · GitHub push: CONFLICT on the integration branch', link: 'Open pull requests' },
+  { imp: false, kind: 'chat', when: 'Oct 20, 2026, 05:40 PM', dim: true, text: 'Test Claude agent session response', sub: '2 messages · last active Oct 20, 2026, 05:40 PM', link: 'Open chat' },
+  { imp: true,  kind: 'step', tone: 'ok', who: 'Davide', avk: 'd', when: 'Oct 20, 2026, 05:12 PM', text: 'marked <b>Plan the change</b> done', sub: 'Guided step · System Engineering' },
+  { imp: false, kind: 'preview', when: 'Oct 20, 2026, 04:55 PM', dim: true, text: 'Preview · dev profile <i>stopped</i>', sub: 'Stopped because the workspace went idle' },
+  { imp: false, kind: 'event', when: 'Oct 20, 2026, 04:31 PM', dim: true, text: '<b>maria</b> added the label <code>area:scheduler</code>', src: 'GitHub' },
+  { imp: true,  kind: 'approval', tone: 'ok', who: 'Maria', avk: 'm', when: 'Oct 20, 2026, 03:48 PM', text: 'approved <b>System Engineering</b>', sub: 'Approval 1 of 2' },
+  { imp: false, kind: 'commit', when: 'Oct 20, 2026, 03:20 PM', text: '<code>5e1b07d</code> feat(scheduler): fair admission across hosts', sub: 'davide · g5-lean / task-graph-rework', link: 'Open diff' },
+  { imp: true,  kind: 'comment', who: 'maria', avk: 'm', when: 'Oct 20, 2026, 02:05 PM', box: true,
+    body: '<p>Linking the design: <a href="#">docs/task-graph-rework/design.md</a>. The admission change also fixes #601.</p>' },
+  { imp: false, kind: 'chat', when: 'Oct 20, 2026, 01:10 PM', dim: true, text: 'Testing session', sub: '2 messages · last active Oct 20, 2026, 01:10 PM', link: 'Open chat' },
+  { imp: true,  kind: 'pr', when: 'Oct 20, 2026, 11:02 AM', text: 'Pull request <b>#689 Task graph rework</b> opened on GitHub', sub: 'g5-lean · task-graph-rework → main', link: 'Open pull requests' },
+  { imp: false, kind: 'task', when: 'Oct 20, 2026, 10:48 AM', dim: true, text: 'cargo clippy --all-targets <i>succeeded</i>', sub: '' },
+  { imp: true,  kind: 'step', tone: 'ok', who: 'Davide', avk: 'd', when: 'Oct 19, 2026, 06:30 PM', text: 'marked <b>Answer open questions</b> done', sub: 'Guided step · Business Engineering' },
+  { imp: false, kind: 'event', when: 'Oct 19, 2026, 05:12 PM', dim: true, text: '<b>alex</b> assigned <b>davide</b>', src: 'GitHub' },
+  { imp: false, kind: 'commit', when: 'Oct 19, 2026, 04:40 PM', text: '<code>c04d9e1</code> chore: scaffold scheduler module', sub: 'davide · g5-lean / task-graph-rework', link: 'Open diff' },
+  { imp: false, kind: 'chat', when: 'Oct 16, 2026, 10:43 AM', dim: true, text: 'Session title test', sub: '4 messages · last active Oct 16, 2026, 10:43 AM', link: 'Open chat' },
+];
+
+// ---------- center: Current ----------
+function currentRows() {
+  if (document.getElementById('nocurrent').checked) return '';
+  return CURRENT.map(c => {
+    const icon = c.kind === 'chat' ? ICONS.chat : c.kind === 'preview' ? ICONS.preview : ICONS.task;
+    const word = c.state === 'run' ? 'Running' : c.state === 'wait' ? 'Waiting for input' : 'Queued';
+    const tagcls = c.state === 'run' ? 'cur' : c.state === 'wait' ? 'cur wait' : 'cur q';
+    const cls = c.state === 'run' ? 'run' : c.state === 'wait' ? 'warn' : '';
+    return `<li class="e cur"><span class="ic ${cls}">${icon}</span><div class="card"><div class="ttl"><b>${c.title}</b><span class="tag ${tagcls}">Current · ${word}</span></div><div class="sub">${c.sub}</div><div class="ft"><span class="src">Workspace</span>${c.link ? `<a href="#">${c.link}</a>` : ''}</div></div></li>`;
+  }).join('');
+}
+function renderCurrent() { renderFeed(); }
+
+// ---------- center: record ----------
+function renderFeed() {
+  const ol = document.getElementById('feed');
+  ol.innerHTML = currentRows() + FEED.map(e => {
+    const icon = ICONS[e.kind];
+    const tone = e.tone || '';
+    if (e.kind === 'comment') {
+      return `<li class="e"><span class="ic">${icon}</span><div class="card box"><div class="ttl">${av(e.avk, e.who[0].toUpperCase())}<b>${e.who}</b> commented</div><div class="md">${e.body}</div><div class="ft"><span class="src">GitHub</span><span>${e.when}</span><a href="#">Edit</a></div></div></li>`;
+    }
+    const who = e.who ? `${av(e.avk, e.who[0].toUpperCase())}<b>${e.who}</b> ` : '';
+    const src = e.src || 'Workspace';
+    return `<li class="e ${e.dim ? 'dim' : ''}"><span class="ic ${tone}">${icon}</span><div class="card"><div class="ttl">${who}<span>${e.text}</span></div>${e.sub ? `<div class="sub">${e.sub}</div>` : ''}<div class="ft"><span class="src">${src}</span><span>${e.when}</span>${e.link ? `<a href="#">${e.link}</a>` : ''}</div></div></li>`;
+  }).join('');
+}
+
+// ---------- rail section body ----------
+function railRows() {
+  const none = document.getElementById('nocurrent').checked;
+  const err = document.getElementById('railerr').checked;
+  const short = (s) => s.startsWith('Oct 20, 2026, ') ? s.slice(14) : s.replace(/, 2026, .*$/, '');
+  let html = `<div class="rail-top"><a href="#">${ICONS.event.replace('r="4"','r="3"')} Open full activity</a><span class="meta">newest first</span></div>`;
+  if (err) {
+    html += `<div class="empty" role="alert">Activity could not be loaded. <a href="#">Retry</a></div>`;
+    return html;
+  }
+  html += `<ul class="rows">`;
+  if (!none) {
+    html += CURRENT.map(c => {
+      const k = c.state === 'run' ? 'run' : c.state === 'wait' ? 'warn' : '';
+      const ic = c.state === 'run' ? ICONS.spin : c.state === 'wait' ? ICONS.wait : ICONS.queue;
+      const w = c.state === 'run' ? 'run' : c.state === 'wait' ? 'wait' : '';
+      return `<li><button class="rrow cur"><span class="k ${k}">${ic}</span><span class="x"><b>${c.title}</b></span><span class="w ${w}">${c.railw}</span></button></li>`;
+    }).join('');
+  }
+  const imp = FEED.filter(e => e.imp).slice(0, 8);
+  html += imp.map(e => {
+    let k = e.tone || '', text = '';
+    if (e.kind === 'comment') text = `<b>${e.who}</b> <i>commented</i> · ${e.body.replace(/<[^>]+>/g, '').slice(0, 60)}…`;
+    else text = `<b>${e.who ? e.who + ' ' : ''}</b>${e.text.replace(/<i>|<\/i>/g, '')}`;
+    return `<li><button class="rrow"><span class="k ${k}">${ICONS[e.kind]}</span><span class="x">${text}</span><span class="w">${short(e.when)}</span></button></li>`;
+  }).join('') + `</ul>`;
+  return html;
+}
+function renderRail() {
+  document.getElementById('actbody').innerHTML = railRows();
+  document.getElementById('actbody2').innerHTML = railRows();
+}
+
+// ---------- wiring ----------
+const actsec = document.getElementById('actsec');
+actsec.addEventListener('click', (ev) => {
+  if (ev.target.closest('.trail')) return; // collapse-sidebar control, not the section
+  const open = actsec.getAttribute('aria-expanded') === 'true';
+  actsec.setAttribute('aria-expanded', String(!open));
+  document.getElementById('actbody').hidden = open;
+});
+document.getElementById('railmode').addEventListener('change', (e) => document.body.classList.toggle('railmode', e.target.checked));
+document.getElementById('light').addEventListener('change', (e) => document.documentElement.dataset.mode = e.target.checked ? 'light' : 'dark');
+document.getElementById('nocurrent').addEventListener('change', () => { renderCurrent(); renderRail(); });
+document.getElementById('railerr').addEventListener('change', renderRail);
+renderCurrent(); renderFeed(); renderRail();
+</script>
+</body>
+</html>

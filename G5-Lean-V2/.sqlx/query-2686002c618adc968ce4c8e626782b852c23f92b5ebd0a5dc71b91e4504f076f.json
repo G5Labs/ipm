@@ -1,0 +1,102 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT id, session_id, role, content, artifacts, citations,\n                   input_tokens, output_tokens, status, message_index, created_at, is_error_notice,\n                   task_id, attempt\n            FROM chat_messages\n            WHERE session_id = $1\n              AND ($2::int IS NULL OR message_index > $2)\n            ORDER BY message_index ASC\n            LIMIT $3\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "session_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "role",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "content",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "artifacts",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 5,
+        "name": "citations",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 6,
+        "name": "input_tokens",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 7,
+        "name": "output_tokens",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 8,
+        "name": "status",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "message_index",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 10,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 11,
+        "name": "is_error_notice",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 12,
+        "name": "task_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 13,
+        "name": "attempt",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Int4",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "2686002c618adc968ce4c8e626782b852c23f92b5ebd0a5dc71b91e4504f076f"
+}

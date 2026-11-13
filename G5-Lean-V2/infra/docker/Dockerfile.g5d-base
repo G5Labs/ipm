@@ -1,0 +1,343 @@
+# =============================================================================
+# Dockerfile.g5d-base — Workspace host base image with language toolchains
+# Base: g5/base:26.04 (Ubuntu 26.04, glibc 2.43, perl-free git)
+# Size target: ~1.5 GB
+# Built by the Cloud Build deploy and CI e2e lanes and by `just ci-docker`
+# Platforms: linux/amd64, linux/arm64
+# =============================================================================
+# Layer strategy: each toolchain is a separate RUN so Docker caches them
+# independently. Changing one toolchain version doesn't rebuild the others.
+# Rust CLI tools use pre-built binaries to avoid 7+ min source compilations.
+#
+# Download policy (operations g5.quality.delivery.pinned-third-party-tools,
+# G5Labs/G5-Lean#527): every third-party artifact this recipe fetches lands in
+# a file and is checked against the repository-pinned per-arch sha256 ARG kept
+# beside its version before anything is extracted or executed. Nothing is
+# piped from the network into a shell or tar, and a vendor's install script or
+# same-origin checksum file is never the only check. The pins are the upstream
+# release's own published values for the exact file names (re-derive them from
+# the vendor's .sha256/SHA256SUMS assets when bumping a version).
+# scripts/verify-pinned-downloads.sh rejects piped downloads statically and
+# scripts/test-pinned-download-verification.sh runs these RUN blocks against
+# substituted bytes.
+#
+# This image derives from the single common base ([D18]) rather than its own
+# `ubuntu:26.04`, so the fleet resolves to exactly one external base image.
+# g5/base:26.04 IS Ubuntu 26.04 (glibc 2.43), which is the host-plane floor: the
+# g5d host binary is built on g5/base-rust-warm:26.04 (glibc 2.43,
+# Dockerfile.g5d) and runs on THIS base, so a 24.04 (glibc 2.39) base would fail
+# to load the 2.43-linked binary with a missing-symbol error. See
+# system_invariants/microvm_execution_boundary#D12.
+#
+# This is the workspace HOST image, not a mounted customer guest rootfs, so it may
+# keep build-essential (and the full perl that dpkg-dev drags in). What it must
+# NOT do is reinstall the distro `git` over the perl-free git inherited from the
+# common base ([D19]) — hence git-lfs is installed from its pinned release
+# tarball below rather than from apt, which would pull `git` as a hard Depends.
+# =============================================================================
+
+ARG BASE_IMAGE=g5/base:26.04
+FROM ${BASE_IMAGE}
+
+ENV DEBIAN_FRONTEND=noninteractive
+ARG TARGETARCH
+
+# --- Layer 1: System packages (rarely changes) ---
+# `git`/`git-lfs` are deliberately absent: git is inherited perl-free from the
+# common base ([D19]), and apt's git-lfs has `git` as a hard Depends, so
+# installing it here would silently replace that git and pull perl back in.
+# git-lfs comes from its pinned release tarball in the next layer instead.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl wget ca-certificates gnupg lsb-release \
+    build-essential gcc g++ make cmake pkg-config \
+    ripgrep fd-find jq unzip zip tar xz-utils \
+    libssl-dev zlib1g-dev libffi-dev \
+    tini e2fsprogs xfsprogs busybox-static patchelf \
+    openssh-client \
+    && rm -rf /var/lib/apt/lists/*
+
+# Pinned VMM/kernel/init and passt packaging shared with the worker-image path.
+COPY infra/guest/ /opt/g5-platform-src/infra/guest/
+COPY scripts/build-cloud-hypervisor-runtime.sh scripts/install-cloud-hypervisor-platform.sh /opt/g5-platform-src/scripts/
+COPY infra/packer/g5-worker/scripts/58-install-passt.sh /opt/g5-platform-src/infra/packer/g5-worker/scripts/
+COPY infra/packer/g5-worker/scripts/lib/download-with-retry.sh /opt/g5-platform-src/infra/packer/g5-worker/scripts/lib/
+RUN bash /opt/g5-platform-src/scripts/install-cloud-hypervisor-platform.sh && rm -rf /opt/g5-platform-src
+
+# Inherited-git guard ([D19]) + git-lfs from the pinned upstream release,
+# checked against the repository-pinned per-arch sha256 (the release's own
+# sha256sums.asc only showed the tarball matched its origin).
+# Keep GIT_LFS_VERSION equal to the version scripts/worker-host-env.sh expects.
+ARG GIT_LFS_VERSION=3.7.1
+ARG GIT_LFS_SHA256_AMD64=1c0b6ee5200ca708c5cebebb18fdeb0e1c98f1af5c1a9cba205a4c0ab5a5ec08
+ARG GIT_LFS_SHA256_ARM64=73a9c90eeb4312133a63c3eaee0c38c019ea7bfa0953d174809d25b18588dd8d
+RUN set -eux; \
+    git --version; \
+    if dpkg-query -W -f='${Status}' git 2>/dev/null | grep -q 'install ok installed'; then \
+        echo "FATAL: this image reinstalled the distribution git package" >&2; exit 1; \
+    fi; \
+    case "${TARGETARCH:-$(uname -m)}" in \
+      amd64|x86_64)  LFS_ARCH=amd64; LFS_SHA256="${GIT_LFS_SHA256_AMD64}" ;; \
+      arm64|aarch64) LFS_ARCH=arm64; LFS_SHA256="${GIT_LFS_SHA256_ARM64}" ;; \
+      *) echo "FATAL: no pinned git-lfs sha256 for arch ${TARGETARCH:-$(uname -m)}" >&2; exit 1 ;; \
+    esac; \
+    TARBALL="git-lfs-linux-${LFS_ARCH}-v${GIT_LFS_VERSION}.tar.gz"; \
+    curl -fsSLo "/tmp/${TARBALL}" "https://github.com/git-lfs/git-lfs/releases/download/v${GIT_LFS_VERSION}/${TARBALL}"; \
+    echo "${LFS_SHA256}  /tmp/${TARBALL}" | sha256sum -c -; \
+    tar xzf "/tmp/${TARBALL}" -C /tmp "git-lfs-${GIT_LFS_VERSION}/git-lfs"; \
+    install -m 0755 "/tmp/git-lfs-${GIT_LFS_VERSION}/git-lfs" /usr/local/bin/git-lfs; \
+    rm -rf "/tmp/${TARBALL}" "/tmp/git-lfs-${GIT_LFS_VERSION}"; \
+    git lfs version
+
+# --- Layer 2: Rust toolchain (bumping version only rebuilds this layer) ---
+ENV RUSTUP_HOME=/usr/local/rustup
+ENV CARGO_HOME=/usr/local/cargo
+ENV PATH="/usr/local/cargo/bin:${PATH}"
+
+# Pinned rustup-init BINARY with per-arch sha256 (docker_images [D18]; same
+# pins as Dockerfile.base-rust) — never `curl | sh` of the mutable script.
+# Retried in place like base-rust ([D18]): transient network failures can
+# interrupt sustained downloads; rustup resumes its kept `.partial`
+# files, and every attempt verifies the same signed manifests.
+ARG RUSTUP_VERSION=1.29.0
+ARG RUSTUP_SHA256_X86_64=4acc9acc76d5079515b46346a485974457b5a79893cfb01112423c89aeb5aa10
+ARG RUSTUP_SHA256_AARCH64=9732d6c5e2a098d3521fca8145d826ae0aaa067ef2385ead08e6feac88fa5792
+RUN set -eux; \
+    RTARGET="$(case "${TARGETARCH:-$(uname -m)}" in arm64|aarch64) echo aarch64-unknown-linux-gnu ;; *) echo x86_64-unknown-linux-gnu ;; esac)"; \
+    case "$RTARGET" in \
+      aarch64-*) RUSTUP_SHA256="${RUSTUP_SHA256_AARCH64}" ;; \
+      *)         RUSTUP_SHA256="${RUSTUP_SHA256_X86_64}" ;; \
+    esac; \
+    curl -fsSLo /tmp/rustup-init "https://static.rust-lang.org/rustup/archive/${RUSTUP_VERSION}/${RTARGET}/rustup-init"; \
+    echo "${RUSTUP_SHA256}  /tmp/rustup-init" | sha256sum -c -; \
+    chmod +x /tmp/rustup-init; \
+    retry() { n=0; until "$@"; do n=$((n+1)); if [ "$n" -ge 5 ]; then return 1; fi; echo "attempt $n/5 failed: $*; retrying in $((n*10))s" >&2; sleep $((n*10)); done; }; \
+    export RUSTUP_MAX_RETRIES=10; \
+    retry /tmp/rustup-init -y --default-toolchain 1.97.1 --profile default \
+      --component rustfmt --component clippy --component rust-analyzer; \
+    rm -f /tmp/rustup-init; \
+    retry rustup target add wasm32-unknown-unknown
+
+# --- Layer 3: Rust CLI tools (pre-built binaries, no compilation) ---
+# Every arch selection below falls back to `uname -m`: TARGETARCH is populated
+# only by BuildKit, and the lanes that must use the LEGACY builder (to see the
+# local g5/base tag) leave it empty. An empty value used to silently take the
+# x86_64 branch, which happens to be right on Cloud Build's amd64 workers but
+# installs x86_64 binaries into an arm64 image everywhere else; an arch with
+# no pin now fails the build instead of guessing.
+#
+# Each release tarball is downloaded to a file and checked against the
+# repository-pinned per-arch sha256 before extraction (G5Labs/G5-Lean#527):
+# piping get.nexte.st / the GitHub asset straight into tar trusted whatever
+# the endpoint returned, and /usr/local/cargo/bin leads PATH, so a substituted
+# archive could have replaced cargo/rustc for every later layer and derived
+# image. sccache stays on the v0.10.0 pins this image already shipped
+# (base-rust moved to v0.17.0 separately; bumping here is its own change).
+# CARGO_NEXTEST_VERSION also feeds the dl-cache below; keep it equal to
+# scripts/worker-host-env.sh and the ci-builder pin.
+ARG CARGO_NEXTEST_VERSION=0.9.138
+ARG CARGO_NEXTEST_SHA256_X86_64=3793bf0c27607b196f502c39b2108f571de89fcda7586ae6beefa11ee177b216
+ARG CARGO_NEXTEST_SHA256_AARCH64=e1c85dbe02dcf5b963803b3f96f4f561757f5c37cab68c932411dea20d57284e
+ARG SCCACHE_VERSION=v0.10.0
+ARG SCCACHE_SHA256_X86_64=1fbb35e135660d04a2d5e42b59c7874d39b3deb17de56330b25b713ec59f849b
+ARG SCCACHE_SHA256_AARCH64=d6a1ce4acd02b937cd61bc675a8be029a60f7bc167594c33d75732bbc0a07400
+ARG CARGO_DENY_VERSION=0.19.0
+ARG CARGO_DENY_SHA256_X86_64=0e8c2aa59128612c90d9e09c02204e912f29a5b8d9a64671b94608cbe09e064f
+ARG CARGO_DENY_SHA256_AARCH64=2b3567a60b7491c159d1cef8b7d8479d1ad2a31e29ef49462634ad4552fcc77d
+RUN set -eux; \
+    case "${TARGETARCH:-$(uname -m)}" in \
+      amd64|x86_64)  ARCH=x86_64;  NEXTEST_SHA256="${CARGO_NEXTEST_SHA256_X86_64}";  SCCACHE_SHA256="${SCCACHE_SHA256_X86_64}";  DENY_SHA256="${CARGO_DENY_SHA256_X86_64}" ;; \
+      arm64|aarch64) ARCH=aarch64; NEXTEST_SHA256="${CARGO_NEXTEST_SHA256_AARCH64}"; SCCACHE_SHA256="${SCCACHE_SHA256_AARCH64}"; DENY_SHA256="${CARGO_DENY_SHA256_AARCH64}" ;; \
+      *) echo "FATAL: no pinned Rust CLI tool sha256 for arch ${TARGETARCH:-$(uname -m)}" >&2; exit 1 ;; \
+    esac; \
+    fetch() { curl -fsSLo "$2" "$1" && echo "$3  $2" | sha256sum -c -; }; \
+    mkdir -p /tmp/g5-rust-tools; cd /tmp/g5-rust-tools; \
+    fetch "https://github.com/nextest-rs/nextest/releases/download/cargo-nextest-${CARGO_NEXTEST_VERSION}/cargo-nextest-${CARGO_NEXTEST_VERSION}-${ARCH}-unknown-linux-gnu.tar.gz" cargo-nextest.tar.gz "${NEXTEST_SHA256}"; \
+    tar xzf cargo-nextest.tar.gz cargo-nextest; \
+    fetch "https://github.com/mozilla/sccache/releases/download/${SCCACHE_VERSION}/sccache-${SCCACHE_VERSION}-${ARCH}-unknown-linux-musl.tar.gz" sccache.tar.gz "${SCCACHE_SHA256}"; \
+    tar xzf sccache.tar.gz --strip-components=1 --wildcards '*/sccache'; \
+    fetch "https://github.com/EmbarkStudios/cargo-deny/releases/download/${CARGO_DENY_VERSION}/cargo-deny-${CARGO_DENY_VERSION}-${ARCH}-unknown-linux-musl.tar.gz" cargo-deny.tar.gz "${DENY_SHA256}"; \
+    tar xzf cargo-deny.tar.gz --strip-components=1 --wildcards '*/cargo-deny'; \
+    install -m 0755 cargo-nextest sccache cargo-deny /usr/local/cargo/bin/; \
+    cd /; rm -rf /tmp/g5-rust-tools
+
+ENV RUSTC_WRAPPER=sccache
+ENV SCCACHE_DIR=/cache/sccache
+
+# --- Layer 4: Python (distro default 3.x — 26.04 ships newer than 3.12) ---
+# 26.04 "resolute" no longer packages python3.12; use the unversioned meta
+# packages so this tracks the distro default python3 (the worker's Python
+# tooling is version-agnostic — uv/scripts, not a pinned interpreter).
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 python3-venv python3-dev python3-pip \
+    && rm -rf /var/lib/apt/lists/* \
+    && ln -sf /usr/bin/python3 /usr/bin/python
+
+# --- Layer 5: uv (Python package manager) ---
+# Pinned uv release tarball from GitHub with per-arch sha256, replacing
+# `curl install.sh | sh` (G5Labs/G5-Lean#527): astral's per-version installer
+# embeds the archive checksums but was itself trusted on TLS alone. The
+# tarball ships uv and uvx; the install must FAIL the build if uv does not
+# land, never be masked.
+ARG UV_VERSION=0.12.6
+ARG UV_SHA256_X86_64=8681d8921e7d520fb368991dcf5f9c1905b80f5bf2a265a0ed085c8d8e342477
+ARG UV_SHA256_AARCH64=d58030acd26159499ac82f32da12d1b3c12a3a1bfc414232d9082070c03e128d
+RUN set -eux; \
+    case "${TARGETARCH:-$(uname -m)}" in \
+      amd64|x86_64)  UV_TARGET=x86_64-unknown-linux-gnu;  UV_SHA256="${UV_SHA256_X86_64}" ;; \
+      arm64|aarch64) UV_TARGET=aarch64-unknown-linux-gnu; UV_SHA256="${UV_SHA256_AARCH64}" ;; \
+      *) echo "FATAL: no pinned uv sha256 for arch ${TARGETARCH:-$(uname -m)}" >&2; exit 1 ;; \
+    esac; \
+    curl -fsSLo /tmp/uv.tar.gz "https://github.com/astral-sh/uv/releases/download/${UV_VERSION}/uv-${UV_TARGET}.tar.gz"; \
+    echo "${UV_SHA256}  /tmp/uv.tar.gz" | sha256sum -c -; \
+    tar xzf /tmp/uv.tar.gz -C /tmp "uv-${UV_TARGET}/uv" "uv-${UV_TARGET}/uvx"; \
+    install -m 0755 "/tmp/uv-${UV_TARGET}/uv" "/tmp/uv-${UV_TARGET}/uvx" /usr/local/bin/; \
+    rm -rf /tmp/uv.tar.gz "/tmp/uv-${UV_TARGET}"; \
+    uv --version | grep -F "${UV_VERSION}"
+
+# --- Layer 6: Node.js 22 LTS + pnpm ---
+# Pinned Node tarball from nodejs.org with per-arch sha256 (docker_images
+# [D18]; same pins as Dockerfile.base-node) — replaces the mutable NodeSource
+# setup script — and a pinned pnpm (tracks scripts/worker-host-env.sh).
+ARG NODE_VERSION=22.23.4
+ARG NODE_SHA256_X64=1805bcd35e6815559bd2eb97db438d3fdb0eb3a5e6a977b7c1badca76337e9ce
+ARG NODE_SHA256_ARM64=6287aa46b6c375d816e63ae66d024fbbfd70404825aabdfdf898a970871d2f4b
+ARG PNPM_VERSION=11.9.0
+RUN set -eux; \
+    NARCH="$(case "${TARGETARCH:-$(uname -m)}" in arm64|aarch64) echo arm64 ;; *) echo x64 ;; esac)"; \
+    case "$NARCH" in \
+      arm64) NODE_SHA256="${NODE_SHA256_ARM64}" ;; \
+      x64)   NODE_SHA256="${NODE_SHA256_X64}" ;; \
+    esac; \
+    curl -fsSLo /tmp/node.tar.xz "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-${NARCH}.tar.xz"; \
+    echo "${NODE_SHA256}  /tmp/node.tar.xz" | sha256sum -c -; \
+    tar -xJf /tmp/node.tar.xz -C /usr/local --strip-components=1 --no-same-owner; \
+    rm -f /tmp/node.tar.xz; \
+    npm install -g "pnpm@${PNPM_VERSION}" && \
+    npm config set cache /cache/npm
+
+# --- Layer 7: Go ---
+ENV GOROOT=/usr/local/go
+ENV GOPATH=/home/g5/go
+ENV PATH="${GOROOT}/bin:${GOPATH}/bin:${PATH}"
+
+# Pinned Go with per-arch sha256 from go.dev/dl (docker_images [D18]); a
+# floating 'latest' resolved different bytes on every rebuild.
+ARG GO_VERSION=go1.27.0
+ARG GO_SHA256_AMD64=675c26c449cbb18fc24b74650de1eabbae6e16f64326fd85a283fb3b58280685
+ARG GO_SHA256_ARM64=51798d2c42d0e1c6ed7fd9f48728b4193abac9e8aad6dbac2fe96a81f5909bda
+RUN set -eux; \
+    GO_ARCH=$(case "${TARGETARCH:-$(uname -m)}" in arm64|aarch64) echo "arm64" ;; *) echo "amd64" ;; esac); \
+    case "$GO_ARCH" in \
+      arm64) GO_SHA256="${GO_SHA256_ARM64}" ;; \
+      amd64) GO_SHA256="${GO_SHA256_AMD64}" ;; \
+    esac; \
+    curl -fsSLo /tmp/go.tar.gz "https://go.dev/dl/${GO_VERSION}.linux-${GO_ARCH}.tar.gz"; \
+    echo "${GO_SHA256}  /tmp/go.tar.gz" | sha256sum -c -; \
+    tar -C /usr/local -xzf /tmp/go.tar.gz; \
+    rm -f /tmp/go.tar.gz
+
+ENV GOCACHE=/cache/go-build
+ENV GOMODCACHE=/cache/go-mod
+
+# --- Layer 8: Java JDK 21 ---
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    openjdk-21-jdk-headless \
+    && rm -rf /var/lib/apt/lists/*
+
+# JAVA_HOME must not interpolate TARGETARCH. That ARG is auto-populated only by
+# BuildKit, and several lanes build this image with the LEGACY builder (any
+# G5_DOCKER_CACHE_DISABLE=true path, which the common-base tiers require because
+# a docker-container builder cannot see a local base tag). There ${TARGETARCH}
+# expands empty and yields the nonexistent `/usr/lib/jvm/java-21-openjdk-`.
+# Resolve the real JDK from javac and pin a stable arch-independent symlink.
+RUN set -eux; \
+    jdk="$(dirname "$(dirname "$(readlink -f "$(command -v javac)")")")"; \
+    ln -sfn "$jdk" /usr/lib/jvm/java-21; \
+    test -x /usr/lib/jvm/java-21/bin/javac
+ENV JAVA_HOME=/usr/lib/jvm/java-21
+
+# --- Layer 8.5: Pinned guest-runtime artifact cache ---
+# start-workers stages gh/just/cargo-nextest into the guest runtime closure at
+# CI time. Serving the pinned tarballs (and their upstream checksum files) from
+# the image keeps GitHub release-asset outages off the CI critical path
+# (G5Labs/G5#1811); stage-local-worker-runtime.sh and 57-install-test-tools.sh
+# use these when present and fall back to a retried download otherwise, so a
+# version bump in the scripts degrades to download-mode until the pins here
+# catch up. Versions must stay equal to scripts/worker-host-env.sh
+# (CARGO_NEXTEST_VERSION and its pins are declared with Layer 3).
+# Each cached tarball is checked against the repository-pinned per-arch
+# sha256, and the cached upstream checksum file must list that same value,
+# so a guest that verifies against the cached file cannot be handed a
+# checksum the repository never pinned (G5Labs/G5-Lean#527).
+ARG GH_CLI_VERSION=2.95.0
+ARG GH_CLI_SHA256_AMD64=25d1e4729e8808c9ed3d613e96ebd3f3e44446f2d368c89d878a71a36ddb3d8c
+ARG GH_CLI_SHA256_ARM64=d41e0b3b6218e5741c8bb4db39b16e53a59e0e06299a8489bd38f623ef7ebaae
+ARG JUST_VERSION=1.55.1
+ARG JUST_SHA256_X86_64=b0ef600f0df20d5ae91ae931627c499fc52b477ffe5f5ea7b7b3ec616b16c778
+ARG JUST_SHA256_AARCH64=b0ee814c9656427408e339893541e30d9027828686839499b2a2a34dd61ad173
+RUN case "${TARGETARCH:-$(uname -m)}" in \
+      amd64|x86_64)  GH_ARCH=amd64; CPU_ARCH=x86_64;  GH_SHA256="${GH_CLI_SHA256_AMD64}"; JUST_SHA256="${JUST_SHA256_X86_64}";  NEXTEST_SHA256="${CARGO_NEXTEST_SHA256_X86_64}" ;; \
+      arm64|aarch64) GH_ARCH=arm64; CPU_ARCH=aarch64; GH_SHA256="${GH_CLI_SHA256_ARM64}"; JUST_SHA256="${JUST_SHA256_AARCH64}"; NEXTEST_SHA256="${CARGO_NEXTEST_SHA256_AARCH64}" ;; \
+      *) echo "FATAL: no pinned dl-cache sha256 for arch ${TARGETARCH:-$(uname -m)}" >&2; exit 1 ;; \
+    esac && \
+    mkdir -p /opt/g5/dl-cache && cd /opt/g5/dl-cache && \
+    dl() { for i in $(seq 1 8); do \
+             HTTP="$(curl -fsSL --connect-timeout 20 --max-time 300 --speed-limit 51200 --speed-time 60 -w '%{http_code}' "$1" -o "$2")" && return 0; \
+             RC=$?; \
+             case "$RC" in \
+               5|6|7|18|28|35|52|55|56|92) ;; \
+               22) case "$HTTP" in 408|429|5??) ;; *) echo "FATAL: $1 -> HTTP $HTTP is not transient; not retrying" >&2; return "$RC";; esac ;; \
+               *) return "$RC" ;; \
+             esac; \
+             [ "$i" -eq 8 ] && { echo "FATAL: $1 failed after 8 attempts (curl_exit=$RC, http=$HTTP)" >&2; return "$RC"; }; \
+             echo "[dl-cache] $1 transient failure (curl_exit=$RC, http=$HTTP); retry $i/8 in 10s" >&2; sleep 10; \
+           done; } && \
+    ck() { ACT="$(sha256sum "$1" | awk '{print $1}')"; [ "$ACT" = "$2" ] || { echo "FATAL: $1 sha256 mismatch. expected=$2 actual=$ACT" >&2; exit 1; }; } && \
+    published() { [ "$1" = "$2" ] || { echo "FATAL: $3 lists sha256 '$1' but the repository pins '$2'; refusing to cache a checksum file guests would trust" >&2; exit 1; }; } && \
+    GH_TARBALL="gh_${GH_CLI_VERSION}_linux_${GH_ARCH}.tar.gz" && \
+    dl "https://github.com/cli/cli/releases/download/v${GH_CLI_VERSION}/${GH_TARBALL}" "$GH_TARBALL" && \
+    dl "https://github.com/cli/cli/releases/download/v${GH_CLI_VERSION}/gh_${GH_CLI_VERSION}_checksums.txt" "gh_${GH_CLI_VERSION}_checksums.txt" && \
+    ck "$GH_TARBALL" "$GH_SHA256" && \
+    published "$(awk -v f="$GH_TARBALL" '$2 == f {print $1}' "gh_${GH_CLI_VERSION}_checksums.txt")" "$GH_SHA256" "gh_${GH_CLI_VERSION}_checksums.txt" && \
+    JUST_TARBALL="just-${JUST_VERSION}-${CPU_ARCH}-unknown-linux-musl.tar.gz" && \
+    dl "https://github.com/casey/just/releases/download/${JUST_VERSION}/${JUST_TARBALL}" "$JUST_TARBALL" && \
+    dl "https://github.com/casey/just/releases/download/${JUST_VERSION}/SHA256SUMS" "just-${JUST_VERSION}-SHA256SUMS" && \
+    ck "$JUST_TARBALL" "$JUST_SHA256" && \
+    published "$(awk -v f="$JUST_TARBALL" '$2 == f {print $1}' "just-${JUST_VERSION}-SHA256SUMS")" "$JUST_SHA256" "just-${JUST_VERSION}-SHA256SUMS" && \
+    NEXTEST_TAG="cargo-nextest-${CARGO_NEXTEST_VERSION}" && \
+    NEXTEST_TARBALL="${NEXTEST_TAG}-${CPU_ARCH}-unknown-linux-gnu.tar.gz" && \
+    dl "https://github.com/nextest-rs/nextest/releases/download/${NEXTEST_TAG}/${NEXTEST_TARBALL}" "$NEXTEST_TARBALL" && \
+    dl "https://github.com/nextest-rs/nextest/releases/download/${NEXTEST_TAG}/${NEXTEST_TARBALL%.tar.gz}.sha256" "${NEXTEST_TARBALL%.tar.gz}.sha256" && \
+    ck "$NEXTEST_TARBALL" "$NEXTEST_SHA256" && \
+    published "$(awk '{print $1}' "${NEXTEST_TARBALL%.tar.gz}.sha256")" "$NEXTEST_SHA256" "${NEXTEST_TARBALL%.tar.gz}.sha256" && \
+    chmod -R a+rX /opt/g5/dl-cache
+
+# --- Layer 9: User, dirs, permissions (cheap, at the bottom) ---
+RUN mkdir -p /cache/sccache /cache/npm /cache/go-build /cache/go-mod \
+    /cache/cargo /cache/pnpm /cache/pip /cache/maven /cache/gradle
+
+RUN groupadd -r g5 && useradd -r -g g5 -m -d /home/g5 -s /bin/bash g5 && \
+    chown -R g5:g5 /cache /home/g5
+
+RUN mkdir -p /workspace && chown g5:g5 /workspace
+
+USER g5
+WORKDIR /workspace
+
+# Verify installations
+RUN rustc --version && \
+    cargo nextest --version && \
+    sccache --version && \
+    cargo-deny --version && \
+    uv --version && \
+    pnpm --version && \
+    python3 --version && \
+    node --version && \
+    go version && \
+    java --version && \
+    gcc --version | head -1 && \
+    cmake --version | head -1 && \
+    rg --version | head -1
+
+ENTRYPOINT ["tini", "--"]
+CMD ["bash"]

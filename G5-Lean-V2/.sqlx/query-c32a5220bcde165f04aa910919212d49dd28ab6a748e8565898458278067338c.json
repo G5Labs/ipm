@@ -1,0 +1,71 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT u.id as user_id, u.email, u.display_name, u.avatar_url,\n                   m.role, m.created_at as joined_at, m.deactivated_at, m.activity_revision,\n                   (m.deactivation_cleanup_id IS NOT NULL) as \"shutdown_pending!\"\n            FROM org_memberships m\n            JOIN users u ON m.user_id = u.id\n            WHERE m.org_id = $1 AND u.email = $2\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "email",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "display_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "avatar_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "role",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "joined_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 6,
+        "name": "deactivated_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 7,
+        "name": "activity_revision",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 8,
+        "name": "shutdown_pending!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      true,
+      false,
+      null
+    ]
+  },
+  "hash": "c32a5220bcde165f04aa910919212d49dd28ab6a748e8565898458278067338c"
+}

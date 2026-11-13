@@ -1,0 +1,198 @@
+{{/*
+g5-api Deployment
+*/}}
+{{- if eq (include "g5.controlPlaneEnabled" .) "true" }}
+{{- /*
+  Per-preview subdomain replay protection (issue #935): the consumed handoff-
+  ticket jti set is process-local (middleware/preview_host [D2]), so a ticket
+  consumed on one pod could be replayed on another. Fail closed at render time
+  rather than silently weakening single-use if the suffix is enabled with more
+  than one API replica.
+*/}}
+{{- if and .Values.previewWildcard.enabled (gt (int .Values.api.replicaCount) 1) }}
+{{- fail "previewWildcard.enabled requires api.replicaCount <= 1: the preview handoff-ticket single-use store is process-local (issue #935); scale-out would let a consumed ticket be replayed on another pod" }}
+{{- end }}
+{{- $apiImage := include "g5.image" (dict "image" .Values.api.image "global" .Values.global "component" "api") | trim -}}
+{{- $apiStorageMountPoint := .Values.api.env.G5_STORAGE_MOUNT_POINT | default "/mnt/g5-repos" -}}
+{{- $apiStorageTenantPrefix := .Values.api.env.G5_STORAGE_TENANT_PREFIX | default "repos" -}}
+{{- $attachments := .Values.api.filestore.attachments -}}
+{{- /* Fail-closed worker-image pin (helm ontology D27): the env overlays
+     carry only the DEPLOY-INJECTED sentinel, and rendering any present
+     non-concrete value (sentinel, empty, family/... ref, malformed path)
+     would silently revert worker hosts to floating family-head resolution —
+     the #1860/#1883 skew class — so a PRESENT value must be a concrete
+     projects/<project>/global/images/<name> ref. Installs that omit the key
+     entirely (infra/self-hosted/local) keep the in-code family default. */ -}}
+{{- if hasKey .Values.api.env "G5_WORKER_IMAGE" -}}
+{{- if not (regexMatch "^projects/[A-Za-z0-9._-]+/global/images/[a-z]([-a-z0-9]{0,61}[a-z0-9])?$" (.Values.api.env.G5_WORKER_IMAGE | toString)) -}}
+{{- fail (printf "api.env.G5_WORKER_IMAGE must be a concrete projects/<project>/global/images/<name> ref injected by the deploy pipeline (helm ontology D27, cloudbuild_pipelines D30); got %q. Omit the key entirely to use the in-code family default (infra/self-hosted/local installs only)." (.Values.api.env.G5_WORKER_IMAGE | toString)) -}}
+{{- end -}}
+{{- end -}}
+{{- /* Hosted accounts must agree with the deployed project, never the node SA.
+     Unrelated local/self-hosted installs that omit the key retain compatibility. */ -}}
+{{- $hostProject := .Values.api.env.GCP_PROJECT_ID | default .Values.global.projectId -}}
+{{- $hostEnvironment := get (dict "g5-qa-1ccc" "qa" "g5lean-staging-1ccc" "staging" "g5lean-prod-1ccc" "prod") $hostProject -}}
+{{- if $hostEnvironment -}}
+{{- $expectedHostAccount := printf "g5-lean-%s-host@%s.iam.gserviceaccount.com" $hostEnvironment $hostProject -}}
+{{- if ne (.Values.api.env.G5_WORKER_SERVICE_ACCOUNT | default "") $expectedHostAccount -}}
+{{- fail (printf "api.env.G5_WORKER_SERVICE_ACCOUNT must be %s for this Lean environment" $expectedHostAccount) -}}
+{{- end -}}
+{{- end -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: g5-api
+  namespace: {{ .Values.namespace }}
+  annotations:
+    # Authoritative deployed-commit marker (cloudbuild_pipelines D29): the
+    # pipeline sets global.imageTag to the promoted COMMIT_SHA, and the
+    # standalone canary resolves staging's g5d from THIS value — never from
+    # the many-to-one api-digest→commit-tag reverse map. Consumers must not
+    # trust a non-40-hex value (e.g. "latest" on non-pipeline installs) and
+    # must only read it from a SETTLED rollout — metadata reflects desired,
+    # not necessarily serving, state mid-rollout.
+    g5.g5labs.ai/deployed-commit: {{ .Values.global.imageTag | quote }}
+  labels:
+    {{- include "g5.labels" . | nindent 4 }}
+    app.kubernetes.io/component: api
+spec:
+  replicas: {{ .Values.api.replicaCount }}
+  selector:
+    matchLabels:
+      app: g5-api
+  # Formal approval schema 3 is durable and unreadable by older coordinators.
+  # Stop old API readers before the new writer starts (also with >1 replica).
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: g5-api
+        {{- include "g5.labels" . | nindent 8 }}
+      {{- with .Values.api.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      serviceAccountName: {{ .Values.api.serviceAccount.name }}
+      {{- with .Values.api.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.api.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.api.filestore.enabled }}
+      initContainers:
+        - name: init-repo-storage
+          image: {{ $apiImage | quote }}
+          imagePullPolicy: {{ .Values.api.image.pullPolicy }}
+          command:
+            - sh
+            - -lc
+            - |
+              set -eu
+              base_dir="${G5_STORAGE_MOUNT_POINT%/}"
+              if [ -n "${G5_STORAGE_TENANT_PREFIX:-}" ]; then
+                base_dir="${base_dir}/${G5_STORAGE_TENANT_PREFIX}"
+              fi
+              mkdir -p "$base_dir"
+              chown 10001:10001 "$base_dir"
+              chmod 0775 "$base_dir"
+              # The attachment store's own directory on the share
+              # (g5.issue.native.attachment-store), created here because a
+              # missing subPath would be created root-owned.
+              attachments_dir="${G5_STORAGE_MOUNT_POINT%/}/{{ $attachments.subPath }}"
+              mkdir -p "$attachments_dir"
+              chown 10001:10001 "$attachments_dir"
+              chmod 0770 "$attachments_dir"
+          env:
+            - name: G5_STORAGE_MOUNT_POINT
+              value: {{ $apiStorageMountPoint | quote }}
+            - name: G5_STORAGE_TENANT_PREFIX
+              value: {{ $apiStorageTenantPrefix | quote }}
+          securityContext:
+            runAsUser: 0
+            runAsGroup: 0
+          volumeMounts:
+            - name: repos
+              mountPath: {{ .Values.api.filestore.mountPath }}
+      {{- end }}
+      containers:
+        - name: g5-api
+          image: {{ $apiImage | quote }}
+          imagePullPolicy: {{ .Values.api.image.pullPolicy }}
+          securityContext:
+            runAsUser: 10001
+            runAsGroup: 10001
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+          ports:
+            - name: http
+              containerPort: 7500
+              protocol: TCP
+          env:
+            {{- if not (hasKey .Values.api.env "GCP_PROJECT_ID") }}
+            - name: GCP_PROJECT_ID
+              value: {{ .Values.global.projectId | quote }}
+            {{- end }}
+            {{- if not (hasKey .Values.api.env "GOOGLE_CLOUD_PROJECT") }}
+            - name: GOOGLE_CLOUD_PROJECT
+              value: {{ .Values.global.projectId | quote }}
+            {{- end }}
+            {{- if and .Values.previewWildcard.enabled (not (hasKey .Values.api.env "G5_PREVIEW_HOST_SUFFIX")) }}
+            # Per-preview wildcard origins (issue #935): serve previews at
+            # https://<job-id>.<suffix>/ — flips together with the Ingress
+            # wildcard host rule + certmap annotation via previewWildcard.*.
+            - name: G5_PREVIEW_HOST_SUFFIX
+              value: {{ required "previewWildcard.hostSuffix is required when previewWildcard.enabled" .Values.previewWildcard.hostSuffix | quote }}
+            {{- end }}
+            {{- range $key, $value := .Values.api.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+          envFrom:
+            {{- include "g5.apiSecretEnvFrom" . | nindent 12 }}
+          resources:
+            {{- toYaml .Values.api.resources | nindent 12 }}
+          {{- with .Values.api.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.api.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.api.startupProbe }}
+          startupProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- if .Values.api.filestore.enabled }}
+          volumeMounts:
+            {{- include "g5.repoStorageMount" (dict "mountPath" .Values.api.filestore.mountPath "prefix" $apiStorageTenantPrefix) | nindent 12 }}
+            # Attachment bytes: their own subdirectory of the share, which
+            # the repository mount above does not reach.
+            - name: repos
+              mountPath: {{ $attachments.mountPath }}
+              subPath: {{ $attachments.subPath | quote }}
+          {{- end }}
+      {{- if .Values.api.filestore.enabled }}
+      volumes:
+        - name: repos
+          persistentVolumeClaim:
+            claimName: {{ .Values.api.filestore.pvcName }}
+      {{- end }}
+---
+# PodDisruptionBudget
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: g5-api-pdb
+  namespace: {{ .Values.namespace }}
+spec:
+  minAvailable: {{ .Values.api.pdb.minAvailable }}
+  selector:
+    matchLabels:
+      app: g5-api
+{{- end }}

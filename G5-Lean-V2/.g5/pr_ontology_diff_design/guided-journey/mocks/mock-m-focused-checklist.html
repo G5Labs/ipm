@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="editor" data-mode="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mock M — Guided: Focused Checklist (one step open, running state, skip vs done)</title>
+<style>
+  :root {
+    --g5-bg0: rgb(10 12 16); --g5-bg1: rgb(14 17 24); --g5-bg2: rgb(18 22 31);
+    --g5-stroke: rgb(255 255 255 / 0.08);
+    --g5-text0: rgb(236 242 255); --g5-text1: rgb(236 242 255 / 0.72); --g5-text2: rgb(236 242 255 / 0.56);
+    --g5-info: rgb(103 164 255); --g5-ok: rgb(113 201 136); --g5-warn: rgb(255 196 87); --g5-blocked: rgb(255 107 107);
+    --g5-overlay: rgb(255 255 255 / 0.05); --g5-overlay-hover: rgb(255 255 255 / 0.08);
+    --phase-be: rgb(94 200 160); --phase-be-soft: rgb(94 200 160 / 0.12);
+    --phase-se: rgb(103 164 255); --phase-se-soft: rgb(103 164 255 / 0.12);
+    --phase-ie: rgb(192 132 252); --phase-ie-soft: rgb(192 132 252 / 0.12);
+    --radius-sm: 4px; --radius-md: 6px; --radius-lg: 8px;
+    --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --font-mono: ui-monospace, "JetBrains Mono", monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-sans); background: var(--g5-bg0); color: var(--g5-text0); display: flex; height: 100vh; overflow: hidden; font-size: 13px; }
+  button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  /* ---- shipped sidebar shell (stacked display mode) ---- */
+  .sidebar { width: 318px; flex-shrink: 0; background: var(--g5-bg1); border-right: 1px solid var(--g5-stroke); display: flex; flex-direction: column; overflow-y: auto; }
+  .sec { display: flex; align-items: center; gap: 10px; height: 36px; padding: 0 12px 0 14px; border-bottom: 1px solid var(--g5-stroke); font-size: 11.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--g5-text1); flex-shrink: 0; }
+  .sec .chev { width: 10px; color: var(--g5-text2); font-size: 9px; }
+  .sec .ico { color: var(--g5-text2); font-size: 13px; width: 16px; text-align: center; }
+  .sec .trail { margin-left: auto; color: var(--g5-text2); font-size: 12px; }
+  .sec.open { border-bottom: none; }
+  .guided-body { padding: 4px 12px 14px; border-bottom: 1px solid var(--g5-stroke); }
+  /* ---- summary card ---- */
+  .summary { border: 1px solid var(--phase-se); background: var(--phase-se-soft); border-radius: var(--radius-sm); padding: 8px 12px 10px; }
+  .summary-head { display: flex; align-items: baseline; justify-content: space-between; font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--phase-se); }
+  .summary-head span:last-child { font-weight: 600; color: var(--g5-text2); letter-spacing: 0; text-transform: none; font-size: 11px; }
+  .bar { height: 3px; margin-top: 6px; background: rgb(255 255 255 / 0.08); border-radius: 999px; overflow: hidden; }
+  .bar i { display: block; height: 100%; background: var(--phase-se); border-radius: 999px; }
+  .summary-next { margin-top: 7px; font-size: 12px; line-height: 1.4; color: var(--g5-text1); }
+  .summary-next b { color: var(--g5-text0); font-weight: 600; }
+  .summary-actions { display: flex; gap: 6px; margin-top: 8px; align-items: center; }
+  /* ---- ribbon-shaped step buttons (as shipped) ---- */
+  .btn { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; font-size: 12px; font-weight: 500; border-radius: var(--radius-sm); border: 1px solid var(--g5-stroke); background: var(--g5-bg2); color: var(--g5-text1); white-space: nowrap; }
+  .btn:hover { background: var(--g5-bg0); }
+  .btn.primary { border-color: var(--phase-se); background: var(--phase-se-soft); color: var(--phase-se); }
+  .btn.quiet { border-color: transparent; background: transparent; color: var(--g5-text2); padding: 0 8px; font-size: 11.5px; }
+  .btn.quiet:hover { background: var(--g5-overlay-hover); color: var(--g5-text0); }
+  .btn[disabled] { opacity: .5; cursor: not-allowed; }
+  /* ---- timeline ---- */
+  .timeline { list-style: none; position: relative; margin: 12px 0 0 11px; padding-left: 24px; border-left: 2px solid var(--g5-stroke); }
+  .phase { position: relative; padding-bottom: 10px; }
+  .phase-node { position: absolute; left: -37px; top: 0; width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--g5-stroke); background: var(--g5-bg2); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: var(--g5-text2); }
+  .phase.done .phase-node { background: var(--g5-ok); border-color: var(--g5-ok); color: rgb(10 12 16); }
+  .phase.active .phase-node { border-color: var(--phase-se); color: var(--phase-se); box-shadow: 0 0 0 4px var(--phase-se-soft); }
+  .phase-head { display: flex; align-items: baseline; gap: 8px; padding-top: 3px; width: 100%; text-align: left; border-radius: var(--radius-sm); }
+  .phase-head:hover { background: var(--g5-overlay); }
+  .phase-name { font-size: 13px; font-weight: 600; color: var(--g5-text0); }
+  .phase.upcoming .phase-name { color: var(--g5-text2); }
+  .phase-count { font-size: 11px; color: var(--g5-text2); margin-left: auto; white-space: nowrap; }
+  .phase-sub { font-size: 11px; color: var(--g5-text2); margin-top: 1px; }
+  .steps { list-style: none; margin-top: 4px; }
+  /* one-line step rows; only the next step (or an expanded one) shows its body */
+  .step { border-radius: var(--radius-sm); }
+  .step-row { display: flex; align-items: center; gap: 8px; min-height: 26px; padding: 2px 4px 2px 0; width: 100%; text-align: left; border-radius: var(--radius-sm); font-size: 12px; color: var(--g5-text1); }
+  .step-row:hover { background: var(--g5-overlay); }
+  .dot { width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid var(--g5-stroke); flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; font-size: 9px; }
+  .step.done .dot { background: var(--g5-ok); border-color: var(--g5-ok); color: rgb(10 12 16); }
+  .step.done .step-label { color: var(--g5-text2); }           /* muted, NOT struck through */
+  .step.skipped .dot { border-style: dashed; }
+  .step.skipped .step-label { color: var(--g5-text2); font-style: italic; }
+  .step.next .dot { border-color: var(--phase-se); box-shadow: 0 0 0 3px var(--phase-se-soft); }
+  .step.next .step-label { color: var(--g5-text0); font-weight: 600; }
+  .step.running .dot { border-color: var(--g5-info); border-top-color: transparent; animation: spin .9s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .step-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .status { font-size: 10.5px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; }
+  .step.done .status { color: var(--g5-ok); }
+  .step.next .status { color: var(--phase-se); }
+  .step.running .status { color: var(--g5-info); }
+  .step.skipped .status { color: var(--g5-text2); }
+  .step.todo .status { color: var(--g5-text2); opacity: .7; }
+  .step-body { padding: 0 0 8px 22px; }
+  .payoff { font-size: 11.5px; color: var(--g5-text2); line-height: 1.4; }
+  .step-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 7px; }
+  .running-line { display: flex; align-items: center; gap: 6px; margin: 0 0 8px 22px; font-size: 11.5px; color: var(--g5-text2); white-space: nowrap; }
+  .running-line a { color: var(--g5-info); text-decoration: none; }
+  .running-line .mini { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid var(--g5-info); border-top-color: transparent; animation: spin .9s linear infinite; }
+  .chips { display: flex; flex-wrap: wrap; gap: 4px; margin: 2px 0 6px 22px; }
+  .cite { display: inline-flex; align-items: center; gap: 4px; padding: 2px 6px; font-size: 11px; border-radius: var(--radius-sm); background: var(--g5-bg2); color: var(--g5-info); }
+  .cite:hover { background: rgb(103 164 255 / 0.12); }
+  .undo { font-size: 11px; color: var(--g5-text2); text-decoration: underline dotted; margin-left: 22px; }
+  .undo:hover { color: var(--g5-text0); }
+  /* rosters between phases */
+  .roster { display: flex; align-items: center; gap: 8px; min-height: 28px; margin: 2px 0 6px; padding-left: 2px; font-size: 11px; color: var(--g5-text2); }
+  .cluster { display: inline-flex; }
+  .av { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--g5-bg1); font-size: 8.5px; font-weight: 700; color: rgb(8 12 24); display: inline-flex; align-items: center; justify-content: center; margin-left: -7px; }
+  .av:first-child { margin-left: 0; }
+  .av.approved { box-shadow: 0 0 0 1.5px var(--g5-ok); }
+  .av.pending { opacity: .5; box-shadow: 0 0 0 1.5px rgb(236 242 255 / 0.25); }
+  .roster b { color: var(--g5-ok); font-weight: 600; }
+  .roster a { color: var(--g5-info); text-decoration: none; margin-left: auto; }
+  .phase.upcoming .steps { opacity: .6; }
+  /* ---- faded center ---- */
+  .center { flex: 1; display: flex; flex-direction: column; opacity: .4; pointer-events: none; min-width: 0; }
+  .chevrons { display: flex; height: 62px; border-bottom: 1px solid var(--g5-stroke); background: var(--g5-bg1); }
+  .chev-item { flex: 1; display: flex; align-items: center; gap: 10px; padding: 0 22px; font-size: 13px; color: var(--g5-text1); border-right: 1px solid var(--g5-stroke); }
+  .chev-item.cur { background: rgb(103 164 255 / 0.1); color: var(--g5-info); box-shadow: inset 0 2px 0 var(--g5-info); }
+  .ribbon { height: 92px; border-bottom: 1px solid var(--g5-stroke); background: var(--g5-bg1); display: flex; gap: 18px; padding: 14px 20px; }
+  .rb { width: 72px; height: 60px; border-radius: var(--radius-md); background: var(--g5-overlay); }
+  .work { flex: 1; display: flex; align-items: center; justify-content: center; color: var(--g5-text2); font-family: var(--font-mono); font-size: 12px; }
+  .mock-banner { position: fixed; bottom: 14px; right: 16px; background: var(--g5-bg2); border: 1px solid var(--g5-stroke); border-radius: var(--radius-lg); padding: 10px 14px; font-size: 11px; color: var(--g5-text1); max-width: 380px; box-shadow: 0 12px 40px rgb(0 0 0 / 0.35); line-height: 1.5; }
+  .mock-banner b { color: var(--g5-info); }
+  .mock-banner ul { margin: 4px 0 0 14px; }
+  .toast { position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%); background: var(--g5-bg2); border: 1px solid var(--g5-stroke); border-radius: var(--radius-md); padding: 8px 14px; font-size: 12px; opacity: 0; transition: opacity .18s; pointer-events: none; white-space: nowrap; }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+  <nav class="sidebar" aria-label="Workspace sidebar">
+    <div class="sec"><span class="ico">⌁</span>Activity<span class="trail">«</span></div>
+    <div class="sec open"><span class="chev">▾</span><span class="ico">◎</span>Guided</div>
+    <div class="guided-body" id="guided"></div>
+    <div class="sec"><span class="chev">▸</span><span class="ico">▤</span>Project Docs<span class="trail">+</span></div>
+    <div class="sec"><span class="chev">▸</span><span class="ico">◈</span>Core Ontology</div>
+    <div class="sec"><span class="chev">▸</span><span class="ico">⌸</span>Files<span class="trail">⧉</span></div>
+    <div class="sec"><span class="chev">▸</span><span class="ico">ⓘ</span>Issues &amp; Tasks<span class="trail">+ Import task</span></div>
+    <div class="sec"><span class="chev">▸</span><span class="ico">⌸</span>Archive</div>
+    <div class="sec"><span class="chev">▸</span><span class="ico">⎇</span>Source Control</div>
+  </nav>
+
+  <div class="center">
+    <div class="chevrons">
+      <div class="chev-item">✓ Business Engineering <small>1/1 approved</small></div>
+      <div class="chev-item cur">02 System Engineering <small>0/1 pending</small></div>
+      <div class="chev-item">03 Integration Engineering</div>
+    </div>
+    <div class="ribbon"><div class="rb"></div><div class="rb"></div><div class="rb"></div><div class="rb"></div><div class="rb"></div><div class="rb"></div><div class="rb"></div></div>
+    <div class="work">— activity / chat / document (unchanged) —</div>
+  </div>
+
+  <div class="mock-banner">
+    <b>Mock M — Focused checklist.</b> Same contract as the shipped panel (Mock G), drawn tighter:
+    <ul>
+      <li>Only the <b>next</b> step is open; every other step is one line and opens on click.</li>
+      <li>SE folds 6 steps into 4 outcome-worded steps; the whole journey fits above the other sections.</li>
+      <li>A step whose job is running shows <b>Running</b> with a link to the job, instead of nothing.</li>
+      <li><b>Skip</b> is distinct from <b>Done</b>; “Undo” replaces the “✓ Not done” button.</li>
+      <li>Status is text, not colour alone; done steps are muted, not struck through; the next step carries <code>aria-current="step"</code>.</li>
+    </ul>
+  </div>
+  <div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  const PHASES = [
+    { id: 'be', name: 'Business Engineering', sub: 'What we are building and why', rel: 'done', steps: [
+      { id: 'be-intent', label: 'Bring in what the business wants', status: 'done', evidence: ['auth-requirement.md'] },
+      { id: 'be-questions', label: 'Surface the open questions', status: 'done', evidence: ['open-questions.md'] },
+      { id: 'be-mock', label: 'Show the team what it will look like', status: 'done', evidence: ['onboarding-a.html', 'onboarding-b.html'] },
+    ], roster: { avs: [['AC','rgb(103 164 255)','approved'],['JL','rgb(192 132 252)','approved']], text: '<b>2</b> of 2 approved' } },
+    { id: 'se', name: 'System Engineering', sub: 'How it will work, agreed before code', rel: 'active', steps: [
+      { id: 'se-plan', label: 'Plan the implementation', payoff: 'The design and its ontology changes, so the code has something to be checked against.', status: 'done', byMark: true,
+        actions: [{ l: 'Create plan', i: '▤' }, { l: 'Check what changed', i: '⇄' }] },
+      { id: 'se-explainer', label: 'Explain the design to the team', payoff: 'A short page anyone can read without opening the design. ~1 min to generate.', status: 'next',
+        actions: [{ l: 'Explainer', i: '✦', primary: true }], evidenceOut: 'auth-refactor-explainer.html' },
+      { id: 'se-code', label: 'Build the code', payoff: 'Generate the code from the design, then see it running.', status: 'running', started: 'running 2 min', job: 'Generate code',
+        actions: [{ l: 'Generate code', i: '‹›' }, { l: 'Preview', i: '▶' }] },
+      { id: 'se-review', label: 'Get the code reviewed', payoff: 'The review skill reads the change and reports as a conversation.', status: 'todo',
+        actions: [{ l: 'Code review', i: '⊙' }] },
+    ], roster: { avs: [['JL','rgb(192 132 252)','approved'],['JC','rgb(94 200 160)','pending']], text: '<b>1</b> of 2 approved' } },
+    { id: 'ie', name: 'Integration Engineering', sub: 'Land it on the parent', rel: 'upcoming', steps: [
+      { id: 'ie-rebase', label: 'Catch up with the parent', status: 'todo' },
+      { id: 'ie-pr', label: 'Open the pull request', status: 'todo' },
+      { id: 'ie-merge', label: 'Merge to the parent', status: 'todo' },
+    ] },
+  ];
+  const open = new Set();          // explicitly expanded step ids
+  let bePhaseOpen = false;
+
+  const toastEl = document.getElementById('toast'); let tt;
+  const toast = m => { toastEl.textContent = m; toastEl.classList.add('show'); clearTimeout(tt); tt = setTimeout(() => toastEl.classList.remove('show'), 2000); };
+  const STATUS = { done: 'Done', next: 'Next', running: 'Running', skipped: 'Skipped', todo: '' };
+
+  function stepHtml(p, s) {
+    const isActive = p.rel === 'active';
+    const expanded = isActive && (s.status === 'next' || open.has(s.id));
+    const showBody = expanded && s.status !== 'done' && s.status !== 'skipped';
+    let html = '<li class="step ' + s.status + '" data-step="' + s.id + '"' + (s.status === 'next' ? ' aria-current="step"' : '') + '>';
+    html += '<button class="step-row" data-toggle="' + s.id + '" aria-expanded="' + expanded + '">' +
+      '<span class="dot" aria-hidden="true">' + (s.status === 'done' ? '✓' : '') + '</span>' +
+      '<span class="step-label">' + s.label + '</span>' +
+      '<span class="status">' + STATUS[s.status] + '</span>' +
+      '<span class="sr-only">' + (STATUS[s.status] || 'To do') + '</span></button>';
+    if (s.status === 'running') {
+      html += '<div class="running-line"><span class="mini" aria-hidden="true"></span>' + s.job + ' · ' + s.started + ' · <a href="#" data-job>view job</a></div>';
+    }
+    if (showBody) {
+      html += '<div class="step-body">' + (s.payoff ? '<div class="payoff">' + s.payoff + '</div>' : '') +
+        '<div class="step-actions">' + (s.actions || []).map((a, i) =>
+          '<button class="btn' + (a.primary ? ' primary' : '') + '" data-run="' + s.id + '"' + (s.status === 'running' && i === 0 ? ' disabled' : '') + '>' + a.i + ' ' + a.l + '</button>').join('') +
+        (s.status !== 'running' ? '<button class="btn quiet" data-skip="' + s.id + '" title="Not needed in this workspace — kept out of the done count">Skip</button>' : '') +
+        '</div></div>';
+    }
+    if (s.evidence) html += '<div class="chips">' + s.evidence.map(e => '<button class="cite" data-cite="' + e + '">🗎 ' + e + '</button>').join('') + '</div>';
+    if (isActive && (s.status === 'done' && s.byMark || s.status === 'skipped')) html += '<button class="undo" data-undo="' + s.id + '">' + (s.status === 'skipped' ? 'Undo skip' : 'Undo mark') + '</button>';
+    return html + '</li>';
+  }
+
+  function rosterHtml(r) {
+    if (!r) return '';
+    return '<div class="roster"><span class="cluster">' + r.avs.map(a => '<span class="av ' + a[2] + '" style="background:' + a[1] + '" title="' + a[0] + ' · ' + a[2] + '">' + a[0] + '</span>').join('') + '</span>' + r.text + '<a href="#" data-approvals>View approvals</a></div>';
+  }
+
+  function render() {
+    const se = PHASES[1];
+    const doneCount = se.steps.filter(s => s.status === 'done').length;
+    const countable = se.steps.filter(s => s.status !== 'skipped').length;
+    const next = se.steps.find(s => s.status === 'next');
+    let html = '<div class="summary" role="status">' +
+      '<div class="summary-head"><span>System Engineering</span><span>' + doneCount + ' of ' + countable + ' done</span></div>' +
+      '<div class="bar" aria-hidden="true"><i style="width:' + Math.round(100 * doneCount / countable) + '%"></i></div>' +
+      '<div class="summary-next">' + (next ? 'Next: <b>' + next.label.toLowerCase() + '</b>' : 'Every step is done or skipped. Next: move to Integration Engineering.') + '</div>' +
+      '<div class="summary-actions">' + (next ? '<button class="btn primary" data-run="' + next.id + '">' + next.actions[0].i + ' ' + next.actions[0].l + '</button><button class="btn quiet" data-skip="' + next.id + '">Skip</button>' : '<button class="btn primary">✦ Move to Integration Engineering</button>') + '</div></div>';
+    html += '<ol class="timeline" aria-label="Guided journey">';
+    PHASES.forEach(p => {
+      const done = p.steps.filter(s => s.status === 'done').length;
+      html += '<li class="phase ' + p.rel + '"><span class="phase-node" aria-hidden="true">' + (p.rel === 'done' ? '✓' : PHASES.indexOf(p) + 1) + '</span>';
+      if (p.rel === 'done') {
+        html += '<button class="phase-head" data-phase-toggle aria-expanded="' + bePhaseOpen + '"><span class="phase-name">' + p.name + '</span><span class="phase-count">' + done + ' of ' + p.steps.length + ' · ' + (bePhaseOpen ? 'hide' : 'show') + '</span></button>';
+        if (bePhaseOpen) html += '<ul class="steps">' + p.steps.map(s => stepHtml(p, s)).join('') + '</ul>';
+      } else {
+        html += '<div class="phase-head"><span class="phase-name">' + p.name + '</span><span class="phase-count">' + done + ' of ' + p.steps.filter(s => s.status !== 'skipped').length + '</span></div>' +
+          '<div class="phase-sub">' + p.sub + '</div>' +
+          '<ul class="steps">' + p.steps.map(s => stepHtml(p, s)).join('') + '</ul>';
+      }
+      html += '</li>';
+      if (p.roster) html += '<li role="presentation">' + rosterHtml(p.roster) + '</li>';
+    });
+    html += '</ol>';
+    document.getElementById('guided').innerHTML = html;
+  }
+
+  const find = id => PHASES.flatMap(p => p.steps).find(s => s.id === id);
+  const reNext = () => { const se = PHASES[1]; se.steps.forEach(s => { if (s.status === 'next') s.status = 'todo'; }); const n = se.steps.find(s => s.status === 'todo'); if (n) n.status = 'next'; };
+
+  document.body.addEventListener('click', e => {
+    const t = e.target.closest('[data-toggle],[data-run],[data-skip],[data-undo],[data-cite],[data-job],[data-approvals],[data-phase-toggle]');
+    if (!t) return;
+    e.preventDefault();
+    if (t.dataset.phaseToggle !== undefined) { bePhaseOpen = !bePhaseOpen; render(); return; }
+    if (t.dataset.toggle) { const id = t.dataset.toggle; open.has(id) ? open.delete(id) : open.add(id); render(); return; }
+    if (t.dataset.cite) { toast('(mock) opens ' + t.dataset.cite); return; }
+    if (t.dataset.job !== undefined) { toast('(mock) opens the running job in Jobs'); return; }
+    if (t.dataset.approvals !== undefined) { toast('(mock) opens the Approvals tab on this phase'); return; }
+    const s = find(t.dataset.run || t.dataset.skip || t.dataset.undo);
+    if (t.dataset.run) {
+      if (s.status === 'running') return;
+      s.status = 'running'; s.job = s.actions[0].l; s.started = 'just started'; render();
+      setTimeout(() => { s.status = 'done'; if (s.evidenceOut) s.evidence = [s.evidenceOut]; else s.byMark = true; reNext(); render(); toast(s.label + ' — done'); }, 1800);
+      return;
+    }
+    if (t.dataset.skip) { s.status = 'skipped'; open.delete(s.id); reNext(); render(); toast('Skipped — not counted, undo any time'); return; }
+    if (t.dataset.undo) { s.status = 'todo'; s.byMark = false; reNext(); render(); return; }
+  });
+
+  // the already-running code generation completes on its own
+  setTimeout(() => { const s = find('se-code'); if (s.status === 'running') { s.status = 'done'; s.byMark = true; render(); toast('Build the code — done (preview is up)'); } }, 9000);
+  render();
+})();
+</script>
+</body>
+</html>

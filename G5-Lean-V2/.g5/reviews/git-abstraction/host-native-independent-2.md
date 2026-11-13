@@ -1,0 +1,62 @@
+# Host/native Git increment — independent review 2
+
+Initial discovery saved before sharing findings with the author or other reviewers. This is a fresh independent, read-only review of the uncommitted increment at HEAD `d3869bca`, using `/tmp/g5-host-native-review/{tracked.patch,files.txt,snapshot.tar}` as the inventory. No production, design, ontology or repository test files were edited. Investigative code, builds and mutable fixtures are under `/tmp/g5-host-review-2`.
+
+Inputs: original `.g5/chat_intent/design-git-abstraction/request.md`; the pinned plan including its opening ontology inventory/diff, governing references, host cache/checkout/runtime configuration section and acceptance cases; the current Git execution/ref/native/outcome/retry/credential/location/guard blocks and their footer entries; restore/cleanup/proof, host materialization and drain, shared boundary/compatibility/dependency, secret redaction and applicable design-principle commitments/metadata; actual implementation and consumers. No author or peer findings were supplied. The current increment changes the design handoff but no ontology body or metadata files. Wider guest/provider migrations remain separate. The parked sibling-object exposure extension remains parked.
+
+## Initial actionable findings
+
+### R2-1 — P2: warm refresh rejects URLs that share the cache's declared identity
+
+**Code defect / compatibility regression.** `backend/g5-scm/src/native/materialization.rs:43-46` calls the existing strict `check_remote` with the unnormalized request URL. The host's `CacheKey::from_repo_url` intentionally strips a trailing slash (`backend/g5d-foundation/src/workspace/repo_cache.rs:90-95,111-114`). Thus `/path/source/` and `/path/source` select the same already-valid cache, but its origin retains the spelling used for the first clone. The second spelling now fails with `FailureKind::Destination` before fetch. The previous host fetch used the cache's origin and succeeded. This blocks otherwise-valid workspace materialization after an equivalent URL spelling changes.
+
+**Runtime evidence:** the probe called the real public `RepoCache::ensure_warm` twice, first with a trailing slash then without it, against an isolated local repository. First call succeeds; second returns `GitFetch` containing “Git destination differs from the requested repository.” Direct `NativeGit` same-spelling refresh succeeds and equivalent-spelling refresh fails. See `/tmp/g5-host-review-2/host-probe.log` and `/tmp/g5-host-review-2/restore-probe.log`.
+
+**Governing obligations:** the pinned host increment explicitly preserves cache identity and URL admission; `g5.architecture.git_locations`, `git_native_runner`, `g5.architecture.compatibility` and `g5.design.evolution` preserve legitimate existing caller behavior while tightening the execution boundary.
+
+**Suggested repair:** preserve the host's declared canonical cache identity in remote validation, including caches created before this change. Keep actual different-origin or rewrite refusal intact. Canonicalizing only new clone inputs does not handle existing caches with the other spelling.
+
+**Regression:** warm a cache with each spelling and reuse it through the other spelling; assert identical cache identity, a successful refresh and an advanced branch tip. Include a genuinely different origin/rewrite refusal control.
+
+### R2-2 — P2: the host wrapper puts a rejected URL's credential back into the error
+
+**In-scope redaction defect retained by the new adapter.** `backend/g5d-foundation/src/workspace/repo_cache.rs:755-759,773-776` converts a redacted `NativeGitError` into `GitFetch`/`GitClone` but also attaches `repo_url: url.into()`. Those existing variants interpolate the raw URL in Display (`workspace/error.rs:67-73,108-115`). An HTTPS URL containing userinfo passes the host's scheme admission, is correctly rejected and redacted by SCM, then leaks its userinfo through the outer wrapper. This defect is in the newly migrated error path; the general raw-URL display mechanism existed before the increment.
+
+**Runtime evidence:** `RepoCache::ensure_warm("https://fixture-user:FIXTURE_SECRET_403@example.invalid/repo.git")` returns without network access. SCM's inner target is `[REDACTED:https_basic_auth]`; the full returned error still contains `https://fixture-user:FIXTURE_SECRET_403@...`. The probe checks `error.to_string().contains("FIXTURE_SECRET_403") == true`. This is a synthetic fixture credential only. See `/tmp/g5-host-review-2/host-probe.log` and `/tmp/g5-host-review-2/restore-probe.log`.
+
+**Governing obligations:** `g5.architecture.git_credentials`, `git_outcomes` and `g5.security.credentials.redaction`; acceptance requires credentials absent from URLs/errors. The host handoff promises scoped credentials and clear typed errors, so restoring raw input outside SCM must not defeat redaction.
+
+**Suggested repair:** retain the shared typed error or sanitize all outer target/context fields with the same credential-aware policy before constructing/logging host errors. Preserve the existing host-owned bounded 403 classification/recovery without adding replay or retry storage. Audit URL-admission rejection formatting in the same owner so rejected credential-bearing inputs cannot escape before SCM either.
+
+**Regression:** exercise public `ensure_warm` for userinfo/query credentials, a selected token echoed in an input/error, and a normal denied HTTP read. Assert Display/debug/public conversion/loggable context contain neither raw nor encoded fixture secrets while retaining operation, safe target, effect and useful diagnostics.
+
+## Commitment and coverage ledger
+
+| Commitment | Actual path / discriminating case | Result |
+|---|---|---|
+| `git_execution`, `git_native_runner`, `git_guard` | Host cache, materialization and restore use owned SCM operations; no raw native command interface is exported. Runner owns process group/streams. Changed process/backend guards inspect the migrated owners. | Source conformance; exact-source guard suite 18/18 passes in isolated harness. Full host crate compilation is not claimed by the harness. |
+| `git_locations`, compatibility/evolution | Host still selects URL/cache key/root; SCM owns bare/worktree execution. Reuse same normalized cache key with alternate trailing slash. | **Violated by R2-1.** Other owner/layout distinctions preserved by inspection. |
+| `git_credentials`, `git_outcomes`, secret redaction | Host chooses live/override token only for HTTP(S); SCM injects URL-scoped config, clears inherited repository controls, refuses redirects/rewrites. Reject credentialed URL through actual `ensure_warm`. | SCM target redaction succeeds; **outer result violated by R2-2.** Live authenticated host HTTP delivery/redirects not independently exercised here. |
+| `git_native_runner`, materialization custody / cleanup proof | Cache owner task holds owned mutex and filesystem lock until cancellation is requested and `wait_idle` returns. Existing cache cancellation test begins actual blocked transport before aborting caller. | Cancellation test passes after enabling loopback listener permission; 27 other cache/error tests pass. This covers prompt cancellation and transport closure, not process crash/uninterruptible cleanup. |
+| `git_retry`, minimal mechanism | Existing 8-attempt host visibility recovery remains in host; SCM operation attempts once; 480-second whole cache budget is below 540-second stale lock age. No tracking schema/queue/journal added. | Preserved by source comparison; classifier/cache tests pass. Real 403-then-visible API authorization recovery not independently run. |
+| `git_ref_updates`, restore/proof | SCM fetches explicit current/tracking/provider/receipt refspecs, verifies exact receipt leaves and required commit types, then restores local state. Cached objects cannot substitute for missing source refs. | Runtime probe confirms missing receipt source ref fails despite cached object. No mapped-branch remote write introduced. |
+| `g5.git.restore`, cleanup | Distinct mapped branch, foreign or detached HEAD, dirty snapshot, index and interrupted sequencer. Optional parent fetch failure is informational. | Runtime probes pass: attached foreign HEAD, detached HEAD, pinned mapped branch, 300 KB binary dirty contents, clean index, removed sequencer directory, absent optional parent, and null-receipt exact reset/clean. Host receipt validation/interrupt-marker/fresh-root replacement mapping inspected, not exercised through a VM. |
+| `g5.runtime.materialization` | `prepare_workspace_root` still rematerializes from host-owned cache before restore; old retained guest controls are not passed to SCM. Host context disables hooks. | Source preserved. Native reflink/KVM warm/cold equivalence and equivalent-performance measurement not run. |
+| `git_native_runner`, member trust/configuration | Runtime still selects task-private file and assigned root cut; SCM owns serialization/exclusive-create/replace/ensure. | Moved implementation byte-identical to HEAD; four configuration tests pass including symlink replacement and exact assigned set. Linux cross-UID test not run on macOS. No user/global/system config write introduced. |
+| `git_execution`, dependencies, abstraction/minimal API | Workspace path routing separated from optional Git workflows; default facade re-exports retained. SCM has no upward runtime dependency. | Routing implementation byte-identical; three path routing tests pass. Normal dependency trees for host/foundation/runtime-core/worker contain no git2/libgit2. |
+| Guard calibration | Host checkout permits `cp` while rejecting literal/configured Git and backend bypasses; required migrated operations checked; wider ownership tests retained. | 18 source guard tests pass, including new positive/negative host fixtures. Structural checks do not prove arbitrary dynamic mediation. |
+
+## Check receipts and limits
+
+All commands used the current source snapshot. Independent harness uses real `g5-scm` as a native-only path dependency and includes the actual host `repo_cache.rs`/`error.rs` source to exercise the public cache path without unrelated host dependencies. The standalone source-guard copy changes only `CARGO_MANIFEST_DIR` to the original crate location. Existing config/path tests include their actual source modules. Temporary roots are confined to the reviewer directory.
+
+- `cargo run --offline --manifest-path /tmp/g5-host-review-2/Cargo.toml`: native cache/restore and actual host cache probes compile and pass their asserted positive cases; both findings reproduce. Latest receipt: `restore-probe.log`.
+- `cargo test --offline --manifest-path /tmp/g5-host-review-2/Cargo.toml --test guard`: **18 passed**, `guard.log`.
+- `TMPDIR=/tmp/g5-host-review-2/runtime-tmp cargo test --offline --manifest-path /tmp/g5-host-review-2/Cargo.toml --test moved`: **7 passed**, `moved.log`.
+- Same isolated harness `--bin g5-host-review-2 workspace::`: **27 passed; one initially blocked** because the sandbox refused `TcpListener::bind`. After permitted escalation, rerunning only `dropped_ensure_warm_releases_cross_process_lock_after_cleanup`: **1 passed**. Logs `cache-tests.log`, `cancellation-test.log`. The blocked first run is environmental, not a code defect.
+- `cargo tree --offline -p g5d-host -e normal --prefix none`, and equivalent foundation/runtime-core/worker trees: no `git2`/`libgit2`, saved as `host-tree.txt` and `native-dependencies.txt`.
+- Moved configuration implementation and moved routing implementation compare byte-identical with HEAD. `git diff --check` passes.
+
+Initial harness-only setup failures (wrong tree-sitter minor versions and missing Tokio `test-util`) were corrected to the repository's versions/features; they are not implementation failures.
+
+Remaining evidence gaps are listed in the ledger: real authenticated host smart-HTTP and 403 recovery, full host/VM preparation and Linux cross-UID/reflink/KVM/performance behavior, and whole-program lifecycle races. Existing broader guest/provider migrations and the accepted sibling-object visibility limit are not new findings. Main-agent consolidation should retain the raw findings and their distinction between regression and retained in-scope defect. After repair/recheck, update relevant Git/native/outcome/credential/dependency and restore/materialization metadata with scoped evidence, keeping those broader limits. No new ontology meaning or retry-policy amendment is proposed.

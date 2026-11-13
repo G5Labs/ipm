@@ -1,0 +1,562 @@
+<title>Preview dialog states and the preview app tab</title>
+<style>
+/* Layout: a mock toolbar, two app frames rendered from state (the Workspace preview
+   dialog in one Modal shell; the top-level tab strip with a preview tab), then the design
+   notes. Tokens are the G5 "editor" theme (frontend/src/index.css) so the frames read as
+   the app. Sample data only; nothing here calls G5. */
+:root {
+  color-scheme: light;
+  --g5-bg0: rgb(248 249 252);
+  --g5-bg1: rgb(255 255 255);
+  --g5-bg2: rgb(240 242 247);
+  --g5-stroke: rgb(0 0 0 / 0.08);
+  --g5-text0: rgb(17 24 39);
+  --g5-text1: rgb(17 24 39 / 0.72);
+  --g5-text2: rgb(17 24 39 / 0.64);
+  --g5-active: rgb(180 140 40);
+  --g5-ok: rgb(22 163 74);
+  --g5-info: rgb(59 130 246);
+  --g5-warn: rgb(217 119 6);
+  --g5-blocked: rgb(220 38 38);
+  --g5-overlay-hover: rgb(0 0 0 / 0.06);
+  --g5-radius-sm: 4px;
+  --note-bg: rgb(255 251 235);
+  --note-stroke: rgb(217 119 6 / 0.35);
+  --font: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Liberation Sans", "DejaVu Sans", "Noto Sans", system-ui, sans-serif;
+  --mono: "JetBrains Mono", "SF Mono", ui-monospace, Menlo, Consolas, "Liberation Mono", "DejaVu Sans Mono", "Noto Sans Mono", monospace;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --g5-bg0: rgb(10 12 16);
+  --g5-bg1: rgb(14 17 24);
+  --g5-bg2: rgb(18 22 31);
+  --g5-stroke: rgb(255 255 255 / 0.08);
+  --g5-text0: rgb(236 242 255);
+  --g5-text1: rgb(236 242 255 / 0.72);
+  --g5-text2: rgb(236 242 255 / 0.52);
+  --g5-active: rgb(235 199 94);
+  --g5-ok: rgb(113 201 136);
+  --g5-info: rgb(103 164 255);
+  --g5-warn: rgb(242 162 73);
+  --g5-blocked: rgb(255 107 107);
+  --g5-overlay-hover: rgb(255 255 255 / 0.08);
+  --note-bg: rgb(48 36 10);
+  --note-stroke: rgb(242 162 73 / 0.4);
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--g5-bg0); color: var(--g5-text0); font: 14px/1.45 var(--font); }
+.wrap { max-width: 1180px; margin: 0 auto; padding: 20px 16px 48px; }
+h1 { font-size: 18px; margin: 0 0 4px; font-weight: 650; letter-spacing: -0.01em; }
+h2 { font-size: 13px; margin: 22px 0 8px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--g5-text2); font-weight: 600; }
+.lede { margin: 0 0 16px; color: var(--g5-text1); max-width: 78ch; }
+code { font: 12px var(--mono); background: var(--g5-bg2); padding: 1px 4px; border-radius: 3px; }
+
+/* ---- mock toolbar ---- */
+.bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; padding: 10px 12px; border: 1px solid var(--g5-stroke); border-radius: 8px; background: var(--g5-bg1); margin-bottom: 14px; position: sticky; top: 0; z-index: 5; }
+.bar label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--g5-text2); display: flex; align-items: center; gap: 6px; }
+.seg { display: inline-flex; border: 1px solid var(--g5-stroke); border-radius: 6px; overflow: hidden; }
+.seg button { font: 12px/1 var(--font); padding: 7px 10px; border: 0; background: transparent; color: var(--g5-text1); cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--g5-stroke); }
+.seg button[aria-pressed="true"] { background: var(--g5-info); color: #fff; }
+button:focus-visible { outline: 2px solid var(--g5-info); outline-offset: 1px; }
+
+/* ---- app frames ---- */
+.frame { border: 1px solid var(--g5-stroke); border-radius: 10px; background: var(--g5-bg0); box-shadow: 0 10px 30px rgb(0 0 0 / 0.12); padding: 14px; }
+.app { font-size: 13px; color: var(--g5-text0); }
+.app button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; padding: 0; }
+.app svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.caption { font-size: 11px; color: var(--g5-text2); margin: 0 0 8px; }
+.spin { animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+:root[data-motion="reduce"] .spin { animation: none !important; }
+
+/* ---- the overlay + the one dialog shell (ui/Modal.tsx: overlay bg-black/50 px-4,
+   panel w-full max-w-* max-h-[85vh] overflow-y-auto rounded border bg0 shadow-xl) ---- */
+.viewport { position: relative; background: var(--g5-bg2); border-radius: 8px; overflow: hidden; margin: 0 auto; }
+.viewport[data-width="wide"] { width: 100%; min-height: 420px; }
+.viewport[data-width="wide"]:has(.modal[data-log="open"]) { min-height: 640px; }
+.viewport[data-width="narrow"] { width: min(360px, 100%); min-height: 560px; }
+.viewport[data-width="narrow"]:has(.modal[data-log="open"]) { min-height: 720px; }
+.overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgb(0 0 0 / 0.5); padding: 0 16px; }
+.modal { width: 100%; max-width: 28rem; max-height: 85%; overflow-y: auto; overflow-x: hidden; border: 1px solid var(--g5-stroke); border-radius: var(--g5-radius-sm); background: var(--g5-bg0); color: var(--g5-text0); box-shadow: 0 20px 50px rgb(0 0 0 / 0.3); padding: 16px; }
+.modal[data-log="open"] { max-width: 56rem; }
+.modal .head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; min-width: 0; }
+.modal .head .title { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.modal h3 { margin: 0; font-size: 14px; font-weight: 600; white-space: nowrap; }
+.modal .x { color: var(--g5-text2); padding: 4px; border-radius: 4px; }
+.modal .x:hover { background: var(--g5-bg2); color: var(--g5-text0); }
+.modal .x svg { width: 14px; height: 14px; }
+.modal p { margin: 0; font-size: 12px; color: var(--g5-text1); }
+.modal .stack { display: flex; flex-direction: column; gap: 12px; }
+.modal .muted { color: var(--g5-text2); }
+.modal .profile b { font-weight: 500; color: var(--g5-text0); }
+
+/* the lifecycle pill (header, variant B) and the status line */
+.pill { display: inline-flex; align-items: center; gap: 5px; height: 20px; padding: 0 8px; border-radius: 999px; font-size: 11px; font-weight: 500; border: 1px solid var(--g5-stroke); color: var(--g5-text1); background: var(--g5-bg1); white-space: nowrap; }
+.pill svg { width: 11px; height: 11px; }
+.pill[data-tone="warn"] { color: var(--g5-warn); border-color: color-mix(in srgb, var(--g5-warn) 40%, transparent); }
+.pill[data-tone="ok"] { color: var(--g5-ok); border-color: color-mix(in srgb, var(--g5-ok) 40%, transparent); }
+.pill[data-tone="blocked"] { color: var(--g5-blocked); border-color: color-mix(in srgb, var(--g5-blocked) 40%, transparent); }
+.status { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: var(--g5-text1); min-width: 0; }
+.status .ic { display: inline-flex; flex: none; width: 14px; height: 14px; align-items: center; justify-content: center; margin-top: 1px; }
+.status .ic svg { width: 14px; height: 14px; }
+.status .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--g5-ok); box-shadow: 0 0 0 3px color-mix(in srgb, var(--g5-ok) 25%, transparent); }
+.status[data-tone="warn"] .ic { color: var(--g5-warn); }
+.status[data-tone="ok"] { color: var(--g5-text0); }
+.status[data-tone="info"] .ic { color: var(--g5-info); }
+.status .txt { min-width: 0; }
+.status .txt b { font-weight: 600; color: var(--g5-text0); }
+
+/* the action row: wraps on a narrow viewport instead of overflowing */
+.actions { display: flex; flex-wrap: wrap; gap: 8px; min-width: 0; }
+.app .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 30px; padding: 0 12px; border-radius: 4px; font-size: 12px; font-weight: 500; border: 1px solid transparent; white-space: nowrap; min-width: 0; }
+.btn svg { width: 12px; height: 12px; }
+.btn.open { flex: 1 1 11rem; }
+.btn.open[data-ready="true"] { background: var(--g5-ok); color: var(--g5-bg0); }
+.btn.open[data-ready="true"]:hover { filter: brightness(0.95); }
+/* not ready: a neutral, clearly inert surface — no green, no reliance on opacity */
+.btn.open[data-ready="false"] { background: var(--g5-bg2); border-color: var(--g5-stroke); color: var(--g5-text2); cursor: not-allowed; }
+.btn.open[data-ready="false"][aria-busy="true"] { color: var(--g5-text1); }
+/* stop: an outlined button with full-strength text and the stop glyph in the blocked hue,
+   so it reads as an available action beside the primary */
+.btn.stop { border-color: var(--g5-stroke); background: var(--g5-bg1); color: var(--g5-text0); }
+.btn.stop svg { color: var(--g5-blocked); }
+.btn.stop:hover { border-color: color-mix(in srgb, var(--g5-blocked) 45%, var(--g5-stroke)); background: color-mix(in srgb, var(--g5-blocked) 6%, var(--g5-bg1)); }
+.btn.stop[disabled] { color: var(--g5-text2); cursor: progress; }
+.btn.stop[disabled] svg { color: var(--g5-text2); }
+.btn.ghost { border-color: var(--g5-stroke); color: var(--g5-text1); }
+.btn.ghost[aria-pressed="true"] { background: var(--g5-bg2); color: var(--g5-text0); }
+.btn.ghost .chev { transition: transform 0.15s; }
+.btn.ghost[aria-pressed="true"] .chev { transform: rotate(180deg); }
+.btn.primary { background: var(--g5-active); color: #fff; }
+.btn.primary[disabled] { opacity: 0.5; cursor: not-allowed; }
+.btn.link { height: auto; padding: 0; color: var(--g5-active); font-weight: 400; }
+.modal .hint { font-size: 11px; color: var(--g5-text2); }
+.modal .hint b { color: var(--g5-text1); font-weight: 500; }
+.notice { border: 1px solid var(--g5-blocked); border-radius: 4px; padding: 6px 8px; font-size: 12px; color: var(--g5-blocked); }
+.notice .btn.link { color: inherit; text-decoration: underline; }
+.modal select { font: 12px var(--font); color: var(--g5-text0); background: var(--g5-bg2); border: 1px solid var(--g5-stroke); border-radius: 4px; padding: 6px 8px; width: 100%; min-width: 0; }
+.modal label { font-size: 12px; font-weight: 500; color: var(--g5-text1); }
+
+/* the run log (PR #693 PreviewRunLog: stage strip + read-only hosted terminal) */
+.runlog { border: 1px solid var(--g5-stroke); border-radius: 4px; background: var(--g5-bg0); overflow: hidden; font-size: 12px; min-width: 0; }
+.stages { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 0; list-style: none; margin: 0; padding: 8px 10px; border-bottom: 1px solid var(--g5-stroke); background: var(--g5-bg1); font-size: 11px; }
+.stages li { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; color: var(--g5-text2); }
+.stages li + li::before { content: ""; display: inline-block; width: 16px; height: 1px; background: var(--g5-stroke); margin: 0 6px; }
+.stages li[data-state="done"] { color: var(--g5-text1); }
+.stages li[data-state="current"] { color: var(--g5-text0); font-weight: 600; }
+.stages li[data-state="failed"] { color: var(--g5-blocked); }
+.mark { display: inline-flex; width: 14px; height: 14px; border-radius: 50%; border: 1px solid var(--g5-stroke); align-items: center; justify-content: center; flex: none; }
+.mark svg { width: 9px; height: 9px; }
+.mark[data-state="done"] { background: var(--g5-ok); border-color: var(--g5-ok); color: var(--g5-bg0); }
+.mark[data-state="current"] { border-color: var(--g5-info); color: var(--g5-info); }
+.mark[data-state="failed"] { background: var(--g5-blocked); border-color: var(--g5-blocked); color: #fff; }
+.term { display: flex; flex-direction: column; height: 240px; min-height: 0; background: var(--g5-bg1); }
+.term .th { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; padding: 5px 10px; border-bottom: 1px solid var(--g5-stroke); font-size: 11px; color: var(--g5-text2); }
+.term .th b { font-weight: 500; color: var(--g5-text1); }
+.term .th .badge { border: 1px solid var(--g5-stroke); border-radius: 3px; padding: 0 5px; }
+.term pre { margin: 0; flex: 1; min-height: 0; overflow: auto; padding: 8px 10px; font: 11px/1.5 var(--mono); color: var(--g5-text1); white-space: pre; }
+.term pre .dim { color: var(--g5-text2); }
+.term pre .ok { color: var(--g5-ok); }
+.term pre .err { color: var(--g5-blocked); }
+
+/* ---- the top-level tab strip (layout/WorkspaceTabStrip.tsx) ---- */
+.shell { border: 1px solid var(--g5-stroke); border-radius: 8px; overflow: hidden; background: var(--g5-bg0); }
+.strip { display: flex; align-items: stretch; border-bottom: 1px solid var(--g5-stroke); background: var(--g5-bg2); padding-right: 8px; }
+.tablist { display: flex; flex: 1; min-width: 0; align-items: flex-end; gap: 2px; padding: 6px 0 0 8px; }
+.tab { position: relative; display: inline-flex; height: 32px; max-width: 220px; min-width: 0; align-items: center; border-radius: 8px 8px 0 0; border: 1px solid transparent; border-bottom: 0; color: var(--g5-text2); }
+.tab:hover { background: var(--g5-bg1); color: var(--g5-text1); }
+.tab[aria-selected="true"] { z-index: 1; border-color: var(--g5-stroke); background: var(--g5-bg0); color: var(--g5-text0); }
+.tab[aria-selected="true"]::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 1px; background: var(--g5-bg0); }
+.tab .tb { display: inline-flex; height: 100%; min-width: 0; align-items: center; gap: 8px; padding: 0 12px; font-size: 12px; border-radius: 8px 8px 0 0; }
+.tab .tb.has-x { padding-right: 4px; }
+.tab .tb svg { width: 13px; height: 13px; }
+.tab .tb .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tab .tb .phase { color: var(--g5-info); display: inline-flex; }
+.tab .tx { display: inline-flex; width: 18px; height: 18px; align-items: center; justify-content: center; border-radius: 50%; margin-right: 6px; color: var(--g5-text2); }
+.tab .tx:hover { background: var(--g5-bg1); color: var(--g5-text0); }
+.tab .tx svg { width: 11px; height: 11px; }
+.tab.home .tb svg { width: 15px; height: 15px; }
+.tab-add { display: inline-flex; width: 28px; height: 28px; align-items: center; justify-content: center; border-radius: 50%; margin: 0 0 3px 4px; color: var(--g5-text2); }
+.tab-add svg { width: 14px; height: 14px; }
+.trailing { display: flex; align-items: center; gap: 6px; padding: 4px 0; color: var(--g5-text2); }
+.trailing .ic { display: inline-flex; width: 26px; height: 26px; align-items: center; justify-content: center; border-radius: 4px; }
+.trailing .ic svg { width: 15px; height: 15px; }
+/* preview tab glyph: the same lit monitor as the ribbon trigger (PreviewMonitorIcon) */
+.mon { display: inline-flex; --c: var(--g5-ok); }
+.mon .screen { fill: var(--c); fill-opacity: 0.4; stroke: var(--c); }
+.mon .stand { stroke: var(--c); }
+.mon[data-state="stopped"] { --c: currentColor; }
+.mon[data-state="stopped"] .screen { fill: none; }
+.mon[data-state="starting"] .screen { animation: glow 1.4s ease-in-out infinite; --c: var(--g5-warn); }
+.mon[data-state="starting"] .stand { --c: var(--g5-warn); }
+@keyframes glow { 0%, 100% { fill-opacity: 0.4; } 50% { fill-opacity: 0.1; } }
+:root[data-motion="reduce"] .mon .screen { animation: none !important; }
+
+/* the preview tab's page: a slim bar, then the application's frame */
+.page { min-height: 300px; }
+.pbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 6px 12px; border-bottom: 1px solid var(--g5-stroke); background: var(--g5-bg1); font-size: 12px; min-width: 0; }
+.pbar .who { display: flex; align-items: center; gap: 8px; min-width: 0; color: var(--g5-text1); }
+.pbar .who b { font-weight: 600; color: var(--g5-text0); }
+.pbar .who .sep { color: var(--g5-text2); }
+.pbar .origin { font: 11px var(--mono); color: var(--g5-text2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 28ch; }
+.pbar .grow { flex: 1; }
+.pbar .btn { height: 26px; padding: 0 10px; font-size: 11px; }
+.pbar .btn.icon { width: 26px; padding: 0; }
+.pbar .btn.icon svg { width: 13px; height: 13px; }
+.appframe { position: relative; height: 300px; background: #fff; color: #111; }
+:root[data-theme="dark"] .appframe { background: #0f1116; color: #e6e9f2; }
+.appframe .fake { padding: 18px 22px; font: 13px/1.5 var(--font); }
+.appframe .fake .nav { display: flex; gap: 14px; align-items: center; padding-bottom: 12px; border-bottom: 1px solid rgb(127 127 127 / 0.25); margin-bottom: 14px; }
+.appframe .fake .nav b { font-size: 15px; }
+.appframe .fake .nav span { opacity: 0.6; }
+.appframe .fake .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.appframe .fake .card { border: 1px solid rgb(127 127 127 / 0.25); border-radius: 8px; padding: 12px; }
+.appframe .fake .card b { display: block; margin-bottom: 4px; }
+.appframe .fake .card span { font-size: 12px; opacity: 0.65; }
+.appframe .corner { position: absolute; right: 10px; bottom: 8px; font: 10px var(--mono); color: var(--g5-text2); background: var(--g5-bg2); border: 1px solid var(--g5-stroke); border-radius: 3px; padding: 1px 6px; }
+.stopped { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; height: 300px; text-align: center; padding: 20px; }
+.stopped h4 { margin: 0; font-size: 14px; font-weight: 600; }
+.stopped p { margin: 0; font-size: 12px; color: var(--g5-text1); max-width: 46ch; }
+.stopped .row { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 4px; }
+/* the workspace page, reduced to its ribbon so the strip has something beneath it */
+.wspage { padding: 10px 12px; }
+.ribbon { display: flex; align-items: center; gap: 2px; padding: 6px 8px; background: var(--g5-bg1); border: 1px solid var(--g5-stroke); border-radius: 8px; width: max-content; }
+.ribbon .rb { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 76px; padding: 6px 4px; font-size: 11px; font-weight: 500; line-height: 1.2; text-align: center; color: var(--g5-text1); border-radius: 4px; }
+.ribbon .rb svg { width: 22px; height: 22px; }
+.ribbon .divider { width: 1px; height: 36px; background: var(--g5-stroke); margin: 0 6px; }
+.wspage .rest { margin-top: 10px; height: 180px; border: 1px dashed var(--g5-stroke); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--g5-text2); font-size: 12px; }
+
+/* ---- notes ---- */
+.notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; margin-top: 18px; }
+.note { background: var(--note-bg); border: 1px solid var(--note-stroke); border-radius: 8px; padding: 12px 14px; font-size: 12.5px; }
+.note h3 { margin: 0 0 6px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--g5-text1); }
+.note ul, .note ol { margin: 0; padding-left: 18px; }
+.note li + li { margin-top: 4px; }
+</style>
+
+<div class="wrap">
+  <h1>Preview: one dialog shell with clear states, and the preview in its own G5 app tab</h1>
+  <p class="lede">Issue #786 names two problems with the Workspace preview dialog: its controls mislead (a green but disabled Open, a quiet but active Close, a bordered card inside the dialog shell with a horizontal scrollbar), and Open sends the application to a separate browser tab. This mock renders the dialog in one Modal shell through every lifecycle state, with the run log from PR #693, and shows the preview opening as a top-level G5 tab beside the workspace.</p>
+
+  <div class="bar" role="toolbar" aria-label="Mock controls">
+    <label>Dialog state <span class="seg" data-key="state"><button data-v="starting" aria-pressed="true">starting</button><button data-v="serving">serving</button><button data-v="closing">stopping</button><button data-v="failed">last failed</button></span></label>
+    <label>Log <span class="seg" data-key="log"><button data-v="closed" aria-pressed="true">closed</button><button data-v="open">open</button></span></label>
+    <label>Not-ready cue <span class="seg" data-key="variant"><button data-v="A" aria-pressed="true">A · button label</button><button data-v="B">B · header pill</button></span></label>
+    <label>Viewport <span class="seg" data-key="width"><button data-v="wide" aria-pressed="true">wide</button><button data-v="narrow">narrow (360)</button></span></label>
+    <label>Tab <span class="seg" data-key="tab"><button data-v="before">workspace</button><button data-v="open" aria-pressed="true">preview open</button><button data-v="stopped">preview stopped</button></span></label>
+    <label>Theme <span class="seg" data-key="theme"><button data-v="light" aria-pressed="true">light</button><button data-v="dark">dark</button></span></label>
+    <label>Motion <span class="seg" data-key="motion"><button data-v="normal" aria-pressed="true">normal</button><button data-v="reduce">reduced</button></span></label>
+  </div>
+
+  <h2>1 · The dialog (Workspace preview): one shell, one dismiss, clear actions</h2>
+  <div class="frame app" id="frame-dialog">
+    <p class="caption" id="dialog-caption"></p>
+    <div class="viewport" id="viewport" data-width="wide">
+      <div class="overlay"><div class="modal" id="dialog" role="dialog" aria-label="Workspace preview"></div></div>
+    </div>
+  </div>
+
+  <h2>2 · Open preview: a new top-level G5 tab beside the workspace</h2>
+  <div class="frame app" id="frame-tabs">
+    <p class="caption" id="tabs-caption"></p>
+    <div class="shell" id="shell"></div>
+  </div>
+
+  <div class="notes">
+    <div class="note">
+      <h3>Dialog: what changes</h3>
+      <ul>
+        <li><b>One shell.</b> The content renders straight into <code>Modal</code> (size <code>sm</code>; <code>lg</code> with the log open) with the shell's own padding, border and scroll. The inner <code>w-[min(34rem,…)]</code> bordered card is gone, so nothing is wider than the panel and no horizontal scrollbar appears; the action row wraps on a narrow viewport.</li>
+        <li><b>One dismiss.</b> The × is "Close dialog" and its hint under the actions says the preview keeps running. The stop action is labelled <b>Stop preview</b> (today "Close preview"), so the two are never confused.</li>
+        <li><b>Open preview is only green when it can open.</b> Starting and stopping render it on the neutral <code>bg2</code> surface with full-strength muted text (not opacity on green), with a spinner and the label <b>Starting…</b> (variant A) or the unchanged label beside a lifecycle pill in the header (variant B). Ready: green with the app-window glyph (it opens a G5 tab now, not an external window).</li>
+        <li><b>Stop preview stays visibly available</b> while starting and serving: an outlined button with full-strength text and a red stop glyph. While the stop runs it shows a spinner and <b>Stopping…</b>, and Open becomes not-ready again.</li>
+        <li>The status line is the one place the lifecycle is spelled out (<code>role=status</code>), so a screen reader hears "Starting the configured application" and "Serving on port 5173 · ready to open" as they change; the stage strip in the log repeats it as steps.</li>
+      </ul>
+    </div>
+    <div class="note">
+      <h3>App tab: proposed behaviour</h3>
+      <ul>
+        <li><b>Open preview</b> adds a tab to the top-level strip beside the workspace's tab, the same surface and opening path as a workspace opened in its own tab (<code>useWorkspaceTabs</code>, <code>g5.workbench.tabs</code>), and selects it. The workspace tab stays; the person switches between them with the strip or Ctrl/Cmd+Shift+arrows.</li>
+        <li>The tab's glyph is the lit monitor the ribbon trigger already uses (<code>PreviewMonitorIcon</code>), so it is distinct from the phase glyphs; its label is <b>Preview ·</b> then the workspace name, so the kind survives truncation, with the profile and port in the tooltip.</li>
+        <li>The tab's page is a slim bar (workspace, profile, port, state pill, Reload, Open in browser, Stop preview) over the application, which loads from its isolated preview origin. The centre panel of the workspace gets no preview tab and no file-style tab.</li>
+        <li>Closing the tab (×) only closes the tab: the preview keeps serving and the dialog still offers Open, which focuses or re-creates the one tab. Stop preview, from the bar or the dialog, stops the application and runs its cleanup; the tab then shows "Preview stopped" with a way back and a way to start again.</li>
+        <li>One preview per workspace means at most one preview tab per workspace; a replacement (Close and start) reuses the tab with the new run.</li>
+      </ul>
+    </div>
+    <div class="note">
+      <h3>Assumptions to confirm before implementing</h3>
+      <ol>
+        <li><b>Route.</b> The tab is a route the strip can store and restore, e.g. <code>/:org/:workspace/preview</code>; <code>WorkspaceTab</code> grows a <code>kind: "preview"</code> entry (name + org only, as today, so storage never goes stale). A reload of that route re-mints the session and reloads the application.</li>
+        <li><b>Loading the isolated origin inside the G5 page.</b> Previews are served only from <code>https://&lt;taskId&gt;.&lt;preview suffix&gt;</code> with a single-use handoff ticket that sets an origin-scoped cookie (<code>g5.workspace.preview-origin-security</code>, <code>POST /api/v1/preview/session/:taskId</code>). Inside an app tab that means an iframe to the handoff URL; the handoff cookie must then be accepted in a third-party context (<code>SameSite=None; Secure</code>, ideally <code>Partitioned</code>), and the preview host must not send <code>X-Frame-Options</code> / <code>frame-ancestors</code> that refuse the G5 origin. If either cannot be met, the fallback is the bar's <b>Open in browser</b> as today, and the tab shows why.</li>
+        <li><b>Application WebSockets</b> (Vite HMR and the like) must keep working from the framed origin; the proxy already requires the preview origin for upgrades, which an iframe preserves.</li>
+        <li><b>Stop from the preview tab.</b> The bar's Stop uses the existing cancel route and cleanup; it needs the workspace's preview read (<code>GET /workspaces/:id/preview</code>) from the preview route too, or the tab reads the state the dialog already polls.</li>
+        <li><b>#693 coordination.</b> The log region (stage strip + read-only hosted terminal) is taken from that PR unchanged; only the shell around it moves. The log's terminal is the one scroll region, inside the panel's <code>max-h-[85vh]</code> with <code>min-h-0</code>.</li>
+        <li>Variant A (label swap) is recommended: the cue sits on the control it governs and needs no new element; variant B keeps the label stable for a screen reader at the cost of a second place to read.</li>
+      </ol>
+    </div>
+  </div>
+</div>
+
+<script>
+const icon = {
+  x: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>`,
+  square: `<svg viewBox="0 0 24 24" aria-hidden="true"><rect width="14" height="14" x="5" y="5" rx="2"/></svg>`,
+  loader: `<svg class="spin" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>`,
+  appWindow: `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M10 4v4"/><path d="M2 8h20"/><path d="M6 4v4"/></svg>`,
+  ext: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>`,
+  scroll: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 12h-5"/><path d="M15 8h-5"/><path d="M19 17V5a2 2 0 0 0-2-2H4"/><path d="M8 21h12a2 2 0 0 0 2-2v-1a1 1 0 0 0-1-1H11a1 1 0 0 0-1 1v1a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v2a1 1 0 0 0 1 1h3"/></svg>`,
+  chevron: `<svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>`,
+  check: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>`,
+  house: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>`,
+  plus: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>`,
+  reload: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>`,
+  back: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>`,
+  bell: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg>`,
+  gear: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>`,
+  chevRight: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>`,
+  hammer: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 12-8.5 8.5a2.12 2.12 0 1 1-3-3L12 9"/><path d="M17.64 15 22 10.64"/><path d="m20.91 11.7-1.25-1.25c-.6-.6-.93-1.4-.93-2.25v-.86L16.01 4.6a5.56 5.56 0 0 0-3.94-1.64H9l.92.82A6.18 6.18 0 0 1 12 8.4v1.56l2 2h2.47l2.26 1.91"/></svg>`,
+  file: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></svg>`,
+  msg: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>`,
+  git: `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M13 6h3a2 2 0 0 1 2 2v7"/><path d="M6 9v12"/></svg>`,
+};
+function monitor(state) {
+  return `<span class="mon" data-state="${state}" aria-hidden="true"><svg viewBox="0 0 24 24"><rect class="screen" width="20" height="14" x="2" y="3" rx="2"/><path class="stand" d="M8 21h8"/><path class="stand" d="M12 17v4"/></svg></span>`;
+}
+
+const params = new URLSearchParams(location.search);
+const state = {
+  state: params.get("state") || "starting",
+  log: params.get("log") || "closed",
+  variant: params.get("variant") || "A",
+  width: params.get("width") || "wide",
+  tab: params.get("tab") || "open",
+  theme: params.get("theme") || "light",
+  motion: params.get("motion") || "normal",
+};
+// A stale link may still name a removed state (the mock once had "opening").
+if (!["starting", "serving", "closing", "failed"].includes(state.state)) state.state = "starting";
+
+const PROFILE = { name: "Workspace default", description: "Vite dev server", port: 5173 };
+const WORKSPACE = "preview-ux-improvement";
+
+const LIFECYCLE = {
+  starting: { tone: "warn", pill: "Starting", icon: icon.loader, text: "<b>Starting</b> the configured application…", ready: false },
+  serving: { tone: "ok", pill: "Serving", icon: `<span class="dot"></span>`, text: `<b>Serving</b> on port ${PROFILE.port} · ready to open`, ready: true },
+  closing: { tone: "warn", pill: "Stopping", icon: icon.loader, text: "<b>Stopping</b> the application and running its cleanup command…", ready: false },
+};
+
+function stages(s) {
+  const done = (k, l) => ({ k, l, st: "done" });
+  const cur = (k, l) => ({ k, l, st: "current" });
+  const pend = (k, l) => ({ k, l, st: "pending" });
+  const serving = `Serving on port ${PROFILE.port}`;
+  switch (s) {
+    case "starting": return [done("queued", "Queued"), cur("starting", "Starting"), pend("building", "Building"), pend("serving", "Serving"), pend("closing", "Closing"), pend("closed", "Closed")];
+    case "serving": return [done("queued", "Queued"), done("starting", "Starting"), done("building", "Building"), cur("serving", serving), pend("closing", "Closing"), pend("closed", "Closed")];
+    case "closing": return [done("queued", "Queued"), done("starting", "Starting"), done("building", "Building"), done("serving", serving), cur("closing", "Closing"), pend("closed", "Closed")];
+    case "failed": return [done("queued", "Queued"), done("starting", "Starting"), { k: "building", l: "Failed while building", st: "failed" }, pend("serving", "Serving"), pend("closing", "Closing"), { k: "closed", l: "Failed", st: "failed" }];
+  }
+}
+const LINES = {
+  starting: `<span class="dim">── preview: starting ───────────────────────</span>
+<span class="dim">$ npm run dev -- --host 0.0.0.0 --port 5173</span>
+
+> frontend@0.0.0 dev
+> vite --host 0.0.0.0 --port 5173
+
+<span class="dim">Re-optimizing dependencies because lockfile has changed</span>`,
+  serving: `<span class="dim">── preview: starting ───────────────────────</span>
+<span class="dim">$ npm run dev -- --host 0.0.0.0 --port 5173</span>
+
+> frontend@0.0.0 dev
+> vite --host 0.0.0.0 --port 5173
+
+<span class="dim">Re-optimizing dependencies because lockfile has changed</span>
+
+  <span class="ok">VITE v6.3.5</span>  ready in 612 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: http://10.0.2.15:5173/
+<span class="dim">── preview: serving on port 5173 ───────────</span>
+<span class="dim">12:04:11</span> [vite] hmr update /src/App.tsx`,
+  closing: `  ➜  Local:   http://localhost:5173/
+  ➜  Network: http://10.0.2.15:5173/
+<span class="dim">── preview: serving on port 5173 ───────────</span>
+<span class="dim">12:04:11</span> [vite] hmr update /src/App.tsx
+<span class="dim">── preview: closing (SIGTERM) ──────────────</span>
+<span class="dim">$ just dev-down</span>
+Stopping dev services…`,
+  failed: `<span class="dim">$ npm run dev -- --host 0.0.0.0 --port 5173</span>
+
+> frontend@0.0.0 dev
+> vite --host 0.0.0.0 --port 5173
+
+<span class="err">error</span> when starting dev server:
+<span class="err">Error: Cannot find module '@vitejs/plugin-react'</span>
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1225:15)
+<span class="dim">── preview: exited 1 ───────────────────────</span>`,
+};
+
+function runLog(s) {
+  const live = s !== "failed";
+  const st = stages(s).map((x) => `<li data-state="${x.st}"><span class="mark" data-state="${x.st}">${x.st === "done" ? icon.check : x.st === "failed" ? icon.x : ""}</span>${x.l}</li>`).join("");
+  return `<div class="runlog" id="workspace-preview-run-log">
+    <ol class="stages" aria-label="Preview stages">${st}</ol>
+    <div class="term">
+      <div class="th"><b>preview · ${PROFILE.name.toLowerCase()}</b><span class="badge">read-only</span><span>${live ? "attached" : "session ended · retained"}</span><span>${live ? "12 KiB" : "3 KiB"} of 4 MiB retained</span></div>
+      <pre>${LINES[s]}</pre>
+    </div>
+  </div>`;
+}
+
+function openButton(s, variant) {
+  const lc = LIFECYCLE[s];
+  const ready = lc.ready;
+  const busy = s === "starting";
+  let label = "Open preview";
+  let glyph = icon.appWindow;
+  // Starting: the cue sits on Open (variant A). Stopping: the pending label belongs to
+  // Stop alone; Open is simply not available, so it keeps its own name.
+  if (!ready && s === "starting" && variant === "A") { label = "Starting…"; glyph = icon.loader; }
+  const aria = !ready ? ` aria-disabled="true" disabled title="${s === "closing" ? "The preview is stopping" : "The application is still starting"}"` : "";
+  return `<button class="btn open" data-ready="${ready}"${aria}${busy ? ' aria-busy="true"' : ""}>${glyph}${label}</button>`;
+}
+function stopButton(s) {
+  if (s === "closing") return `<button class="btn stop" disabled aria-busy="true">${icon.loader}Stopping…</button>`;
+  return `<button class="btn stop" title="Stop the application and run its cleanup command">${icon.square}Stop preview</button>`;
+}
+function logButton(open) {
+  return `<button class="btn ghost" aria-pressed="${open}" aria-expanded="${open}" aria-controls="workspace-preview-run-log" title="Show the run's stages and the application's live output">${icon.scroll}Log${icon.chevron}</button>`;
+}
+
+function renderDialog() {
+  const s = state.state;
+  const logOpen = state.log === "open";
+  const d = document.getElementById("dialog");
+  d.dataset.log = logOpen ? "open" : "closed";
+  document.getElementById("viewport").dataset.width = state.width;
+  const lc = LIFECYCLE[s];
+  const pill = state.variant === "B" && lc
+    ? `<span class="pill" data-tone="${lc.tone}">${lc.tone === "ok" ? "" : icon.loader}${lc.pill}</span>`
+    : "";
+  const head = `<div class="head"><div class="title"><h3>Workspace preview</h3>${pill}</div><button class="x" aria-label="Close dialog" title="Close this dialog (the preview keeps running)">${icon.x}</button></div>`;
+  let body;
+  if (s === "failed") {
+    body = `<div class="stack">
+      <p class="notice" role="status">The last preview attempt (${PROFILE.name}) on port ${PROFILE.port} failed. Its command exited with an error. <button class="btn link" aria-expanded="${logOpen}">${logOpen ? "Hide log" : "View log"}</button></p>
+      ${logOpen ? runLog(s) : ""}
+      <label for="workspace-preview-application">Preview application</label>
+      <select id="workspace-preview-application" aria-label="Preview application"><option>frontend — Workspace default — Vite dev server (:5173)</option></select>
+      <button class="btn link" style="align-self:flex-start">Open profile in editor</button>
+      <button class="btn primary" style="align-self:flex-start">Start preview</button>
+    </div>`;
+  } else {
+    body = `<div class="stack">
+      <p class="profile"><b>${PROFILE.name}</b> <span class="muted">· ${PROFILE.description}</span></p>
+      <div class="status" role="status" data-tone="${lc.tone}"><span class="ic">${lc.icon}</span><span class="txt">${lc.text}</span></div>
+      <div class="actions">${openButton(s, state.variant)}${stopButton(s)}${logButton(logOpen)}</div>
+      ${logOpen ? runLog(s) : ""}
+      <p class="hint"><b>Close dialog</b> (×) keeps the preview running. <b>Stop preview</b> stops the application and runs its cleanup command. One preview runs at a time.</p>
+    </div>`;
+  }
+  d.innerHTML = head + body;
+  const captions = {
+    starting: "Starting: Open preview is inert on the neutral surface, Stop preview is fully available, the status line names the stage.",
+    serving: "Serving: Open preview is the green primary (it opens a G5 tab); Stop preview stays beside it.",
+    closing: "Stopping: Stop preview shows the pending stop; Open preview returns to the inert surface.",
+    failed: "Last run failed: the notice links to the retained log; the launcher is offered again.",
+  };
+  document.getElementById("dialog-caption").textContent =
+    `${captions[s]} ${logOpen ? "Log open: the dialog widens to the lg size; the terminal is the one scroll region." : ""} ${state.width === "narrow" ? "Narrow viewport (360 px): the action row wraps; no horizontal overflow." : ""}`;
+}
+
+function tab({ label, glyph, selected, closable, title }) {
+  return `<div class="tab" role="presentation" aria-selected="${!!selected}"><button role="tab" class="tb${closable ? " has-x" : ""}" aria-selected="${!!selected}" title="${title || label}">${glyph}<span class="nm">${label}</span></button>${closable ? `<button class="tx" aria-label="Close ${label}" title="Close tab">${icon.x}</button>` : ""}</div>`;
+}
+function renderTabs() {
+  const t = state.tab;
+  const previewOpen = t === "open" || t === "stopped";
+  const monState = t === "stopped" ? "stopped" : "serving";
+  const strip = `<div class="strip" data-testid="workspace-tab-bar">
+    <div class="tablist" role="tablist" aria-label="Open workspaces">
+      <div class="tab home" aria-selected="false"><button role="tab" class="tb" aria-label="Home" title="Home">${icon.house}</button></div>
+      ${tab({ label: "Base", glyph: `<span class="phase" title="Business engineering">${icon.chevRight}</span>`, closable: true })}
+      ${tab({ label: WORKSPACE, glyph: `<span class="phase" title="Software engineering">${icon.hammer}</span>`, closable: true, selected: !previewOpen })}
+      ${previewOpen ? tab({ label: `Preview · ${WORKSPACE}`, glyph: monitor(monState), closable: true, selected: true, title: `${WORKSPACE} — preview · ${PROFILE.name} (:${PROFILE.port})` }) : ""}
+      <button class="tab-add" aria-label="New tab" title="New tab">${icon.plus}</button>
+    </div>
+    <div class="trailing"><span class="ic">${icon.bell}</span><span class="ic">${icon.gear}</span></div>
+  </div>`;
+  let page;
+  if (!previewOpen) {
+    page = `<div class="page wspage">
+      <div class="ribbon"><button class="rb">${icon.msg}<span>Chat</span></button><button class="rb">${icon.file}<span>Files</span></button><button class="rb">${icon.git}<span>Changes</span></button><span class="divider"></span><button class="rb" aria-describedby="t">${monitor("serving")}<span>Preview</span></button></div>
+      <div class="rest">Workspace page, unchanged. Preview in the ribbon opens the dialog; its glyph is lit while a preview serves.</div>
+    </div>`;
+  } else if (t === "open") {
+    page = `<div class="page">
+      <div class="pbar">
+        <div class="who">${monitor("serving")}<b>${WORKSPACE}</b><span class="sep">·</span><span>${PROFILE.name}</span><span class="sep">·</span><span>port ${PROFILE.port}</span></div>
+        <span class="pill" data-tone="ok">Serving</span>
+        <span class="origin" title="https://3f1c9a2e-….preview.g5labs.ai/">3f1c9a2e-….preview.g5labs.ai</span>
+        <span class="grow"></span>
+        <button class="btn ghost icon" aria-label="Reload the application" title="Reload">${icon.reload}</button>
+        <button class="btn ghost" title="Open the application in a browser tab outside G5">${icon.ext}Open in browser</button>
+        <button class="btn stop" title="Stop the application and run its cleanup command">${icon.square}Stop preview</button>
+      </div>
+      <div class="appframe">
+        <div class="fake">
+          <div class="nav"><b>Sample app</b><span>Dashboard</span><span>Orders</span><span>Settings</span></div>
+          <div class="cards"><div class="card"><b>Revenue</b><span>Up 4.2% week on week</span></div><div class="card"><b>Open orders</b><span>37 awaiting dispatch</span></div><div class="card"><b>Deploy</b><span>main · 2 min ago</span></div></div>
+        </div>
+        <span class="corner">iframe → isolated preview origin</span>
+      </div>
+    </div>`;
+  } else {
+    page = `<div class="page">
+      <div class="pbar">
+        <div class="who">${monitor("stopped")}<b>${WORKSPACE}</b><span class="sep">·</span><span>${PROFILE.name}</span><span class="sep">·</span><span>port ${PROFILE.port}</span></div>
+        <span class="pill">Stopped</span>
+        <span class="grow"></span>
+        <button class="btn ghost" title="Go to the workspace tab">${icon.back}Back to workspace</button>
+      </div>
+      <div class="stopped">
+        ${monitor("stopped")}
+        <h4>The preview stopped</h4>
+        <p>The application was stopped and its cleanup command ran. This tab stays until you close it; start the preview again from the workspace to reuse it.</p>
+        <div class="row"><button class="btn primary">Start preview again</button><button class="btn ghost">Close tab</button></div>
+      </div>
+    </div>`;
+  }
+  document.getElementById("shell").innerHTML = strip + page;
+  const captions = {
+    before: "Before: the workspace's own tab is active. Preview in the ribbon opens the dialog.",
+    open: "After Open preview: a new top-level tab beside the workspace, lit monitor glyph, the application framed under a slim bar. The workspace tab stays open.",
+    stopped: "After Stop preview: the tab stays, says so, and offers the way back or a restart. Closing the tab never stops a preview; Stop does.",
+  };
+  document.getElementById("tabs-caption").textContent = captions[t];
+}
+
+function render() {
+  document.documentElement.dataset.theme = state.theme;
+  document.documentElement.dataset.motion = state.motion;
+  document.querySelectorAll(".seg").forEach((seg) => {
+    const key = seg.dataset.key;
+    seg.querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.v === state[key])));
+  });
+  renderDialog();
+  renderTabs();
+}
+document.querySelectorAll(".seg").forEach((seg) => {
+  seg.addEventListener("click", (event) => {
+    const b = event.target.closest("button");
+    if (!b) return;
+    state[seg.dataset.key] = b.dataset.v;
+    const q = new URLSearchParams(state);
+    history.replaceState(null, "", `?${q}`);
+    render();
+  });
+});
+render();
+</script>

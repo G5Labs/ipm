@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="editor" data-mode="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mock R — Motion spec for the Guided panel</title>
+<style>
+  :root {
+    --g5-bg0: rgb(10 12 16); --g5-bg1: rgb(14 17 24); --g5-bg2: rgb(18 22 31);
+    --g5-stroke: rgb(255 255 255 / 0.08); --ring: rgb(255 255 255 / 0.35);
+    --g5-text0: rgb(236 242 255); --muted: rgb(236 242 255 / 0.68); --meta: rgb(236 242 255 / 0.56);
+    --g5-info: rgb(103 164 255); --g5-ok: rgb(113 201 136); --g5-warn: rgb(242 162 73);
+    --phase-se: rgb(121 175 227); --phase-se-soft: rgb(18 39 57); --phase-ie: rgb(172 149 218); --phase-ie-soft: rgb(34 28 52);
+    --radius: 4px; --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; --mono: ui-monospace, Menlo, monospace;
+    /* the three tokens this spec adds to index.css */
+    --g5-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    --g5-ease-move: cubic-bezier(0.77, 0, 0.175, 1);
+    --g5-d-fast: 120ms; --g5-d-base: 180ms; --g5-d-slow: 240ms;
+    --speed: 1;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-sans); background: var(--g5-bg0); color: var(--g5-text0); font-size: 13px; padding: 24px 28px 60px; }
+  button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; }
+  button:focus-visible { outline: 2px solid var(--g5-info); outline-offset: 2px; }
+  h1 { font-size: 18px; font-weight: 500; line-height: 24px; }
+  .intro { color: var(--muted); font-size: 13px; line-height: 18px; max-width: 800px; margin-top: 4px; text-wrap: pretty; }
+  .tokens { display: flex; gap: 18px; flex-wrap: wrap; margin: 14px 0 6px; font-family: var(--mono); font-size: 12px; color: var(--muted); }
+  .tokens span b { color: var(--g5-text0); font-weight: 500; }
+  .controls { display: flex; gap: 8px; margin: 10px 0 22px; align-items: center; color: var(--meta); font-size: 12px; }
+  .controls button { height: 28px; padding: 0 10px; border: 1px solid var(--g5-stroke); border-radius: var(--radius); font-size: 12px; color: var(--muted); }
+  .controls button.on { border-color: var(--g5-info); color: var(--g5-info); }
+  .ev { display: grid; grid-template-columns: 1fr 318px; gap: 24px; padding: 18px 0; border-top: 1px solid var(--g5-stroke); align-items: start; }
+  .ev h2 { font-size: 14px; font-weight: 500; line-height: 20px; }
+  .tier { font-size: 12px; color: var(--meta); margin-top: 1px; }
+  .spec { margin-top: 8px; font-size: 13px; line-height: 18px; color: var(--muted); max-width: 640px; text-wrap: pretty; }
+  .spec b { color: var(--g5-text0); font-weight: 500; }
+  .spec code { font-family: var(--mono); font-size: 12px; color: var(--g5-text0); }
+  .rm { margin-top: 6px; font-size: 12px; line-height: 16px; color: var(--meta); }
+  .rm b { color: var(--muted); font-weight: 500; }
+  .frame { width: 318px; background: var(--g5-bg1); border: 1px solid var(--g5-stroke); border-radius: 6px; padding: 40px 12px 10px; position: relative; min-height: 96px; }
+  .play { position: absolute; right: 8px; top: 8px; height: 24px; padding: 0 8px; border: 1px solid var(--g5-stroke); border-radius: var(--radius); font-size: 12px; color: var(--muted); z-index: 2; }
+  .play:hover { color: var(--g5-text0); }
+  /* shared row bits */
+  .row { display: grid; grid-template-columns: 20px 1fr auto; column-gap: 10px; align-items: start; min-height: 32px; padding: 6px 0; }
+  .ring { width: 20px; height: 20px; margin-top: 1px; border-radius: 50%; border: 1.5px solid var(--ring); display: inline-flex; align-items: center; justify-content: center; color: rgb(10 12 16); transition: background-color calc(var(--g5-d-base) * var(--speed)) var(--g5-ease-out), border-color calc(var(--g5-d-base) * var(--speed)) var(--g5-ease-out); }
+  .ring svg { width: 12px; height: 12px; opacity: 0; transform: scale(.9); transition: opacity calc(var(--g5-d-base) * var(--speed)) var(--g5-ease-out), transform calc(var(--g5-d-base) * var(--speed)) var(--g5-ease-out); }
+  .done .ring { background: var(--g5-ok); border-color: var(--g5-ok); }
+  .done .ring svg { opacity: 1; transform: scale(1); }
+  .label { font-size: 13px; line-height: 20px; }
+  .done .label { color: var(--muted); }
+  .status { font-size: 12px; line-height: 20px; color: var(--meta); font-variant-numeric: tabular-nums; transition: opacity calc(var(--g5-d-base) * var(--speed)) var(--g5-ease-out) calc(60ms * var(--speed)); }
+  .status.next { color: var(--phase-se); opacity: 0; }
+  .done + .row .status.next { opacity: 1; }
+  .chev { width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; color: var(--meta); transition: transform calc(var(--g5-d-fast) * var(--speed)) var(--g5-ease-out); }
+  .chev svg { width: 12px; height: 12px; }
+  .open .chev { transform: rotate(90deg); }
+  /* 1 expand */
+  .body { grid-column: 2 / -1; display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows calc(var(--g5-d-fast) * var(--speed)) var(--g5-ease-out), opacity calc(var(--g5-d-fast) * var(--speed)) var(--g5-ease-out); }
+  .open .body { grid-template-rows: 1fr; opacity: 1; transition-duration: calc(var(--g5-d-base) * var(--speed)); }
+  .body > div { overflow: hidden; }
+  .note { font-size: 12px; line-height: 16px; color: var(--muted); margin-top: 2px; }
+  .btn { display: inline-flex; align-items: center; height: 28px; padding: 0 10px; font-size: 13px; font-weight: 500; border-radius: var(--radius); border: 1px solid var(--phase-se); color: var(--phase-se); margin-top: 8px; transition: transform 160ms var(--g5-ease-out); }
+  .btn:active { transform: scale(.97); }
+  /* 3 chips */
+  .chips { grid-column: 2 / -1; display: flex; gap: 6px; flex-wrap: wrap; }
+  .chip { display: inline-flex; align-items: center; min-height: 24px; padding: 0 6px; border-radius: var(--radius); background: var(--g5-bg2); color: var(--muted); font-size: 12px; opacity: 0; transform: translateY(4px); transition: opacity calc(var(--g5-d-base) * var(--speed)) var(--g5-ease-out), transform calc(var(--g5-d-base) * var(--speed)) var(--g5-ease-out); }
+  .chip:nth-child(2) { transition-delay: calc(50ms * var(--speed)); }
+  .arrived .chip { opacity: 1; transform: none; }
+  /* 4 running */
+  .running .ring { border-color: var(--g5-info); border-width: 2px; animation: breathe calc(3000ms * var(--speed)) ease-in-out infinite; }
+  @keyframes breathe { 0%, 100% { opacity: 1; } 50% { opacity: .8; } }
+  .running .status { color: var(--g5-info); }
+  /* 5 phase move */
+  .summary { background: var(--g5-bg2); border-radius: var(--radius); padding: 10px 12px; position: relative; overflow: hidden; }
+  .summary .lead { font-size: 14px; font-weight: 500; line-height: 20px; }
+  .summary .sub { font-size: 12px; color: var(--muted); line-height: 16px; }
+  .summary .face { transition: opacity calc(var(--g5-d-base) * var(--speed)) var(--g5-ease-out), filter calc(var(--g5-d-base) * var(--speed)) var(--g5-ease-out); }
+  .summary .face.b { position: absolute; inset: 10px 12px; opacity: 0; filter: blur(2px); }
+  .moved .summary .face.a { opacity: 0; filter: blur(2px); }
+  .moved .summary .face.b { opacity: 1; filter: blur(0); }
+  .node { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--ring); display: inline-flex; align-items: center; justify-content: center; font-size: 11px; color: var(--meta); transition: border-color calc(var(--g5-d-base) * var(--speed)) var(--g5-ease-out), transform calc(var(--g5-d-slow) * var(--speed)) var(--g5-ease-out) calc(60ms * var(--speed)); }
+  .moved .node.ie { border-color: var(--phase-ie); transform: scale(1); }
+  .node.ie { transform: scale(.9); }
+  .moved .node.se { border-color: var(--g5-ok); background: var(--g5-ok); }
+  .steps-se { display: grid; grid-template-rows: 1fr; opacity: 1; transition: grid-template-rows calc(var(--g5-d-slow) * var(--speed)) var(--g5-ease-move), opacity calc(var(--g5-d-base) * var(--speed)) var(--g5-ease-out); }
+  .moved .steps-se { grid-template-rows: 0fr; opacity: 0; }
+  .steps-se > div { overflow: hidden; }
+  .ph { display: flex; align-items: center; gap: 10px; min-height: 32px; font-size: 13px; }
+  .ph .n { margin-left: auto; font-size: 12px; color: var(--meta); font-variant-numeric: tabular-nums; }
+  /* 6 approval */
+  .roster { display: flex; align-items: center; gap: 8px; min-height: 32px; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .av { width: 20px; height: 20px; border-radius: 50%; font-size: 8px; font-weight: 600; color: rgb(8 12 24); display: inline-flex; align-items: center; justify-content: center; border: 2px solid var(--g5-bg1); box-shadow: 0 0 0 1.5px rgb(236 242 255 / 0.25); opacity: .5; transition: box-shadow calc(var(--g5-d-base) * var(--speed)) var(--g5-ease-out), opacity calc(var(--g5-d-base) * var(--speed)) var(--g5-ease-out), transform calc(var(--g5-d-slow) * var(--speed)) var(--g5-ease-out); }
+  .av.ok { opacity: 1; box-shadow: 0 0 0 1.5px var(--g5-ok); }
+  .approved .av.jt { opacity: 1; box-shadow: 0 0 0 1.5px var(--g5-ok); animation: pop calc(var(--g5-d-slow) * var(--speed)) var(--g5-ease-out); }
+  @keyframes pop { 0% { transform: scale(1); } 50% { transform: scale(1.06); } 100% { transform: scale(1); } }
+  .live { font-size: 12px; color: var(--meta); margin-top: 6px; min-height: 16px; }
+  /* 7 complete */
+  .rows7 .row { transition: opacity calc(var(--g5-d-base) * var(--speed)) var(--g5-ease-out); }
+  .complete .rows7 .row:nth-last-child(1) { opacity: 0; transition-delay: 0ms; }
+  .complete .rows7 .row:nth-last-child(2) { opacity: 0; transition-delay: calc(30ms * var(--speed)); }
+  .complete .rows7 .row:nth-last-child(3) { opacity: 0; transition-delay: calc(60ms * var(--speed)); }
+  .card { position: absolute; inset: 40px 12px auto 12px; background: var(--g5-bg2); border-radius: var(--radius); padding: 10px 12px; opacity: 0; transform: scale(.96); transition: opacity calc(var(--g5-d-slow) * var(--speed)) var(--g5-ease-out) calc(120ms * var(--speed)), transform calc(var(--g5-d-slow) * var(--speed)) var(--g5-ease-out) calc(120ms * var(--speed)); }
+  .complete .card { opacity: 1; transform: none; }
+  .card .lead { font-size: 14px; font-weight: 500; line-height: 20px; display: flex; gap: 8px; align-items: center; }
+  .card .ck { width: 18px; height: 18px; border-radius: 50%; background: var(--g5-ok); color: rgb(10 12 16); display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; }
+  .card .sub { font-size: 12px; color: var(--muted); line-height: 16px; margin-top: 2px; }
+  /* reduced motion: keep colour and opacity, drop movement; stop loops */
+  body.rm .ring svg, body.rm .chip, body.rm .node, body.rm .av, body.rm .card, body.rm .chev { transition-property: opacity, background-color, border-color, box-shadow, color; transform: none !important; animation: none !important; }
+  body.rm .running .ring { animation: none; }
+  body.rm .body, body.rm .steps-se { transition-property: opacity; }
+  body.rm .summary .face { filter: none !important; }
+  @media (prefers-reduced-motion: reduce) {
+    .ring svg, .chip, .node, .av, .card, .chev { transition-property: opacity, background-color, border-color, box-shadow, color; transform: none !important; animation: none !important; }
+    .running .ring { animation: none; } .body, .steps-se { transition-property: opacity; } .summary .face { filter: none !important; }
+  }
+</style>
+</head>
+<body>
+  <h1>Mock R — motion spec</h1>
+  <p class="intro">Every transition the panel is allowed, with its tier, choreography and reduced-motion fallback, playable at the real width. Rules applied: things done tens of times a day get 120ms or nothing; occasional changes get 180ms; the once-per-workspace moment gets 240ms and one soft entrance. Transform and opacity only, except the accordion's height. Transitions, never keyframes, for anything a person can toggle twice a second, so Undo retargets mid-flight. Nothing travels more than 20% of the panel width. Loops stop under reduced motion; colour and opacity changes stay.</p>
+  <div class="tokens"><span><b>--g5-ease-out</b> cubic-bezier(0.23, 1, 0.32, 1)</span><span><b>--g5-ease-move</b> cubic-bezier(0.77, 0, 0.175, 1)</span><span><b>--g5-d-fast</b> 120ms</span><span><b>--g5-d-base</b> 180ms</span><span><b>--g5-d-slow</b> 240ms</span><span><b>press</b> scale(.97) 160ms on every pressable</span></div>
+  <div class="controls">Playback <button data-speed="1" class="on">1×</button><button data-speed="4">4× slower</button><button data-rm>Reduced motion</button></div>
+
+  <section class="ev">
+    <div><h2>1 · Expand or collapse a step row</h2><div class="tier">Tens of times a day → minimal</div>
+      <div class="spec">Open: height and opacity <b>180ms ease-out</b> (the one place height may animate). Close: <b>120ms</b>. Chevron rotates 90° in 120ms. A keyboard toggle (Enter/Space) opens with <b>no animation</b>.</div>
+      <div class="rm"><b>Reduced motion:</b> opacity 120ms, no height change.</div></div>
+    <div class="frame" id="f1"><button class="play" data-play="f1" data-cls="open">Play</button>
+      <div class="row"><span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></span><span class="label">Get the code reviewed</span><span class="status"></span>
+        <div class="body"><div><div class="note">The review skill reads the change and reports as a conversation.</div><button class="btn">Code review</button></div></div></div>
+    </div>
+  </section>
+
+  <section class="ev">
+    <div><h2>2 · Mark done, and undo</h2><div class="tier">Occasional → standard</div>
+      <div class="spec">Ring fills (<code>background-color</code> 180ms). Check fades in and settles from <b>scale .9 → 1</b>, 180ms ease-out, never from 0. The label changes tier with no animation. The next row's “Next” word fades in <b>60ms later</b>. All transitions, so Undo reverses from wherever it is.</div>
+      <div class="rm"><b>Reduced motion:</b> fill and check by colour and opacity only.</div></div>
+    <div class="frame" id="f2"><button class="play" data-play="f2" data-cls="done" data-target=".row">Play</button>
+      <div class="row"><span class="ring"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><span class="label">Explain the design</span><span class="status"></span></div>
+      <div class="row"><span class="ring"></span><span class="label">Build the code</span><span class="status next">Next</span></div>
+    </div>
+  </section>
+
+  <section class="ev">
+    <div><h2>3 · Evidence arrives</h2><div class="tier">Occasional → standard</div>
+      <div class="spec">Same as a mark, plus each document chip enters from <b>4px below</b> with opacity, 180ms ease-out; a second chip follows after <b>50ms</b>. Total stays under 250ms.</div>
+      <div class="rm"><b>Reduced motion:</b> chips fade in, no travel.</div></div>
+    <div class="frame" id="f3"><button class="play" data-play="f3" data-cls="arrived done">Play</button>
+      <div class="row"><span class="ring"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><span class="label">Show it as a mock</span><span class="status"></span>
+        <div class="chips"><span class="chip">onboarding-a.html</span><span class="chip">onboarding-b.html</span></div></div>
+    </div>
+  </section>
+
+  <section class="ev">
+    <div><h2>4 · Running</h2><div class="tier">Continuous → waiting</div>
+      <div class="spec">No spinner loop. The ring takes a <b>2px info border</b>; the elapsed time is tabular and updates once a minute with no morph. Optional breathe on the ring: opacity 1 → .8 → 1 over <b>3000ms</b>, sine, paused when the panel is off screen.</div>
+      <div class="rm"><b>Reduced motion:</b> ring and text only. The word “Running” carries the state.</div></div>
+    <div class="frame" id="f4"><button class="play" data-play="f4" data-cls="running">Play</button>
+      <div class="row"><span class="ring"></span><span class="label">Build the code</span><span class="status">Running 2 min</span></div>
+    </div>
+  </section>
+
+  <section class="ev">
+    <div><h2>5 · Phase move</h2><div class="tier">Rare → standard, the panel's largest change</div>
+      <div class="spec">In <b>240ms</b>: the finished phase's open rows collapse with <b>ease-move</b>; its node turns green; the new phase's node ring scales <b>.9 → 1</b> starting 60ms in; the summary's two faces crossfade in 180ms with a <b>2px blur</b> seam so the text never doubles. Nothing travels more than 64px.</div>
+      <div class="rm"><b>Reduced motion:</b> crossfade only, no blur, no scale; rows swap without height animation.</div></div>
+    <div class="frame" id="f5"><button class="play" data-play="f5" data-cls="moved">Play</button>
+      <div class="summary"><div class="face a"><div class="lead">Every step is done</div><div class="sub">System Engineering, 4 of 4 done.</div></div><div class="face b"><div class="lead">Rebase and open the pull request</div><div class="sub">Integration Engineering, 0 of 2 done.</div></div></div>
+      <div class="ph" style="margin-top:8px"><span class="node se">2</span>System Engineering<span class="n">4 of 4</span></div>
+      <div class="steps-se"><div><div class="row"><span class="ring" style="background:var(--g5-ok);border-color:var(--g5-ok)"></span><span class="label" style="color:var(--muted)">Get the code reviewed</span><span class="status">Done</span></div></div></div>
+      <div class="ph"><span class="node ie">3</span>Integration Engineering<span class="n">0 of 2</span></div>
+    </div>
+  </section>
+
+  <section class="ev">
+    <div><h2>6 · An approval arrives</h2><div class="tier">Rare → standard</div>
+      <div class="spec">The avatar's ring turns green and its opacity rises in 180ms; the avatar pops <b>1 → 1.06 → 1</b> over 240ms ease-out. The count updates in tabular figures. A polite live region says who approved what.</div>
+      <div class="rm"><b>Reduced motion:</b> colour and opacity only; the live sentence is unchanged.</div></div>
+    <div class="frame" id="f6"><button class="play" data-play="f6" data-cls="approved">Play</button>
+      <div class="roster"><span class="av ok" style="background:rgb(172 149 218)">JL</span><span class="av jt" style="background:rgb(111 188 174)">JT</span><span id="cnt6">1 of 2 approved</span></div>
+      <div class="live" id="live6"></div>
+    </div>
+  </section>
+
+  <section class="ev">
+    <div><h2>7 · Journey complete</h2><div class="tier">Once per workspace → the delight budget</div>
+      <div class="spec">Rows fade out bottom-up with a <b>30ms stagger</b> (under 400ms in total). The completion card enters from <b>scale .96</b> with opacity, 240ms ease-out, 120ms after the rows start leaving. No confetti, no bounce.</div>
+      <div class="rm"><b>Reduced motion:</b> one 200ms crossfade from rows to card.</div></div>
+    <div class="frame" id="f7" style="min-height:140px"><button class="play" data-play="f7" data-cls="complete">Play</button>
+      <div class="rows7">
+        <div class="row done"><span class="ring"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><span class="label">Rebase and open the pull request</span><span class="status">Done</span></div>
+        <div class="row done"><span class="ring"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><span class="label">Land it</span><span class="status">Done</span></div>
+        <div class="row"><span class="ring"></span><span class="label" style="color:var(--muted)">Approvals</span><span class="status">2 of 2</span></div>
+      </div>
+      <div class="card"><div class="lead"><span class="ck">✓</span>Journey complete</div><div class="sub">Merged to internal-g5-devs/base via g5labs/g5#41, 2 days ago.</div></div>
+    </div>
+  </section>
+
+<script>
+(function () {
+  document.querySelectorAll('[data-speed]').forEach(b => b.addEventListener('click', () => {
+    document.documentElement.style.setProperty('--speed', b.dataset.speed);
+    document.querySelectorAll('[data-speed]').forEach(x => x.classList.toggle('on', x === b));
+  }));
+  document.querySelector('[data-rm]').addEventListener('click', e => { document.body.classList.toggle('rm'); e.currentTarget.classList.toggle('on'); });
+  document.querySelectorAll('[data-play]').forEach(b => b.addEventListener('click', () => {
+    const f = document.getElementById(b.dataset.play);
+    const target = b.dataset.target ? f.querySelector(b.dataset.target) : f;
+    const classes = b.dataset.cls.split(' ');
+    const on = classes.every(c => target.classList.contains(c));
+    classes.forEach(c => target.classList.toggle(c, !on));
+    b.textContent = on ? 'Play' : 'Reverse';
+    if (b.dataset.play === 'f6') { document.getElementById('cnt6').textContent = on ? '1 of 2 approved' : '2 of 2 approved'; document.getElementById('live6').textContent = on ? '' : 'Live region: “Jada Torres approved System Engineering.”'; }
+  }));
+})();
+</script>
+</body>
+</html>

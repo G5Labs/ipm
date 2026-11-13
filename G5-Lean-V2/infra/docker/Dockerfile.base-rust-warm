@@ -1,0 +1,107 @@
+# syntax=docker/dockerfile:1
+# =============================================================================
+# Dockerfile.base-rust-warm — Rust toolchain tier + a BAKED workspace-dependency
+# sccache object cache, shared by every Rust image via ancestry.
+# Base: g5/base-rust:26.04   Platforms: linux/amd64, linux/arm64
+# =============================================================================
+# Contract: software_architecture/integration-stack/docker_images [D20] (shared
+# dependency-compilation ancestry) built on [D18] (common base + toolchain tiers)
+# and [D14] (build-cache is an acceleration contract, never a correctness one).
+#
+# WHY THIS TIER EXISTS
+# --------------------
+# `just ci-docker` (cargo in `docker run`) and `just dev-up` (cargo inside
+# `docker build`) are isolated cache contexts — a BuildKit cache mount and a
+# docker-run volume never see each other, and there is no host-filesystem bridge
+# between `docker build` and `docker run`. Rather than bridge them with an
+# external cache service, this tier bakes the compiled-dependency sccache cache
+# INTO a shared ancestor image. `ci-builder`, `g5-api`'s builder, and `g5d`'s
+# builder all `FROM g5/base-rust-warm:26.04`, so they inherit the warm sccache as
+# a read-only image layer and get dependency cache HITS with no service. This is
+# the g5d-g5dev [I31] "prime" pattern promoted to a fleet-shared tier.
+#
+# PATH ALIGNMENT IS LOAD-BEARING ([D20])
+# --------------------------------------
+# sccache's cache key hashes the crate's source path and rustc's `--out-dir`, so
+# a consumer only gets hits if it compiles with the SAME `CARGO_HOME` and
+# `CARGO_TARGET_DIR` this tier cooked with. Every consumer therefore compiles at
+# `CARGO_HOME=/usr/local/cargo` (from base-rust) and `CARGO_TARGET_DIR=/build/target`
+# with `RUSTC_WRAPPER=sccache` and `SCCACHE_DIR=/opt/g5-sccache`. A mismatch
+# silently yields a 0%-hit cache — verified empirically — so these paths are a
+# contract, not a convenience.
+# =============================================================================
+
+ARG BASE_IMAGE=g5/base-rust:26.04
+
+# --- Stage 1: derive the cargo-chef recipe from the workspace ----------------
+# The recipe is content-addressed over the Cargo manifests + lockfile +
+# .cargo/config.toml + target topology, so BuildKit only re-cooks when the
+# dependency shape actually changes; editing source files leaves the cook layer
+# cache-hit.
+FROM ${BASE_IMAGE} AS planner
+WORKDIR /build
+COPY . .
+RUN cargo chef prepare --recipe-path /recipe.json
+
+# --- Stage 2: cook deps under sccache and bake the object cache --------------
+FROM ${BASE_IMAGE} AS final
+WORKDIR /build
+
+ENV CARGO_HOME=/usr/local/cargo \
+    CARGO_TARGET_DIR=/build/target \
+    RUSTC_WRAPPER=sccache \
+    SCCACHE_DIR=/opt/g5-sccache \
+    CARGO_INCREMENTAL=0 \
+    SQLX_OFFLINE=true
+
+COPY .cargo/ .cargo/
+COPY --from=planner /recipe.json /recipe.json
+
+# Only the sccache object cache (/opt/g5-sccache) and the Cargo registry/git
+# sources ($CARGO_HOME) are kept; the cooked target tree and the recipe are
+# discarded so no app binaries or local-crate artifacts ship. The registry
+# sources ship so descendants resolve the same absolute source paths that keyed
+# the cache (path alignment, above).
+# Cook the full workspace dependency graph in dev/test mode. Only that profile is
+# cooked because the consumer this warms is `just ci-docker` (clippy/nextest/
+# check/tests all compile dev-profile); the backend/g5-api/g5d IMAGE builders compile
+# `--release` — a different, non-cross-hitting sccache key — and keep their own
+# BuildKit `--mount=type=cache` release cache, so a release cook here would only
+# double this tier's build for no ci-docker benefit.
+# `--all-targets --all-features` cooks the FULL dependency graph — normal, build,
+# AND dev-dependencies (wiremock, assert_cmd, serial_test, …), across every
+# feature — matching exactly what the ci-docker gates compile
+# (`cargo clippy --workspace --all-targets`, `nextest … --all-features`) and the
+# ci-builder warmup. Without `--all-targets` the cook warmed only normal deps, so
+# the first test-target compile paid to build all dev-deps cold. jobs is not part
+# of the sccache key; features and target-kind ARE, so this must mirror the
+# consumers for cross-context hits.
+RUN set -eux; \
+    cargo chef cook --workspace --all-targets --all-features --recipe-path /recipe.json; \
+    # Second cook, g5-dev profile: the compose stacks build backend/g5-api/g5d with
+    # G5_CARGO_PROFILE=g5-dev (docker-compose.dev.yml / docker-compose.test.yml),
+    # and sccache keys are profile-specific, so a dev-only cook would leave every
+    # `just dev-up` image build compiling its dependencies cold ([D20]).
+    cargo chef cook --workspace --all-targets --all-features --profile g5-dev --recipe-path /recipe.json; \
+    sccache --show-stats; \
+    (sccache --stop-server || true); \
+    # This tier exists ONLY to bake the dependency cache. Printing stats does not
+    # fail the build, so an empty cache previously shipped as a successful image
+    # and every descendant then compiled cold while believing it was warm — the
+    # expensive failure mode this tier is meant to prevent, and an invisible one.
+    # Assert the cache actually has content before discarding the cook inputs.
+    test -d "$SCCACHE_DIR" || { echo "FATAL: SCCACHE_DIR $SCCACHE_DIR missing after cook" >&2; exit 1; }; \
+    if [ -z "$(find "$SCCACHE_DIR" -type f -name '*' -print -quit)" ]; then \
+        echo "FATAL: baked sccache cache at $SCCACHE_DIR is empty after cargo chef cook" >&2; \
+        exit 1; \
+    fi; \
+    test -d "$CARGO_HOME/registry" || { echo "FATAL: warmed cargo registry missing at $CARGO_HOME/registry" >&2; exit 1; }; \
+    rm -rf /build/target /recipe.json /build/.cargo
+
+# Descendants (ci-builder, backend/g5-api/g5d builders) inherit /opt/g5-sccache and the
+# warmed registry. They must keep RUSTC_WRAPPER=sccache + SCCACHE_DIR=/opt/g5-sccache
+# + the aligned CARGO_HOME/CARGO_TARGET_DIR to hit this cache.
+ENV RUSTC_WRAPPER=sccache \
+    SCCACHE_DIR=/opt/g5-sccache
+
+CMD ["/bin/bash"]

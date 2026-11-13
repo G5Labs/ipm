@@ -1,0 +1,747 @@
+name: self-hosted-azure-install
+
+on:
+  workflow_dispatch:
+    inputs:
+      install_release:
+        description: "Public installer release tag, or latest"
+        required: false
+        default: "latest"
+        type: string
+      target_version:
+        description: "Runtime version for the clean install registry-token request"
+        required: false
+        default: "latest"
+        type: string
+      upgrade_version:
+        description: "Runtime version for just upgrade; defaults to target_version/latest"
+        required: false
+        default: "latest"
+        type: string
+      worker_hosts:
+        description: "External microVM worker VMs (must be exactly 1)"
+        required: false
+        default: "1"
+        type: string
+      azure_region:
+        description: "Azure region"
+        required: false
+        default: "eastus"
+        type: string
+      vm_size:
+        description: "Nested-virtualization Azure VM size"
+        required: false
+        default: "Standard_D4s_v3"
+        type: string
+      os_disk_size_gb:
+        description: "Azure VM OS disk size in GB"
+        required: false
+        default: "128"
+        type: string
+      keep_alive_minutes:
+        description: "Keep the Azure VM alive for click-through debugging before cleanup"
+        required: false
+        default: "0"
+        type: string
+  schedule:
+    # Nightly receipt that the published Lean release still installs, upgrades
+    # and executes microVM turns on Azure (G5Labs/G5-Lean#748). Scheduled runs
+    # take the input defaults; the environment supplies every secret.
+    - cron: "17 6 * * *"
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: self-hosted-azure-install
+  cancel-in-progress: false
+
+jobs:
+  azure-canary:
+    name: Real Azure self-hosted install
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    environment: self-hosted-azure-canary
+    # Job scope: environment-level variables are only visible to the job
+    # that selects the environment, never to a workflow-level env block.
+    env:
+      G5_GITHUB_RELEASE_REPO: G5Labs/Releases
+      G5_CANARY_DNS_LABEL: ${{ vars.G5_CANARY_DNS_LABEL }}
+      G5_CANARY_ADMIN_API_URL: ${{ vars.G5_CANARY_ADMIN_API_URL || 'https://qa.g5labs.ai' }}
+      G5_CANARY_AUTH_ALLOWED_EMAILS: ${{ vars.G5_CANARY_AUTH_ALLOWED_EMAILS || 'james.moore@g5labs.ai' }}
+      G5_CANARY_DEFAULT_ADMIN_EMAIL: ${{ vars.G5_CANARY_DEFAULT_ADMIN_EMAIL || 'james.moore@g5labs.ai' }}
+      G5_CANARY_DEFAULT_ADMIN_NAME: ${{ vars.G5_CANARY_DEFAULT_ADMIN_NAME || 'James Moore' }}
+      G5_CANARY_AR_LOCATION: ${{ vars.G5_CANARY_AR_LOCATION }}
+      G5_CANARY_AR_PROJECT: ${{ vars.G5_CANARY_AR_PROJECT }}
+      G5_CANARY_AR_REPOSITORY: ${{ vars.G5_CANARY_AR_REPOSITORY }}
+      G5_CANARY_REGISTRY_PULLER_SERVICE_ACCOUNT: ${{ vars.G5_CANARY_REGISTRY_PULLER_SERVICE_ACCOUNT }}
+
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
+
+      - name: Verify microVM canary contract
+        run: bash scripts/test-self-hosted-azure-microvm-canary.sh
+
+      - name: Resolve canary configuration
+        id: cfg
+        env:
+          INPUT_INSTALL_RELEASE: ${{ inputs.install_release }}
+          INPUT_TARGET_VERSION: ${{ inputs.target_version }}
+          INPUT_UPGRADE_VERSION: ${{ inputs.upgrade_version }}
+          INPUT_WORKER_HOSTS: ${{ inputs.worker_hosts }}
+          INPUT_AZURE_REGION: ${{ inputs.azure_region }}
+          INPUT_VM_SIZE: ${{ inputs.vm_size }}
+          INPUT_OS_DISK_SIZE_GB: ${{ inputs.os_disk_size_gb }}
+          INPUT_KEEP_ALIVE_MINUTES: ${{ inputs.keep_alive_minutes }}
+        run: |
+          set -euo pipefail
+          install_release="${INPUT_INSTALL_RELEASE:-latest}"
+          target_version="${INPUT_TARGET_VERSION:-latest}"
+          upgrade_version="${INPUT_UPGRADE_VERSION:-$target_version}"
+          worker_hosts="${INPUT_WORKER_HOSTS:-1}"
+          azure_region="${INPUT_AZURE_REGION:-eastus}"
+          vm_size="${INPUT_VM_SIZE:-Standard_D4s_v3}"
+          os_disk_size_gb="${INPUT_OS_DISK_SIZE_GB:-128}"
+          keep_alive_minutes="${INPUT_KEEP_ALIVE_MINUTES:-0}"
+
+          case "$worker_hosts" in ''|*[!0-9]*) echo "worker_hosts must be a non-negative integer" >&2; exit 2 ;; esac
+          case "$os_disk_size_gb" in ''|*[!0-9]*) echo "os_disk_size_gb must be a positive integer" >&2; exit 2 ;; esac
+          case "$keep_alive_minutes" in ''|*[!0-9]*) echo "keep_alive_minutes must be a non-negative integer" >&2; exit 2 ;; esac
+          [ "$os_disk_size_gb" -gt 0 ] || { echo "os_disk_size_gb must be greater than zero" >&2; exit 2; }
+          [ "$worker_hosts" -eq 1 ] || { echo "microVM canary requires worker_hosts=1" >&2; exit 2; }
+
+          case "$vm_size" in
+            Standard_D*v3|Standard_E*v3) ;;
+            *) echo "vm_size must be a nested-virtualization Dv3/Ev3 SKU" >&2; exit 2 ;;
+          esac
+
+          slug="$(printf 'g5sh-%s-%s' "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" | tr '[:upper:]' '[:lower:]' | tr -cd 'a-z0-9-' | cut -c1-40)"
+          # OAuth callbacks are registered per hostname, so the canary hostname
+          # must stay stable across runs. Resource-group names remain unique.
+          : "${G5_CANARY_DNS_LABEL:?Set G5_CANARY_DNS_LABEL to the Azure DNS label registered on the Entra app (and optional GitHub OAuth app)}"
+          [[ "$G5_CANARY_DNS_LABEL" =~ ^[a-z][a-z0-9-]{1,61}[a-z0-9]$ ]] || { echo "invalid G5_CANARY_DNS_LABEL" >&2; exit 2; }
+          fqdn="${G5_CANARY_DNS_LABEL}.${azure_region}.cloudapp.azure.com"
+          {
+            echo "install_release=$install_release"
+            echo "target_version=$target_version"
+            echo "upgrade_version=$upgrade_version"
+            echo "worker_hosts=$worker_hosts"
+            echo "azure_region=$azure_region"
+            echo "vm_size=$vm_size"
+            echo "os_disk_size_gb=$os_disk_size_gb"
+            echo "keep_alive_minutes=$keep_alive_minutes"
+            echo "slug=$slug"
+            echo "resource_group=rg-${slug}"
+            echo "fqdn=$fqdn"
+            echo "external_url=https://$fqdn"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Validate protected real-provider configuration
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+        run: |
+          set -euo pipefail
+          : "${OPENROUTER_API_KEY:?OPENROUTER_API_KEY is required for the real microVM canary}"
+          [ -z "${G5_CLAUDE_CODE_FAKE:-}" ] || { echo "fake provider mode is forbidden" >&2; exit 2; }
+          echo "::add-mask::$OPENROUTER_API_KEY"
+
+      - name: Package checked-out installer and self-hosted bundle
+        id: bundle
+        run: |
+          set -euo pipefail
+          stage="$RUNNER_TEMP/g5-canary-payload"
+          assets="$RUNNER_TEMP/g5-canary-release-assets"
+          mkdir -p "$stage"
+          G5_RELEASE_TAG='${{ steps.cfg.outputs.install_release }}' \
+            bash scripts/package-self-hosted-release-assets.sh "$assets"
+          cp "$assets/install.sh" "$assets/g5-self-hosted-bundle.tar.gz" "$stage/"
+          sha256sum "$stage/g5-self-hosted-bundle.tar.gz" > "$stage/g5-self-hosted-bundle.sha256"
+          echo "payload=$stage" >> "$GITHUB_OUTPUT"
+
+      - name: Azure login
+        uses: azure/login@7184910d9eb2b1c5e48f7073824a90609bb9b6d6 # v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Ensure Azure Container Registry provider is registered
+        run: |
+          set -euo pipefail
+          state="$(az provider show --namespace Microsoft.ContainerRegistry --query registrationState -o tsv)"
+          if [ "$state" != "Registered" ]; then
+            az provider register --namespace Microsoft.ContainerRegistry --wait
+          fi
+          test "$(az provider show --namespace Microsoft.ContainerRegistry --query registrationState -o tsv)" = "Registered"
+
+      # The canary hostname is stable, so the Entra redirect URI only needs to
+      # exist once. When the app registration object id is supplied, add the
+      # URI through Microsoft Graph if it is missing (idempotent, never removed
+      # afterwards); otherwise it must be pre-registered by the tenant owner.
+      # Runs right after azure/login so the OIDC assertion is still fresh.
+      - name: Ensure Entra redirect URI
+        env:
+          APP_OBJECT_ID: ${{ secrets.AZURE_ENTRA_APP_OBJECT_ID }}
+          REDIRECT_URI: ${{ steps.cfg.outputs.external_url }}/api/v1/auth/callback/microsoft
+        run: |
+          set -euo pipefail
+          if [ -z "${APP_OBJECT_ID:-}" ]; then
+            echo "AZURE_ENTRA_APP_OBJECT_ID not set; expecting $REDIRECT_URI to be pre-registered on the Entra app"
+            exit 0
+          fi
+          az rest --method GET --url "https://graph.microsoft.com/v1.0/applications/${APP_OBJECT_ID}?\$select=web" -o json > "$RUNNER_TEMP/entra-app.json"
+          rc=0
+          python3 - "$RUNNER_TEMP/entra-app.json" "$REDIRECT_URI" "$RUNNER_TEMP/entra-web.json" <<'PY' || rc=$?
+          import json
+          import sys
+          from pathlib import Path
+
+          current = json.loads(Path(sys.argv[1]).read_text()).get("web") or {}
+          redirect = sys.argv[2]
+          uris = list(current.get("redirectUris") or [])
+          if redirect in uris:
+              raise SystemExit(3)
+          current["redirectUris"] = [*uris, redirect]
+          Path(sys.argv[3]).write_text(json.dumps({"web": current}))
+          PY
+          if [ "$rc" -eq 0 ]; then
+            az rest --method PATCH --url "https://graph.microsoft.com/v1.0/applications/${APP_OBJECT_ID}" \
+              --headers "Content-Type=application/json" --body @"$RUNNER_TEMP/entra-web.json" >/dev/null
+            echo "registered $REDIRECT_URI on Entra app ${APP_OBJECT_ID}"
+          elif [ "$rc" -eq 3 ]; then
+            echo "$REDIRECT_URI already registered on Entra app ${APP_OBJECT_ID}"
+          else
+            echo "failed to compute the Entra redirect URI update (exit $rc)" >&2
+            exit "$rc"
+          fi
+
+      - name: Provision canary license key through hosted G5 admin API
+        id: license
+        env:
+          G5_LICENSE_ADMIN_TOKEN: ${{ secrets.G5_LICENSE_ADMIN_TOKEN }}
+          TARGET_VERSION: ${{ steps.cfg.outputs.target_version }}
+        run: |
+          set -euo pipefail
+          : "${G5_LICENSE_ADMIN_TOKEN:?G5_LICENSE_ADMIN_TOKEN is required in the self-hosted-azure-canary environment}"
+          : "${G5_CANARY_AR_LOCATION:?G5_CANARY_AR_LOCATION repository variable is required}"
+          : "${G5_CANARY_AR_PROJECT:?G5_CANARY_AR_PROJECT repository variable is required}"
+          : "${G5_CANARY_AR_REPOSITORY:?G5_CANARY_AR_REPOSITORY repository variable is required}"
+          : "${G5_CANARY_REGISTRY_PULLER_SERVICE_ACCOUNT:?G5_CANARY_REGISTRY_PULLER_SERVICE_ACCOUNT repository variable is required}"
+
+          payload="$(python3 - <<'PY'
+          import json
+          import os
+
+          print(json.dumps({
+              "customer_id": f"azure-canary-{os.environ['GITHUB_RUN_ID']}-{os.environ['GITHUB_RUN_ATTEMPT']}",
+              "customer_name": f"G5 Azure canary {os.environ['GITHUB_RUN_ID']}.{os.environ['GITHUB_RUN_ATTEMPT']}",
+              "contact_email": "platform@g5labs.ai",
+              "product": "g5-self-hosted",
+              "version": os.environ.get("TARGET_VERSION") or "latest",
+              "requested_by": f"github-actions:{os.environ['GITHUB_REPOSITORY']}:{os.environ['GITHUB_RUN_ID']}",
+              "registry": {
+                  "location": os.environ["G5_CANARY_AR_LOCATION"],
+                  "project": os.environ["G5_CANARY_AR_PROJECT"],
+                  "repository": os.environ["G5_CANARY_AR_REPOSITORY"],
+                  "puller_service_account": os.environ["G5_CANARY_REGISTRY_PULLER_SERVICE_ACCOUNT"],
+              },
+          }, separators=(",", ":")))
+          PY
+          )"
+          response="$(
+            curl -fsSL \
+              -X POST "${G5_CANARY_ADMIN_API_URL%/}/api/v1/admin/licenses" \
+              -H "Authorization: Bearer $G5_LICENSE_ADMIN_TOKEN" \
+              -H "Content-Type: application/json" \
+              -d "$payload"
+          )"
+          license_key="$(python3 -c 'import json,sys; print(json.load(sys.stdin)["license_key"])' <<<"$response")"
+          echo "::add-mask::$license_key"
+          echo "license_key=$license_key" >> "$GITHUB_OUTPUT"
+
+      - name: Create Azure infrastructure
+        id: azure
+        env:
+          RG: ${{ steps.cfg.outputs.resource_group }}
+          SLUG: ${{ steps.cfg.outputs.slug }}
+          REGION: ${{ steps.cfg.outputs.azure_region }}
+          VM_SIZE: ${{ steps.cfg.outputs.vm_size }}
+          OS_DISK_SIZE_GB: ${{ steps.cfg.outputs.os_disk_size_gb }}
+          WORKER_HOSTS: ${{ steps.cfg.outputs.worker_hosts }}
+        run: |
+          set -euo pipefail
+          ssh_key="$RUNNER_TEMP/g5-azure-canary"
+          ssh-keygen -q -t ed25519 -N '' -f "$ssh_key"
+          echo "ssh_key=$ssh_key" >> "$GITHUB_OUTPUT"
+
+          runner_ip="$(curl -fsSL https://api.ipify.org)"
+          az group create -n "$RG" -l "$REGION" >/dev/null
+          az network vnet create -g "$RG" -n g5-vnet --address-prefix 10.52.0.0/16 --subnet-name g5-subnet --subnet-prefix 10.52.1.0/24 >/dev/null
+          az network nsg create -g "$RG" -n g5-nsg >/dev/null
+          az network nsg rule create -g "$RG" --nsg-name g5-nsg -n ssh-runner --priority 100 \
+            --access Allow --direction Inbound --protocol Tcp --source-address-prefixes "${runner_ip}/32" \
+            --destination-port-ranges 22 >/dev/null
+          az network nsg rule create -g "$RG" --nsg-name g5-nsg -n http --priority 110 \
+            --access Allow --direction Inbound --protocol Tcp --source-address-prefixes Internet \
+            --destination-port-ranges 80 >/dev/null
+          az network nsg rule create -g "$RG" --nsg-name g5-nsg -n https --priority 120 \
+            --access Allow --direction Inbound --protocol Tcp --source-address-prefixes Internet \
+            --destination-port-ranges 443 >/dev/null
+
+          az network public-ip create -g "$RG" -n g5-control-pip --sku Standard --allocation-method Static --dns-name "$G5_CANARY_DNS_LABEL" >/dev/null
+          az network nic create -g "$RG" -n g5-control-nic --vnet-name g5-vnet --subnet g5-subnet \
+            --network-security-group g5-nsg --public-ip-address g5-control-pip >/dev/null
+          az vm create -g "$RG" -n g5-control --image Canonical:ubuntu-24_04-lts:server:latest \
+            --size "$VM_SIZE" --admin-username azureuser --ssh-key-values "${ssh_key}.pub" \
+            --nics g5-control-nic --storage-sku StandardSSD_LRS \
+            --os-disk-size-gb "$OS_DISK_SIZE_GB" >/dev/null
+          control_ip="$(az network public-ip show -g "$RG" -n g5-control-pip --query ipAddress -o tsv)"
+          control_private_ip="$(az network nic show -g "$RG" -n g5-control-nic --query 'ipConfigurations[0].privateIPAddress' -o tsv)"
+          echo "control_ip=$control_ip" >> "$GITHUB_OUTPUT"
+          echo "control_private_ip=$control_private_ip" >> "$GITHUB_OUTPUT"
+
+          az network private-dns zone create -g "$RG" -n "${G5_CANARY_DNS_LABEL}.${REGION}.cloudapp.azure.com" >/dev/null
+          az network private-dns link vnet create -g "$RG" -n g5-canary-link \
+            -z "${G5_CANARY_DNS_LABEL}.${REGION}.cloudapp.azure.com" -v g5-vnet -e false >/dev/null
+          az network private-dns record-set a add-record -g "$RG" \
+            -z "${G5_CANARY_DNS_LABEL}.${REGION}.cloudapp.azure.com" -n @ -a "$control_private_ip" >/dev/null
+
+          acr_name="$(printf 'g5c%s%s' "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" | tr -cd 'a-z0-9' | cut -c1-45)"
+          az acr create -g "$RG" -n "$acr_name" --sku Basic --admin-enabled false >/dev/null
+          acr_id="$(az acr show -g "$RG" -n "$acr_name" --query id -o tsv)"
+          acr_server="$(az acr show -g "$RG" -n "$acr_name" --query loginServer -o tsv)"
+
+          acr_context="$RUNNER_TEMP/g5-acr-task-base"
+          mkdir -p "$acr_context"
+          cat > "$acr_context/Dockerfile" <<'EOF'
+          FROM buildpack-deps:noble
+          RUN printf '%s\n' 'g5-azure-microvm-canary' > /etc/g5-canary-marker
+          EOF
+          sed -i 's/^          //' "$acr_context/Dockerfile"
+          az acr build -r "$acr_name" -t g5-task-base:canary "$acr_context" >/dev/null
+          acr_digest="$(az acr repository show -n "$acr_name" --image g5-task-base:canary --query digest -o tsv)"
+          case "$acr_digest" in sha256:????????????????????????????????????????????????????????????????) ;; *) echo "invalid ACR digest: $acr_digest" >&2; exit 1 ;; esac
+          task_image="${acr_server}/g5-task-base@${acr_digest}"
+          echo "acr_name=$acr_name" >> "$GITHUB_OUTPUT"
+          echo "task_image=$task_image" >> "$GITHUB_OUTPUT"
+
+          : > "$RUNNER_TEMP/g5-worker-ips.txt"
+          for i in $(seq 1 "$WORKER_HOSTS"); do
+            az network public-ip create -g "$RG" -n "g5-worker-${i}-pip" --sku Standard --allocation-method Static >/dev/null
+            az network nic create -g "$RG" -n "g5-worker-${i}-nic" --vnet-name g5-vnet --subnet g5-subnet \
+              --network-security-group g5-nsg --public-ip-address "g5-worker-${i}-pip" >/dev/null
+            az vm create -g "$RG" -n "g5-worker-${i}" --image Canonical:ubuntu-24_04-lts:server:latest \
+              --size "$VM_SIZE" --admin-username azureuser --ssh-key-values "${ssh_key}.pub" \
+              --nics "g5-worker-${i}-nic" --storage-sku StandardSSD_LRS \
+              --os-disk-size-gb "$OS_DISK_SIZE_GB" --assign-identity >/dev/null
+            worker_principal="$(az vm show -g "$RG" -n "g5-worker-${i}" --query identity.principalId -o tsv)"
+            : "${worker_principal:?worker managed identity principal id missing}"
+            az role assignment create --assignee-object-id "$worker_principal" \
+              --assignee-principal-type ServicePrincipal --role AcrPull --scope "$acr_id" >/dev/null
+            az network public-ip show -g "$RG" -n "g5-worker-${i}-pip" --query ipAddress -o tsv >> "$RUNNER_TEMP/g5-worker-ips.txt"
+          done
+          {
+            echo "worker_ips<<EOF"
+            cat "$RUNNER_TEMP/g5-worker-ips.txt"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Bootstrap Ubuntu hosts
+        env:
+          SSH_KEY: ${{ steps.azure.outputs.ssh_key }}
+          CONTROL_IP: ${{ steps.azure.outputs.control_ip }}
+          WORKER_IPS: ${{ steps.azure.outputs.worker_ips }}
+          PAYLOAD: ${{ steps.bundle.outputs.payload }}
+        run: |
+          set -euo pipefail
+          ssh_opts=(-i "$SSH_KEY" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=30)
+          bootstrap="scripts/self-hosted-azure/bootstrap-ubuntu-host.sh"
+          for ip in "$CONTROL_IP" $WORKER_IPS; do
+            [ -n "$ip" ] || continue
+            for attempt in $(seq 1 30); do
+              if ssh "${ssh_opts[@]}" "azureuser@$ip" true >/dev/null 2>&1; then
+                break
+              fi
+              [ "$attempt" -lt 30 ] || { echo "ssh unavailable for $ip" >&2; exit 1; }
+              sleep 10
+            done
+            scp "${ssh_opts[@]}" "$bootstrap" "azureuser@$ip:/tmp/bootstrap-ubuntu-host.sh"
+            ssh "${ssh_opts[@]}" "azureuser@$ip" "sudo bash /tmp/bootstrap-ubuntu-host.sh"
+            scp "${ssh_opts[@]}" "$PAYLOAD/install.sh" "$PAYLOAD/g5-self-hosted-bundle.tar.gz" "azureuser@$ip:/tmp/"
+            ssh "${ssh_opts[@]}" "azureuser@$ip" "sudo bash -lc 'install -d -m 0755 /opt/g5-canary /opt/g5-canary-bundle; install -m 0755 /tmp/install.sh /opt/g5-canary/install.sh; tar -xzf /tmp/g5-self-hosted-bundle.tar.gz -C /opt/g5-canary-bundle'"
+          done
+
+      - name: Provision public certificate for direct Caddy TLS
+        env:
+          SSH_KEY: ${{ steps.azure.outputs.ssh_key }}
+          CONTROL_IP: ${{ steps.azure.outputs.control_ip }}
+          FQDN: ${{ steps.cfg.outputs.fqdn }}
+        run: |
+          set -euo pipefail
+          ssh_opts=(-i "$SSH_KEY" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null)
+          scp "${ssh_opts[@]}" scripts/self-hosted-azure/provision-control-tls.sh "azureuser@$CONTROL_IP:/tmp/provision-control-tls.sh"
+          # FQDN is intentionally expanded on the runner.
+          # shellcheck disable=SC2029
+          ssh "${ssh_opts[@]}" "azureuser@$CONTROL_IP" "sudo env G5_CANARY_FQDN='$FQDN' bash /tmp/provision-control-tls.sh"
+
+      - name: Install control plane and verify clean install, ops, backup/restore, up/down, upgrade
+        id: install_control
+        env:
+          SSH_KEY: ${{ steps.azure.outputs.ssh_key }}
+          CONTROL_IP: ${{ steps.azure.outputs.control_ip }}
+          LICENSE_KEY: ${{ steps.license.outputs.license_key }}
+          EXTERNAL_URL: ${{ steps.cfg.outputs.external_url }}
+          INSTALL_RELEASE: ${{ steps.cfg.outputs.install_release }}
+          TARGET_VERSION: ${{ steps.cfg.outputs.target_version }}
+          UPGRADE_VERSION: ${{ steps.cfg.outputs.upgrade_version }}
+          AZURE_ENTRA_TENANT_ID: ${{ secrets.AZURE_ENTRA_TENANT_ID }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          G5_MICROSOFT_CLIENT_ID: ${{ secrets.AZURE_ENTRA_CLIENT_ID }}
+          G5_MICROSOFT_CLIENT_SECRET: ${{ secrets.AZURE_ENTRA_CLIENT_SECRET }}
+          G5_GITHUB_CLIENT_ID: ${{ secrets.SELF_HOSTED_GITHUB_CLIENT_ID }}
+          G5_GITHUB_CLIENT_SECRET: ${{ secrets.SELF_HOSTED_GITHUB_CLIENT_SECRET }}
+          PAYLOAD: ${{ steps.bundle.outputs.payload }}
+        run: |
+          set -euo pipefail
+          # Entra login is required; GitHub login is optional and only wired
+          # when both halves of its credential are present.
+          : "${G5_MICROSOFT_CLIENT_ID:?AZURE_ENTRA_CLIENT_ID is required}"
+          : "${G5_MICROSOFT_CLIENT_SECRET:?AZURE_ENTRA_CLIENT_SECRET is required}"
+          entra_tenant="${AZURE_ENTRA_TENANT_ID:-$AZURE_TENANT_ID}"
+          : "${entra_tenant:?AZURE_ENTRA_TENANT_ID or AZURE_TENANT_ID is required}"
+          if [ -n "${G5_GITHUB_CLIENT_ID:-}" ] && [ -z "${G5_GITHUB_CLIENT_SECRET:-}" ]; then
+            echo "SELF_HOSTED_GITHUB_CLIENT_ID is set without SELF_HOSTED_GITHUB_CLIENT_SECRET" >&2
+            exit 2
+          fi
+          if [ -z "${G5_GITHUB_CLIENT_ID:-}" ]; then
+            G5_GITHUB_CLIENT_SECRET=""
+          fi
+          ssh_opts=(-i "$SSH_KEY" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null)
+          auth_allowed_emails="$(printf '%q' "$G5_CANARY_AUTH_ALLOWED_EMAILS")"
+          default_admin_email="$(printf '%q' "$G5_CANARY_DEFAULT_ADMIN_EMAIL")"
+          default_admin_name="$(printf '%q' "$G5_CANARY_DEFAULT_ADMIN_NAME")"
+
+          cat > "$RUNNER_TEMP/g5-control.env" <<EOF
+          G5_LICENSE_KEY=$LICENSE_KEY
+          G5_API_URL=${G5_CANARY_ADMIN_API_URL}
+          G5_EXTERNAL_URL=$EXTERNAL_URL
+          G5_GITHUB_RELEASE_REPO=${G5_GITHUB_RELEASE_REPO}
+          G5_INSTALL_RELEASE=$INSTALL_RELEASE
+          G5_TARGET_VERSION=$TARGET_VERSION
+          G5_UPGRADE_VERSION=$UPGRADE_VERSION
+          G5_MICROSOFT_CLIENT_ID=$G5_MICROSOFT_CLIENT_ID
+          G5_MICROSOFT_CLIENT_SECRET=$G5_MICROSOFT_CLIENT_SECRET
+          G5_MICROSOFT_TENANT_ID=$entra_tenant
+          G5_GITHUB_CLIENT_ID=${G5_GITHUB_CLIENT_ID:-}
+          G5_GITHUB_CLIENT_SECRET=${G5_GITHUB_CLIENT_SECRET:-}
+          G5_AUTH_ALLOWED_EMAILS=$auth_allowed_emails
+          G5_SELF_HOSTED_DEFAULT_ADMIN_EMAIL=$default_admin_email
+          G5_SELF_HOSTED_DEFAULT_ADMIN_NAME=$default_admin_name
+          G5_TLS_CERT_FILE=/var/lib/g5/tls/fullchain.pem
+          G5_TLS_KEY_FILE=/var/lib/g5/tls/privkey.pem
+          G5_SYNC_QUESTION_V1_STAMPING=true
+          G5_QUESTION_V1_COMPOSE_FILE_SOURCE=/tmp/compose.question-v1.yml
+          G5_BUNDLE_DIR=/opt/g5-canary-bundle
+          G5_INSTALLER_PATH=/opt/g5-canary/install.sh
+          SELF_HOSTED=true
+          ENABLE_CLOUD_FEATURES=false
+          EOF
+          sed -i 's/^          //' "$RUNNER_TEMP/g5-control.env"
+          chmod 0600 "$RUNNER_TEMP/g5-control.env"
+
+          scp "${ssh_opts[@]}" scripts/self-hosted-azure/install-control-plane.sh "azureuser@$CONTROL_IP:/tmp/install-control-plane.sh"
+          scp "${ssh_opts[@]}" scripts/self-hosted-azure/compose.question-v1.yml "azureuser@$CONTROL_IP:/tmp/compose.question-v1.yml"
+          scp "${ssh_opts[@]}" "$RUNNER_TEMP/g5-control.env" "azureuser@$CONTROL_IP:/tmp/g5-control.env"
+          ssh "${ssh_opts[@]}" "azureuser@$CONTROL_IP" "sudo install -m 0755 /tmp/install-control-plane.sh /usr/local/bin/g5-azure-install-control-plane && sudo install -m 0600 /tmp/g5-control.env /root/g5-control.env && sudo bash -lc 'set -a; . /root/g5-control.env; set +a; /usr/local/bin/g5-azure-install-control-plane'"
+
+      - name: Start digest-pinned ACR microVM worker
+        env:
+          SSH_KEY: ${{ steps.azure.outputs.ssh_key }}
+          CONTROL_IP: ${{ steps.azure.outputs.control_ip }}
+          WORKER_IPS: ${{ steps.azure.outputs.worker_ips }}
+          LICENSE_KEY: ${{ steps.license.outputs.license_key }}
+          EXTERNAL_URL: ${{ steps.cfg.outputs.external_url }}
+          INSTALL_RELEASE: ${{ steps.cfg.outputs.install_release }}
+          TARGET_VERSION: ${{ steps.cfg.outputs.target_version }}
+          TASK_IMAGE: ${{ steps.azure.outputs.task_image }}
+          FQDN: ${{ steps.cfg.outputs.fqdn }}
+          CONTROL_PRIVATE_IP: ${{ steps.azure.outputs.control_private_ip }}
+          PAYLOAD: ${{ steps.bundle.outputs.payload }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          G5_ENTRA_EMAIL: ${{ secrets.AZURE_ENTRA_TEST_USER_EMAIL }}
+          G5_ENTRA_PASSWORD: ${{ secrets.AZURE_ENTRA_TEST_USER_PASSWORD }}
+          G5_ENTRA_TOTP_SECRET: ${{ secrets.AZURE_ENTRA_TEST_USER_TOTP_SECRET }}
+        run: |
+          set -euo pipefail
+          : "${OPENROUTER_API_KEY:?OPENROUTER_API_KEY is required}"
+          : "${G5_ENTRA_EMAIL:?AZURE_ENTRA_TEST_USER_EMAIL is required}"
+          : "${G5_ENTRA_PASSWORD:?AZURE_ENTRA_TEST_USER_PASSWORD is required}"
+          echo "::add-mask::$OPENROUTER_API_KEY"
+          ssh_opts=(-i "$SSH_KEY" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null)
+
+          provider_key="$(printf '%q' "$OPENROUTER_API_KEY")"
+          task_image_q="$(printf '%q' "$TASK_IMAGE")"
+          mkdir -p "$RUNNER_TEMP/host-provision-artifacts"
+
+          index=0
+          for ip in $WORKER_IPS; do
+            [ -n "$ip" ] || continue
+            index=$((index + 1))
+            docker run --rm \
+              -v "$PWD/scripts/self-hosted-azure:/work/smoke:ro" \
+              -v "$RUNNER_TEMP/host-provision-artifacts:/artifacts" \
+              -e G5_BASE_URL="$EXTERNAL_URL" \
+              -e G5_ENTRA_EMAIL -e G5_ENTRA_PASSWORD -e G5_ENTRA_TOTP_SECRET \
+              -e G5_PROVISION_HOST_BASE_IMAGE="$TASK_IMAGE" \
+              -e G5_PROVISION_HOST_OUTPUT="/artifacts/host-${index}.json" \
+              -e G5_PLAYWRIGHT_ARTIFACT_DIR=/artifacts \
+              -e PLAYWRIGHT_BROWSERS_PATH=/ms-playwright \
+              -e PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 \
+              mcr.microsoft.com/playwright:v1.52.0-noble \
+              bash -lc 'cd /work && npm init -y >/dev/null && npm install --no-audit --no-fund --save-exact --save-dev playwright@1.52.0 >/dev/null && node /work/smoke/entra-login-smoke.js'
+            host_json="$RUNNER_TEMP/host-provision-artifacts/host-${index}.json"
+            host_id="$(jq -er .hostId "$host_json")"
+            host_org_id="$(jq -er .orgId "$host_json")"
+            host_jwt="$(jq -er .hostJwt "$host_json")"
+            echo "::add-mask::$host_jwt"
+
+            cat > "$RUNNER_TEMP/worker.env" <<EOF
+          G5_LICENSE_KEY=$LICENSE_KEY
+          G5_API_URL=${G5_CANARY_ADMIN_API_URL}
+          G5_GITHUB_RELEASE_REPO=${G5_GITHUB_RELEASE_REPO}
+          G5_INSTALL_RELEASE=$INSTALL_RELEASE
+          G5_TARGET_VERSION=$TARGET_VERSION
+          G5D_API_URL=$EXTERNAL_URL
+          G5D_ISOLATION_MODE=microvm
+          G5D_BASE_IMAGE=$task_image_q
+          G5D_HOST_BASE_IMAGE=$task_image_q
+          G5D_HOST_ID=$host_id
+          G5D_ORG_ID=$host_org_id
+          G5_HOST_JWT=$host_jwt
+          G5D_LLM_PROVIDER=openrouter
+          G5D_LLM_MODEL=anthropic/claude-sonnet-4.6
+          OPENROUTER_API_KEY=$provider_key
+          ANTHROPIC_AUTH_TOKEN=$provider_key
+          ANTHROPIC_BASE_URL=https://openrouter.ai/api
+          ANTHROPIC_MODEL=anthropic/claude-sonnet-4.6
+          G5D_HOST_MAX_MICROVMS=1
+          G5D_HOST_CPUS_PER_VM=2
+          G5D_HOST_MEM_MIB_PER_VM=4096
+          G5D_SCRATCH_DISK_MIB=10240
+          G5_BUNDLE_DIR=/opt/g5-canary-bundle
+          G5_INSTALLER_PATH=/opt/g5-canary/install.sh
+          EOF
+            sed -i 's/^          //' "$RUNNER_TEMP/worker.env"
+            chmod 0600 "$RUNNER_TEMP/worker.env"
+            # Canary DNS/TLS values are intentionally expanded on the runner.
+            # shellcheck disable=SC2029
+            ssh "${ssh_opts[@]}" "azureuser@$ip" "set -euo pipefail; test -c /dev/kvm; resolved=\$(getent ahostsv4 '$FQDN' | awk 'NR==1 {print \$1}'); test \"\$resolved\" = '$CONTROL_PRIVATE_IP'; curl --proto '=https' --tlsv1.2 -fsS '$EXTERNAL_URL/healthz'; echo | openssl s_client -connect '$FQDN:443' -servername '$FQDN' -verify_return_error 2>/dev/null | openssl x509 -noout -subject -issuer"
+            scp "${ssh_opts[@]}" scripts/self-hosted-azure/install-worker-host.sh "azureuser@$ip:/tmp/install-worker-host.sh"
+            scp "${ssh_opts[@]}" scripts/apt-install-with-retry.sh "azureuser@$ip:/tmp/apt-install-with-retry.sh"
+            scp "${ssh_opts[@]}" "$RUNNER_TEMP/worker.env" "azureuser@$ip:/tmp/worker.env"
+            # Worker index is intentionally expanded on the runner.
+            # shellcheck disable=SC2029
+            ssh "${ssh_opts[@]}" "azureuser@$ip" "sudo install -m 0755 /tmp/install-worker-host.sh /usr/local/bin/g5-azure-install-worker-host && sudo install -m 0755 /tmp/apt-install-with-retry.sh /usr/local/bin/g5-apt-install-with-retry && sudo install -m 0600 /tmp/worker.env /root/g5-worker.env && sudo bash -lc 'set -a; . /root/g5-worker.env; set +a; export G5D_GUEST_HOST_ALIASES=$FQDN=$CONTROL_PRIVATE_IP; export G5D_GIT_HTTP_ALLOW_HOSTS=$FQDN; /usr/local/bin/g5-azure-install-worker-host'"
+          done
+
+      - name: Verify the external worker advertises microVM capability
+        env:
+          SSH_KEY: ${{ steps.azure.outputs.ssh_key }}
+          CONTROL_IP: ${{ steps.azure.outputs.control_ip }}
+          WORKER_HOSTS: ${{ steps.cfg.outputs.worker_hosts }}
+        run: |
+          set -euo pipefail
+          ssh_opts=(-i "$SSH_KEY" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null)
+          scp "${ssh_opts[@]}" scripts/self-hosted-azure/verify-worker-hosts.sh "azureuser@$CONTROL_IP:/tmp/verify-worker-hosts.sh"
+          # Expected worker count is intentionally expanded on the runner.
+          # shellcheck disable=SC2029
+          ssh "${ssh_opts[@]}" "azureuser@$CONTROL_IP" "sudo bash /tmp/verify-worker-hosts.sh '$WORKER_HOSTS'"
+
+      - name: Verify real Entra-authenticated chat executes in the ACR microVM
+        env:
+          G5_BASE_URL: ${{ steps.cfg.outputs.external_url }}
+          G5_ENTRA_EMAIL: ${{ secrets.AZURE_ENTRA_TEST_USER_EMAIL }}
+          G5_ENTRA_PASSWORD: ${{ secrets.AZURE_ENTRA_TEST_USER_PASSWORD }}
+          G5_ENTRA_TOTP_SECRET: ${{ secrets.AZURE_ENTRA_TEST_USER_TOTP_SECRET }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          G5_VERIFY_CHAT: "true"
+          G5_CHAT_MARKER: microvm-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          set -euo pipefail
+          : "${G5_ENTRA_EMAIL:?AZURE_ENTRA_TEST_USER_EMAIL is required}"
+          : "${G5_ENTRA_PASSWORD:?AZURE_ENTRA_TEST_USER_PASSWORD is required}"
+          : "${OPENROUTER_API_KEY:?OPENROUTER_API_KEY is required}"
+          echo "::add-mask::$OPENROUTER_API_KEY"
+          mkdir -p "$RUNNER_TEMP/playwright-artifacts"
+          docker run --rm \
+            -v "$PWD/scripts/self-hosted-azure:/work/smoke:ro" \
+            -v "$RUNNER_TEMP/playwright-artifacts:/artifacts" \
+            -e G5_BASE_URL -e G5_ENTRA_EMAIL -e G5_ENTRA_PASSWORD -e G5_ENTRA_TOTP_SECRET \
+            -e OPENROUTER_API_KEY \
+            -e G5_VERIFY_CHAT -e G5_CHAT_MARKER \
+            -e G5_PLAYWRIGHT_ARTIFACT_DIR=/artifacts \
+            -e PLAYWRIGHT_BROWSERS_PATH=/ms-playwright \
+            -e PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 \
+            mcr.microsoft.com/playwright:v1.52.0-noble \
+            bash -lc '
+              set -euo pipefail
+              cd /work
+              npm init -y >/dev/null
+              npm install --no-audit --no-fund --save-exact --save-dev playwright@1.52.0 >/dev/null
+              node /work/smoke/entra-login-smoke.js
+            '
+
+      # Optional: prove GitHub login still works beside Entra when the GitHub
+      # OAuth app and test account secrets are configured. Secrets cannot be
+      # read in `if:`, so the step decides at run time and skips cleanly.
+      - name: Verify optional GitHub login beside Entra
+        env:
+          G5_BASE_URL: ${{ steps.cfg.outputs.external_url }}
+          G5_GITHUB_CLIENT_ID: ${{ secrets.SELF_HOSTED_GITHUB_CLIENT_ID }}
+          G5_GITHUB_EMAIL: ${{ secrets.SELF_HOSTED_GITHUB_TEST_USER_EMAIL }}
+          G5_GITHUB_PASSWORD: ${{ secrets.SELF_HOSTED_GITHUB_TEST_USER_PASSWORD }}
+          G5_GITHUB_TOTP_SECRET: ${{ secrets.SELF_HOSTED_GITHUB_TEST_USER_TOTP_SECRET }}
+        run: |
+          set -euo pipefail
+          if [ -z "${G5_GITHUB_CLIENT_ID:-}" ]; then
+            echo "SELF_HOSTED_GITHUB_CLIENT_ID not set; GitHub login not configured on this canary"
+            exit 0
+          fi
+          if [ -z "${G5_GITHUB_EMAIL:-}" ] || [ -z "${G5_GITHUB_PASSWORD:-}" ]; then
+            echo "GitHub login is configured but SELF_HOSTED_GITHUB_TEST_USER_EMAIL/PASSWORD are not set; skipping the GitHub smoke"
+            exit 0
+          fi
+          mkdir -p "$RUNNER_TEMP/playwright-artifacts"
+          docker run --rm \
+            -v "$PWD/scripts/self-hosted-azure:/work/smoke:ro" \
+            -v "$RUNNER_TEMP/playwright-artifacts:/artifacts" \
+            -e G5_BASE_URL -e G5_GITHUB_EMAIL -e G5_GITHUB_PASSWORD -e G5_GITHUB_TOTP_SECRET \
+            -e G5_PLAYWRIGHT_ARTIFACT_DIR=/artifacts \
+            -e PLAYWRIGHT_BROWSERS_PATH=/ms-playwright \
+            -e PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 \
+            mcr.microsoft.com/playwright:v1.52.0-noble \
+            bash -lc '
+              set -euo pipefail
+              cd /work
+              npm init -y >/dev/null
+              npm install --no-audit --no-fund --save-exact --save-dev playwright@1.52.0 >/dev/null
+              node /work/smoke/github-login-smoke.js
+            '
+
+      - name: Verify immutable ACR, Cloud Hypervisor, Git HTTP, and redaction evidence
+        env:
+          SSH_KEY: ${{ steps.azure.outputs.ssh_key }}
+          CONTROL_IP: ${{ steps.azure.outputs.control_ip }}
+          WORKER_IPS: ${{ steps.azure.outputs.worker_ips }}
+          TASK_IMAGE: ${{ steps.azure.outputs.task_image }}
+          LICENSE_KEY: ${{ steps.license.outputs.license_key }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/azure-canary-artifacts"
+          ssh_opts=(-i "$SSH_KEY" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null)
+          worker_ip="$(printf '%s\n' "$WORKER_IPS" | head -n1)"
+          ssh "${ssh_opts[@]}" "azureuser@$worker_ip" "sudo journalctl -u g5d-host.service --no-pager" \
+            > "$RUNNER_TEMP/azure-canary-artifacts/microvm-worker.log" 2>&1
+          ssh "${ssh_opts[@]}" "azureuser@$CONTROL_IP" \
+            "sudo G5_TLS_CADDYFILE=/opt/g5/Caddyfile.tls docker compose --env-file /opt/g5/.env -f /opt/g5/compose.yml -f /opt/g5/compose.tls.yml logs --no-color edge" \
+            > "$RUNNER_TEMP/azure-canary-artifacts/caddy.log" 2>&1
+
+          grep -Fq "Building rootfs template" "$RUNNER_TEMP/azure-canary-artifacts/microvm-worker.log"
+          grep -Fq "cloned pristine block workload template" "$RUNNER_TEMP/azure-canary-artifacts/microvm-worker.log"
+          grep -Fq "$TASK_IMAGE" "$RUNNER_TEMP/azure-canary-artifacts/microvm-worker.log"
+          grep -Eq "Creating microVM \(Cloud Hypervisor\)|Starting microVM \(long-running, Cloud Hypervisor\)" \
+            "$RUNNER_TEMP/azure-canary-artifacts/microvm-worker.log"
+          # The guest dispatcher's console is relayed into the host journal under
+          # the g5d::guest target; the chat marker itself is verified end to end
+          # by entra-login-smoke.js in the Entra chat step above.
+          grep -Fq 'g5d::guest' \
+            "$RUNNER_TEMP/azure-canary-artifacts/microvm-worker.log"
+          grep -Eq '/git/.*/info/refs.*git-upload-pack|info/refs.*service=git-upload-pack' \
+            "$RUNNER_TEMP/azure-canary-artifacts/caddy.log"
+          grep -Eq '/git/.*/git-upload-pack' "$RUNNER_TEMP/azure-canary-artifacts/caddy.log"
+
+          host_jwt="$(jq -er .hostJwt "$RUNNER_TEMP/host-provision-artifacts/host-1.json")"
+          echo "::add-mask::$host_jwt"
+          for dir in "$RUNNER_TEMP/azure-canary-artifacts" "$RUNNER_TEMP/playwright-artifacts"; do
+            [ -d "$dir" ] || { echo "expected evidence directory is missing: $dir" >&2; exit 1; }
+          done
+          for secret in "$LICENSE_KEY" "$OPENROUTER_API_KEY" "$host_jwt"; do
+            [ -n "$secret" ] || continue
+            if grep -RFq -- "$secret" "$RUNNER_TEMP/azure-canary-artifacts" "$RUNNER_TEMP/playwright-artifacts"; then
+              echo "protected secret detected in canary evidence" >&2
+              exit 1
+            fi
+          done
+
+      - name: Publish click-through URL
+        if: ${{ always() && steps.install_control.outcome == 'success' }}
+        run: |
+          cat >> "$GITHUB_STEP_SUMMARY" <<EOF
+          ## Azure self-hosted canary
+
+          - URL: ${{ steps.cfg.outputs.external_url }}
+          - Installer release: \`${{ steps.cfg.outputs.install_release }}\`
+          - Clean-install version: \`${{ steps.cfg.outputs.target_version }}\`
+          - Upgrade version: \`${{ steps.cfg.outputs.upgrade_version }}\`
+          - Additional worker hosts: \`${{ steps.cfg.outputs.worker_hosts }}\`
+          - VM size: \`${{ steps.cfg.outputs.vm_size }}\`
+          - OS disk: \`${{ steps.cfg.outputs.os_disk_size_gb }} GB\`
+          EOF
+
+      - name: Keep environment alive for manual click-through
+        if: ${{ always() && steps.install_control.outcome == 'success' && steps.cfg.outputs.keep_alive_minutes != '0' }}
+        run: sleep $(( ${{ steps.cfg.outputs.keep_alive_minutes }} * 60 ))
+
+      - name: Collect logs
+        if: always()
+        env:
+          SSH_KEY: ${{ steps.azure.outputs.ssh_key }}
+          CONTROL_IP: ${{ steps.azure.outputs.control_ip }}
+          WORKER_IPS: ${{ steps.azure.outputs.worker_ips }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/azure-canary-artifacts"
+          if [ -n "${CONTROL_IP:-}" ] && [ -n "${SSH_KEY:-}" ]; then
+            ssh_opts=(-i "$SSH_KEY" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=10)
+            ssh "${ssh_opts[@]}" "azureuser@$CONTROL_IP" "sudo bash -lc 'if [ -f /opt/g5/.env ]; then G5_TLS_CADDYFILE=/opt/g5/Caddyfile.tls docker compose --env-file /opt/g5/.env -f /opt/g5/compose.yml -f /opt/g5/compose.tls.yml logs --no-color --tail=500 > /tmp/g5-compose.log 2>&1 || true; openssl x509 -in /var/lib/g5/tls/fullchain.pem -noout -subject -issuer -dates > /tmp/g5-tls.txt 2>&1 || true; tar -czf /tmp/g5-azure-canary-artifacts.tar.gz -C /tmp g5-compose.log g5-tls.txt -C /opt/g5 azure-canary-summary.json 2>/dev/null || true; fi'" || true
+            scp "${ssh_opts[@]}" "azureuser@$CONTROL_IP:/tmp/g5-azure-canary-artifacts.tar.gz" "$RUNNER_TEMP/azure-canary-artifacts/" || true
+            worker_ip="$(printf '%s\n' "$WORKER_IPS" | head -n1)"
+            if [ -n "$worker_ip" ]; then
+              ssh "${ssh_opts[@]}" "azureuser@$worker_ip" "sudo journalctl -u g5d-host.service --no-pager" > "$RUNNER_TEMP/azure-canary-artifacts/microvm-worker-final.log" 2>&1 || true
+            fi
+          fi
+
+      - name: Upload Azure canary artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: self-hosted-azure-canary-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/azure-canary-artifacts
+            ${{ runner.temp }}/playwright-artifacts
+          if-no-files-found: ignore
+
+      - name: Delete Azure resource group
+        if: always()
+        env:
+          RG: ${{ steps.cfg.outputs.resource_group }}
+        run: |
+          set -euo pipefail
+          if [ -n "${RG:-}" ]; then
+            az group delete -n "$RG" --yes || true
+          fi
+
+  notify-failure:
+    name: Notify Slack on automatic main failure
+    needs: azure-canary
+    if: ${{ failure() && (github.event_name == 'schedule' || github.event_name == 'push') && github.ref == 'refs/heads/main' }}
+    uses: ./.github/workflows/slack-notify.yml
+    secrets:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+    with:
+      title: ":x: GitHub Actions failed: self-hosted-azure-install"
+      summary: "self-hosted-azure-install failed on a scheduled or automatic main-branch run"

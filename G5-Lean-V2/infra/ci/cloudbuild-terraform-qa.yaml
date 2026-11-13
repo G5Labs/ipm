@@ -1,0 +1,347 @@
+# Terraform plan/apply for the G5 Lean QA roots (infra/qa/*).
+#
+# The original environment's pipeline promoted one immutable bundle across
+# workspaces of a single root; QA is deliberately split into independent
+# roots (infra/qa/README.md
+# "Roots and order"), each with its own GCS backend prefix and no workspaces,
+# so this pipeline walks those roots in dependency order instead:
+#
+#   foundation -> delivery -> platform -> addons
+#
+# `bootstrap` is excluded: its state is local by design (it owns the state
+# bucket) and it is applied once by a project administrator, which is also
+# where the identity this pipeline runs as is created.
+#
+# Two triggers drive it (infra/qa/delivery/main.tf):
+#   g5-terraform-plan-qa   pull requests into main that touch infra/qa/**:
+#                          fmt check, validate and a refreshed plan per root,
+#                          run as the read-only g5-lean-terraform-plan
+#                          identity (a PR controls the steps it runs).
+#   g5-terraform-apply-qa  pushes to main, no approval, run as the
+#                          privileged g5-lean-terraform identity: per root, a
+#                          fresh plan immediately followed by its apply, so a
+#                          later root always plans against the upstream root's
+#                          freshly applied outputs.
+#
+# Apply-mode guards, because nobody reviews the plan an apply build makes (it
+# is a fresh plan, not the pull request's):
+#   - a build superseded by a newer build of the same trigger successfully
+#     skips remaining work (checked before each root/apply and release publication);
+#     a failed newer build still supersedes this one; recovery uses current main;
+#   - a plan that deletes or replaces a resource refuses to apply unless the
+#     build was started with _TF_ALLOW_DESTROY=true.
+#
+# Values a laptop apply reads from an untracked terraform.tfvars arrive as
+# substitutions; only the delivery root declares variables today.
+substitutions:
+  _TF_ACTION: plan                 # plan | apply
+  _TF_VERSION: '1.9.8'
+  # sha256 of terraform_${_TF_VERSION}_linux_amd64.zip, pinned in review so a
+  # changed release object cannot run as the Terraform identity.
+  _TF_SHA256: '186e0145f5e5f2eb97cbd785bc78f21bae4ef15119349f6ad4fa535b83b10df8'
+  _TF_ALLOW_DESTROY: 'false'       # apply mode: allow delete/replace actions
+  _TF_ROOTS: 'foundation,delivery,platform,addons'
+  _TF_ROOT_DIR: infra/qa
+  _QA_ENABLE_APPLICATION_TRIGGERS: 'true'
+  _QA_ENABLE_RELEASE_BOOTSTRAP: 'false'
+  _QA_ENABLE_PROMOTION: 'false'
+  _QA_ENABLE_RELEASE_TRAIN: 'true'
+  _QA_RELEASE_AUTHORITY_REVIEWED: 'false'
+  _QA_PROMOTION_TARGETS_JSON: '{}'
+  _ARTIFACT_PROJECT: g5-qa-1ccc
+  _RELEASE_BUCKET: ''
+  _TF_NEXT_TRIGGER: ''
+  _AR_REPOSITORY: g5
+  _REGION: us-central1
+
+steps:
+  - id: install-terraform
+    name: ubuntu
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        apt-get update -qq && apt-get install -y -qq curl unzip > /dev/null 2>&1
+        mkdir -p /workspace/bin
+        curl -fsSL "https://releases.hashicorp.com/terraform/${_TF_VERSION}/terraform_${_TF_VERSION}_linux_amd64.zip" \
+          -o /tmp/terraform.zip
+        if [[ -z "${_TF_SHA256}" ]]; then
+          echo "_TF_SHA256 must pin the Terraform archive checksum"
+          exit 1
+        fi
+        echo "${_TF_SHA256}  /tmp/terraform.zip" | sha256sum -c -
+        unzip -q /tmp/terraform.zip -d /workspace/bin
+        chmod +x /workspace/bin/terraform
+        /workspace/bin/terraform version
+
+  - id: validate-inputs
+    name: gcr.io/cloud-builders/gcloud
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        case "${_TF_ACTION}" in
+          plan|apply) ;;
+          *)
+            echo "Unsupported _TF_ACTION=${_TF_ACTION}; expected plan or apply"
+            exit 1
+            ;;
+        esac
+        if [[ "$PROJECT_ID" != "g5-qa-1ccc" ]]; then
+          echo "This pipeline only runs in g5-qa-1ccc (got $PROJECT_ID)"
+          exit 1
+        fi
+        IFS=',' read -r -a roots <<< "${_TF_ROOTS}"
+        for root in "$${roots[@]}"; do
+          case "$$root" in
+            foundation|delivery|platform|addons) ;;
+            *)
+              echo "Refusing root '$$root': only the remote-state QA roots are automated"
+              exit 1
+              ;;
+          esac
+          if [[ ! -f "${_TF_ROOT_DIR}/$$root/main.tf" ]]; then
+            echo "Missing ${_TF_ROOT_DIR}/$$root/main.tf"
+            exit 1
+          fi
+        done
+        if [[ "${_TF_ACTION}" == "apply" && -z "$COMMIT_SHA" ]]; then
+          echo "COMMIT_SHA must be set for an apply"
+          exit 1
+        fi
+        case "${_TF_ALLOW_DESTROY}" in
+          true|false) ;;
+          *)
+            echo "_TF_ALLOW_DESTROY must be true or false (got '${_TF_ALLOW_DESTROY}')"
+            exit 1
+            ;;
+        esac
+        if [[ "${_TF_ACTION}" == apply ]]; then
+          # Bind ownership before this build can update its own delivery trigger.
+          python3 scripts/terraform_release.py policy \
+            --project="$PROJECT_ID" --location="$LOCATION" --build-id="$BUILD_ID" \
+            --sha="$COMMIT_SHA" --artifact-project="${_ARTIFACT_PROJECT}" --bucket="${_RELEASE_BUCKET}" --next-trigger="${_TF_NEXT_TRIGGER}"
+        fi
+        echo "Action: ${_TF_ACTION}"
+        echo "Roots:  ${_TF_ROOTS}"
+    waitFor: ['install-terraform']
+
+  - id: tf-fmt
+    name: gcr.io/cloud-builders/gcloud
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        export PATH="/workspace/bin:$$PATH"
+        terraform fmt -check -recursive -diff -no-color "${_TF_ROOT_DIR}"
+    waitFor: ['validate-inputs']
+
+  # G5's build/push/digest sequence, before any apply-generated local files.
+  # Existing QA roots still own QA application; only release source packaging
+  # uses this carrier image. PR plans and disabled promotion never publish.
+  - id: build-bundle
+    name: gcr.io/cloud-builders/docker
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        if [[ "${_TF_ACTION}" != apply || -z "${_TF_NEXT_TRIGGER}" ]]; then
+          echo "Skipping Terraform bundle build"
+          exit 0
+        fi
+        TF_BUNDLE_IMAGE="${_REGION}-docker.pkg.dev/${_ARTIFACT_PROJECT}/${_AR_REPOSITORY}/terraform-bundle:$COMMIT_SHA"
+        G5_BASE_DOCKERFILE_DIR=infra/docker bash scripts/ensure-base-images.sh base
+        docker build --tag="$${TF_BUNDLE_IMAGE}" --file=infra/docker/Dockerfile.terraform-bundle .
+    waitFor: ['tf-fmt']
+
+  - id: push-bundle
+    name: gcr.io/cloud-builders/docker
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        if [[ "${_TF_ACTION}" != apply || -z "${_TF_NEXT_TRIGGER}" ]]; then
+          echo "Skipping Terraform bundle push"
+          exit 0
+        fi
+        docker push "${_REGION}-docker.pkg.dev/${_ARTIFACT_PROJECT}/${_AR_REPOSITORY}/terraform-bundle:$COMMIT_SHA"
+    waitFor: ['build-bundle']
+
+  - id: resolve-bundle-ref
+    name: gcr.io/cloud-builders/docker
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        if [[ "${_TF_ACTION}" != apply || -z "${_TF_NEXT_TRIGGER}" ]]; then
+          echo "Skipping Terraform bundle digest resolution"
+          exit 0
+        fi
+        TF_BUNDLE_IMAGE="${_REGION}-docker.pkg.dev/${_ARTIFACT_PROJECT}/${_AR_REPOSITORY}/terraform-bundle:$COMMIT_SHA"
+        BUNDLE_REF="$$(docker inspect --format='{{range .RepoDigests}}{{println .}}{{end}}' "$${TF_BUNDLE_IMAGE}" | head -n 1 | tr -d '\r')"
+        if [[ "$${BUNDLE_REF}" != *@sha256:* ]]; then
+          echo "Expected immutable Terraform bundle ref, got: $${BUNDLE_REF:-<empty>}"
+          exit 1
+        fi
+        printf 'export TF_BUNDLE_REF=%s\n' "$${BUNDLE_REF}" > /workspace/tf-promotion.env
+    waitFor: ['push-bundle']
+
+  # Plan mode: every root is initialised, validated and planned with refresh
+  # against its live state; the run fails only on a plan error, and each
+  # root's summary is printed so a PR reviewer sees what an apply would do.
+  # Apply mode: each root is planned and applied before the next root starts,
+  # so a downstream terraform_remote_state read sees the upstream apply.
+  - id: tf-roots
+    name: gcr.io/cloud-builders/gcloud
+    env:
+      - 'TF_VAR_artifact_project=${_ARTIFACT_PROJECT}'
+      - 'TF_VAR_enable_release_bootstrap=${_QA_ENABLE_RELEASE_BOOTSTRAP}'
+      - 'TF_VAR_enable_promotion=${_QA_ENABLE_PROMOTION}'
+      - 'TF_VAR_enable_release_train=${_QA_ENABLE_RELEASE_TRAIN}'
+      - 'TF_VAR_qa_release_authority_reviewed=${_QA_RELEASE_AUTHORITY_REVIEWED}'
+      - 'TF_VAR_promotion_targets=${_QA_PROMOTION_TARGETS_JSON}'
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        export PATH="/workspace/bin:$$PATH"
+        IFS=',' read -r -a roots <<< "${_TF_ROOTS}"
+        summary=/workspace/tf-summary.txt
+        : > "$$summary"
+        printf 'export SKIP_TERRAFORM=false\n' > /workspace/tf-control.env
+
+        # Apply-mode guard 1: any newer same-trigger build cancels stale work,
+        # including a failed successor. A skip is not proof of a successful apply.
+        source scripts/terraform-qa-freshness.sh "$BUILD_ID" "$PROJECT_ID" "$LOCATION" "$TRIGGER_NAME" /workspace/tf-control.env
+
+        # Apply-mode guard 2: nobody reviews this plan, so a destructive plan
+        # is never applied unattended.
+        destroy_actions() {
+          terraform -chdir="$$1" show -json "$$2" | python3 -c '
+        import json, sys
+        plan = json.load(sys.stdin)
+        for change in plan.get("resource_changes", []):
+            actions = change.get("change", {}).get("actions", [])
+            if "delete" in actions:
+                print(change["address"], "/".join(actions))
+        '
+        }
+
+        for root in "$${roots[@]}"; do
+          if [[ "${_TF_ACTION}" == "apply" ]]; then
+            skip_if_superseded
+          fi
+          dir="${_TF_ROOT_DIR}/$$root"
+          echo ""
+          echo "=== $$root: init ==="
+          # The committed .terraform.lock.hcl is the reviewed provider set;
+          # never let init pick new provider versions here.
+          if ! terraform -chdir="$$dir" init -input=false -no-color -lockfile=readonly; then
+            echo "$$root: init failed under -lockfile=readonly; commit an updated .terraform.lock.hcl"
+            exit 1
+          fi
+          echo "=== $$root: validate ==="
+          terraform -chdir="$$dir" validate -no-color
+
+          var_args=()
+          if [[ "$$root" == "delivery" ]]; then
+            var_args+=(-var "enable_application_triggers=${_QA_ENABLE_APPLICATION_TRIGGERS}")
+          fi
+
+          echo "=== $$root: plan ==="
+          set +e
+          terraform -chdir="$$dir" plan \
+            "$${var_args[@]}" \
+            -out="/workspace/tfplan-$$root" \
+            -input=false \
+            -no-color \
+            -lock-timeout=10m \
+            -detailed-exitcode 2>&1 | tee "/workspace/plan-$$root.txt"
+          plan_exit=$${PIPESTATUS[0]}
+          set -e
+          case "$$plan_exit" in
+            0) echo "$$root: no changes" >> "$$summary" ;;
+            2) grep -E "^Plan:" "/workspace/plan-$$root.txt" | sed "s/^/$$root: /" >> "$$summary" || echo "$$root: changes pending" >> "$$summary" ;;
+            *)
+              echo "$$root: plan failed (exit $$plan_exit)" >&2
+              exit 1
+              ;;
+          esac
+
+          if [[ "$$plan_exit" == "2" ]]; then
+            destroys="$$(destroy_actions "$$dir" "/workspace/tfplan-$$root")"
+            if [[ -n "$$destroys" ]]; then
+              echo "=== $$root: destructive actions ==="
+              echo "$$destroys"
+              echo "$$root: $$(echo "$$destroys" | wc -l | tr -d ' ') delete/replace action(s)" >> "$$summary"
+            fi
+          fi
+
+          if [[ "${_TF_ACTION}" == "apply" && "$$plan_exit" == "2" ]]; then
+            if [[ -n "$$destroys" && "${_TF_ALLOW_DESTROY}" != "true" ]]; then
+              echo "Refusing to apply $$root: the plan deletes or replaces resources and _TF_ALLOW_DESTROY is not true."
+              echo "Review the actions above, then rerun the trigger with _TF_ALLOW_DESTROY=true if they are intended."
+              exit 1
+            fi
+            skip_if_superseded
+            echo "=== $$root: apply ==="
+            terraform -chdir="$$dir" apply \
+              -input=false \
+              -no-color \
+              -lock-timeout=10m \
+              -auto-approve \
+              "/workspace/tfplan-$$root"
+            echo "=== $$root: outputs ==="
+            terraform -chdir="$$dir" output -no-color || true
+          fi
+        done
+        echo ""
+        echo "=== Summary (${_TF_ACTION}) ==="
+        cat "$$summary"
+    waitFor: ['resolve-bundle-ref']
+
+  - id: publish-terraform-release
+    name: gcr.io/cloud-builders/gcloud
+    entrypoint: bash
+    args:
+      - -ceu
+      - |
+        if [[ "${_TF_ACTION}" != apply || -z "${_TF_NEXT_TRIGGER}" ]]; then
+          echo "No Terraform promotion requested"
+          exit 0
+        fi
+        source /workspace/tf-control.env
+        case "$${SKIP_TERRAFORM}" in
+          true)
+            echo "Skipping Terraform release publication for superseded build $BUILD_ID"
+            exit 0
+            ;;
+          false) ;;
+          *) echo "Invalid Terraform skip decision"; exit 1 ;;
+        esac
+        source /workspace/tf-promotion.env
+        if [[ "$${TF_BUNDLE_REF}" != *@sha256:* ]]; then
+          echo "Refusing to promote a non-digest Terraform bundle"
+          exit 1
+        fi
+        # The root step's proceed decision can age before this step starts.
+        source scripts/terraform-qa-freshness.sh "$BUILD_ID" "$PROJECT_ID" "$LOCATION" "$TRIGGER_NAME" /workspace/tf-control.env
+        skip_if_superseded
+        gcloud builds triggers run "${_TF_NEXT_TRIGGER}" \
+          --project="$PROJECT_ID" --region="${_REGION}" --sha="$COMMIT_SHA" \
+          --substitutions="_TF_ACTION=apply,_TF_BUNDLE_MODE=use,_TF_BUNDLE_REF=$${TF_BUNDLE_REF},_AR_PROJECT=${_ARTIFACT_PROJECT},_AR_REPOSITORY=${_AR_REPOSITORY}"
+    waitFor: ['tf-roots']
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+# The platform root's first apply creates GKE, Cloud SQL and Filestore
+# and can exceed an hour; the GKE node-pool update timeout is the reference.
+timeout: 14400s

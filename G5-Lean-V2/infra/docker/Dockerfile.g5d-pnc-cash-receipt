@@ -1,0 +1,154 @@
+# syntax=docker/dockerfile:1
+# =============================================================================
+# Dockerfile.g5d-pnc-cash-receipt
+#
+# PNC Cash Receipt Angular/Spring runtime for G5 preview microVMs. Customer
+# source is mounted at /work; the signed host supplies G5 binaries at
+# /opt/g5/bin. This image contains only the locked workspace toolchains.
+# =============================================================================
+
+ARG BASE_IMAGE=g5/base:26.04
+FROM ${BASE_IMAGE}
+
+ARG MAVEN_VERSION=3.9.8
+ARG MAVEN_SHA512=7d171def9b85846bf757a2cec94b7529371068a0670df14682447224e57983528e97a6d1b850327e4ca02b139abaab7fcb93c4315119e6f0ffb3f0cbc0d0b9a2
+ARG NODE_VERSION=24.22.1
+ARG NODE_SHA256_AMD64=6c172a9ab6718f7b801fb5a7bd486af2ee5e32758086a04b84fcce2aa77095e6
+ARG NODE_SHA256_ARM64=dbabf7a1cbf947e6059ffad2c27b80041db97dea1e553b62afdee7f13fca336e
+ARG NPM_VERSION=11.19.1
+ARG TARGETARCH
+
+LABEL org.opencontainers.image.title="G5 PNC Cash Receipt Preview Runtime" \
+      org.opencontainers.image.description="PNC Cash Receipt preview microVM base with Java 21, Maven 3.9.8, Node 24.22.1, npm 11.19.1, and native npm build prerequisites" \
+      com.g5labs.runtime.schema="v1" \
+      com.g5labs.runtime.base_image="ubuntu-26.04-glibc-2.43" \
+      com.g5labs.runtime.workload.class="java21-spring-boot-3.5-angular-20" \
+      com.g5labs.runtime.kernel.features="cloud-hypervisor" \
+      com.g5labs.runtime.testcontainers.enabled="false" \
+      com.g5labs.runtime.java="21" \
+      com.g5labs.runtime.maven="${MAVEN_VERSION}" \
+      com.g5labs.runtime.node="${NODE_VERSION}" \
+      com.g5labs.runtime.npm="${NPM_VERSION}" \
+      com.g5labs.runtime.external_services="none-ui-demo-in-process"
+
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+USER root
+
+# G5 tasks supply their own PATH, so every launcher must remain reachable from
+# /usr/local/bin. The workspace mount shadows /work at runtime; these cache env
+# values therefore point at the writable customer workspace rather than a baked
+# dependency tree.
+ENV MAVEN_HOME=/opt/apache-maven \
+    MAVEN_OPTS=-Dmaven.repo.local=/work/.m2/repository \
+    NPM_CONFIG_CACHE=/work/.npm \
+    JAVA_HOME=/opt/java/openjdk \
+    LANG=C.UTF-8 \
+    LC_ALL=C.UTF-8
+
+RUN apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        bash \
+        ca-certificates \
+        curl \
+        gcc \
+        g++ \
+        libc6-dev \
+        make \
+        openjdk-21-jdk-headless \
+        procps \
+        python3 \
+        tar \
+        xz-utils \
+    && rm -rf /var/lib/apt/lists/*
+
+# Maven comes from Maven Central (repo.maven.apache.org), which serves the
+# release binaries through a CDN; archive.apache.org is a single origin and
+# timed out (curl exit 28) in QA deploy build 2c3bf5ba on 2026-11-05. The
+# fetch retries curl's transient errors (timeouts, HTTP 408/429/5xx) with a
+# bounded budget of 5 attempts 10s apart; each attempt is capped at 20s to
+# connect, 300s in total, and a stall under 50 KiB/s for 60s counts as a
+# timeout, matching the dl-cache fetch in Dockerfile.g5d-base. Because curl
+# honours a server's Retry-After over --retry-delay, --retry-max-time also
+# stops new attempts after 20 minutes, so with the 300s per-attempt cap the
+# fetch ends within 25 minutes and a sustained 429 cannot hold the build
+# step until the Cloud Build deadline. Definitive errors such as a
+# 404 for a wrong MAVEN_VERSION fail immediately. The
+# transport is best-effort; the pinned SHA-512 below is the only acceptance
+# gate, so an exhausted budget or a tampered mirror fails the build closed.
+RUN curl -fsSL --retry 4 --retry-delay 10 --retry-max-time 1200 \
+        --connect-timeout 20 --max-time 300 --speed-limit 51200 --speed-time 60 \
+        -o /tmp/apache-maven.tar.gz \
+        "https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/${MAVEN_VERSION}/apache-maven-${MAVEN_VERSION}-bin.tar.gz" \
+    && echo "${MAVEN_SHA512}  /tmp/apache-maven.tar.gz" | sha512sum -c - \
+    && tar -xzf /tmp/apache-maven.tar.gz -C /opt \
+    && ln -sfn "/opt/apache-maven-${MAVEN_VERSION}" "${MAVEN_HOME}" \
+    && ln -sf "${MAVEN_HOME}/bin/mvn" /usr/local/bin/mvn \
+    && ln -sf "${MAVEN_HOME}/bin/mvnDebug" /usr/local/bin/mvnDebug \
+    && rm -f /tmp/apache-maven.tar.gz
+
+RUN JHOME="$(dirname "$(dirname "$(readlink -f "$(command -v java)")")")" \
+    && mkdir -p /opt/java \
+    && ln -sfn "${JHOME}" /opt/java/openjdk \
+    && ln -sf /opt/java/openjdk/bin/java /usr/local/bin/java \
+    && ln -sf /opt/java/openjdk/bin/javac /usr/local/bin/javac
+
+RUN case "${TARGETARCH}" in \
+      amd64) NODE_ARCH=x64; NODE_SHA256="${NODE_SHA256_AMD64}" ;; \
+      arm64) NODE_ARCH=arm64; NODE_SHA256="${NODE_SHA256_ARM64}" ;; \
+      *) echo "Unsupported target architecture: ${TARGETARCH}" >&2; exit 1 ;; \
+    esac \
+    && curl -fsSLo /tmp/node.tar.xz \
+        "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-${NODE_ARCH}.tar.xz" \
+    && echo "${NODE_SHA256}  /tmp/node.tar.xz" | sha256sum -c - \
+    && tar -xJf /tmp/node.tar.xz -C /usr/local --strip-components=1 --no-same-owner \
+    && rm -f /tmp/node.tar.xz \
+    && ln -sf /usr/local/bin/node /usr/bin/node \
+    && ln -sf /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm \
+    && ln -sf /usr/local/lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx
+
+RUN if ! getent group 1000 >/dev/null; then groupadd --gid 1000 ubuntu; fi \
+    && if ! getent passwd 1000 >/dev/null; then \
+         useradd --uid 1000 --gid 1000 --create-home --shell /bin/bash ubuntu; \
+       fi \
+    && mkdir -p /home/ubuntu /work/.m2 /work/.npm /work/.cache \
+    && chown -R 1000:1000 /home/ubuntu /work \
+    && chmod 0700 /home/ubuntu \
+    && chmod 1777 /tmp
+
+WORKDIR /work
+
+USER 1000:1000
+
+# Run the gate under the exact task PATH and final non-root identity. This is
+# the executable oracle for test_contract/base_image_consolidation D8.
+RUN export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/g5/bin" \
+    && java -version 2>&1 | grep -F 'version "21.' \
+    && javac -version 2>&1 | grep -F 'javac 21.' \
+    && mvn -version | grep -F "Apache Maven ${MAVEN_VERSION}" \
+    && node --version | grep -Fx "v${NODE_VERSION}" \
+    && npm --version | grep -Fx "${NPM_VERSION}" \
+    && npx --version | grep -Fx "${NPM_VERSION}" \
+    && python3 --version \
+    && pgrep --version \
+    && gcc --version \
+    && g++ --version \
+    && make --version \
+    && curl --version \
+    && xz --version \
+    && git --version | grep -F 'git version 2.53.0' \
+    && getconf GNU_LIBC_VERSION | grep -F 'glibc 2.43' \
+    && test -w /work/.m2 \
+    && test -w /work/.npm \
+    && for p in perl dpkg-dev libdpkg-perl; do \
+         if dpkg-query -W -f='${Status}' "$p" 2>/dev/null | grep -q 'install ok installed'; then \
+           echo "FATAL: $p is installed; use the exact compiler subset instead of build-essential" >&2; \
+           exit 1; \
+         fi; \
+       done \
+    && bad="$(dpkg-query -W -f='${Package} ${Status}\n' 2>/dev/null \
+                | awk '$NF == "installed" && ($1 ~ /^perl-modules-/ || $1 ~ /^libperl[0-9]/) { print $1 }')" \
+    && if [[ -n "${bad}" ]]; then \
+         echo "FATAL: versioned perl package(s) installed: ${bad}" >&2; \
+         exit 1; \
+       fi

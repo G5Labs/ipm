@@ -1,0 +1,58 @@
+flowchart LR
+  classDef ontology fill:#e9f6ec,stroke:#4f8a5b,color:#16301d,stroke-width:1.5px;
+  classDef workflow fill:#fff1e6,stroke:#b56b2c,color:#3b2110,stroke-width:1.5px;
+  classDef project fill:#e8f1ff,stroke:#4b73b8,color:#14233d,stroke-width:1.5px;
+  classDef platform fill:#f3ebff,stroke:#7a59b3,color:#26153e,stroke-width:1.5px;
+  classDef store fill:#fff8d9,stroke:#a7902e,color:#352c0d,stroke-width:1.5px;
+  classDef worker fill:#ffe9de,stroke:#b85a2f,color:#3c1d0d,stroke-width:1.5px;
+
+  subgraph P1["1. Linked-markdown ontology"]
+    Docs["Markdown specs and project docs<br/>client: SpecEditor, OntologyTree<br/>api: docs.rs, ontology.rs"]:::ontology
+    Graph["Ontology graph and linked nodes<br/>api: doc_service.rs, ontology_service.rs<br/>db: docs + ontology_nodes"]:::ontology
+  end
+
+  subgraph P2["2. Uplift and downlift workflows"]
+    Bootstrap["Bootstrap graph assembly<br/>g5d: worker/bootstrap.rs"]:::workflow
+    Analysis["Project analysis and ontology diff<br/>g5d: analysis/*.rs"]:::workflow
+    Scheduler["Job and task orchestration<br/>g5-api: job_service.rs, task_service.rs"]:::workflow
+    Swarm["Agent swarm execution<br/>g5d: worker/lifecycle.rs, agent/*.rs, tools/*.rs"]:::worker
+  end
+
+  subgraph P3["3. Project primitive with Git-like semantics"]
+    LiveEdit["Live editing and CRDT drafts<br/>client: DraftEditor, CodeEditor<br/>api/common/worker: crdt/*"]:::project
+    GitSurface["Workspace branches, clone, fork, merge, commit, rebase<br/>api: git.rs, drafts.rs, workspace_service.rs"]:::project
+    SharedOps["Shared workspace and git operations<br/>g5-common: ops/clone.rs, commit.rs, merge.rs, fork.rs, workspace.rs"]:::project
+  end
+
+  subgraph P4["4. Multi-tenant platform"]
+    UX["User and org experience<br/>client: App.tsx, ProjectsPage, WorkspacePage"]:::platform
+    Control["Control plane and tenancy APIs<br/>g5-api: auth.rs, orgs.rs, workspaces.rs, users.rs, permissions.rs"]:::platform
+    Authz["Multi-tenant authz and scoped access<br/>g5-authz + scoped DB"]:::platform
+    Infra["Hosted platform infrastructure<br/>infra: Terraform, Helm, Cloud Build, GKE, Cloud SQL"]:::platform
+  end
+
+  RepoStore[("User Git repositories and workspace branches")]:::store
+  DataStore[("Multi-tenant platform state<br/>orgs, workspaces, ontology, jobs, tasks, drafts")]:::store
+
+  Docs --> Graph
+  Graph --> Scheduler
+  Bootstrap --> Analysis
+  Analysis --> Graph
+  Scheduler --> Swarm
+  Swarm --> GitSurface
+
+  LiveEdit <--> GitSurface
+  GitSurface <--> SharedOps
+  SharedOps <--> RepoStore
+
+  UX <--> Control
+  Control <--> Authz
+  Control --> Scheduler
+  Control --> GitSurface
+  Control --> Graph
+  Control <--> DataStore
+  Infra --> Control
+  Infra --> Swarm
+
+  Graph -. scopes .-> Bootstrap
+  LiveEdit -. edits .-> SharedOps

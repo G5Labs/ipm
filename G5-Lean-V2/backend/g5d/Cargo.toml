@@ -1,0 +1,111 @@
+[package]
+name = "g5d"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[features]
+# Cloud Hypervisor is the Linux/KVM production backend. Explicit process
+# development builds may disable default features; there is no VM fallback.
+default = ["cloud-hypervisor"]
+test-helpers = ["dep:tempfile", "g5d-dispatch/test-support","g5-contracts/test-helpers", "g5d-foundation/test-helpers", "g5d-isolation/test-helpers", "g5d-host/test-helpers"]
+microvm-e2e = ["cloud-hypervisor"]
+cloud-hypervisor = ["g5d-isolation/cloud-hypervisor"]
+# Opt-in feature for the workspace materialization integration test that
+# requires an XFS-reflink-capable host filesystem (PR-rev7-6 §5.4). The
+# default test path on non-XFS hosts skips the reflink-bytewise probe; this
+# feature flips the probe into a hard assertion. See
+# `g5d-foundation/src/workspace/materialize.rs::materialize_produces_real_reflink_on_xfs`.
+workspace-integration = ["g5d-foundation/workspace-integration"]
+
+[dependencies]
+g5d-agent = { path = "../g5d-agent" }
+g5d-dispatch = { path = "../g5d-dispatch" }
+# Internal crate dependency (NO sqlx feature — g5d doesn't access database).
+# `tracing-compat` backs the CLI's legacy tracing-target mappings.
+g5-contracts = { path = "../g5-contracts", features = ["tracing-compat"] }
+g5-internal-api = { path = "../g5-internal-api", features = ["http-client"] }
+g5-auth = { path = "../g5-auth" }
+# The CLI drives workspace Git through the native SCM runner.
+g5-scm = { path = "../g5-scm", features = ["native"] }
+g5-storage = { path = "../g5-storage" }
+g5-semantic = { path = "../g5-semantic" }
+g5d-foundation = { path = "../g5d-foundation" }
+g5d-isolation = { path = "../g5d-isolation" }
+g5d-host = { path = "../g5d-host" }
+
+# Workspace dependencies (version inherited from root Cargo.toml)
+tokio = { workspace = true }
+axum = { workspace = true }
+serde = { workspace = true }
+tracing = { workspace = true }
+serde_json = { workspace = true }
+uuid = { workspace = true }
+tracing-subscriber = { workspace = true }
+clap = { workspace = true }
+tower = { workspace = true }
+tower-http = { workspace = true }
+jsonwebtoken = { workspace = true }
+reqwest = { workspace = true }
+
+# Workspace dependencies (time)
+# `pr checks --watch` waits until GitHub's reported RFC3339 rate-limit reset.
+chrono = { workspace = true }
+
+# Local dependencies (not in workspace [workspace.dependencies])
+thiserror = "2"
+http = "1"
+# `axum::body::to_bytes` wraps `http_body_util::Limited`; the LLM proxy
+# downcasts the over-cap error to `LengthLimitError` to distinguish a local
+# request-size fault (413) from an upstream failure (502).
+http-body-util = "0.1"
+# Claude's private Unix-socket LLM proxy serves its axum Router through
+# hyper-util's connection builder over a UnixListener.
+hyper = { version = "1", features = ["server", "http1"] }
+hyper-util = { version = "0.1", features = ["server-auto", "service", "tokio"] }
+tokio-tungstenite = { version = "0.24", features = ["connect", "rustls-tls-native-roots"] }
+zstd = "0.14"
+serde_yaml = "0.9"
+walkdir = "2"
+sha2 = "0.10"
+anyhow = "1"
+libc = "0.2"
+socket2 = "0.5"
+futures-util = "0.3"
+ignore = "0.4"
+tokio-util = { version = "0.7.18", features = ["rt", "io"] }
+base64 = "0.22"
+toml = "0.8"
+wait-timeout = "0.2"
+# CLI (`cli/`): async host-resource probes and spec file globbing.
+async-trait = "0.1"
+glob = "0.3"
+# Temporary roots for the `dispatch_test_support` harness (test-helpers only).
+tempfile = { version = "3", optional = true }
+
+# Digest encoding remains used by cache and worker code outside OCI.
+hex = "0.4"
+# OS CSPRNG for the per-VM carrier capability token (P5.5 carrier handshake auth,
+# `worker/agent_host.rs`). `getrandom` reads the operating-system entropy source
+# directly (no userspace seeding, no time seed) and is already resolved in the
+# lock tree — the minimal secure-RNG surface for a one-shot 32-byte token.
+getrandom = "0.2"
+
+[dev-dependencies]
+g5-contracts = { path = "../g5-contracts", features = ["render"] }
+g5-scm = { path = "../g5-scm", features = ["test-helpers"] }
+git2 = { version = "0.21.0", features = ["https", "ssh"] }
+tempfile = "3"
+wiremock = "0.6"
+# test-util enables tokio::time::pause/start_paused so the tunnel keepalive
+# deadline tests run on virtual time instead of sleeping wall-clock seconds.
+tokio = { workspace = true, features = ["test-util"] }
+# Test helpers do not require a locally installed VMM; strict KVM gates
+# supply the platform runtime and fixture explicitly.
+g5d = { path = ".", default-features = false, features = ["test-helpers"] }
+assert_cmd = "2"
+# The architecture suite parses the CLI module to prove it only names itself.
+syn = { version = "2", features = ["full", "visit"] }
+proc-macro2 = "1"
+predicates = "3"
+serial_test = "3"

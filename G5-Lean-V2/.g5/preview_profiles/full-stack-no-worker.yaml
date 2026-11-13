@@ -1,0 +1,26 @@
+# =============================================================================
+# .g5/preview_profiles/full-stack-no-worker.yaml — the stack without a worker
+# =============================================================================
+# Boots the Docker Compose part of the G5 dev stack (Postgres, API, Edge) via
+# `just dev-stack-up` and nothing else: no workspace host, so the previewed
+# instance can show its UI and API but cannot open workspaces. Use the
+# `full-stack` profile for the whole stack with a process-mode workspace host.
+#
+# Same stack identity as the `full-stack` profile (project and volumes named after
+# this incarnation, image tag `preview`, ports off the defaults), so it never
+# touches a developer's own stack, and Close's `just dev-stack-down` removes
+# only this preview's containers and volumes. See full-stack.yaml for the field
+# semantics `g5d preview-serve` reads.
+# Seeds the same issue-only and issue-with-PR examples through durable APIs;
+# browsing their landing pages and conversations does not require a worker.
+
+description: API, database and UI without a worker host (browse and configure; workspaces cannot start) via `just dev-stack-up`
+port: 13000
+env:
+  G5_PORT_EDGE: "13000"
+  G5_PORT_API: "17500"
+  G5_PORT_POSTGRES: "15433"
+  G5_PORT_OAUTH_STUB: "19876"
+  G5_IMAGE_TAG: preview
+command: 'export PATH="/usr/local/bin:$PATH" G5_COMPOSE_PROJECT="g5-preview-${G5D_PROCESS_INCARNATION:-vm}"; export G5_COMPOSE_VOLUMES="$G5_COMPOSE_PROJECT"; if command -v g5-dev-dockerd-start >/dev/null 2>&1; then setsid g5-dev-dockerd-start || exit 1; fi; just dev-stack-up && { python3 scripts/seed-preview-workspaces.py || echo "preview seeding failed; the stack stays up without sample workspaces" >&2; } && while :; do sleep 3600; done'
+cleanup_command: 'export PATH="/usr/local/bin:$PATH" G5_COMPOSE_PROJECT="g5-preview-${G5D_PROCESS_INCARNATION:-vm}"; export G5_COMPOSE_VOLUMES="$G5_COMPOSE_PROJECT"; just dev-stack-down'
