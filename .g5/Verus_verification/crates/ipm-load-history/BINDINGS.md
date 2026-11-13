@@ -38,7 +38,7 @@ Paths are relative to the IPM repository root at `571e04a19aba9f9b4bc0ea23fbe091
 | 1 | `lnm_begin` | 1172 `tUseTransactions`; 1191-1193 JournalManager(0); 1194-1196 `tstart` | T1 or journaling off |
 | 2 | `guard_refuses` | 1213-1223 (downgrade 1214-1217; update-required 1218-1222) | controls 08, 09 remove each guard |
 | 3 | `set_com` when no transaction | 1225-1228 | IRISTEMP only (control 03 removes it) |
-| 4 | `lnm_load` | 1251-1264 `$system.OBJ.Load` → `StudioDocument/Module.cls:149-202` `ImportStream` (nested `tstart` 184, `ModuleStream.%Save` 185, `UpdatePersistentFromStream` 190, `tcommit` 194, `trollback 1` 198-200) | `mf == 2`: nothing loaded, "No module definition found." (1255-1257); `mf == 3`: validation refusal, nested rollback (document kept only when journaling is off) |
+| 4 | `lnm_load` | 1251-1264 `$system.OBJ.Load` → `StudioDocument/Module.cls:149-202` `ImportStream` (nested `tstart` 184, `ModuleStream.%Save` 185, `UpdatePersistentFromStream` 190, `tcommit` 194, `trollback 1` 198-200) | `mf == 2`: nothing loaded, "No module definition found." (1255-1257); `mf == 3`: validation refusal, nested rollback (document kept only when journaling is off)  `mf == 4`: both documents imported, then "module.xml contains multiple documents." (1258-1260) |
 | 5 | `t_names` | 1290-1295 `NameOpen`, `pLog.SetName`, `pLog.SetVersion` | IRISTEMP only |
 | 6 | `lnm_devsave` | 1298-1307 | module save when `params("DeveloperMode")` is defined; otherwise stored mode (Q-01) |
 | 7 | C1 `tcommit` when dev and transactions | 1309-1311 | durable only at `$TLEVEL` 1 → 0 |
@@ -75,7 +75,17 @@ Paths are relative to the IPM repository root at `571e04a19aba9f9b4bc0ea23fbe091
 | `caller_end` | the caller of `Shell("load ...")` that already held a transaction commits or rolls back (P-11) |
 | `user_edit` | another process's object save or SQL UPDATE of a History row, refused for finalized rows (P-08) |
 
+## Repair variant 103 (not the as-built product)
+
+D1 repair, used only by `repair103_*` lemmas, the `repair-103-*` explorer runs and the repair survey. Dependency History rows (slots 1, 2) are inserted and persisted by `autonomous_twin` (no rollback of the load undoes them, premise R-01); a dependency's row takes Committed=1 only when its writes are durable (at its close if no IPM transaction of the load is open, otherwise when the parent's C2/C3 commit reaches the load's entry level, `dep_commit_mark`); a parent rollback leaves it at 0; the rows are finalized at the top-level close (`dep_finalize`). The top-level row, all guards and all other writes are as built.
+
 ## Abstractions and what they could hide or invent
+
+- Early refusals of `LoadModuleReference` (repository unavailable, required-version mismatch, Utils/Module.cls:84-126) are not modelled. They happen after the dependency's log Init (inside the parent's transaction), so they would produce a dependency failure whose row is lost like D1; the model reaches that outcome only through the dependency's own failures.
+- An error from `WriteAfterInstallMessage` after C3 (Utils/Module.cls:1354) is not modelled. It would behave like the CleanUp error (`cleanup_fails`, V6): an error status after the commit.
+- In the fault domain the manifest, not-found and system-requirements faults are applied to the first dependency only; the second dependency only gets the Activate fault. Nothing in the code treats the second dependency differently, but its combinations are not explored.
+- Process death is one step (death and rollback together). After SIGKILL, IRIS rolls back only at slot cleanup (105 s to about 10 min, N-P18), and other processes can read the uncommitted writes meanwhile (premise P-13). The model observes only after the rollback.
+- Per-module `<Defaults>` transaction flags are not representable (`Cfg.txm` applies to every activation). A dependency whose own defaults set NoJournal would write unjournaled inside the parent's T1, so the parent's rollback would leave it installed (P-03), and its journaled History row would be rolled back. Open obligation (R1-MOD-05): B2 native case pending; the model cannot predict it.
 
 - Combined steps. `SetSource` + `SetVersion` (IRISTEMP only) are one step; `ImportStream` is one atomic step (a process end inside it equals one before it when journaling is on); phase bodies other than Reload and Activate write nothing. These merge only IRISTEMP or invisible writes; a native observation at a finer point (for example a process end inside ImportStream under NoJournal) is not represented.
 - Snapshot stack instead of an undo log. Equivalent to IRIS rollback when no key written in an open transaction is also written with journaling off or by another process in that transaction. Unjournaled writes are pushed into every snapshot; foreign edits are restricted to rows the load has not modified in its open transaction (`user_edit_enabled`).

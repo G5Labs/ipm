@@ -37,7 +37,8 @@ pub struct Pkg {
     pub act: u8,
     /// Manifest: 0 valid, 1 not parseable (GetModuleObjectFromPath throws), 2 parseable but holds
     /// no module document ("No module definition found."), 3 module document refused by
-    /// ImportStream validation (nested transaction rolled back).
+    /// ImportStream validation (nested transaction rolled back), 4 written, then refused
+    /// ("module.xml contains multiple documents.", Utils/Module.cls:1258-1260).
     pub mf: u8,
     /// Snapshot version (a dependency loaded from a filesystem repository under a `-dev` parent
     /// is itself loaded in developer mode).
@@ -79,7 +80,8 @@ pub struct Cfg {
     pub deps: Seq<Pkg>,
     /// Installed state before the command, one entry per module slot (3).
     pub init: Seq<Mod>,
-    /// 0 as-built. 1..19 controls (one guard or effect removed). 100.. repairs.
+    /// 0 as-built. 1..19 controls (one guard or effect removed). 100.. repairs:
+    /// 103 = D1 repair (dependency History rows written outside the parent's transaction).
     pub var: u8,
 }
 
@@ -338,10 +340,21 @@ pub open spec fn set_com(c: Cfg, s: State, i: usize) -> State {
 
 pub open spec fn fresh_twin(id: u8, pkg: bool) -> Twin { Twin { ex: true, id: id, pkg: pkg, ver: 0, ok: 0, com: false, tend: false, fin: false, ph: 0, phst: 0, edited: false } }
 
+/// A write that no open transaction of this process undoes (applied to the store and to every
+/// snapshot). Used only by repair 103 for dependency rows.
+pub open spec fn autonomous_twin(s: State, i: usize, t: Twin) -> State {
+    with_store(s, upd_twin(s.ns, i, t), all_twin(s.tx, i, t))
+}
+
+/// Repair 103 writes the History rows of dependency loads (slots 1 and 2) outside the parent's
+/// transaction.
+pub open spec fn dep_autonomous(c: Cfg, i: usize) -> bool { c.var == 103 && i != 0 }
+
 /// HistoryTemp:Init second half: the History twin %Save (at the caller's $TLEVEL), copying
 /// Package and the placeholder Version from the temp row.
-pub open spec fn twin_insert(s: State, i: usize) -> State {
-    let s2 = wtwin(s, i, fresh_twin(inc(s.ctr), gtemp(s.temp, i).pkg));
+pub open spec fn twin_insert(c: Cfg, s: State, i: usize) -> State {
+    let t = fresh_twin(inc(s.ctr), gtemp(s.temp, i).pkg);
+    let s2 = if dep_autonomous(c, i) { autonomous_twin(s, i, t) } else { wtwin(s, i, t) };
     with_ctr_att(s2, inc(s.ctr), if i < s.att.len() { s.att.update(i as int, 1u8) } else { s.att })
 }
 
@@ -352,10 +365,43 @@ pub open spec fn persist_row(c: Cfg, s: State, i: usize) -> State {
     let tw = gtwin(s.ns.twins, i);
     let t = gtemp(s.temp, i);
     if !tw.ex || (tw.fin && c.var != 10) { s }
+    else if dep_autonomous(c, i) {
+        // repair 103: Committed only if the dependency's writes are already durable (no IPM
+        // transaction of the load is open); finalized later, at the top-level close
+        autonomous_twin(s, i, Twin { ex: true, id: tw.id, pkg: t.pkg, ver: t.ver, ok: t.ok,
+            com: t.com && s.tx.len() <= (s.lnm0.itl as usize), tend: t.tend, fin: false, ph: t.ph, phst: t.phst, edited: tw.edited })
+    }
     else {
         wtwin(s, i, Twin { ex: true, id: tw.id, pkg: t.pkg, ver: t.ver, ok: t.ok, com: t.com, tend: t.tend,
             fin: c.var != 7, ph: t.ph, phst: t.phst, edited: tw.edited })
     }
+}
+
+/// Repair 103: when the parent's commit makes its dependencies' writes durable, their rows take
+/// the dependencies' own Committed.
+pub open spec fn dep_mark_one(c: Cfg, s: State, i: usize) -> State {
+    let tw = gtwin(s.ns.twins, i);
+    if tw.ex && !tw.fin {
+        autonomous_twin(s, i, Twin { ex: tw.ex, id: tw.id, pkg: tw.pkg, ver: tw.ver, ok: tw.ok, com: gtemp(s.temp, i).com,
+            tend: tw.tend, fin: tw.fin, ph: tw.ph, phst: tw.phst, edited: tw.edited })
+    } else { s }
+}
+
+pub open spec fn dep_commit_mark(c: Cfg, s: State, w: u8) -> State {
+    if c.var == 103 && w == 0 && s.tx.len() <= (s.lnm0.itl as usize) { dep_mark_one(c, dep_mark_one(c, s, 1), 2) } else { s }
+}
+
+/// Repair 103: the top-level close finalizes the dependency rows.
+pub open spec fn dep_fin_one(s: State, i: usize) -> State {
+    let tw = gtwin(s.ns.twins, i);
+    if tw.ex && !tw.fin {
+        autonomous_twin(s, i, Twin { ex: tw.ex, id: tw.id, pkg: tw.pkg, ver: tw.ver, ok: tw.ok, com: tw.com,
+            tend: tw.tend, fin: true, ph: tw.ph, phst: tw.phst, edited: tw.edited })
+    } else { s }
+}
+
+pub open spec fn dep_finalize(c: Cfg, s: State) -> State {
+    if c.var == 103 { dep_fin_one(dep_fin_one(s, 1), 2) } else { s }
 }
 
 /// Auxiliary: record that slot `i` reached stage `a`.
@@ -450,6 +496,10 @@ pub open spec fn lnm_load(c: Cfg, s: State, w: u8) -> State {
         // ImportStream: tstart, ModuleStream %Save, validation refuses, trollback 1. The
         // document write is undone only if it was journaled.
         set_lnm(if s.jrn { s } else { wmod(s, i, m_doc(cur, p.ver)) }, w, lfail(f))
+    } else if p.mf == 4 {
+        // both documents are imported (module record written), then the multiple-documents check
+        // refuses (1258-1260)
+        set_lnm(wmod(s, i, m_manifest(cur, p.ver)), w, lfail(f))
     } else {
         set_lnm(wmod(s, i, m_manifest(cur, p.ver)), w, lpc(f, 5))
     }
@@ -553,7 +603,7 @@ pub open spec fn lnm_b2(c: Cfg, s: State, w: u8) -> State {
     let i = slot_of(s, w);
     if f.pc == 11 { if w == 0 { lnm_deps(c, s) } else { set_lnm(s, w, lpc(f, 12)) } }
     else if f.pc == 12 { set_lnm(wmod(s, i, m_touch(gmod(s.ns.mods, i))), w, lpc(f, 13)) }
-    else { set_lnm(if f.dev && c.txm == 0 { tcommit(c, s) } else { s }, w, lpc(f, 14)) }
+    else { set_lnm(if f.dev && c.txm == 0 { dep_commit_mark(c, tcommit(c, s), w) } else { s }, w, lpc(f, 14)) }
 }
 
 /// LoadNewModule phases, non-developer commit and exit (1340-1363).
@@ -561,7 +611,7 @@ pub open spec fn lnm_c(c: Cfg, s: State, w: u8) -> State {
     let f = lnm_of(s, w);
     let i = slot_of(s, w);
     if f.pc == 29 {
-        if !f.dev && c.txm == 0 { set_lnm(tcommit(c, s), w, lpc(f, 30)) } else { set_lnm(s, w, lpc(f, 31)) }
+        if !f.dev && c.txm == 0 { set_lnm(dep_commit_mark(c, tcommit(c, s), w), w, lpc(f, 30)) } else { set_lnm(s, w, lpc(f, 31)) }
     }
     else if f.pc == 30 { set_lnm(if c.var != 2 { set_com(c, s, i) } else { s }, w, lpc(f, 31)) }
     else if f.pc == 31 { lnm_exit(c, s, w) }
@@ -581,7 +631,7 @@ pub open spec fn lmr_step(c: Cfg, s: State) -> State {
     let i = dslot(s);
     let d = gpkg(c.deps, s.lnm0.di as usize);
     if s.lmr_pc == 1 { with_lmr(put_temp(s, i, fresh_temp(true)), 2, s.lmr_err) }
-    else if s.lmr_pc == 2 { with_lmr(twin_insert(s, i), 3, s.lmr_err) }
+    else if s.lmr_pc == 2 { with_lmr(twin_insert(c, s, i), 3, s.lmr_err) }
     else if s.lmr_pc == 3 { with_lmr(put_temp(s, i, t_ver(gtemp(s.temp, i), d.ver)), 4, s.lmr_err) }
     else if s.lmr_pc == 4 { with_lmr(with_lnm1(s, dlnm()), 5, s.lmr_err) }
     else if s.lmr_pc == 5 { with_lmr(s, 6, s.lnm1.err) }
@@ -599,14 +649,14 @@ pub open spec fn lmr_step(c: Cfg, s: State) -> State {
 
 pub open spec fn top_step(c: Cfg, s: State) -> State {
     if s.top_pc == 0 { with_top(put_temp(s, 0, fresh_temp(false)), 1, false) }
-    else if s.top_pc == 1 { with_top(twin_insert(s, 0), 2, false) }
+    else if s.top_pc == 1 { with_top(twin_insert(c, s, 0), 2, false) }
     else if s.top_pc == 2 {
         if c.path_ok { with_top(with_lnm0(s, dlnm()), 3, false) } else { with_top(s, 4, true) }
     }
     else if s.top_pc == 3 { with_top(s, 4, s.lnm0.err || c.cleanup_fails) }
     else if s.top_pc == 4 { with_top(set_att(put_temp(s, 0, t_final(c, gtemp(s.temp, 0), s.top_err)), 0, 2), 5, s.top_err) }
     else if s.top_pc == 5 {
-        with_top(persist(c, s, 0), 6, s.top_err)
+        with_top(persist(c, dep_finalize(c, s), 0), 6, s.top_err)
     }
     else if s.top_pc == 6 { with_top(put_temp(s, 0, t_dead(gtemp(s.temp, 0))), 7, s.top_err) }
     else { s }
@@ -711,7 +761,7 @@ pub open spec fn init(c: Cfg) -> State {
 }
 
 /// Configurations in the modelled domain.
-pub open spec fn pkg_wf(p: Pkg) -> bool { 1 <= p.ver && p.ver <= 3 && p.act <= 2 && p.mf <= 3 }
+pub open spec fn pkg_wf(p: Pkg) -> bool { 1 <= p.ver && p.ver <= 3 && p.act <= 2 && p.mf <= 4 }
 pub open spec fn mod_wf(m: Mod) -> bool { m.ver <= 3 && m.wr == 0 && (m.present ==> (1 <= m.ver && m.doc == m.ver)) && (!m.present ==> (!m.dev && !m.res && m.doc == 0 && m.ver == 0)) }
 pub open spec fn cfg_wf(c: Cfg) -> bool {
     &&& c.txm <= 2 && c.devf <= 2
@@ -723,7 +773,7 @@ pub open spec fn cfg_wf(c: Cfg) -> bool {
     &&& mod_wf(gmod(c.init, 0)) && mod_wf(gmod(c.init, 1)) && mod_wf(gmod(c.init, 2))
     &&& (gmod(c.init, 1).present ==> (c.deps.len() >= 1 && gmod(c.init, 1).ver == gpkg(c.deps, 0).ver && !gmod(c.init, 1).dev))
     &&& (gmod(c.init, 2).present ==> (c.deps.len() >= 2 && gmod(c.init, 2).ver == gpkg(c.deps, 1).ver && !gmod(c.init, 2).dev))
-    &&& (c.var == 0 || (1 <= c.var && c.var <= 11) || c.var == 102)
+    &&& (c.var == 0 || (1 <= c.var && c.var <= 11) || c.var == 102 || c.var == 103)
 }
 
 } // exec_spec_verified!

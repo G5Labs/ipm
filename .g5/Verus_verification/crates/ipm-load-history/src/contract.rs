@@ -23,9 +23,11 @@ pub struct Q {
     pub q01_keep: bool,
     /// Q-02: `-dev` bypasses the UpdatePackage guard (provisional true).
     pub q02_dev_bypass: bool,
-    /// Q-05: Committed must be exact for every action, not only top-level actions started at
-    /// $TLEVEL 0 (provisional false).
-    pub q05_all: bool,
+    /// Q-05 (scope revised by stage C R1-MOD-01): under a caller-held transaction, Committed must be
+    /// exact (provisional false: not constrained there, because the caller decides later). With no
+    /// caller transaction Committed is always required to equal "changes kept", for the top
+    /// action and for every dependency (`history.committed`, R1-ONT-01).
+    pub q05_caller_exact: bool,
     /// Q-06b (stage C R1-ONT-01): the load's records (top and dependencies) must survive a
     /// rollback of a caller-held transaction, by the caller or by process death (provisional true).
     /// Survival of a dependency's record under its parent's rollback is no longer a Q: it is
@@ -46,7 +48,7 @@ pub struct Q {
 }
 
 pub open spec fn qprov() -> Q {
-    Q { q01_keep: true, q02_dev_bypass: true, q05_all: false, q06b_caller_survive: true, q08_exact: true, q14_end: true, q17_before: true, qfin_unended: false }
+    Q { q01_keep: true, q02_dev_bypass: true, q05_caller_exact: false, q06b_caller_survive: true, q08_exact: true, q14_end: true, q17_before: true, qfin_unended: false }
 }
 
 /// One module's required final state.
@@ -149,7 +151,9 @@ pub open spec fn l1_alts(c: Cfg, q: Q) -> Seq<Seq<MExp>> {
     let dev = dev_mode(c, q);
     let tx = c.txm == 0;
     if v == 0 { Seq::empty().push(success_alt(c, q)) }
-    else if v == 1 || v == 3 || v == 4 { Seq::empty().push(unchanged_alt()) }
+    // refusals (path, manifest, downgrade, update required) write no module data in any mode
+    // (`load.refusal`, R1-MOD-02)
+    else if v == 1 || v == 2 || v == 3 || v == 4 { Seq::empty().push(unchanged_alt()) }
     else if v == 5 && q.q17_before { Seq::empty().push(unchanged_alt()) }
     else if !tx { Seq::empty().push(any_alt()) }
     else if !dev { Seq::empty().push(unchanged_alt()) }
@@ -162,7 +166,8 @@ pub open spec fn l1_alts(c: Cfg, q: Q) -> Seq<Seq<MExp>> {
 /// Module states a killed load may leave (`att0`: the top action had started).
 pub open spec fn l1_alts_kill(c: Cfg, q: Q) -> Seq<Seq<MExp>> {
     let v = l1_verdict(c, q);
-    if c.txm != 0 { Seq::empty().push(any_alt()) }
+    if v == 1 || v == 2 || v == 3 || v == 4 || (v == 5 && q.q17_before) { Seq::empty().push(unchanged_alt()) }
+    else if c.txm != 0 { Seq::empty().push(any_alt()) }
     else if dev_mode(c, q) {
         Seq::empty().push(three(mx(5, c.top.ver, 1), mx(6, dep(c, 0).ver, 2), mx(6, dep(c, 1).ver, 2)))
     }
@@ -180,12 +185,15 @@ pub open spec fn norec() -> RExp { rx(0, 3, 2, 2, 2, 2, 255, 255) }
 /// The top action's row after the command returned.
 pub open spec fn top_rec(c: Cfg, q: Q) -> RExp {
     let v = l1_verdict(c, q);
-    let com = if !c.caller_tx || q.q05_all { 3u8 } else { 2u8 };
+    let com = if !c.caller_tx || q.q05_caller_exact { 3u8 } else { 2u8 };
     let ok = if v == 0 { 1u8 } else { 2u8 };
     if v == 0 || v == 8 { rx(1, ok, com, 1, 1, 1, 5, 1) }
     else if v == 7 { rx(1, ok, com, 1, 1, 1, 5, if q.q14_end { 2u8 } else { 255u8 }) }
     // refused or failed after the manifest was read: the record names the package (R1-ONT-03)
     else if v >= 3 { rx(1, ok, com, 1, 1, 1, 255, 255) }
+    // a manifest refused after GetModuleObjectFromPath read the <Module> element (validation
+    // refusal, multiple documents) names the package too (R1-MOD-02)
+    else if v == 2 && c.top.mf >= 3 { rx(1, ok, com, 1, 1, 1, 255, 255) }
     else { rx(1, ok, com, 1, 1, 2, 255, 255) }
 }
 
@@ -198,7 +206,9 @@ pub open spec fn dep_rec(c: Cfg, q: Q, d: usize) -> RExp {
         // required under the parent's rollback (#366); under a caller-held transaction the
         // record is observed before the caller decides
         let ex = 1u8;
-        let com = if q.q05_all { 3u8 } else { 2u8 };
+        // a dependency undone by its parent's rollback reads uncommitted; one whose writes were
+        // kept reads committed (`history.committed`, R1-MOD-01)
+        let com = if !c.caller_tx || q.q05_caller_exact { 3u8 } else { 2u8 };
         let ph = if phased { 5u8 } else { 255u8 };
         let phst = if !fails { 1u8 } else if phased && q.q14_end { 2u8 } else { 255u8 };
         rx(ex, if fails { 2u8 } else { 1u8 }, com, 1, 1, 1, ph, phst)
@@ -221,12 +231,21 @@ pub open spec fn l1_expect(c: Cfg, q: Q) -> Expect {
 /// started row must say "in progress" (Success 0, no TimeEnd), whether or not it is Finalized.
 pub open spec fn kill_rec(c: Cfg, q: Q, s: State, i: usize) -> RExp {
     let a = gatt(s.att, i);
+    let t = gtemp(s.temp, i);
     let must = !c.caller_tx || q.q06b_caller_survive;
     let ex = if must { 1u8 } else { 2u8 };
+    let exact = !c.caller_tx || q.q05_caller_exact;
     let st = if i == 0 { if s.top_err { 2u8 } else { 1u8 } } else if dep_fails(c, if i == 1 { 0usize } else { 1usize }) { 2u8 } else { 1u8 };
     if a == 0 { rx(2, 3, 2, 2, 2, 2, 255, 255) }
-    else if a == 3 { rx(ex, st, if q.q05_all || (i == 0 && !c.caller_tx) { 3u8 } else { 2u8 }, 1, 1, 2, 255, 255) }
-    else { rx(ex, 0, if q.q08_exact && (q.q05_all || (i == 0 && !c.caller_tx)) { 3u8 } else { 2u8 }, 0, if q.qfin_unended { 2u8 } else { 0u8 }, 2, 255, 255) }
+    // a completed row carries the outcome; a dependency's row may wait for its parent's end to
+    // be finalized, because its Committed depends on the parent's outcome
+    else if a == 3 { rx(ex, st, if exact { 3u8 } else { 2u8 }, 1, if i == 0 { 1u8 } else { 2u8 }, 2, 255, 255) }
+    // an unended row says in progress, lists the phases its action started (the open one without
+    // an end), and names the package once it was known (`history.record`, R1-MOD-03)
+    else {
+        rx(ex, 0, if q.q08_exact && exact { 3u8 } else { 2u8 }, 0, if q.qfin_unended { 2u8 } else { 0u8 },
+            if t.pkg { 1u8 } else { 2u8 }, t.ph, if t.ph == 0 { 255u8 } else { t.phst })
+    }
 }
 
 /// After the caller's transaction is undone (caller rollback, or death with a caller

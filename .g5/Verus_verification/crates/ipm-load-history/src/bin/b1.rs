@@ -51,30 +51,41 @@ fn runs() -> Vec<Run> {
     v.push(Run { name: "asbuilt-l1-ns-all-conforming-domain", kind: "explore", variant: "as-built", expect: "pass",
         concern: "baseline for the process-end control: the as-built passes L1-NS-ALL on its conforming configurations", txms: vec![0, 1, 2], callers: vec![false, true], var: 0,
         checks: vec![Check::L1NsAll], edits: false, q: p.clone(), conforming: true });
+    v.push(Run { name: "repair-103-dep-clauses", kind: "explore", variant: "repair-103", expect: "pass",
+        concern: "D1 repair (dependency rows outside the parent's transaction, Committed when the dependency's writes become durable): dependency record clauses, transactional modes (default and -dev), with and without caller transaction", txms: vec![0], callers: vec![false, true], var: 103,
+        checks: vec![Check::DepRepair], edits: false, q: p.clone(), conforming: false });
+    v.push(Run { name: "asbuilt-dep-clauses", kind: "explore", variant: "as-built", expect: "violation",
+        concern: "as-built baseline for the D1 repair check (transactional modes)", txms: vec![0], callers: vec![false, true], var: 0,
+        checks: vec![Check::DepRepair], edits: false, q: p.clone(), conforming: false });
+    v.push(Run { name: "repair-103-invariants", kind: "explore", variant: "repair-103", expect: "pass",
+        concern: "D1 repair keeps R1, R2, R3-top, COMMIT-SOUND, TLEVEL, PERSIST-TARGET", txms: vec![0, 1, 2], callers: vec![false, true], var: 103,
+        checks: vec![Check::R1RowKept, Check::R2FinalUnchanged, Check::R3Top, Check::CommitSoundTop, Check::TLevel, Check::PersistTarget], edits: false, q: p.clone(), conforming: false });
     v.push(Run { name: "asbuilt-commit-exact", kind: "explore", variant: "as-built", expect: "violation",
         concern: "COMMIT-EXACT: Committed=1 implies something kept (top-level)", txms: vec![0, 1, 2], callers: vec![false], var: 0,
         checks: vec![Check::CommitExactTop], edits: false, q: p.clone(), conforming: false });
     // controls: one guard or effect removed; the named property must detect it
     let ctl = |name: &'static str, var: u8, concern: &'static str, txms: Vec<u8>, checks: Vec<Check>, edits: bool| Run {
         name, kind: "control", variant: name, expect: "violation", concern, txms, callers: vec![false], var, checks: checks.clone(), edits, q: qprov_x(),
-        conforming: checks.contains(&Check::L1EndNormal) || checks.contains(&Check::L1NsAll) };
+        conforming: checks.iter().any(|c| matches!(c, Check::L1EndNormal | Check::L1NsAll | Check::RecFieldsNormal | Check::ComNormal)) };
     v.push(ctl("control-01-no-setcommitted-c1", 1, "SetCommitted after C1 removed; COMMIT-SOUND must fail", vec![0], vec![Check::CommitSoundTop], false));
     v.push(ctl("control-02-no-setcommitted-c3", 2, "SetCommitted after C3 removed; COMMIT-SOUND must fail", vec![0], vec![Check::CommitSoundTop], false));
     v.push(ctl("control-03-no-setcommitted-notx", 3, "SetCommitted before writes (no transaction) removed; COMMIT-SOUND must fail", vec![1, 2], vec![Check::CommitSoundTop], false));
     v.push(ctl("control-04-no-rollback-loop", 4, "trollback loop removed; TLEVEL must fail", vec![0], vec![Check::TLevel], false));
-    v.push(ctl("control-04b-no-rollback-loop-l1", 4, "trollback loop removed; L1-END-NORMAL must fail", vec![0], vec![Check::L1EndNormal], false));
+    v.push(ctl("control-04b-no-rollback-loop-l1", 4, "trollback loop removed; L1-NS-ALL must fail", vec![0], vec![Check::L1NsAll], false));
     v.push(ctl("control-05-finalize-no-isok", 5, "Finalize's `|| ISOK(status)` removed; COMMIT-SOUND checked (expected to survive: equivalent in load scope)", vec![0, 1, 2], vec![Check::CommitSoundTop], false));
     v.push(Run { name: "control-05c-finalize-no-isok-all-callers", kind: "control", variant: "control-05-finalize-no-isok", expect: "pass",
         concern: "investigation of the surviving control 05: L1-END with caller transactions too, on conforming configurations", txms: vec![0, 1, 2], callers: vec![false, true], var: 5,
         checks: vec![Check::L1EndNormal], edits: false, q: p.clone(), conforming: true });
-    v.push(ctl("control-05b-finalize-no-isok-l1", 5, "Finalize's `|| ISOK(status)` removed; L1-END on success cases", vec![0, 1, 2], vec![Check::L1EndNormal], false));
-    v.push(ctl("control-06-iristemp-rolled-back", 6, "IRISTEMP premise negated (temp rows rolled back); L1-END-NORMAL must fail", vec![0], vec![Check::L1EndNormal], false));
-    v.push(ctl("control-07-no-finalized-flag", 7, "PersistToTwin does not set Finalized; L1-END-NORMAL must fail", vec![0], vec![Check::L1EndNormal], false));
+    v.push(ctl("control-05b-finalize-no-isok-l1", 5, "Finalize's `|| ISOK(status)` removed; L1-END on success cases", vec![0, 1, 2], vec![Check::ComNormal], false));
+    v.push(ctl("control-06-iristemp-rolled-back", 6, "IRISTEMP premise negated (temp rows rolled back); H-RECORD-FIELDS (per-clause domain) must fail", vec![0], vec![Check::RecFieldsNormal], false));
+    v.push(ctl("control-07-no-finalized-flag", 7, "PersistToTwin does not set Finalized; H-RECORD-FIELDS (per-clause domain) must fail", vec![0], vec![Check::RecFieldsNormal], false));
     v.push(ctl("control-08-no-downgrade-guard", 8, "downgrade guard removed; L1-NS-ALL (refusal writes no module data) must fail", vec![0], vec![Check::L1NsAll], false));
     v.push(ctl("control-09-no-update-guard", 9, "UpdatePackage guard removed; L1-NS-ALL (refusal writes no module data) must fail", vec![0], vec![Check::L1NsAll], false));
     v.push(ctl("control-10-no-trigger", 10, "Finalized UPDATE trigger removed; R2 must fail", vec![0], vec![Check::R2FinalUnchanged], true));
     v.push(ctl("control-11-death-keeps-transaction", 11, "process death keeps the open transaction; L1-NS-ALL must fail", vec![0], vec![Check::L1NsAll], false));
-    v.push(ctl("control-11b-death-keeps-transaction-r1", 11, "process death keeps the open transaction; R3-top checked", vec![0], vec![Check::R3Top], false));
+    v.push(Run { name: "diagnostic-11b-death-keeps-transaction-r3top", kind: "explore", variant: "control-11", expect: "pass",
+        concern: "diagnostic, not a control: R3-top cannot fail under variant 11 (the top row is inserted at $TLEVEL 0)", txms: vec![0], callers: vec![false], var: 11,
+        checks: vec![Check::R3Top], edits: false, q: qprov_x(), conforming: false });
     v
 }
 
@@ -241,6 +252,8 @@ fn cases() -> Vec<CaseDef> {
         CaseDef { id: "B1-C48".to_string(), title: "Process killed inside Activate (NoTransaction): partial kept, row reads Committed=0", cfg: with(|c| c.txm = 1), end: Kill(KillPoint::TopActivate), nesting: "top-level", fault: "process kill inside m's Activate phase", fixture: "as B1-C44 with -DNoTransaction=1", lemma: "" },
         CaseDef { id: "B1-C49".to_string(), title: "Process killed after the final commit, before Finalize (default)", cfg: base_cfg(), end: Kill(KillPoint::AfterC3), nesting: "top-level", fault: "process kill after C3 (not natively injectable without a debugger; model-only)", fixture: "model-only: no product hook between the C3 tcommit and SetCommitted", lemma: "" },
         CaseDef { id: "B1-C50".to_string(), title: "Process killed inside Activate with a caller transaction: everything rolled back, row lost", cfg: with(|c| c.caller_tx = true), end: Kill(KillPoint::TopActivate), nesting: "caller already in a transaction", fault: "process kill inside m's Activate phase", fixture: "JOB'd process: tstart; Shell(\"load <m with halting Activate Invoke>\")", lemma: "" },
+        CaseDef { id: "B1-C51".to_string(), title: "Manifest with two documents refused after import (default): rolled back", cfg: with(|c| c.top.mf = 4), end: Normal, nesting: "top-level", fault: "invalid manifest: written, then refused (module.xml contains multiple documents)", fixture: "module.xml with the module's .ZPM <Document> and a second <Document> (e.g. a class) in the same <Export>", lemma: "" },
+        CaseDef { id: "B1-C52".to_string(), title: "Manifest with two documents refused after import (NoTransaction): module record kept", cfg: with(|c| { c.top.mf = 4; c.txm = 1; }), end: Normal, nesting: "top-level", fault: "invalid manifest: written, then refused (module.xml contains multiple documents)", fixture: "as B1-C51 with -DNoTransaction=1", lemma: "case_c52_multiple_documents_kept" },
     ];
     for c in v.iter_mut() { c.cfg.var = 0; }
     // Every process-end case in two variants: SIGKILL-like (no %OnClose, N-P18) and
@@ -270,7 +283,7 @@ fn cmd_cases(out: &str) {
     writeln!(f, "{{").unwrap();
     writeln!(f, "  \"generator\": \"ipm-load-history b1 cases (executable twin of the L2 spec, exec_spec_verified)\",").unwrap();
     writeln!(f, "  \"product\": \"571e04a19aba9f9b4bc0ea23fbe09182038f4e55\",").unwrap();
-    writeln!(f, "  \"q_provisional\": {{\"Q-01\": \"keep stored dev mode\", \"Q-02\": \"-dev bypasses UpdatePackage guard\", \"Q-05\": \"Committed exact only for top-level actions at $TLEVEL 0\", \"Q-06b\": \"records survive a caller-held transaction's rollback\", \"Q-08\": \"unended record Committed reflects kept changes\", \"Q-14\": \"started phases must end with status\", \"Q-17\": \"system requirements checked before any write\", \"Q-FIN\": \"an unended record is not Finalized\"}}, \"l1_revision\": \"stage C round 1 (R1-ONT-01..03): dependency record survival under parent rollback required; Q-06b added; Q-08 default flipped; Q-FIN added; Package required after the manifest was read\",").unwrap();
+    writeln!(f, "  \"q_provisional\": {{\"Q-01\": \"keep stored dev mode\", \"Q-02\": \"-dev bypasses UpdatePackage guard\", \"Q-05\": \"under a caller-held transaction Committed is not constrained (with no caller transaction it must be exact for every action)\", \"Q-06b\": \"records survive a caller-held transaction's rollback\", \"Q-08\": \"unended record Committed reflects kept changes\", \"Q-14\": \"started phases must end with status\", \"Q-17\": \"system requirements checked before any write\", \"Q-FIN\": \"an unended record is not Finalized\"}}, \"l1_revision\": \"stage C round 1: R1-ONT-01..03 (dependency record survival required; Q-06b; Q-08 default flipped; Q-FIN; Package after the manifest was read) and R1-MOD-01..03 (dependency Committed exact without a caller transaction, Q-05 limited to caller-held transactions; manifest refusals write nothing in any mode and name the package once read; unended rows list their started phases and package)\",").unwrap();
     writeln!(f, "  \"versions\": \"version ordinals 1,2,3 stand for 1.0.0, 2.0.0, 3.0.0; module m is slot 'top', dependencies d/d1 are 'dep1', d2 is 'dep2'\",").unwrap();
     writeln!(f, "  \"observation_notes\": \"history.* are %IPM_General.History rows for the action (load of m, load of each dependency); history_temp.* are ^IRIS.Temp.HistoryTempD rows left over; modules.*.manifest_present is %IPM.Storage.Module:NameExists; resources_loaded is a class resource of the module present; zpm_document_version is the .ZPM ModuleStream; writes counts module record writes (not natively comparable, LastUpdated changes); id_order is the History ID allocation order (gaps reveal rolled-back inserts)\",").unwrap();
     writeln!(f, "  \"cases\": [").unwrap();
@@ -290,7 +303,7 @@ fn cmd_cases(out: &str) {
         writeln!(f, "      \"inputs\": {{\"command\": \"load\", \"mode\": \"{}\", \"dev_flag\": \"{}\", \"force\": {}, \"nesting\": {}, \"installed_before\": {{\"top\": {}}}, \"top_package\": {{\"version\": \"{}\", \"update_package\": {}, \"system_requirements_met\": {}, \"activate\": \"{}\", \"manifest\": {}}}, \"dependencies\": [{}], \"fault_point\": {}, \"end\": {}, \"fixture_hint\": {}}},",
             mode_str(c), devf_str(c), c.force, json_str(d.nesting), json_str(&inst_str(&c.init[0])), ver_str(c.top.ver), c.top.upd, c.top.sysreq,
             match c.top.act { 0 => "ok", 1 => "throws", _ => "invoke returns error (phase left open)" },
-            json_str(match c.top.mf { 0 => "valid", 1 => "not parseable", 2 => "no module document", _ => "module document refused by validation" }),
+            json_str(match c.top.mf { 0 => "valid", 1 => "not parseable", 2 => "no module document", 3 => "module document refused by validation", _ => "written, then refused (multiple documents)" }),
             deps.join(", "), json_str(d.fault), json_str(&end), json_str(d.fixture)).unwrap();
         writeln!(f, "      \"l1_permitted\": {},", expect_json(c, &e)).unwrap();
         writeln!(f, "      \"l2_predicted\": {},", obs_json(c, &s)).unwrap();
@@ -303,6 +316,55 @@ fn cmd_cases(out: &str) {
     println!("cases: {} written to {}", n, out);
 }
 
+/// D1 repair (variant 103) against the as-built: every end state of every configuration, the
+/// DEP-REPAIR check, with each violation classified.
+fn cmd_repair_survey(out: &str) {
+    let q = qprov_x();
+    let mut f = std::fs::File::create(out).unwrap();
+    let mut rows: BTreeMap<String, (usize, usize, String)> = BTreeMap::new();
+    for var in [0u8, 103u8] {
+        for c in domain(&[0, 1, 2], &[false, true], var) {
+            let mut s = exec_init(&c);
+            let mut ends: Vec<(String, ExecState, Option<ExecState>)> = vec![];
+            while exec_running(&s) {
+                ends.push(("kill".into(), exec_kill(&c, &s), Some(s.clone())));
+                ends.push(("terminate".into(), exec_terminate(&c, &s), Some(s.clone())));
+                s = exec_step(&c, &s);
+            }
+            if c.caller_tx {
+                ends.push(("caller-commit".into(), exec_caller_end(&c, &s, true), None));
+                ends.push(("caller-rollback".into(), exec_caller_end(&c, &s, false), None));
+            }
+            ends.push(("normal".into(), s.clone(), None));
+            for (k, e, pre) in ends {
+                let ok = check_state(&c, &q, Check::DepRepair, &e);
+                // classification: a dependency's no-transaction marker (Utils/Module.cls:1226-1228) set
+                // Committed while none of its writes had happened (V4 window)
+                let v4 = !ok && c.txm != 0 && pre.as_ref().map_or(false, |p| exec_active(p) == 3 && p.lnm1.pc >= 4 && p.lnm1.pc <= 4)
+                    || (!ok && c.txm != 0 && (1..3).any(|i| { let t = exec_gtwin(&e.ns.twins, i); t.ex && t.com && !exec_kept(&c.init, &e.ns.mods, i) && c.deps.get(i - 1).map_or(false, |d| d.mf == 2 || d.mf == 3) }));
+                let key = format!("var={} txm={} end={}", var, c.txm, k);
+                let ent = rows.entry(key).or_insert((0, 0, String::new()));
+                ent.0 += 1;
+                if !ok {
+                    ent.1 += 1;
+                    let lag = (1..3).any(|i| { let t = exec_gtwin(&e.ns.twins, i); t.ex && !t.com && !t.tend && exec_kept(&c.init, &e.ns.mods, i) });
+                    let cls = if var == 103 && v4 { "V4-window (dependency marked Committed before its first write)" }
+                        else if var == 103 && k != "normal" && lag { "V9-lag (unended dependency row reads Committed=0 although its writes were kept; SetCommitted writes IRISTEMP only)" }
+                        else { "other" };
+                    if !ent.2.contains(cls) { ent.2.push_str(cls); ent.2.push_str("; "); }
+                }
+            }
+        }
+    }
+    writeln!(f, "{{").unwrap();
+    let n = rows.len();
+    for (i, (k, (t, bad, cls))) in rows.iter().enumerate() {
+        writeln!(f, "  {}: {{\"end_states\": {}, \"dep_repair_violations\": {}, \"classes\": {}}}{}", json_str(k), t, bad, json_str(cls), if i + 1 < n { "," } else { "" }).unwrap();
+    }
+    writeln!(f, "}}").unwrap();
+    println!("repair-survey written to {}", out);
+}
+
 fn main() {
     let args: Vec<String> = std::env::args().collect();
     match args.get(1).map(|s| s.as_str()) {
@@ -310,6 +372,7 @@ fn main() {
         Some("explore-list") => for r in runs() { println!("{}\t{}\t{}\t{}", r.name, r.kind, r.variant, r.expect) },
         Some("survey") => cmd_survey(&args[2]),
         Some("cases") => cmd_cases(&args[2]),
+        Some("repair-survey") => cmd_repair_survey(&args[2]),
         _ => eprintln!("usage: b1 explore <run>|explore-list|survey <out>|cases <out>"),
     }
 }

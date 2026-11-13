@@ -16,7 +16,7 @@ explorer::state_struct!(ExecNs { mods, twins });
 explorer::state_struct!(ExecTemp { live, pkg, ver, ok, com, tend, ph, phst });
 explorer::state_struct!(ExecLnm { pc, itl, dev, err, nj, jprev, di });
 explorer::state_struct!(ExecState { ns, tx, jrn, temp, ttx, ctr, alive, top_pc, top_err, lnm0, lmr_pc, lmr_err, lnm1, caller, att, how });
-explorer::state_struct!(ExecQ { q01_keep, q02_dev_bypass, q05_all, q06b_caller_survive, q08_exact, q14_end, q17_before, qfin_unended });
+explorer::state_struct!(ExecQ { q01_keep, q02_dev_bypass, q05_caller_exact, q06b_caller_survive, q08_exact, q14_end, q17_before, qfin_unended });
 explorer::state_struct!(ExecMExp { kind, ver, dev });
 explorer::state_struct!(ExecRExp { ex, ok, com, tend, fin, pkg, ph, phst });
 explorer::state_struct!(ExecExpect { st, alts, recs, verdict });
@@ -45,7 +45,7 @@ pub fn q_alternatives() -> Vec<(&'static str, ExecQ)> {
     let mut v = vec![];
     let mut q = p.clone(); q.q01_keep = false; v.push(("Q-01 reset to non-dev", q));
     let mut q = p.clone(); q.q02_dev_bypass = false; v.push(("Q-02 only -force bypasses", q));
-    let mut q = p.clone(); q.q05_all = true; v.push(("Q-05 Committed exact for every action", q));
+    let mut q = p.clone(); q.q05_caller_exact = true; v.push(("Q-05 Committed exact under a caller-held transaction", q));
     let mut q = p.clone(); q.q06b_caller_survive = false; v.push(("Q-06b records may be lost with a caller-held transaction", q));
     let mut q = p.clone(); q.q08_exact = false; v.push(("Q-08 unended record Committed unconstrained (outcome unknown)", q));
     let mut q = p.clone(); q.q14_end = false; v.push(("Q-14 open phases accepted", q));
@@ -170,6 +170,13 @@ pub enum Check {
     L1EndNormal,
     /// L1 status and namespace clauses at every end state, including process ends.
     L1NsAll,
+    /// Record-content clause (H-RECORD-FIELDS, every action) at the normal end and caller ends.
+    RecFieldsNormal,
+    /// Committed clause (H-COMMITTED, every action) at the normal end and caller ends.
+    ComNormal,
+    /// Dependency clauses for the D1 repair: every dependency record clause at the normal end
+    /// and caller ends; existence and Committed at process ends.
+    DepRepair,
 }
 
 pub struct LoadModel {
@@ -210,6 +217,22 @@ pub fn check_state(c: &ExecCfg, q: &ExecQ, ch: Check, s: &ExecState) -> bool {
         }
         Check::L1NsAll => {
             exec_end_kind(s) == 0 || { let e = exec_expect_for(c, q, s); exec_st_ok(&e, s) && exec_ns_ok(c, &e, s) }
+        }
+        Check::RecFieldsNormal | Check::ComNormal | Check::DepRepair => {
+            let k = exec_end_kind(s);
+            if k == 0 { return true; }
+            let e = exec_expect_for(c, q, s);
+            let slots: Vec<usize> = if ch == Check::DepRepair { vec![1, 2] } else { vec![0, 1, 2] };
+            slots.into_iter().all(|i| {
+                let r = exec_grx(&e.recs, i);
+                let t = twin(&s.ns, i);
+                let kept = exec_kept(&c.init, &s.ns.mods, i);
+                match ch {
+                    Check::RecFieldsNormal => k == 2 || exec_rec_fields_ok(&r, &t),
+                    Check::ComNormal => k == 2 || exec_rec_com_ok(&r, &t, kept),
+                    _ => exec_rec_exists_ok(&r, &t) && exec_rec_com_ok(&r, &t, kept) && (k == 2 || exec_rec_fields_ok(&r, &t)),
+                }
+            })
         }
         Check::IsOkRedundant => {
             let a = !(s.alive && s.top_pc == 4 && !s.top_err) || exec_gtemp(&s.temp, 0).com;
@@ -322,6 +345,9 @@ pub fn check_name(ch: Check) -> &'static str {
         Check::IsOkRedundant => "ISOK-REDUNDANT an OK Finalize finds Committed already set",
         Check::L1EndNormal => "L1-END-NORMAL every L1 clause at the normal end and after the caller ends",
         Check::L1NsAll => "L1-NS-ALL status and namespace clauses at every end state (including process ends)",
+        Check::RecFieldsNormal => "H-RECORD-FIELDS at the normal end and caller ends (every action)",
+        Check::ComNormal => "H-COMMITTED at the normal end and caller ends (every action)",
+        Check::DepRepair => "DEP-REPAIR dependency record clauses (all at returned ends; existence and Committed at process ends)",
     }
 }
 
@@ -335,6 +361,7 @@ pub enum Fault {
     ManifestParse,
     ManifestNoModule,
     ManifestInvalid,
+    ManifestMultiple,
     UpdatePackage,
     UpdatePackageForce,
     SysReq,
@@ -347,8 +374,8 @@ pub enum Fault {
     DepSysReq,
 }
 
-pub const ALL_FAULTS: [Fault; 16] = [
-    Fault::None, Fault::Path, Fault::ManifestParse, Fault::ManifestNoModule, Fault::ManifestInvalid,
+pub const ALL_FAULTS: [Fault; 17] = [
+    Fault::None, Fault::Path, Fault::ManifestParse, Fault::ManifestNoModule, Fault::ManifestInvalid, Fault::ManifestMultiple,
     Fault::UpdatePackage, Fault::UpdatePackageForce, Fault::SysReq, Fault::Activate, Fault::ActivateReturned,
     Fault::Cleanup, Fault::DepActivate(0), Fault::DepActivate(1), Fault::DepManifestInvalid, Fault::DepNotFound, Fault::DepSysReq,
 ];
@@ -389,6 +416,7 @@ pub fn make_cfg(txm: u8, devf: u8, caller_tx: bool, top_init: &ExecMod, deps: De
         Fault::ManifestParse => c.top.mf = 1,
         Fault::ManifestNoModule => c.top.mf = 2,
         Fault::ManifestInvalid => c.top.mf = 3,
+        Fault::ManifestMultiple => c.top.mf = 4,
         Fault::UpdatePackage => c.top.upd = true,
         Fault::UpdatePackageForce => { c.top.upd = true; c.force = true; }
         Fault::SysReq => c.top.sysreq = false,

@@ -2,50 +2,48 @@
 
 Stage B1 of the IPM Verus uplift. Product `571e04a1`. Paths: `VV` = `.g5/Verus_verification`; crate `VV/crates/ipm-load-history` (`src/model.rs` L2, `src/contract.rs` L1, `src/proofs.rs`, `src/cases.rs`, `src/explore.rs`, `src/bin/b1.rs`); `VV/crates/ipm-load-history/BINDINGS.md`; `VV/premises.md`; `VV/SOURCE.json`; `VV/cases/cases.json`; receipts `VV/results/verus/<run>/`, one line each in `VV/results/index.jsonl`.
 
-Status: COMPLETE for the load path and history writers; history readers (filters, delete, purge) are not modelled (see Gaps). The L1 contract includes the stage C round 1 revision (R1-ONT-01..03).
+Status: COMPLETE for the load path and the history writers, after the stage C round 1 repairs (R1-ONT-01..03, R1-MOD-01..09, -14, -15). History readers (filters, delete, purge) are not modelled. Open: R1-MOD-05 (per-module `<Defaults>` transaction flags; native case pending).
 
 ## 1. Model summary
 
 - L2 (`model.rs`, all inside `exec_spec_verified!`, so each function has an executable twin proved equal to it): the IRIS process (namespace store; one snapshot per open `TSTART` level; IRISTEMP; journaling flag; `$INCREMENT` counter), and the IPM load as three activations with program counters split at every real boundary: `Main:Load` (9 steps), `LoadNewModule` for the loaded module and for each dependency (33 steps: entry, `tstart`/JournalManager, guards, no-transaction marker, manifest import, names, dev save, C1, SetCommitted, T2, system requirements, dependencies, reload, C2, 5 phases x start/body/end, C3, SetCommitted, rollback loop), and `LoadModuleReference` for a dependency (9 steps, its own log). Environment transitions: kill-like end (SIGKILL: rollback only), terminate-like end (Terminate/HALT: `%OnClose` then rollback, per B2 N-P10/N-P11), the caller committing or rolling back its own transaction, and another process editing a History row.
-- Inputs (`Cfg`): transaction mode (default, NoTransaction, NoJournal), dev flag (none, `-dev`, `-nodev`), `-force`, path validity, caller-held transaction, the package (version, UpdatePackage, system requirements, Activate outcome: ok / throws / Invoke returns an error, manifest: valid / unparseable / no module document / refused by validation), up to two leaf dependencies (Activate outcome, manifest, snapshot, found), installed state before, and a variant number (0 as-built, 1-11 controls).
+- Inputs (`Cfg`): transaction mode (default, NoTransaction, NoJournal), dev flag (none, `-dev`, `-nodev`), `-force`, path validity, caller-held transaction, the package (version, UpdatePackage, system requirements, Activate outcome: ok / throws / Invoke returns an error; manifest: valid / unparseable / no module document / refused by validation / written then refused because of multiple documents), up to two leaf dependencies (Activate outcome, manifest, snapshot, found), installed state before, and a variant number (0 as-built, 1-11 controls, 103 the D1 repair).
 - L1 (`contract.rs`): `l1_verdict` from inputs alone, an `Expect` (status, module-state alternatives, one record expectation per action) for normal ends, caller ends and process ends, and `l1_ok`. Open questions are the `Q` parameter (`qprov()` = provisional options).
-- Abstraction: L1 reads the durable store `dv(s)` (what survives if the process dies now), the namespace the process sees at an end state, and the auxiliary `att` (per action: started, finalized, record completed). Steps that only touch IRISTEMP or uncommitted data are stutters for L1.
-- Bindings: `VV/crates/ipm-load-history/BINDINGS.md` (every step to file:line, abstractions and what they could hide).
+- Abstraction: L1 reads the durable store `dv(s)`, the namespace the process sees at an end state, and the auxiliary `att` (per action: started, finalized, record completed). For an unended record the started phases and package come from the action's IRISTEMP row (what the action had reached). Steps that only touch IRISTEMP or uncommitted data are stutters for L1.
+- Bindings: `BINDINGS.md` (every step to file:line, the repair variant, abstractions and what they could hide).
 
 ## 2. L1 clauses and their sources
 
-| Clause | Content | Source (A1 inventory IDs) |
+| Clause | Content | Source |
 |---|---|---|
 | L1-STATUS | returned status OK iff verdict success | INT-LOAD-01, -09, -10, -11 |
-| L1-NAMESPACE refusals | path, downgrade, update-required refusals write no module data in any mode; system requirements too under Q-17 provisional | INT-LOAD-02, -09, -10, -11, Q-17 |
+| L1-NAMESPACE refusals | path, manifest, downgrade and update-required refusals write no module data in any mode (`load.refusal`, R1-MOD-02); system requirements too under Q-17 provisional; this also holds at a process end | INT-LOAD-02, -09, -10, -11, Q-17 |
 | L1-NAMESPACE failures | default mode: a failed load leaves the namespace unchanged (Q-04: database only); `-dev`: manifest kept after C1, dependencies kept only if all succeed, phases outside a transaction; NoTransaction/NoJournal: partial changes allowed | INT-LOAD-05, -06, -08 |
 | L1-NAMESPACE success | module installed at the package version, dev mode `-dev` / `-nodev` / stored (Q-01), dependencies installed non-dev except snapshot under `-dev` | INT-LOAD-01, -07, -15, Q-01 |
-| H-RECORD-EXISTS | one record per attempted action, including each dependency load; it survives the action's own rollback and a parent's rollback (#366, stage C R1-ONT-01); under a caller-held transaction survival is Q-06b (provisional: survives); a record exists once its action started, including after either kind of process end | INT-LOAD-17, INT-HIST-01, -02, -03, -08 |
-| H-RECORD-FIELDS | Success = the action's status; TimeEnd set and Finalized iff the action ended normally; an unended record says in progress (Success 0, no TimeEnd) and is not Finalized (Q-FIN provisional); Package set once the manifest was read for refusals after that point and for failures (R1-ONT-03); phases started are listed and the last one ends with its status (Q-14); a placeholder version on an unfinished record is permitted, not required (R1-ONT-02) | INT-HIST-03, -04, -14, 3.2 fields, Q-14, Q-FIN |
-| H-COMMITTED | Committed = whether any of the action's changes were kept; exact for top-level actions at `$TLEVEL` 0 (Q-05 provisional); on an unended record too (Q-08, provisional changed by R1-ONT-02 to "reflects kept changes"); uninstall exception out of scope | INT-HIST-05, -06, -07, Q-05, Q-08 |
+| H-RECORD-EXISTS | one record per attempted action, including each dependency load; it survives the action's own rollback and a parent's rollback (#366, R1-ONT-01); under a caller-held transaction survival is Q-06b (provisional: survives); a record exists once its action started, including after either kind of process end | INT-LOAD-17, INT-HIST-01, -02, -03, -08 |
+| H-RECORD-FIELDS | Success = the action's status; TimeEnd set and Finalized when the action ended normally (a dependency's row may be finalized at its parent's end); an unended record says in progress (Success 0, no TimeEnd), lists the phases its action started with the open one unended, names the package once the action knew it (R1-MOD-03), and is not Finalized (Q-FIN provisional); Package is set once the manifest was read, including validation and multiple-documents refusals (R1-ONT-03, R1-MOD-02); started phases end with their status (Q-14); a placeholder version on an unfinished record is permitted (R1-ONT-02) | INT-HIST-03, -04, -14, 3.2 fields, `history.record`, Q-14, Q-FIN |
+| H-COMMITTED | Committed = whether any of the action's changes were kept, for the top action and every dependency whenever there is no caller-held transaction (a dependency undone by its parent's rollback reads 0, one whose writes were kept reads 1; R1-MOD-01); on an unended record too (Q-08 provisional); under a caller-held transaction Q-05 | INT-HIST-05, -06, -07, `history.committed`, Q-05, Q-08 |
 | R1 | a durable History row is never removed by the load | INT-HIST-02 |
 | R2 | a finalized durable row never changes (another writer's UPDATE/save refused) | INT-HIST-14 |
 
-Q parameters (provisional first, alternative second; `contract.rs` `Q`):
+Q parameters (`contract.rs` `Q`; provisional first):
 
-| Q | Provisional | Alternative | Cases whose verdict depends on it |
-|---|---|---|---|
-| Q-01 | plain load keeps stored dev mode | reset to non-dev | B1-C20 |
-| Q-02 | `-dev` bypasses the UpdatePackage guard | only `-force` | B1-C17 |
-| Q-05 | Committed exact only for top-level actions at `$TLEVEL` 0 | exact for every action | B1-C41, C43 (records lost before the question arises), C50 |
-| Q-06b (new, R1-ONT-01) | records survive a caller-held transaction's rollback or the process end inside it | may be lost | B1-C42, C43, C50T, C50K |
-| Q-08 (default flipped, R1-ONT-02) | unended record's Committed reflects kept changes | unconstrained (unknown outcome) | B1-C46K, C48K, C49T, C49K |
-| Q-14 | every started phase ends with its status | open phases accepted | B1-C28 |
-| Q-17 | system requirements checked before any write in every mode | kept manifest accepted | B1-C23, C24 |
-| Q-FIN (new, R1-ONT-02) | an unended record is not Finalized | may be | B1-C46T, C48T, C49T |
+| Q | Field | Provisional | Alternative | Cases whose verdict depends on it |
+|---|---|---|---|---|
+| Q-01 | `q01_keep` | plain load keeps stored dev mode | reset to non-dev | B1-C20 |
+| Q-02 | `q02_dev_bypass` | `-dev` bypasses the UpdatePackage guard | only `-force` | B1-C17 |
+| Q-05 (renamed and rescoped, R1-MOD-01) | `q05_caller_exact` | under a caller-held transaction Committed is not constrained | exact there too | B1-C41, C50 |
+| Q-06b (R1-ONT-01) | `q06b_caller_survive` | records survive a caller-held transaction's rollback or a process end inside it | may be lost | B1-C42, C43, C50T, C50K |
+| Q-08 (default flipped, R1-ONT-02) | `q08_exact` | unended record's Committed reflects kept changes | unconstrained | B1-C46K, C48K, C49T, C49K |
+| Q-14 | `q14_end` | every started phase ends with its status | open phases accepted | B1-C28 |
+| Q-17 | `q17_before` | system requirements checked before any write in every mode | kept manifest accepted | B1-C23, C24 |
+| Q-FIN (R1-ONT-02) | `qfin_unended` | an unended record is not Finalized | may be | B1-C46T, C48T, C49T |
 
-Q-06 (dependency record survives the parent's rollback) is no longer a parameter: it is required.
+## 3. What is proved
 
-## 3. What is proved (Verus, `--num-threads 4`, default rlimit)
+Final as-built Verus run, on the final inputs: `20261113T204233Z-asbuilt-proofs-r1`: verified 259, errors 0 (exec-twin equality obligations, all proofs, all case and repair lemmas). Earlier green runs (`…192915Z`, `…193253Z`, `…194721Z-asbuilt-proofs-l1rev1`) predate later edits and are superseded (R1-MOD-09); the failed run `…192717Z` is preserved. Evaluator sanity check (R1-MOD-14): `20261113T204317Z-sanity-false-claim` builds with feature `sanity-false`, which adds a deliberately false evaluation lemma (`sanity_false_claim`, "the dependency row of B1-C31 survives as built"); observed: exactly that lemma fails ("expression simplifies to false").
 
-Final as-built run: `20261113T194721Z-asbuilt-proofs-l1rev1`: verified 248, errors 0 (includes the 180+ exec-twin equality obligations, all proofs and the case lemmas). Earlier green run before the L1 revision: `20261113T193253Z-asbuilt-proofs` (247). A failed earlier run `20261113T192717Z-asbuilt-proofs` (2 resource-limit errors, fixed by splitting functions) is preserved.
-
-Domain: every `Cfg` with `cfg_wf(c)` (all modes, dev flags, force, caller transaction, installed states, up to two leaf dependencies, all faults) and `c.var == ACTIVE_VARIANT()` (0 as-built). Theorems are symbolic over this domain, not bounded.
+Domain: every `Cfg` with `cfg_wf(c)` and `c.var == ACTIVE_VARIANT()` (0 as-built). Theorems are symbolic over this domain, not bounded.
 
 | Theorem (`proofs.rs`) | Statement |
 |---|---|
@@ -59,91 +57,109 @@ Domain: every `Cfg` with `cfg_wf(c)` (all modes, dev flags, force, caller transa
 | `theorem_r1` (R1) | no transition except the caller's own rollback removes a durable row |
 | `lemma_inv_nonvacuous` | `inv` holds in a concrete initial state |
 
-`inv` also carries: store shape, transaction depth per activation, journaling flag, which slots are fresh, the finalized-row and row-existence chains along the snapshot stack, and the commit-soundness conjuncts.
+Case lemmas (`cases.rs`, evaluation of the spec machine; configurations use `ACTIVE_VARIANT()`): `case_c01_conforms`, `case_c11_downgrade_refused`, `case_c15_update_refused`, `case_c08_committed_without_change`, `case_c09_committed_without_change`, `case_c23_sysreq_dev_keeps_manifest`, `case_c28_phase_left_open`, `case_c29_error_after_commit`, `case_c31_dep_record_lost`, `case_c33_dev_dep_record_lost`, `case_c45_kill_dep_record_lost`, `case_c45_terminate_dep_record_lost`, `case_c46_dev_end_inside_activate`, `case_c42_caller_rollback_record_lost`, `case_c52_multiple_documents_kept`. Repair lemmas (variant 103 explicitly): `repair103_c31`, `repair103_c33`, `repair103_c38`, `repair103_c45` (section 5).
 
-Case lemmas (`cases.rs`, `by (compute_only)` on the spec machine; configurations use `ACTIVE_VARIANT()`): `case_c01_conforms`, `case_c11_downgrade_refused`, `case_c15_update_refused`, `case_c08_committed_without_change`, `case_c09_committed_without_change`, `case_c23_sysreq_dev_keeps_manifest`, `case_c28_phase_left_open`, `case_c29_error_after_commit`, `case_c31_dep_record_lost`, `case_c33_dev_dep_record_lost`, `case_c45_kill_dep_record_lost`, `case_c45_terminate_dep_record_lost`, `case_c46_dev_end_inside_activate`, `case_c42_caller_rollback_record_lost`. A deliberately false variant was checked to fail ("expression simplifies to false").
+Bounded evidence (explorer over the executable twins; single-fault domain of 3 transaction modes x 3 dev flags x caller transaction or not x 5 installed states x 5 dependency shapes x 17 faults; every run exhaustive in its domain, `truncated=false`, depth <= 119), final receipts `20261113T20441xZ-*`: `asbuilt-invariants-default` PASS (1950 configs, 189,577 states), `-notx` and `-nojournal` PASS (183,036 each), `asbuilt-r2-with-foreign-edits` PASS (491,080). Survey of all 375,912 end states of 5850 configurations: `20261113T204353Z-survey-asbuilt-r1/survey.json`.
 
-Bounded evidence (explorer over the executable twins, single-fault domain: 3 transaction modes x 3 dev flags x caller transaction or not x 5 installed states x 5 dependency shapes x 16 faults, 900-5400 configurations per run, every run exhaustive within its domain, `truncated=false`; depth <= 119): `asbuilt-invariants-{default,notx,nojournal}` PASS (R1, R2, R3-top, COMMIT-SOUND, TLEVEL, PERSIST-TARGET, ISOK-REDUNDANT; 177-183k states each), `asbuilt-r2-with-foreign-edits` PASS (480k states). Final receipts `20261113T1949xxZ-*`. Survey of all 363,372 end states of 5400 configurations: `20261113T194804Z-survey-asbuilt-l1rev1` (`survey.json` there).
+## 4. Confirmed as-built violations
 
-## 4. Confirmed as-built violations (model level)
-
-Each is an L2 execution from the initial state that violates the stated L1 clause, exhibited by a Verus case lemma and/or an explorer trace, and listed with its product path. "Native" gives B2's observation where one exists (B2 `native-report.md` sections 4-5; replay `native-replay.md`).
+Each is an L2 execution from the initial state that violates the stated L1 clause, exhibited by a Verus case lemma and/or an explorer trace. "Native" gives B2's observation (`native-report.md`, `native-replay.md`); run IDs are under `VV/results/native/`.
 
 | # | Violation (clause) | Cases | Proof / trace | Product path | Native |
 |---|---|---|---|---|---|
-| V1 | Dependency records lost when the parent's transaction rolls back (H-RECORD-EXISTS; required by #366) | B1-C31, C32, C33, C36, C37 | `case_c31_dep_record_lost`, `case_c33_dev_dep_record_lost`; explorer `asbuilt-r3-dep` (violation, shortest trace 15 steps) | `LoadModuleReference` LoadInit/twin insert (Utils/Module.cls:63-68 → HistoryTemp.cls:21) and `%OnClose` persist inside the parent's T1/T2; parent rollback loop 1358-1362 | confirmed (B2 A1, A2, A3; D1) |
-| V2 | Process end inside the parent's transaction loses dependency records (H-RECORD-EXISTS) | B1-C45T/K, C47T/K | `case_c45_kill_dep_record_lost`, `case_c45_terminate_dep_record_lost` | same insert inside T1, then end-of-process rollback | T variants confirmed by B2 replay (interim); K pending |
-| V3 | `-dev`/NoTransaction/NoJournal load refused by system requirements keeps the manifest (L1-NAMESPACE under Q-17 provisional) | B1-C23, C24 | `case_c23_sysreq_dev_keeps_manifest` | C1 commit (1309-1314) or no-tx marker (1227) and manifest import precede `CheckSystemRequirements` (1321) | confirmed (B2 B2-B4; D4) |
-| V4 | NoTransaction/NoJournal load whose manifest is refused after the marker reads Committed=1 with nothing kept (H-COMMITTED exactness) | B1-C08, C09 | `case_c08_committed_without_change`, `case_c09_committed_without_change`; explorer `asbuilt-commit-exact` | `SetCommitted` at 1226-1228 precedes `OBJ.Load` (1251), whose ImportStream rolls back its own nested transaction | B2 replay pending (not in B2 phase 1) |
-| V5 | Activate-phase Invoke returning an error leaves the phase open (H-RECORD-FIELDS under Q-14) | B1-C28 | `case_c28_phase_left_open` | Storage/Module.cls:669-671 `quit:$$$ISERR` bypasses FinalizePhase | confirmed (B2 D6) |
-| V6 | Error after the final commit (CleanUp) returns failure with the module installed in default mode (L1-NAMESPACE) | B1-C29 | `case_c29_error_after_commit` | `tmpRepoMgr.CleanUp()` status after `LoadNewModule` committed (Main.cls:2529-2531, OBS-L12) | B2 replay pending |
-| V7 | Refusal after the manifest was read records an empty Package (H-RECORD-FIELDS, R1-ONT-03) | B1-C11..C15, C18 | `case_c11_downgrade_refused`, `case_c15_update_refused` | guards 1213-1223 precede `SetName` (1293) | confirmed (B2 g3, g6, g7; D9) |
-| V8 | Caller-held transaction: the caller's rollback (or process end inside it) removes the load's record (H-RECORD-EXISTS under Q-06b) | B1-C42, C43, C50T/K | `case_c42_caller_rollback_record_lost` | twin insert and persist join the caller's transaction | confirmed (B2 D1 case, section 6) |
-| V9 | Kill-like end after a commit: unended record reads Committed=0 though changes were kept (H-COMMITTED under Q-08 provisional) | B1-C46K, C48K, C49K, C49T | `case_c46_dev_end_inside_activate` | twin keeps Init values until `%OnClose` (N-P14); SetCommitted writes IRISTEMP only | confirmed (B2 C4R) |
-| V10 | Terminate-like end at `$TLEVEL` 0 finalizes an unended record (H-RECORD-FIELDS under Q-FIN) | B1-C46T, C48T, C49T | `case_c46_dev_end_inside_activate` | `%OnClose` → PersistToTwin sets Finalized regardless of TimeEnd | confirmed (B2 C2) |
+| V1 | Dependency records lost when the parent's transaction rolls back (H-RECORD-EXISTS, #366) | B1-C31, C32, C33, C36, C37 | `case_c31_dep_record_lost`, `case_c33_dev_dep_record_lost`; explorer `asbuilt-r3-dep` (`20261113T204414Z`) | `LoadModuleReference` LoadInit/twin insert (Utils/Module.cls:63-68 → HistoryTemp.cls:21) and `%OnClose` persist inside the parent's T1/T2; rollback loop 1358-1362 | confirmed: A1, A2, A3 (D1); replay `20261113T193952Z-replay-return-b` |
+| V2 | Process end inside the parent's transaction loses dependency records (H-RECORD-EXISTS) | B1-C45T/K, C47T/K | `case_c45_kill_dep_record_lost`, `case_c45_terminate_dep_record_lost` | same insert inside T1, then end-of-process rollback | confirmed for Terminate: `20261113T194122Z-replay-terminate-b` (C45T, C47T); SIGKILL replay `20261113T194155Z-replay-sigkill-b` reported by B2 |
+| V3 | `-dev`/NoTransaction/NoJournal load refused by system requirements keeps the manifest (L1-NAMESPACE under Q-17 provisional) | B1-C23, C24 | `case_c23_sysreq_dev_keeps_manifest` | C1 commit (1309-1314) or no-tx marker (1227) and manifest import precede `CheckSystemRequirements` (1321) | confirmed: B2 B2-B4 (D4) |
+| V4 | NoTransaction/NoJournal load refused after the "kept without transaction" marker reads Committed=1 with nothing kept (H-COMMITTED) | B1-C08, C09 | `case_c08_committed_without_change`, `case_c09_committed_without_change`; explorer `asbuilt-commit-exact` | `SetCommitted` at 1226-1228 precedes `OBJ.Load` (1251) | confirmed: B1-C08, C09 in `20261113T193952Z-replay-return-b` (l2 AGREES, l1 VIOLATES) |
+| V5 | Activate-phase Invoke returning an error leaves the phase open (H-RECORD-FIELDS under Q-14) | B1-C28 | `case_c28_phase_left_open` | Storage/Module.cls:669-671 `quit:$$$ISERR` bypasses FinalizePhase | confirmed (D6) |
+| V6 | Error after the final commit (CleanUp) returns failure with the module installed in default mode (L1-NAMESPACE) | B1-C29 | `case_c29_error_after_commit` | `tmpRepoMgr.CleanUp()` status after `LoadNewModule` committed (Main.cls:2529-2531) | confirmed: B1-C29 in `20261113T193952Z-replay-return-b` (`<INVALID OREF>`, module installed, Committed=1) |
+| V7 | Refusal after the manifest was read records an empty Package (H-RECORD-FIELDS, R1-ONT-03; extended to validation and multiple-documents refusals by R1-MOD-02) | B1-C09..C15, C18, C51, C52 | `case_c11_downgrade_refused`, `case_c15_update_refused`, `case_c52_multiple_documents_kept` | guards 1213-1223 and the manifest checks 1251-1264 precede `SetName` (1293) | confirmed: g3, g6, g7 (D9); B1-C09, C10 in the replay (`package_set=0`) |
+| V8 | Caller-held transaction: the caller's rollback (or a process end inside it) removes the load's record (H-RECORD-EXISTS under Q-06b) | B1-C42, C43, C50T/K | `case_c42_caller_rollback_record_lost` | twin insert and persist join the caller's transaction | confirmed: D1 case (native-report section 6) |
+| V9 | Unended record reads Committed=0 though changes were kept (H-COMMITTED under Q-08) | B1-C46K, C48K, C49K, C49T | `case_c46_dev_end_inside_activate` | twin keeps Init values until `%OnClose` (N-P14); SetCommitted writes IRISTEMP only | confirmed: C4R |
+| V10 | Terminate-like end at `$TLEVEL` 0 finalizes an unended record (H-RECORD-FIELDS under Q-FIN) | B1-C46T, C48T, C49T | `case_c46_dev_end_inside_activate` | `%OnClose` → PersistToTwin sets Finalized regardless of TimeEnd | confirmed: C2 |
+| V11 (new, R1-MOD-03) | Unended record lists no phases and no package although its action had started phases and knew its name (H-RECORD-FIELDS, `history.record`, I) | B1-C44T/K, C45T/K, C46K, C47T/K, C48K, C49K | `case_c46_dev_end_inside_activate` (`k.temp[0].ph == 5`, row `ph == 0`); `repair103_c45` (top row still fails) | durable row written only at Init and at `%OnClose`; a Terminate's persist inside T1 is rolled back | confirmed: native C1, C3, C4R show empty `Phases` (defect D10 per the orchestrator) |
+| V12 (new, R1-MOD-02) | Manifest refusal keeps module data (L1-NAMESPACE, `load.refusal`, I) | B1-C10 (NoJournal: `.ZPM` document kept), B1-C52 (NoTransaction, multiple documents: module record kept) | `case_c52_multiple_documents_kept`; C10 via cases.json | NoJournal: ImportStream's rollback cannot undo unjournaled writes (P-03, P-09); multiple documents: both documents imported before the check (1251-1260) | C10 confirmed in `20261113T193952Z-replay-return-b` (`zpm_document_version=2.0.0`); C51/C52 not yet run natively (defect D11 per the orchestrator) |
 
-The explorer run `asbuilt-l1-end` (violation) gives the shortest L1 counterexample across all of these; the survey lists every violating class with an example.
+The explorer run `asbuilt-l1-end` (violation) gives a shortest L1 counterexample across all of these; the survey lists every violating class with an example.
 
-## 5. Controls and verdicts
+## 5. D1 repair variant (variant 103, not the as-built product)
 
-A control removes one guard or effect (variant number in `Cfg.var`; Verus feature `control-NN`). Explorer verdicts use the final receipts `20261113T19491x-19492xZ-control-*`; L1 controls are evaluated on the configurations where the as-built satisfies the same clause, so a violation is caused by the mutation (baselines `asbuilt-l1-normal-conforming-domain` PASS 1617 configs, `asbuilt-l1-ns-all-conforming-domain` PASS 5040 configs). Verus verdicts: receipts `20261113T194935Z-control-01-verus-l1rev1` through `20261113T195508Z-control-11-verus-l1rev1` (one Verus build per control feature, after the L1 revision; control 05 "verified 248, errors 0", control 10 "verified 243, errors 5", the others stop at a failed evaluation lemma and list their failing lemmas).
+Design (BINDINGS.md "Repair variant 103"): dependency History rows are written outside the parent's transaction (premise R-01, unverified design premise); a dependency row reads Committed=1 only when the dependency's writes are durable (at its close if no IPM transaction of the load is open, otherwise when the parent's C2 or C3 commit reaches the load's entry level); a parent rollback leaves it at 0; dependency rows are finalized at the top-level close. This differs from the earlier repair idea "Committed set from the parent's outcome": in `-dev` the parent can fail after C2 while its dependencies stay (native A5, B1-C38), and then the dependency must read Committed=1.
+
+Results:
+- Verus (in `20261113T204233Z-asbuilt-proofs-r1`): `repair103_c31` (row survives, Success OK, Committed=0, Finalized; full L1 holds), `repair103_c33` (failed dependency row survives T2's rollback, Committed=0; full L1 holds), `repair103_c38` (dependency kept, Committed=1 while the parent failed; full L1 holds), `repair103_c45` (kill and terminate: the dependency row survives with Success OK, Committed=0, and every dependency clause holds; the top row still violates V11/D10, which this repair does not address).
+- Explorer: `repair-103-dep-clauses` PASS (transactional modes, with and without caller transaction, 1950 configurations, 189,577 states, exhaustive; check DEP-REPAIR = every dependency record clause at returned and caller ends, existence and Committed at process ends) against the as-built baseline `asbuilt-dep-clauses` (violation). `repair-103-invariants` PASS (R1, R2, R3-top, COMMIT-SOUND, TLEVEL, PERSIST-TARGET; all modes, 5850 configurations, 555,649 states).
+- Repair survey `20261113T204354Z-repair-103-survey/repair-survey.json` (every end state, both variants): variant 103 has 0 DEP-REPAIR violations in the transactional modes (normal, caller ends, kill, terminate). In NoTransaction/NoJournal it has residual violations, all classified as either the V4 window (a dependency's no-transaction marker sets Committed before its first write; visible at a process end or a manifest refusal in that window) or the V9 lag (an unended dependency row reads Committed=0 because SetCommitted writes IRISTEMP only). These are separate defects (V4, V9) that the D1 repair does not touch.
+
+## 6. Controls and verdicts
+
+A control removes one guard or effect (variant number; Verus feature `control-NN`). Explorer receipts `20261113T204419Z`-`204424Z`. L1 controls are bound to one clause and evaluated on the configurations where the as-built satisfies that clause at every end state (per-clause domains, R1-MOD-08): L1-NS-ALL (5190 conforming configurations, baseline `asbuilt-l1-ns-all-conforming-domain` PASS), H-COMMITTED and H-RECORD-FIELDS at returned ends. Verus receipts: `20261113T204430Z-control-01-verus-r1` through `20261113T204957Z-control-11-verus-r1`, re-run after the round 1 repairs on the final proof inputs.
 
 | Control | Mutation | Property (explorer) | Explorer verdict | Verus verdict (failing lemmas) |
 |---|---|---|---|---|
-| 01 | no SetCommitted after C1 | COMMIT-SOUND | detected | detected: `lemma_lnm0_b`, `case_c23` |
-| 02 | no SetCommitted after C3 | COMMIT-SOUND | detected | detected: `lemma_lnm0_d`, `case_c29` |
-| 03 | no SetCommitted before writes without a transaction | COMMIT-SOUND | detected | detected: `lemma_lnm0_a`, `case_c08` |
-| 04 | rollback loop removed | TLEVEL; L1-END-NORMAL | detected; detected | detected: `lemma_lnm0_d`, `lemma_lnm1_d`, `case_c28` |
-| 05 | Finalize without `|| ISOK(status)` | COMMIT-SOUND; L1-END-NORMAL (with and without caller transactions) | survives (all three) | survives (verified, 0 errors) |
-| 06 | IRISTEMP rolled back with the transaction (P-02 negated) | L1-END-NORMAL | detected (record content after rollback) | detected: `case_c28`; also `lemma_kill_inv`, `lemma_terminate_inv`, exit lemmas (the auxiliary IRISTEMP snapshots are not constrained by `inv`, so these failures are partly an invariant gap) |
-| 07 | PersistToTwin does not set Finalized | L1-END-NORMAL | detected | detected: `lemma_top_step` (TOP-RECORD-COMPLETE), `case_c01` |
-| 08 | downgrade guard removed | L1-NS-ALL | detected | detected: `case_c11` |
-| 09 | UpdatePackage guard removed | L1-NS-ALL | detected | detected: `case_c15` |
-| 10 | Finalized trigger removed | R2 (with foreign edits) | detected | detected: R2/inv lemmas (`lemma_top_step`, `lemma_lmr_step`, `lemma_mono_edit`, `lemma_mono_lmr`, `lemma_mono_terminate`) |
-| 11 | process end keeps the open transaction (P-05 negated) | L1-NS-ALL; R3-top (11b) | detected; survives (11b) | detected: `case_c45_kill` |
+| 01 | no SetCommitted after C1 | COMMIT-SOUND (full domain; as-built passes everywhere) | detected | detected (`20261113T204430Z`): `lemma_lnm0_b`, `case_c23` |
+| 02 | no SetCommitted after C3 | COMMIT-SOUND | detected | detected (`…204502Z`): `lemma_lnm0_d`, `case_c29` |
+| 03 | no SetCommitted before writes without a transaction | COMMIT-SOUND | detected | detected (`…204536Z`): `lemma_lnm0_a`, `case_c08` |
+| 04 | rollback loop removed | TLEVEL; L1-NS-ALL (04b) | detected; detected | detected (`…204608Z`): `lemma_lnm0_d`, `lemma_lnm1_d`, `case_c28` |
+| 05 | Finalize without `|| ISOK(status)` | COMMIT-SOUND; H-COMMITTED (05b, 2679 configs); L1-END-NORMAL with caller transactions (05c) | survives (all three) | survives (`…204641Z`: verified 259, errors 0) |
+| 06 | IRISTEMP rolled back with the transaction (P-02 negated) | H-RECORD-FIELDS (641 configs) | detected | detected (`…204714Z`): `case_c28`; also `lemma_kill_inv`, `lemma_terminate_inv`, exit lemmas (partly because `inv` does not constrain the auxiliary IRISTEMP snapshots) |
+| 07 | PersistToTwin does not set Finalized | H-RECORD-FIELDS | detected | detected (`…204747Z`): `lemma_top_step` (TOP-RECORD-COMPLETE), `case_c01` |
+| 08 | downgrade guard removed | L1-NS-ALL (915 configs) | detected | detected (`…204820Z`): `case_c11` |
+| 09 | UpdatePackage guard removed | L1-NS-ALL | detected | detected (`…204853Z`): `case_c15` |
+| 10 | Finalized trigger removed | R2 (with foreign edits) | detected | detected (`…204925Z`: verified 254, errors 5): `lemma_top_step`, `lemma_lmr_step`, `lemma_mono_edit`, `lemma_mono_lmr`, `lemma_mono_terminate` |
+| 11 | process end keeps the open transaction (P-05 negated) | L1-NS-ALL | detected | detected (`…204957Z`): `case_c45_kill` |
 
-Surviving controls investigated:
-- 05 is equivalent on the load path: every successful LoadNewModule path calls SetCommitted (no-transaction marker, C1, or C3) before Finalize, so `|| ISOK` never changes the value. Checked by the explorer property ISOK-REDUNDANT (passes in all as-built invariant runs). `|| ISOK` matters for uninstall, which is out of scope.
-- 11b is a deliberate wrong binding: R3-top does not depend on the end-of-process rollback because the top row is inserted at `$TLEVEL` 0.
-- Superseded control evidence (kept, with notes appended to `index.jsonl`): the first L1-END control runs (`…193031Z-…193034Z`) used the full domain, where the as-built already violates L1, so their violations were not caused by the mutation; the runs `…194808Z-…194812Z` used an as-built-conforming domain that the L1 revision had emptied (0 configurations), so their "pass" is no verdict; the Verus control runs `…193359Z-…193934Z` were marked INCOMPLETE by a receipt-parser gap (Verus prints no summary when an evaluation lemma fails) and were re-run.
+Notes:
+- Control 05 survives because, in the modelled domain (filesystem `.modules` dependencies and the top-level load), every successful LoadNewModule path calls SetCommitted (no-transaction marker, C1 or C3) before Finalize; explorer property ISOK-REDUNDANT passes in every as-built invariant run. `|| ISOK` is the only source of Committed=1 for callers outside the model: the legacy XML install path of a dependency (Utils/Module.cls:172-185, OBS-L16) and uninstall (R1-MOD-07).
+- `diagnostic-11b-death-keeps-transaction-r3top` (formerly control 11b) is not a control: R3-top cannot fail under variant 11 because the top row is inserted at `$TLEVEL` 0. Relabelled as a diagnostic with expect "pass"; earlier 11b receipts are annotated in `index.jsonl` (R1-MOD-06).
+- Control domain limit (R1-MOD-08): the earlier whole-check domain (all L1 clauses at the normal end) kept 1617 of 5400 configurations and dropped every version refusal and every D1 configuration. The reviewer's variant 201 (no-transaction SetCommitted moved before the version guards) changes 308 configurations, of which that method saw 60 (`VV/results/verus/20261113T202330Z-review-r1-mutants`). The L1 controls are now bound per clause. Variant 201 is not one of B1's controls and was not re-run here; a COMMIT-EXACT-bound control would be the natural detector, but the as-built already violates COMMIT-EXACT (V4).
+- Superseded control evidence is kept with notes in `index.jsonl`: the first L1-END control runs (`…193031Z-…193034Z`, as-built violations not caused by the mutation), the empty-domain runs (`…194808Z-…194812Z`), and the parser-INCOMPLETE Verus control runs (`…193359Z-…193934Z`).
 
-## 6. Native reconciliation (read after cases.json was emitted and receipted)
+## 7. cases.json history and native reconciliation
 
-cases.json history:
-- `fc7adec492c7a55f64ecddb44798359c652fbc21beef9973e01d531f123ec8f0` (run `20261113T193019Z-cases-asbuilt`), 57 cases, 15 L1 violations. B2 replays this file.
-- `993008003ef5cda84ef42e503619b314af60a4f61cf764b159e1be1f67714557` (run `20261113T194755Z-cases-asbuilt-l1rev1`) after the stage C L1 revision. `l2_predicted` and `inputs` are byte-identical for all 57 cases; `l1_permitted` changed for 31 cases; 31 L1 violations.
-- Verdicts that flipped (conforms → violates): B1-C11, C12, C13, C14, C15, C18 (Package, R1-ONT-03); B1-C42, C43, C50T, C50K (Q-06b); B1-C46K, C48K, C49K (Q-08 default); B1-C46T, C48T (Q-FIN); B1-C49T (Q-08 and Q-FIN). No verdict flipped the other way.
+| sha256 | Run | Cases | L1 violations | Note |
+|---|---|---|---|---|
+| `fc7adec492c7a55f64ecddb44798359c652fbc21beef9973e01d531f123ec8f0` | `20261113T193019Z-cases-asbuilt` | 57 | 15 | replayed natively by B2 |
+| `993008003ef5cda84ef42e503619b314af60a4f61cf764b159e1be1f67714557` | `20261113T194755Z-cases-asbuilt-l1rev1` | 57 | 31 | R1-ONT-01..03 |
+| `058429752d6508a3e4527beb35e5825badf3132c8688b3f6138aa1d9bc457961` | `20261113T204349Z-cases-asbuilt-r1` | 59 | 36 | R1-MOD-01..03, new B1-C51/C52; final |
 
-Comparison with B2's native observations (phase 1 report sections 4-7, and the interim phase 2 replay): no disagreement found between `l2_predicted` and the product.
-- Phase 1 cases matching B1 cases field by field where both observe: A0/A1/A2/A3/A5 ↔ C30/C31/C33/C32/C38; B1-B4 ↔ C22, C23, C24 (and the NoJournal twin of C24); C1 ↔ C44T (Init-value row, IRISTEMP row deleted); C2 ↔ C46T top record (Finalized, Package and version set, Success 0, Committed 1, no TimeEnd, Activate open); C3 ↔ C44K (orphan IRISTEMP row); C4R ↔ C46K top record (Init values, Committed 0; orphan IRISTEMP row with Committed 1); D1 ↔ C42; g1-g10 ↔ C12, C14, C15, C17, C19-C21.
-- Phase 2 interim (B2 `native-replay.md`, 19:45Z): returning cases C01-C43 `l2_predicted` AGREES 43/43, T variants AGREES 6/6; B2's L1 judgement matched `l1_vs_l2` in every case (against the fc7adec4 expectations). K variants and C49T/K (approximated by a ZBREAK stall) were still running. Final per-case disagreements, if any, are B2's to report; none was known at the time of writing.
+`l2_predicted` and `inputs` are byte-identical across all three versions for the 57 original cases.
 
-## 7. Trust inventory
+Flips from `fc7adec4` to `99300800` (conforms → violates): B1-C11, C12, C13, C14, C15, C18 (Package, R1-ONT-03); B1-C42, C43, C50T, C50K (Q-06b); B1-C46K, C48K, C49K (Q-08 default); B1-C46T, C48T (Q-FIN); B1-C49T (Q-08 and Q-FIN).
 
-- `assume`, `admit`, `external_body`: none in the crate. No `#[verifier::external]` code is relied on by a proof.
-- Uninterpreted functions: none (all spec functions are open and defined).
-- `exec_spec_verified!`: the macro's generated exec twins are verified against the spec functions (part of the 248 obligations); the macro itself and vstd are trusted (pinned vstd `=0.0.0-2026-09-20-0158`).
-- `by (compute_only)`: case lemmas rely on Verus's interpreter.
-- Explorer (`vendor/explorer`, plain Rust) and the harness (`explore.rs`, `bin/b1.rs`) are unverified; their results are labelled bounded. The harness only chooses actions and evaluates exec twins of spec predicates.
-- Premises: `VV/premises.md` (P-01..P-12 mapped to B2 N-P01..N-P18). All premises the theorems use are CONFIRMED natively; P-06c (order of `%OnClose` at Terminate across frames, matters only for NoJournal under a caller transaction) is UNVERIFIED; P-09 and P-10 are PARTIAL.
+Flips from `99300800` to `05842975` (conforms → violates): B1-C10 (L1-NAMESPACE: NoJournal keeps the `.ZPM` document; Package), B1-C44T, B1-C44K (phases and Package on the unended row). Clause changes on cases that already violated: B1-C09 (+Package), C45T, C45K, C46K, C47T, C47K, C48K, C49K (+H-RECORD-FIELDS: phases/Package). New: B1-C51 (default, multiple documents: rolled back, Package empty: violates H-RECORD-FIELDS), B1-C52 (NoTransaction, multiple documents: module record kept: violates L1-NAMESPACE and H-RECORD-FIELDS). No verdict flipped toward conformance. R1-MOD-01 (dependency Committed exact) flipped no case: as built, every dependency row that exists carries the right Committed; the clause now rejects the wrong D1 repair the reviewer built (variant 203).
 
-## 8. Remaining gaps
+Native reconciliation (read only after `fc7adec4` and its receipt existed): no disagreement between `l2_predicted` and the product has been found.
+- Phase 1 cases match B1 cases field by field where both observe: A0/A1/A2/A3/A5 ↔ C30/C31/C33/C32/C38; B1-B4 ↔ C22, C23, C24 (and the NoJournal twin of C24); C1 ↔ C44T; C2 ↔ C46T top record; C3 ↔ C44K; C4R ↔ C46K top record; D1 ↔ C42; g1-g10 ↔ C12, C14, C15, C17, C19-C21.
+- Phase 2 replay (B2 `native-replay.md`, interim): returning cases C01-C43 `l2_predicted` AGREES 43/43 (`20261113T193952Z-replay-return-b`), T variants AGREES 6/6 (`20261113T194122Z-replay-terminate-b`). K variants and C49T/K were still running at the last read. B2 re-evaluates every replay against the final `cases.json` (R1-MOD-10); any disagreement found there is B2's to report and must not change these predictions.
 
-- History readers are not modelled: `history find/delete` filters (B2 D2), retention purge (D3), `config delete HistoryRetain` (D5), `-globally`, `GlobalRecords`. Their contracts (INT-HIST-10..13) have only B2's native evidence.
-- Commands sharing the path but not modelled: `install` (developer-mode overwrite guard Q-03, read-only repositories), `update` (MarkResourceForUpdate, ApplyUpdateSteps), `reinstall`, uninstall histories, self-uninstall; legacy XML installs; module `<Defaults>` setting NoTransaction for one module; nested dependencies and more than two; non-database effects (Q-04: archives, ModuleRoot, FileCopy, pip, CPF, lock file, git temp dirs).
-- The `Committed`-exactness (no false "committed") direction is not a theorem: it fails as-built (V4) and the explorer shows the counterexample.
-- Q-05 and Q-06b semantics under a caller transaction are observed, not proved; L1 for dev-mode kills is looser than the real reachable set (each module independently "unchanged or present/installed").
-- `inv` does not constrain the control-06 auxiliary IRISTEMP snapshots; the Verus control-06 failures partly reflect that.
-- No repair variants were modelled (none was needed to state the findings). Candidate repairs: write a dependency's History row outside the parent's transaction (or persist nested logs from IRISTEMP at the top-level close at `$TLEVEL` 0); check system requirements before the first write; call SetCommitted only after a write was kept; copy SetCommitted to the twin when `$TLEVEL` is 0; set Package before the guards; do not set Finalized without TimeEnd.
+## 8. Trust inventory
 
-## 9. Reproduce
+- `assume`, `admit`, `external_body`, `#[verifier::external]`, uninterpreted functions: none in the crate.
+- `exec_spec_verified!`: generated exec twins are verified against the spec functions (part of the 259 obligations); the macro and vstd are trusted (pinned vstd `=0.0.0-2026-09-20-0158`).
+- `by (compute_only)`: case and repair lemmas rely on Verus's interpreter; its sanity run is receipted (`20261113T204317Z-sanity-false-claim`).
+- Explorer (`vendor/explorer`, plain Rust) and the harness (`explore.rs`, `bin/b1.rs`) are unverified; their results are bounded evidence.
+- Premises: `VV/premises.md` (P-01..P-13 mapped to B2 N-P01..N-P18). Every premise the theorems use is CONFIRMED natively, including P-09 (B1-C09/C10). P-06c (order of `%OnClose` at Terminate across frames) is UNVERIFIED and matters only for NoJournal under a caller transaction. P-10 is PARTIAL. R-01 is a design premise of the repair variant only.
+
+## 9. Remaining gaps and open obligations
+
+- R1-MOD-05 (open obligation): per-module `<Defaults>` transaction flags are not representable (`Cfg.txm` is global). Code reading (Utils/Module.cls:1166-1169, 1191-1193) and N-P07 imply that a dependency whose own `<Defaults>` set NoJournal=1 writes unjournaled inside its parent's T1, so the parent's rollback leaves it installed while its journaled History row is rolled back; with NoTransaction=1 the namespace rolls back but the dependency's log is marked Committed at 1227. B2's native case (normal parent, dependency `<Defaults>` NoJournal=1, parent Activate fails) had no result when this was written. The model makes no prediction for it.
+- History readers are not modelled: `history find/delete` filters (D2), retention purge (D3), `config delete HistoryRetain` (D5), `-globally`, `GlobalRecords`.
+- Not modelled (BINDINGS lists each with what it could hide): `install`/`update`/`reinstall`/uninstall paths, `LoadModuleReference` early refusals, `WriteAfterInstallMessage` errors, legacy XML installs, nested or more than two dependencies, non-database effects (Q-04), the SIGKILL cleanup window (P-13).
+- COMMIT-EXACT (no false "committed") is not a theorem: the as-built violates it (V4).
+- Q-05 and Q-06b semantics under a caller transaction are observed, not proved; L1 for dev-mode kills is looser than the real reachable set.
+- `inv` does not constrain the control-06 auxiliary IRISTEMP snapshots.
+- Repairs for V4, V9 and V11 are not modelled; the D1 repair survey shows they remain in NoTransaction/NoJournal and at process ends.
+
+## 10. Reproduce
 
 ```sh
 cd VV/crates
-python3 -I scripts/receipt.py verus asbuilt-proofs as-built "verified, 0 errors" "as-built proofs"      # expect: verified 248, errors 0
-python3 -I scripts/receipt.py verus control-01-verus control-01 "failure of lemma_lnm0_b" "control 01" --features control-01   # expect: errors in lemma_lnm0_b and case_c23
-python3 -I scripts/receipt.py cases cases-check     # rewrites VV/cases/cases.json; expect sha256 9930080…14557 with unchanged inputs
-target/release/b1 explore asbuilt-r3-dep           # expect: VIOLATION of R3-dep after 15 steps
+python3 -I scripts/receipt.py verus asbuilt-proofs as-built "verified, 0 errors" "as-built proofs"     # expect: verified 259, errors 0
+python3 -I scripts/receipt.py verus control-01-verus control-01 "failure of lemma_lnm0_b" "control 01" --features control-01   # expect: lemma_lnm0_b fails
+python3 -I scripts/receipt.py cases cases-check     # rewrites VV/cases/cases.json; expect sha256 05842975…457961
+target/release/b1 explore repair-103-dep-clauses   # expect: PASS, 189,577 states, exhaustive
+target/release/b1 explore asbuilt-dep-clauses      # expect: VIOLATION (dependency row lost)
 target/release/b1 explore control-10-no-trigger    # expect: VIOLATION of R2
 ```
 `scripts/dev-verify.sh` is a development helper without receipts.

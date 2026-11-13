@@ -1,0 +1,93 @@
+--- /home/ziniu_wu_g5labs_ai/experiments/ipm-verus-uplift-20261113/ipm/.g5/Verus_verification/crates/ipm-load-history/src/model.rs	2026-11-13 19:28:25.246255194 +0000
++++ /tmp/review-r1-model/vv/crates/ipm-load-history/src/model.rs	2026-11-13 20:18:59.260089751 +0000
+@@ -286,9 +286,14 @@
+ }
+ 
+ /// TCOMMIT: drops the innermost snapshot. Durable only when it leaves level 0.
++/// Variant 206 only: the snapshots left after a TCOMMIT all equal the current store.
++pub open spec fn rep_after_commit(s: State) -> Seq<Ns> {
++    if s.tx.len() <= 1 { Seq::empty() } else if s.tx.len() == 2 { Seq::empty().push(s.ns) } else { Seq::empty().push(s.ns).push(s.ns) }
++}
++
+ pub open spec fn tcommit(c: Cfg, s: State) -> State {
+     if s.tx.len() > 0 {
+-        let s2 = with_store(s, s.ns, s.tx.drop_last());
++        let s2 = if c.var == 206 { with_store(s, s.ns, rep_after_commit(s)) } else { with_store(s, s.ns, s.tx.drop_last()) };
+         if c.var == 6 && s.ttx.len() > 0 { with_temp(s2, s.temp, s.ttx.drop_last()) } else { s2 }
+     } else { s }
+ }
+@@ -322,8 +327,8 @@
+ 
+ /// AbstractHistory:Finalize: Success = status, Committed = Committed || ISOK(status), TimeEnd.
+ pub open spec fn t_final(c: Cfg, t: Temp, err: bool) -> Temp {
+-    Temp { live: t.live, pkg: t.pkg, ver: t.ver, ok: if err { 2u8 } else { 1u8 },
+-        com: if c.var == 5 { t.com } else { t.com || !err }, tend: true, ph: t.ph, phst: t.phst }
++    Temp { live: t.live, pkg: t.pkg, ver: t.ver, ok: if err && c.var != 204 { 2u8 } else { 1u8 },
++        com: if c.var == 5 { t.com } else if c.var == 204 { true } else { t.com || !err }, tend: true, ph: t.ph, phst: t.phst }
+ }
+ 
+ /// AbstractHistory:SetCommitted (IRISTEMP only). Repair 102 also copies it to the History row
+@@ -363,6 +368,22 @@
+     with_ctr_att(s, s.ctr, if i < s.att.len() { s.att.update(i as int, a) } else { s.att })
+ }
+ 
++pub open spec fn twin_insert_out(s: State, i: usize) -> State {
++    let t = fresh_twin(inc(s.ctr), gtemp(s.temp, i).pkg);
++    let s2 = with_store(s, upd_twin(s.ns, i, t), all_twin(s.tx, i, t));
++    with_ctr_att(s2, inc(s.ctr), if i < s.att.len() { s.att.update(i as int, 1u8) } else { s.att })
++}
++
++pub open spec fn persist_out(c: Cfg, s: State, i: usize) -> State {
++    let tw = gtwin(s.ns.twins, i);
++    let t = gtemp(s.temp, i);
++    let s2 = if !tw.ex || tw.fin { s } else {
++        let t2 = Twin { ex: true, id: tw.id, pkg: t.pkg, ver: t.ver, ok: t.ok, com: t.com, tend: t.tend, fin: true, ph: t.ph, phst: t.phst, edited: tw.edited };
++        with_store(s, upd_twin(s.ns, i, t2), all_twin(s.tx, i, t2))
++    };
++    if gatt(s.att, i) == 2 { set_att(s2, i, 3) } else { s2 }
++}
++
+ /// PersistToTwin from %OnClose; a row persisted after Finalize is complete (auxiliary 3).
+ pub open spec fn persist(c: Cfg, s: State, i: usize) -> State {
+     let s2 = persist_row(c, s, i);
+@@ -527,8 +548,8 @@
+     let p = pkg_of(c, s, w);
+     if f.pc == 0 { lnm_enter(c, s, w) }
+     else if f.pc == 1 { lnm_begin(c, s, w) }
+-    else if f.pc == 2 { set_lnm(s, w, if guard_refuses(c, s, w) { lfail(f) } else { lpc(f, 3) }) }
+-    else if f.pc == 3 { set_lnm(if c.txm != 0 && c.var != 3 { set_com(c, s, i) } else { s }, w, lpc(f, 4)) }
++    else if f.pc == 2 { set_lnm(if c.txm != 0 && c.var == 201 { set_com(c, s, i) } else { s }, w, if guard_refuses(c, s, w) { lfail(f) } else { lpc(f, 3) }) }
++    else if f.pc == 3 { set_lnm(if c.txm != 0 && c.var != 3 && c.var != 201 { set_com(c, s, i) } else { s }, w, lpc(f, 4)) }
+     else if f.pc == 4 { lnm_load(c, s, w) }
+     else if f.pc == 5 { set_lnm(put_temp(s, i, t_names(gtemp(s.temp, i), p.ver)), w, lpc(f, 6)) }
+     else { lnm_devsave(c, s, w) }
+@@ -561,9 +582,9 @@
+     let f = lnm_of(s, w);
+     let i = slot_of(s, w);
+     if f.pc == 29 {
+-        if !f.dev && c.txm == 0 { set_lnm(tcommit(c, s), w, lpc(f, 30)) } else { set_lnm(s, w, lpc(f, 31)) }
++        if !f.dev && c.txm == 0 { if c.var == 205 { set_lnm(set_com(c, s, i), w, lpc(f, 30)) } else { set_lnm(tcommit(c, s), w, lpc(f, 30)) } } else { set_lnm(s, w, lpc(f, 31)) }
+     }
+-    else if f.pc == 30 { set_lnm(if c.var != 2 { set_com(c, s, i) } else { s }, w, lpc(f, 31)) }
++    else if f.pc == 30 { if c.var == 205 { set_lnm(tcommit(c, s), w, lpc(f, 31)) } else { set_lnm(if c.var != 2 { set_com(c, s, i) } else { s }, w, lpc(f, 31)) } }
+     else if f.pc == 31 { lnm_exit(c, s, w) }
+     else { s }
+ }
+@@ -581,7 +602,7 @@
+     let i = dslot(s);
+     let d = gpkg(c.deps, s.lnm0.di as usize);
+     if s.lmr_pc == 1 { with_lmr(put_temp(s, i, fresh_temp(true)), 2, s.lmr_err) }
+-    else if s.lmr_pc == 2 { with_lmr(twin_insert(s, i), 3, s.lmr_err) }
++    else if s.lmr_pc == 2 { with_lmr(if c.var == 202 || c.var == 203 { twin_insert_out(s, i) } else { twin_insert(s, i) }, 3, s.lmr_err) }
+     else if s.lmr_pc == 3 { with_lmr(put_temp(s, i, t_ver(gtemp(s.temp, i), d.ver)), 4, s.lmr_err) }
+     else if s.lmr_pc == 4 { with_lmr(with_lnm1(s, dlnm()), 5, s.lmr_err) }
+     else if s.lmr_pc == 5 { with_lmr(s, 6, s.lnm1.err) }
+@@ -589,7 +610,7 @@
+     else if s.lmr_pc == 7 {
+         // %OnClose: PersistToTwin, then the temp row is deleted. A missing twin row is not
+         // recreated and the temp row is still deleted (N-P15).
+-        with_lmr(persist(c, s, i), 8, s.lmr_err)
++        with_lmr(if c.var == 203 { persist_out(c, s, i) } else { persist(c, s, i) }, 8, s.lmr_err)
+     }
+     else if s.lmr_pc == 8 { with_lmr(put_temp(s, i, t_dead(gtemp(s.temp, i))), 9, s.lmr_err) }
+     else { s }

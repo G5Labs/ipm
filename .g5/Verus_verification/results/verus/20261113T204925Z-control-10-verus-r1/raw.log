@@ -1,0 +1,42 @@
+verification results:: 254 verified, 5 errors
+    Checking ipm-load-history v0.1.0 (/home/ziniu_wu_g5labs_ai/experiments/ipm-verus-uplift-20261113/ipm/.g5/Verus_verification/crates/ipm-load-history)
+error: assertion failed
+   --> ipm-load-history/src/proofs.rs:250:16
+    |
+250 |         assert(inv(c, s2));
+    |                ^^^^^^^^^^ assertion failed
+
+error: postcondition not satisfied
+   --> ipm-load-history/src/proofs.rs:258:13
+    |
+256 | pub proof fn lemma_lmr_step(c: Cfg, s: State)
+    | --------------------------------------------- at the end of the function body
+257 |     requires inv(c, s), running(s), active(s) == 2,
+258 |     ensures inv(c, lmr_step(c, s)),
+    |             ^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: assertion failed
+   --> ipm-load-history/src/proofs.rs:558:36
+    |
+558 |     else if s.lmr_pc == 7 { assert(dv_mono(dv(s), dv(lmr_step(c, s)))); }
+    |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ assertion failed
+
+error: postcondition not satisfied
+   --> ipm-load-history/src/proofs.rs:707:13
+    |
+705 | pub proof fn lemma_mono_terminate(c: Cfg, s: State)
+    | --------------------------------------------------- at the end of the function body
+706 |     requires inv(c, s), running(s),
+707 |     ensures dv_mono(dv(s), dv(terminate(c, s))),
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: postcondition not satisfied
+   --> ipm-load-history/src/proofs.rs:719:13
+    |
+717 | pub proof fn lemma_mono_edit(c: Cfg, s: State, i: usize)
+    | -------------------------------------------------------- at the end of the function body
+718 |     requires inv(c, s), s.alive, user_edit_enabled(s, i),
+719 |     ensures dv_mono(dv(s), dv(user_edit(c, s, i))),
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: could not compile `ipm-load-history` (lib) due to 5 previous errors

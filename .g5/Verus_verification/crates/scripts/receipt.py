@@ -104,14 +104,14 @@ def main():
         obs = "INCOMPLETE (timeout)" if to else (r[0]["observed"] if r else "INCOMPLETE (no RESULT line)")
         rec.update({"variant": variant, "expect": expect, "concern": concern, "observed": obs, "exit_code": code, "explorer": r[0] if r else None,
                     "build_log_tail": b.stderr[-500:]})
-    elif kind in ("cases", "survey"):
+    elif kind in ("cases", "survey", "repair-survey"):
         b = subprocess.run(["cargo", "build", "--release", "--offline", "-p", "ipm-load-history", "--bin", "b1"], cwd=CR, env=ENV, capture_output=True, text=True)
-        out = VV / "cases/cases.json" if kind == "cases" else d / "survey.json"
+        out = VV / "cases/cases.json" if kind == "cases" else d / ("survey.json" if kind == "survey" else "repair-survey.json")
         out.parent.mkdir(parents=True, exist_ok=True)
         cmd = [str(CR / "target/release/b1"), kind, str(out)]
         code, log, to = run(cmd, 900)
         obs = "INCOMPLETE" if (to or code != 0 or not out.exists()) else f"written {out.relative_to(VV)} sha256 {sha(out)}"
-        rec.update({"variant": "as-built", "expect": f"{kind} written", "concern": f"{kind} from the executable twin", "observed": obs, "exit_code": code,
+        rec.update({"variant": "repair-103 vs as-built" if kind == "repair-survey" else "as-built", "expect": f"{kind} written", "concern": f"{kind} from the executable twin", "observed": obs, "exit_code": code,
                     "output": str(out.relative_to(VV)), "output_sha256": sha(out) if out.exists() else None})
         if kind == "cases" and out.exists():
             (d / "cases.json.sha256").write_text(f"{sha(out)}  cases/cases.json\n")
@@ -125,7 +125,7 @@ def main():
     rec["inputs_sha256_file"] = "inputs.sha256"
     rec["inputs_digest"] = hashlib.sha256("".join(f"{h}{f}" for f, h in ins).encode()).hexdigest()
     (d / "receipt.json").write_text(json.dumps(rec, indent=2) + "\n")
-    line = {"concern": rec.get("concern"), "label": label, "outcome": rec["observed"], "run_id": run_id, "kind": {"verus": "proof" if not rec.get("features") else "control", "explore": "explore" if rec.get("variant") in ("as-built",) else "control", "cases": "cases", "survey": "explore"}[kind],
+    line = {"concern": rec.get("concern"), "label": label, "outcome": rec["observed"], "run_id": run_id, "kind": {"verus": "proof" if not rec.get("features") else "control", "explore": "explore" if rec.get("variant") in ("as-built",) else "control", "cases": "cases", "survey": "explore", "repair-survey": "explore"}[kind],
             "variant": rec.get("variant"), "expect": rec.get("expect")}
     with open(VV / "results/index.jsonl", "a") as f:
         f.write(json.dumps(line) + "\n")

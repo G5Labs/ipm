@@ -1,0 +1,18 @@
+{
+  "run_id": "20261113T202330Z-review-r1-mutants",
+  "kind": "explore-differential (reviewer harness, unverified Rust over exec twins of a mutated copy)",
+  "author": "stage C round 1 reviewer (model and evidence)",
+  "product": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+  "domain": "explore::domain(txm 0,1,2; caller false,true) = 5400 single-fault configurations; every reachable state (trajectory, kill/terminate after each step, caller ends); no foreign edits",
+  "variants": {
+    "201": "faulty implementation: no-transaction SetCommitted moved before the version guards",
+    "202": "erroneously permitted step: dependency History row inserted outside the parent transaction, persisted inside",
+    "203": "plausible D1 repair: dependency History row inserted and persisted outside the parent transaction, SetCommitted marking unchanged",
+    "204": "faulty implementation: Finalize ignores its status (Success OK, Committed set)",
+    "205": "SetCommitted moved one step before the C3 tcommit",
+    "206": "false premise: TCOMMIT at any level makes all work so far durable (P-01 negated)"
+  },
+  "observed": "201 detected (308 configs, H-COMMITTED[top]/COMMIT-EXACT; authors' whole-L1 conforming-domain method catches 60 of them); 202 detected (H-RECORD-FIELDS replaces H-RECORD-EXISTS in 828 configs; 0 by the conforming-domain method); 203 NOT detected under provisional Q at normal end (B1-C31: dependency row OK/Committed=1 while its module was rolled back), detected only under the Q-05 alternative (H-COMMITTED[dep1]); 204 detected widely (1377 configs by the authors' method); 205 no new violation, removes 80 H-COMMITTED[top]@terminate violations (equivalent or better); 206 predicts B1-C42 row and module surviving the caller rollback, refuted by native D1/B1-C42 (no row, no module)",
+  "exit_code": 0,
+  "note": "valid completion: as-built conforming configurations unchanged under 205; case_c01_conforms verified in review-r1-asbuilt-proofs"
+}
