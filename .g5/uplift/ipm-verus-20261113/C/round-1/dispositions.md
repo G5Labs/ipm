@@ -25,6 +25,24 @@ The orchestrator adjudicates the round 1 findings here. A reviewer proposal is n
 
 A3's repairs are in `repairs-ontology.md`. The orchestrator checked them at 19:55 UTC. The checker reports 18 files, 147 blocks (122 I, 5 D, 20 Q), 0 issues. Spot reads of `history.survives-rollback`, `history.record.abnormal-end` and the new `history.locked.unfinished` (Q-21) match the dispositions. The B1 contract changes (R1-ONT-01, -02, -03) and the B2 native additions (R1-ONT-04) are validated when those owners report.
 
-## Model and evidence domain
+## Model and evidence domain (`review-model.md`)
 
-Pending. Starts after B1 finishes and B2 has replayed `cases/cases.json`.
+The reviewer reproduced the as-built proof (248 verified, 0 errors on the current inputs), control 02 (same failing lemmas), five explorer runs (same state counts), and `cases.json` and `survey.json` (byte-identical).
+
+| Finding | Decision | Reason | Owner and repair | Validation |
+|---|---|---|---|---|
+| R1-MOD-01 | Accept | `history.committed` (after R1-ONT-01): a dependency undone by its parent's rollback reads uncommitted, and one whose writes were kept reads committed. `q05_all` wrongly makes dependency `Committed` "any" with no caller transaction. | B1: dependency `Committed` equals "changes kept" whenever there is no caller transaction. Keep the Q only for caller-held transactions, rename and document it, and regenerate cases and survey. Add a D1 repair variant (rows written outside the parent's transaction, `Committed` from whether the dependency's writes were kept) and show it meets L1 on C31, C33, C38 and C45. Orchestrator: restate D1's repair proposal and add A5/C38 to its distinguishing checks. | B1 receipts. Repair variant passes. |
+| R1-MOD-02 | Accept | `load.refusal` (I) covers manifest refusals in every mode, and only the requirements timing is open. A validation refusal under NoJournal keeps the `.ZPM` document (B1-C10, native). The module document is module data. | B1: a manifest refusal requires an unchanged namespace in every mode, and `Package` set when the manifest was read. Add an input for "manifest written, then refused" (multiple documents). Orchestrator: new defect D11. | B1 receipts. Flipped verdicts reported. |
+| R1-MOD-03 | Accept | `history.record` (I) requires an unfinished record to list its started phases. Native C1, C3 and C4R show none. The durable row also lacks the package that `SetName` had already recorded (`history.fields`). The governing clause is I, not Q-08. | B1: `kill_rec` requires the started phases and the package once named. B2: add `Phases` and `Package` expectations to the process-end cases and re-evaluate. Orchestrator: new defect D10, moved out of the Q table. | B1 and B2 receipts |
+| R1-MOD-04 | Accept | V4 and V6 are natively confirmed (`20261113T193952Z-replay-return-b`, B1-C08, C09, C29). | Orchestrator: defects D12 (V4) and D13 (V6), with repair proposals. B1: update the native columns for V2, V4 and V6. B1/B2: P-09 CONFIRMED with B1-C09/C10. | Handoff |
+| R1-MOD-05 | Accept | `transaction.flag-sources` (I) allows per-module `<Defaults>`. The code (`Utils/Module.cls:1166-1169`, `:1191-1193`) and N-P07 imply a dependency's NoJournal escapes the parent's rollback. | B2: native case (normal parent, dependency with `<Defaults>` NoJournal=1, parent Activate fails). B1: record an open obligation with the native result, or model per-package modes if cheap. Orchestrator: suspected defect until observed. | B2 receipt |
+| R1-MOD-06 | Accept | Control 11b cannot fail by construction. | B1: relabel it as a non-control with expect "pass", and annotate the index. | Receipt |
+| R1-MOD-07 | Accept | The legacy XML path relies on `|| ISOK`. | B1: scope the control 05 explanation. | Notes |
+| R1-MOD-08 | Accept, modified | Whole-check conforming domains hide most control effects. | B1: use per-clause conforming domains for controls 01-03, 08 and 09 if cheap. Otherwise document the limit with the reviewer's variant 201 numbers. | Receipts or notes |
+| R1-MOD-09 | Accept | The cited receipt predates harness edits. | B1: rerun the final proofs after the contract changes and cite that receipt. | Receipt |
+| R1-MOD-10 | Accept | Native L1 verdicts were evaluated against the pre-revision `l1_permitted`. | B2: re-evaluate every replay run against the final `cases.json` (no IRIS needed). | B2 verdicts |
+| R1-MOD-11 | Accept | Expectation provenance for C3 and C4R. | B2: the K-variant replay supersedes them. Keep the original verdict files under a new name. | B2 report |
+| R1-MOD-12 | Accept | D6 depends on Q-14, and D8 has no governing source beyond usability (wiki/09 L161 only says how to read an open phase). | Orchestrator: D6 becomes "confirmed, decision pending". D8 becomes an issue, not a defect. | Handoff |
+| R1-MOD-13 | Accept | Stale prose after R1-ONT-02. | B2: update `native-report.md` sections 4.3 and 6. | B2 report |
+| R1-MOD-14 | Accept | The claimed false-variant check has no receipt. | B1: receipt it, or remove the claim. | Receipt |
+| R1-MOD-15 | Accept | Unlisted abstractions. | B1: list them in BINDINGS.md with what each could hide. | BINDINGS |
