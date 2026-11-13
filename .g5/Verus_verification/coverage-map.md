@@ -8,7 +8,7 @@ Maps each in-scope ontology block to its formal support, its connection to the p
   - Theorems are in `crates/ipm-load-history/src/proofs.rs` and case lemmas in `cases.rs`.
   - The domain is every well-formed configuration: all transaction modes, dev flags, `-force`, installed states, a caller transaction or none, up to two leaf dependencies, and all modeled faults.
   - Theorems are symbolic over that domain. Explorer runs are bounded and exhaustive within the single-fault domain listed in `B/model-notes.md` section 3.
-  - Final proof receipt: `results/verus/20261113T214349Z-asbuilt-proofs-r2` (260 verified, 0 errors, no `assume`, `admit` or `external_body`). Final cases: `cases/cases.json` sha256 `d3334b16…476cd97` (59 cases). Every explorer run and Verus control was rerun on the final inputs by the orchestrator (Verus controls `results/verus/*final*` and explorer receipts `20261113T215113Z`..`215126Z`, script `crates/scripts/final-candidate-batch.sh`).
+  - Final proof receipt: `results/verus/20261113T222933Z-asbuilt-proofs-r3` (263 verified, 0 errors, no `assume`, `admit` or `external_body`). Its input hashes match the current sources. Final cases: `cases/cases.json` sha256 `10410864…df782a478` (59 cases). Every explorer run and Verus control (13 controls and the sanity check) was rerun on the final inputs by the orchestrator: receipts `20261113T223451Z`..`224441Z` (Verus labels `final-r3-*`), script `crates/scripts/final-candidate-batch.sh`. All 43 runs gave their expected verdicts.
 - **Product connection:**
   - Bindings are in `crates/ipm-load-history/BINDINGS.md`.
   - Native runs are under `results/native/`. "Replay" means B2's replay of `cases/cases.json` (`B/native-replay.md`).
@@ -19,7 +19,7 @@ Maps each in-scope ontology block to its formal support, its connection to the p
   - **unresolved authority**: a human decision is needed.
   - **unestablished**: no formal or native evidence.
 - Premises P-01..P-11 used by the theorems are CONFIRMED natively (`premises.md`, `B/native-replay.md` section 6). P-12 (IRISTEMP at restart) is not run, and nothing in the model depends on it. The D1 repair variant's premise R-01 (a History row written with journaling off survives every rollback and SIGKILL) is CONFIRMED natively (N-P20, `20261113T214135Z-premise-p20-r01`).
-- Native replay: 57 of 59 model cases realized. All 57 agree with `l2_predicted` (1161 fields, 0 disagreements). Against the final `cases.json`: 23 permitted, 34 violate (`verdict-cases-d3334b16.json` beside each replay run). C49T/K are approximate (debugger stall).
+- Native replay: 57 of 59 model cases realized. All 57 agree with `l2_predicted` (1161 fields, 0 disagreements). Against the final `cases.json`: 23 permitted, 34 violate (`verdict-cases-10410864.json` beside each replay run). C49T/K are approximate (debugger stall).
 
 ## Package loading
 
@@ -36,7 +36,7 @@ Maps each in-scope ontology block to its formal support, its connection to the p
 | `load.refusal.update-required` (+ Q dev-bypass) | `case_c15_update_refused`, control 09, Q-02 parameter | Native g3, g4, g5 | supported. Q-02 provisional matches the product (unresolved authority for the docs) |
 | `load.refusal.requirements` (+ Q timing) | V3, `case_c23_sysreq_dev_keeps_manifest` | Native B1-B4, `repro/sysreq-dev-manifest-left.cos` | confirmed violation D4 under Q-17 provisional (decision pending) |
 | `load.same-version` (D) | Modeled installed-equal state | Native g2 | supported |
-| `load.outcome` (what a failure keeps, by mode) | L1-NAMESPACE failures, `theorem_commit_sound`, explorer invariants for default, NoTransaction and NoJournal. Process ends: kill-like and terminate-like. Per-module `<Defaults>` flags not representable | Native A1, A5, C1-C4R, D0. Replay T and K variants (C49T/K approximate). Stage C M5, M5N | supported for database state within scope (P-05, P-06b confirmed). Confirmed violation D13 (failure reported after the commit, B1-C29). D14 (dependency `<Defaults>` NoJournal escapes the rollback) is decision pending (Q-22). Non-database effects (Q-04) unestablished. Temporary repository left after a process end: issue I2 |
+| `load.outcome` (what a failure keeps, by mode) | L1-NAMESPACE failures (per mode; NoTransaction and NoJournal keep what was written, after round 3), `case_c27`, controls 12 and 13, `theorem_commit_sound`, explorer invariants for default, NoTransaction and NoJournal. Process ends: kill-like and terminate-like. Per-module `<Defaults>` flags not representable | Native A1, A5, C1-C4R, D0. Replay T and K variants (C49T/K approximate). Stage C M5, M5N | supported for database state within scope (P-05, P-06b confirmed). Confirmed violation D13 (failure reported after the commit, B1-C29). D14 (dependency `<Defaults>` NoJournal escapes the rollback) is decision pending (Q-22). Non-database effects (Q-04) unestablished. Temporary repository left after a process end: issue I2 |
 | `load.outcome.dev`, `.early-failure` | L1-NAMESPACE (after round 2: phase work kept on a transactional `-dev` failure), `case_c26_dev_failure_keeps_phase_work`, `case_c29_error_after_commit`. Controls 01, 04 and 12 (phase work rolled back) detected | Native A2, A5, C2. Suites History `TestDevModeRollbackNotCommitted`, `TestDevModeFailureAfterCommit` | supported |
 | `load.dependencies` | Up to two leaf dependencies. V1, V2 | Native A0-A5. Suite LoadModuleWithDeps | module state supported. Dependency history: confirmed violation D1 |
 | `load.dependencies.local-repo` | Not modeled | Native A0 (dependencies from `.modules`) | supported by observation only |
@@ -48,7 +48,7 @@ Maps each in-scope ontology block to its formal support, its connection to the p
 |---|---|---|---|
 | `transaction` (one transaction, rolled back on failure) | `theorem_tlevel`. Rollback loop, control 04 detected | Premises N-P01..N-P03 | supported, conditional on P-01 |
 | `transaction.rollback-scope` (Q-04) | Not modeled | None | unresolved authority |
-| `transaction.opt-out` (NoTransaction, NoJournal) | Explorer invariants per mode. P-03 | Native B3, B4, N-P07 | supported |
+| `transaction.opt-out` (NoTransaction, NoJournal) | Explorer invariants per mode. L1-NAMESPACE requires that a failure without a transaction keeps what was written before it (after round 3). `case_c27_notx_failure_keeps_partial`. Control 13 (NoTransaction ignored) detected. P-03 | Native B3, B4, N-P07. Replay C27, C34 | supported at a returned end. At a process end without a transaction, L1 does not constrain the namespace (disclosed gap) |
 | `transaction.flag-sources` | Not modeled (open obligation) | Stage C M5 (dependency `<Defaults>`), X1 (default modifiers) | confirmed violation D19 (namespace defaults shared by every namespace). Dependency `<Defaults>` inside a parent transaction: D14, decision pending (Q-22) |
 | `dev-mode.keep-on-failure` | C1/C2 commit steps, controls 01 and 02 | Native A5, C2 | supported |
 | `dev-mode.not-propagated` (+ D local-snapshot) | Dependencies are non-dev except a snapshot under `-dev` | Native A4. Suite LoadModuleWithDeps | supported |

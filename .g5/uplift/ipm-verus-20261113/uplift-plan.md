@@ -44,18 +44,20 @@ Initial uplift of InterSystems Package Manager (IPM) using the G5-Lean-V2 Verus 
 | A4 | Fresh reader | Reconstruct the major functionality from the ontology alone, then compare with A1/A2. | `A/reconstruction-check.md` | done: 6 material corrections (R1-R6), 8 minor |
 | B1 | Verus modeler | L1 contract, L2 as-built transitions, refinement and controls for load and history. | `.g5/Verus_verification/crates/**`, `vendor/**`, `SOURCE.json`, `premises.md`, `cases/**`, `results/verus/**`, `B/model-notes.md` | done: 259 verified, 0 errors; V1-V11; D1 repair variant; `B/model-notes.md` |
 | B2 | Native validator | Premise checks on IRIS transactions and IRISTEMP, existing suites, and native replay of model cases at the real handler, store and reader. | `.g5/Verus_verification/native/**`, `.g5/Verus_verification/results/native/**`, `B/native-report.md` | done: phase 1 (`B/native-report.md`) and phase 2 (`B/native-replay.md`: 57/57 model cases agree, stage C cases, premise mapping) |
-| C | Fresh independent reviewers, then repair agents | Coverage and fidelity challenge per round. | `C/round-<n>/**`; repairs in owning artifacts | pending |
-| Handoff | Orchestrator, then a reproduction reviewer | Runbook, coverage map, receipts, findings. | `.g5/Verus_verification/README.md`, `coverage-map.md`, `bugs_issues.md`, `design_simplification.md` | pending |
+| C | Fresh independent reviewers, then repair agents | Coverage and fidelity challenge per round. | `C/round-<n>/**`; repairs in owning artifacts | done: 3 rounds |
+| Handoff | Orchestrator, then a reproduction reviewer | Runbook, coverage map, receipts, findings. | `.g5/Verus_verification/README.md`, `coverage-map.md`, `bugs_issues.md`, `design_simplification.md`, `handoff.md` | done 2026-11-13 22:50 UTC. The round 2 reviewer reproduced the runbook cold |
 
 ## Review-round counter
 
-Rounds used: **3 of 3**. Round 1 (19:25-21:10 UTC) and round 2 (21:15-22:00 UTC) were adjudicated and repaired (`C/round-1/`, `C/round-2/`). Round 3 is the final confirmation, and any finding it leaves is reported as unresolved in `handoff.md`. A resumed worker continues from this counter.
+Rounds used: **3 of 3** (final). Rounds 1 and 2 were repaired and re-reviewed. Round 3 was not clean (2 material findings). Its repairs were validated by the orchestrator only and are reported as unresolved in `handoff.md`. No further review round is planned.
 
 ## Open obligations
 
 Updated at each handoff. See `C/` for findings and dispositions once stage C starts.
 
 ## Log
+
+- 2026-11-13 22:50 UTC: handoff written (`handoff.md`). Round 3's material findings were repaired and validated by the orchestrator. The final-candidate batch (43 runs) and the replay re-evaluation against `cases.json` `10410864` are current. The IRIS and ORAS containers were removed after the final evidence was saved. `run-iris.sh up` recreates them.
 
 - 2026-11-13 19:15 UTC: resumed after a service usage limit stopped A3, B1 and B2 at about 18:50. B2 had finished its report. A3 had not started the A4 corrections. B1 had a partial crate and no receipts. Before the summary, the orchestrator's saved transcript records a TaskStop and a WebSearch whose content was not kept. No file changed after 18:49 except B2's report and B1's `proofs.rs`, so no artifact depends on the missing part. B1 was told to use B2's premise results and not to read B2's case observations until `cases.json` is written.
 

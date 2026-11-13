@@ -62,14 +62,14 @@ Working directory: `.g5/Verus_verification/crates`. Each command writes a new re
    ```sh
    python3 -I scripts/receipt.py verus repro-asbuilt as-built "verified, 0 errors" "runbook: as-built proofs"
    ```
-   Expected: `verified 260, errors 0`, matching the final receipt `results/verus/20261113T214349Z-asbuilt-proofs-r2`. It takes under a minute when the build is cached, and a few minutes from a cold build.
+   Expected: `verified 263, errors 0`, matching the final receipt `results/verus/20261113T222933Z-asbuilt-proofs-r3`. It takes under a minute when the build is cached, and a few minutes from a cold build.
 
 2. Its distinguishing control. Control 01 removes the `SetCommitted` call after the developer-mode first commit (`Utils/Module.cls:1312-1314`).
 
    ```sh
    python3 -I scripts/receipt.py verus repro-control-01 control-01 "failure of lemma_lnm0_b" "runbook: control 01" --features control-01
    ```
-   Expected: errors in `lemma_lnm0_b` and one case lemma. On the final inputs that lemma is `case_c26_dev_failure_keeps_phase_work` (final receipt `results/verus/20261113T215127Z-final-control-01-verus`). Verus stops evaluating case lemmas at the first one that fails, so which case lemma appears depends on source order. Verus prints no summary line when a lemma fails, so the receipt parser reports the failing lemmas instead.
+   Expected: errors in `lemma_lnm0_b` and one case lemma. On the final inputs that lemma is `case_c26_dev_failure_keeps_phase_work` (final receipt `results/verus/20261113T223505Z-final-r3-control-01-verus`). Verus stops evaluating case lemmas at the first one that fails, so which case lemma appears depends on source order. Verus prints no summary line when a lemma fails, so the receipt parser reports the failing lemmas instead.
 
 3. A bounded counterexample for defect D1 (dependency records lost on a parent rollback).
 

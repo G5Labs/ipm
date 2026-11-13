@@ -138,6 +138,16 @@ pub open spec fn dep_installed(c: Cfg, d: usize) -> MExp {
     if needed(c, d) { mx(1, dep(c, d).ver, if dep(c, d).snap && c.devf == 1 { 1u8 } else { 0u8 }) } else { unch() }
 }
 
+/// A dependency's state after a dependency failure without a transaction: dependencies before
+/// the failing one installed, the failing one partial, later ones untouched; none touched when a
+/// dependency was not found.
+pub open spec fn dep_upto(c: Cfg, d: usize) -> MExp {
+    if !all_found(c) { unch() }
+    else if d < first_dep_fail(c) { dep_installed(c, d) }
+    else if d == first_dep_fail(c) { anym() }
+    else { unch() }
+}
+
 pub open spec fn success_alt(c: Cfg, q: Q) -> Seq<MExp> {
     three(mx(1, c.top.ver, final_dev(c, q)), dep_installed(c, 0), dep_installed(c, 1))
 }
@@ -155,6 +165,10 @@ pub open spec fn l1_alts(c: Cfg, q: Q) -> Seq<Seq<MExp>> {
     // (`load.refusal`, R1-MOD-02)
     else if v == 1 || v == 2 || v == 3 || v == 4 { Seq::empty().push(unchanged_alt()) }
     else if v == 5 && q.q17_before { Seq::empty().push(unchanged_alt()) }
+    // without a transaction what was written before the failure stays (`load.outcome`,
+    // `transaction.opt-out`, wiki/00 L145-155; stage C R3-01)
+    else if !tx && (v == 7 || v == 8) { Seq::empty().push(three(mx(1, c.top.ver, final_dev(c, q)), dep_installed(c, 0), dep_installed(c, 1))) }
+    else if !tx && v == 6 { Seq::empty().push(three(mx(4, c.top.ver, final_dev(c, q)), dep_upto(c, 0), dep_upto(c, 1))) }
     else if !tx { Seq::empty().push(any_alt()) }
     else if !dev { Seq::empty().push(unchanged_alt()) }
     // developer mode with a transaction: what was committed before the failure point is kept
@@ -170,6 +184,8 @@ pub open spec fn l1_alts(c: Cfg, q: Q) -> Seq<Seq<MExp>> {
 pub open spec fn l1_alts_kill(c: Cfg, q: Q) -> Seq<Seq<MExp>> {
     let v = l1_verdict(c, q);
     if v == 1 || v == 2 || v == 3 || v == 4 || (v == 5 && q.q17_before) { Seq::empty().push(unchanged_alt()) }
+    // without a transaction a process end keeps whatever was written before it; that set depends
+    // on the end point and is not stated here (gap disclosed in model-notes; stage C R3-01)
     else if c.txm != 0 { Seq::empty().push(any_alt()) }
     else if dev_mode(c, q) {
         Seq::empty().push(three(mx(5, c.top.ver, 1), mx(6, dep(c, 0).ver, 2), mx(6, dep(c, 1).ver, 2)))

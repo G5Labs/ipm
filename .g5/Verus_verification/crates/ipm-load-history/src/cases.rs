@@ -83,6 +83,20 @@ pub proof fn case_c26_dev_failure_keeps_phase_work() {
     }) by (compute_only);
 }
 
+pub open spec fn cfg_c27() -> Cfg { mk(1, 0, false, true, false, false, pk_act(2, 1), Seq::empty(), none3()) }
+
+/// B1-C27 (`load.outcome`, `transaction.opt-out`): a NoTransaction load whose Activate fails
+/// keeps what it wrote: the module installed with its resources, the row Committed=1; L1 holds.
+/// Control 13 (reviewer variant 15: NoTransaction ignored) breaks this lemma. Placed before the
+/// other NoTransaction lemmas (evaluation order).
+pub proof fn case_c27_notx_failure_keeps_partial() {
+    assert({
+        let s = end_of(cfg_c27());
+        s.top_err && s.ns.mods[0].present && s.ns.mods[0].res && s.ns.twins[0].com
+        && l1_ok(cfg_c27(), qprov(), s)
+    }) by (compute_only);
+}
+
 pub open spec fn cfg_c11() -> Cfg { mk(0, 0, false, true, false, false, pk(2), Seq::empty(), Seq::empty().push(inst_m(3, false)).push(mod0()).push(mod0())) }
 
 /// B1-C11: downgrade refused: no module data written, row error/Committed=0 (these clauses

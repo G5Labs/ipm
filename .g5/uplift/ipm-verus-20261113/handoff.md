@@ -2,21 +2,21 @@
 
 Initial uplift of InterSystems Package Manager (IPM) at `571e04a1` with the G5-Lean-V2 Verus guide, run on 2026-11-13. Plan, pins and assignments: [uplift-plan.md](uplift-plan.md). Verification runbook: [`../../Verus_verification/README.md`](../../Verus_verification/README.md).
 
-STATUS: DRAFT, pending the round 3 (final) review outcome.
+STATUS: complete as an initial uplift, with unresolved items. All three review rounds ran. The final round was not clean (2 material findings). Both were repaired and validated by the orchestrator, but not independently re-reviewed, because the method allows three rounds. See "Unresolved after the final round".
 
 ## What was delivered
 
 | Artifact | Path | State |
 |---|---|---|
-| Governing ontology for all of IPM, in depth for load and history | `.g5/ontology/` (18 pages, 148 blocks: 122 I, 5 D, 21 Q) | Checker clean. Fresh-reader check and round 1 and 2 repairs applied |
+| Governing ontology for all of IPM, in depth for load and history | `.g5/ontology/` (18 pages, 149 blocks: 122 I, 5 D, 22 Q) | Checker clean. Fresh-reader check and the repairs from all three review rounds applied |
 | Intent and operation inventories, capability coverage map | `A/` | Done |
-| Verus model: L1 contract, L2 as-built machine, executable twins, proofs, controls, D1 repair variant | `.g5/Verus_verification/crates/ipm-load-history/` | 260 verified, 0 errors, no trusted assumptions (`results/verus/20261113T214349Z-asbuilt-proofs-r2`). 12 controls: 11 detected on the final inputs, and control 05 survives as an equivalent mutant |
+| Verus model: L1 contract, L2 as-built machine, executable twins, proofs, controls, D1 repair variant | `.g5/Verus_verification/crates/ipm-load-history/` | 263 verified, 0 errors, no trusted assumptions (`results/verus/20261113T222933Z-asbuilt-proofs-r3`, input hashes current). 13 controls: 12 detected on the final inputs, and control 05 survives as an equivalent mutant. Final-candidate batch: 43 runs, all as expected (`20261113T223451Z`..`224441Z`) |
 | Provider premises | `.g5/Verus_verification/premises.md` | P-01..P-11 and the repair premise R-01 confirmed natively. P-12 not run |
-| Native validation in IRIS 2026.1 | `.g5/Verus_verification/native/`, `results/native/`, `B/native-report.md`, `B/native-replay.md` | 9 product suites, hypothesis cases a-g, stage C cases. 57 of 59 model cases realized: all agree with the model (1161 fields), and 23 conform to the contract while 34 violate it. 2 approximate |
+| Native validation in IRIS 2026.1 | `.g5/Verus_verification/native/`, `results/native/`, `B/native-report.md`, `B/native-replay.md` | 9 product suites, hypothesis cases a-g, stage C cases. 57 of 59 model cases realized: all agree with the model (1161 fields), and 23 conform to the final contract while 34 violate it (`cases.json` sha256 `10410864…`). 2 approximate |
 | Verification coverage map | `.g5/Verus_verification/coverage-map.md` | Final |
 | Product defects with repair proposals | `.g5/Verus_verification/bugs_issues.md` | D1-D6, D9-D20, issues I1-I2 |
 | Design simplifications | `.g5/Verus_verification/design_simplification.md` | Six proposals |
-| Reviews and dispositions | `C/round-1/`, `C/round-2/`, `C/round-3/` | Rounds 1 and 2 done and repaired. Round 3 pending |
+| Reviews and dispositions | `C/round-1/`, `C/round-2/`, `C/round-3/` | Three rounds done. Every finding was adjudicated and repaired. Round 3's repairs were not independently re-reviewed |
 
 ## Established claims (supported within scope)
 
@@ -29,7 +29,8 @@ Scope: one `load` with up to two leaf dependencies, in every transaction mode an
 - Finalized records never change, including under foreign edits (`theorem_r2`).
 - A load never removes a durable history record (`theorem_r1`). A dependency row written inside its parent's transaction is not durable until that transaction commits, so D1 is not a counterexample to this theorem.
 - Downgrade and update-required refusals write no module data in any mode. This is proved for the listed cases (`case_c11`, `case_c15`), explored exhaustively over the single-fault domain (L1-NS-ALL), and its controls 08 and 09 are detected. It is not a symbolic theorem.
-- In developer mode, a failure before the first commit rolls everything back. A failure after it keeps the manifest and, after the R2-01 repair, the phase work done before the failure. This rests on the L1-NAMESPACE clause, checked by the explorer and the case lemmas. Variant 212 (phase work rolled back) is the control.
+- In developer mode, a failure before the first commit rolls everything back. A failure after it keeps the manifest and the phase work done before the failure. This rests on the L1-NAMESPACE clause, checked by the explorer and the case lemmas (`case_c26`). Control 12 (phase work rolled back) is detected.
+- With `-DNoTransaction=1` or `-DNoJournal=1`, a failed load that returns keeps what it wrote before the failure. This rests on the L1-NAMESPACE clause (`case_c27`), and control 13 (NoTransaction ignored) is detected. At a process end without a transaction, the contract does not constrain the namespace (see Unresolved).
 
 These rest on IRIS premises P-01..P-11, which were confirmed natively. The SIGKILL rollback is delayed by slot cleanup (105 s to about 10 min observed), and during that window other processes read uncommitted data.
 
@@ -54,7 +55,8 @@ Ordered by how much they change the verdicts. Each is a Q block in the ontology,
 | Q | Ontology ID | Provisional answer | What depends on it |
 |---|---|---|---|
 | Q-17 | `load.refusal.requirements.timing` | Check system requirements before any write, in every mode | D4 |
-| Q-22 | `transaction.flag-sources.dependency-defaults` | A dependency's own `<Defaults>` NoTransaction or NoJournal applies inside its parent's transaction, so its changes escape the parent's rollback. Its record must survive. If accepted, D14 becomes intended behavior, and only its lost record (D1) remains a defect | D14 |
+| Q-22 | `transaction.flag-sources.dependency-defaults` | A dependency's own `<Defaults>` NoJournal applies inside its parent's transaction, so its changes escape the parent's rollback. Its record must survive. If accepted, D14 becomes intended behavior, and only its lost record (D1) remains a defect | D14 |
+| Q-23 | `transaction.flag-sources.dependency-no-transaction` | A dependency's own `<Defaults>` NoTransaction suppresses its parent's transaction. The product does not do this: the dependency only skips its own `tstart`, so its writes are undone with the parent. Not observed natively | an unobserved deviation (M5's NoTransaction variant not run) |
 | Q-05 / Q-06b | `history.committed.nested` | A record survives a caller's rollback. `Committed` is exact only for actions started outside a caller transaction | V8 (record lost under a caller transaction) |
 | Q-08 | `history.record.abnormal-end` | `Committed` reflects kept changes even on an unfinished record | V9 deviation (SIGKILLed dev load reads `Committed=0`) |
 | Q-21 | `history.locked.unfinished` | An unfinished record is not finalized | V10 deviation (Terminate finalizes it) |
@@ -81,10 +83,19 @@ Ordered by how much they change the verdicts. Each is a Q block in the ontology,
   - concurrent loads (Q-16, OBS-H13);
   - self-uninstall (OBS-H15);
   - the legacy XML path (OBS-L16);
+  - a dependency whose `<Defaults>` set only NoTransaction (Q-23);
   - remote or ORAS repositories as a dependency source;
   - git URL loads (OBS-L13).
 - B1-C49T and B1-C49K could only be approximated, with a debugger stall. They agree with the model but are not counted as realized.
 - Suspected, from code only: OBS-L4, L5, L7, L9, L11, L14, L15, L17, H8, H12, H13, H15 (listed in `bugs_issues.md`).
+
+## Unresolved after the final round
+
+- **Not independently reviewed.** The round 3 repairs listed under "Review rounds" were checked only by the orchestrator. A further review would start there.
+- **Process ends without a transaction.** After a SIGKILL or Terminate in a NoTransaction or NoJournal load, L1 allows any namespace state. Stating "what was written before the end" needs the end point. B1's first attempt wrongly rejected a legitimate partial write and was reverted. The product's behavior there is observed natively (B3, B4 shapes), not checked against a contract clause.
+- **Repair-mechanism ordering.** The proposed `Committed` policy needs the journaled `Committed=1` update to be the row's last write before the commit. Whether rolling back a journaled update also discards later unjournaled updates to the same stored row was not probed natively.
+- **Human decisions.** The Q blocks in the decision table. Four defect verdicts (D4, D6, D14, D18) and three deviations (under Q-05, Q-08 and Q-21) change with them.
+- **Q-23 deviation not observed.** A dependency whose `<Defaults>` set only NoTransaction was not run natively.
 
 ## Missing evidence and process record
 
@@ -106,7 +117,7 @@ Ordered by how much they change the verdicts. Each is a Q block in the ontology,
   - a reviewer's invalid control invocation.
 - **Expectation provenance.** Some phase-1 cases were evaluated against an expectations file edited after the run. They were replayed with snapshots (`20261113T184230Z-replay-fast`) or superseded by the K-variant replay, and re-evaluations sit beside the originals.
 - **Second usage-limit stop.** The orchestrator's process stopped again at about 21:35 UTC, right after the round 2 reviewer wrote its review. It resumed at 21:38 UTC from the saved review and checkout. No delegate was running, and no artifact changed in that window except the reviewer's own files.
-- **Final-candidate reruns.** After the round 2 repairs, the orchestrator reran every explorer run and every Verus control on the final inputs (`VV/crates/scripts/final-candidate-batch.sh`; receipts from `20261113T215113Z` to `20261113T215941Z`, including the sanity check). It also re-evaluated the native replays against the final `cases.json` without an IRIS run.
+- **Final-candidate reruns.** The orchestrator reran every explorer run and every Verus control on the final inputs twice, with `VV/crates/scripts/final-candidate-batch.sh`: after round 2 (`20261113T215113Z`..`215941Z`) and after round 3 (`20261113T223451Z`..`224441Z`, the final set). Both times it re-evaluated the native replays against the then-final `cases.json` without an IRIS run (`verdict-cases-<sha8>.json`).
 - **Environment.** IRIS Community hit its license connection limit once during the first History suite run. No later run logged a license or disk error.
 
 ## Review rounds
@@ -114,4 +125,10 @@ Ordered by how much they change the verdicts. Each is a Q block in the ontology,
 Rounds used: 3 of 3 (see `uplift-plan.md`).
 - Round 1: an ontology reviewer (4 material, 10 minor findings) and a model and evidence reviewer (5 material, 10 minor). All findings were accepted, five with modifications, and repaired by their owners.
 - Round 2: one fresh reviewer reproduced the runbook cold, and every result matched. It found 3 material and 8 minor findings, all accepted and repaired. These were: developer-mode phase work unconstrained in L1 (now control 12), repair proposals with no named rollback-proof write (now named and confirmed as R-01), and D14 reclassified as decision pending (Q-22).
-- Round 3: pending.
+- Round 3 (final): one fresh reviewer confirmed every round 2 repair and reproduced the final evidence (263/0 on unchanged sources, byte-identical `cases.json`, identical replay counts). It found 2 material and 7 minor findings, all accepted. The repairs were:
+  - L1 now requires NoTransaction and NoJournal failures to keep their writes, with control 13.
+  - The D1, D10 and S2 `Committed` policy now matches the checked repair variant.
+  - Q-22 was split into Q-22 (NoJournal) and Q-23 (NoTransaction).
+  - Q-15's alternatives were restored.
+  - Pointers and wording were fixed.
+  These repairs were validated by the orchestrator: checker clean, proofs 263/0, control 13 detected, the final-candidate batch, and replay re-evaluation. They were not re-reviewed independently.

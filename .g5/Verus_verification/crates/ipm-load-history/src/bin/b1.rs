@@ -83,6 +83,7 @@ fn runs() -> Vec<Run> {
     v.push(ctl("control-09-no-update-guard", 9, "UpdatePackage guard removed; L1-NS-ALL (refusal writes no module data) must fail", vec![0], vec![Check::L1NsAll], false));
     v.push(ctl("control-10-no-trigger", 10, "Finalized UPDATE trigger removed; R2 must fail", vec![0], vec![Check::R2FinalUnchanged], true));
     v.push(ctl("control-12-dev-phases-in-transaction", 12, "reviewer variant 212: -dev phases inside an inner transaction rolled back on failure; L1-NS-ALL (dev failure keeps phase work) must fail", vec![0], vec![Check::L1NsAll], false));
+    v.push(ctl("control-13-notransaction-ignored", 13, "reviewer variant 15: -DNoTransaction=1 ignored (the load runs in a transaction); L1-NS-ALL (a NoTransaction failure keeps what it wrote) must fail", vec![1], vec![Check::L1NsAll], false));
     v.push(ctl("control-11-death-keeps-transaction", 11, "process death keeps the open transaction; L1-NS-ALL must fail", vec![0], vec![Check::L1NsAll], false));
     v.push(Run { name: "diagnostic-11b-death-keeps-transaction-r3top", kind: "explore", variant: "control-11", expect: "pass",
         concern: "diagnostic, not a control: R3-top cannot fail under variant 11 (the top row is inserted at $TLEVEL 0)", txms: vec![0], callers: vec![false], var: 11,

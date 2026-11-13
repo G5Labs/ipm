@@ -475,11 +475,15 @@ pub open spec fn lnm_enter(c: Cfg, s: State, w: u8) -> State {
     set_lnm(s, w, Lnm { pc: if p.mf == 1 { 31u8 } else { 1u8 }, itl: itl, dev: false, err: p.mf == 1, nj: false, jprev: s.jrn, di: f.di })
 }
 
+/// The transaction mode the load runs in: the requested one, except under control 13 (reviewer
+/// variant 15), where `-DNoTransaction=1` is ignored.
+pub open spec fn etx(c: Cfg) -> u8 { if c.var == 13 && c.txm == 1 { 0u8 } else { c.txm } }
+
 pub open spec fn lnm_begin(c: Cfg, s: State, w: u8) -> State {
     let f = lnm_of(s, w);
     if c.txm == 2 {
         set_lnm(with_jrn(s, false), w, Lnm { pc: 2, itl: f.itl, dev: f.dev, err: f.err, nj: true, jprev: s.jrn, di: f.di })
-    } else if c.txm == 0 {
+    } else if etx(c) == 0 {
         set_lnm(tstart(c, s), w, lpc(f, 2))
     } else {
         set_lnm(s, w, lpc(f, 2))
@@ -578,7 +582,7 @@ pub open spec fn lnm_a(c: Cfg, s: State, w: u8) -> State {
     if f.pc == 0 { lnm_enter(c, s, w) }
     else if f.pc == 1 { lnm_begin(c, s, w) }
     else if f.pc == 2 { set_lnm(s, w, if guard_refuses(c, s, w) { lfail(f) } else { lpc(f, 3) }) }
-    else if f.pc == 3 { set_lnm(if c.txm != 0 && c.var != 3 { set_com(c, s, i) } else { s }, w, lpc(f, 4)) }
+    else if f.pc == 3 { set_lnm(if etx(c) != 0 && c.var != 3 { set_com(c, s, i) } else { s }, w, lpc(f, 4)) }
     else if f.pc == 4 { lnm_load(c, s, w) }
     else if f.pc == 5 { set_lnm(put_temp(s, i, t_names(gtemp(s.temp, i), p.ver)), w, lpc(f, 6)) }
     else { lnm_devsave(c, s, w) }
@@ -590,7 +594,7 @@ pub open spec fn lnm_b(c: Cfg, s: State, w: u8) -> State {
     let i = slot_of(s, w);
     let p = pkg_of(c, s, w);
     if f.pc == 7 {
-        if f.dev && c.txm == 0 { set_lnm(tcommit(c, s), w, lpc(f, 8)) } else { set_lnm(s, w, lpc(f, 10)) }
+        if f.dev && etx(c) == 0 { set_lnm(tcommit(c, s), w, lpc(f, 8)) } else { set_lnm(s, w, lpc(f, 10)) }
     }
     else if f.pc == 8 { set_lnm(if c.var != 1 { set_com(c, s, i) } else { s }, w, lpc(f, 9)) }
     else if f.pc == 9 { set_lnm(tstart(c, s), w, lpc(f, 10)) }
@@ -604,7 +608,7 @@ pub open spec fn lnm_b2(c: Cfg, s: State, w: u8) -> State {
     if f.pc == 11 { if w == 0 { lnm_deps(c, s) } else { set_lnm(s, w, lpc(f, 12)) } }
     else if f.pc == 12 { set_lnm(wmod(s, i, m_touch(gmod(s.ns.mods, i))), w, lpc(f, 13)) }
     // control 12 (reviewer variant 212): developer-mode phases run inside an inner transaction
-    else { set_lnm(if f.dev && c.txm == 0 { if c.var == 12 { tstart(c, dep_commit_mark(c, tcommit(c, s), w)) } else { dep_commit_mark(c, tcommit(c, s), w) } } else { s }, w, lpc(f, 14)) }
+    else { set_lnm(if f.dev && etx(c) == 0 { if c.var == 12 { tstart(c, dep_commit_mark(c, tcommit(c, s), w)) } else { dep_commit_mark(c, tcommit(c, s), w) } } else { s }, w, lpc(f, 14)) }
 }
 
 /// LoadNewModule phases, non-developer commit and exit (1340-1363).
@@ -612,8 +616,8 @@ pub open spec fn lnm_c(c: Cfg, s: State, w: u8) -> State {
     let f = lnm_of(s, w);
     let i = slot_of(s, w);
     if f.pc == 29 {
-        if !f.dev && c.txm == 0 { set_lnm(dep_commit_mark(c, tcommit(c, s), w), w, lpc(f, 30)) }
-        else if f.dev && c.txm == 0 && c.var == 12 { set_lnm(tcommit(c, s), w, lpc(f, 31)) }
+        if !f.dev && etx(c) == 0 { set_lnm(dep_commit_mark(c, tcommit(c, s), w), w, lpc(f, 30)) }
+        else if f.dev && etx(c) == 0 && c.var == 12 { set_lnm(tcommit(c, s), w, lpc(f, 31)) }
         else { set_lnm(s, w, lpc(f, 31)) }
     }
     else if f.pc == 30 { set_lnm(if c.var != 2 { set_com(c, s, i) } else { s }, w, lpc(f, 31)) }
@@ -776,7 +780,7 @@ pub open spec fn cfg_wf(c: Cfg) -> bool {
     &&& mod_wf(gmod(c.init, 0)) && mod_wf(gmod(c.init, 1)) && mod_wf(gmod(c.init, 2))
     &&& (gmod(c.init, 1).present ==> (c.deps.len() >= 1 && gmod(c.init, 1).ver == gpkg(c.deps, 0).ver && !gmod(c.init, 1).dev))
     &&& (gmod(c.init, 2).present ==> (c.deps.len() >= 2 && gmod(c.init, 2).ver == gpkg(c.deps, 1).ver && !gmod(c.init, 2).dev))
-    &&& (c.var == 0 || (1 <= c.var && c.var <= 12) || c.var == 102 || c.var == 103)
+    &&& (c.var == 0 || (1 <= c.var && c.var <= 13) || c.var == 102 || c.var == 103)
 }
 
 } // exec_spec_verified!
