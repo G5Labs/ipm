@@ -1,0 +1,12 @@
+set utns = $get(utns, "USER-VERIFY")
+new $namespace
+set $namespace = utns
+set rs0 = ##class(%SQL.Statement).%ExecDirect(,"SELECT MAX(ID) AS inst FROM %UnitTest_Result.TestInstance") do rs0.%Next() set inst = rs0.inst write !,"UTINSTANCE ",utns," ",inst,!
+set rs = ##class(%SQL.Statement).%ExecDirect(,"SELECT m.TestCase->Name AS tc, m.Name AS meth, m.Status AS st FROM %UnitTest_Result.TestMethod m WHERE m.TestCase->TestSuite->TestInstance = ? ORDER BY m.ID", inst)
+set pass=0, fail=0, other=0
+while rs.%Next() { write "UTMETHOD ",rs.tc," ",rs.meth," status=",rs.st,! if rs.st=1 {set pass=pass+1} elseif rs.st=0 {set fail=fail+1} else {set other=other+1} }
+write "UTSUMMARY pass=",pass," fail=",fail," other=",other,!
+set rs = ##class(%SQL.Statement).%ExecDirect(,"SELECT a.TestMethod->TestCase->Name AS tc, a.TestMethod->Name AS meth, a.Action AS act, a.Description AS d FROM %UnitTest_Result.TestAssert a WHERE a.Status = 0 AND a.TestMethod->TestCase->TestSuite->TestInstance = ?", inst)
+while rs.%Next() { write "UTFAILED ",rs.tc," ",rs.meth," ",rs.act," ",$extract(rs.d,1,300),! }
+write !,"NATIVE-END",!
+halt
