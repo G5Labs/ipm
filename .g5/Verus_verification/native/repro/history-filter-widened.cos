@@ -1,0 +1,8 @@
+write !,"CASE-BEGIN X2",!
+set rs = ##class(%SQL.Statement).%ExecDirect(,"SELECT COUNT(*) AS n FROM %IPM_General.History WHERE Version_Major = 1") do rs.%Next() write !,"OBS X2 truth=",rs.n,!
+kill filter set filter("Version_Major") = 1 set rs = ##class(%IPM.General.History).GetHistory(.filter) set n = 0 while rs.%Next() { set n = n + 1 } write !,"OBS X2 returned=",n,!
+set rs = ##class(%SQL.Statement).%ExecDirect(,"SELECT COUNT(*) AS n FROM %IPM_General.History") do rs.%Next() write !,"OBS X2 total=",rs.n,!
+zpm "history find -DVersion_Major=1 -limit 3"
+write !,"CASE-END X2",!
+write !,"NATIVE-END",!
+halt

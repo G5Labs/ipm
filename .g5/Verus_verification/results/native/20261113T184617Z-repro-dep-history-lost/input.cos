@@ -1,0 +1,10 @@
+do ##class(%IPM.Main).Shell("uninstall b2-par-actfail") do ##class(%IPM.Main).Shell("uninstall b2-dep-a1")
+write !,"CASE-BEGIN X1",!
+set c0 = +$get(^IPM.General.HistoryD) set rs = ##class(%SQL.Statement).%ExecDirect(,"SELECT MAX(ID) AS m FROM %IPM_General.History") do rs.%Next() set m0 = +rs.m
+set sc = ##class(%IPM.Main).Shell("load /home/irisowner/zpm/.native/fixtures/b2-par-actfail/1.0.0/") write !,"OBS X1 load.ok=",$system.Status.IsOK(sc),!
+set rs = ##class(%SQL.Statement).%ExecDirect(,"SELECT COUNT(*) AS n FROM %IPM_General.History WHERE Package = 'b2-dep-a1' AND ID > ?", m0) do rs.%Next() write !,"OBS X1 dep.rows=",rs.n,!
+set rs = ##class(%SQL.Statement).%ExecDirect(,"SELECT COUNT(*) AS n FROM %IPM_General.History WHERE ID > ?", m0) do rs.%Next() write !,"OBS X1 rows=",rs.n,!
+write !,"OBS X1 ids.allocated=",+$get(^IPM.General.HistoryD)-c0,!
+write !,"CASE-END X1",!
+write !,"NATIVE-END",!
+halt

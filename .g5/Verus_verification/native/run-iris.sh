@@ -7,7 +7,8 @@
 #   run-iris.sh purge-journals          delete IRIS journal files inside the container to save disk
 #   run-iris.sh down                    remove the container
 #
-# Every exec writes results/native/<UTC>-<LABEL>/ with the script, raw log, command and receipt.json.
+# Every exec writes results/native/<UTC>-<LABEL>/ with the script, raw log, command and receipt.json,
+# and inputs/ with a snapshot of native/cases/*.json (the expectations) taken before the session starts.
 # A watchdog stops the session when host free space drops below FLOOR_MB and records outcome RESOURCE.
 # A run that is stopped, times out or exits abnormally is an incomplete check, never a pass.
 set -euo pipefail
@@ -83,6 +84,11 @@ cmd_exec() {
     local out="$results/$run_id"
     mkdir -p "$out"
     cp "$script" "$out/input.cos"
+    # Snapshot the expectations as they are when the run starts, so a verdict can show they preceded it.
+    if [ -d "$here/cases" ]; then
+        mkdir -p "$out/inputs"
+        cp "$here"/cases/*.json "$out/inputs/" 2>/dev/null || true
+    fi
     # Refresh native scripts inside the export so the container sees the current helper classes.
     mkdir -p "$EXPORT/.native" && cp -r "$here/scripts/." "$EXPORT/.native/"
     [ -d "$here/fixtures" ] && cp -r "$here/fixtures" "$EXPORT/.native/"
@@ -121,7 +127,8 @@ cmd_exec() {
     local digest; digest=$(docker image inspect "$IMAGE" -f '{{.Id}}' 2>/dev/null || echo unknown)
     local base; base=$(docker image inspect "$BASE_IMAGE" -f '{{index .RepoDigests 0}}' 2>/dev/null || echo unknown)
     local script_sha; script_sha=$(sha256sum "$script" | cut -d' ' -f1)
-    local helpers_sha; helpers_sha=$( (cd "$here/scripts" && find . -type f -print0 | sort -z | xargs -0 sha256sum) | sha256sum | cut -d' ' -f1)
+    local helpers_sha; helpers_sha=$( (cd "$here/scripts" && find . -type f -print0 | sort -z | xargs -0 sha256sum) | sha256sum | cut -d' ' -f1) || true
+    local expect_sha; expect_sha=$( (cd "$out/inputs" 2>/dev/null && find . -type f -print0 | sort -z | xargs -0 sha256sum) | sha256sum | cut -d' ' -f1) || true
     cat > "$out/receipt.json" <<EOF
 {
   "run_id": "$run_id",
@@ -141,6 +148,7 @@ cmd_exec() {
   "container": "$NAME",
   "script_sha256": "$script_sha",
   "helpers_sha256": "$helpers_sha",
+  "expectations_snapshot_sha256": "$expect_sha",
   "substantive_verdict": "see verdict.json written by the check's evaluator; process_outcome alone is not a verdict"
 }
 EOF

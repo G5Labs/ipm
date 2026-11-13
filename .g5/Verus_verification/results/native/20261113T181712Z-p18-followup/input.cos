@@ -1,0 +1,5 @@
+write !,"OBS N-P18-followup job.listed=",$data(^$JOB(3292)),!
+set rs = ##class(%SQL.Statement).%ExecDirect(,"SELECT Pid, State, Routine, InTransaction, JobType FROM %SYS.ProcessQuery WHERE Pid = 3292") if rs.%SQLCODE<0 { write !,"OBS N-P18-followup pq.sqlerror=",rs.%SQLCODE," ",rs.%Message,! } else { set found=0 while rs.%Next() { set found=1 write !,"OBS N-P18-followup pq.state=",rs.State,! write !,"OBS N-P18-followup pq.intransaction=",rs.InTransaction,! write !,"OBS N-P18-followup pq.routine=",rs.Routine,! } write !,"OBS N-P18-followup pq.found=",found,! }
+write !,"OBS N-P18-followup now=",$zdatetime($h,3),!
+write !,"NATIVE-END",!
+halt

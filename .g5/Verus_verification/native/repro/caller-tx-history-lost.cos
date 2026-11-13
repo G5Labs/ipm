@@ -1,0 +1,11 @@
+do ##class(%IPM.Main).Shell("uninstall b2-ctx-rb")
+write !,"CASE-BEGIN X7",!
+set rs = ##class(%SQL.Statement).%ExecDirect(,"SELECT MAX(ID) AS m FROM %IPM_General.History") do rs.%Next() set m0 = +rs.m
+tstart
+set sc = ##class(%IPM.Main).Shell("load /home/irisowner/zpm/.native/fixtures/b2-ctx-rb/1.0.0/") write !,"OBS X7 load.ok=",$system.Status.IsOK(sc),!
+trollback
+set rs = ##class(%SQL.Statement).%ExecDirect(,"SELECT COUNT(*) AS n FROM %IPM_General.History WHERE ID > ?", m0) do rs.%Next() write !,"OBS X7 rows=",rs.n,!
+write !,"OBS X7 mod.exists=",##class(%IPM.Storage.Module).NameExists("b2-ctx-rb"),!
+write !,"CASE-END X7",!
+write !,"NATIVE-END",!
+halt

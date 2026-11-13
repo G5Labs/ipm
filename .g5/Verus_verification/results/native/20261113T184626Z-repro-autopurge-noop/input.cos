@@ -1,0 +1,11 @@
+write !,"CASE-BEGIN X4",!
+set h = ##class(%IPM.General.History).%New() set h.Action = "load", h.Package = "b2-repro-old", h.CommandString = "repro", h.Version = ##class(%IPM.General.SemanticVersion).FromString("1.0.0"), h.TimeStart = $zdatetime(($horolog-40)_",0", 3), h.Finalized = 1 do h.%Save() set old = h.%Id() kill h
+set sc = ##class(%IPM.Main).Shell("config set HistoryRetain 30")
+new $namespace set $namespace = "%SYS" kill ^IPM.settings("history_retain","lastPurge") set $namespace = "USER"
+set sc = ##class(%IPM.Main).Shell("version") write !,"OBS X4 trigger.ok=",$system.Status.IsOK(sc),!
+write !,"OBS X4 old.exists=",##class(%IPM.General.History).%ExistsId(old),!
+write !,"OBS X4 lastpurge.is.today=",(##class(%IPM.General.History).GetHistoryLastPurge() = +$horolog),!
+set sc = ##class(%IPM.Main).Shell("config set HistoryRetain 0") do ##class(%IPM.General.History).%DeleteId(old)
+write !,"CASE-END X4",!
+write !,"NATIVE-END",!
+halt

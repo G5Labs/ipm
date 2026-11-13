@@ -1,0 +1,89 @@
+{
+  "run_id": "20261113T181225Z-premise-p18-sigkill",
+  "label": "premise-p18-sigkill",
+  "process_outcome": "COMPLETED",
+  "environment_flags": [],
+  "duplicate_observations": [],
+  "expected_files": [
+    {
+      "path": "../../../native/cases/expected-premises-2.json",
+      "sha256": "38f69a56c914bbb5bb801df16f1cc3053f632e9f86e9789c5d866f3ddb1d3669",
+      "mtime_utc": "2026-11-13T18:12:25Z",
+      "written_before_run": false,
+      "group": "premises-2"
+    }
+  ],
+  "substantive_verdict": "PARTIAL",
+  "case_verdict_counts": {
+    "INCOMPLETE": 1
+  },
+  "cases": {
+    "N-P18": {
+      "kind": "premise",
+      "claim": "When a process holding an object and an open transaction is killed with SIGKILL, %OnClose does not run and IRIS still rolls back its open transaction; the instance keeps accepting transactions.",
+      "hypothesis": null,
+      "maps_to": [
+        "A2 P-6",
+        "intent INT-HIST-03, Q-08, 2.3 abnormal termination"
+      ],
+      "verdict": "INCOMPLETE",
+      "mismatched_fields": [
+        "closed",
+        "after.data"
+      ],
+      "missing_fields": [],
+      "harness_failed_fields": [
+        "kill.rc"
+      ],
+      "case_markers_complete": true,
+      "fields": {
+        "signal": {
+          "expected": "1",
+          "source": "harness",
+          "observed": "1",
+          "match": true
+        },
+        "dirty.read.data": {
+          "expected": "1",
+          "source": "harness",
+          "observed": "1",
+          "match": true
+        },
+        "kill.rc": {
+          "expected": "0",
+          "source": "harness",
+          "observed": "127",
+          "match": false
+        },
+        "gone": {
+          "expected": "1",
+          "source": "harness",
+          "observed": "1",
+          "match": true
+        },
+        "closed": {
+          "expected": "0",
+          "source": "no ObjectScript runs in a SIGKILLed process",
+          "observed": "1",
+          "match": false
+        },
+        "after.data": {
+          "expected": "0",
+          "source": "A2 P-6",
+          "observed": "1",
+          "match": false
+        },
+        "health.tx.ok": {
+          "expected": "1",
+          "source": "harness",
+          "observed": "1",
+          "match": true
+        }
+      },
+      "unexpected_observations": {}
+    }
+  },
+  "mutation_controls": [],
+  "evaluated_utc": "2026-11-13T18:14:41Z",
+  "evaluator": "native/evaluate.py"
+}

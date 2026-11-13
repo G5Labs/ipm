@@ -1,0 +1,187 @@
+{
+ "group": "repro",
+ "written_utc": "2026-11-13T18:46:17Z",
+ "note": "Minimal reproductions of confirmed deviations. expect = governing intent; predicted_as_built = the earlier native observation. A DEVIATES verdict with matched prediction means the defect reproduced.",
+ "cases": {
+  "X1": {
+   "kind": "case",
+   "claim": "repro: non-dev parent fails after its dependency loaded; the dependency's history record must survive (dependency record lost).",
+   "fields": {
+    "load.ok": {
+     "expect": "0",
+     "source": "fixture"
+    },
+    "dep.rows": {
+     "expect": "1",
+     "source": "INT-HIST-02, INT-HIST-08, Q-06 provisional",
+     "predicted_as_built": "0",
+     "prediction_source": "cases A1/A2/A3"
+    },
+    "rows": {
+     "expect": null,
+     "source": "observation"
+    },
+    "ids.allocated": {
+     "expect": null,
+     "source": "observation"
+    }
+   }
+  },
+  "X2": {
+   "kind": "case",
+   "claim": "repro: GetHistory with filter Version_Major=1 returns only matching rows (filter silently dropped).",
+   "fields": {
+    "returned": {
+     "expect": {
+      "eq_field": "truth"
+     },
+     "source": "INT-HIST-10; wiki/09 L112",
+     "predicted_as_built": {
+      "eq_field": "total"
+     },
+     "prediction_source": "case E1"
+    },
+    "truth": {
+     "expect": null,
+     "source": "SQL truth"
+    },
+    "total": {
+     "expect": null,
+     "source": "SQL truth"
+    }
+   }
+  },
+  "X3": {
+   "kind": "case",
+   "claim": "repro: history delete -DVersion_Major=99 without -confirm deletes only matching rows (deletes the whole namespace history).",
+   "fields": {
+    "delete.ok": {
+     "expect": "1",
+     "source": "INT-HIST-12"
+    },
+    "total.after": {
+     "expect": {
+      "eq_field": "total.before"
+     },
+     "source": "INT-HIST-10/-12, Q-10 provisional (no row has Version_Major=99)",
+     "predicted_as_built": "0",
+     "prediction_source": "case E4"
+    },
+    "truth": {
+     "expect": "0",
+     "source": "harness",
+     "harness": true
+    },
+    "total.before": {
+     "expect": null,
+     "source": "SQL truth"
+    },
+    "total.restored": {
+     "expect": {
+      "eq_field": "total.before"
+     },
+     "source": "harness",
+     "harness": true
+    }
+   }
+  },
+  "X4": {
+   "kind": "case",
+   "claim": "repro: with HistoryRetain=30 and lastPurge cleared, the next command purges a 40-day-old record (purge deletes nothing yet stamps lastPurge).",
+   "fields": {
+    "trigger.ok": {
+     "expect": "1",
+     "source": "INT-HIST-13"
+    },
+    "old.exists": {
+     "expect": "0",
+     "source": "INT-HIST-13",
+     "predicted_as_built": "1",
+     "prediction_source": "case F1"
+    },
+    "lastpurge.is.today": {
+     "expect": "1",
+     "source": "INT-HIST-13"
+    }
+   }
+  },
+  "X5": {
+   "kind": "case",
+   "claim": "repro: config delete HistoryRetain after set 7 and set 0 on a fresh key returns to the default 0 (returns 7).",
+   "fields": {
+    "after.delete": {
+     "expect": [
+      "0",
+      ""
+     ],
+     "source": "INT-HIST-13 ('0, the default, disables it')",
+     "predicted_as_built": "7",
+     "prediction_source": "case F0"
+    }
+   }
+  },
+  "X6": {
+   "kind": "case",
+   "claim": "repro: load -dev of a module that requires %SYS, in USER, leaves no module record and an uncommitted history record (manifest kept, Committed=1).",
+   "fields": {
+    "load.ok": {
+     "expect": "0",
+     "source": "INT-LOAD-11"
+    },
+    "mod.exists": {
+     "expect": "0",
+     "source": "INT-LOAD-11; Q-17 provisional",
+     "predicted_as_built": "1",
+     "prediction_source": "case B2"
+    },
+    "committed": {
+     "expect": "0",
+     "source": "INT-HIST-05",
+     "predicted_as_built": "1",
+     "prediction_source": "case B2"
+    }
+   }
+  },
+  "X7": {
+   "kind": "case",
+   "claim": "repro: a load inside a caller transaction that the caller rolls back still leaves its history record (record vanishes).",
+   "fields": {
+    "load.ok": {
+     "expect": "1",
+     "source": "INT-LOAD-01"
+    },
+    "rows": {
+     "expect": "1",
+     "source": "INT-LOAD-17; INT-HIST-02; Q-05 open",
+     "predicted_as_built": "0",
+     "prediction_source": "case D1"
+    },
+    "mod.exists": {
+     "expect": "0",
+     "source": "N-P03"
+    }
+   }
+  },
+  "X8": {
+   "kind": "case",
+   "claim": "repro: an Activate-phase Invoke that returns an error leaves the Activate phase ended with its error (phase left open).",
+   "fields": {
+    "load.ok": {
+     "expect": "0",
+     "source": "fixture"
+    },
+    "last.phase": {
+     "expect": "Activate",
+     "source": "harness",
+     "harness": true
+    },
+    "last.phase.ended": {
+     "expect": "1",
+     "source": "Q-14 provisional; wiki/09 L135-161",
+     "predicted_as_built": "0",
+     "prediction_source": "case H1"
+    }
+   }
+  }
+ }
+}

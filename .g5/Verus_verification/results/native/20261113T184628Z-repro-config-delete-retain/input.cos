@@ -1,0 +1,10 @@
+write !,"CASE-BEGIN X5",!
+new $namespace set $namespace = "%SYS" kill ^IRIS.Temp.B2Repro merge ^IRIS.Temp.B2Repro = ^IPM.settings("history_retain") kill ^IPM.settings("history_retain") set $namespace = "USER"
+zpm "config set HistoryRetain 7"
+zpm "config set HistoryRetain 0"
+zpm "config delete HistoryRetain"
+write !,"OBS X5 after.delete=",##class(%IPM.Repo.UniversalSettings).GetHistoryRetain(),!
+set $namespace = "%SYS" kill ^IPM.settings("history_retain") merge ^IPM.settings("history_retain") = ^IRIS.Temp.B2Repro kill ^IRIS.Temp.B2Repro set $namespace = "USER"
+write !,"CASE-END X5",!
+write !,"NATIVE-END",!
+halt

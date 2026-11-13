@@ -1,0 +1,397 @@
+{
+  "run_id": "20261113T184444Z-cases-hr",
+  "label": "cases-hr",
+  "process_outcome": "COMPLETED",
+  "environment_flags": [],
+  "duplicate_observations": [],
+  "expected_files": [
+    {
+      "path": "../../../native/cases/expected-cases.json",
+      "sha256": "960b295d26afb728087a8b787f221dde00d6f3825a7523f594fb1bd6f10064cb",
+      "mtime_utc": "2026-11-13T18:44:44Z",
+      "evaluated_from": "inputs/expected-cases.json",
+      "snapshot_sha256": "960b295d26afb728087a8b787f221dde00d6f3825a7523f594fb1bd6f10064cb",
+      "snapshot_matches_current": true,
+      "written_before_run": true,
+      "group": "cases a-g"
+    }
+  ],
+  "substantive_verdict": "EVALUATED",
+  "case_verdict_counts": {
+    "DEVIATES": 1,
+    "CONFORMS": 4
+  },
+  "cases": {
+    "H1": {
+      "kind": "case",
+      "claim": "A load whose Activate-phase Invoke returns an error records the Activate phase as ended with that error.",
+      "hypothesis": "Q-14",
+      "maps_to": null,
+      "verdict": "DEVIATES",
+      "mismatched_fields": [
+        "hist.row1.Phases"
+      ],
+      "missing_fields": [],
+      "harness_failed_fields": [],
+      "case_markers_complete": true,
+      "fields": {
+        "load.ok": {
+          "expected": "0",
+          "source": "fixture",
+          "observed": "0",
+          "match": true
+        },
+        "mod.exists": {
+          "expected": "0",
+          "source": "INT-LOAD-08",
+          "observed": "0",
+          "match": true
+        },
+        "hist.rows": {
+          "expected": "1",
+          "source": "INT-LOAD-17",
+          "observed": "1",
+          "match": true
+        },
+        "hist.row1.SuccessKind": {
+          "expected": "ERR",
+          "source": "INT-HIST-02",
+          "observed": "ERR",
+          "match": true
+        },
+        "hist.row1.Committed": {
+          "expected": "0",
+          "source": "INT-HIST-05",
+          "observed": "0",
+          "match": true
+        },
+        "hist.row1.Phases": {
+          "expected": {
+            "re": ".*Activate:ended:ERR$"
+          },
+          "source": "Q-14 provisional (every started phase ends with its status); wiki/09 L135-161 reads an open phase as never finished",
+          "observed": "Initialize:ended:OK,Reload:ended:OK,Validate:ended:OK,Compile:ended:OK,Activate:open:ZERO",
+          "match": false,
+          "predicted_as_built": {
+            "re": ".*Activate:open:.*"
+          },
+          "prediction_source": "A2 OBS-H14 (quit:$$$ISERR in the Invoke loops bypasses FinalizePhase)",
+          "matches_prediction": true
+        },
+        "temp.rows": {
+          "expected": "0",
+          "source": "intent 3.3",
+          "observed": "0",
+          "match": true
+        }
+      },
+      "unexpected_observations": {
+        "load.err": "ERROR #5001: b2 deliberate failure in b2-invoke-activate",
+        "load.tlevel": "0",
+        "hist.row1.ID": "99",
+        "hist.row1.Action": "load",
+        "hist.row1.Package": "b2-invoke-activate",
+        "hist.row1.Version": "1.0.0",
+        "hist.row1.SuccessText": "ERR:ERROR #5001: b2 deliberate failure in b2-invoke-activate",
+        "hist.row1.Finalized": "1",
+        "hist.row1.TimeEndSet": "1",
+        "hist.row1.SourceName": "",
+        "hist.row1.CommandString": "load /home/irisowner/zpm/.native/fixtures/b2-invoke-activate/1.0.0/"
+      },
+      "as_built_prediction": {
+        "fields": 1,
+        "matched": 1,
+        "verdict": "CONFIRMED"
+      }
+    },
+    "R1": {
+      "kind": "case",
+      "claim": "`history details -phases` for the C1 row (non-dev load ended by Terminate).",
+      "hypothesis": "c (reader)",
+      "maps_to": null,
+      "verdict": "CONFORMS",
+      "mismatched_fields": [],
+      "missing_fields": [],
+      "harness_failed_fields": [],
+      "case_markers_complete": true,
+      "fields": {
+        "row.id": {
+          "expected": {
+            "re": "\\d+"
+          },
+          "source": "harness",
+          "observed": "97",
+          "match": true
+        },
+        "details.ok": {
+          "expected": "1",
+          "source": "INT-HIST-10",
+          "observed": "1",
+          "match": true
+        },
+        "det.Version": {
+          "expected": "<unset>",
+          "source": "intent 3.2 (placeholder shown as <unset>; wiki/09 L70)",
+          "observed": "<unset>",
+          "match": true
+        },
+        "det.Committed": {
+          "expected": "Uncommitted",
+          "source": "INT-HIST-05 (nothing kept)",
+          "observed": "Uncommitted",
+          "match": true
+        },
+        "det.Success": {
+          "expected": "0",
+          "source": "wiki/09 L73, L110 ('0 while in progress')",
+          "observed": "0",
+          "match": true
+        },
+        "det.Time": {
+          "expected": {
+            "re": ".*Ended At\\s*"
+          },
+          "source": "INT-HIST-03 (empty end time)",
+          "observed": "Started At 2026-11-13 18:42:46; Ended At",
+          "match": true
+        },
+        "sql.timeend.null": {
+          "expected": "1",
+          "source": "INT-HIST-03",
+          "observed": "1",
+          "match": true
+        },
+        "det.Package": {
+          "expected": null,
+          "source": "observation",
+          "observed": "",
+          "match": null
+        }
+      },
+      "unexpected_observations": {
+        "det.ID": "97",
+        "det.Action": "load",
+        "det.UserName": "irisowner",
+        "det.CommandString": "load /home/irisowner/zpm/.native/fixtures/b2-hang-nd/1.0.0/",
+        "det.Source": "n/a"
+      }
+    },
+    "R2": {
+      "kind": "case",
+      "claim": "`history details -phases` for the C2 row (dev load ended by Terminate after its commits).",
+      "hypothesis": "c (reader)",
+      "maps_to": null,
+      "verdict": "CONFORMS",
+      "mismatched_fields": [],
+      "missing_fields": [],
+      "harness_failed_fields": [],
+      "case_markers_complete": true,
+      "fields": {
+        "row.id": {
+          "expected": {
+            "re": "\\d+"
+          },
+          "source": "harness",
+          "observed": "98",
+          "match": true
+        },
+        "details.ok": {
+          "expected": "1",
+          "source": "INT-HIST-10",
+          "observed": "1",
+          "match": true
+        },
+        "det.Committed": {
+          "expected": "Committed",
+          "source": "INT-HIST-05 (manifest and classes kept)",
+          "observed": "Committed",
+          "match": true
+        },
+        "det.Success": {
+          "expected": "0",
+          "source": "wiki/09 ('0 while in progress'); INT-HIST-03",
+          "observed": "0",
+          "match": true
+        },
+        "det.phase.Activate": {
+          "expected": {
+            "re": "open\\|.*"
+          },
+          "source": "wiki/09 L135-161 ('A phase with no elapsed time never finished')",
+          "observed": "open|ERROR #00: (no error description)",
+          "match": true
+        },
+        "sql.timeend.null": {
+          "expected": "1",
+          "source": "INT-HIST-03",
+          "observed": "1",
+          "match": true
+        },
+        "det.Version": {
+          "expected": null,
+          "source": "observation",
+          "observed": "v1.0.0",
+          "match": null
+        },
+        "det.Package": {
+          "expected": null,
+          "source": "observation",
+          "observed": "b2-hang-dev",
+          "match": null
+        }
+      },
+      "unexpected_observations": {
+        "det.ID": "98",
+        "det.Action": "load",
+        "det.UserName": "irisowner",
+        "det.Time": "Started At 2026-11-13 18:42:49; Ended At",
+        "det.CommandString": "load -dev /home/irisowner/zpm/.native/fixtures/b2-hang-dev/1.0.0/",
+        "det.Source": "n/a",
+        "det.phase.Initialize": "ended|Success",
+        "det.phase.Reload": "ended|Success",
+        "det.phase.Validate": "ended|Success",
+        "det.phase.Compile": "ended|Success"
+      }
+    },
+    "R3": {
+      "kind": "case",
+      "claim": "`history details` for the refused newer-version load (g3).",
+      "hypothesis": "g (reader)",
+      "maps_to": null,
+      "verdict": "CONFORMS",
+      "mismatched_fields": [],
+      "missing_fields": [],
+      "harness_failed_fields": [],
+      "case_markers_complete": true,
+      "fields": {
+        "row.id": {
+          "expected": {
+            "re": "\\d+"
+          },
+          "source": "harness",
+          "observed": "85",
+          "match": true
+        },
+        "details.ok": {
+          "expected": "1",
+          "source": "INT-HIST-10",
+          "observed": "1",
+          "match": true
+        },
+        "det.Committed": {
+          "expected": "Uncommitted",
+          "source": "INT-HIST-05",
+          "observed": "Uncommitted",
+          "match": true
+        },
+        "det.Package": {
+          "expected": null,
+          "source": "observation (intent 3.2 Package: empty until the manifest is read)",
+          "observed": "",
+          "match": null
+        },
+        "det.Version": {
+          "expected": null,
+          "source": "observation",
+          "observed": "<unset>",
+          "match": null
+        },
+        "det.Success": {
+          "expected": null,
+          "source": "observation (detail view prints the raw Success value)",
+          "observed": "<raw %Status, 617 chars>",
+          "match": null
+        }
+      },
+      "unexpected_observations": {
+        "det.ID": "85",
+        "det.Action": "load",
+        "det.UserName": "irisowner",
+        "det.Time": "Started At 2026-11-13 18:42:44; Ended At 2026-11-13 18:42:44",
+        "det.CommandString": "load /home/irisowner/zpm/tests/integration_tests/Test/PM/Integration/_data/update-test/update-modules-2.x/update-simple/",
+        "det.Source": "n/a",
+        "sql.timeend.null": "0"
+      }
+    },
+    "R4": {
+      "kind": "case",
+      "claim": "`history find -DPackage=update-simple` returns the rows whose Package column is update-simple.",
+      "hypothesis": "g (reader)",
+      "maps_to": null,
+      "verdict": "CONFORMS",
+      "mismatched_fields": [],
+      "missing_fields": [],
+      "harness_failed_fields": [],
+      "case_markers_complete": true,
+      "fields": {
+        "find.ok": {
+          "expected": "1",
+          "source": "INT-HIST-10",
+          "observed": "1",
+          "match": true
+        },
+        "shown": {
+          "expected": {
+            "eq_field": "truth.package"
+          },
+          "source": "INT-HIST-10",
+          "observed": "14",
+          "match": true
+        },
+        "truth.package": {
+          "expected": null,
+          "source": "SQL truth",
+          "observed": "14",
+          "match": null
+        },
+        "truth.attempts": {
+          "expected": null,
+          "source": "SQL truth: rows whose command names update-simple",
+          "observed": "20",
+          "match": null
+        }
+      },
+      "unexpected_observations": {}
+    }
+  },
+  "mutation_controls": [
+    {
+      "mutation": "H1:hist.row1.Phases=x,Activate:ended:ERR",
+      "original_observed": "Initialize:ended:OK,Reload:ended:OK,Validate:ended:OK,Compile:ended:OK,Activate:open:ZERO",
+      "verdict_before": "DEVIATES",
+      "verdict_after": "CONFORMS",
+      "field_match_before": false,
+      "field_match_after": true,
+      "detected": true
+    },
+    {
+      "mutation": "R1:det.Version=v1.0.0",
+      "original_observed": "<unset>",
+      "verdict_before": "CONFORMS",
+      "verdict_after": "DEVIATES",
+      "field_match_before": true,
+      "field_match_after": false,
+      "detected": true
+    },
+    {
+      "mutation": "R2:det.Committed=Uncommitted",
+      "original_observed": "Committed",
+      "verdict_before": "CONFORMS",
+      "verdict_after": "DEVIATES",
+      "field_match_before": true,
+      "field_match_after": false,
+      "detected": true
+    },
+    {
+      "mutation": "R4:shown=0",
+      "original_observed": "14",
+      "verdict_before": "CONFORMS",
+      "verdict_after": "DEVIATES",
+      "field_match_before": true,
+      "field_match_after": false,
+      "detected": true
+    }
+  ],
+  "evaluated_utc": "2026-11-13T18:44:46Z",
+  "evaluator": "native/evaluate.py"
+}

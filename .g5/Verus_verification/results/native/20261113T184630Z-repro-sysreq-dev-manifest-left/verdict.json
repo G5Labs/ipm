@@ -1,0 +1,74 @@
+{
+  "run_id": "20261113T184630Z-repro-sysreq-dev-manifest-left",
+  "label": "repro-sysreq-dev-manifest-left",
+  "process_outcome": "COMPLETED",
+  "environment_flags": [],
+  "duplicate_observations": [],
+  "expected_files": [
+    {
+      "path": "../../../native/cases/expected-repro.json",
+      "sha256": "875b9f71246632c8658cac26f21dda76ef98b64fb8563ddacb46ffed9d2f4b59",
+      "mtime_utc": "2026-11-13T18:46:17Z",
+      "evaluated_from": "inputs/expected-repro.json",
+      "snapshot_sha256": "875b9f71246632c8658cac26f21dda76ef98b64fb8563ddacb46ffed9d2f4b59",
+      "snapshot_matches_current": true,
+      "written_before_run": true,
+      "group": "repro"
+    }
+  ],
+  "substantive_verdict": "EVALUATED",
+  "case_verdict_counts": {
+    "DEVIATES": 1
+  },
+  "cases": {
+    "X6": {
+      "kind": "case",
+      "claim": "repro: load -dev of a module that requires %SYS, in USER, leaves no module record and an uncommitted history record (manifest kept, Committed=1).",
+      "hypothesis": null,
+      "maps_to": null,
+      "verdict": "DEVIATES",
+      "mismatched_fields": [
+        "mod.exists",
+        "committed"
+      ],
+      "missing_fields": [],
+      "harness_failed_fields": [],
+      "case_markers_complete": true,
+      "fields": {
+        "load.ok": {
+          "expected": "0",
+          "source": "INT-LOAD-11",
+          "observed": "0",
+          "match": true
+        },
+        "mod.exists": {
+          "expected": "0",
+          "source": "INT-LOAD-11; Q-17 provisional",
+          "observed": "1",
+          "match": false,
+          "predicted_as_built": "1",
+          "prediction_source": "case B2",
+          "matches_prediction": true
+        },
+        "committed": {
+          "expected": "0",
+          "source": "INT-HIST-05",
+          "observed": "1",
+          "match": false,
+          "predicted_as_built": "1",
+          "prediction_source": "case B2",
+          "matches_prediction": true
+        }
+      },
+      "unexpected_observations": {},
+      "as_built_prediction": {
+        "fields": 2,
+        "matched": 2,
+        "verdict": "CONFIRMED"
+      }
+    }
+  },
+  "mutation_controls": [],
+  "evaluated_utc": "2026-11-13T18:46:32Z",
+  "evaluator": "native/evaluate.py"
+}

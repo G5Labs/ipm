@@ -1,0 +1,7 @@
+write !,"CASE-BEGIN X8",!
+set sc = ##class(%IPM.Main).Shell("load /home/irisowner/zpm/.native/fixtures/b2-invoke-activate/1.0.0/") write !,"OBS X8 load.ok=",$system.Status.IsOK(sc),!
+set rs = ##class(%SQL.Statement).%ExecDirect(,"SELECT TOP 1 ID, Phases FROM %IPM_General.History WHERE Package = 'b2-invoke-activate' ORDER BY ID DESC") do rs.%Next() set id = rs.ID, ph = $listget($listget(rs.Phases, $listlength(rs.Phases)), 1) write !,"OBS X8 last.phase=",$listget(ph,1),!,"OBS X8 last.phase.ended=",($listget(ph,3)'=""),!
+do ##class(%IPM.Main).Shell("history details "_id_" -phases")
+write !,"CASE-END X8",!
+write !,"NATIVE-END",!
+halt

@@ -1,0 +1,10 @@
+do ##class(%IPM.Main).Shell("uninstall b2-sysreq-dev")
+write !,"CASE-BEGIN X6",!
+set sc = ##class(%IPM.Main).Shell("load -dev /home/irisowner/zpm/.native/fixtures/b2-sysreq-dev/1.0.0/") write !,"OBS X6 load.ok=",$system.Status.IsOK(sc),!
+write !,"OBS X6 mod.exists=",##class(%IPM.Storage.Module).NameExists("b2-sysreq-dev"),!
+set rs = ##class(%SQL.Statement).%ExecDirect(,"SELECT TOP 1 Committed FROM %IPM_General.History WHERE Package = 'b2-sysreq-dev' ORDER BY ID DESC") do rs.%Next() write !,"OBS X6 committed=",rs.Committed,!
+zpm "list-installed b2-sysreq-dev"
+write !,"CASE-END X6",!
+do ##class(%IPM.Main).Shell("uninstall b2-sysreq-dev")
+write !,"NATIVE-END",!
+halt

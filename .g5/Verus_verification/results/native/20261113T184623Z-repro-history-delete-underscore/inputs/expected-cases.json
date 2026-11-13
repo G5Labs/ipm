@@ -1,0 +1,2149 @@
+{
+ "group": "cases a-g",
+ "written_utc": "2026-11-13T18:27:23Z",
+ "note": "Expected values come from A1 intent-inventory commitments (INT-*) and provisional options of open questions (Q-*). predicted_as_built carries the code-read prediction from A1 (d) notes or A2 observations, compared separately. A null expect is an observation without a claim; a harness field failing makes the case INCOMPLETE. F0 added before any case run.",
+ "cases": {
+  "A0": {
+   "kind": "case",
+   "hypothesis": "a (neighbour valid completion)",
+   "claim": "Non-dev load of a parent with one dependency from .modules succeeds; each module has its own finalized, committed record.",
+   "fields": {
+    "load.ok": {
+     "expect": "1",
+     "source": "INT-LOAD-01"
+    },
+    "par.exists": {
+     "expect": "1",
+     "source": "INT-LOAD-01"
+    },
+    "par.dev": {
+     "expect": "0",
+     "source": "INT-LOAD-05"
+    },
+    "dep.exists": {
+     "expect": "1",
+     "source": "INT-LOAD-01, INT-LOAD-14"
+    },
+    "dep.dev": {
+     "expect": "0",
+     "source": "INT-LOAD-07"
+    },
+    "par.cls.compiled": {
+     "expect": "1",
+     "source": "INT-LOAD-01"
+    },
+    "dep.cls.compiled": {
+     "expect": "1",
+     "source": "INT-LOAD-01"
+    },
+    "par.hist.rows": {
+     "expect": "1",
+     "source": "INT-LOAD-17"
+    },
+    "dep.hist.rows": {
+     "expect": "1",
+     "source": "INT-HIST-08"
+    },
+    "par.hist.row1.SuccessKind": {
+     "expect": "OK",
+     "source": "INT-HIST-04/05, intent 3.3"
+    },
+    "par.hist.row1.Committed": {
+     "expect": "1",
+     "source": "INT-HIST-04/05, intent 3.3"
+    },
+    "par.hist.row1.Finalized": {
+     "expect": "1",
+     "source": "INT-HIST-04/05, intent 3.3"
+    },
+    "par.hist.row1.TimeEndSet": {
+     "expect": "1",
+     "source": "INT-HIST-04/05, intent 3.3"
+    },
+    "par.hist.row1.Version": {
+     "expect": "1.0.0",
+     "source": "INT-HIST-04/05, intent 3.3"
+    },
+    "par.hist.row1.Action": {
+     "expect": "load",
+     "source": "INT-HIST-04/05, intent 3.3"
+    },
+    "dep.hist.row1.SuccessKind": {
+     "expect": "OK",
+     "source": "INT-HIST-08 (dependency of load reads 'load'), INT-HIST-05"
+    },
+    "dep.hist.row1.Committed": {
+     "expect": "1",
+     "source": "INT-HIST-08 (dependency of load reads 'load'), INT-HIST-05"
+    },
+    "dep.hist.row1.Finalized": {
+     "expect": "1",
+     "source": "INT-HIST-08 (dependency of load reads 'load'), INT-HIST-05"
+    },
+    "dep.hist.row1.Action": {
+     "expect": "load",
+     "source": "INT-HIST-08 (dependency of load reads 'load'), INT-HIST-05"
+    },
+    "temp.rows": {
+     "expect": "0",
+     "source": "intent 3.3 valid completion: no HistoryTemp rows left"
+    }
+   }
+  },
+  "A1": {
+   "kind": "case",
+   "hypothesis": "a",
+   "claim": "Non-dev parent fails in Activate after its dependency loaded: everything rolls back, and the dependency's record survives reading uncommitted.",
+   "fields": {
+    "load.ok": {
+     "expect": "0",
+     "source": "INT-LOAD-08"
+    },
+    "load.err": {
+     "expect": {
+      "re": ".*b2 deliberate failure in b2-par-actfail.*"
+     },
+     "source": "fixture"
+    },
+    "par.exists": {
+     "expect": "0",
+     "source": "INT-LOAD-08 'a failure rolls the namespace back'"
+    },
+    "dep.exists": {
+     "expect": "0",
+     "source": "INT-LOAD-08"
+    },
+    "par.cls.compiled": {
+     "expect": "0",
+     "source": "INT-LOAD-08"
+    },
+    "dep.cls.compiled": {
+     "expect": "0",
+     "source": "INT-LOAD-08"
+    },
+    "par.hist.rows": {
+     "expect": "1",
+     "source": "INT-LOAD-17, INT-HIST-02"
+    },
+    "par.hist.row1.SuccessKind": {
+     "expect": "ERR",
+     "source": "INT-HIST-02/05"
+    },
+    "par.hist.row1.Committed": {
+     "expect": "0",
+     "source": "INT-HIST-02/05"
+    },
+    "par.hist.row1.Finalized": {
+     "expect": "1",
+     "source": "INT-HIST-02/05"
+    },
+    "par.hist.row1.TimeEndSet": {
+     "expect": "1",
+     "source": "INT-HIST-02/05"
+    },
+    "dep.hist.rows": {
+     "expect": "1",
+     "source": "INT-HIST-02 'record survives the action's rollback', INT-HIST-08, Q-06 provisional (must survive)",
+     "predicted_as_built": "0",
+     "prediction_source": "A2 OBS-L1 / OBS-H5 (dependency twin insert and persist run inside the parent's transaction)"
+    },
+    "dep.hist.row1.Committed": {
+     "expect": "0",
+     "source": "INT-HIST-05 (its changes were rolled back by the parent)",
+     "when": {
+      "field": "dep.hist.rows",
+      "expect": "1"
+     }
+    },
+    "temp.rows": {
+     "expect": "0",
+     "source": "intent 3.3"
+    },
+    "ids.allocated": {
+     "expect": null,
+     "source": "observation"
+    },
+    "all.rows": {
+     "expect": null,
+     "source": "observation"
+    }
+   }
+  },
+  "A3": {
+   "kind": "case",
+   "hypothesis": "a",
+   "claim": "Non-dev parent whose dependency fails in Activate: the failed dependency load is logged and its record survives the rollback.",
+   "fields": {
+    "load.ok": {
+     "expect": "0",
+     "source": "INT-LOAD-14 (dependency failure fails the parent)"
+    },
+    "load.err": {
+     "expect": {
+      "re": ".*b2 deliberate failure in b2-dep-fail.*"
+     },
+     "source": "fixture"
+    },
+    "par.exists": {
+     "expect": "0",
+     "source": "INT-LOAD-08"
+    },
+    "dep.exists": {
+     "expect": "0",
+     "source": "INT-LOAD-08"
+    },
+    "par.hist.rows": {
+     "expect": "1",
+     "source": "INT-LOAD-17"
+    },
+    "par.hist.row1.SuccessKind": {
+     "expect": "ERR",
+     "source": "INT-HIST-02/05"
+    },
+    "par.hist.row1.Committed": {
+     "expect": "0",
+     "source": "INT-HIST-02/05"
+    },
+    "par.hist.row1.Finalized": {
+     "expect": "1",
+     "source": "INT-HIST-02/05"
+    },
+    "dep.hist.rows": {
+     "expect": "1",
+     "source": "INT-HIST-02 'Failed actions are logged too', INT-HIST-08, Q-06 provisional",
+     "predicted_as_built": "0",
+     "prediction_source": "A2 OBS-L1 / OBS-H5 (dependency twin insert and persist run inside the parent's transaction)"
+    },
+    "dep.hist.row1.SuccessKind": {
+     "expect": "ERR",
+     "source": "INT-HIST-02",
+     "when": {
+      "field": "dep.hist.rows",
+      "expect": "1"
+     }
+    },
+    "dep.hist.row1.Committed": {
+     "expect": "0",
+     "source": "INT-HIST-05",
+     "when": {
+      "field": "dep.hist.rows",
+      "expect": "1"
+     }
+    },
+    "temp.rows": {
+     "expect": "0",
+     "source": "intent 3.3"
+    },
+    "ids.allocated": {
+     "expect": null,
+     "source": "observation"
+    }
+   }
+  },
+  "A2": {
+   "kind": "case",
+   "hypothesis": "a (dev variant)",
+   "claim": "Dev parent whose dependency fails: manifest kept (committed first), dependencies rolled back, the failed dependency's record survives.",
+   "fields": {
+    "load.ok": {
+     "expect": "0",
+     "source": "INT-LOAD-14"
+    },
+    "load.err": {
+     "expect": {
+      "re": ".*b2 deliberate failure in b2-dep-fail.*"
+     },
+     "source": "fixture"
+    },
+    "par.exists": {
+     "expect": "1",
+     "source": "INT-LOAD-06; intent 2.3 failure between first and second commit: 'Manifest kept but dependencies rolled back'"
+    },
+    "par.dev": {
+     "expect": "1",
+     "source": "INT-LOAD-05"
+    },
+    "par.cls.compiled": {
+     "expect": "0",
+     "source": "INT-LOAD-06 (resources load after dependencies)"
+    },
+    "dep.exists": {
+     "expect": "0",
+     "source": "INT-LOAD-06 (dependencies commit only if all succeed)"
+    },
+    "par.hist.rows": {
+     "expect": "1",
+     "source": "INT-LOAD-17"
+    },
+    "par.hist.row1.SuccessKind": {
+     "expect": "ERR",
+     "source": "INT-HIST-05, CHANGELOG #1237 (dev failure after the first commit reads committed)"
+    },
+    "par.hist.row1.Committed": {
+     "expect": "1",
+     "source": "INT-HIST-05, CHANGELOG #1237 (dev failure after the first commit reads committed)"
+    },
+    "par.hist.row1.Finalized": {
+     "expect": "1",
+     "source": "INT-HIST-05, CHANGELOG #1237 (dev failure after the first commit reads committed)"
+    },
+    "dep.hist.rows": {
+     "expect": "1",
+     "source": "INT-HIST-02, INT-HIST-08, Q-06 provisional",
+     "predicted_as_built": "0",
+     "prediction_source": "A2 OBS-L1 / OBS-H5 (dependency twin insert and persist run inside the parent's transaction)"
+    },
+    "dep.hist.row1.SuccessKind": {
+     "expect": "ERR",
+     "source": "INT-HIST-02",
+     "when": {
+      "field": "dep.hist.rows",
+      "expect": "1"
+     }
+    },
+    "dep.hist.row1.Committed": {
+     "expect": "0",
+     "source": "INT-HIST-05",
+     "when": {
+      "field": "dep.hist.rows",
+      "expect": "1"
+     }
+    },
+    "temp.rows": {
+     "expect": "0",
+     "source": "intent 3.3"
+    },
+    "ids.allocated": {
+     "expect": null,
+     "source": "observation"
+    }
+   }
+  },
+  "A4": {
+   "kind": "case",
+   "hypothesis": "a (dev neighbour valid completion)",
+   "claim": "Dev parent with a dependency succeeds; the dependency is non-dev and has its own committed record.",
+   "fields": {
+    "load.ok": {
+     "expect": "1",
+     "source": "INT-LOAD-01"
+    },
+    "par.exists": {
+     "expect": "1",
+     "source": "INT-LOAD-01"
+    },
+    "par.dev": {
+     "expect": "1",
+     "source": "INT-LOAD-05"
+    },
+    "dep.exists": {
+     "expect": "1",
+     "source": "INT-LOAD-14"
+    },
+    "dep.dev": {
+     "expect": "0",
+     "source": "INT-LOAD-07 (dev mode not propagated)"
+    },
+    "par.cls.compiled": {
+     "expect": "1",
+     "source": "INT-LOAD-01"
+    },
+    "dep.cls.compiled": {
+     "expect": "1",
+     "source": "INT-LOAD-01"
+    },
+    "par.hist.rows": {
+     "expect": "1",
+     "source": "INT-LOAD-17"
+    },
+    "par.hist.row1.SuccessKind": {
+     "expect": "OK",
+     "source": "INT-HIST-05"
+    },
+    "par.hist.row1.Committed": {
+     "expect": "1",
+     "source": "INT-HIST-05"
+    },
+    "par.hist.row1.Finalized": {
+     "expect": "1",
+     "source": "INT-HIST-05"
+    },
+    "dep.hist.rows": {
+     "expect": "1",
+     "source": "INT-HIST-08"
+    },
+    "dep.hist.row1.SuccessKind": {
+     "expect": "OK",
+     "source": "INT-HIST-05/08"
+    },
+    "dep.hist.row1.Committed": {
+     "expect": "1",
+     "source": "INT-HIST-05/08"
+    },
+    "dep.hist.row1.Finalized": {
+     "expect": "1",
+     "source": "INT-HIST-05/08"
+    },
+    "temp.rows": {
+     "expect": "0",
+     "source": "intent 3.3"
+    }
+   }
+  },
+  "A5": {
+   "kind": "case",
+   "hypothesis": "a (dev, failure after dependencies committed)",
+   "claim": "Dev parent fails in Activate after dependencies committed: manifest, classes and dependency kept; dependency record kept.",
+   "fields": {
+    "load.ok": {
+     "expect": "0",
+     "source": "fixture"
+    },
+    "load.err": {
+     "expect": {
+      "re": ".*b2 deliberate failure in b2-par-actfail.*"
+     },
+     "source": "fixture"
+    },
+    "par.exists": {
+     "expect": "1",
+     "source": "INT-LOAD-05/06"
+    },
+    "par.dev": {
+     "expect": "1",
+     "source": "INT-LOAD-05"
+    },
+    "par.cls.compiled": {
+     "expect": "1",
+     "source": "INT-LOAD-05 ('transactions will not be rolled back'), INT-LOAD-06"
+    },
+    "dep.exists": {
+     "expect": "1",
+     "source": "INT-LOAD-06 (dependency transaction committed)"
+    },
+    "dep.cls.compiled": {
+     "expect": "1",
+     "source": "INT-LOAD-06"
+    },
+    "par.hist.rows": {
+     "expect": "1",
+     "source": "INT-LOAD-17"
+    },
+    "par.hist.row1.SuccessKind": {
+     "expect": "ERR",
+     "source": "INT-HIST-05, -07"
+    },
+    "par.hist.row1.Committed": {
+     "expect": "1",
+     "source": "INT-HIST-05, -07"
+    },
+    "par.hist.row1.Finalized": {
+     "expect": "1",
+     "source": "INT-HIST-05, -07"
+    },
+    "dep.hist.rows": {
+     "expect": "1",
+     "source": "INT-HIST-08"
+    },
+    "dep.hist.row1.SuccessKind": {
+     "expect": "OK",
+     "source": "INT-HIST-05/08"
+    },
+    "dep.hist.row1.Committed": {
+     "expect": "1",
+     "source": "INT-HIST-05/08"
+    },
+    "dep.hist.row1.Finalized": {
+     "expect": "1",
+     "source": "INT-HIST-05/08"
+    },
+    "temp.rows": {
+     "expect": "0",
+     "source": "intent 3.3"
+    }
+   }
+  },
+  "B0": {
+   "kind": "case",
+   "hypothesis": "b (neighbour valid completion)",
+   "claim": "Dev load of a module whose system requirement is satisfied succeeds.",
+   "fields": {
+    "load.ok": {
+     "expect": "1",
+     "source": "INT-LOAD-11"
+    },
+    "mod.exists": {
+     "expect": "1",
+     "source": "INT-LOAD-01"
+    },
+    "mod.dev": {
+     "expect": "1",
+     "source": "INT-LOAD-05"
+    },
+    "cls.compiled": {
+     "expect": "1",
+     "source": "INT-LOAD-01"
+    },
+    "hist.rows": {
+     "expect": "1",
+     "source": "INT-LOAD-17"
+    },
+    "hist.row1.SuccessKind": {
+     "expect": "OK",
+     "source": "INT-HIST-05"
+    },
+    "hist.row1.Committed": {
+     "expect": "1",
+     "source": "INT-HIST-05"
+    },
+    "temp.rows": {
+     "expect": "0",
+     "source": "intent 3.3"
+    }
+   }
+  },
+  "B1": {
+   "kind": "case",
+   "hypothesis": "b",
+   "claim": "Default (transactional, non-dev) load refused by SYSNamespace: nothing kept, record uncommitted.",
+   "fields": {
+    "load.ok": {
+     "expect": "0",
+     "source": "INT-LOAD-11"
+    },
+    "load.err": {
+     "expect": {
+      "re": ".*requires the %SYS namespace.*"
+     },
+     "source": "INT-LOAD-11; Storage/SystemRequirements message"
+    },
+    "mod.exists": {
+     "expect": "0",
+     "source": "INT-LOAD-11 'must be validated before module installation'; Q-17 provisional (refusal precedes any write)"
+    },
+    "cls.compiled": {
+     "expect": "0",
+     "source": "INT-LOAD-11"
+    },
+    "hist.rows": {
+     "expect": "1",
+     "source": "INT-LOAD-17"
+    },
+    "hist.row1.SuccessKind": {
+     "expect": "ERR",
+     "source": "INT-HIST-02"
+    },
+    "hist.row1.Committed": {
+     "expect": "0",
+     "source": "INT-HIST-05 (a refusal before installation retains nothing)"
+    },
+    "hist.row1.Finalized": {
+     "expect": "1",
+     "source": "HistoryTemp %OnClose"
+    },
+    "temp.rows": {
+     "expect": "0",
+     "source": "intent 3.3"
+    }
+   }
+  },
+  "B2": {
+   "kind": "case",
+   "hypothesis": "b",
+   "claim": "-dev load refused by SYSNamespace: nothing kept, record uncommitted.",
+   "fields": {
+    "load.ok": {
+     "expect": "0",
+     "source": "INT-LOAD-11"
+    },
+    "load.err": {
+     "expect": {
+      "re": ".*requires the %SYS namespace.*"
+     },
+     "source": "INT-LOAD-11; Storage/SystemRequirements message"
+    },
+    "mod.exists": {
+     "expect": "0",
+     "source": "INT-LOAD-11 'must be validated before module installation'; Q-17 provisional (refusal precedes any write)",
+     "predicted_as_built": "1",
+     "prediction_source": "A1 INT-LOAD-11 note (d); A2 OBS-L10 / commit matrix"
+    },
+    "cls.compiled": {
+     "expect": "0",
+     "source": "INT-LOAD-11"
+    },
+    "hist.rows": {
+     "expect": "1",
+     "source": "INT-LOAD-17"
+    },
+    "hist.row1.SuccessKind": {
+     "expect": "ERR",
+     "source": "INT-HIST-02"
+    },
+    "hist.row1.Committed": {
+     "expect": "0",
+     "source": "INT-HIST-05 (a refusal before installation retains nothing)",
+     "predicted_as_built": "1",
+     "prediction_source": "A1 INT-LOAD-11 note (d); A2 commit matrix"
+    },
+    "hist.row1.Finalized": {
+     "expect": "1",
+     "source": "HistoryTemp %OnClose"
+    },
+    "temp.rows": {
+     "expect": "0",
+     "source": "intent 3.3"
+    },
+    "uninstall.ok": {
+     "expect": null,
+     "source": "observation"
+    },
+    "after.uninstall.mod.exists": {
+     "expect": null,
+     "source": "observation"
+    }
+   }
+  },
+  "B3": {
+   "kind": "case",
+   "hypothesis": "b",
+   "claim": "-DNoTransaction=1 load refused by SYSNamespace: nothing kept, record uncommitted.",
+   "fields": {
+    "load.ok": {
+     "expect": "0",
+     "source": "INT-LOAD-11"
+    },
+    "load.err": {
+     "expect": {
+      "re": ".*requires the %SYS namespace.*"
+     },
+     "source": "INT-LOAD-11; Storage/SystemRequirements message"
+    },
+    "mod.exists": {
+     "expect": "0",
+     "source": "INT-LOAD-11 'must be validated before module installation'; Q-17 provisional (refusal precedes any write)",
+     "predicted_as_built": "1",
+     "prediction_source": "A1 INT-LOAD-11 note (d); A2 OBS-L10 / commit matrix"
+    },
+    "cls.compiled": {
+     "expect": "0",
+     "source": "INT-LOAD-11"
+    },
+    "hist.rows": {
+     "expect": "1",
+     "source": "INT-LOAD-17"
+    },
+    "hist.row1.SuccessKind": {
+     "expect": "ERR",
+     "source": "INT-HIST-02"
+    },
+    "hist.row1.Committed": {
+     "expect": "0",
+     "source": "INT-HIST-05 (a refusal before installation retains nothing)",
+     "predicted_as_built": "1",
+     "prediction_source": "A1 INT-LOAD-11 note (d); A2 commit matrix"
+    },
+    "hist.row1.Finalized": {
+     "expect": "1",
+     "source": "HistoryTemp %OnClose"
+    },
+    "temp.rows": {
+     "expect": "0",
+     "source": "intent 3.3"
+    }
+   }
+  },
+  "B4": {
+   "kind": "case",
+   "hypothesis": "b",
+   "claim": "-DNoJournal=1 load refused by SYSNamespace: nothing kept, record uncommitted.",
+   "fields": {
+    "load.ok": {
+     "expect": "0",
+     "source": "INT-LOAD-11"
+    },
+    "load.err": {
+     "expect": {
+      "re": ".*requires the %SYS namespace.*"
+     },
+     "source": "INT-LOAD-11; Storage/SystemRequirements message"
+    },
+    "mod.exists": {
+     "expect": "0",
+     "source": "INT-LOAD-11 'must be validated before module installation'; Q-17 provisional (refusal precedes any write)",
+     "predicted_as_built": "1",
+     "prediction_source": "A1 INT-LOAD-11 note (d); A2 OBS-L10 / commit matrix"
+    },
+    "cls.compiled": {
+     "expect": "0",
+     "source": "INT-LOAD-11"
+    },
+    "hist.rows": {
+     "expect": "1",
+     "source": "INT-LOAD-17"
+    },
+    "hist.row1.SuccessKind": {
+     "expect": "ERR",
+     "source": "INT-HIST-02"
+    },
+    "hist.row1.Committed": {
+     "expect": "0",
+     "source": "INT-HIST-05 (a refusal before installation retains nothing)",
+     "predicted_as_built": "1",
+     "prediction_source": "A1 INT-LOAD-11 note (d); A2 commit matrix"
+    },
+    "hist.row1.Finalized": {
+     "expect": "1",
+     "source": "HistoryTemp %OnClose"
+    },
+    "temp.rows": {
+     "expect": "0",
+     "source": "intent 3.3"
+    }
+   }
+  },
+  "C0": {
+   "kind": "case",
+   "hypothesis": "c (neighbour valid completion through the same JOB path)",
+   "claim": "The stalling fixture, released immediately, completes normally in a JOB.",
+   "fields": {
+    "job.started": {
+     "expect": "1",
+     "source": "harness",
+     "harness": true
+    },
+    "signal": {
+     "expect": "1",
+     "source": "harness",
+     "harness": true
+    },
+    "gone": {
+     "expect": "1",
+     "source": "harness",
+     "harness": true
+    },
+    "job.sc.ok": {
+     "expect": "1",
+     "source": "INT-LOAD-01"
+    },
+    "mod.exists": {
+     "expect": "1",
+     "source": "INT-LOAD-01"
+    },
+    "cls.compiled": {
+     "expect": "1",
+     "source": "INT-LOAD-01"
+    },
+    "hist.rows": {
+     "expect": "1",
+     "source": "INT-LOAD-17"
+    },
+    "hist.row1.Package": {
+     "expect": "b2-hang-ok",
+     "source": "INT-HIST-04/05"
+    },
+    "hist.row1.Version": {
+     "expect": "1.0.0",
+     "source": "INT-HIST-04/05"
+    },
+    "hist.row1.SuccessKind": {
+     "expect": "OK",
+     "source": "INT-HIST-04/05"
+    },
+    "hist.row1.Committed": {
+     "expect": "1",
+     "source": "INT-HIST-04/05"
+    },
+    "hist.row1.Finalized": {
+     "expect": "1",
+     "source": "INT-HIST-04/05"
+    },
+    "hist.row1.TimeEndSet": {
+     "expect": "1",
+     "source": "INT-HIST-04/05"
+    },
+    "temp.rows": {
+     "expect": "0",
+     "source": "intent 3.3"
+    },
+    "invoke.tlevel": {
+     "expect": null,
+     "source": "observation"
+    }
+   }
+  },
+  "C1": {
+   "kind": "case",
+   "hypothesis": "c",
+   "claim": "Non-dev load stalled in Activate, ended with $SYSTEM.Process.Terminate.",
+   "fields": {
+    "job.started": {
+     "expect": "1",
+     "source": "harness",
+     "harness": true
+    },
+    "signal": {
+     "expect": "1",
+     "source": "harness",
+     "harness": true
+    },
+    "gone": {
+     "expect": "1",
+     "source": "harness",
+     "harness": true
+    },
+    "end.rc": {
+     "expect": "1",
+     "source": "harness",
+     "harness": true
+    },
+    "hist.rows": {
+     "expect": "1",
+     "source": "INT-HIST-03 'A process that dies mid-action leaves a record'"
+    },
+    "hist.row1.TimeEndSet": {
+     "expect": "0",
+     "source": "INT-HIST-03 'with an empty end time'",
+     "predicted_as_built": "0",
+     "prediction_source": "A2 OBS-H6 (relies on 'process killed: %OnClose does not run')"
+    },
+    "hist.row1.Version": {
+     "expect": "0.0.0-0",
+     "source": "INT-HIST-03 'and a placeholder version'",
+     "predicted_as_built": "0.0.0-0",
+     "prediction_source": "A2 OBS-H6 (relies on 'process killed: %OnClose does not run')"
+    },
+    "hist.row1.SuccessKind": {
+     "expect": "ZERO",
+     "source": "AbstractHistory.cls:38 / wiki 09 ('0 while in progress'); INT-HIST-03",
+     "predicted_as_built": "ZERO",
+     "prediction_source": "A2 OBS-H6 (relies on 'process killed: %OnClose does not run')"
+    },
+    "hist.row1.Finalized": {
+     "expect": "0",
+     "source": "intent 3.4 'Unfinalized record ... editable'",
+     "predicted_as_built": "0",
+     "prediction_source": "A2 OBS-H6 (relies on 'process killed: %OnClose does not run')"
+    },
+    "hist.row1.Package": {
+     "expect": null,
+     "source": "observation",
+     "predicted_as_built": "",
+     "prediction_source": "A2 OBS-H6 (relies on 'process killed: %OnClose does not run')"
+    },
+    "invoke.tlevel": {
+     "expect": null,
+     "source": "observation"
+    },
+    "temp.rows": {
+     "expect": null,
+     "source": "observation (A1 INT-HIST-03 (d): IRISTEMP row orphaned)"
+    },
+    "job.sc.recorded": {
+     "expect": null,
+     "source": "observation"
+    },
+    "mod.exists": {
+     "expect": "0",
+     "source": "intent 2.3 abnormal termination 'IRIS rolls back the open transaction'; N-P12/N-P18"
+    },
+    "cls.compiled": {
+     "expect": "0",
+     "source": "intent 2.3; INT-LOAD-08"
+    },
+    "hist.row1.Committed": {
+     "expect": "0",
+     "source": "INT-HIST-05 (nothing kept)",
+     "predicted_as_built": "0",
+     "prediction_source": "A2 OBS-H6 (relies on 'process killed: %OnClose does not run')"
+    }
+   }
+  },
+  "C2": {
+   "kind": "case",
+   "hypothesis": "c",
+   "claim": "Dev load stalled in Activate (after both commits), ended with $SYSTEM.Process.Terminate.",
+   "fields": {
+    "job.started": {
+     "expect": "1",
+     "source": "harness",
+     "harness": true
+    },
+    "signal": {
+     "expect": "1",
+     "source": "harness",
+     "harness": true
+    },
+    "gone": {
+     "expect": "1",
+     "source": "harness",
+     "harness": true
+    },
+    "end.rc": {
+     "expect": "1",
+     "source": "harness",
+     "harness": true
+    },
+    "hist.rows": {
+     "expect": "1",
+     "source": "INT-HIST-03 'A process that dies mid-action leaves a record'"
+    },
+    "hist.row1.TimeEndSet": {
+     "expect": "0",
+     "source": "INT-HIST-03 'with an empty end time'",
+     "predicted_as_built": "0",
+     "prediction_source": "A2 OBS-H6 (relies on 'process killed: %OnClose does not run')"
+    },
+    "hist.row1.Version": {
+     "expect": "0.0.0-0",
+     "source": "INT-HIST-03 'and a placeholder version'",
+     "predicted_as_built": "0.0.0-0",
+     "prediction_source": "A2 OBS-H6 (relies on 'process killed: %OnClose does not run')"
+    },
+    "hist.row1.SuccessKind": {
+     "expect": "ZERO",
+     "source": "AbstractHistory.cls:38 / wiki 09 ('0 while in progress'); INT-HIST-03",
+     "predicted_as_built": "ZERO",
+     "prediction_source": "A2 OBS-H6 (relies on 'process killed: %OnClose does not run')"
+    },
+    "hist.row1.Finalized": {
+     "expect": "0",
+     "source": "intent 3.4 'Unfinalized record ... editable'",
+     "predicted_as_built": "0",
+     "prediction_source": "A2 OBS-H6 (relies on 'process killed: %OnClose does not run')"
+    },
+    "hist.row1.Package": {
+     "expect": null,
+     "source": "observation",
+     "predicted_as_built": "",
+     "prediction_source": "A2 OBS-H6 (relies on 'process killed: %OnClose does not run')"
+    },
+    "invoke.tlevel": {
+     "expect": null,
+     "source": "observation"
+    },
+    "temp.rows": {
+     "expect": null,
+     "source": "observation (A1 INT-HIST-03 (d): IRISTEMP row orphaned)"
+    },
+    "job.sc.recorded": {
+     "expect": null,
+     "source": "observation"
+    },
+    "mod.exists": {
+     "expect": "1",
+     "source": "intent 2.3 abnormal termination 'A dev manifest already committed stays'; INT-LOAD-06"
+    },
+    "mod.dev": {
+     "expect": "1",
+     "source": "INT-LOAD-05"
+    },
+    "cls.compiled": {
+     "expect": "1",
+     "source": "INT-LOAD-06 (phases outside a transaction; Compile precedes Activate)"
+    },
+    "hist.row1.Committed": {
+     "expect": "1",
+     "source": "INT-HIST-05 'Whether any of the action's changes were kept' (Q-08 open: readers must not trust Committed on such rows)",
+     "predicted_as_built": "0",
+     "prediction_source": "A2 OBS-H6 (relies on 'process killed: %OnClose does not run')"
+    }
+   }
+  },
+  "C3": {
+   "kind": "case",
+   "hypothesis": "c",
+   "claim": "Non-dev load stalled in Activate, ended with SIGKILL.",
+   "fields": {
+    "job.started": {
+     "expect": "1",
+     "source": "harness",
+     "harness": true
+    },
+    "signal": {
+     "expect": "1",
+     "source": "harness",
+     "harness": true
+    },
+    "gone": {
+     "expect": "1",
+     "source": "harness",
+     "harness": true
+    },
+    "end.rc": {
+     "expect": "0",
+     "source": "harness",
+     "harness": true
+    },
+    "hist.rows": {
+     "expect": "1",
+     "source": "INT-HIST-03 'A process that dies mid-action leaves a record'"
+    },
+    "hist.row1.TimeEndSet": {
+     "expect": "0",
+     "source": "INT-HIST-03 'with an empty end time'",
+     "predicted_as_built": "0",
+     "prediction_source": "A2 OBS-H6 (relies on 'process killed: %OnClose does not run')"
+    },
+    "hist.row1.Version": {
+     "expect": "0.0.0-0",
+     "source": "INT-HIST-03 'and a placeholder version'",
+     "predicted_as_built": "0.0.0-0",
+     "prediction_source": "A2 OBS-H6 (relies on 'process killed: %OnClose does not run')"
+    },
+    "hist.row1.SuccessKind": {
+     "expect": "ZERO",
+     "source": "AbstractHistory.cls:38 / wiki 09 ('0 while in progress'); INT-HIST-03",
+     "predicted_as_built": "ZERO",
+     "prediction_source": "A2 OBS-H6 (relies on 'process killed: %OnClose does not run')"
+    },
+    "hist.row1.Finalized": {
+     "expect": "0",
+     "source": "intent 3.4 'Unfinalized record ... editable'",
+     "predicted_as_built": "0",
+     "prediction_source": "A2 OBS-H6 (relies on 'process killed: %OnClose does not run')"
+    },
+    "hist.row1.Package": {
+     "expect": null,
+     "source": "observation",
+     "predicted_as_built": "",
+     "prediction_source": "A2 OBS-H6 (relies on 'process killed: %OnClose does not run')"
+    },
+    "invoke.tlevel": {
+     "expect": null,
+     "source": "observation"
+    },
+    "temp.rows": {
+     "expect": null,
+     "source": "observation (A1 INT-HIST-03 (d): IRISTEMP row orphaned)"
+    },
+    "job.sc.recorded": {
+     "expect": null,
+     "source": "observation"
+    },
+    "mod.exists": {
+     "expect": "0",
+     "source": "intent 2.3 abnormal termination 'IRIS rolls back the open transaction'; N-P12/N-P18"
+    },
+    "cls.compiled": {
+     "expect": "0",
+     "source": "intent 2.3; INT-LOAD-08"
+    },
+    "hist.row1.Committed": {
+     "expect": "0",
+     "source": "INT-HIST-05 (nothing kept)",
+     "predicted_as_built": "0",
+     "prediction_source": "A2 OBS-H6 (relies on 'process killed: %OnClose does not run')"
+    }
+   }
+  },
+  "C4": {
+   "kind": "case",
+   "hypothesis": "c",
+   "claim": "Dev load stalled in Activate (after both commits), ended with SIGKILL.",
+   "fields": {
+    "job.started": {
+     "expect": "1",
+     "source": "harness",
+     "harness": true
+    },
+    "signal": {
+     "expect": "1",
+     "source": "harness",
+     "harness": true
+    },
+    "gone": {
+     "expect": "1",
+     "source": "harness",
+     "harness": true
+    },
+    "end.rc": {
+     "expect": "0",
+     "source": "harness",
+     "harness": true
+    },
+    "hist.rows": {
+     "expect": "1",
+     "source": "INT-HIST-03 'A process that dies mid-action leaves a record'"
+    },
+    "hist.row1.TimeEndSet": {
+     "expect": "0",
+     "source": "INT-HIST-03 'with an empty end time'",
+     "predicted_as_built": "0",
+     "prediction_source": "A2 OBS-H6 (relies on 'process killed: %OnClose does not run')"
+    },
+    "hist.row1.Version": {
+     "expect": "0.0.0-0",
+     "source": "INT-HIST-03 'and a placeholder version'",
+     "predicted_as_built": "0.0.0-0",
+     "prediction_source": "A2 OBS-H6 (relies on 'process killed: %OnClose does not run')"
+    },
+    "hist.row1.SuccessKind": {
+     "expect": "ZERO",
+     "source": "AbstractHistory.cls:38 / wiki 09 ('0 while in progress'); INT-HIST-03",
+     "predicted_as_built": "ZERO",
+     "prediction_source": "A2 OBS-H6 (relies on 'process killed: %OnClose does not run')"
+    },
+    "hist.row1.Finalized": {
+     "expect": "0",
+     "source": "intent 3.4 'Unfinalized record ... editable'",
+     "predicted_as_built": "0",
+     "prediction_source": "A2 OBS-H6 (relies on 'process killed: %OnClose does not run')"
+    },
+    "hist.row1.Package": {
+     "expect": null,
+     "source": "observation",
+     "predicted_as_built": "",
+     "prediction_source": "A2 OBS-H6 (relies on 'process killed: %OnClose does not run')"
+    },
+    "invoke.tlevel": {
+     "expect": null,
+     "source": "observation"
+    },
+    "temp.rows": {
+     "expect": null,
+     "source": "observation (A1 INT-HIST-03 (d): IRISTEMP row orphaned)"
+    },
+    "job.sc.recorded": {
+     "expect": null,
+     "source": "observation"
+    },
+    "mod.exists": {
+     "expect": "1",
+     "source": "intent 2.3 abnormal termination 'A dev manifest already committed stays'; INT-LOAD-06"
+    },
+    "mod.dev": {
+     "expect": "1",
+     "source": "INT-LOAD-05"
+    },
+    "cls.compiled": {
+     "expect": "1",
+     "source": "INT-LOAD-06 (phases outside a transaction; Compile precedes Activate)"
+    },
+    "hist.row1.Committed": {
+     "expect": "1",
+     "source": "INT-HIST-05 'Whether any of the action's changes were kept' (Q-08 open: readers must not trust Committed on such rows)",
+     "predicted_as_built": "0",
+     "prediction_source": "A2 OBS-H6 (relies on 'process killed: %OnClose does not run')"
+    }
+   }
+  },
+  "D0": {
+   "kind": "case",
+   "hypothesis": "d (neighbour: caller commits)",
+   "claim": "Load inside a caller transaction that the caller commits: module and record kept.",
+   "fields": {
+    "load.ok": {
+     "expect": "1",
+     "source": "INT-LOAD-01"
+    },
+    "load.tlevel": {
+     "expect": "1",
+     "source": "N-P03 (inner commits only decrement $TLEVEL)"
+    },
+    "after.tlevel": {
+     "expect": "0",
+     "source": "harness",
+     "harness": true
+    },
+    "mod.exists": {
+     "expect": "1",
+     "source": "INT-LOAD-01"
+    },
+    "cls.compiled": {
+     "expect": "1",
+     "source": "INT-LOAD-01"
+    },
+    "hist.rows": {
+     "expect": "1",
+     "source": "INT-LOAD-17"
+    },
+    "hist.row1.SuccessKind": {
+     "expect": "OK",
+     "source": "INT-HIST-05"
+    },
+    "hist.row1.Committed": {
+     "expect": "1",
+     "source": "INT-HIST-05"
+    },
+    "hist.row1.Finalized": {
+     "expect": "1",
+     "source": "INT-HIST-05"
+    },
+    "temp.rows": {
+     "expect": "0",
+     "source": "intent 3.3"
+    }
+   }
+  },
+  "D1": {
+   "kind": "case",
+   "hypothesis": "d",
+   "claim": "Load inside a caller transaction that the caller rolls back: the module is gone (caller's choice), the load's record survives and does not read committed.",
+   "fields": {
+    "load.ok": {
+     "expect": "1",
+     "source": "INT-LOAD-01"
+    },
+    "load.tlevel": {
+     "expect": "1",
+     "source": "N-P03"
+    },
+    "after.tlevel": {
+     "expect": "0",
+     "source": "harness",
+     "harness": true
+    },
+    "inflight.hist.rows": {
+     "expect": null,
+     "source": "observation"
+    },
+    "inflight.hist.row1.Committed": {
+     "expect": null,
+     "source": "observation"
+    },
+    "mod.exists": {
+     "expect": "0",
+     "source": "IRIS rollback of the caller's transaction (N-P03)"
+    },
+    "cls.compiled": {
+     "expect": "0",
+     "source": "N-P03"
+    },
+    "hist.rows": {
+     "expect": "1",
+     "source": "INT-LOAD-17 'Every load produces a history record'; INT-HIST-02 (record survives rollback); Q-05 open",
+     "predicted_as_built": "0",
+     "prediction_source": "A2 OBS-H16"
+    },
+    "hist.row1.Committed": {
+     "expect": "0",
+     "source": "INT-HIST-05",
+     "when": {
+      "field": "hist.rows",
+      "expect": "1"
+     }
+    },
+    "ids.allocated": {
+     "expect": null,
+     "source": "observation"
+    },
+    "temp.rows": {
+     "expect": "0",
+     "source": "intent 3.3"
+    }
+   }
+  },
+  "E0": {
+   "kind": "case",
+   "hypothesis": "e (neighbour valid filter)",
+   "claim": "history find -DPackage=<p> shows exactly the rows of that package.",
+   "fields": {
+    "find.ok": {
+     "expect": "1",
+     "source": "INT-HIST-10"
+    },
+    "shown": {
+     "expect": {
+      "eq_field": "truth"
+     },
+     "source": "INT-HIST-10"
+    },
+    "truth": {
+     "expect": null,
+     "source": "SQL truth"
+    },
+    "total": {
+     "expect": null,
+     "source": "SQL truth"
+    }
+   }
+  },
+  "E1": {
+   "kind": "case",
+   "hypothesis": "e",
+   "claim": "history find -DVersion_Major=1 shows only rows with Version_Major=1.",
+   "fields": {
+    "find.ok": {
+     "expect": "1",
+     "source": "INT-HIST-10; wiki/09 L112 (filter versions by Version_Major)"
+    },
+    "shown": {
+     "expect": {
+      "eq_field": "truth"
+     },
+     "source": "INT-HIST-10; wiki/09 L112; Q-10 provisional",
+     "predicted_as_built": {
+      "eq_field": "total"
+     },
+     "prediction_source": "A2 OBS-H1 (ConstructSQLWhere quits at the first column name with '_')"
+    },
+    "truth": {
+     "expect": null,
+     "source": "SQL truth"
+    },
+    "total": {
+     "expect": null,
+     "source": "SQL truth"
+    }
+   }
+  },
+  "E2": {
+   "kind": "case",
+   "hypothesis": "e",
+   "claim": "A filter on an underscore column plus a valid filter that matches nothing shows no rows (filters combine with AND).",
+   "fields": {
+    "find.ok": {
+     "expect": null,
+     "source": "error or success both acceptable"
+    },
+    "shown": {
+     "expect": "0",
+     "source": "INT-HIST-10 (filters combine with AND)",
+     "predicted_as_built": {
+      "eq_field": "total"
+     },
+     "prediction_source": "A2 OBS-H1 (ConstructSQLWhere quits at the first column name with '_')"
+    },
+    "truth": {
+     "expect": null,
+     "source": "SQL truth"
+    },
+    "total": {
+     "expect": null,
+     "source": "SQL truth"
+    }
+   }
+  },
+  "E3": {
+   "kind": "case",
+   "hypothesis": "e",
+   "claim": "A filter on an unknown column selects no records (an error would also be acceptable).",
+   "fields": {
+    "find.ok": {
+     "expect": null,
+     "source": "no governing source; Q-10 alternative: reject with an error",
+     "predicted_as_built": "1",
+     "prediction_source": "A2 OBS-H2 (SQLCODE unchecked)"
+    },
+    "shown": {
+     "expect": "0",
+     "source": "INT-HIST-10",
+     "predicted_as_built": "0",
+     "prediction_source": "A2 OBS-H2"
+    },
+    "total": {
+     "expect": null,
+     "source": "SQL truth"
+    }
+   }
+  },
+  "E8": {
+   "kind": "case",
+   "hypothesis": "e",
+   "claim": "-DCommitted=1 -DVersion_Major=0 shows rows matching both filters.",
+   "fields": {
+    "find.ok": {
+     "expect": "1",
+     "source": "INT-HIST-10"
+    },
+    "shown": {
+     "expect": {
+      "eq_field": "truth"
+     },
+     "source": "INT-HIST-10 (AND)",
+     "predicted_as_built": {
+      "eq_field": "truth.committed.only"
+     },
+     "prediction_source": "A2 OBS-H1 (ConstructSQLWhere quits at the first column name with '_') variant"
+    },
+    "truth": {
+     "expect": null,
+     "source": "SQL truth"
+    },
+    "truth.committed.only": {
+     "expect": null,
+     "source": "SQL truth"
+    },
+    "total": {
+     "expect": null,
+     "source": "SQL truth"
+    }
+   }
+  },
+  "E4": {
+   "kind": "case",
+   "hypothesis": "e",
+   "claim": "history delete -DVersion_Major=99 without -confirm deletes only rows with Version_Major=99 (none).",
+   "fields": {
+    "delete.ok": {
+     "expect": "1",
+     "source": "INT-HIST-12"
+    },
+    "total.after": {
+     "expect": {
+      "eq_field": "expected.after"
+     },
+     "source": "INT-HIST-10/-12; Q-10 provisional (wiki filter intent valid)",
+     "predicted_as_built": "0",
+     "prediction_source": "A2 OBS-H1 (ConstructSQLWhere quits at the first column name with '_')"
+    },
+    "total.restored": {
+     "expect": {
+      "eq_field": "total.before"
+     },
+     "source": "harness",
+     "harness": true
+    },
+    "truth": {
+     "expect": null,
+     "source": "SQL truth"
+    },
+    "total.before": {
+     "expect": null,
+     "source": "SQL truth"
+    },
+    "expected.after": {
+     "expect": null,
+     "source": "SQL truth"
+    }
+   }
+  },
+  "E5": {
+   "kind": "case",
+   "hypothesis": "e (neighbour refusal)",
+   "claim": "history delete with no filter and no -confirm is refused and deletes nothing.",
+   "fields": {
+    "delete.ok": {
+     "expect": "0",
+     "source": "INT-HIST-12; intent 3.3"
+    },
+    "delete.err": {
+     "expect": {
+      "re": ".*No filter specified.*"
+     },
+     "source": "Main.cls:4165-4167 message"
+    },
+    "total.after": {
+     "expect": {
+      "eq_field": "total.before"
+     },
+     "source": "INT-HIST-12"
+    },
+    "total.restored": {
+     "expect": {
+      "eq_field": "total.before"
+     },
+     "source": "harness",
+     "harness": true
+    },
+    "total.before": {
+     "expect": null,
+     "source": "SQL truth"
+    }
+   }
+  },
+  "E6": {
+   "kind": "case",
+   "hypothesis": "e (neighbour valid delete)",
+   "claim": "history delete -DPackage=<p> deletes exactly that package's rows.",
+   "fields": {
+    "delete.ok": {
+     "expect": "1",
+     "source": "INT-HIST-12"
+    },
+    "total.after": {
+     "expect": {
+      "eq_field": "expected.after"
+     },
+     "source": "INT-HIST-12"
+    },
+    "total.restored": {
+     "expect": {
+      "eq_field": "total.before"
+     },
+     "source": "harness",
+     "harness": true
+    },
+    "truth": {
+     "expect": "1",
+     "source": "harness (one b2-probe-p14 row from N-P14)",
+     "harness": true
+    },
+    "total.before": {
+     "expect": null,
+     "source": "SQL truth"
+    },
+    "expected.after": {
+     "expect": null,
+     "source": "SQL truth"
+    }
+   }
+  },
+  "E7": {
+   "kind": "case",
+   "hypothesis": "e",
+   "claim": "history delete with an unknown column deletes nothing.",
+   "fields": {
+    "delete.ok": {
+     "expect": null,
+     "source": "no governing source",
+     "predicted_as_built": "0",
+     "prediction_source": "A2 OBS-H2 (DeleteHistory checks SQLCODE)"
+    },
+    "total.after": {
+     "expect": {
+      "eq_field": "total.before"
+     },
+     "source": "INT-HIST-12 (only filtered rows may be deleted)"
+    },
+    "total.restored": {
+     "expect": {
+      "eq_field": "total.before"
+     },
+     "source": "harness",
+     "harness": true
+    },
+    "total.before": {
+     "expect": null,
+     "source": "SQL truth"
+    }
+   }
+  },
+  "F1": {
+   "kind": "case",
+   "hypothesis": "f",
+   "claim": "With HistoryRetain=30 and lastPurge cleared, the next shell command purges records whose TimeStart is older than 30 days and keeps newer ones.",
+   "fields": {
+    "retain.set": {
+     "expect": "30",
+     "source": "harness",
+     "harness": true
+    },
+    "lastpurge.before": {
+     "expect": "",
+     "source": "harness",
+     "harness": true
+    },
+    "trigger.ok": {
+     "expect": "1",
+     "source": "INT-HIST-13"
+    },
+    "old.final.exists": {
+     "expect": "0",
+     "source": "INT-HIST-13 'deletes records older than that many days ... compares TimeStart'",
+     "predicted_as_built": "1",
+     "prediction_source": "A2 OBS-H3 (cutoff bound with embedded quotes); A1 Q-13"
+    },
+    "old.unfinal.exists": {
+     "expect": "0",
+     "source": "INT-HIST-13",
+     "predicted_as_built": "1",
+     "prediction_source": "A2 OBS-H3 (cutoff bound with embedded quotes); A1 Q-13"
+    },
+    "recent.exists": {
+     "expect": "1",
+     "source": "INT-HIST-13"
+    },
+    "lastpurge.after": {
+     "expect": {
+      "eq_field": "today"
+     },
+     "source": "INT-HIST-13 (at most once per calendar day)"
+    },
+    "second.ok": {
+     "expect": "1",
+     "source": "INT-HIST-13"
+    },
+    "retain.final": {
+     "expect": "0",
+     "source": "harness",
+     "harness": true
+    },
+    "diag.cutoff": {
+     "expect": null,
+     "source": "diagnostic"
+    },
+    "retain.initial": {
+     "expect": null,
+     "source": "observation (OBS-H4: after the CLI unit suite)"
+    },
+    "lastpurge.initial": {
+     "expect": null,
+     "source": "observation"
+    },
+    "control.unquoted.deleted": {
+     "expect": null,
+     "source": "adapter control, not a product observation"
+    },
+    "today": {
+     "expect": null,
+     "source": "harness"
+    }
+   }
+  },
+  "G": {
+   "kind": "case",
+   "hypothesis": "g",
+   "claim": "Version transitions through load on update-simple 1.2.1/2.1.1/3.5.0 (product fixture tests/integration_tests/Test/PM/Integration/_data/update-test).",
+   "fields": {
+    "g1.ok": {
+     "expect": "1",
+     "source": "INT-LOAD-01 (valid completion)"
+    },
+    "g1.mod.version": {
+     "expect": "1.2.1",
+     "source": "INT-LOAD-01 (valid completion)"
+    },
+    "g1.mod.dev": {
+     "expect": "0",
+     "source": "INT-LOAD-01 (valid completion)"
+    },
+    "g1.hist.rows": {
+     "expect": "1",
+     "source": "INT-LOAD-17 / INT-HIST-01"
+    },
+    "g1.hist.row1.SuccessKind": {
+     "expect": "OK",
+     "source": "INT-HIST-02/04"
+    },
+    "g1.hist.row1.Committed": {
+     "expect": "1",
+     "source": "INT-HIST-05"
+    },
+    "g2.ok": {
+     "expect": "1",
+     "source": "INT-LOAD-18 (same version reinstall succeeds)"
+    },
+    "g2.mod.version": {
+     "expect": "1.2.1",
+     "source": "INT-LOAD-18 (same version reinstall succeeds)"
+    },
+    "g2.mod.dev": {
+     "expect": "0",
+     "source": "INT-LOAD-18 (same version reinstall succeeds)"
+    },
+    "g2.hist.rows": {
+     "expect": "1",
+     "source": "INT-LOAD-17 / INT-HIST-01"
+    },
+    "g2.hist.row1.SuccessKind": {
+     "expect": "OK",
+     "source": "INT-HIST-02/04"
+    },
+    "g2.hist.row1.Committed": {
+     "expect": "1",
+     "source": "INT-HIST-05"
+    },
+    "g3.ok": {
+     "expect": "0",
+     "source": "INT-LOAD-10 (newer with UpdatePackage refused)"
+    },
+    "g3.err": {
+     "expect": {
+      "re": ".*Please use the 'update' command.*"
+     },
+     "source": "INT-LOAD-10 (newer with UpdatePackage refused)"
+    },
+    "g3.mod.version": {
+     "expect": "1.2.1",
+     "source": "INT-LOAD-10 (newer with UpdatePackage refused)"
+    },
+    "g3.mod.dev": {
+     "expect": "0",
+     "source": "INT-LOAD-10 (newer with UpdatePackage refused)"
+    },
+    "g3.hist.rows": {
+     "expect": "1",
+     "source": "INT-LOAD-17 / INT-HIST-01"
+    },
+    "g3.hist.row1.SuccessKind": {
+     "expect": "ERR",
+     "source": "INT-HIST-02/04"
+    },
+    "g3.hist.row1.Committed": {
+     "expect": "0",
+     "source": "INT-HIST-05"
+    },
+    "g4.ok": {
+     "expect": "1",
+     "source": "INT-LOAD-10 (-force bypasses)"
+    },
+    "g4.mod.version": {
+     "expect": "2.1.1",
+     "source": "INT-LOAD-10 (-force bypasses)"
+    },
+    "g4.mod.dev": {
+     "expect": "0",
+     "source": "INT-LOAD-10 (-force bypasses)"
+    },
+    "g4.hist.rows": {
+     "expect": "1",
+     "source": "INT-LOAD-17 / INT-HIST-01"
+    },
+    "g4.hist.row1.SuccessKind": {
+     "expect": "OK",
+     "source": "INT-HIST-02/04"
+    },
+    "g4.hist.row1.Committed": {
+     "expect": "1",
+     "source": "INT-HIST-05"
+    },
+    "g5.ok": {
+     "expect": "1",
+     "source": "INT-LOAD-10 qualification (d) and Q-02 provisional (-dev bypass intended)"
+    },
+    "g5.mod.version": {
+     "expect": "3.5.0",
+     "source": "INT-LOAD-10 qualification (d) and Q-02 provisional (-dev bypass intended)"
+    },
+    "g5.mod.dev": {
+     "expect": "1",
+     "source": "INT-LOAD-10 qualification (d) and Q-02 provisional (-dev bypass intended)"
+    },
+    "g5.hist.rows": {
+     "expect": "1",
+     "source": "INT-LOAD-17 / INT-HIST-01"
+    },
+    "g5.hist.row1.SuccessKind": {
+     "expect": "OK",
+     "source": "INT-HIST-02/04"
+    },
+    "g5.hist.row1.Committed": {
+     "expect": "1",
+     "source": "INT-HIST-05"
+    },
+    "g6.ok": {
+     "expect": "0",
+     "source": "INT-LOAD-09 (neither -force nor -dev bypasses the downgrade refusal)"
+    },
+    "g6.err": {
+     "expect": {
+      "re": ".*Cannot downgrade.*"
+     },
+     "source": "INT-LOAD-09 (neither -force nor -dev bypasses the downgrade refusal)"
+    },
+    "g6.mod.version": {
+     "expect": "3.5.0",
+     "source": "INT-LOAD-09 (neither -force nor -dev bypasses the downgrade refusal)"
+    },
+    "g6.mod.dev": {
+     "expect": "1",
+     "source": "INT-LOAD-09 (neither -force nor -dev bypasses the downgrade refusal)"
+    },
+    "g6.hist.rows": {
+     "expect": "1",
+     "source": "INT-LOAD-17 / INT-HIST-01"
+    },
+    "g6.hist.row1.SuccessKind": {
+     "expect": "ERR",
+     "source": "INT-HIST-02/04"
+    },
+    "g6.hist.row1.Committed": {
+     "expect": "0",
+     "source": "INT-HIST-05"
+    },
+    "g7.ok": {
+     "expect": "0",
+     "source": "INT-LOAD-09"
+    },
+    "g7.err": {
+     "expect": {
+      "re": ".*Cannot downgrade.*"
+     },
+     "source": "INT-LOAD-09"
+    },
+    "g7.mod.version": {
+     "expect": "3.5.0",
+     "source": "INT-LOAD-09"
+    },
+    "g7.mod.dev": {
+     "expect": "1",
+     "source": "INT-LOAD-09"
+    },
+    "g7.hist.rows": {
+     "expect": "1",
+     "source": "INT-LOAD-17 / INT-HIST-01"
+    },
+    "g7.hist.row1.SuccessKind": {
+     "expect": "ERR",
+     "source": "INT-HIST-02/04"
+    },
+    "g7.hist.row1.Committed": {
+     "expect": "0",
+     "source": "INT-HIST-05"
+    },
+    "g8.ok": {
+     "expect": "1",
+     "source": "INT-LOAD-18; Q-01 provisional (plain load keeps the stored dev mode)"
+    },
+    "g8.mod.version": {
+     "expect": "3.5.0",
+     "source": "INT-LOAD-18; Q-01 provisional (plain load keeps the stored dev mode)"
+    },
+    "g8.mod.dev": {
+     "expect": "1",
+     "source": "INT-LOAD-18; Q-01 provisional (plain load keeps the stored dev mode)"
+    },
+    "g8.hist.rows": {
+     "expect": "1",
+     "source": "INT-LOAD-17 / INT-HIST-01"
+    },
+    "g8.hist.row1.SuccessKind": {
+     "expect": "OK",
+     "source": "INT-HIST-02/04"
+    },
+    "g8.hist.row1.Committed": {
+     "expect": "1",
+     "source": "INT-HIST-05"
+    },
+    "g9.ok": {
+     "expect": "1",
+     "source": "INT-LOAD-15 (-nodev sets DeveloperMode=0)"
+    },
+    "g9.mod.version": {
+     "expect": "3.5.0",
+     "source": "INT-LOAD-15 (-nodev sets DeveloperMode=0)"
+    },
+    "g9.mod.dev": {
+     "expect": "0",
+     "source": "INT-LOAD-15 (-nodev sets DeveloperMode=0)"
+    },
+    "g9.hist.rows": {
+     "expect": "1",
+     "source": "INT-LOAD-17 / INT-HIST-01"
+    },
+    "g9.hist.row1.SuccessKind": {
+     "expect": "OK",
+     "source": "INT-HIST-02/04"
+    },
+    "g9.hist.row1.Committed": {
+     "expect": "1",
+     "source": "INT-HIST-05"
+    },
+    "g10.ok": {
+     "expect": "1",
+     "source": "INT-HIST-01 uninstall"
+    },
+    "g10.mod.exists": {
+     "expect": "0",
+     "source": "uninstall"
+    }
+   }
+  },
+  "F0": {
+   "kind": "case",
+   "hypothesis": "f (retention setting)",
+   "claim": "After `config set HistoryRetain 7`, `config set HistoryRetain 0` and `config delete HistoryRetain` on a fresh key, retention is back to the default 0 (disabled).",
+   "fields": {
+    "fresh.value": {
+     "expect": "",
+     "source": "harness",
+     "harness": true
+    },
+    "set7.ok": {
+     "expect": "1",
+     "source": "INT-HIST-13"
+    },
+    "set0.ok": {
+     "expect": "1",
+     "source": "INT-HIST-13"
+    },
+    "after.set0": {
+     "expect": "0",
+     "source": "INT-HIST-13"
+    },
+    "delete.ok": {
+     "expect": "1",
+     "source": "wiki/02 config delete"
+    },
+    "after.delete": {
+     "expect": [
+      "0",
+      ""
+     ],
+     "source": "INT-HIST-13 '0, the default, disables it'",
+     "predicted_as_built": "7",
+     "prediction_source": "A2 OBS-H4 (first value ever set is stored as the default)"
+    },
+    "restored.value": {
+     "expect": null,
+     "source": "harness"
+    }
+   }
+  },
+  "C4R": {
+   "kind": "case",
+   "hypothesis": "c",
+   "claim": "Re-observation of C4 after IRIS removed the SIGKILLed process slot (added after the C4 run hit its 400 s wait; expectations copied unchanged from C4).",
+   "fields": {
+    "hist.rows": {
+     "expect": "1",
+     "source": "INT-HIST-03 'A process that dies mid-action leaves a record'"
+    },
+    "hist.row1.TimeEndSet": {
+     "expect": "0",
+     "source": "INT-HIST-03 'with an empty end time'",
+     "predicted_as_built": "0",
+     "prediction_source": "A2 OBS-H6 (relies on 'process killed: %OnClose does not run')"
+    },
+    "hist.row1.Version": {
+     "expect": "0.0.0-0",
+     "source": "INT-HIST-03 'and a placeholder version'",
+     "predicted_as_built": "0.0.0-0",
+     "prediction_source": "A2 OBS-H6 (relies on 'process killed: %OnClose does not run')"
+    },
+    "hist.row1.SuccessKind": {
+     "expect": "ZERO",
+     "source": "AbstractHistory.cls:38 / wiki 09 ('0 while in progress'); INT-HIST-03",
+     "predicted_as_built": "ZERO",
+     "prediction_source": "A2 OBS-H6 (relies on 'process killed: %OnClose does not run')"
+    },
+    "hist.row1.Finalized": {
+     "expect": "0",
+     "source": "intent 3.4 'Unfinalized record ... editable'",
+     "predicted_as_built": "0",
+     "prediction_source": "A2 OBS-H6 (relies on 'process killed: %OnClose does not run')"
+    },
+    "hist.row1.Package": {
+     "expect": null,
+     "source": "observation",
+     "predicted_as_built": "",
+     "prediction_source": "A2 OBS-H6 (relies on 'process killed: %OnClose does not run')"
+    },
+    "mod.exists": {
+     "expect": "1",
+     "source": "intent 2.3 abnormal termination 'A dev manifest already committed stays'; INT-LOAD-06"
+    },
+    "mod.dev": {
+     "expect": "1",
+     "source": "INT-LOAD-05"
+    },
+    "cls.compiled": {
+     "expect": "1",
+     "source": "INT-LOAD-06 (phases outside a transaction; Compile precedes Activate)"
+    },
+    "hist.row1.Committed": {
+     "expect": "1",
+     "source": "INT-HIST-05 'Whether any of the action's changes were kept' (Q-08 open: readers must not trust Committed on such rows)",
+     "predicted_as_built": "0",
+     "prediction_source": "A2 OBS-H6 (relies on 'process killed: %OnClose does not run')"
+    },
+    "gone": {
+     "expect": "1",
+     "source": "harness",
+     "harness": true
+    },
+    "temp.orphans": {
+     "expect": null,
+     "source": "observation"
+    }
+   }
+  },
+  "Reset": {
+   "kind": "case",
+   "hypothesis": "harness",
+   "claim": "All b2-* fixture modules and update-simple are uninstalled before the replay.",
+   "fields": {
+    "remaining": {
+     "expect": "0",
+     "source": "harness",
+     "harness": true
+    },
+    "temp.rows": {
+     "expect": "0",
+     "source": "harness",
+     "harness": true
+    }
+   }
+  },
+  "H1": {
+   "kind": "case",
+   "hypothesis": "Q-14",
+   "claim": "A load whose Activate-phase Invoke returns an error records the Activate phase as ended with that error.",
+   "fields": {
+    "load.ok": {
+     "expect": "0",
+     "source": "fixture"
+    },
+    "mod.exists": {
+     "expect": "0",
+     "source": "INT-LOAD-08"
+    },
+    "hist.rows": {
+     "expect": "1",
+     "source": "INT-LOAD-17"
+    },
+    "hist.row1.SuccessKind": {
+     "expect": "ERR",
+     "source": "INT-HIST-02"
+    },
+    "hist.row1.Committed": {
+     "expect": "0",
+     "source": "INT-HIST-05"
+    },
+    "hist.row1.Phases": {
+     "expect": {
+      "re": ".*Activate:ended:ERR$"
+     },
+     "source": "Q-14 provisional (every started phase ends with its status); wiki/09 L135-161 reads an open phase as never finished",
+     "predicted_as_built": {
+      "re": ".*Activate:open:.*"
+     },
+     "prediction_source": "A2 OBS-H14 (quit:$$$ISERR in the Invoke loops bypasses FinalizePhase)"
+    },
+    "temp.rows": {
+     "expect": "0",
+     "source": "intent 3.3"
+    }
+   }
+  },
+  "R1": {
+   "kind": "case",
+   "hypothesis": "c (reader)",
+   "claim": "`history details -phases` for the C1 row (non-dev load ended by Terminate).",
+   "fields": {
+    "row.id": {
+     "expect": {
+      "re": "\\d+"
+     },
+     "source": "harness",
+     "harness": true
+    },
+    "details.ok": {
+     "expect": "1",
+     "source": "INT-HIST-10"
+    },
+    "det.Version": {
+     "expect": "<unset>",
+     "source": "intent 3.2 (placeholder shown as <unset>; wiki/09 L70)"
+    },
+    "det.Committed": {
+     "expect": "Uncommitted",
+     "source": "INT-HIST-05 (nothing kept)"
+    },
+    "det.Success": {
+     "expect": "0",
+     "source": "wiki/09 L73, L110 ('0 while in progress')"
+    },
+    "det.Time": {
+     "expect": {
+      "re": ".*Ended At\\s*"
+     },
+     "source": "INT-HIST-03 (empty end time)"
+    },
+    "sql.timeend.null": {
+     "expect": "1",
+     "source": "INT-HIST-03"
+    },
+    "det.Package": {
+     "expect": null,
+     "source": "observation"
+    }
+   }
+  },
+  "R2": {
+   "kind": "case",
+   "hypothesis": "c (reader)",
+   "claim": "`history details -phases` for the C2 row (dev load ended by Terminate after its commits).",
+   "fields": {
+    "row.id": {
+     "expect": {
+      "re": "\\d+"
+     },
+     "source": "harness",
+     "harness": true
+    },
+    "details.ok": {
+     "expect": "1",
+     "source": "INT-HIST-10"
+    },
+    "det.Committed": {
+     "expect": "Committed",
+     "source": "INT-HIST-05 (manifest and classes kept)"
+    },
+    "det.Success": {
+     "expect": "0",
+     "source": "wiki/09 ('0 while in progress'); INT-HIST-03"
+    },
+    "det.phase.Activate": {
+     "expect": {
+      "re": "open\\|.*"
+     },
+     "source": "wiki/09 L135-161 ('A phase with no elapsed time never finished')"
+    },
+    "sql.timeend.null": {
+     "expect": "1",
+     "source": "INT-HIST-03"
+    },
+    "det.Version": {
+     "expect": null,
+     "source": "observation"
+    },
+    "det.Package": {
+     "expect": null,
+     "source": "observation"
+    }
+   }
+  },
+  "R3": {
+   "kind": "case",
+   "hypothesis": "g (reader)",
+   "claim": "`history details` for the refused newer-version load (g3).",
+   "fields": {
+    "row.id": {
+     "expect": {
+      "re": "\\d+"
+     },
+     "source": "harness",
+     "harness": true
+    },
+    "details.ok": {
+     "expect": "1",
+     "source": "INT-HIST-10"
+    },
+    "det.Committed": {
+     "expect": "Uncommitted",
+     "source": "INT-HIST-05"
+    },
+    "det.Package": {
+     "expect": null,
+     "source": "observation (intent 3.2 Package: empty until the manifest is read)"
+    },
+    "det.Version": {
+     "expect": null,
+     "source": "observation"
+    },
+    "det.Success": {
+     "expect": null,
+     "source": "observation (detail view prints the raw Success value)"
+    }
+   }
+  },
+  "R4": {
+   "kind": "case",
+   "hypothesis": "g (reader)",
+   "claim": "`history find -DPackage=update-simple` returns the rows whose Package column is update-simple.",
+   "fields": {
+    "find.ok": {
+     "expect": "1",
+     "source": "INT-HIST-10"
+    },
+    "shown": {
+     "expect": {
+      "eq_field": "truth.package"
+     },
+     "source": "INT-HIST-10"
+    },
+    "truth.package": {
+     "expect": null,
+     "source": "SQL truth"
+    },
+    "truth.attempts": {
+     "expect": null,
+     "source": "SQL truth: rows whose command names update-simple"
+    }
+   }
+  }
+ }
+}

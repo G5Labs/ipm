@@ -1,0 +1,156 @@
+{
+  "run_id": "20261113T183827Z-cases-c4r",
+  "label": "cases-c4r",
+  "process_outcome": "COMPLETED",
+  "environment_flags": [],
+  "duplicate_observations": [],
+  "expected_files": [
+    {
+      "path": "../../../native/cases/expected-cases.json",
+      "sha256": "3ca2500d15a7fbe5a7a254b837e7bd849635b0bfed3471f79af22d6ccf6d0cf5",
+      "mtime_utc": "2026-11-13T18:38:27Z",
+      "written_before_run": false,
+      "group": "cases a-g"
+    }
+  ],
+  "substantive_verdict": "EVALUATED",
+  "case_verdict_counts": {
+    "DEVIATES": 1
+  },
+  "cases": {
+    "C4R": {
+      "kind": "case",
+      "claim": "Re-observation of C4 after IRIS removed the SIGKILLed process slot (added after the C4 run hit its 400 s wait; expectations copied unchanged from C4).",
+      "hypothesis": "c",
+      "maps_to": null,
+      "verdict": "DEVIATES",
+      "mismatched_fields": [
+        "hist.row1.Committed"
+      ],
+      "missing_fields": [],
+      "harness_failed_fields": [],
+      "case_markers_complete": true,
+      "fields": {
+        "hist.rows": {
+          "expected": "1",
+          "source": "INT-HIST-03 'A process that dies mid-action leaves a record'",
+          "observed": "1",
+          "match": true
+        },
+        "hist.row1.TimeEndSet": {
+          "expected": "0",
+          "source": "INT-HIST-03 'with an empty end time'",
+          "observed": "0",
+          "match": true,
+          "predicted_as_built": "0",
+          "prediction_source": "A2 OBS-H6 (relies on 'process killed: %OnClose does not run')",
+          "matches_prediction": true
+        },
+        "hist.row1.Version": {
+          "expected": "0.0.0-0",
+          "source": "INT-HIST-03 'and a placeholder version'",
+          "observed": "0.0.0-0",
+          "match": true,
+          "predicted_as_built": "0.0.0-0",
+          "prediction_source": "A2 OBS-H6 (relies on 'process killed: %OnClose does not run')",
+          "matches_prediction": true
+        },
+        "hist.row1.SuccessKind": {
+          "expected": "ZERO",
+          "source": "AbstractHistory.cls:38 / wiki 09 ('0 while in progress'); INT-HIST-03",
+          "observed": "ZERO",
+          "match": true,
+          "predicted_as_built": "ZERO",
+          "prediction_source": "A2 OBS-H6 (relies on 'process killed: %OnClose does not run')",
+          "matches_prediction": true
+        },
+        "hist.row1.Finalized": {
+          "expected": "0",
+          "source": "intent 3.4 'Unfinalized record ... editable'",
+          "observed": "0",
+          "match": true,
+          "predicted_as_built": "0",
+          "prediction_source": "A2 OBS-H6 (relies on 'process killed: %OnClose does not run')",
+          "matches_prediction": true
+        },
+        "hist.row1.Package": {
+          "expected": null,
+          "source": "observation",
+          "observed": "",
+          "match": null,
+          "predicted_as_built": "",
+          "prediction_source": "A2 OBS-H6 (relies on 'process killed: %OnClose does not run')",
+          "matches_prediction": true
+        },
+        "mod.exists": {
+          "expected": "1",
+          "source": "intent 2.3 abnormal termination 'A dev manifest already committed stays'; INT-LOAD-06",
+          "observed": "1",
+          "match": true
+        },
+        "mod.dev": {
+          "expected": "1",
+          "source": "INT-LOAD-05",
+          "observed": "1",
+          "match": true
+        },
+        "cls.compiled": {
+          "expected": "1",
+          "source": "INT-LOAD-06 (phases outside a transaction; Compile precedes Activate)",
+          "observed": "1",
+          "match": true
+        },
+        "hist.row1.Committed": {
+          "expected": "1",
+          "source": "INT-HIST-05 'Whether any of the action's changes were kept' (Q-08 open: readers must not trust Committed on such rows)",
+          "observed": "0",
+          "match": false,
+          "predicted_as_built": "0",
+          "prediction_source": "A2 OBS-H6 (relies on 'process killed: %OnClose does not run')",
+          "matches_prediction": true
+        },
+        "gone": {
+          "expected": "1",
+          "source": "harness",
+          "observed": "1",
+          "match": true
+        },
+        "temp.orphans": {
+          "expected": null,
+          "source": "observation",
+          "observed": "0",
+          "match": null
+        }
+      },
+      "unexpected_observations": {
+        "wait.seconds": "168",
+        "mod.version": "1.0.0",
+        "cls.defined": "1",
+        "hist.row1.ID": "48",
+        "hist.row1.Action": "load",
+        "hist.row1.SuccessText": "ZERO",
+        "hist.row1.SourceName": "",
+        "hist.row1.CommandString": "load -dev /home/irisowner/zpm/.native/fixtures/b2-hang-kill-dev/1.0.0/",
+        "hist.row1.Phases": ""
+      },
+      "as_built_prediction": {
+        "fields": 6,
+        "matched": 6,
+        "verdict": "CONFIRMED"
+      }
+    }
+  },
+  "mutation_controls": [
+    {
+      "mutation": "C4R:hist.row1.Committed=1",
+      "original_observed": "0",
+      "verdict_before": "DEVIATES",
+      "verdict_after": "CONFORMS",
+      "field_match_before": false,
+      "field_match_after": true,
+      "detected": true
+    }
+  ],
+  "evaluated_utc": "2026-11-13T18:41:34Z",
+  "evaluator": "native/evaluate.py"
+}

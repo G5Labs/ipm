@@ -1,0 +1,741 @@
+{
+  "run_id": "20261113T182845Z-cases-ef",
+  "label": "cases-ef",
+  "process_outcome": "COMPLETED",
+  "environment_flags": [],
+  "duplicate_observations": [],
+  "expected_files": [
+    {
+      "path": "../../../native/cases/expected-cases.json",
+      "sha256": "352399dd3500a7616c2adfbce359204efd05d117cd71bb2e685f037a51d90559",
+      "mtime_utc": "2026-11-13T18:42:21Z",
+      "evaluated_from": "../../../native/cases/expected-cases.json",
+      "written_before_run": false,
+      "note": "no snapshot in this run; written_before_run compares the current file's mtime",
+      "group": "cases a-g"
+    }
+  ],
+  "substantive_verdict": "EVALUATED",
+  "case_verdict_counts": {
+    "CONFORMS": 5,
+    "DEVIATES": 6
+  },
+  "cases": {
+    "E0": {
+      "kind": "case",
+      "claim": "history find -DPackage=<p> shows exactly the rows of that package.",
+      "hypothesis": "e (neighbour valid filter)",
+      "maps_to": null,
+      "verdict": "CONFORMS",
+      "mismatched_fields": [],
+      "missing_fields": [],
+      "harness_failed_fields": [],
+      "case_markers_complete": true,
+      "fields": {
+        "find.ok": {
+          "expected": "1",
+          "source": "INT-HIST-10",
+          "observed": "1",
+          "match": true
+        },
+        "shown": {
+          "expected": {
+            "eq_field": "truth"
+          },
+          "source": "INT-HIST-10",
+          "observed": "1",
+          "match": true
+        },
+        "truth": {
+          "expected": null,
+          "source": "SQL truth",
+          "observed": "1",
+          "match": null
+        },
+        "total": {
+          "expected": null,
+          "source": "SQL truth",
+          "observed": "29",
+          "match": null
+        }
+      },
+      "unexpected_observations": {}
+    },
+    "E1": {
+      "kind": "case",
+      "claim": "history find -DVersion_Major=1 shows only rows with Version_Major=1.",
+      "hypothesis": "e",
+      "maps_to": null,
+      "verdict": "DEVIATES",
+      "mismatched_fields": [
+        "shown"
+      ],
+      "missing_fields": [],
+      "harness_failed_fields": [],
+      "case_markers_complete": true,
+      "fields": {
+        "find.ok": {
+          "expected": "1",
+          "source": "INT-HIST-10; wiki/09 L112 (filter versions by Version_Major)",
+          "observed": "1",
+          "match": true
+        },
+        "shown": {
+          "expected": {
+            "eq_field": "truth"
+          },
+          "source": "INT-HIST-10; wiki/09 L112; Q-10 provisional",
+          "observed": "29",
+          "match": false,
+          "predicted_as_built": {
+            "eq_field": "total"
+          },
+          "prediction_source": "A2 OBS-H1 (ConstructSQLWhere quits at the first column name with '_')",
+          "matches_prediction": true
+        },
+        "truth": {
+          "expected": null,
+          "source": "SQL truth",
+          "observed": "19",
+          "match": null
+        },
+        "total": {
+          "expected": null,
+          "source": "SQL truth",
+          "observed": "29",
+          "match": null
+        }
+      },
+      "unexpected_observations": {},
+      "as_built_prediction": {
+        "fields": 1,
+        "matched": 1,
+        "verdict": "CONFIRMED"
+      }
+    },
+    "E2": {
+      "kind": "case",
+      "claim": "A filter on an underscore column plus a valid filter that matches nothing shows no rows (filters combine with AND).",
+      "hypothesis": "e",
+      "maps_to": null,
+      "verdict": "DEVIATES",
+      "mismatched_fields": [
+        "shown"
+      ],
+      "missing_fields": [],
+      "harness_failed_fields": [],
+      "case_markers_complete": true,
+      "fields": {
+        "find.ok": {
+          "expected": null,
+          "source": "error or success both acceptable",
+          "observed": "1",
+          "match": null
+        },
+        "shown": {
+          "expected": "0",
+          "source": "INT-HIST-10 (filters combine with AND)",
+          "observed": "29",
+          "match": false,
+          "predicted_as_built": {
+            "eq_field": "total"
+          },
+          "prediction_source": "A2 OBS-H1 (ConstructSQLWhere quits at the first column name with '_')",
+          "matches_prediction": true
+        },
+        "truth": {
+          "expected": null,
+          "source": "SQL truth",
+          "observed": "0",
+          "match": null
+        },
+        "total": {
+          "expected": null,
+          "source": "SQL truth",
+          "observed": "29",
+          "match": null
+        }
+      },
+      "unexpected_observations": {},
+      "as_built_prediction": {
+        "fields": 1,
+        "matched": 1,
+        "verdict": "CONFIRMED"
+      }
+    },
+    "E3": {
+      "kind": "case",
+      "claim": "A filter on an unknown column selects no records (an error would also be acceptable).",
+      "hypothesis": "e",
+      "maps_to": null,
+      "verdict": "CONFORMS",
+      "mismatched_fields": [],
+      "missing_fields": [],
+      "harness_failed_fields": [],
+      "case_markers_complete": true,
+      "fields": {
+        "find.ok": {
+          "expected": null,
+          "source": "no governing source; Q-10 alternative: reject with an error",
+          "observed": "1",
+          "match": null,
+          "predicted_as_built": "1",
+          "prediction_source": "A2 OBS-H2 (SQLCODE unchecked)",
+          "matches_prediction": true
+        },
+        "shown": {
+          "expected": "0",
+          "source": "INT-HIST-10",
+          "observed": "0",
+          "match": true,
+          "predicted_as_built": "0",
+          "prediction_source": "A2 OBS-H2",
+          "matches_prediction": true
+        },
+        "total": {
+          "expected": null,
+          "source": "SQL truth",
+          "observed": "29",
+          "match": null
+        }
+      },
+      "unexpected_observations": {},
+      "as_built_prediction": {
+        "fields": 2,
+        "matched": 2,
+        "verdict": "CONFIRMED"
+      }
+    },
+    "E8": {
+      "kind": "case",
+      "claim": "-DCommitted=1 -DVersion_Major=0 shows rows matching both filters.",
+      "hypothesis": "e",
+      "maps_to": null,
+      "verdict": "DEVIATES",
+      "mismatched_fields": [
+        "shown"
+      ],
+      "missing_fields": [],
+      "harness_failed_fields": [],
+      "case_markers_complete": true,
+      "fields": {
+        "find.ok": {
+          "expected": "1",
+          "source": "INT-HIST-10",
+          "observed": "1",
+          "match": true
+        },
+        "shown": {
+          "expected": {
+            "eq_field": "truth"
+          },
+          "source": "INT-HIST-10 (AND)",
+          "observed": "22",
+          "match": false,
+          "predicted_as_built": {
+            "eq_field": "truth.committed.only"
+          },
+          "prediction_source": "A2 OBS-H1 (ConstructSQLWhere quits at the first column name with '_') variant",
+          "matches_prediction": true
+        },
+        "truth": {
+          "expected": null,
+          "source": "SQL truth",
+          "observed": "1",
+          "match": null
+        },
+        "truth.committed.only": {
+          "expected": null,
+          "source": "SQL truth",
+          "observed": "22",
+          "match": null
+        },
+        "total": {
+          "expected": null,
+          "source": "SQL truth",
+          "observed": "29",
+          "match": null
+        }
+      },
+      "unexpected_observations": {},
+      "as_built_prediction": {
+        "fields": 1,
+        "matched": 1,
+        "verdict": "CONFIRMED"
+      }
+    },
+    "E4": {
+      "kind": "case",
+      "claim": "history delete -DVersion_Major=99 without -confirm deletes only rows with Version_Major=99 (none).",
+      "hypothesis": "e",
+      "maps_to": null,
+      "verdict": "DEVIATES",
+      "mismatched_fields": [
+        "total.after"
+      ],
+      "missing_fields": [],
+      "harness_failed_fields": [],
+      "case_markers_complete": true,
+      "fields": {
+        "delete.ok": {
+          "expected": "1",
+          "source": "INT-HIST-12",
+          "observed": "1",
+          "match": true
+        },
+        "total.after": {
+          "expected": {
+            "eq_field": "expected.after"
+          },
+          "source": "INT-HIST-10/-12; Q-10 provisional (wiki filter intent valid)",
+          "observed": "0",
+          "match": false,
+          "predicted_as_built": "0",
+          "prediction_source": "A2 OBS-H1 (ConstructSQLWhere quits at the first column name with '_')",
+          "matches_prediction": true
+        },
+        "total.restored": {
+          "expected": {
+            "eq_field": "total.before"
+          },
+          "source": "harness",
+          "observed": "29",
+          "match": true
+        },
+        "truth": {
+          "expected": null,
+          "source": "SQL truth",
+          "observed": "0",
+          "match": null
+        },
+        "total.before": {
+          "expected": null,
+          "source": "SQL truth",
+          "observed": "29",
+          "match": null
+        },
+        "expected.after": {
+          "expected": null,
+          "source": "SQL truth",
+          "observed": "29",
+          "match": null
+        }
+      },
+      "unexpected_observations": {},
+      "as_built_prediction": {
+        "fields": 1,
+        "matched": 1,
+        "verdict": "CONFIRMED"
+      }
+    },
+    "E5": {
+      "kind": "case",
+      "claim": "history delete with no filter and no -confirm is refused and deletes nothing.",
+      "hypothesis": "e (neighbour refusal)",
+      "maps_to": null,
+      "verdict": "CONFORMS",
+      "mismatched_fields": [],
+      "missing_fields": [],
+      "harness_failed_fields": [],
+      "case_markers_complete": true,
+      "fields": {
+        "delete.ok": {
+          "expected": "0",
+          "source": "INT-HIST-12; intent 3.3",
+          "observed": "0",
+          "match": true
+        },
+        "delete.err": {
+          "expected": {
+            "re": ".*No filter specified.*"
+          },
+          "source": "Main.cls:4165-4167 message",
+          "observed": "ERROR #5001: No filter specified. Should specify at least one column to filter on or pass -confirm to delete all records in the current namespace.",
+          "match": true
+        },
+        "total.after": {
+          "expected": {
+            "eq_field": "total.before"
+          },
+          "source": "INT-HIST-12",
+          "observed": "29",
+          "match": true
+        },
+        "total.restored": {
+          "expected": {
+            "eq_field": "total.before"
+          },
+          "source": "harness",
+          "observed": "29",
+          "match": true
+        },
+        "total.before": {
+          "expected": null,
+          "source": "SQL truth",
+          "observed": "29",
+          "match": null
+        }
+      },
+      "unexpected_observations": {}
+    },
+    "E6": {
+      "kind": "case",
+      "claim": "history delete -DPackage=<p> deletes exactly that package's rows.",
+      "hypothesis": "e (neighbour valid delete)",
+      "maps_to": null,
+      "verdict": "CONFORMS",
+      "mismatched_fields": [],
+      "missing_fields": [],
+      "harness_failed_fields": [],
+      "case_markers_complete": true,
+      "fields": {
+        "delete.ok": {
+          "expected": "1",
+          "source": "INT-HIST-12",
+          "observed": "1",
+          "match": true
+        },
+        "total.after": {
+          "expected": {
+            "eq_field": "expected.after"
+          },
+          "source": "INT-HIST-12",
+          "observed": "28",
+          "match": true
+        },
+        "total.restored": {
+          "expected": {
+            "eq_field": "total.before"
+          },
+          "source": "harness",
+          "observed": "29",
+          "match": true
+        },
+        "truth": {
+          "expected": "1",
+          "source": "harness (one b2-probe-p14 row from N-P14)",
+          "observed": "1",
+          "match": true
+        },
+        "total.before": {
+          "expected": null,
+          "source": "SQL truth",
+          "observed": "29",
+          "match": null
+        },
+        "expected.after": {
+          "expected": null,
+          "source": "SQL truth",
+          "observed": "28",
+          "match": null
+        }
+      },
+      "unexpected_observations": {}
+    },
+    "E7": {
+      "kind": "case",
+      "claim": "history delete with an unknown column deletes nothing.",
+      "hypothesis": "e",
+      "maps_to": null,
+      "verdict": "CONFORMS",
+      "mismatched_fields": [],
+      "missing_fields": [],
+      "harness_failed_fields": [],
+      "case_markers_complete": true,
+      "fields": {
+        "delete.ok": {
+          "expected": null,
+          "source": "no governing source",
+          "observed": "0",
+          "match": null,
+          "predicted_as_built": "0",
+          "prediction_source": "A2 OBS-H2 (DeleteHistory checks SQLCODE)",
+          "matches_prediction": true
+        },
+        "total.after": {
+          "expected": {
+            "eq_field": "total.before"
+          },
+          "source": "INT-HIST-12 (only filtered rows may be deleted)",
+          "observed": "29",
+          "match": true
+        },
+        "total.restored": {
+          "expected": {
+            "eq_field": "total.before"
+          },
+          "source": "harness",
+          "observed": "29",
+          "match": true
+        },
+        "total.before": {
+          "expected": null,
+          "source": "SQL truth",
+          "observed": "29",
+          "match": null
+        }
+      },
+      "unexpected_observations": {
+        "delete.err": "ERROR #5540: SQLCODE: -29 Message:  Field 'NOSUCHCOLUMN' not found in the applicable tables^ DELETE FROM %IPM_General . History WHERE ? = ? AND NoSuchColumn ="
+      },
+      "as_built_prediction": {
+        "fields": 1,
+        "matched": 1,
+        "verdict": "CONFIRMED"
+      }
+    },
+    "F1": {
+      "kind": "case",
+      "claim": "With HistoryRetain=30 and lastPurge cleared, the next shell command purges records whose TimeStart is older than 30 days and keeps newer ones.",
+      "hypothesis": "f",
+      "maps_to": null,
+      "verdict": "DEVIATES",
+      "mismatched_fields": [
+        "old.final.exists",
+        "old.unfinal.exists"
+      ],
+      "missing_fields": [],
+      "harness_failed_fields": [],
+      "case_markers_complete": true,
+      "fields": {
+        "retain.set": {
+          "expected": "30",
+          "source": "harness",
+          "observed": "30",
+          "match": true
+        },
+        "lastpurge.before": {
+          "expected": "",
+          "source": "harness",
+          "observed": "",
+          "match": true
+        },
+        "trigger.ok": {
+          "expected": "1",
+          "source": "INT-HIST-13",
+          "observed": "1",
+          "match": true
+        },
+        "old.final.exists": {
+          "expected": "0",
+          "source": "INT-HIST-13 'deletes records older than that many days ... compares TimeStart'",
+          "observed": "1",
+          "match": false,
+          "predicted_as_built": "1",
+          "prediction_source": "A2 OBS-H3 (cutoff bound with embedded quotes); A1 Q-13",
+          "matches_prediction": true
+        },
+        "old.unfinal.exists": {
+          "expected": "0",
+          "source": "INT-HIST-13",
+          "observed": "1",
+          "match": false,
+          "predicted_as_built": "1",
+          "prediction_source": "A2 OBS-H3 (cutoff bound with embedded quotes); A1 Q-13",
+          "matches_prediction": true
+        },
+        "recent.exists": {
+          "expected": "1",
+          "source": "INT-HIST-13",
+          "observed": "1",
+          "match": true
+        },
+        "lastpurge.after": {
+          "expected": {
+            "eq_field": "today"
+          },
+          "source": "INT-HIST-13 (at most once per calendar day)",
+          "observed": "67887",
+          "match": true
+        },
+        "second.ok": {
+          "expected": "1",
+          "source": "INT-HIST-13",
+          "observed": "1",
+          "match": true
+        },
+        "retain.final": {
+          "expected": "0",
+          "source": "harness",
+          "observed": "0",
+          "match": true
+        },
+        "diag.cutoff": {
+          "expected": null,
+          "source": "diagnostic",
+          "observed": "2026-10-14 00:00:00",
+          "match": null
+        },
+        "retain.initial": {
+          "expected": null,
+          "source": "observation (OBS-H4: after the CLI unit suite)",
+          "observed": "30",
+          "match": null
+        },
+        "lastpurge.initial": {
+          "expected": null,
+          "source": "observation",
+          "observed": "67887",
+          "match": null
+        },
+        "control.unquoted.deleted": {
+          "expected": null,
+          "source": "adapter control, not a product observation",
+          "observed": "2",
+          "match": null
+        },
+        "today": {
+          "expected": null,
+          "source": "harness",
+          "observed": "67887",
+          "match": null
+        }
+      },
+      "unexpected_observations": {
+        "config.ok": "1",
+        "config.tlevel": "0",
+        "second.old.final.exists": "1",
+        "control.old.final.exists": "0",
+        "control.recent.exists": "1",
+        "restore.ok": "1",
+        "restore.tlevel": "0"
+      },
+      "as_built_prediction": {
+        "fields": 2,
+        "matched": 2,
+        "verdict": "CONFIRMED"
+      }
+    },
+    "F0": {
+      "kind": "case",
+      "claim": "After `config set HistoryRetain 7`, `config set HistoryRetain 0` and `config delete HistoryRetain` on a fresh key, retention is back to the default 0 (disabled).",
+      "hypothesis": "f (retention setting)",
+      "maps_to": null,
+      "verdict": "DEVIATES",
+      "mismatched_fields": [
+        "after.delete"
+      ],
+      "missing_fields": [],
+      "harness_failed_fields": [],
+      "case_markers_complete": true,
+      "fields": {
+        "fresh.value": {
+          "expected": "",
+          "source": "harness",
+          "observed": "",
+          "match": true
+        },
+        "set7.ok": {
+          "expected": "1",
+          "source": "INT-HIST-13",
+          "observed": "1",
+          "match": true
+        },
+        "set0.ok": {
+          "expected": "1",
+          "source": "INT-HIST-13",
+          "observed": "1",
+          "match": true
+        },
+        "after.set0": {
+          "expected": "0",
+          "source": "INT-HIST-13",
+          "observed": "0",
+          "match": true
+        },
+        "delete.ok": {
+          "expected": "1",
+          "source": "wiki/02 config delete",
+          "observed": "1",
+          "match": true
+        },
+        "after.delete": {
+          "expected": [
+            "0",
+            ""
+          ],
+          "source": "INT-HIST-13 '0, the default, disables it'",
+          "observed": "7",
+          "match": false,
+          "predicted_as_built": "7",
+          "prediction_source": "A2 OBS-H4 (first value ever set is stored as the default)",
+          "matches_prediction": true
+        },
+        "restored.value": {
+          "expected": null,
+          "source": "harness",
+          "observed": "30",
+          "match": null
+        }
+      },
+      "unexpected_observations": {
+        "set7.tlevel": "0",
+        "set0.tlevel": "0",
+        "delete.tlevel": "0"
+      },
+      "as_built_prediction": {
+        "fields": 1,
+        "matched": 1,
+        "verdict": "CONFIRMED"
+      }
+    }
+  },
+  "mutation_controls": [
+    {
+      "mutation": "E4:total.after=29",
+      "original_observed": "0",
+      "verdict_before": "DEVIATES",
+      "verdict_after": "CONFORMS",
+      "field_match_before": false,
+      "field_match_after": true,
+      "detected": true
+    },
+    {
+      "mutation": "E1:shown=19",
+      "original_observed": "29",
+      "verdict_before": "DEVIATES",
+      "verdict_after": "CONFORMS",
+      "field_match_before": false,
+      "field_match_after": true,
+      "detected": true
+    },
+    {
+      "mutation": "E0:shown=0",
+      "original_observed": "1",
+      "verdict_before": "CONFORMS",
+      "verdict_after": "DEVIATES",
+      "field_match_before": true,
+      "field_match_after": false,
+      "detected": true
+    },
+    {
+      "mutation": "F1:old.final.exists=0",
+      "original_observed": "1",
+      "verdict_before": "DEVIATES",
+      "verdict_after": "DEVIATES",
+      "field_match_before": false,
+      "field_match_after": true,
+      "detected": true
+    },
+    {
+      "mutation": "F0:after.delete=0",
+      "original_observed": "7",
+      "verdict_before": "DEVIATES",
+      "verdict_after": "CONFORMS",
+      "field_match_before": false,
+      "field_match_after": true,
+      "detected": true
+    },
+    {
+      "mutation": "E5:delete.ok=1",
+      "original_observed": "0",
+      "verdict_before": "CONFORMS",
+      "verdict_after": "DEVIATES",
+      "field_match_before": true,
+      "field_match_after": false,
+      "detected": true
+    }
+  ],
+  "evaluated_utc": "2026-11-13T18:43:07Z",
+  "evaluator": "native/evaluate.py"
+}

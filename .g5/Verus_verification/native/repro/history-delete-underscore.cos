@@ -1,0 +1,11 @@
+write !,"CASE-BEGIN X3",!
+kill ^B2Repro merge ^B2Repro("D") = ^IPM.General.HistoryD merge ^B2Repro("I") = ^IPM.General.HistoryI
+set rs = ##class(%SQL.Statement).%ExecDirect(,"SELECT COUNT(*) AS n FROM %IPM_General.History") do rs.%Next() write !,"OBS X3 total.before=",rs.n,!
+set rs = ##class(%SQL.Statement).%ExecDirect(,"SELECT COUNT(*) AS n FROM %IPM_General.History WHERE Version_Major = 99") do rs.%Next() write !,"OBS X3 truth=",rs.n,!
+set sc = ##class(%IPM.Main).Shell("history delete -DVersion_Major=99") write !,"OBS X3 delete.ok=",$system.Status.IsOK(sc),!
+set rs = ##class(%SQL.Statement).%ExecDirect(,"SELECT COUNT(*) AS n FROM %IPM_General.History") do rs.%Next() write !,"OBS X3 total.after=",rs.n,!
+kill ^IPM.General.HistoryD, ^IPM.General.HistoryI merge ^IPM.General.HistoryD = ^B2Repro("D") merge ^IPM.General.HistoryI = ^B2Repro("I") kill ^B2Repro
+set rs = ##class(%SQL.Statement).%ExecDirect(,"SELECT COUNT(*) AS n FROM %IPM_General.History") do rs.%Next() write !,"OBS X3 total.restored=",rs.n,!
+write !,"CASE-END X3",!
+write !,"NATIVE-END",!
+halt

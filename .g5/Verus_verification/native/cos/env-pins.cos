@@ -1,0 +1,11 @@
+write !,"OBS ENV zversion=",$zversion,!
+set rs = ##class(%SQL.Statement).%ExecDirect(,"SELECT VersionString FROM %IPM_Storage.ModuleItem WHERE Name = 'zpm'") do rs.%Next() write !,"OBS ENV ipm.version=",rs.VersionString,!
+write !,"OBS ENV HistoryRetain=",##class(%IPM.Repo.UniversalSettings).GetHistoryRetain(),!
+write !,"OBS ENV HistoryRetain.default=",##class(%IPM.Repo.UniversalSettings).GetDefaultValue("history_retain"),!
+write !,"OBS ENV lastPurge=",##class(%IPM.General.History).GetHistoryLastPurge()," today=",+$horolog,!
+set rs = ##class(%SQL.Statement).%ExecDirect(,"SELECT COUNT(*) AS n FROM %IPM_General.HistoryTemp") do rs.%Next() write !,"OBS ENV historytemp.rows=",rs.n,!
+set rs = ##class(%SQL.Statement).%ExecDirect(,"SELECT COUNT(*) AS n FROM %IPM_General.History") do rs.%Next() write !,"OBS ENV history.rows.USER=",rs.n,!
+set rs = ##class(%SQL.Statement).%ExecDirect(,"SELECT LIST(Name) AS l FROM %IPM_Storage.ModuleItem") do rs.%Next() write !,"OBS ENV modules.USER=",rs.l,!
+write !,"OBS ENV journal.enabled=",'($zboolean($zjob,1024,1)=1024),!
+write !,"NATIVE-END",!
+halt
