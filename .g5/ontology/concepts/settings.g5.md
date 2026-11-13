@@ -57,7 +57,7 @@ Source locators follow the conventions on the [root page](../root.g5.md#how-to-r
 - test-coverage
 - Children: [default modifiers](#settings.default-modifiers), [install flags](#settings.install-flags), [analytics](#settings.analytics).
 
-Sources: `wiki/02` L93-141; `Main.cls:210-220`; CHANGELOG 0.9.0 (`#224`); `preload/cls/IPM/Installer.cls:110-124`. Inventory: CAT-26; A2 1.2 row 15 (`Main:Config`, `%IPM.Repo.UniversalSettings`), OP-HIST-22. Tests: `Unit/CLI.cls` `TestReportFormatConfiguration`, `ModuleRoot.cls`. Observed: settings are stored in `^IPM.settings` in `%SYS`, so they apply to the whole instance. Suspected gap, stage B to confirm: `delete` restores the first value ever set, not the built-in default (OBS-H4).
+Sources: `wiki/02` L93-141; `Main.cls:210-220`; CHANGELOG 0.9.0 (`#224`); `preload/cls/IPM/Installer.cls:110-124`. Inventory: CAT-26; A2 1.2 row 15 (`Main:Config`, `%IPM.Repo.UniversalSettings`), OP-HIST-22. Tests: `Unit/CLI.cls` `TestReportFormatConfiguration`, `ModuleRoot.cls`. Observed: settings are stored in `^IPM.settings` in `%SYS`, so they apply to the whole instance. Confirmed product defect B2 D5: `delete` restores the first value ever set, not the built-in default, so `config delete HistoryRetain` can leave retention on (case F0; `20261113T184628Z-repro-config-delete-retain`; also seen after `20261113T182514Z-suite-test-CLI`).
 
 ### settings.default-modifiers
 
@@ -65,7 +65,7 @@ Sources: `wiki/02` L93-141; `Main.cls:210-220`; CHANGELOG 0.9.0 (`#224`); `prelo
 - user-facing-behavior
 - Expands: [Settings](#settings).
 
-Sources: `Main.cls:617-637`; `wiki/02` L143-166; maintainer comment `Main.cls:1067-1070`. Inventory: CAT-27; A2 1.2 row 28 (`Main:ProcessDefaultModifiers`). Suspected gaps, stage B to confirm: the flags are stored in `^%IPM.DefaultModifiers`, which may be shared by every namespace (OBS-X1, P-10). They are also read by `history` as filters ([default-modifier filters](../features/history.g5.md#history.read.filter.default-modifiers), OBS-H2).
+Sources: `Main.cls:617-637`; `wiki/02` L143-166; maintainer comment `Main.cls:1067-1070`. Inventory: CAT-27; A2 1.2 row 28 (`Main:ProcessDefaultModifiers`). Suspected gaps, not run natively in B2 phase 1: the flags are stored in `^%IPM.DefaultModifiers`, which may be shared by every namespace (OBS-X1, P-10). They are also read by `history` as filters ([default-modifier filters](../features/history.g5.md#history.read.filter.default-modifiers), OBS-H2).
 
 ### settings.install-flags
 

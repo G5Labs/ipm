@@ -3,7 +3,8 @@
 Joins the A1 [intent inventory](intent-inventory.md) and the A2 [operation inventory](operation-inventory.md) to the governing ontology in [`.g5/ontology`](../../../ontology/root.g5.md). This map locates evidence. The ontology bodies govern.
 
 - Product pin `571e04a1`; wiki `781e98fd`. Locators as in A1 and A2.
-- Ontology: 18 pages, 146 blocks (122 I, 5 D, 19 Q). Q-01 to Q-17 come from A1, and Q-12 is now closed as a decision. Q-18 and Q-19 are new in A3, and Q-20 came from the A4 [reconstruction check](reconstruction-check.md). Row dispositions are in [reconstruction-dispositions.md](reconstruction-dispositions.md).
+- Ontology: 18 pages, 147 blocks (122 I, 5 D, 20 Q). Q-01 to Q-17 come from A1, and Q-12 is now closed as a decision. Q-18 and Q-19 are new in A3. Q-20 came from the A4 [reconstruction check](reconstruction-check.md) (row dispositions in [reconstruction-dispositions.md](reconstruction-dispositions.md)), and Q-21 from stage C round 1 (`../C/round-1/repairs-ontology.md`).
+- Native evidence: B2 phase 1 results ([native report](../B/native-report.md)) are cited on the owning blocks and summarized in section 9. Where section 9 gives a status, it replaces `pending B` for native evidence. Formal (B1) evidence is still pending.
 - Columns. **Commitment**: A1 ID and summary. **Governing source**: the strongest human source checked by A3. **Owner**: ontology block IDs. **Operations**: A2 IDs with the main symbol. `CMD-n` is row n of A2 section 1.2, and `EP` names a row of A2 section 1.3. **Model/evidence**: `pending B` for the formal scope (load and history), `out of formal scope` otherwise. Existing product tests are cited in the ontology metadata. **Status**: `covered`, `partial: <what is missing>` or `unmatched`.
 - "Missing" in a status means a clause is unresolved (Q), contradicted by observed code (suspected gap, stage B to confirm), or has no operation. It never means the ontology adopted the observed behavior.
 
@@ -38,20 +39,20 @@ Joins the A1 [intent inventory](intent-inventory.md) and the A2 [operation inven
 | Commitment | Governing source | Owner | Operations | Model/evidence | Status |
 |---|---|---|---|---|---|
 | INT-HIST-01 install, load, uninstall, update recorded; others not | `Main.cls:820`; `wiki/09` L18; issue #366 | `history`, `history.actions` | OP-HIST-02 Init callers | pending B | covered |
-| INT-HIST-02 record survives the action's rollback | issue #366; `wiki/09` L22 | `history.survives-rollback`, `history.survives-rollback.temp-copy`, `history.dependencies.parent-rollback` | OP-HIST-01 `HistoryTemp:Init`; OP-HIST-10 `PersistToTwin`; OP-HIST-11 `%OnClose` | pending B | partial: dependency records under parent rollback (Q-06, OBS-L1) |
-| INT-HIST-03 record created at start; running and abnormally ended actions listed with `Success` 0, no end time and started phases | `wiki/09` L20, L72, L161, L229-233; `AbstractHistory.cls:6-7`, `:32`, `:61` | `history.record`, `history.record.abnormal-end`, `history.survives-rollback.temp-copy`, `history.phases` | OP-HIST-01; OP-HIST-07 `Finalize`; OP-HIST-10; OP-HIST-26 | pending B | partial: permanent record shows no phases until the end (OBS-H6); `Committed` on an unfinished record open (Q-08) |
-| INT-HIST-04 and A1 3.2 fields | `AbstractHistory.cls:11-49`; `wiki/09` L63-78 | `history.fields`, `history.fields.dependency-source` | OP-HIST-01, OP-HIST-03 `SetSource`, OP-HIST-04 `SetVersion`, OP-HIST-05 `SetName`, OP-HIST-07, OP-HIST-25 | pending B | partial: dependency source and label (Q-15, OBS-H7) |
+| INT-HIST-02 record survives any rollback that undoes its action, including a parent's rollback of a dependency | issue #366; `wiki/09` L18, L22 | `history.survives-rollback`, `history.survives-rollback.temp-copy`, `history.committed.nested` (caller transactions) | OP-HIST-01 `HistoryTemp:Init`; OP-HIST-10 `PersistToTwin`; OP-HIST-11 `%OnClose` | B2: confirmed defect D1 (A1-A3); caller case D1 deviates; formal pending | partial: dependency records lost (D1); caller transactions open (Q-05) |
+| INT-HIST-03 record created at start; running and abnormally ended actions listed with `Success` 0, no end time and started phases; unfinished records not finalized | `wiki/09` L20, L72, L161, L229-233; `AbstractHistory.cls:6-7`, `:32`, `:61` | `history.record`, `history.record.abnormal-end`, `history.survives-rollback.temp-copy`, `history.phases`, `history.locked.unfinished` | OP-HIST-01; OP-HIST-07 `Finalize`; OP-HIST-10; OP-HIST-11; OP-HIST-26 | B2: C1, C3, C4R deviate on phases (no phases listed); C2 finalized without end; C4R `Committed=0` after kept changes | partial: phase listing after a crash; Q-08; Q-21 |
+| INT-HIST-04 and A1 3.2 fields; `Package` empty only before any name is known | `AbstractHistory.cls:11-49`; `wiki/09` L63-78 | `history.fields`, `history.fields.dependency-source` | OP-HIST-01, OP-HIST-03 `SetSource`, OP-HIST-04 `SetVersion`, OP-HIST-05 `SetName`, OP-HIST-07, OP-HIST-25 | B2: refused loads record no package (D9: g3, g6, g7, R4) | partial: D9; dependency label (Q-15) |
 | A1 3.2 `Phases` | `wiki/09` L135-161 | `history.phases`, `history.phases.returned-errors` | OP-HIST-08 `InitPhase`; OP-HIST-09 `FinalizePhase`; OP-LOAD-23 `ExecutePhases` | pending B | partial: returned Invoke errors leave a phase open (Q-14, OBS-H14) |
 | INT-HIST-05 `Committed` means changes kept | `AbstractHistory.cls:41-42`; CHANGELOG `#1237`; issue #1237; PR #1322 | `history.committed`, `history.committed.marking`, `history.committed.nested`, `history.committed.side-effects` | OP-HIST-06 `SetCommitted`; OP-HIST-07; OP-LOAD-07, OP-LOAD-11, OP-LOAD-15 | pending B | partial: nested transactions (Q-05, OBS-H16); side effects (Q-07); legacy XML (OBS-L16); requirement refusal reads committed (Q-17) |
 | INT-HIST-06 uninstall `Committed` equals success | `AbstractHistory.cls:43`; PR #1322 | `history.committed.uninstall`, `uninstall` | OP-HIST-02; OP-HIST-24; CMD-22 `Main:Uninstall` | pending B | partial: skipped uninstall reads success while the module stays (OBS-L17, OBS-H8) |
 | INT-HIST-07 `Success` and `Committed` differ | `Main.cls:831`; `wiki/09` L80-86 | `history.committed.vs-success` | OP-HIST-07 | pending B | covered |
-| INT-HIST-08 dependency installs recorded | issue #366; PR #578 TODO | `history.dependencies`, `history.dependencies.parent-rollback`, `history.fields.dependency-source` | OP-HIST-02; OP-LOAD-13; OP-LOAD-18 | pending B | partial: Q-06, Q-15 |
+| INT-HIST-08 dependency installs recorded | issue #366; PR #578 TODO | `history.dependencies`, `history.dependencies.parent-rollback`, `history.fields.dependency-source` | OP-HIST-02; OP-LOAD-13; OP-LOAD-18 | B2: A0, A4, A5 conform; D1 under parent rollback | partial: D1; Q-06 (`Success`), Q-15 |
 | INT-HIST-09 when a record exists | code (class b/d) | `history.record`, `history.record.unlogged-refusals`, `history.actions` | OP-HIST-02; OP-LOAD-01; OP-LOAD-17; OP-LOAD-21 | pending B | partial: update and uninstall argument refusals unrecorded (Q-09) |
 | INT-HIST-10 `history` actions, sort, limit, filters | `Main.cls:818-843`; `wiki/09` L24-112 | `history.read`, `history.read.find`, `history.read.filter`, `history.read.filter.invalid-column`, `history.read.filter.default-modifiers`, `history.read.details` | OP-HIST-13 `GetHistory`/`ConstructSQLWhere`; OP-HIST-15; OP-HIST-16 | pending B | partial: dropped filters (Q-10, OBS-H1); default modifiers as filters (Q-18, OBS-H2) |
 | INT-HIST-11 `-globally` and API | `wiki/09` L163-171, L199-211; issue #366 | `history.read.global`, `history.read.api` | OP-HIST-14; OP-HIST-19 `Records`; OP-HIST-20 `GlobalRecords` | pending B | partial: `GlobalRecords` and `Records` shape (OBS-H10, OBS-H11) |
 | INT-HIST-12 delete with `-confirm` and `-globally` | `Main.cls:825`; `wiki/09` L187-195 | `history.delete`, `history.delete.confirm-with-filter`, `history.delete.global-unfiltered` (D), `history.delete.running-records` | OP-HIST-17 `DeleteHistory`; OP-HIST-18 `DeleteHistoryGlobally` | pending B | partial: Q-11; deleting a running action's record (Q-20) |
-| INT-HIST-13 retention purge | `wiki/09` L173-185; CHANGELOG `#992`; `Main.cls:839-841` | `history.retention`, `history.retention.effect`, `history.delete.running-records`, `ipm.shell` | OP-HIST-21 `AutoPurgeOldHistory`; OP-HIST-22 | pending B | partial: purge likely deletes nothing (OBS-H3); a purge failure blocks the command (Q-13, OBS-H12); `config delete` restores first value (OBS-H4); purge of running records (Q-20) |
-| INT-HIST-14 finalized records cannot be edited | `wiki/09` L197; PR #578 reviews | `history.locked` | OP-HIST-12 trigger `PreventSQLUpdates`; OP-HIST-10 | pending B | covered |
+| INT-HIST-13 retention purge | `wiki/09` L173-185; CHANGELOG `#992`; `Main.cls:839-841` | `history.retention`, `history.retention.effect`, `history.delete.running-records`, `ipm.shell` | OP-HIST-21 `AutoPurgeOldHistory`; OP-HIST-22 | B2: confirmed defects D3 (F1) and D5 (F0); purge failure not run | partial: D3, D5; Q-13; Q-20 |
+| INT-HIST-14 finalized records cannot be edited | `wiki/09` L197; PR #578 reviews | `history.locked`, `history.locked.unfinished` | OP-HIST-12 trigger `PreventSQLUpdates`; OP-HIST-10 | B2: N-P13 confirmed; C2 finalized an unfinished record | partial: Q-21 |
 | INT-HIST-15 history survives IPM uninstall | `Main.cls:2735`; comment `Lifecycle/Module.cls:54` | `history.keep-on-ipm-uninstall`, `history.keep-on-ipm-uninstall.other-namespaces`, `uninstall.ipm` | OP-HIST-23 | pending B | partial: shared IRISTEMP global killed (Q-16, OBS-H13); success recorded before Clean (OBS-H15) |
 | INT-HIST-16 per namespace | `History.cls:3`; `wiki/09` L20; PR #578 | `history.namespace` | OP-HIST-02 | pending B | covered |
 | INT-HIST-17 IRIS audit database | issue #366 comment | none (future note in `history` metadata) | none | out of formal scope | unmatched: future option only |
@@ -146,7 +147,7 @@ Each row is a clause of an owned block that the A2 operations do not fully satis
 | `load.path` | `.tar.gz` archives | Not recognized as an archive | OBS-L2 |
 | `load.refusal.path` | only absolute paths | An existing relative path is accepted | OP-LOAD-02 |
 | `load.refusal`, `load.refusal.manifest` | refusals keep no module data in any mode | Under `-DNoTransaction=1`, late manifest checks leave the manifest and read committed | OP-LOAD-09, A1 2.3, A4 R6 |
-| `load.refusal.requirements` | checked before installation | Checked after the manifest write and the developer-mode first commit | Q-17, OBS-L10 |
+| `load.refusal.requirements` | checked before installation | Checked after the manifest write and the developer-mode first commit (confirmed, B2 D4: B2-B4) | Q-17, OBS-L10 |
 | `load.refusal.downgrade` | no bypass | Holds. `PermitDowngrade` honored by the graph but not the guard | OBS-L14 |
 | `load.path.archive`, `install.package` | rollback leaves the namespace as it was | Install folder replaced before version checks | OBS-L7, Q-04 |
 | `load.dependencies.local-repo` | removed even after an error | Cleanup fails with `<INVALID OREF>` when the folder cannot be cached | OBS-L12 |
@@ -158,20 +159,22 @@ Each row is a clause of an owned block that the A2 operations do not fully satis
 | `update.steps` | steps from current to new version | Lock timeout skips steps; new dependency runs all steps | OBS-L9, OBS-L5 |
 | `update.refusal` | `-path` mismatch keeps no module data | Checked after the manifest write | OBS-L6, A4 R6 |
 | `module.processor` | processor errors fail the phase | Compile ignores processor status | OBS-L8 |
-| `history.survives-rollback` | dependency records | Lost when the parent rolls back | Q-06, OBS-L1, OBS-H5 |
+| `history.survives-rollback` | dependency records survive a parent rollback | Lost (confirmed, B2 D1) | OBS-L1, OBS-H5, B2 A1-A3 |
 | `history.record`, `history.phases` | running or never-finished actions listed with their started phases | Permanent record keeps only start values, so no phases and an empty package show until the end | OBS-H6 |
 | `history.record.abnormal-end` | `Committed` on an unfinished record | Open | Q-08 |
-| `history.phases` | every phase records its end | Returned Invoke errors leave the phase open | Q-14, OBS-H14 |
+| `history.phases` | every phase records its end | Returned Invoke errors leave the phase open (confirmed, B2 D6) | Q-14, OBS-H14 |
 | `history.committed`, `history.committed.nested`, `history.dependencies.parent-rollback` | kept changes, including dependencies undone by the parent | Nested commits for every dependency and caller transactions; legacy XML failure reads uncommitted | Q-05, Q-06, OBS-H5, OBS-H16, OBS-L16 |
 | `history.committed.uninstall`, `uninstall.dependents`, `uninstall.recurse` | success means removed | Skipped uninstall reads success and committed | OBS-L17, OBS-H8 |
 | `history.fields` | source empty for load | Dependency records labeled `load` carry a source, listing shows `n/a` | Q-15, OBS-H7 |
-| `history.read.filter`, `history.delete` | filters apply | First invalid column drops the rest, widening delete | Q-10, OBS-H1 |
+| `history.fields` | `Package` empty only before any name is known | Refused loads whose manifest was read record no package (confirmed, D9) | B2 g3, g6, g7, R4 |
+| `history.locked` | only ended actions are finalized | `$SYSTEM.Process.Terminate` finalizes an unfinished developer-mode record (B2 C2) | Q-21 |
+| `history.read.filter`, `history.delete` | filters apply | First invalid column drops the rest, widening delete (confirmed, B2 D2); `find` hides query errors (E3) | Q-10, OBS-H1 |
 | `history.read.filter` | explicit filters only | Default modifiers become filters | Q-18, OBS-H2 |
 | `history.read.api` | `GlobalRecords` reads all namespaces | Fetch without switching namespace; `Records` ID column | OBS-H10, OBS-H11 |
 | `history.retention` | deletes old records | Cutoff likely matches nothing; error blocks commands; `config delete` restores first value | OBS-H3, Q-13, OBS-H12, OBS-H4 |
 | `history.keep-on-ipm-uninstall`, `uninstall.ipm` | log kept; uninstall recorded | Shared IRISTEMP global killed; success recorded before Clean | Q-16, OBS-H13, OBS-H15 |
 | `settings.default-modifiers` | current namespace only | Stored in a `^%` global, possibly instance-wide | OBS-X1, P-10 |
-| `settings` | `delete` restores the default | Restores the first value ever set | OBS-H4 |
+| `settings` | `delete` restores the default | Restores the first value ever set (confirmed, B2 D5) | OBS-H4 |
 
 ## 5. Where A1 and A2 disagree
 
@@ -198,22 +201,23 @@ No disagreement is left unresolved. Disagreements 2, 5 and 8 depend on stage B's
 | Q-02 | Does `-dev` lift the update-required refusal? | `load.refusal.update-required.dev-bypass` | features/load |
 | Q-03 | Does `-force` lift the overwrite guard, and does it cover `load`? | `dev-mode.overwrite-guard.force` | concepts/transactions-and-dev-mode |
 | Q-04 | What does a rollback promise beyond the database? | `transaction.rollback-scope` | concepts/transactions-and-dev-mode |
-| Q-05 | Is `Committed` correct for nested transactions? | `history.committed.nested` | features/history |
-| Q-06 | Must dependency records survive a parent rollback? | `history.dependencies.parent-rollback` | features/history |
+| Q-05 | Under a caller-held transaction, does the record survive the caller's rollback, and what does `Committed` say? (dependencies settled by `history.survives-rollback` and `history.committed` in round 1) | `history.committed.nested` | features/history |
+| Q-06 | What `Success` does a dependency record undone by its parent show? (survival is intent since round 1) | `history.dependencies.parent-rollback` | features/history |
 | Q-07 | Does `Committed` cover non-database changes? | `history.committed.side-effects` | features/history |
-| Q-08 | What does `Committed` say on an unfinished record? | `history.record.abnormal-end` | features/history |
-| Q-09 | Should `update` and `uninstall` argument refusals be recorded? | `history.record.unlogged-refusals` | features/history |
-| Q-10 | Filters on `Version_Major` and unknown columns | `history.read.filter.invalid-column` | features/history |
+| Q-08 | What does `Committed` say on an unfinished record? (provisional since round 1: the kept changes) | `history.record.abnormal-end` | features/history |
+| Q-09 | Should `update`, `reinstall` and `uninstall` argument refusals be recorded? (provisional since round 1: yes) | `history.record.unlogged-refusals` | features/history |
+| Q-10 | Filters on `Version_Major`, unknown columns and query errors in `find` | `history.read.filter.invalid-column` | features/history |
 | Q-11 | `-confirm` with a filter | `history.delete.confirm-with-filter` | features/history |
 | Q-12 (closed) | Global unfiltered delete without `-confirm` | `history.delete.global-unfiltered`, now a D block: documented in `wiki/09` L195 and `Main.cls:825`. Requiring `-confirm` stays a proposal in its metadata. | features/history |
 | Q-13 | May a purge failure stop the user's command? (deleting old records is required by `history.retention`) | `history.retention.effect` | features/history |
 | Q-14 | Must every started phase record its end? | `history.phases.returned-errors` | features/history |
-| Q-15 | Source and label of repository-pulled dependency records | `history.fields.dependency-source` | features/history |
+| Q-15 | Source and label of repository-pulled dependency records (provisional since round 1: keep `load`, per `TestWithDependencies`) | `history.fields.dependency-source` | features/history |
 | Q-16 | May IPM uninstall delete other namespaces' in-progress records? | `history.keep-on-ipm-uninstall.other-namespaces` | features/history |
 | Q-17 | Must requirements be checked before any write? | `load.refusal.requirements.timing` | features/load |
 | Q-18 (new) | Should default modifiers act as `history` filters? | `history.read.filter.default-modifiers` | features/history |
 | Q-19 (new) | Does `reinstall` use the installed or the latest version? | `reinstall.version` | features/install |
 | Q-20 (new, A4 R12) | May a delete or purge remove a running action's record, and what does its final write do? | `history.delete.running-records` | features/history |
+| Q-21 (new, C round 1) | May IPM finalize the record of an action that never ended? | `history.locked.unfinished` | features/history |
 
 ## 7. In-scope ontology blocks
 
@@ -221,7 +225,7 @@ These blocks are in the formal scope. Stage B links model and native evidence to
 
 - Load: `load`, `load.path`, `load.path.archive`, `load.core`, `load.options`, `load.refusal`, `load.refusal.path`, `load.refusal.manifest`, `load.refusal.downgrade`, `load.refusal.update-required`, `load.refusal.update-required.dev-bypass` (Q), `load.refusal.requirements`, `load.refusal.requirements.timing` (Q), `load.same-version` (D), `load.outcome`, `load.outcome.dev`, `load.outcome.dev.early-failure`, `load.dependencies`, `load.dependencies.local-repo`, `load.write-check`.
 - Transactions and developer mode used by load: `transaction`, `transaction.rollback-scope` (Q), `transaction.opt-out`, `transaction.flag-sources`, `dev-mode`, `dev-mode.keep-on-failure`, `dev-mode.not-propagated`, `dev-mode.not-propagated.local-snapshot` (D), `dev-mode.overwrite-guard`, `dev-mode.overwrite-guard.force` (Q), `dev-mode.sticky` (Q), `repo.read-only`, `deps.installed`, `deps.lockfile`.
-- History: `history`, `history.actions`, `history.record`, `history.record.unlogged-refusals` (Q), `history.record.abnormal-end` (Q), `history.survives-rollback`, `history.survives-rollback.temp-copy` (D), `history.fields`, `history.fields.dependency-source` (Q), `history.phases`, `history.phases.returned-errors` (Q), `history.committed`, `history.committed.marking` (D), `history.committed.uninstall`, `history.committed.vs-success`, `history.committed.nested` (Q), `history.committed.side-effects` (Q), `history.dependencies`, `history.dependencies.parent-rollback` (Q), `history.namespace`, `history.read`, `history.read.find`, `history.read.filter`, `history.read.filter.invalid-column` (Q), `history.read.filter.default-modifiers` (Q), `history.read.details`, `history.read.global`, `history.read.api`, `history.delete`, `history.delete.confirm-with-filter` (Q), `history.delete.global-unfiltered` (D), `history.delete.running-records` (Q), `history.locked`, `history.retention`, `history.retention.effect` (Q), `history.keep-on-ipm-uninstall`, `history.keep-on-ipm-uninstall.other-namespaces` (Q).
+- History: `history`, `history.actions`, `history.record`, `history.record.unlogged-refusals` (Q), `history.record.abnormal-end` (Q), `history.survives-rollback`, `history.survives-rollback.temp-copy` (D), `history.fields`, `history.fields.dependency-source` (Q), `history.phases`, `history.phases.returned-errors` (Q), `history.committed`, `history.committed.marking` (D), `history.committed.uninstall`, `history.committed.vs-success`, `history.committed.nested` (Q), `history.committed.side-effects` (Q), `history.dependencies`, `history.dependencies.parent-rollback` (Q), `history.namespace`, `history.read`, `history.read.find`, `history.read.filter`, `history.read.filter.invalid-column` (Q), `history.read.filter.default-modifiers` (Q), `history.read.details`, `history.read.global`, `history.read.api`, `history.delete`, `history.delete.confirm-with-filter` (Q), `history.delete.global-unfiltered` (D), `history.delete.running-records` (Q), `history.locked`, `history.locked.unfinished` (Q), `history.retention`, `history.retention.effect` (Q), `history.keep-on-ipm-uninstall`, `history.keep-on-ipm-uninstall.other-namespaces` (Q).
 - Shared path through other commands: `install`, `install.package`, `reinstall`, `update`, `update.refusal`, `update.dev-mode`, `uninstall` and `uninstall.ipm` (history records only), `ipm.shell` (purge before each command).
 
 ## 8. Open work for later stages
@@ -229,3 +233,29 @@ These blocks are in the formal scope. Stage B links model and native evidence to
 - A4 fresh-reader reconstruction is done ([reconstruction-check.md](reconstruction-check.md)). A3 adjudicated rows R1-R14 in [reconstruction-dispositions.md](reconstruction-dispositions.md) and repaired the owning blocks.
 - Stage B: confirm every suspected gap in section 4 natively, and link model and native evidence to the in-scope blocks in section 7.
 - Human decisions: Q-01 to Q-19 need maintainer answers. Q-02, Q-17, Q-10 and Q-06 change required outcomes most.
+
+## 9. Native evidence status after B2 phase 1 (stage C round 1)
+
+Runs are `20261113T<suffix>` under `.g5/Verus_verification/results/native/`. The owning blocks carry the details, and the [B2 report](../B/native-report.md) is the source. Formal (B1) evidence is linked at handoff.
+
+| Owner block | Status | Runs |
+|---|---|---|
+| `load`, `load.dependencies`, `dev-mode.not-propagated` | conforms (A0, A4, B0, C0, g1); suites History, LoadModuleWithDeps, Update pass | `182759Z-cases-a`, `175623Z-smoke-history-suite-oras`, `182313Z-suite-verify-LoadModuleWithDeps`, `182433Z-suite-verify-Update` |
+| `load.refusal.downgrade`, `load.refusal.update-required`, `load.same-version`, `load.outcome.dev.early-failure` | conforms (g2-g4, g6, g7) | `182832Z-cases-dg`, `184230Z-replay-fast`, `182208Z-suite-verify-InstallModule` |
+| `load.refusal.update-required.dev-bypass` (Q-02), `dev-mode.sticky` (Q-01) | consistent with the provisional answer (g5, g8, g9) | `182832Z-cases-dg` |
+| `load.refusal.requirements.timing` (Q-17) | confirmed defect D4 pending the decision (B2-B4); B0, B1 conform | `182820Z-cases-b`, `184630Z-repro-sysreq-dev-manifest-left` |
+| `load.outcome`, `load.outcome.dev`, `transaction`, `transaction.opt-out` | conforms (A1, A2, A5, B3, B4, C1, C3); P-6 refined: SIGKILL rollback waits for slot cleanup | `182759Z-cases-a`, `182820Z-cases-b`, `182903Z-cases-c-terminate`, `182927Z-cases-c-sigkill`, `181724Z-premise-p18-sigkill-r3`, `181129Z-premises` |
+| `load.path.archive` | `.tgz` covered by suite FileBinaryTar | `182337Z-suite-verify-FileBinaryTar` |
+| `load.path` (`.tar.gz`), `load.refusal.path`, `load.refusal.manifest` late checks, `update.refusal` `-path` mismatch, `load.dependencies.local-repo` cleanup, legacy XML (`load.core`), `history.read.filter.default-modifiers` (Q-18) | not run; queued for B2 phase 2 | none |
+| `history.survives-rollback`, `history.dependencies`, `history.dependencies.parent-rollback` | confirmed defect D1 (A1-A3) | `182759Z-cases-a`, `184617Z-repro-dep-history-lost` |
+| `history.committed.nested` (Q-05) | deviates (D1 caller case); D0 conforms | `182832Z-cases-dg`, `184632Z-repro-caller-tx-history-lost` |
+| `history.record`, `history.record.abnormal-end` (Q-08), `history.locked.unfinished` (Q-21), `history.survives-rollback.temp-copy` | C1, C3, C4R show no phases; C2 finalized without end; C4R `Committed=0`; temp-copy premise refuted for Terminate (N-P10) | `182903Z-cases-c-terminate`, `182927Z-cases-c-sigkill`, `183827Z-cases-c4r`, `181129Z-premises` |
+| `history.fields` | deviation D9 (refused loads record no package) | `182832Z-cases-dg`, `184444Z-cases-hr` |
+| `history.read.filter.invalid-column` (Q-10) | confirmed defect D2 (E1, E2, E4, E8); E3/E7 differ | `182845Z-cases-ef`, `184621Z-repro-history-filter-widened`, `184623Z-repro-history-delete-underscore` |
+| `history.delete` | E5, E6 conform; E4 under D2 | `182845Z-cases-ef` |
+| `history.delete.running-records` (Q-20) | observed: the record disappears and is not recreated (N-P15) | `181129Z-premises` |
+| `history.retention`, `history.retention.effect`, `settings` | confirmed defects D3 (F1) and D5 (F0); purge failure not run | `184626Z-repro-autopurge-noop`, `184628Z-repro-config-delete-retain`, `182514Z-suite-test-CLI` |
+| `history.phases`, `history.phases.returned-errors` (Q-14) | confirmed defect D6; reader defect D8 | `184444Z-cases-hr` |
+| `history.locked` | conforms (N-P13) | `181129Z-premises` |
+| `history.read.details` | conforms (R1, R2); D7 withdrawn | `184444Z-cases-hr` |
+| `history.read.global`, `history.read.api`, `history.keep-on-ipm-uninstall` and its Q-16, uninstall cases | not run (self-uninstall persist step probed in N-P16; IRISTEMP sharing confirmed in N-P06, N-P17) | `181129Z-premises` |

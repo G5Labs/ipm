@@ -21,6 +21,10 @@ The orchestrator adjudicates the round 1 findings here. A reviewer proposal is n
 | R1-ONT-13 | Accept | wiki/09 L133 documents the raw `%Status` in `details` on purpose ("so the ObjectScript stack is visible"). D7 is withdrawn as a defect. | Orchestrator: `bugs_issues.md` lists D7 as withdrawn. B2: annotate the report. | Handoff |
 | R1-ONT-14 | Accept | B2 refined P-6 (delayed rollback after SIGKILL). | A3: metadata only. | Checker |
 
+## Ontology repair validation
+
+A3's repairs are in `repairs-ontology.md`. The orchestrator checked them at 19:55 UTC. The checker reports 18 files, 147 blocks (122 I, 5 D, 20 Q), 0 issues. Spot reads of `history.survives-rollback`, `history.record.abnormal-end` and the new `history.locked.unfinished` (Q-21) match the dispositions. The B1 contract changes (R1-ONT-01, -02, -03) and the B2 native additions (R1-ONT-04) are validated when those owners report.
+
 ## Model and evidence domain
 
 Pending. Starts after B1 finishes and B2 has replayed `cases/cases.json`.

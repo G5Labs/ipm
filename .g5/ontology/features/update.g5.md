@@ -67,7 +67,7 @@ Sources: `Main.cls:164-187`; `wiki/02` L1341-1371; `wiki/08`; CHANGELOG 0.10.4 (
 - test-coverage
 - Expands: [Update](#update).
 
-Sources: messages `Main.cls:4415-4423`, `Utils/Module.cls:1269-1275`. Inventory: CAT-15; OP-LOAD-21, OP-LOAD-10. Tests: `Update.cls` `TestUpdateOfUninstalledModule`, `TestUpdateNonMatchingTarballFails`, `TestUpdateToOlderVersion`. Observed: the first two refusals happen before a history record exists ([unlogged refusals](history.g5.md#history.record.unlogged-refusals)). Suspected gap, stage B to confirm: the module-mismatch check runs after the archive is unpacked and the manifest is saved, so with `-DNoTransaction=1` the wrong manifest stays and the record reads committed (OBS-L6, reconstruction check R6).
+Sources: messages `Main.cls:4415-4423`, `Utils/Module.cls:1269-1275`. Inventory: CAT-15; OP-LOAD-21, OP-LOAD-10. Tests: `Update.cls` `TestUpdateOfUninstalledModule`, `TestUpdateNonMatchingTarballFails` (status only), `TestUpdateToOlderVersion`; suite PASS 15 of 15 (`20261113T182433Z-suite-verify-Update`). Observed: the first two refusals happen before a history record exists ([unlogged refusals](history.g5.md#history.record.unlogged-refusals)). Suspected gap, not yet run natively (queued for B2 phase 2): the module-mismatch check runs after the archive is unpacked and the manifest is saved, so with `-DNoTransaction=1` the wrong manifest stays and the record reads committed (OBS-L6, reconstruction check R6).
 
 ### update.dev-mode
 
@@ -76,7 +76,7 @@ Sources: messages `Main.cls:4415-4423`, `Utils/Module.cls:1269-1275`. Inventory:
 - test-coverage
 - Expands: [Update](#update).
 
-Sources: CHANGELOG 0.10.5 (`#1036`). Inventory: CAT-15, INT-LOAD-07; OP-LOAD-20. Test: `Update.cls` `TestDevModePropagation`. Suspected gap, stage B to confirm: `update <m> -dev` from a registry leaves the module itself in normal mode (OBS-L4).
+Sources: CHANGELOG 0.10.5 (`#1036`). Inventory: CAT-15, INT-LOAD-07; OP-LOAD-20. Test: `Update.cls` `TestDevModePropagation`. Suspected gap, not run natively in B2 phase 1: `update <m> -dev` from a registry leaves the module itself in normal mode (OBS-L4).
 
 ### update.requirements
 
@@ -94,4 +94,4 @@ Sources: CHANGELOG 0.10.7 (`#1119`, `#430`); issue #430; PR #1136. Inventory: CA
 - test-coverage
 - Expands: [Update](#update).
 
-Sources: `wiki/03` L365-380; `wiki/08` L14-61; `Main.cls:166-167` ("runs all of the update steps from the current version to the newer version"); `General/Update/VersionBase.cls:1-24`. Inventory: CAT-09, A1 seed 3; A2 1.3 update steps (`Storage.Module:HandleAllUpdateSteps`, `ExecuteUpdateStep`). Tests: `Update.cls` `TestAllNoErrorModulesNoMirror`, `TestUpdateAfterInterruptedUpdate`; `InstallModule.cls` `TestUpdateStepsSeededOnInstall`. Observed: steps run from a record of completed steps, not a version range. A normal install marks all current steps as done, and `update` runs from the first step not yet done. Suspected gaps, stage B to confirm: if the update lock is busy for 3 seconds, steps are skipped and the update still succeeds (OBS-L9). A dependency newly installed during `update` runs all its steps instead of marking them done (OBS-L5). Mirrored instances are future work (`wiki/08` L5). Primary-only steps are skipped on other mirror members, and nothing runs them later despite `General/Update/VersionBase.cls:18`.
+Sources: `wiki/03` L365-380; `wiki/08` L14-61; `Main.cls:166-167` ("runs all of the update steps from the current version to the newer version"); `General/Update/VersionBase.cls:1-24`. Inventory: CAT-09, A1 seed 3; A2 1.3 update steps (`Storage.Module:HandleAllUpdateSteps`, `ExecuteUpdateStep`). Tests: `Update.cls` `TestAllNoErrorModulesNoMirror`, `TestUpdateAfterInterruptedUpdate`; `InstallModule.cls` `TestUpdateStepsSeededOnInstall`. Observed: steps run from a record of completed steps, not a version range. A normal install marks all current steps as done, and `update` runs from the first step not yet done. Suspected gaps, not run natively in B2 phase 1: if the update lock is busy for 3 seconds, steps are skipped and the update still succeeds (OBS-L9). A dependency newly installed during `update` runs all its steps instead of marking them done (OBS-L5). Mirrored instances are future work (`wiki/08` L5). Primary-only steps are skipped on other mirror members, and nothing runs them later despite `General/Update/VersionBase.cls:18`.

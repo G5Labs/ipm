@@ -148,7 +148,7 @@ What a failed load keeps depends on how it ran.
 
 | How the load ran | What a failure keeps |
 |---|---|
-| Normal mode, in a transaction | Nothing in the database. The whole load, including dependencies loaded for it, is rolled back. |
+| Normal mode, in a transaction | No module data. The whole load, including dependencies loaded for it, is rolled back. |
 | Developer mode, in a transaction | Depends on when it fails. See [developer-mode commits](#load.outcome.dev). |
 | `-DNoTransaction=1` or `-DNoJournal=1` | Everything written before the failure. |
 
@@ -196,7 +196,7 @@ Before installing files, `install` and `load` check that IPM can write to the ta
 
 ## Metadata
 
-Source locators follow the conventions on the [root page](../root.g5.md#how-to-read-this-ontology). Inventory IDs refer to [A1](../../uplift/ipm-verus-20261113/A/intent-inventory.md) (`CAT`, `INT`, `Q`), [A2](../../uplift/ipm-verus-20261113/A/operation-inventory.md) (`OP`, `OBS`, `P`) and the [coverage map](../../uplift/ipm-verus-20261113/A/coverage-map.md). Every block on this page is in the formal scope, and its model and native evidence are pending stage B.
+Source locators follow the conventions on the [root page](../root.g5.md#how-to-read-this-ontology). Inventory IDs refer to [A1](../../uplift/ipm-verus-20261113/A/intent-inventory.md) (`CAT`, `INT`, `Q`), [A2](../../uplift/ipm-verus-20261113/A/operation-inventory.md) (`OP`, `OBS`, `P`) and the [coverage map](../../uplift/ipm-verus-20261113/A/coverage-map.md). Every block on this page is in the formal scope. Native results of stage B2 phase 1 are cited per block by run, as `<time>-<name>`. The full run ID is `20261113T<time>-<name>` under `.g5/Verus_verification/results/native/`, and the [B2 report](../../uplift/ipm-verus-20261113/B/native-report.md) explains each case and defect. Formal (B1) evidence is linked at handoff.
 
 ### load
 
@@ -205,7 +205,7 @@ Source locators follow the conventions on the [root page](../root.g5.md#how-to-r
 - test-coverage
 - Children: [path](#load.path), [shared core](#load.core), [options](#load.options), [refusals](#load.refusal), [same version](#load.same-version), [outcome](#load.outcome), [dependencies](#load.dependencies), [write check](#load.write-check).
 
-Sources: `Main.cls:268-276` (summary and description); `wiki/02` L564-568; vendor manual AIPM. Inventory: CAT-12, INT-LOAD-01; OP-LOAD-01, OP-LOAD-02. Tests: `History.cls` `TestSimpleHistory`; `LoadModuleWithDeps.cls` `TestLoadModuleWithDependencies`.
+Sources: `Main.cls:268-276` (summary and description); `wiki/02` L564-568; vendor manual AIPM. Inventory: CAT-12, INT-LOAD-01; OP-LOAD-01, OP-LOAD-02. Tests: `History.cls` `TestSimpleHistory`; `LoadModuleWithDeps.cls` `TestLoadModuleWithDependencies`. Native evidence: valid completions conform in cases A0, B0, C0 and g1 (`182759Z-cases-a`, `182820Z-cases-b`, `182903Z-cases-c-terminate`, `182832Z-cases-dg`). Suites pass: History 13 of 13 (`175623Z-smoke-history-suite-oras`) and LoadModuleWithDeps 2 of 2 (`182313Z-suite-verify-LoadModuleWithDeps`).
 
 ### load.path
 
@@ -214,15 +214,16 @@ Sources: `Main.cls:268-276` (summary and description); `wiki/02` L564-568; vendo
 - Expands: [Load](#load).
 - Children: [archive](#load.path.archive).
 
-Sources: `Main.cls:278-291` (examples include `.tgz`, `.tar.gz` and git URLs), `:305` (`-branch`); `wiki/02` L599-604; CHANGELOG 0.10.0 (`#474`), 0.10.4 (`#930`). Inventory: INT-LOAD-01; OP-LOAD-02, OP-LOAD-03. The `path` parameter help (`Main.cls:318`) still mentions only a folder. Suspected gap, stage B to confirm: `.tar.gz` is not recognized as an archive, because only the last extension is compared (`Main.cls:2466-2467`, OBS-L2). Observed: a git URL is cloned into `mgr/Temp/<timestamp>/`, the clone's exit code is not checked and the clone is never removed (OBS-L13).
+Sources: `Main.cls:278-291` (examples include `.tgz`, `.tar.gz` and git URLs), `:305` (`-branch`); `wiki/02` L599-604; CHANGELOG 0.10.0 (`#474`), 0.10.4 (`#930`). Inventory: INT-LOAD-01; OP-LOAD-02, OP-LOAD-03. The `path` parameter help (`Main.cls:318`) still mentions only a folder. Suspected regression, not yet run natively (queued for B2 phase 2): `.tar.gz` is not recognized as an archive, because only the last extension is compared (`Main.cls:2466-2467`, OBS-L2). Support was added by `280c8d68` for CHANGELOG 0.10.0 `#474` ("compatibility to load '.tar.gz' archives"). Commit `f83b207e` (PR #887) replaced the working two-piece test `$piece(...,".",*-1,*)="tar.gz"` with the single-piece one. The help example `Main.cls:282` still shows a `.tar.gz` load. Observed: a git URL is cloned into `mgr/Temp/<timestamp>/`, the clone's exit code is not checked and the clone is never removed (OBS-L13).
 
 ### load.path.archive
 
 - human-provided
 - user-facing-behavior
+- test-coverage
 - Expands: [Path](#load.path).
 
-Sources: CHANGELOG 0.10.7 (`#945`), 0.10.11 (`#1183`); `wiki/02` L649-653; comments `Main.cls:2498-2500`. Inventory: INT-LOAD-03; OP-LOAD-02. No test loads an archive with `load`. Observed: an existing `<ModuleRoot>/<name>/<version>/` is deleted and replaced before any version check, and the copy stays after a later failure (OBS-L7, see [rollback scope](../concepts/transactions-and-dev-mode.g5.md#transaction.rollback-scope)).
+Sources: CHANGELOG 0.10.7 (`#945`), 0.10.11 (`#1183`); `wiki/02` L649-653; comments `Main.cls:2498-2500`. Inventory: INT-LOAD-03; OP-LOAD-02. Test, `.tgz` only: `FileBinaryTar.cls` `TestLoadDestinationDirectory` checks the `<ModuleRoot>/<name>/<version>/` destination and the in-place folder load (PASS 5 of 5, `182337Z-suite-verify-FileBinaryTar`). `InstallModule`, `DeployedItems`, `GlobalsPackaging` and `FileCopy` tests also load `.tgz` files. No test loads a `.tar.gz` file. Observed: an existing `<ModuleRoot>/<name>/<version>/` is deleted and replaced before any version check, and the copy stays after a later failure (OBS-L7, see [rollback scope](../concepts/transactions-and-dev-mode.g5.md#transaction.rollback-scope)).
 
 ### load.core
 
@@ -238,7 +239,7 @@ Sources: `Main.cls:273` and `:407` (load and install descriptions); `wiki/00` L4
 - user-facing-behavior
 - Expands: [Load](#load).
 
-Sources: `Main.cls:304-315`; CHANGELOG `#704`, `#1260`, `#595`, `#647`, `#961`, `#1290`, `#885`. Inventory: INT-LOAD-15, INT-LOAD-14; OP-LOAD-02. `wiki/02` L589-590 still describes `-synchronous` as active.
+Sources: `Main.cls:304-315`; CHANGELOG `#704`, `#1260`, `#595`, `#647`, `#961`, `#1290`, `#885`. Inventory: INT-LOAD-15, INT-LOAD-14; OP-LOAD-02. `wiki/02` L589-590 still describes `-synchronous` as active. Native evidence: `-nodev` (g9) sets normal mode, and a plain load (g8) keeps the stored developer mode (`182832Z-cases-dg`). `-create-lockfile`, `-env` and the pip options were not run.
 
 ### load.refusal
 
@@ -248,7 +249,7 @@ Sources: `Main.cls:304-315`; CHANGELOG `#704`, `#1260`, `#595`, `#647`, `#961`, 
 - Expands: [Load](#load).
 - Children: [path](#load.refusal.path), [manifest](#load.refusal.manifest), [downgrade](#load.refusal.downgrade), [update required](#load.refusal.update-required), [requirements](#load.refusal.requirements).
 
-Sources: downgrade message `Utils/Module.cls:1214-1217`; `wiki/03` L260-261 ("validated before module installation"); CHANGELOG 0.10.11 (`#1237`). Inventory: INT-LOAD-02, -09, -10, -11. Tests: `History.cls` `TestDevModeRollbackNotCommitted`, `TestDevMode`. The tests check status and history only, not the installed module afterwards. The requirements refusal is the open exception ([timing](#load.refusal.requirements.timing)). Reconstruction check R6 and R7: the no-write rule now covers every refusal and the overwrite guard, and is limited to module data. Sources for the timing: PR #1322 body (committed marking "before writing when there is no transaction" follows the version checks); `wiki/09` L133. Suspected gaps, stage B to confirm: the late manifest checks ("No module definition found", "multiple documents", `Utils/Module.cls:1255-1264`) and the `update -path` module mismatch (`:1269-1275`, OBS-L6) run after the manifest is saved. Under `-DNoTransaction=1` the manifest then stays and the record reads committed.
+Sources: downgrade message `Utils/Module.cls:1214-1217`; `wiki/03` L260-261 ("validated before module installation"); CHANGELOG 0.10.11 (`#1237`). Inventory: INT-LOAD-02, -09, -10, -11. Tests: `History.cls` `TestDevModeRollbackNotCommitted`, `TestDevMode`. The tests check status and history only, not the installed module afterwards. The requirements refusal is the open exception ([timing](#load.refusal.requirements.timing)). Reconstruction check R6 and R7: the no-write rule now covers every refusal and the overwrite guard, and is limited to module data. Sources for the timing: PR #1322 body (committed marking "before writing when there is no transaction" follows the version checks); `wiki/09` L133. Suspected gaps, not yet run natively (queued for B2 phase 2): the late manifest checks ("No module definition found", "multiple documents", `Utils/Module.cls:1255-1264`) and the `update -path` module mismatch (`:1269-1275`, OBS-L6) run after the manifest is saved. Under `-DNoTransaction=1` the manifest then stays and the record reads committed. Native evidence: version refusals keep no module data in any mode (g3, g6, g7; `182832Z-cases-dg`). The requirements exception is confirmed as B2 D4 ([timing](#load.refusal.requirements.timing)). The late manifest checks and the `update -path` mismatch were not run and are queued for B2 phase 2. Refused loads record no package name (D9, [fields](history.g5.md#history.fields)).
 
 ### load.refusal.path
 
@@ -256,7 +257,7 @@ Sources: downgrade message `Utils/Module.cls:1214-1217`; `wiki/03` L260-261 ("va
 - user-facing-behavior
 - Expands: [Refusals](#load.refusal).
 
-Sources: CHANGELOG 0.10.4 (`#706`: "load now only accepts absolute paths"), 0.10.0 (`#726`: a nonexistent path "now returns an error instead of silently failing"); messages `Main.cls:2447-2452`. Inventory: INT-LOAD-02; OP-LOAD-02. Observed: an existing relative path is accepted, because the check refuses a path only when it is neither existing, nor absolute, nor a URL. An absolute path that does not exist fails later, when IPM reads the manifest. No test.
+Sources: CHANGELOG 0.10.4 (`#706`: "load now only accepts absolute paths"), 0.10.0 (`#726`: a nonexistent path "now returns an error instead of silently failing"); messages `Main.cls:2447-2452`. Inventory: INT-LOAD-02; OP-LOAD-02. Observed: an existing relative path is accepted, because the check refuses a path only when it is neither existing, nor absolute, nor a URL. An absolute path that does not exist fails later, when IPM reads the manifest. No test. Not run by B2 phase 1. An existing relative path is queued for phase 2.
 
 ### load.refusal.manifest
 
@@ -265,7 +266,7 @@ Sources: CHANGELOG 0.10.4 (`#706`: "load now only accepts absolute paths"), 0.10
 - test-coverage
 - Expands: [Refusals](#load.refusal).
 
-Sources: `wiki/09` L114-133 (malformed manifest "rejected before any resource was touched"); messages `Utils/Module.cls:1255-1264`, `:341-343`. Inventory: A1 2.3 "Manifest" row; OP-LOAD-05, OP-LOAD-09. Test: `History.cls` `TestDevMode` (malformed manifest, with and without `-dev`). Suspected gap, stage B to confirm: the "no module definition" and "multiple documents" checks run after the manifest is loaded, so with `-DNoTransaction=1` the manifest stays and the record reads committed. Reconstruction check R6 added the wiki's timing.
+Sources: `wiki/09` L114-133 (malformed manifest "rejected before any resource was touched"); messages `Utils/Module.cls:1255-1264`, `:341-343`. Inventory: A1 2.3 "Manifest" row; OP-LOAD-05, OP-LOAD-09. Test: `History.cls` `TestDevMode` (malformed manifest, with and without `-dev`). Suspected gap, not yet run natively (queued for B2 phase 2): the "no module definition" and "multiple documents" checks run after the manifest is loaded, so with `-DNoTransaction=1` the manifest stays and the record reads committed. Reconstruction check R6 added the wiki's timing.
 
 ### load.refusal.downgrade
 
@@ -274,7 +275,7 @@ Sources: `wiki/09` L114-133 (malformed manifest "rejected before any resource wa
 - test-coverage
 - Expands: [Refusals](#load.refusal).
 
-Sources: message `Utils/Module.cls:1214-1217`; `-force` help `Main.cls:313`, `:441` ("newer version"); PR #887 review r2392741268 by isc-jili ("check for newVer<currVer has always been present"). Inventory: INT-LOAD-09; OP-LOAD-06. Tests: `InstallModule.cls` `TestInstallForceFlag`, `TestDevMode`; `History.cls` `TestDevModeRollbackNotCommitted`. Observed: `-DPermitDowngrade=1` does not lift this refusal, though dependency resolution honors it (OBS-L14). No human source defines `PermitDowngrade` beyond `update` refusing it.
+Sources: message `Utils/Module.cls:1214-1217`; `-force` help `Main.cls:313`, `:441` ("newer version"); PR #887 review r2392741268 by isc-jili ("check for newVer<currVer has always been present"). Inventory: INT-LOAD-09; OP-LOAD-06. Tests: `InstallModule.cls` `TestInstallForceFlag`, `TestDevMode`; `History.cls` `TestDevModeRollbackNotCommitted`. Observed: `-DPermitDowngrade=1` does not lift this refusal, though dependency resolution honors it (OBS-L14). No human source defines `PermitDowngrade` beyond `update` refusing it. Native evidence: g6 (`-force`) and g7 (`-dev`) are refused and leave 3.5.0 installed, with `Committed=0` (`182832Z-cases-dg`, `184230Z-replay-fast`). Suite InstallModule passes (`182208Z-suite-verify-InstallModule`).
 
 ### load.refusal.update-required
 
@@ -284,7 +285,7 @@ Sources: message `Utils/Module.cls:1214-1217`; `-force` help `Main.cls:313`, `:4
 - Expands: [Refusals](#load.refusal).
 - Children: [developer-mode bypass](#load.refusal.update-required.dev-bypass).
 
-Sources: README L62; `-force` help `Main.cls:313`, `:441`; message `Utils/Module.cls:1218-1222`; CHANGELOG 0.10.4 (`#550`); `wiki/08` L3; PR #887 review r2388507362 by isc-tleavitt. Inventory: INT-LOAD-10; OP-LOAD-06. Test: `InstallModule.cls` `TestInstallForceFlag`. Observed: a forced normal-mode install records every update step as already done, so they never run (`Lifecycle/Module.cls:122-127`).
+Sources: README L62; `-force` help `Main.cls:313`, `:441`; message `Utils/Module.cls:1218-1222`; CHANGELOG 0.10.4 (`#550`); `wiki/08` L3; PR #887 review r2388507362 by isc-tleavitt. Inventory: INT-LOAD-10; OP-LOAD-06. Test: `InstallModule.cls` `TestInstallForceFlag`. Observed: a forced normal-mode install records every update step as already done, so they never run (`Lifecycle/Module.cls:122-127`). Native evidence: g3 refused and kept 1.2.1, and g4 (`-force`) loaded 2.1.1 (`182832Z-cases-dg`).
 
 ### load.refusal.update-required.dev-bypass
 
@@ -293,7 +294,7 @@ Sources: README L62; `-force` help `Main.cls:313`, `:441`; message `Utils/Module
 - user-facing-behavior
 - Expands: [Update required](#load.refusal.update-required).
 
-Sources: A1 Q-02; test `InstallModule.cls` `TestDevMode` ("succeeds in dev mode and fails otherwise"); issue #903 by isc-eneil; README L62. Observed: the check skips `-dev` (`Utils/Module.cls:1219`), and a `-dev` install leaves the update steps pending for a later `update`. A read-only repository forces normal mode only after this check (`Utils/Module.cls:1277-1288`).
+Sources: A1 Q-02; test `InstallModule.cls` `TestDevMode` ("succeeds in dev mode and fails otherwise"); issue #903 by isc-eneil; README L62. Observed: the check skips `-dev` (`Utils/Module.cls:1219`), and a `-dev` install leaves the update steps pending for a later `update`. A read-only repository forces normal mode only after this check (`Utils/Module.cls:1277-1288`). Native evidence: g5 (`load -dev` of 3.x over 2.1.1) loads, consistent with the provisional answer (`182832Z-cases-dg`).
 
 ### load.refusal.requirements
 
@@ -303,7 +304,7 @@ Sources: A1 Q-02; test `InstallModule.cls` `TestDevMode` ("succeeds in dev mode 
 - Expands: [Refusals](#load.refusal).
 - Children: [timing](#load.refusal.requirements.timing).
 
-Sources: `wiki/03` L260-269; CHANGELOG 0.10.10 (`#106`), 0.10.0 (`#469`), 0.9.0 (`#364`), 0.10.4 (`#874`). Inventory: INT-LOAD-11, CAT-05; OP-LOAD-12. Test: `SystemRequirements.cls` `TestSYSNamespaceRequirement` (status and message only).
+Sources: `wiki/03` L260-269; CHANGELOG 0.10.10 (`#106`), 0.10.0 (`#469`), 0.9.0 (`#364`), 0.10.4 (`#874`). Inventory: INT-LOAD-11, CAT-05; OP-LOAD-12. Test: `SystemRequirements.cls` `TestSYSNamespaceRequirement` (status and message only). Native evidence: B1 (normal mode) refused with "requires the %SYS namespace" and kept nothing. Suite SystemRequirements passes (`182820Z-cases-b`, `182248Z-suite-verify-SystemRequirements`).
 
 ### load.refusal.requirements.timing
 
@@ -312,7 +313,7 @@ Sources: `wiki/03` L260-269; CHANGELOG 0.10.10 (`#106`), 0.10.0 (`#469`), 0.9.0 
 - user-facing-behavior
 - Expands: [Requirements](#load.refusal.requirements).
 
-Sources: A1 Q-17; `wiki/03` L260-261; issue #363 comment by isc-tleavitt. Observed: the check runs after the manifest is saved and after the developer-mode first commit (`Utils/Module.cls:1251-1321`). A refused `-dev` or `-DNoTransaction=1` load therefore keeps the manifest, and its record reads committed (OBS-L10). A refused normal-mode load is rolled back. No test covers the state after a refusal.
+Sources: A1 Q-17; `wiki/03` L260-261; issue #363 comment by isc-tleavitt. Confirmed as B2 D4, pending this question: refused `-dev`, `-DNoTransaction=1` and `-DNoJournal=1` loads keep the module record, with no classes, and read `Committed=1`. `list-installed` shows the module (cases B2, B3, B4; `182820Z-cases-b`, `184230Z-replay-fast`, `184630Z-repro-sysreq-dev-manifest-left`). B0 and B1 conform. Observed cause: the check runs after the manifest is saved and after the developer-mode first commit (`Utils/Module.cls:1251-1321`, OBS-L10).
 
 ### load.same-version
 
@@ -320,7 +321,7 @@ Sources: A1 Q-17; `wiki/03` L260-261; issue #363 comment by isc-tleavitt. Observ
 - architecture-decision
 - Expands: [Load](#load).
 
-Sources: PR #887 review r2388507362 by isc-tleavitt, 2025-09-29 ("someone's automation ... does an 'install' of the same version every time and makes sure that it succeeds"); r2392741268 by isc-jili ("removed check for newVer==currVer"). Inventory: INT-LOAD-18; OP-LOAD-06. This supersedes issue #903 and the CHANGELOG 0.10.4 `#903` entry, which said a same-version install should fail. No test covers a same-version install.
+Sources: PR #887 review r2388507362 by isc-tleavitt, 2025-09-29 ("someone's automation ... does an 'install' of the same version every time and makes sure that it succeeds"); r2392741268 by isc-jili ("removed check for newVer==currVer"). Inventory: INT-LOAD-18; OP-LOAD-06. This supersedes issue #903 and the CHANGELOG 0.10.4 `#903` entry, which said a same-version install should fail. No test covers a same-version install. Native evidence: g2 reloads 1.2.1 successfully (`182832Z-cases-dg`).
 
 ### load.outcome
 
@@ -330,7 +331,7 @@ Sources: PR #887 review r2388507362 by isc-tleavitt, 2025-09-29 ("someone's auto
 - Expands: [Load](#load).
 - Children: [developer-mode commits](#load.outcome.dev).
 
-Sources: `wiki/00` L125-126, L145-155; CHANGELOG 0.10.11 (`#1237`). Inventory: INT-LOAD-08, A1 2.2 and 2.3; commit-point matrix in A2 2.3; OP-LOAD-05, -07, -11, -14, -15, -16. Tests: `History.cls` `TestFailingPhases` (normal mode), `TestNoTransactionFailure`. The tests check status and history only. Observed: a load nested inside a caller's transaction cannot make its own commits final (P-4, OBS-H16, see [nested commits](history.g5.md#history.committed.nested)). Reconstruction check R5 added the dying-process rule from `wiki/00` L147 ("a failure mid-way through is fully rolled back") and L155 (with `NoJournal`, "if the process crashes mid-install, changes cannot be rolled back and the namespace may be left in an inconsistent state"). That IRIS rolls back a dead process's open transaction is premise P-6, for stage B. Observed: the `.modules` temporary repository and unpacked files stay after a killed load.
+Sources: `wiki/00` L125-126, L145-155; CHANGELOG 0.10.11 (`#1237`). Inventory: INT-LOAD-08, A1 2.2 and 2.3; commit-point matrix in A2 2.3; OP-LOAD-05, -07, -11, -14, -15, -16. Tests: `History.cls` `TestFailingPhases` (normal mode), `TestNoTransactionFailure`. The tests check status and history only. Observed: a load nested inside a caller's transaction cannot make its own commits final (P-4, OBS-H16, see [nested commits](history.g5.md#history.committed.nested)). Reconstruction check R5 added the dying-process rule from `wiki/00` L147 ("a failure mid-way through is fully rolled back") and L155 (with `NoJournal`, "if the process crashes mid-install, changes cannot be rolled back and the namespace may be left in an inconsistent state"). That IRIS rolls back a dead process's open transaction is premise P-6. Observed: the `.modules` temporary repository and unpacked files stay after a killed load. Native evidence: A1 (normal mode, parent fails after its dependency loaded) leaves the modules and classes absent. C1 and C3 (terminated or killed in Activate) are rolled back. B3 and B4 keep partial writes (`182759Z-cases-a`, `182903Z-cases-c-terminate`, `182927Z-cases-c-sigkill`, `182820Z-cases-b`). Premise P-6 is confirmed and refined (round 1 R1-ONT-14, N-P12, N-P18). After a SIGKILL, IRIS rolls back only when it cleans up the dead process's slot, which took 105 s, 226 s and about 10 minutes in three runs, and other processes can read the uncommitted writes until then (`181724Z-premise-p18-sigkill-r3`, `182927Z-cases-c-sigkill`, `183827Z-cases-c4r`). Compiled classes of a rolled-back normal-mode load were absent afterwards (A1, C1).
 
 ### load.outcome.dev
 
@@ -340,7 +341,7 @@ Sources: `wiki/00` L125-126, L145-155; CHANGELOG 0.10.11 (`#1237`). Inventory: I
 - Expands: [Outcome](#load.outcome).
 - Children: [early failure](#load.outcome.dev.early-failure).
 
-Sources: `wiki/00` L126; `wiki/09` L86; maintainer comments `Utils/Module.cls:1310`, `:1316-1317`, `:1336-1337` ("commit load of dependencies (if all went well) and don't wrap reload/compile ... in a transaction; we want to be able to debug!"). Inventory: INT-LOAD-06; OP-LOAD-11, OP-LOAD-14. Test: `History.cls` `TestDevModeFailureAfterCommit`. Observed: a developer-mode dependency commits inside its parent's transaction, so its own commits are not final (P-4).
+Sources: `wiki/00` L126; `wiki/09` L86; maintainer comments `Utils/Module.cls:1310`, `:1316-1317`, `:1336-1337` ("commit load of dependencies (if all went well) and don't wrap reload/compile ... in a transaction; we want to be able to debug!"). Inventory: INT-LOAD-06; OP-LOAD-11, OP-LOAD-14. Test: `History.cls` `TestDevModeFailureAfterCommit`. Observed: a developer-mode dependency commits inside its parent's transaction, so its own commits are not final (P-4). Native evidence: A2 (dependency fails) keeps the parent manifest and drops the dependency. A5 (parent fails after the dependency transaction) keeps the manifest, classes and dependency. C2 and C4R keep the module after termination (`182759Z-cases-a`, `182903Z-cases-c-terminate`, `183827Z-cases-c4r`).
 
 ### load.outcome.dev.early-failure
 
@@ -349,7 +350,7 @@ Sources: `wiki/00` L126; `wiki/09` L86; maintainer comments `Utils/Module.cls:13
 - test-coverage
 - Expands: [Developer-mode commits](#load.outcome.dev).
 
-Sources: CHANGELOG 0.10.11 (`#1237`: "A -dev action rolled back before its first commit reads uncommitted"); issue #1237 by isc-dchui ("Everything in that window runs inside a transaction that the catch block rolls back ... regardless of developer mode"). Inventory: INT-LOAD-05, INT-LOAD-09; OP-LOAD-06, OP-LOAD-16. Tests: `History.cls` `TestDevModeRollbackNotCommitted`, `TestDevMode`.
+Sources: CHANGELOG 0.10.11 (`#1237`: "A -dev action rolled back before its first commit reads uncommitted"); issue #1237 by isc-dchui ("Everything in that window runs inside a transaction that the catch block rolls back ... regardless of developer mode"). Inventory: INT-LOAD-05, INT-LOAD-09; OP-LOAD-06, OP-LOAD-16. Tests: `History.cls` `TestDevModeRollbackNotCommitted`, `TestDevMode`. Native evidence: g7 (`load -dev` of an older version) is refused with `Committed=0` (`182832Z-cases-dg`).
 
 ### load.dependencies
 
@@ -359,7 +360,7 @@ Sources: CHANGELOG 0.10.11 (`#1237`: "A -dev action rolled back before its first
 - Expands: [Load](#load).
 - Children: [local repository](#load.dependencies.local-repo).
 
-Sources: `Main.cls:270-271`, `:312`; CHANGELOG 0.10.5 (`#885`); `wiki/00` L126. Inventory: INT-LOAD-14; OP-LOAD-13, OP-LOAD-18, OP-LOAD-20. Tests: `LoadModuleWithDeps.cls` `TestLoadModuleWithDependencies`; `History.cls` `TestWithDependencies`.
+Sources: `Main.cls:270-271`, `:312`; CHANGELOG 0.10.5 (`#885`); `wiki/00` L126. Inventory: INT-LOAD-14; OP-LOAD-13, OP-LOAD-18, OP-LOAD-20. Tests: `LoadModuleWithDeps.cls` `TestLoadModuleWithDependencies`; `History.cls` `TestWithDependencies`. Native evidence: A0 and A4 conform. A3 (a dependency's Activate fails) fails the parent (`182759Z-cases-a`). Suite LoadModuleWithDeps passes (`182313Z-suite-verify-LoadModuleWithDeps`).
 
 ### load.dependencies.local-repo
 
@@ -367,7 +368,7 @@ Sources: `Main.cls:270-271`, `:312`; CHANGELOG 0.10.5 (`#885`); `wiki/00` L126. 
 - user-facing-behavior
 - Expands: [Dependencies](#load.dependencies).
 
-Sources: PR #726 body by isc-shuliu; CHANGELOG 0.10.0 (`#726`, `#729`); comment `Main.cls:2523-2524`. Inventory: INT-LOAD-14; OP-LOAD-04. Suspected gap, stage B to confirm: if the `.modules` folder cannot be cached, the temporary repository is never created and the final cleanup fails after the load has committed (OBS-L12). Observed: a process that dies mid-load leaves the temporary repository defined.
+Sources: PR #726 body by isc-shuliu; CHANGELOG 0.10.0 (`#726`, `#729`); comment `Main.cls:2523-2524`. Inventory: INT-LOAD-14; OP-LOAD-04. Suspected gap, not yet run natively (lower priority in B2 phase 2): if the `.modules` folder cannot be cached, the temporary repository is never created and the final cleanup fails after the load has committed (OBS-L12). Observed: a process that dies mid-load leaves the temporary repository defined.
 
 ### load.write-check
 
@@ -375,4 +376,4 @@ Sources: PR #726 body by isc-shuliu; CHANGELOG 0.10.0 (`#726`, `#729`); comment 
 - user-facing-behavior
 - Expands: [Load](#load).
 
-Sources: CHANGELOG 0.10.7 (`#1053`); issue #1053. Inventory: INT-LOAD-16; OP-LOAD-19. Observed: an explicit check exists only for repository archives (`Utils/Module.cls:228-233`). An archive `load` relies on folder-creation errors (`Main.cls:2510`).
+Sources: CHANGELOG 0.10.7 (`#1053`); issue #1053. Inventory: INT-LOAD-16; OP-LOAD-19. Observed: an explicit check exists only for repository archives (`Utils/Module.cls:228-233`). An archive `load` relies on folder-creation errors (`Main.cls:2510`). Not run by B2.

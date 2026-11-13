@@ -89,7 +89,7 @@ A module installed in developer mode cannot be overwritten by a normal-mode inst
 May `-force` lift the developer-mode overwrite guard, and does the guard cover `load`?
 
 - Provisional answer: keep the current scope. The guard covers `install` only, and `-force` does not lift it.
-- Reason: the wiki says "Uninstall first, or use `-force`", but no code or test supports `-force` here. Treat that wiki line as a documentation error until a maintainer decides.
+- Reason: this follows the product as built since the guard was added, and the `-force` help, which speaks only of newer versions without update steps. The wiki's "Uninstall first, or use `-force`" conflicts with both, and a maintainer must decide which is meant.
 - Alternative: let `-force` lift the guard as the wiki says, and decide whether `load` is covered.
 
 <a id="dev-mode.sticky"></a>
@@ -112,7 +112,7 @@ Source locators follow the conventions on the [root page](../root.g5.md#how-to-r
 - test-coverage
 - Children: [rollback scope](#transaction.rollback-scope), [turning transactions off](#transaction.opt-out), [flag sources](#transaction.flag-sources).
 
-Sources: `wiki/00` L125-126, L145-149 ("the entire load/install is wrapped in a transaction; any failure rolls the namespace back"). Inventory: INT-LOAD-08; OP-LOAD-05, OP-LOAD-15, OP-LOAD-16. Test: `History.cls` `TestFailingPhases` (normal-mode failure reads uncommitted). Formal scope: model and native evidence pending stage B.
+Sources: `wiki/00` L125-126, L145-149 ("the entire load/install is wrapped in a transaction; any failure rolls the namespace back"). Inventory: INT-LOAD-08; OP-LOAD-05, OP-LOAD-15, OP-LOAD-16. Test: `History.cls` `TestFailingPhases` (normal-mode failure reads uncommitted). Native evidence (B2 phase 1, run IDs under `.g5/Verus_verification/results/native/`): a normal-mode failure after a dependency loaded leaves the modules and classes absent (case A1, `20261113T182759Z-cases-a`). Rollback premises N-P01 to N-P03 are confirmed (`20261113T181129Z-premises`). Formal evidence is linked at handoff.
 
 ### transaction.rollback-scope
 
@@ -130,7 +130,7 @@ Sources: A1 Q-04; `wiki/00` L126; CHANGELOG 0.10.11 (`#1183`, temp folder cleanu
 - test-coverage
 - Expands: [Transactions](#transaction).
 
-Sources: `wiki/00` L139-155; `wiki/02` L447, L595, L907, L1367; `Main.cls:628-630` example. Inventory: INT-LOAD-08, CAT-28; OP-LOAD-05, OP-LOAD-07, OP-LOAD-26. Test: `History.cls` `TestNoTransactionFailure`. The help for `reinstall` and `update` lists these flags only through the wiki. Formal scope: pending stage B. Reconstruction check R5 added the crash trade-off from `wiki/00` L155. The wiki states it for `NoJournal`, and it holds for `NoTransaction` because there is no transaction to roll back (`wiki/00` L147). Observed: the journaling flag is restored when the load's journal manager object is released (`Utils/JournalManager.cls`, OP-LOAD-26).
+Sources: `wiki/00` L139-155; `wiki/02` L447, L595, L907, L1367; `Main.cls:628-630` example. Inventory: INT-LOAD-08, CAT-28; OP-LOAD-05, OP-LOAD-07, OP-LOAD-26. Test: `History.cls` `TestNoTransactionFailure`. The help for `reinstall` and `update` lists these flags only through the wiki. Native evidence: with journaling turned off by the `NoJournal` path, a rollback does not revert writes, and the flag is restored afterwards (N-P07, `20261113T181129Z-premises`). B3 and B4 keep partial writes (`20261113T182820Z-cases-b`). Reconstruction check R5 added the crash trade-off from `wiki/00` L155. The wiki states it for `NoJournal`, and it holds for `NoTransaction` because there is no transaction to roll back (`wiki/00` L147). Observed: the journaling flag is restored when the load's journal manager object is released (`Utils/JournalManager.cls`, OP-LOAD-26).
 
 ### transaction.flag-sources
 
@@ -138,7 +138,7 @@ Sources: `wiki/00` L139-155; `wiki/02` L447, L595, L907, L1367; `Main.cls:628-63
 - user-facing-behavior
 - Expands: [Transactions](#transaction).
 
-Sources: `wiki/00` L161-180 (command line, `default-modifiers`, `<Defaults>`); `wiki/03` L252-258 (`-D` overrides `<Defaults>`); maintainer comment `Main.cls:1067-1070` ("so they can be overwritten by commands"). Inventory: INT-LOAD-08, CAT-04, CAT-27; OP-LOAD-05 (`Utils/Module.cls:1166-1169`). Observed: a module's own `<Defaults>` can turn transactions off for itself (`Utils/Module.cls:1033-1041`). Suspected gap, stage B to confirm: default modifiers are stored in `^%IPM.DefaultModifiers`, which may be shared by every namespace (OBS-X1, P-10). Reconstruction check R13: no human source sets precedence between default modifiers and `<Defaults>`. Observed: default modifiers enter the command data, which overrides the module's `<Defaults>`, so the order is command line, then default modifiers, then `<Defaults>` (`Main.cls:1067-1069`; `Utils/Module.cls:1166-1169`). Stage B carries this as a condition, not a rule.
+Sources: `wiki/00` L161-180 (command line, `default-modifiers`, `<Defaults>`); `wiki/03` L252-258 (`-D` overrides `<Defaults>`); maintainer comment `Main.cls:1067-1070` ("so they can be overwritten by commands"). Inventory: INT-LOAD-08, CAT-04, CAT-27; OP-LOAD-05 (`Utils/Module.cls:1166-1169`). Observed: a module's own `<Defaults>` can turn transactions off for itself (`Utils/Module.cls:1033-1041`). Suspected gap, not run natively in B2 phase 1: default modifiers are stored in `^%IPM.DefaultModifiers`, which may be shared by every namespace (OBS-X1, P-10). Reconstruction check R13: no human source sets precedence between default modifiers and `<Defaults>`. Observed: default modifiers enter the command data, which overrides the module's `<Defaults>`, so the order is command line, then default modifiers, then `<Defaults>` (`Main.cls:1067-1069`; `Utils/Module.cls:1166-1169`). Stage B carries this as a condition, not a rule.
 
 ### dev-mode
 
@@ -155,7 +155,7 @@ Sources: `Main.cls:306`, `:434` (`-dev` help); `wiki/00` L107-135; `Main.cls:262
 - test-coverage
 - Expands: [Developer mode](#dev-mode).
 
-Sources: `-dev` help `Main.cls:306`, `:434` ("transactions will not be rolled back if installation fails"); issue #363 comment by isc-tleavitt, 2025-09-15 ("we don't remove these entries when installing in dev mode (to support debugging), but will in non-dev mode"); `wiki/00` L125-126; CHANGELOG 0.10.4 (`#363`), 0.10.11 (`#1237`). Inventory: INT-LOAD-05. Test: `History.cls` `TestDevModeFailureAfterCommit`. The `-dev` help for `reinstall` and `update` lacks the rollback sentence. Reconstruction check R8 added the dependency exception from the maintainer comment `Utils/Module.cls:1336-1337` ("commit load of dependencies (if all went well)").
+Sources: `-dev` help `Main.cls:306`, `:434` ("transactions will not be rolled back if installation fails"); issue #363 comment by isc-tleavitt, 2025-09-15 ("we don't remove these entries when installing in dev mode (to support debugging), but will in non-dev mode"); `wiki/00` L125-126; CHANGELOG 0.10.4 (`#363`), 0.10.11 (`#1237`). Inventory: INT-LOAD-05. Test: `History.cls` `TestDevModeFailureAfterCommit`. The `-dev` help for `reinstall` and `update` lacks the rollback sentence. Reconstruction check R8 added the dependency exception from the maintainer comment `Utils/Module.cls:1336-1337` ("commit load of dependencies (if all went well)"). Native evidence: A2, A5, C2 and C4R keep what developer mode had committed (`20261113T182759Z-cases-a`, `20261113T182903Z-cases-c-terminate`, `20261113T183827Z-cases-c4r`).
 
 ### dev-mode.not-propagated
 
@@ -165,7 +165,7 @@ Sources: `-dev` help `Main.cls:306`, `:434` ("transactions will not be rolled ba
 - Expands: [Developer mode](#dev-mode).
 - Children: [local snapshot exception](#dev-mode.not-propagated.local-snapshot).
 
-Sources: CHANGELOG 0.10.5 (`#316`, `#1036`); `wiki/00` L133; commit `0e25c23d` comment "Propagate all params except developer mode". Inventory: INT-LOAD-07; OP-LOAD-20. Tests: `LoadModuleWithDeps.cls` `TestParamPropagation`; `Update.cls` `TestDevModePropagation`. Suspected gap, stage B to confirm: `update <m> -dev` from a registry leaves the top-level module itself in normal mode (OBS-L4).
+Sources: CHANGELOG 0.10.5 (`#316`, `#1036`); `wiki/00` L133; commit `0e25c23d` comment "Propagate all params except developer mode". Inventory: INT-LOAD-07; OP-LOAD-20. Tests: `LoadModuleWithDeps.cls` `TestParamPropagation`; `Update.cls` `TestDevModePropagation`. Suspected gap, not run natively in B2 phase 1: `update <m> -dev` from a registry leaves the top-level module itself in normal mode (OBS-L4). Native evidence: A4 (`load -dev` with a dependency) leaves the dependency in normal mode (`20261113T182759Z-cases-a`). Suites LoadModuleWithDeps and Update pass (`20261113T182313Z-suite-verify-LoadModuleWithDeps`, `20261113T182433Z-suite-verify-Update`).
 
 ### dev-mode.not-propagated.local-snapshot
 
@@ -191,7 +191,7 @@ Sources: `wiki/00` L129; message `Utils/Module.cls:109-112`. Inventory: INT-LOAD
 - user-facing-behavior
 - Expands: [Overwrite guard](#dev-mode.overwrite-guard).
 
-Sources: A1 Q-03; `wiki/00` L129; `Utils/Module.cls:103-114`.
+Sources: A1 Q-03; `wiki/00` L129 (maintainer-authored, isc-dchui, 2026-05-13); `wiki/05` (names only uninstalling); `-force` help `Main.cls:441`; `Utils/Module.cls:103-114`. The guard has never checked `-force` since it was introduced in commit `d541c5b4` (2022-08-23). Round 1 R1-ONT-05: the wiki line is a conflict for a maintainer, not a documentation error. Not run by B2.
 
 ### dev-mode.sticky
 
@@ -200,4 +200,4 @@ Sources: A1 Q-03; `wiki/00` L129; `Utils/Module.cls:103-114`.
 - user-facing-behavior
 - Expands: [Developer mode](#dev-mode).
 
-Sources: A1 Q-01; CHANGELOG 0.10.4 (`#892`: "no longer sets Developer Mode unless -dev flag is set"); issue #892; commit `f83b207e`. Observed: a load without `-dev` or `-nodev` keeps the stored mode and does not save `Root` or `Repository` (`Utils/Module.cls:1298-1307`, OBS-L3). Affects [load options](../features/load.g5.md#load.options).
+Sources: A1 Q-01; CHANGELOG 0.10.4 (`#892`: "no longer sets Developer Mode unless -dev flag is set"); issue #892; commit `f83b207e`. Observed: a load without `-dev` or `-nodev` keeps the stored mode and does not save `Root` or `Repository` (`Utils/Module.cls:1298-1307`, OBS-L3). Affects [load options](../features/load.g5.md#load.options). Native evidence: g8 (plain `load` of a developer-mode module) keeps developer mode, consistent with the provisional answer, and g9 (`-nodev`) turns it off (`20261113T182832Z-cases-dg`).
