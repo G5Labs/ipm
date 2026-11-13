@@ -1,0 +1,56 @@
+PASS C B1-C01 kind 1 installed: valid neighbor (saved observation) | corrected: PERMITTED | original: PERMITTED
+PASS C B1-C01 kind 1 installed: resources missing from the namespace | corrected: VIOLATES L1-NAMESPACE | original: PERMITTED
+PASS C B1-C01 kind 1 installed: wrong version | corrected: VIOLATES L1-NAMESPACE | original: VIOLATES modules_one_of
+PASS C B1-C01 kind 1 installed: developer mode on | corrected: VIOLATES L1-NAMESPACE | original: VIOLATES modules_one_of
+PASS C B1-C01 kind 1 installed: resources not observed | corrected: INDETERMINATE L1-NAMESPACE | original: PERMITTED
+PASS C B1-C05 kind 0 unchanged (absent): valid neighbor | corrected: PERMITTED | original: PERMITTED
+PASS C B1-C05 kind 0 unchanged (absent): module record written | corrected: VIOLATES H-COMMITTED[top],L1-NAMESPACE | original: VIOLATES history.top.committed,modules_one_of
+PASS C B1-C05 kind 0 unchanged (absent): no module observation at all | corrected: INDETERMINATE H-COMMITTED[top],L1-NAMESPACE | original: PERMITTED
+PASS C B1-C11 kind 0 unchanged (present): valid neighbor | corrected: VIOLATES H-RECORD-FIELDS[top] | original: VIOLATES history.top.package_set
+PASS C B1-C11 kind 0 unchanged (present): record rewritten (LastUpdated changed) | corrected: VIOLATES H-COMMITTED[top],H-RECORD-FIELDS[top],L1-NAMESPACE | original: VIOLATES history.top.committed,history.top.package_set
+PASS C B1-C11 kind 0 unchanged (present): LastUpdated not observed | corrected: VIOLATES H-RECORD-FIELDS[top] | original: VIOLATES history.top.committed,history.top.package_set
+PASS C B1-C33 kind 2 manifest only: saved observation (dependency record lost, D1) | corrected: VIOLATES H-RECORD-EXISTS[dep1] | original: VIOLATES history.dep1.row
+PASS C B1-C33 kind 2 manifest only: stored document at another version | corrected: VIOLATES H-RECORD-EXISTS[dep1],L1-NAMESPACE | original: VIOLATES history.dep1.row
+PASS C B1-C33 kind 2 manifest only: resources loaded although they were absent before | corrected: VIOLATES H-RECORD-EXISTS[dep1],L1-NAMESPACE | original: VIOLATES history.dep1.row,modules_one_of
+PASS C B1-C34 kind 3/4: valid neighbor | corrected: PERMITTED | original: PERMITTED
+PASS C B1-C34 kind 4 manifest present: module record absent | corrected: VIOLATES L1-NAMESPACE | original: VIOLATES modules_one_of
+PASS C B1-C34 kind 3 any: dependency in any state | corrected: PERMITTED | original: PERMITTED
+PASS C B1-C46T kind 5/6: saved observation | corrected: VIOLATES H-RECORD-FIELDS[top] | original: VIOLATES history.top.finalized
+PASS C B1-C46T kind 5 unchanged or present: present at another version | corrected: VIOLATES H-RECORD-FIELDS[top],L1-NAMESPACE | original: VIOLATES history.top.finalized,modules_one_of
+PASS C B1-C46T kind 6 unchanged or installed: dependency present without resources | corrected: VIOLATES H-RECORD-FIELDS[top],L1-NAMESPACE | original: VIOLATES history.top.finalized
+PASS C B1-C44K two alternatives: saved observation (unchanged) | corrected: VIOLATES H-RECORD-FIELDS[top] | original: VIOLATES history.top.last_phase_status,history.top.package_set,history.top.phases_started
+PASS C B1-C44K two alternatives: partial state matching neither | corrected: VIOLATES H-COMMITTED[top],H-RECORD-FIELDS[top],L1-NAMESPACE | original: VIOLATES history.top.committed,history.top.last_phase_status,history.top.package_set,history.top.phases_started
+PASS C B1-C01 record: not finalized | corrected: VIOLATES H-RECORD-FIELDS[top] | original: VIOLATES history.top.finalized
+PASS C B1-C01 record: four phases | corrected: VIOLATES H-RECORD-FIELDS[top] | original: VIOLATES history.top.phases_started
+PASS C B1-C01 record: last phase failed | corrected: VIOLATES H-RECORD-FIELDS[top] | original: VIOLATES history.top.last_phase_status
+PASS C B1-C01 record: no end time | corrected: VIOLATES H-RECORD-FIELDS[top] | original: VIOLATES history.top.time_end_set
+PASS C B1-C01 record: success error | corrected: VIOLATES H-RECORD-FIELDS[top] | original: VIOLATES history.top.success
+PASS C B1-C01 record: missing | corrected: VIOLATES H-RECORD-EXISTS[top] | original: VIOLATES history.top.row
+PASS C B1-C01 status: error returned | corrected: VIOLATES L1-STATUS | original: VIOLATES status,verdict
+PASS C B1-C01 status: not observed | corrected: INDETERMINATE L1-STATUS | original: VIOLATES status,verdict
+PASS C B1-C08 committed: not observed | corrected: INDETERMINATE H-COMMITTED[top] | original: VIOLATES history.top.committed
+PASS C B1-C31 record exists: dependency row restored as the contract requires (valid neighbor) | corrected: PERMITTED | original: PERMITTED
+PASS C B1-C33 Committed per slot: dependency row present, dependency rolled back, Committed=0 (valid) | corrected: PERMITTED | original: VIOLATES history.dep1.committed
+PASS C B1-C33 Committed per slot: dependency row present, dependency rolled back, Committed=1 | corrected: VIOLATES H-COMMITTED[dep1] | original: PERMITTED
+PASS C B1-C33 kind 2 isolated: valid neighbor (dependency row as the contract requires) | corrected: PERMITTED | original: VIOLATES history.dep1.committed
+PASS C B1-C33 kind 2 isolated: stored document at another version | corrected: VIOLATES L1-NAMESPACE | original: VIOLATES history.dep1.committed
+PASS C B1-C46T kind 6 isolated: valid neighbor (top row not finalized) | corrected: PERMITTED | original: PERMITTED
+PASS C B1-C46T kind 6 isolated: dependency present without resources | corrected: VIOLATES L1-NAMESPACE | original: PERMITTED
+PASS C B1-C38 Committed per slot: saved observation | corrected: PERMITTED | original: PERMITTED
+PASS C B1-C31 qualified row (ex=2): absent row passes | corrected: PERMITTED | original: None
+PASS C B1-C31 qualified row (ex=2): row not observed leaves its fields unknown | corrected: INDETERMINATE H-COMMITTED[dep1],H-RECORD-FIELDS[dep1] | original: None
+PASS C B1-C31 qualified row (ex=2): present row with no end time fails its fields | corrected: VIOLATES H-COMMITTED[dep1],H-RECORD-FIELDS[dep1] | original: None
+PASS C B1-C08 clause identity: different failed clause, same overall verdict | corrected: {'failed': ['L1-NAMESPACE'], 'model': ['H-COMMITTED[top]'], 'same_clauses': False} | original: VIOLATES modules_one_of
+PASS D B1-C05 missing case: scheduled but absent from the log | corrected: INCOMPLETE | original: case absent from results (silently dropped)
+PASS D B1-C01 missing field: resources_loaded line removed | corrected: INCOMPLETE/INDETERMINATE | original: None
+PASS D B1-C02 stale input: target cases.json changed the case's inputs | corrected: True | original: None
+PASS D B1-C01 stale input: unchanged neighbor stays evaluable | corrected: PERMITTED | original: None
+PASS D B1-C01 conflicting repeated measurement | corrected: INCOMPLETE | original: keeps last value only: history.top.committed=0
+PASS D B1-C01 repeated identical measurement | corrected: ('PERMITTED', {'history.top.committed': 2}) | original: None
+PASS D * input.cos differs from the receipt's script hash | corrected: INCOMPLETE | original: None
+PASS D * NATIVE-END missing | corrected: INCOMPLETE | original: None
+PASS D B1-C99 observed but not scheduled | corrected: ['B1-C99'] | original: None
+PASS D B1-C01 measurement outside its case's markers | corrected: INCOMPLETE | original: None
+PASS D B1-C01 driver reported one of two History rows for a slot | corrected: INCOMPLETE | original: None
+PASS D * unmodified run: every scheduled case is complete | corrected: 43 | original: None
+counts {'A': {'pass': 175, 'fail': 0}, 'B': {'pass': 59, 'fail': 0}, 'C': {'pass': 43, 'fail': 0}, 'D': {'pass': 12, 'fail': 0}}

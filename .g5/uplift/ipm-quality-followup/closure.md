@@ -178,6 +178,15 @@ Accepted. Primary class: A2, V7.
 | R12e | an independent check of this follow-up's material corrections, with exactly what it covered | accept | fresh reviewer with its own record under `review/` |
 | R12f | separate counts: formal proofs, controls, exact native cases, questions, product findings | accept | handoff |
 
+## Status
+
+| Finding | Status | Closure evidence | Residual |
+|---|---|---|---|
+| R01 | CLOSED | `Verus_verification/followup/replay/` (`l1sem.py`, `evaluate_replay2.py`, `PROJECTION.md`); controls `followup/results/20261113T232331Z-replay-controls` (A 175, B 59, C 43, D 12, all pass); re-evaluation `followup/results/20261113T232332Z-replay-reeval` (`delta.md`) | `wr` stays a proxy (`LastUpdated`), and `res` stays a one-class projection (R07) |
+| R02 | CLOSED | per-slot `kept`, per-clause comparison with `violated_clauses`, controls "Committed per slot", "qualified row", "clause identity" | R02a and R02b are latent in the saved corpus (no observation exercises them) |
+| R03 | CLOSED except R03f | schedule, markers, conflicts, staleness and provenance in `evaluate_replay2.py`; evidence controls D1–D12 | R03f: the helper sources used by four final replay runs were never committed and cannot be recovered. No case needs re-execution for staleness. New native runs in this follow-up snapshot their helper sources at start |
+| R04–R12 | OPEN | | |
+
 ## Superseded files
 
 None yet.
@@ -185,3 +194,4 @@ None yet.
 ## Revisions
 
 - Initial ledger, written before any artifact was revised. R01a–c and R03c were checked against the saved evidence before writing (see `audit-validation.md`).
+- R01–R03 closed (R03f residual). R02b narrowed: the qualified-row handling matched Verus, and the gaps were missing-data handling and the lost Q identity. R03d narrowed: the original did not rely on the return code alone.
