@@ -1,6 +1,6 @@
 # Dependency resolution and lock files
 
-Before a package change loads anything, IPM works out which version of each dependency to use. [Loading](load.g5.md#load.dependencies) owns the order and failure rules of the dependency loads themselves.
+Before it loads any dependency, IPM works out which version of each dependency to use. [Loading](load.g5.md#load.dependencies) owns the order and failure rules of the dependency loads themselves.
 
 ## Definitions
 
@@ -12,7 +12,7 @@ Before a package change loads anything, IPM works out which version of each depe
 <a id="deps"></a>
 [I · deps]
 
-Before loading, IPM resolves the module's whole dependency tree across the enabled repositories, one level at a time.
+Before it loads any dependency, IPM resolves the module's whole dependency tree across the enabled repositories, one level at a time.
 
 - It passes every parameter except [developer mode](../concepts/transactions-and-dev-mode.g5.md#dev-mode.not-propagated) on to the dependencies.
 - A dependency limited to the `test` or `verify` phase is loaded only for that phase.
@@ -20,12 +20,15 @@ Before loading, IPM resolves the module's whole dependency tree across the enabl
 <a id="deps.conflict"></a>
 [I · deps.conflict]
 
-When no version can satisfy every requirement, IPM refuses and names the modules whose requirements conflict.
+When no version can satisfy every requirement, IPM stops the load with an error that names the modules whose requirements conflict.
+
+- The conflict fails the load, so [what a failed load keeps](load.g5.md#load.outcome) applies.
+- In developer mode, resolution happens after the [first commit](load.g5.md#load.outcome.dev), so the saved manifest stays.
 
 <a id="deps.installed"></a>
 [I · deps.installed]
 
-A dependency version must also satisfy the requirements of modules already installed in the namespace. Otherwise IPM refuses with "Requested version ... does not satisfy the requirements of other modules installed in the current namespace".
+A dependency version must also satisfy the requirements of modules already installed in the namespace. Otherwise the load fails with "Requested version ... does not satisfy the requirements of other modules installed in the current namespace", like a [conflict](#deps.conflict).
 
 <a id="deps.lockfile"></a>
 [I · deps.lockfile]
@@ -46,16 +49,16 @@ Source locators follow the conventions on the [root page](../root.g5.md#how-to-r
 - test-coverage
 - Children: [conflict](#deps.conflict), [installed requirements](#deps.installed), [lock file](#deps.lockfile).
 
-Sources: CHANGELOG 0.9.0 (`#261`), 0.10.5 (`#316`, `#481`, `#1015`); `wiki/03` L243-250. Inventory: CAT-18; OP-LOAD-13 (`Storage.Module:BuildDependencyGraph`, `Storage/Module.cls:898`). Tests: `BuildDependencyGraph.cls` `TestScopedDepExcludedWhenPhaseInactive`, `TestInstalledVersionUsedWhenCompatible`; `Scopes.cls` `TestScopedDependencyLoadingTest`. Observed: phase-limited dependencies are described only by code and tests. Each phase-scoped dependency that `test` or `verify` loads gets a `load` history record (OP-LOAD-29).
+Sources: CHANGELOG 0.9.0 (`#261`), 0.10.5 (`#316`, `#481`, `#1015`); `wiki/03` L243-250. Inventory: CAT-18; OP-LOAD-13 (`Storage.Module:BuildDependencyGraph`, `Storage/Module.cls:898`). Tests: `BuildDependencyGraph.cls` `TestScopedDepExcludedWhenPhaseInactive`, `TestInstalledVersionUsedWhenCompatible`; `Scopes.cls` `TestScopedDependencyLoadingTest`. Observed: phase-limited dependencies are described only by code and tests. Each phase-scoped dependency that `test` or `verify` loads gets a `load` history record (OP-LOAD-29). No human source says when resolution runs relative to the manifest save. The statement says only that it precedes any dependency load (reconstruction check R1).
 
 ### deps.conflict
 
-- human-provided
+- human-verified
 - user-facing-behavior
 - test-coverage
 - Expands: [Dependency resolution](#deps).
 
-Sources: CHANGELOG 0.10.8 (`#1192`, `#1077`); `Storage/Module.cls:954-959`. Inventory: CAT-18, A1 seed 4. Tests: `BuildDependencyGraph.cls` `TestInstalledDirectVersionConflictWithAndWithoutIgnoreFlag`, `TestInstalledModuleConstraintConflictWithAndWithoutIgnoreFlag`. A test comment (`BuildDependencyGraph.cls:231-232`) still calls an exact-versus-range case a known edge case that the CHANGELOG says is fixed.
+Sources: CHANGELOG 0.10.8 (`#1192`, `#1077`); `Storage/Module.cls:954-959`. Timing: maintainer comment `Utils/Module.cls:1316-1317` places "the dependency resolution process" in the second developer-mode transaction, after the first commit. Reconstruction check row R1. Inventory: OP-LOAD-13 (`BuildDependencyGraph` runs inside `LoadDependencies`, `Utils/Module.cls:1328`). Inventory: CAT-18, A1 seed 4. Tests: `BuildDependencyGraph.cls` `TestInstalledDirectVersionConflictWithAndWithoutIgnoreFlag`, `TestInstalledModuleConstraintConflictWithAndWithoutIgnoreFlag`. A test comment (`BuildDependencyGraph.cls:231-232`) still calls an exact-versus-range case a known edge case that the CHANGELOG says is fixed.
 
 ### deps.installed
 

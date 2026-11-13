@@ -3,14 +3,14 @@
 IPM keeps a log of what it did to each namespace, so users can find out what changed, when, who ran it and why something failed. This page is in the formal scope of the uplift, together with [loading](load.g5.md).
 
 ```
-action starts ──► record created (end time empty, placeholder version)
-     │                 │ kept in IRISTEMP while the action runs,
-     │                 │ so a rollback cannot erase it
-     ▼                 ▼
+action starts ──► permanent record written (Success 0, no end time,
+     │             placeholder version), outside the action's transaction;
+     │             in-progress copy kept in IRISTEMP, so a rollback cannot erase it
+     ▼
  phases run ─────► phase entries added; Committed set at each commit
      │
-action ends ────► Success and end time set; record finalized and
-                  copied to the namespace's permanent log (now read-only)
+action ends ────► Success and end time set; result copied to the
+                  permanent record outside the transaction; finalized (read-only)
 ```
 
 ## Definitions
@@ -42,20 +42,24 @@ IPM records every `install`, `load`, `uninstall` and `update` it attempts.
 
 IPM creates a record as soon as an action starts and fills it in when the action ends. A process that dies mid-action still leaves a record, with an empty end time and a placeholder version.
 
+- While the action runs, and after it stops without ending, the log lists its record with `Success` 0, no end time and the [phases](#history.phases) it has started.
+- `history find -DSuccess=0` therefore finds actions that are running or never finished.
+
 <a id="history.record.unlogged-refusals"></a>
 [Q · history.record.unlogged-refusals]
 
-Should IPM record `update` and `uninstall` attempts it refuses because of their arguments, as it records refused loads and installs?
+Should IPM record `update`, `reinstall` and `uninstall` attempts it refuses because of their arguments, as it records refused loads and installs?
 
-- Provisional answer: not required. These refusals happen before the action starts, for example `update` of a module that is not installed, or `uninstall` with no name.
+- Provisional answer: not required. These refusals happen before the action starts, for example `update` or `reinstall` of a module that is not installed, or `uninstall` with no name.
 - Alternative: record every attempt, following the original request to log failed installations.
 
 <a id="history.record.abnormal-end"></a>
 [Q · history.record.abnormal-end]
 
-What should the record of an action that never ended say about kept changes?
+What should `Committed` say on the record of an action that never ended?
 
-- Provisional answer: an empty end time means the outcome is unknown. Readers must not trust `Committed` or the phase list on such a record.
+- Provisional answer: nothing reliable. An empty end time means the outcome is unknown, so readers must not trust `Committed=0` on such a record.
+- Reason: no source says when `Committed` must reach the permanent record. The phase list, unlike `Committed`, is promised to show progress.
 - Alternative: write `Committed` to the permanent record at each commit, so it stays accurate after a crash.
 
 <a id="history.survives-rollback"></a>
@@ -66,7 +70,7 @@ A record survives the rollback of its own action, so failures stay visible after
 <a id="history.survives-rollback.temp-copy"></a>
 [D · history.survives-rollback.temp-copy]
 
-IPM keeps the in-progress record in IRISTEMP, which a rollback does not undo, and copies the result to the namespace's permanent log outside the action's transaction.
+IPM writes the permanent record when the action starts and keeps the in-progress record in IRISTEMP, which a rollback does not undo. When the action ends, IPM copies the result to the permanent record. For a top-level action, both writes happen outside the action's transaction.
 
 <a id="history.fields"></a>
 [I · history.fields]
@@ -75,8 +79,8 @@ Each record holds:
 
 - `Action`: `load`, `install`, `uninstall` or `update`.
 - `Package`: the module name. It may be empty if the action failed before the name was known.
-- `Version`: the module version. It holds a placeholder, shown as `<unset>`, until the version is known.
-- Source name, type and details: the repository an install came from. They are empty for load and uninstall.
+- `Version`: the module version. Until the version is known it is stored as `0.0.0-0` and shown as `<unset>`.
+- Source name, type and details: the repository an install came from. They are empty for load and uninstall, and listings show `n/a` for any action other than install.
 - `TimeStart` and `TimeEnd`: the end time is empty while the action runs or after it ended abnormally.
 - `UserName`: the user who started the action.
 - `Success`: the action's status. It is `0` while the action is in progress.
@@ -87,11 +91,12 @@ Each record holds:
 <a id="history.fields.dependency-source"></a>
 [Q · history.fields.dependency-source]
 
-How should the log show a dependency that IPM pulled from a repository while running a `load` or `update`?
+How should the log label and show a dependency that IPM pulled from a repository while running a `load` or `update`, and what source does an `update` from a registry store?
 
-- Provisional answer: keep the record and its source. Label such records `install`, or show their source in the listing.
-- Reason: the source field's description covers top-level actions, and hiding a real source loses useful history.
-- Alternative: clear the source of records labeled `load`.
+- Provisional answer: label a dependency pulled from a repository `install`, with its source, and keep the rule that listings show a source only for installs.
+- Reason: the original request lists installs "including as a dependency" and keeps source details for installs only.
+- Alternative: keep the `load` label and show a stored source on any record, which changes the wiki's `n/a` rule.
+- `update` is not covered by any source. Provisionally it may store its registry, and listings still show `n/a` for it.
 
 <a id="history.phases"></a>
 [I · history.phases]
@@ -116,7 +121,7 @@ Must every phase that starts also record its end and status, including when an `
 
 For `load`, `install` and `update`, `Committed` shows whether the action kept any changes, either by a commit or by writing outside a transaction. An uncommitted action wrote nothing or was rolled back.
 
-- A successful action is committed.
+- A successful top-level action is committed. Dependency records follow [nested commits](#history.committed.nested).
 - A failure rolled back in full is not committed. This includes a developer-mode failure before its [first commit](load.g5.md#load.outcome.dev.early-failure).
 - A developer-mode failure after its first commit is committed.
 - A failure with `-DNoTransaction=1` or `-DNoJournal=1` is committed once the action has started writing.
@@ -140,11 +145,12 @@ Uninstall runs without a transaction, so for uninstall `Committed` only shows wh
 <a id="history.committed.nested"></a>
 [Q · history.committed.nested]
 
-Is `Committed` correct when IPM's commits sit inside another transaction? This happens when a caller wraps an IPM command in its own transaction, or for a developer-mode dependency loaded inside its parent's transaction.
+Is `Committed` correct when an action's commits sit inside another transaction? Every dependency load runs inside its parent's transaction, in normal and developer mode, and a caller can also wrap an IPM command in its own transaction.
 
-- Provisional answer: `Committed` is exact only for actions started outside any transaction. Record this limit, because an outer rollback undoes an inner commit.
-- Reason: the fix chose marking at each commit over comparing transaction levels, which would also handle nesting.
-- Alternative: compare the transaction level at the end with the level at the start.
+- Provisional answer for dependencies: `Committed` must follow the parent's outcome. When the parent's rollback undoes a dependency, its record reads uncommitted, because its changes were not kept.
+- Provisional answer for a caller's transaction: IPM cannot know the caller's outcome, so `Committed` is exact only for actions started outside any caller transaction. Record this limit.
+- Reason: `Committed` is defined by whether changes were kept, and the fix chose marking at each commit, which an outer rollback can undo.
+- Alternative: compare the transaction level at the end with the level at the start, so any nested commit reads uncommitted.
 
 <a id="history.committed.side-effects"></a>
 [Q · history.committed.side-effects]
@@ -164,10 +170,11 @@ Installs that IPM starts for dependencies are recorded as their own records, wit
 <a id="history.dependencies.parent-rollback"></a>
 [Q · history.dependencies.parent-rollback]
 
-Must a dependency's record survive when the parent action rolls back?
+Must a dependency's record survive when the parent action rolls back, and what should it say?
 
-- Provisional answer: yes. The original request asks to record dependency installs and to keep history across rollbacks.
-- Alternative: accept that such records are lost, and document it.
+- Provisional answer: yes, it survives. It keeps the dependency's own `Success` and reads uncommitted when the parent's rollback undid it ([nested commits](#history.committed.nested)).
+- Reason: the original request asks to record dependency installs and to keep history across rollbacks.
+- Alternative: record the parent's outcome on it, or accept that such records are lost and document it.
 
 <a id="history.namespace"></a>
 [I · history.namespace]
@@ -244,7 +251,7 @@ Programs can read the log through the SQL table `%IPM_General.History` and the c
 `history delete` deletes the records that match its filters.
 
 - Deleting every record in the namespace, with no filter, requires `-confirm`.
-- With `-globally`, it deletes in every namespace and does not require `-confirm`. With no filter, that deletes every record on the instance without asking.
+- With `-globally`, it deletes the matching records in every namespace ([no confirmation](#history.delete.global-unfiltered)).
 - `-verbose` shows how many records each namespace lost and which namespaces were skipped for lack of permission.
 
 <a id="history.delete.confirm-with-filter"></a>
@@ -257,12 +264,18 @@ Does `-confirm` together with a filter delete every record, or only the matching
 - Alternative: follow the command help.
 
 <a id="history.delete.global-unfiltered"></a>
-[Q · history.delete.global-unfiltered]
+[D · history.delete.global-unfiltered]
 
-Should `history delete -globally` with no filter require `-confirm`?
+`history delete -globally` does not require `-confirm`. With no filter, it deletes every record on the instance without asking.
 
-- Provisional answer: no. Keep the documented behavior.
-- Alternative: require `-confirm`, as a proposed safety change.
+<a id="history.delete.running-records"></a>
+[Q · history.delete.running-records]
+
+May `history delete` or the daily [purge](#history.retention) remove the record of an action that is still running, and what should that action's final write do then?
+
+- Provisional answer: a delete or purge may remove any matching record, and the running action must still finish normally whether or not its record comes back.
+- Reason: no source covers this case. Deleting is an explicit user choice, and the log must not make a package change fail.
+- Alternative: skip records of running actions, or always write the final result back.
 
 <a id="history.locked"></a>
 [I · history.locked]
@@ -280,10 +293,11 @@ Once a record is finalized, it cannot be edited through SQL `UPDATE` or by savin
 <a id="history.retention.effect"></a>
 [Q · history.retention.effect]
 
-Must the daily purge really delete old records, and may a purge failure stop the user's command?
+May a failure of the daily purge stop the user's command?
 
-- Provisional answer: the purge must delete records older than the limit, judged by start time. A purge failure should not stop the command, which is a proposed change.
-- Reason: no source says a purge failure may block other commands.
+- Provisional answer: no. The command should still run, which is a proposed change.
+- Reason: no source says a purge failure may block other commands, and the purge is housekeeping the user did not ask for in that command.
+- Alternative: report the purge error and stop, as a signal that retention is broken.
 
 <a id="history.keep-on-ipm-uninstall"></a>
 [I · history.keep-on-ipm-uninstall]
@@ -327,7 +341,7 @@ Sources: `Main.cls:820`; `wiki/09` L18; issue #366; PR #578 review r2557338086 b
 - Expands: [History](#history).
 - Children: [unlogged refusals](#history.record.unlogged-refusals), [abnormal end](#history.record.abnormal-end).
 
-Sources: `wiki/09` L20; comments `General/AbstractHistory.cls:3-7`, `:17`, `:32`, `:61` ("Save it now in case Finalize isn't called"). Inventory: INT-HIST-03, INT-HIST-09; OP-HIST-01, OP-HIST-02, OP-HIST-07, OP-HIST-10, OP-HIST-11. Observed: `load` creates its record before checking the path, and `install` before checking for a module name (`Main.cls:2419-2420`, `:2565-2566`). No test covers an abnormal end.
+Sources: `wiki/09` L20, L72 ("An entry with no elapsed time either is still running or ended abnormally"), L161, L229-233 (`-DSuccess=0` finds actions that never finished); comments `General/AbstractHistory.cls:3-7`, `:17`, `:32`, `:38`, `:61` ("Save it now in case Finalize isn't called"). Inventory: INT-HIST-03, INT-HIST-09; OP-HIST-01, OP-HIST-02, OP-HIST-07, OP-HIST-10, OP-HIST-11, OP-HIST-26. Reconstruction check R3 moved the visible-progress rule here from the abnormal-end question. Suspected gap, stage B to confirm: the permanent record is written only at start and at the end, so a running or killed action shows no phases and an empty package in listings (OBS-H6). Observed: `load` creates its record before checking the path, and `install` before checking for a module name (`Main.cls:2419-2420`, `:2565-2566`). No test covers an abnormal end.
 
 ### history.record.unlogged-refusals
 
@@ -336,7 +350,7 @@ Sources: `wiki/09` L20; comments `General/AbstractHistory.cls:3-7`, `:17`, `:32`
 - user-facing-behavior
 - Expands: [Record](#history.record).
 
-Sources: A1 Q-09; issue #366 ("we still want to log failed installations"). Observed: `update` refuses `PermitDowngrade` and a module that is not installed before creating a record (`Main.cls:4415-4423`). `uninstall` with no name and `reinstall` of a module that is not installed are refused the same way (`Main.cls:2685-2688`, `:2709-2712`).
+Sources: A1 Q-09; issue #366 ("we still want to log failed installations"). Observed: `update` refuses `PermitDowngrade` and a module that is not installed before creating a record (`Main.cls:4415-4423`). `uninstall` with no name and `reinstall` of a module that is not installed are refused the same way (`Main.cls:2685-2688`, `:2709-2712`). Reconstruction check R11 added `reinstall` to the question.
 
 ### history.record.abnormal-end
 
@@ -345,7 +359,7 @@ Sources: A1 Q-09; issue #366 ("we still want to log failed installations"). Obse
 - user-facing-behavior
 - Expands: [Record](#history.record).
 
-Sources: A1 Q-08; `wiki/09` L229-233. Observed: the permanent record keeps only its starting values until the action ends, so after a crash it shows an empty package, the placeholder version, `Success=0` and `Committed=0`, even when the load had committed (OBS-H6, P-6). The IRISTEMP copy stays until the instance restarts. Such a record is not finalized and can still be edited.
+Sources: A1 Q-08; `wiki/09` L229-233. Narrowed to `Committed` by reconstruction check R3, because the wiki promises phase progress (see [record](#history.record)). Observed: the permanent record keeps only its starting values until the action ends, so after a crash it shows an empty package, the placeholder version, `Success=0` and `Committed=0`, even when the load had committed (OBS-H6, P-6). The IRISTEMP copy stays until the instance restarts. Such a record is not finalized and can still be edited.
 
 ### history.survives-rollback
 
@@ -363,7 +377,7 @@ Sources: issue #366 ("if install rolls back we still need the history"); `wiki/0
 - architecture-decision
 - Expands: [Survives rollback](#history.survives-rollback).
 
-Sources: `wiki/09` L22; class doc `General/AbstractHistory.cls:3-7`, `General/HistoryTemp.cls:1`; PR #578 comment by isc-dchui, 2025-11-24 ("requires temporarily storing in IRISTEMP to avoid losing data to transaction rollback"). Inventory: OP-HIST-01 (`HistoryTemp.Init`), OP-HIST-10 (`PersistToTwin`), OP-HIST-11 (`%OnClose`); premises P-1, P-2, P-3. Observed: the permanent copy is written when the action starts and again when the in-progress record object is released. For a top-level action both writes happen outside the action's transaction. Test: `TestSimpleHistory` (no IRISTEMP rows remain).
+Sources: `wiki/09` L20, L22; class doc `General/AbstractHistory.cls:3-7` ("persisted to %IPM.General.History on init and when the object falls out of scope"), `General/HistoryTemp.cls:1`; PR #578 comment by isc-dchui, 2025-11-24 ("requires temporarily storing in IRISTEMP to avoid losing data to transaction rollback"). Inventory: OP-HIST-01 (`HistoryTemp.Init`), OP-HIST-10 (`PersistToTwin`), OP-HIST-11 (`%OnClose`); premises P-1, P-2, P-3. The start write is stated because a record must survive a crash, and IRISTEMP is emptied on restart (reconstruction check R2). Writing both copies outside the action's transaction follows from [survives rollback](#history.survives-rollback). Observed: the end copy happens when the in-progress record object is released. For a dependency, both writes happen inside the parent's transaction ([parent rollback](#history.dependencies.parent-rollback)). Test: `TestSimpleHistory` (no IRISTEMP rows remain).
 
 ### history.fields
 
@@ -373,7 +387,7 @@ Sources: `wiki/09` L22; class doc `General/AbstractHistory.cls:3-7`, `General/Hi
 - Expands: [History](#history).
 - Children: [dependency source](#history.fields.dependency-source).
 
-Sources: `General/AbstractHistory.cls:11-49`; `wiki/09` L63-78; issue #366 field list. Inventory: INT-HIST-04, A1 3.2; OP-HIST-01, OP-HIST-03 to OP-HIST-07, OP-HIST-25. Tests: `TestSimpleHistory`, `TestDevMode`. Observed: `Version` is set from the repository before an install starts. Dependency records carry the parent's command string. Actions started outside the shell record `<unset>` as the command, and namespace default modifiers are not shown in it. A record also has a `Finalized` column that the wiki does not describe.
+Sources: `General/AbstractHistory.cls:11-49` (`:17` placeholder `0.0.0-0`, `:20-27` source empty for load and uninstall); `wiki/09` L63-78 (L70 `<unset>`, L76 source `n/a` for anything other than install), L112 (version parts); issue #366 field list ("for install only"). Reconstruction check R9, R14. Inventory: INT-HIST-04, A1 3.2; OP-HIST-01, OP-HIST-03 to OP-HIST-07, OP-HIST-25. Tests: `TestSimpleHistory`, `TestDevMode`. Observed: `Version` is set from the repository before an install starts. Dependency records carry the parent's command string. Actions started outside the shell record `<unset>` as the command, and namespace default modifiers are not shown in it. A record also has a `Finalized` column that the wiki does not describe. A top-level `update` from a registry stores its source, and listings show `n/a` for it (`Main.cls:2631`, `General/History.cls:461-463`).
 
 ### history.fields.dependency-source
 
@@ -382,7 +396,7 @@ Sources: `General/AbstractHistory.cls:11-49`; `wiki/09` L63-78; issue #366 field
 - user-facing-behavior
 - Expands: [Fields](#history.fields).
 
-Sources: A1 Q-15; `General/AbstractHistory.cls:20-27` ("For load and uninstall this will be empty"); `wiki/09` L77. Observed: dependencies of `load` and `update` are labeled `load` but carry a repository source (`Utils/Module.cls:63-69`). The listing shows `n/a` as the source for every record that is not `install`, including a top-level `update` from a registry (`General/History.cls:461-463`, OBS-H7).
+Sources: A1 Q-15; `General/AbstractHistory.cls:20-27` ("For load and uninstall this will be empty"); `wiki/09` L76; issue #366 ("install (including as a dependency)", source "for install only"). Reconstruction check R9 asked for one provisional answer. Observed: dependencies of `load` and `update` are labeled `load` but carry a repository source (`Utils/Module.cls:63-69`). The listing shows `n/a` as the source for every record that is not `install`, including a top-level `update` from a registry (`General/History.cls:461-463`, OBS-H7).
 
 ### history.phases
 
@@ -411,7 +425,7 @@ Sources: A1 Q-14; `wiki/09` L161. Suspected gap, stage B to confirm: when an `<I
 - Expands: [History](#history).
 - Children: [marking](#history.committed.marking), [uninstall](#history.committed.uninstall), [versus success](#history.committed.vs-success), [nested](#history.committed.nested), [side effects](#history.committed.side-effects).
 
-Sources: property comment `General/AbstractHistory.cls:41-43`; CHANGELOG 0.10.11 (`#1237`); issue #1237 by isc-dchui ("should reflect whether the action's changes were actually retained"); PR #1322 (merged as `5d27e15b`, approved by isc-kiyer). Inventory: INT-HIST-05; OP-HIST-06, OP-HIST-07, OP-LOAD-07, OP-LOAD-11, OP-LOAD-15. Tests: `TestSimpleHistory`, `TestDevMode`, `TestDevModeRollbackNotCommitted`, `TestDevModeFailureAfterCommit`, `TestNoTransactionFailure`, `TestFailingPhases`. This supersedes issue #366 ("0 in non-developer mode if installation fails; 1 otherwise") and PR #578 review r2585373293 ("in developer mode, committed will be set to 1 regardless"). `wiki/09` L80-86 predates the fix and explains only developer mode. Suspected gap, stage B to confirm: a legacy XML package that fails after writing reads uncommitted (OBS-L16). Observed: a refused developer-mode or `-DNoTransaction=1` load that saved its manifest reads committed ([requirements timing](load.g5.md#load.refusal.requirements.timing)).
+Sources: property comment `General/AbstractHistory.cls:41-43`; CHANGELOG 0.10.11 (`#1237`); issue #1237 by isc-dchui ("should reflect whether the action's changes were actually retained"); PR #1322 (merged as `5d27e15b`, approved by isc-kiyer). Inventory: INT-HIST-05; OP-HIST-06, OP-HIST-07, OP-LOAD-07, OP-LOAD-11, OP-LOAD-15. Tests: `TestSimpleHistory`, `TestDevMode`, `TestDevModeRollbackNotCommitted`, `TestDevModeFailureAfterCommit`, `TestNoTransactionFailure`, `TestFailingPhases`. This supersedes issue #366 ("0 in non-developer mode if installation fails; 1 otherwise") and PR #578 review r2585373293 ("in developer mode, committed will be set to 1 regardless"). `wiki/09` L80-86 predates the fix and explains only developer mode. Suspected gap, stage B to confirm: a legacy XML package that fails after writing reads uncommitted (OBS-L16). Observed: a refused developer-mode or `-DNoTransaction=1` load that saved its manifest reads committed ([requirements timing](load.g5.md#load.refusal.requirements.timing)). Reconstruction check R4: the first bullet now names top-level actions, because a dependency's success can be undone by its parent's rollback.
 
 ### history.committed.marking
 
@@ -445,7 +459,7 @@ Sources: `Main.cls:831` (help example); `wiki/09` L80-86, L215-219; PR #578 revi
 - architecture-decision
 - Expands: [Committed](#history.committed).
 
-Sources: A1 Q-05; issue #1237 option 1; PR #1322. Observed: when a caller holds a transaction, IPM's commits, the record's creation and its final copy all sit inside the caller's transaction, so an outer rollback removes the module and the record although `Committed` was set (P-4, OBS-H16). The same applies to a developer-mode dependency inside its parent's load.
+Sources: A1 Q-05; issue #1237 option 1; PR #1322. Observed: when a caller holds a transaction, IPM's commits, the record's creation and its final copy all sit inside the caller's transaction, so an outer rollback removes the module and the record although `Committed` was set (P-4, OBS-H16). The same applies to a developer-mode dependency inside its parent's load. Reconstruction check R4 widened the question to every dependency load, following issue #1237 ("should reflect whether the action's changes were actually retained"), the property doc `General/AbstractHistory.cls:41-42` and the maintainer comment `Utils/Module.cls:1316-1317` (nested loads "may be rolled back at the end of this method"). The two provisional answers were checked together with [parent rollback](#history.dependencies.parent-rollback) and agree.
 
 ### history.committed.side-effects
 
@@ -473,7 +487,7 @@ Sources: issue #366 ("install (including as a dependency)"); PR #578 TODO "Recor
 - user-facing-behavior
 - Expands: [Dependencies](#history.dependencies).
 
-Sources: A1 Q-06; issue #366. Suspected gap, stage B to confirm: a dependency's permanent record is created and finalized inside the parent's transaction, so a parent rollback removes it, while its IRISTEMP copy is already gone (OBS-L1, OBS-H5, P-2, P-4, P-5).
+Sources: A1 Q-06; issue #366. Suspected gap, stage B to confirm: a dependency's permanent record is created and finalized inside the parent's transaction, so a parent rollback removes it, while its IRISTEMP copy is already gone (OBS-L1, OBS-H5, P-2, P-4, P-5). Reconstruction check R4 added what the surviving record says. It follows from the definition of `Committed` in [committed](#history.committed).
 
 ### history.namespace
 
@@ -563,9 +577,9 @@ Sources: issue #366 ("documented API ... cross-namespace class query wrapper"); 
 - user-facing-behavior
 - test-coverage
 - Expands: [History](#history).
-- Children: [confirm with filter](#history.delete.confirm-with-filter), [global unfiltered](#history.delete.global-unfiltered).
+- Children: [confirm with filter](#history.delete.confirm-with-filter), [global unfiltered](#history.delete.global-unfiltered), [running records](#history.delete.running-records).
 
-Sources: `Main.cls:825`, `:838`; `wiki/09` L187-195. Inventory: INT-HIST-12; OP-HIST-17, OP-HIST-18. Test: `TestMultipleNamespaces`. Observed: delete also removes unfinalized records of actions still running. PR #578 review r1816818561 by isc-kiyer asked for deletes scoped by filter.
+Sources: `Main.cls:825`, `:838`; `wiki/09` L187-195. Inventory: INT-HIST-12; OP-HIST-17, OP-HIST-18. Test: `TestMultipleNamespaces`. Observed: delete also removes unfinalized records of actions still running ([running records](#history.delete.running-records)). PR #578 review r1816818561 by isc-kiyer asked for deletes scoped by filter.
 
 ### history.delete.confirm-with-filter
 
@@ -578,12 +592,20 @@ Sources: A1 Q-11; `Main.cls:825`; `wiki/09` L43-44, L187; guard `Main.cls:4165-4
 
 ### history.delete.global-unfiltered
 
-- agent
-- uncertain
+- human-provided
 - user-facing-behavior, security
 - Expands: [Delete](#history.delete).
 
-Sources: A1 Q-12; `wiki/09` L195; `Main.cls:825` ("Ignored if -globally is passed too"); OBS-H9.
+Sources: `wiki/09` L46, L195 ("`-globally` bypasses the `-confirm` requirement, so `history delete -globally` with no filter deletes every record on the instance without prompting"); `Main.cls:825` ("Ignored if -globally is passed too"). Inventory: A1 Q-12, OBS-H9; OP-HIST-18. This was Q-12. Reconstruction check R10 found the behavior documented, so it is a decision, not open intent. Proposal (not adopted): require `-confirm` for an unfiltered global delete.
+
+### history.delete.running-records
+
+- agent
+- uncertain
+- user-facing-behavior
+- Expands: [Delete](#history.delete).
+
+Sources: new question Q-20 from reconstruction check R12; A1 3.4 last row ("unspecified"). Observed: `history delete` and the purge are not limited to finalized records (OP-HIST-17, OP-HIST-21, OBS-H12). What the running action's final copy then does depends on premise P-9, which stage B checks. Affects [retention](#history.retention).
 
 ### history.locked
 
@@ -601,7 +623,7 @@ Sources: `wiki/09` L197; PR #578 reviews r2583818448 by isc-kiyer ("To protect h
 - Expands: [History](#history).
 - Children: [effect](#history.retention.effect).
 
-Sources: `Main.cls:840-842`; `wiki/02` L113; `wiki/09` L173-185; CHANGELOG 0.10.7 (`#992`); issue #977. Inventory: INT-HIST-13; OP-HIST-21, OP-HIST-22. Test: `tests/unit_tests/Test/PM/Unit/CLI.cls` `TestAutoPurgeOldHistory` runs the purge but does not check that anything was deleted, so no coverage tag. Observed: the purge runs only through `%IPM.Main:Shell`, and the retention setting and last-purge date are shared by the whole instance. The opt-in default answers the audit-trail concern raised on PR #578 by isc-dchui, 2025-12-02.
+Sources: `Main.cls:840-842`; `wiki/02` L113; `wiki/09` L173-185; CHANGELOG 0.10.7 (`#992`); issue #977. Inventory: INT-HIST-13; OP-HIST-21, OP-HIST-22. Test: `tests/unit_tests/Test/PM/Unit/CLI.cls` `TestAutoPurgeOldHistory` runs the purge but does not check that anything was deleted, so no coverage tag. Observed: the purge runs only through `%IPM.Main:Shell`, and the retention setting and last-purge date are shared by the whole instance. The opt-in default answers the audit-trail concern raised on PR #578 by isc-dchui, 2025-12-02. Suspected gap, stage B to confirm: the cutoff value carries literal quote marks, so the purge likely deletes nothing while still recording that it ran (`General/History.cls:172-173`, OBS-H3).
 
 ### history.retention.effect
 
@@ -610,7 +632,7 @@ Sources: `Main.cls:840-842`; `wiki/02` L113; `wiki/09` L173-185; CHANGELOG 0.10.
 - user-facing-behavior
 - Expands: [Retention](#history.retention).
 
-Sources: A1 Q-13. Suspected gaps, stage B to confirm: the cutoff value carries literal quote marks, so the purge likely deletes nothing while still recording that it ran (`General/History.cls:172-173`, OBS-H3). A purge error is returned before the user's command runs (`Main.cls:862-865`, OBS-H12). `config delete HistoryRetain` restores the first value ever set rather than `0` (OBS-H4).
+Sources: A1 Q-13. Reconstruction check R10 narrowed it to the failure case, because [retention](#history.retention) already requires deleting old records. Suspected gaps, stage B to confirm: a purge error is returned before the user's command runs (`Main.cls:862-865`, OBS-H12). `config delete HistoryRetain` restores the first value ever set rather than `0` (OBS-H4).
 
 ### history.keep-on-ipm-uninstall
 

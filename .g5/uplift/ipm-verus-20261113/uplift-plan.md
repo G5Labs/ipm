@@ -39,11 +39,11 @@ Initial uplift of InterSystems Package Manager (IPM) using the G5-Lean-V2 Verus 
 | Stage | Worker | Question | Write ownership | Status |
 |---|---|---|---|---|
 | A1 | Intent recovery agent | Which commitments do human-authored sources establish across IPM, in depth for load and history? | `A/intent-inventory.md`, `A/sources-intent.md` | done 2026-11-13: 18 load and 17 history commitments, 42-row catalog, Q-01..Q-17 |
-| A2 | Operation inventory agent | Which operations exist from entry points through writers, commit boundaries, effects and final readers? Deep for load and history. Must not read A1. | `A/operation-inventory.md` | running |
-| A3 | Ontology author | Reconcile A1 and A2 into one coverage map and write the governing ontology. | `.g5/ontology/**`, `A/coverage-map.md` | pending |
-| A4 | Fresh reader | Reconstruct the major functionality from the ontology alone, then compare with A1/A2. | `A/reconstruction-check.md` | pending |
-| B1 | Verus modeler | L1 contract, L2 as-built transitions, refinement and controls for load and history. | `.g5/Verus_verification/crates/**`, `vendor/**`, `SOURCE.json`, `premises.md`, `cases/**`, `results/verus/**`, `B/model-notes.md` | running (started before A3 so modeling uses A1/A2 directly) |
-| B2 | Native validator | Premise checks on IRIS transactions and IRISTEMP, existing suites, and native replay of model cases at the real handler, store and reader. | `.g5/Verus_verification/native/**`, `.g5/Verus_verification/results/native/**`, `B/native-report.md` | phase 1 running (premises, suites, hypothesis probes); phase 2 replays `cases/cases.json` |
+| A2 | Operation inventory agent | Which operations exist from entry points through writers, commit boundaries, effects and final readers? Deep for load and history. Must not read A1. | `A/operation-inventory.md` | done 2026-11-13: 39 commands, 29 load and 26 history operations, 34 observations |
+| A3 | Ontology author | Reconcile A1 and A2 into one coverage map and write the governing ontology. | `.g5/ontology/**`, `A/coverage-map.md` | draft done (18 pages, 145 blocks, Q-01..Q-19); applying A4 corrections R1-R14 |
+| A4 | Fresh reader | Reconstruct the major functionality from the ontology alone, then compare with A1/A2. | `A/reconstruction-check.md` | done: 6 material corrections (R1-R6), 8 minor |
+| B1 | Verus modeler | L1 contract, L2 as-built transitions, refinement and controls for load and history. | `.g5/Verus_verification/crates/**`, `vendor/**`, `SOURCE.json`, `premises.md`, `cases/**`, `results/verus/**`, `B/model-notes.md` | resumed 19:15 UTC after usage-limit stop; proofs partly green, no receipts yet |
+| B2 | Native validator | Premise checks on IRIS transactions and IRISTEMP, existing suites, and native replay of model cases at the real handler, store and reader. | `.g5/Verus_verification/native/**`, `.g5/Verus_verification/results/native/**`, `B/native-report.md` | phase 1 done (`B/native-report.md`: 18 premises, 9 suites, cases a-g, defects D1-D8); phase 2 replays `cases/cases.json` |
 | C | Fresh independent reviewers, then repair agents | Coverage and fidelity challenge per round. | `C/round-<n>/**`; repairs in owning artifacts | pending |
 | Handoff | Orchestrator, then a reproduction reviewer | Runbook, coverage map, receipts, findings. | `.g5/Verus_verification/README.md`, `coverage-map.md`, `bugs_issues.md`, `design_simplification.md` | pending |
 
@@ -56,6 +56,8 @@ Rounds used: **0 of 3**. A resumed worker continues from this counter.
 Updated at each handoff. See `C/` for findings and dispositions once stage C starts.
 
 ## Log
+
+- 2026-11-13 19:15 UTC: resumed after a service usage limit stopped A3, B1 and B2 at about 18:50. B2 had finished its report. A3 had not started the A4 corrections. B1 had a partial crate and no receipts. Before the summary, the orchestrator's saved transcript records a TaskStop and a WebSearch whose content was not kept. No file changed after 18:49 except B2's report and B1's `proofs.rs`, so no artifact depends on the missing part. B1 was told to use B2's premise results and not to read B2's case observations until `cases.json` is written.
 
 - 2026-11-13: native baseline. `Test.PM.Integration.History` needs the ORAS service. With zot attached it passed 13/13 methods and 450 assertions (`results/native/20261113T175623Z-smoke-history-suite-oras`). Two earlier attempts are void: one coincided with a host disk-full event, one hung without ORAS. The runner now requires a `NATIVE-END` marker because a killed session exited 0.
 

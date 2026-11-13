@@ -26,6 +26,8 @@ IPM refuses an update when:
 - The `-path` archive holds a different module from the one named.
 - The target version is [older than the installed one](load.g5.md#load.refusal.downgrade).
 
+Like a [refused load](load.g5.md#load.refusal), a refused update keeps no module data.
+
 <a id="update.dev-mode"></a>
 [I · update.dev-mode]
 
@@ -65,7 +67,7 @@ Sources: `Main.cls:164-187`; `wiki/02` L1341-1371; `wiki/08`; CHANGELOG 0.10.4 (
 - test-coverage
 - Expands: [Update](#update).
 
-Sources: messages `Main.cls:4415-4423`, `Utils/Module.cls:1269-1275`. Inventory: CAT-15; OP-LOAD-21, OP-LOAD-10. Tests: `Update.cls` `TestUpdateOfUninstalledModule`, `TestUpdateNonMatchingTarballFails`, `TestUpdateToOlderVersion`. Observed: the first two refusals happen before a history record exists ([unlogged refusals](history.g5.md#history.record.unlogged-refusals)). The module-mismatch check runs after the archive is unpacked and the manifest is saved, so with `-DNoTransaction=1` the wrong manifest stays and the record reads committed (OBS-L6).
+Sources: messages `Main.cls:4415-4423`, `Utils/Module.cls:1269-1275`. Inventory: CAT-15; OP-LOAD-21, OP-LOAD-10. Tests: `Update.cls` `TestUpdateOfUninstalledModule`, `TestUpdateNonMatchingTarballFails`, `TestUpdateToOlderVersion`. Observed: the first two refusals happen before a history record exists ([unlogged refusals](history.g5.md#history.record.unlogged-refusals)). Suspected gap, stage B to confirm: the module-mismatch check runs after the archive is unpacked and the manifest is saved, so with `-DNoTransaction=1` the wrong manifest stays and the record reads committed (OBS-L6, reconstruction check R6).
 
 ### update.dev-mode
 

@@ -28,6 +28,7 @@ The diagram shows the order at the pinned revision. The blocks below say which p
 - **ModuleRoot setting**: the folder where IPM unpacks archives, by default `<data directory>/ipm/`. See [settings](../concepts/settings.g5.md#settings).
 - **Installed module**: a module with the same name already in the namespace.
 - **Refusal**: IPM stops the load with an error because the request is not allowed.
+- **Module data**: what a load writes to the namespace's databases for a module, such as its manifest record and its code. Files on disk and the history log are not module data.
 - **First commit**: in developer mode, the point where IPM commits the saved manifest, before it loads dependencies and resources.
 
 ## What a load does
@@ -81,9 +82,11 @@ Other `load` options:
 <a id="load.refusal"></a>
 [I · load.refusal]
 
-IPM refuses a load with an error when the request is not allowed. A refused load leaves the installed module as it was.
+IPM refuses a load with an error when the request is not allowed. A refusal happens before IPM writes any module data, so in every mode the installed module's data stays as it was and the record reads uncommitted.
 
 - This covers the refusals below and the [developer-mode overwrite guard](../concepts/transactions-and-dev-mode.g5.md#dev-mode.overwrite-guard).
+- When the requirements check runs is open ([timing](#load.refusal.requirements.timing)).
+- Files written before the checks, such as an unpacked archive, follow the [rollback scope](../concepts/transactions-and-dev-mode.g5.md#transaction.rollback-scope).
 - A [dependency conflict](dependencies.g5.md#deps.conflict) is found while dependencies load, so [what a failed load keeps](#load.outcome) applies to it.
 - Every refused attempt still gets a [history record](history.g5.md#history.actions).
 
@@ -95,7 +98,7 @@ IPM refuses a load with an error when the request is not allowed. A refused load
 <a id="load.refusal.manifest"></a>
 [I · load.refusal.manifest]
 
-IPM refuses a module whose manifest is missing or invalid, for example malformed XML, no `<Module>` element or more than one document.
+IPM refuses a module whose manifest is missing or invalid, for example malformed XML, no `<Module>` element or more than one document. It rejects such a manifest before it touches any resource.
 
 <a id="load.refusal.downgrade"></a>
 [I · load.refusal.downgrade]
@@ -149,9 +152,10 @@ What a failed load keeps depends on how it ran.
 | Developer mode, in a transaction | Depends on when it fails. See [developer-mode commits](#load.outcome.dev). |
 | `-DNoTransaction=1` or `-DNoJournal=1` | Everything written before the failure. |
 
-- A refusal by the [version checks](#load.refusal.downgrade) happens before anything is written, so it keeps nothing in any mode.
+- A [refusal](#load.refusal) keeps no module data in any mode. The requirements check is the open exception.
+- A process that dies mid-load ends like a failure at that point. The open transaction is rolled back, so the table applies, and with `-DNoTransaction=1` or `-DNoJournal=1` nothing is rolled back and the namespace may be left inconsistent.
 - Files and other changes outside the database follow the [rollback scope](../concepts/transactions-and-dev-mode.g5.md#transaction.rollback-scope).
-- The [history record](history.g5.md#history.committed) shows whether anything was kept.
+- The [history record](history.g5.md#history.committed) shows whether anything was kept. After a dying process, see [record](history.g5.md#history.record).
 
 <a id="load.outcome.dev"></a>
 [I · load.outcome.dev]
@@ -244,7 +248,7 @@ Sources: `Main.cls:304-315`; CHANGELOG `#704`, `#1260`, `#595`, `#647`, `#961`, 
 - Expands: [Load](#load).
 - Children: [path](#load.refusal.path), [manifest](#load.refusal.manifest), [downgrade](#load.refusal.downgrade), [update required](#load.refusal.update-required), [requirements](#load.refusal.requirements).
 
-Sources: downgrade message `Utils/Module.cls:1214-1217`; `wiki/03` L260-261 ("validated before module installation"); CHANGELOG 0.10.11 (`#1237`). Inventory: INT-LOAD-02, -09, -10, -11. Tests: `History.cls` `TestDevModeRollbackNotCommitted`, `TestDevMode`. The tests check status and history only, not the installed module afterwards. The requirements refusal is the open exception ([timing](#load.refusal.requirements.timing)).
+Sources: downgrade message `Utils/Module.cls:1214-1217`; `wiki/03` L260-261 ("validated before module installation"); CHANGELOG 0.10.11 (`#1237`). Inventory: INT-LOAD-02, -09, -10, -11. Tests: `History.cls` `TestDevModeRollbackNotCommitted`, `TestDevMode`. The tests check status and history only, not the installed module afterwards. The requirements refusal is the open exception ([timing](#load.refusal.requirements.timing)). Reconstruction check R6 and R7: the no-write rule now covers every refusal and the overwrite guard, and is limited to module data. Sources for the timing: PR #1322 body (committed marking "before writing when there is no transaction" follows the version checks); `wiki/09` L133. Suspected gaps, stage B to confirm: the late manifest checks ("No module definition found", "multiple documents", `Utils/Module.cls:1255-1264`) and the `update -path` module mismatch (`:1269-1275`, OBS-L6) run after the manifest is saved. Under `-DNoTransaction=1` the manifest then stays and the record reads committed.
 
 ### load.refusal.path
 
@@ -256,12 +260,12 @@ Sources: CHANGELOG 0.10.4 (`#706`: "load now only accepts absolute paths"), 0.10
 
 ### load.refusal.manifest
 
-- human-provided
+- human-verified
 - user-facing-behavior
 - test-coverage
 - Expands: [Refusals](#load.refusal).
 
-Sources: `wiki/09` L114-133 (malformed manifest "rejected before any resource was touched"); messages `Utils/Module.cls:1255-1264`, `:341-343`. Inventory: A1 2.3 "Manifest" row; OP-LOAD-05, OP-LOAD-09. Test: `History.cls` `TestDevMode` (malformed manifest, with and without `-dev`). Observed: the "no module definition" and "multiple documents" checks run after the manifest is loaded, so with `-DNoTransaction=1` the record reads committed.
+Sources: `wiki/09` L114-133 (malformed manifest "rejected before any resource was touched"); messages `Utils/Module.cls:1255-1264`, `:341-343`. Inventory: A1 2.3 "Manifest" row; OP-LOAD-05, OP-LOAD-09. Test: `History.cls` `TestDevMode` (malformed manifest, with and without `-dev`). Suspected gap, stage B to confirm: the "no module definition" and "multiple documents" checks run after the manifest is loaded, so with `-DNoTransaction=1` the manifest stays and the record reads committed. Reconstruction check R6 added the wiki's timing.
 
 ### load.refusal.downgrade
 
@@ -326,7 +330,7 @@ Sources: PR #887 review r2388507362 by isc-tleavitt, 2025-09-29 ("someone's auto
 - Expands: [Load](#load).
 - Children: [developer-mode commits](#load.outcome.dev).
 
-Sources: `wiki/00` L125-126, L145-155; CHANGELOG 0.10.11 (`#1237`). Inventory: INT-LOAD-08, A1 2.2 and 2.3; commit-point matrix in A2 2.3; OP-LOAD-05, -07, -11, -14, -15, -16. Tests: `History.cls` `TestFailingPhases` (normal mode), `TestNoTransactionFailure`. The tests check status and history only. Observed: a load nested inside a caller's transaction cannot make its own commits final (P-4, OBS-H16, see [nested commits](history.g5.md#history.committed.nested)).
+Sources: `wiki/00` L125-126, L145-155; CHANGELOG 0.10.11 (`#1237`). Inventory: INT-LOAD-08, A1 2.2 and 2.3; commit-point matrix in A2 2.3; OP-LOAD-05, -07, -11, -14, -15, -16. Tests: `History.cls` `TestFailingPhases` (normal mode), `TestNoTransactionFailure`. The tests check status and history only. Observed: a load nested inside a caller's transaction cannot make its own commits final (P-4, OBS-H16, see [nested commits](history.g5.md#history.committed.nested)). Reconstruction check R5 added the dying-process rule from `wiki/00` L147 ("a failure mid-way through is fully rolled back") and L155 (with `NoJournal`, "if the process crashes mid-install, changes cannot be rolled back and the namespace may be left in an inconsistent state"). That IRIS rolls back a dead process's open transaction is premise P-6, for stage B. Observed: the `.modules` temporary repository and unpacked files stay after a killed load.
 
 ### load.outcome.dev
 

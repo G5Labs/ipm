@@ -36,6 +36,7 @@ Users can turn off the transaction for a package change.
 
 - `-DNoTransaction=1` runs without a transaction, so a failure leaves a partial install.
 - `-DNoJournal=1` turns off journaling for the process during the change. It also turns off the transaction, because a rollback needs the journal.
+- With either flag, if the process crashes during the change, nothing can be rolled back and the namespace may be left inconsistent.
 - Both apply to `install`, `load`, `reinstall` and `update`. They are expected to change in IPM 1.0.0.
 
 <a id="transaction.flag-sources"></a>
@@ -62,6 +63,7 @@ Developer mode (`-dev`) marks a module as one a developer is actively changing i
 A failed developer-mode change keeps what it already did, so the developer can inspect and fix it. In normal mode, a failed change inside a transaction is rolled back.
 
 - Exception: a developer-mode load that fails before its first commit is rolled back in full ([early failure](../features/load.g5.md#load.outcome.dev.early-failure)).
+- Exception: its dependency loads commit together, so one failed dependency rolls back all of them.
 - The [load page](../features/load.g5.md#load.outcome.dev) says what is kept at each point.
 
 <a id="dev-mode.not-propagated"></a>
@@ -128,7 +130,7 @@ Sources: A1 Q-04; `wiki/00` L126; CHANGELOG 0.10.11 (`#1183`, temp folder cleanu
 - test-coverage
 - Expands: [Transactions](#transaction).
 
-Sources: `wiki/00` L139-155; `wiki/02` L447, L595, L907, L1367; `Main.cls:628-630` example. Inventory: INT-LOAD-08, CAT-28; OP-LOAD-05, OP-LOAD-07, OP-LOAD-26. Test: `History.cls` `TestNoTransactionFailure`. The help for `reinstall` and `update` lists these flags only through the wiki. Formal scope: pending stage B.
+Sources: `wiki/00` L139-155; `wiki/02` L447, L595, L907, L1367; `Main.cls:628-630` example. Inventory: INT-LOAD-08, CAT-28; OP-LOAD-05, OP-LOAD-07, OP-LOAD-26. Test: `History.cls` `TestNoTransactionFailure`. The help for `reinstall` and `update` lists these flags only through the wiki. Formal scope: pending stage B. Reconstruction check R5 added the crash trade-off from `wiki/00` L155. The wiki states it for `NoJournal`, and it holds for `NoTransaction` because there is no transaction to roll back (`wiki/00` L147). Observed: the journaling flag is restored when the load's journal manager object is released (`Utils/JournalManager.cls`, OP-LOAD-26).
 
 ### transaction.flag-sources
 
@@ -136,7 +138,7 @@ Sources: `wiki/00` L139-155; `wiki/02` L447, L595, L907, L1367; `Main.cls:628-63
 - user-facing-behavior
 - Expands: [Transactions](#transaction).
 
-Sources: `wiki/00` L161-180 (command line, `default-modifiers`, `<Defaults>`); `wiki/03` L252-258 (`-D` overrides `<Defaults>`); maintainer comment `Main.cls:1067-1070` ("so they can be overwritten by commands"). Inventory: INT-LOAD-08, CAT-04, CAT-27; OP-LOAD-05 (`Utils/Module.cls:1166-1169`). Observed: a module's own `<Defaults>` can turn transactions off for itself (`Utils/Module.cls:1033-1041`). Suspected gap, stage B to confirm: default modifiers are stored in `^%IPM.DefaultModifiers`, which may be shared by every namespace (OBS-X1, P-10).
+Sources: `wiki/00` L161-180 (command line, `default-modifiers`, `<Defaults>`); `wiki/03` L252-258 (`-D` overrides `<Defaults>`); maintainer comment `Main.cls:1067-1070` ("so they can be overwritten by commands"). Inventory: INT-LOAD-08, CAT-04, CAT-27; OP-LOAD-05 (`Utils/Module.cls:1166-1169`). Observed: a module's own `<Defaults>` can turn transactions off for itself (`Utils/Module.cls:1033-1041`). Suspected gap, stage B to confirm: default modifiers are stored in `^%IPM.DefaultModifiers`, which may be shared by every namespace (OBS-X1, P-10). Reconstruction check R13: no human source sets precedence between default modifiers and `<Defaults>`. Observed: default modifiers enter the command data, which overrides the module's `<Defaults>`, so the order is command line, then default modifiers, then `<Defaults>` (`Main.cls:1067-1069`; `Utils/Module.cls:1166-1169`). Stage B carries this as a condition, not a rule.
 
 ### dev-mode
 
@@ -153,7 +155,7 @@ Sources: `Main.cls:306`, `:434` (`-dev` help); `wiki/00` L107-135; `Main.cls:262
 - test-coverage
 - Expands: [Developer mode](#dev-mode).
 
-Sources: `-dev` help `Main.cls:306`, `:434` ("transactions will not be rolled back if installation fails"); issue #363 comment by isc-tleavitt, 2025-09-15 ("we don't remove these entries when installing in dev mode (to support debugging), but will in non-dev mode"); `wiki/00` L125-126; CHANGELOG 0.10.4 (`#363`), 0.10.11 (`#1237`). Inventory: INT-LOAD-05. Test: `History.cls` `TestDevModeFailureAfterCommit`. The `-dev` help for `reinstall` and `update` lacks the rollback sentence.
+Sources: `-dev` help `Main.cls:306`, `:434` ("transactions will not be rolled back if installation fails"); issue #363 comment by isc-tleavitt, 2025-09-15 ("we don't remove these entries when installing in dev mode (to support debugging), but will in non-dev mode"); `wiki/00` L125-126; CHANGELOG 0.10.4 (`#363`), 0.10.11 (`#1237`). Inventory: INT-LOAD-05. Test: `History.cls` `TestDevModeFailureAfterCommit`. The `-dev` help for `reinstall` and `update` lacks the rollback sentence. Reconstruction check R8 added the dependency exception from the maintainer comment `Utils/Module.cls:1336-1337` ("commit load of dependencies (if all went well)").
 
 ### dev-mode.not-propagated
 
