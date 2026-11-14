@@ -43,3 +43,14 @@ Model `Verus_verification/followup/models/history_readers.py`, receipt `FR/20261
 ## Round-three repairs rechecked (R12)
 
 `FR/20261113T232529Z-r12-asbuilt-proofs` .. `FR/20261113T233034Z-control-01-no-setcommitted-c1`: as-built 263/0 (crate), controls 01, 12, 13 and sanity detected, explorer as-built invariants and L1 conforming domains pass, repair-103 pass, as-built dep-clauses/r3-dep/l1-end/commit-exact violations, controls 12/13/01 explorer violations. All 19 as expected.
+
+## Corrections after the independent owner-file review (receipt `FR/20261114T004842Z-final-loadtx-model`)
+
+- R-1. The model now also checks `Committed` on records that exist but are not finalized and ended at a process end (clause COMMITTED-UNENDED, Q-08's provisional answer, as the original contract's `kill_rec`). Earlier counts checked finalized rows only, which hid violations.
+- R-2. Dependency rows, by variant (product policy Q-22 A, Q-23 B, no caller transaction):
+  - as-built: dependency rows are mostly lost (D1). Where they exist without being ended, 10,368 unended rows read `Committed=0` with kept writes in loads that run without a transaction (9,216 at SIGKILL, 1,152 at Terminate).
+  - REPAIR-103: finalized dependency rows wrong in 902 end states (842 with a dependency's own NoJournal, 60 in the Terminate window between mark and commit); unended dependency rows wrong in 10,775 (1,559 with a dependency's own NoJournal, 9,216 SIGKILL of a load without a transaction).
+  - REPAIR-103-GUARDED: removes the 60 window states. It does not fix the NoJournal case: those rows stay unfinalized and still read the wrong `Committed` (unended NoJournal violations rise from 1,559 to 2,338). Finalized dependency violations 81, all NoJournal.
+  - REPAIR-103-GUARDED-GLOBAL (new: one transaction plan per load, dependencies ignore their own defaults, plus the guarded close): no finalized dependency violation; the only dependency residual is the 9,216 SIGKILL end states of loads that run without a transaction, before the dependency's close. This is the residual the original handoff named (`handoff.md:80`: "In NoTransaction and NoJournal, residual violations come from D12 and the Q-08 deviation").
+- R-3. Top records: the dependency repair does not address the top row. Unended top rows read `Committed=0` with kept writes in 29,042 process-end states as built and in REPAIR-103, and 28,141 in REPAIR-103-GUARDED-GLOBAL (D26 under Q-08). S2's top-row part is not modeled.
+- R-4. M-GLOBAL-MODE (as-built with global modes) loses dependency rows (D1), so it cannot show that a single plan fixes the repair. REPAIR-103-GUARDED-GLOBAL is the evidence for that claim.

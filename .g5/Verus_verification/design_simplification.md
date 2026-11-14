@@ -2,7 +2,7 @@
 
 This file proposes design changes that would make the load and history guarantees easier to keep. They are proposals for the IPM maintainers. Nothing here was implemented in the product. The original six proposals (S1–S6, commit `ae619795`) are kept with their IDs and corrected. S7–S9 are new in the follow-up review.
 
-What was modeled. Earlier versions of this file said that none of the proposals had been modeled. That was not accurate. The dependency part of S2 is repair variant 103 in the original Verus crate, and its checks pass when every activation of a load uses the same transaction mode. The follow-up checked S2, S3, S4 and S8 in executable state-machine models, and S2's premise natively. Each proposal states its exact model evidence or says that it was not modeled.
+What was modeled. Earlier versions of this file said that none of the proposals had been modeled. That was not accurate. The dependency part of S2 is repair variant 103 in the original Verus crate. Its explorer check passes in the transactional modes (default and `-dev`, `repair-103-dep-clauses` with `txms [0]`), where every activation of a load uses the same mode. The follow-up checked S2, S3, S4 and S8 in executable state-machine models, and S2's premise natively. Each proposal states its exact model evidence or says that it was not modeled.
 
 Paths are relative to `.g5/Verus_verification/`. `FR` is `followup/results/`. Product paths start with `src/` and refer to commit `571e04a1`. Finding IDs (D1, I2, …) refer to `bugs_issues.md`, question IDs (Q-17, …) to `open_questions.md`.
 
@@ -10,21 +10,48 @@ Paths are relative to `.g5/Verus_verification/`. `FR` is `followup/results/`. Pr
 
 | ID | Proposal | Owner in the product | Removes | Policy choice it makes | Model evidence |
 |---|---|---|---|---|---|
-| S1 | Validate the whole load before the first write | `src/cls/IPM/Utils/Module.cls` `LoadNewModule` | D4, D9, D11, D12, V4, V7 | Q-17 (chooses option A) | none as a variant. The decisive cases are already L1 cases |
-| S2 | One durable history row per action, written so no rollback can remove it | `General/HistoryTemp.cls`, `General/AbstractHistory.cls` | D1, D10, V1, V2, V9, V10 | Q-05/Q-06b for caller transactions | repair variant 103 (original crate); follow-up `models/loadtx.py` variants REPAIR-103, REPAIR-103-GUARDED |
+| S1 | Validate the whole load before the first write | `src/cls/IPM/Utils/Module.cls` `LoadNewModule` | D4, D9, D11, D12, D16, V4, V7 | Q-17 (chooses option A), Q-31 | none as a variant. The decisive cases are already L1 cases |
+| S2 | One durable history row per action, written so no rollback can remove it | `General/HistoryTemp.cls`, `General/AbstractHistory.cls` | D1 (dependency rows, modeled). D10, D25, D26, D27 (top rows, by design argument only, not modeled) | Q-05/Q-06b, Q-08, Q-21, Q-22, Q-30 | repair variant 103 (original crate); follow-up `models/loadtx.py` variants REPAIR-103, REPAIR-103-GUARDED, REPAIR-103-GUARDED-GLOBAL |
 | S3 | Mark `Committed` only where a write is kept | `AbstractHistory.cls` `Finalize` | needed for S2 to be correct | none | control 05 (original); REPAIR-NAIVE (follow-up) |
 | S4 | Structured history filters | `General/History.cls` `ConstructSQLWhere`, `AutoPurgeOldHistory` | D2, D3, D24, D18 (if Q-18 says filters only) | Q-10, Q-18 | `models/history_readers.py` |
 | S5 | One exit path per phase | `Storage/Module.cls` `ExecutePhases` | D6, V5 | Q-14 (chooses option A) | none as a variant |
 | S6 | Declared setting defaults | `Repo/UniversalSettings.cls` | D5 | none | none |
 | S7 | A temporary repository that cannot outlive or fail its load | `General/TempLocalRepoManager.cls`, `Main.cls` `LoadInternal` | D13, I2 | none | none |
-| S8 | One transaction plan per load | `Utils/Module.cls` `LoadNewModule`, `LoadDependencies`, `LoadModuleFromDirectory` | D14, D21, D22, D28 and the per-dependency-mode condition on the D1 repair | Q-22, Q-23 (the maintainer chooses the rule) | `models/loadtx.py` M-GLOBAL-MODE |
-| S9 | Namespace-aware history readers and setting scope | `General/History.cls` global readers, `Main.cls` default modifiers | D19, D20, D23, I4 | Q-12 (D block), Q-16 | `models/history_readers.py` |
+| S10 | Stage files outside the database until the commit | `Main.cls` archive and URL paths, `Utils/Module.cls` archive extraction, `ResourceProcessor/FileCopy.cls` | I6 (OBS-L7, OBS-L11, OBS-L13) | Q-04 | none |
+| S8 | One transaction plan per load | `Utils/Module.cls` `LoadNewModule`, `LoadDependencies`, `LoadModuleFromDirectory` | D14, D21, D22, D28 and the per-dependency-mode condition on the D1 repair | Q-22, Q-23, Q-25, Q-26 (the maintainer chooses the rule) | `models/loadtx.py` REPAIR-103-GUARDED-GLOBAL and M-GLOBAL-MODE |
+| S9 | Namespace-aware history readers and setting scope | `General/History.cls` global readers, `Main.cls` default modifiers | D19, D20, D23, I4 | Q-12 (D block), Q-16, Q-27, Q-28 | `models/history_readers.py` |
 
-Findings that get no separate simplification, with the reason:
+Every finding in `bugs_issues.md` and where it is handled. "Local fix" means the repair is a contained code change with no design simplification behind it.
 
-- A developer-mode dependency replaced and its developer mode cleared (I3). This is a policy decision, not a structural problem. Once decided, the rule belongs in S8's load plan.
-- I1 (unfinished phase displayed as running). This is a reader display choice that S2 and S5 make rarer but do not settle.
-- `.tar.gz` (D15) and relative paths (D17). These are local input checks, and S1's single validation point is where they would live.
+| Finding | Proposal or reason |
+|---|---|
+| D1 | S2 with S3, and S8 for dependencies that declare their own NoJournal (Q-30) |
+| D2, D3, D24 | S4 |
+| D4, D9, D11, D12, D16 | S1. D12 also depends on Q-31 |
+| D5 | S6 |
+| D6 | S5 |
+| D10, D25, D26, D27 | S2's top-row part (not modeled). D27 needs the rule that `Finalized` is set only together with `TimeEnd` |
+| D13 | S7 |
+| D14, D21, D22, D28 | S8 |
+| D15, D17 | local fix. They are input checks, and S1's single validation point is where they would live |
+| D18 | S4 together with Q-18 |
+| D19, D20, D23 | S9 |
+| D29 | local fix: create the record before the argument checks of `update`, `reinstall` and `uninstall` (Q-09) |
+| D30 | local fix: implement or remove `uninstall -purge` |
+| I1 | reader display choice. S2 and S5 make it rarer but do not settle it |
+| I2 | S7 |
+| I3 | policy decision (Q-24). Once decided, the rule belongs in S8's load plan |
+| I4 | S9 |
+| I5 | local fix in the Compile phase (check each processor's status). S5's single exit path is where the phase would record the error |
+| I6 | S10 |
+| I7, I8 | local fixes (`PermitDowngrade` reaching the downgrade refusal, and the inverted `NoLock`) |
+| OBS-L3, OBS-L4 | local fixes on the load and update paths. OBS-L4 would follow S8's plan if update shares it |
+| OBS-L5, OBS-L9 | outside the formal scope (update framework). No proposal |
+| OBS-L16 | S1 and S3 (legacy XML installs must mark `Committed` where writes are kept) |
+| OBS-L17, OBS-H8 | outside the formal scope (uninstall). No proposal |
+| OBS-H12 | S4's purge triple, run so that a purge failure cannot stop the user's command (Q-13) |
+| OBS-H13, OBS-H15 | outside the formal scope (IPM self-uninstall). No proposal |
+| D7, OBS-H9, OBS-H10 (remainder), OBS-L15 | withdrawn, refuted or out of scope in `bugs_issues.md`. No proposal |
 
 ## S1: Validate the whole load before the first write
 
@@ -44,25 +71,28 @@ Evidence. Not modeled as a variant. The L1 contract already encodes the required
 
 ## S2: One durable history row per action
 
-Old complexity. A log has an IRISTEMP copy and a namespace twin. The twin is written at `Init` and from `%OnClose` (`src/cls/IPM/General/HistoryTemp.cls:30-70`). Whether it survives depends on the transaction level at those two moments and on when IRIS runs `%OnClose` (premises P-06a–c). A dependency's log is created and closed inside its parent's transaction, so a parent rollback removes it (D1).
+Old complexity. A log has an IRISTEMP copy and a namespace twin. The twin is written at `Init` (`src/cls/IPM/General/HistoryTemp.cls:9-26`) and from `%OnClose` (`:30-70`). Whether it survives depends on the transaction level at those two moments and on when IRIS runs `%OnClose` (premises P-06a–c). A dependency's log is created and closed inside its parent's transaction, so a parent rollback removes it (D1).
 
-What gets simpler. Every setter writes the durable row directly, with process journaling off for that save (`%IPM.Utils.JournalManager(0)`), so no rollback and no process end can remove it. IRISTEMP becomes a cache. `Committed` is the one field written journaled, set to 1 just before the commit that makes the action's changes durable, as the row's last write before that commit. Any rollback then restores 0.
+What gets simpler. Every setter writes the durable row directly, with process journaling off for that save (`%IPM.Utils.JournalManager(0)`), so no rollback and no process end can remove it. IRISTEMP becomes a cache. `Committed` is the one field written journaled, set to 1 just before the commit that makes the action's changes durable, as the row's last write before that commit. Any rollback then restores 0. `Finalized` is set only together with `TimeEnd`, so a record whose action never ended stays unfinalized (D27).
 
-Corrections from the follow-up (model `models/loadtx.py`, receipt `FR/20261114T002647Z-final-loadtx-model`):
+Scope of the evidence. The models cover the dependency rows. The top-row part of S2 (D10, D25, D26, D27) is argued from the design and not modeled. In every follow-up variant, an unended top row still reads `Committed=0` with kept writes at many process ends (29,042 end states as built, D26 under Q-08).
 
-1. One transaction mode per load. Variant 103 meets every dependency clause only when every activation uses the load's mode. A dependency whose own `<Defaults>` set NoJournal keeps its changes after a parent rollback (the product's behavior, D14), but under S2 its row stays at `Committed=0`. That gives 818 dependency-clause violations (27 at returned ends, 791 at process ends). S2 therefore needs S8, or a rule that marks such a dependency's row committed at its own close.
-2. Write ordering at the close. A rollback undoes a journaled write only if the row still holds the value that write set (new premise P-14, native `FR/native/20261113T234716Z-p21-ordering-r2`). IRIS runs `%OnClose` at a Terminate before its rollback (P-06b). If the top-level close finalizes dependency rows with journaling off while the load's transaction is open, a Terminate between the `Committed=1` mark and its commit leaves `Committed=1` on a dependency that was rolled back (60 end states, 30 of them distinct, in variant REPAIR-103). The window is two adjacent statements wide. It follows from the design text "dependency rows are finalized at the top-level close". The original crate's variant 103 models the mark as atomic with the commit and finalizes dependency rows only at a returned close, so it could not show this window. The guarded variant (REPAIR-103-GUARDED) finalizes dependency rows at the close only when no transaction of the load is open, and it removes every violation that does not come from a dependency's own NoJournal default (141 remain, all with such a dependency). That count is lower partly because the guarded close leaves dependency rows unfinalized at such a Terminate, and this model checks `Committed` only on finalized rows. The original contract allows an unfinalized dependency row at a process end. A mutant that writes the rows unjournaled between the mark and the commit is detected.
+Corrections from the follow-up. (Model `models/loadtx.py`, receipt `FR/20261114T004842Z-final-loadtx-model`. Dependency-row counts include unfinished rows, checked under Q-08's provisional answer.)
+
+1. One transaction mode per load. Variant 103 meets every dependency clause only when every activation uses the load's mode. A dependency whose own `<Defaults>` set NoJournal keeps its changes after a parent rollback (the product's behavior, D14), but under S2 its row stays at `Committed=0`. That gives 842 finalized and 1,559 unfinished dependency rows with the wrong `Committed` in REPAIR-103. S2 therefore needs S8, or a rule that marks such a dependency's row committed at its own close.
+2. Write ordering at the close. A rollback undoes a journaled write only if the row still holds the value that write set (new premise P-14, native `FR/native/20261113T234716Z-p21-ordering-r2`). IRIS runs `%OnClose` at a Terminate before its rollback (P-06b). If the top-level close finalizes dependency rows with journaling off while the load's transaction is open, a Terminate between the `Committed=1` mark and its commit leaves `Committed=1` on a dependency that was rolled back (60 end states, 30 of them distinct, in variant REPAIR-103). The window is two adjacent statements wide. It follows from the design text "dependency rows are finalized at the top-level close". The original crate's variant 103 models the mark as atomic with the commit and finalizes dependency rows only at a returned close, so it could not show this window. The guarded variant (REPAIR-103-GUARDED) finalizes dependency rows at the close only when no transaction of the load is open. It removes the 60 window states and nothing else: the NoJournal rows it no longer finalizes still read the wrong `Committed` (unfinished NoJournal violations rise from 1,559 to 2,338). A mutant that writes the rows unjournaled between the mark and the commit is detected.
+4. A residual every variant keeps. A SIGKILL of a load that runs without a transaction (caller flag or top module defaults), before a dependency's close, leaves that dependency's row at `Committed=0` with its writes kept (9,216 end states). The original handoff named this residual (`handoff.md:80`). Only REPAIR-103-GUARDED-GLOBAL, which also uses one transaction plan per load (S8), has no other dependency-row violation.
 3. The premise S2 depends on is now stated precisely. The rollback-proof insert is R-01 (native N-P20). The ordering rule is P-14 (N-P20c, N-P20c2, N-P21A, N-P21R). The original text described the hazard of a journaled insert followed by unjournaled updates (N-P20c2). The follow-up shows the opposite order, an unjournaled write after the journaled mark, is the one that defeats the rollback.
 
 Preserved behavior. Finalized rows stay immutable (`history.locked`). A top-level failure reads `Committed=0`. IDs follow start order. In developer mode, a dependency committed by C2 keeps `Committed=1` when the parent fails later (B1-C38).
 
 Decisive neighboring pair. B1-C31 (default parent fails after its dependency loaded): the dependency row must survive with `Committed=0`. B1-C38 (`-dev` parent fails after C2): the dependency row must read `Committed=1`. The as-built evaluator could not have checked the first one correctly (R02a in `followup/replay/`). The corrected evaluator's control "Committed per slot" does.
 
-Unresolved choices. Whether IPM may write history outside a caller's transaction at all (Q-05, Q-06b). Writing it unjournaled makes the record survive the caller's rollback. Whether that is wanted is a maintainer decision. The rule for dependencies whose own defaults turn journaling off depends on Q-22.
+Unresolved choices. Whether IPM may write history outside a caller's transaction at all (Q-05, Q-06b). Writing it unjournaled makes the record survive the caller's rollback. Whether that is wanted is a maintainer decision. The rule for dependencies whose own defaults turn journaling off depends on Q-22. The repair design itself is Q-30. What an unfinished record must say is Q-08 and Q-21.
 
 Tradeoffs. IRIS mirroring replicates through the journal, so a history row written with journaling off would not reach a mirror member. Neither the original uplift nor this review tested mirroring, and the update framework distinguishes mirror members (`src/cls/IPM/General/Update/VersionBase.cls`).
 
-Evidence. Original: variant 103, `repair-103-dep-clauses` PASS (189,577 states) and `repair-103-invariants` PASS, rerun on the final inputs (`FR/20261113T233031Z-repair-103-dep-clauses`, `FR/20261113T233031Z-repair-103-invariants`). Follow-up: `FR/20261114T002647Z-final-loadtx-model` variants REPAIR-103, REPAIR-103-GUARDED, REPAIR-103-M-LATE-MARK.
+Evidence. Original: variant 103, `repair-103-dep-clauses` PASS (189,577 states) and `repair-103-invariants` PASS, rerun on the final inputs (`FR/20261113T233031Z-repair-103-dep-clauses`, `FR/20261113T233031Z-repair-103-invariants`). Follow-up: `FR/20261114T004842Z-final-loadtx-model` variants REPAIR-103, REPAIR-103-GUARDED, REPAIR-103-GUARDED-GLOBAL, REPAIR-103-M-LATE-MARK.
 
 ## S3: Mark `Committed` only where a write is kept
 
@@ -72,7 +102,11 @@ What gets simpler. `Committed` is written only where a write becomes durable. `u
 
 Preserved behavior. A successful top-level load reads `Committed=1`. An uninstall's `Committed` keeps meaning "it succeeded" (`AbstractHistory.cls:41-44`).
 
-Decisive neighboring pair. A successful dependency under a parent that then fails (must read 0 once its row survives) versus a successful top-level load (reads 1 through the C3 marker).
+Decisive neighboring pair. B1-C31 once its dependency row survives: a successful dependency under a parent that then fails must read 0. B1-C01: a successful top-level load reads 1 through the C3 marker.
+
+Tradeoffs. Every writer that relies on `|| ISOK` has to mark `Committed` itself. `uninstall` is the one known caller, and others outside load and history were not inventoried.
+
+Unresolved choices. Whether `Committed` on an uninstall keeps meaning "it succeeded" or comes to mean "its changes were kept" like the other actions (`history.committed.uninstall`).
 
 Evidence. Follow-up variant REPAIR-NAIVE, which only makes dependency rows survive and keeps today's `Committed` logic, has 2,712 clause violations: rolled-back dependencies read `Committed=1`, through `|| ISOK` and the no-transaction marker. So S3 is required by any D1 repair, not an independent clean-up.
 
@@ -95,6 +129,8 @@ Worked preserving and refusing pair (native `FR/native/20261113T234810Z-r04-hist
 
 Preserved behavior. Wildcard `*`, the comparison operators, the `-confirm` gate and the SQL-injection guard on column names.
 
+Tradeoffs. Scripts that pass a misspelled or unknown column today get every row back silently. Under S4 they get an error, which is the point but is still a visible change. The purge would start deleting rows on instances where `HistoryRetain` was set long ago and never took effect, so a release note is needed.
+
 Policy choices. Whether default modifiers are filters (Q-18). Under S4 a default modifier that is not a column would be refused, so S4 together with Q-18 option A removes D18. Whether an in-progress record may be purged (Q-20, Q-29). The model shows that once D3 is fixed, an in-progress record older than the cutoff is purged unless S4's purge triple excludes unfinished rows.
 
 Evidence. `models/history_readers.py` (receipt `FR/20261114T002647Z-final-history-readers-model`): the 69 commands of the valid neighbor (plain columns, no default modifiers) match the contract exactly. The deliberately wrong variant "skip invalid keys" (a tempting partial fix) still differs from the contract and is refuted natively by N-R04-SEL. So skipping instead of stopping is not a repair. The variant with an unquoted cutoff is refuted by the archived no-op purge (X4), which confirms the quoting is the cause of D3.
@@ -111,17 +147,23 @@ Decisive neighboring pair. B1-C28 (an Activate-phase Invoke returns an error) to
 
 Policy choice. Adopting S5 answers Q-14 with option A.
 
+Tradeoffs. The single exit has to keep the current behavior of the After-phase Invokes that run once a phase failed, and it must not record a phase end twice when a thrown error passes through it.
+
 Evidence. Not modeled as a variant. The L1 clause with Q-14 option A rejects B1-C28 and accepts B1-C25 (`FR/20261114T002646Z-final-replay-reeval`). Native: archived `repro-activate-invoke-phase-open`.
 
 ## S6: Declared setting defaults
 
-Old complexity. `ResetToDefault` reads a stored "default" node that the first `SetValue` creates (`src/cls/IPM/Repo/UniversalSettings.cls:87-105`, `:150-163`). So `config delete` restores the first value ever set rather than a factory default (D5).
+Old complexity. `ResetToDefault` (`src/cls/IPM/Repo/UniversalSettings.cls:87-105`) reads a stored "default" node that the first `SetValue` creates (`:178-179`). The getters are at `:150-163`. So `config delete` restores the first value ever set rather than a factory default (D5).
 
 What gets simpler. One table of factory defaults that both `GetValue` and `ResetToDefault` read.
 
 Preserved behavior. `config set` and `config get` round-trip. Settings without a factory default keep their current special cases (`:95-99`).
 
-Decisive neighboring pair. After `config set HistoryRetain 7`, `config set HistoryRetain 0` and `config delete HistoryRetain`, the value must be the factory default (0, retention off). Today it is 7 (archived run `results/native/20261113T184628Z-repro-config-delete-retain`). The neighbor `config set HistoryRetain 30` then `config get` must still return 30.
+Decisive neighboring pair. A setting first stored as 7, then set to 0, then deleted must read its factory default (0, retention off). Today it reads 7 (archived run `results/native/20261113T184628Z-repro-config-delete-retain`, which restored the original setting afterwards). The neighbor: a value that was set and not deleted must still read back unchanged. The setting is instance-wide, so a native check of either case must restore the previous value.
+
+Tradeoffs. Instances whose stored "default" came from an earlier explicit value would see `config delete` behave differently after the change.
+
+Unresolved choices. The factory default of each setting, including the ones that today have none (`:95-99`).
 
 Evidence. Not modeled. The decisive case is archived natively.
 
@@ -136,6 +178,8 @@ Preserved behavior. Dependencies in `.modules` are found before every other repo
 Decisive neighboring pair. B1-C29 (cleanup fails after the commit) must report the load's success with a warning. B1-C30 (normal cleanup) must not change.
 
 Tradeoffs. A sweep needs a reliable "owner is gone" test. Two concurrent loads of the same directory would each need their own repository.
+
+Unresolved choices. Whether a cleanup failure after the commit is reported as a warning or not at all. Whether the sweep runs at every resolution or only at IPM start-up.
 
 Evidence. Not modeled. Native: B1-C29 (`FR/20261114T002646Z-final-replay-reeval`), archived `results/native/20261113T210229Z-temp-repos-leftover`.
 
@@ -153,11 +197,13 @@ What gets simpler. Before the first write, compute one plan for the whole load f
 
 Preserved behavior. A load whose modules declare no defaults behaves as today. A caller's `-DNoTransaction=1` or `-DNoJournal=1` keeps its meaning.
 
-Decisive neighboring cases. N-R05-NESTF (parent fails; middle dependency declares NoJournal): under a single plan the namespace is either fully rolled back or keeps the whole dependency closure, never a module without its dependency. N-R05-Q23S and N-R05-NESTS (successful loads) must not change.
+Decisive neighboring cases. N-R05-NESTF (the parent fails and the middle dependency declares NoJournal): under a single plan the namespace is either fully rolled back or keeps the whole dependency closure, never a module without its dependency. N-R05-Q23S and N-R05-NESTS (successful loads) must not change.
 
-Policy choice. S8 makes Q-22 and Q-23 one decision. It does not answer them.
+Policy choice. S8 makes Q-22 and Q-23 one decision, together with Q-25 and Q-26 that follow from them. It does not answer them.
 
-Evidence. `models/loadtx.py` variant M-GLOBAL-MODE is the "one mode per load" design, with the dependency defaults ignored (receipt `FR/20261114T002647Z-final-loadtx-model`). It has no `Committed` violation under any option, so the 30 top-record and 818 repair-103 dependency violations disappear. Under Q-22 B and Q-23 B, 144 end states still differ from the contract. All are caller rollbacks of a load that runs without its own transaction while a dependency declares NoJournal: the contract as written still lets that dependency's NoJournal survive the caller's rollback, and the single plan ignores it. The plan rule has to say which wins. Under the product's current policy (Q-22 A) the variant differs in 3,080 end states, as expected, because it no longer lets a dependency's NoJournal escape.
+Tradeoffs. The plan needs every dependency's `<Defaults>` before the first write. Today the dependency graph is built inside `LoadDependencies`, after the manifest write and the developer-mode first commit (`src/cls/IPM/Utils/Module.cls:1298-1328`). Building it earlier means reading every dependency manifest before anything is written, which also changes when an unresolvable dependency is reported. A module that declares NoJournal for speed loses that speed when its parent's plan is transactional, if the rule says so.
+
+Evidence. `models/loadtx.py`, receipt `FR/20261114T004842Z-final-loadtx-model`. REPAIR-103-GUARDED-GLOBAL is the design S8 plus S2: one plan per load (dependencies ignore their own defaults) with the guarded repair. It has no finalized-row `Committed` violation, and its only dependency-row residual is the SIGKILL case of a load without a transaction (9,216 end states), which S2 does not address. Its unfinished top rows keep D26 (S2's top-row part is not modeled). M-GLOBAL-MODE applies the single plan to today's history logic. It removes the 30 top-record `Committed` violations but cannot show anything about dependency rows, because they are lost as built (D1). Both variants differ from the contract in 144 end states under Q-22 B and Q-23 B. All are caller rollbacks of a load that runs without its own transaction while a dependency declares NoJournal: the contract as written still lets that dependency's NoJournal survive the caller's rollback, and the single plan ignores it. The plan rule has to say which wins. Under the product's current policy (Q-22 A) they differ in 3,134 and 3,080 end states, as expected, because the plan no longer lets a dependency's NoJournal escape. The original crate's `repair-103-dep-clauses` PASS covers only the transactional modes.
 
 ## S9: Namespace-aware history readers and setting scope
 
@@ -169,4 +215,24 @@ Preserved behavior. `history find -globally` already lists rows per namespace co
 
 Decisive neighboring pair. `GlobalRecords` from a namespace with three rows, with a second IPM namespace present, must return every namespace's rows once with their namespace. `history find -globally` must not change.
 
+Tradeoffs. Adding columns to `GlobalRecords` and `Records` changes an `@API.Query` result shape that callers may read by position. Per-namespace default modifiers would change behavior for users who set them once for the whole instance today.
+
+Unresolved choices. Which errors a global delete may skip (Q-27). Whether readers return the namespace and ID (Q-28). Whether IPM's own uninstall may touch other namespaces' records (Q-16).
+
 Evidence. `models/history_readers.py`: `globalrecords:ROWS` and `delete-global:STATUS` violations in the as-built variant. The dedicated follow-up container has one IPM namespace, so the global cases rely on the archived H10 run.
+
+## S10: Stage files outside the database until the commit
+
+Old complexity. Archive installs and loads replace the module's folder before any version guard (`src/cls/IPM/Main.cls:2507-2509`, `src/cls/IPM/Utils/Module.cls:236-242`), the lock file is written before the parent's commit (OBS-L11), and a git URL load keeps its clone (OBS-L13). A rollback undoes none of these, so a refused or failed load can leave files that do not match the database (I6).
+
+What gets simpler. Unpack or clone into a temporary folder, run every refusal and the load, and move the result into place only after the commit. Remove the temporary folder on failure.
+
+Preserved behavior. A successful archive install leaves the same files in the same place as today.
+
+Decisive neighboring pair. A downgrade refusal from an archive must leave the installed module's folder unchanged. A successful archive install of a newer version must replace it.
+
+Tradeoffs. A move after the commit can itself fail, which leaves a committed module without its files. The move must be retried or reported.
+
+Unresolved choices. What a rollback promises beyond the database (Q-04). If the maintainers decide that files outside the database are not covered, S10 is still a robustness improvement but not a requirement.
+
+Evidence. Not modeled. OBS-L7, OBS-L11 and OBS-L13 are code reading only (`bugs_issues.md` I6).

@@ -1,0 +1,23 @@
+# python3 -I -B guarded_unfinalized.py followup/models/loadtx.py   (cwd .g5/Verus_verification; loadtx.py as in the working tree at 2026-11-14T00:30Z)
+# counts are (end state, dependency row) pairs without a caller transaction; "checked" = row finalized and ended (what loadtx COMMITTED inspects)
+REPAIR-103
+   ('process-end', 'checked', 'ok') 20269
+   ('process-end', 'checked', 'wrong') 875
+   ('process-end', 'unchecked', 'ok') 41089
+   ('process-end', 'unchecked', 'wrong') 10775
+   ('return', 'checked', 'ok') 1269
+   ('return', 'checked', 'wrong') 27
+REPAIR-103-GUARDED
+   ('process-end', 'checked', 'ok') 18753
+   ('process-end', 'checked', 'wrong') 54
+   ('process-end', 'unchecked', 'ok') 42647
+   ('process-end', 'unchecked', 'wrong') 11554
+   ('return', 'checked', 'ok') 1269
+   ('return', 'checked', 'wrong') 27
+# guarded_unfinalized2.py REPAIR-103-GUARDED: every unchecked wrong row is com=0 with kept writes
+#   9,216 = 12 x 768 SIGKILL ends of loads run with caller/top NoTransaction or NoJournal (any dependency default, dev or not)
+#   2,338 = 638 + 604 + 558 + 538 SIGKILL/Terminate ends of transactional loads whose dependency's own <Defaults> set NoJournal
+#   no unchecked row has com=1 with nothing kept
+# guarded_unfinalized2.py REPAIR-103: unchecked wrong rows = 9,216 (same SIGKILL rows as above) + 638 + 558 (SIGKILL, own NoJournal, transactional load)
+#   + 185 + 178 (Terminate, own NoJournal, transactional load) = 10,775
+# So the guard moves Terminate rows with own NoJournal from finalized (counted) to unfinalized (not counted): 363 -> 1,142 (+779).

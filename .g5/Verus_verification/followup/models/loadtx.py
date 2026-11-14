@@ -126,7 +126,7 @@ def effective(caller, top_def, own_def, is_top, variant):
             return 1
         if top_def == k:
             return 1
-        if not is_top and own_def == k and variant != "M-GLOBAL-MODE":
+        if not is_top and own_def == k and variant not in ("M-GLOBAL-MODE", "REPAIR-103-GUARDED-GLOBAL"):
             return 1
         return 0
     return {"NoTransaction": key("NoTransaction"), "NoJournal": key("NoJournal")}
@@ -163,7 +163,7 @@ def program(cfg):
 
     steps = []
     S = steps.append
-    rep = cfg.variant in ("REPAIR-103", "REPAIR-103-GUARDED", "REPAIR-103-M-LATE-MARK")
+    rep = cfg.variant in ("REPAIR-103", "REPAIR-103-GUARDED", "REPAIR-103-GUARDED-GLOBAL", "REPAIR-103-M-LATE-MARK")
     naive = cfg.variant == "REPAIR-NAIVE"   # only the row's survival is fixed; Committed as built
 
     # ---- history helpers
@@ -427,7 +427,7 @@ def close(a, st, ctx, variant="as-built"):
         st.write(("hist", a), {"com": t["com"], "ok": t["ok"], "tend": t["tend"], "fin": 1})
         # REPAIR-103-GUARDED: the close finalizes dependency rows only when no transaction of the load
         # is open, so no unjournaled write can follow the journaled Committed mark before its commit.
-        if variant != "REPAIR-103-GUARDED" or st.tl() == ctx["entry"]:
+        if variant not in ("REPAIR-103-GUARDED", "REPAIR-103-GUARDED-GLOBAL") or st.tl() == ctx["entry"]:
             finalize_dep_rows(st, list(ctx.get("acts", [])))
         return
     if variant.startswith("REPAIR-103") and a != "top":
@@ -539,14 +539,20 @@ def check(cfg, q22, q23, obs, acts, caller_end="commit"):
     for a in acts:
         if got[a] != want[a]:
             v.append(f"PREFIX[{a}]")
-    # Committed on finalized records, without a caller transaction
+    # Committed, without a caller transaction. COMMITTED: finalized, ended records. COMMITTED-UNENDED:
+    # every other existing record at a process end, under Q-08's provisional answer ("Committed reflects
+    # the changes kept, even on an unfinished record"; contract.rs kill_rec with q08_exact).
     if not cfg.caller_tx:
         for a in acts:
             row = snap["v"].get(("hist", a))
-            if row and row.get("fin") and row.get("tend"):
-                kept = any(got[b] != {"present": 0, "res": 0} for b in acts) if a == "top" else got[a] != {"present": 0, "res": 0}
+            if not row:
+                continue
+            kept = any(got[b] != {"present": 0, "res": 0} for b in acts) if a == "top" else got[a] != {"present": 0, "res": 0}
+            if row.get("fin") and row.get("tend"):
                 if bool(row["com"]) != kept:
                     v.append(f"COMMITTED[{a}]")
+            elif end != "return" and bool(row["com"]) != kept:
+                v.append(f"COMMITTED-UNENDED[{a}]")
     return sorted(set(v))
 
 
@@ -695,12 +701,12 @@ def main(argv):
                         "transaction or not; ends: return, and a Terminate or SIGKILL before every step (no caller transaction); "
                         "retry after every process end",
               "q_options": [{"Q-22": a, "Q-23": b} for a, b in qopts]}
-    for variants in (["as-built"], ["REPAIR-103"], ["REPAIR-103-GUARDED"], ["REPAIR-103-M-LATE-MARK"], ["REPAIR-NAIVE"], ["M-GLOBAL-MODE"], ["M-BEFORE-IMAGE"], ["M-JOURNAL-NOT-RESTORED"]):
+    for variants in (["as-built"], ["REPAIR-103"], ["REPAIR-103-GUARDED"], ["REPAIR-103-GUARDED-GLOBAL"], ["REPAIR-103-M-LATE-MARK"], ["REPAIR-NAIVE"], ["M-GLOBAL-MODE"], ["M-BEFORE-IMAGE"], ["M-JOURNAL-NOT-RESTORED"]):
         result[variants[0]] = explore(variants, qopts)
     result["correspondence"] = [{"case": c, "holds": ok} for c, ok in corresponding_cases()]
     result["ordering_hazard"] = ordering_hazard()
     json.dump(result, open(os.path.join(out, "loadtx.json"), "w"), indent=1, sort_keys=True, default=str)
-    for k in ("as-built", "REPAIR-103", "REPAIR-103-GUARDED", "REPAIR-103-M-LATE-MARK", "REPAIR-NAIVE", "M-GLOBAL-MODE", "M-BEFORE-IMAGE", "M-JOURNAL-NOT-RESTORED"):
+    for k in ("as-built", "REPAIR-103", "REPAIR-103-GUARDED", "REPAIR-103-GUARDED-GLOBAL", "REPAIR-103-M-LATE-MARK", "REPAIR-NAIVE", "M-GLOBAL-MODE", "M-BEFORE-IMAGE", "M-JOURNAL-NOT-RESTORED"):
         r = result[k]
         print(k, "configs", r["configs"], "end_states", r["end_states"], "retry_failures", r["retry_failures"], "transient_differs", r["transient_differs"])
         for vk, n in sorted(r["violations"].items()):
