@@ -44,6 +44,8 @@ python3 -I -B followup/replay/evaluate_replay2.py results/native/20261113T193952
 
 Expected: `B1-C01 … l1=VIOLATES L1-NAMESPACE`.
 
+Re-execution with the committed driver (R03f). The archived scripts of the two return-path runs are `native/sessions/replay-return-b.cos` and `replay-c51-c52.cos`. `NATIVE_ORIGINAL=1 ./run-native.sh exec …` stages the committed original driver and fixtures and records their hash at start. `replay/compare_reruns.py` compares the fresh observations with the archived ones field by field. Expected: identical 45/45 (`results/20261114T000320Z-replay-rerun-compare`).
+
 ## 2. Models (R04–R06)
 
 See `models/MODELS.md` for bounds, clauses, variants and results.
