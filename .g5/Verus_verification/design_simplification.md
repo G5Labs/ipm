@@ -40,7 +40,7 @@ Every finding in `bugs_issues.md` and where it is handled. "Local fix" means the
 | D30 | local fix: implement or remove `uninstall -purge` |
 | I1 | reader display choice. S2 and S5 make it rarer but do not settle it |
 | I2 | S7 |
-| I3 | policy decision (Q-24). Once decided, the rule belongs in S8's load plan |
+| I3, D31 | policy decision (Q-03, Q-24). Once decided, the rule belongs in S8's load plan |
 | I4 | S9 |
 | I5 | local fix in the Compile phase (check each processor's status). S5's single exit path is where the phase would record the error |
 | I6 | S10 |
@@ -51,7 +51,7 @@ Every finding in `bugs_issues.md` and where it is handled. "Local fix" means the
 | OBS-L17, OBS-H8 | outside the formal scope (uninstall). No proposal |
 | OBS-H12 | S4's purge triple, run so that a purge failure cannot stop the user's command (Q-13) |
 | OBS-H13, OBS-H15 | outside the formal scope (IPM self-uninstall). No proposal |
-| D7, OBS-H9, OBS-H10 (remainder), OBS-L15 | withdrawn, refuted or out of scope in `bugs_issues.md`. No proposal |
+| D7, OBS-H9, OBS-H10 (remainder), OBS-L15, OOS-1, OOS-2, OOS-3 | withdrawn, refuted or out of scope in `bugs_issues.md`. No proposal |
 
 ## S1: Validate the whole load before the first write
 

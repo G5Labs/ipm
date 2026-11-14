@@ -11,7 +11,7 @@ Conventions:
 - Short uplift paths such as `handoff.md:67`, `A/coverage-map.md`, `B/model-notes.md` and `C/round-2/` are under `.g5/uplift/ipm-verus-20261113/`. `bugs_issues.md` and `design_simplification.md` sit next to this file.
 - `RN` is `.g5/Verus_verification/results/native/` (uplift runs). `FR` is `.g5/Verus_verification/followup/results/` (this follow-up). Follow-up native cases such as `N-R05-DEVUP` are in `FR/native/20261113T234817Z-r05-modes-nesting` (R05) and `FR/native/20261113T234810Z-r04-history-readers` (R04).
 - Labels L-1 to L-12, H-1 to H-8 and E-1 to E-5 are findings of this follow-up. R-1 to R-4 are its corrections after the independent owner-file review. All are in `.g5/uplift/ipm-quality-followup/work/followup-findings.md`.
-- Finding IDs refer to the rewritten [bugs_issues.md](bugs_issues.md). It keeps the original D1-D20, I1 and I2 and adds D21-D30 and I3-I8. Suspected findings keep their A2 IDs (OBS-L*, OBS-H*). The original file is in git at commit `ae619795`. A finding whose verdict depends on a question is "conditional" there.
+- Finding IDs refer to the rewritten [bugs_issues.md](bugs_issues.md). It keeps the original D1-D20, I1 and I2 and adds D21-D31, I3-I8 and the out-of-scope labels OOS-1 to OOS-3. Suspected findings keep their A2 IDs (OBS-L*, OBS-H*). The original file is in git at commit `ae619795`. A finding whose verdict depends on a question is "conditional" there.
 - Model results come from the original crate `crates/ipm-load-history` (59 cases, `cases/cases.json` sha256 `10410864…`) and from the follow-up models `followup/models/loadtx.py` (receipt `FR/20261114T004842Z-final-loadtx-model`) and `followup/models/history_readers.py` (receipt `FR/20261114T002647Z-final-history-readers-model`). "End states" are the outcomes the loadtx model explores: 62,764 for the product as built.
 - Q-24 to Q-31 are new in this file. They continue the uplift's numbering and have no ontology block yet.
 
@@ -497,7 +497,7 @@ Ranked by how many defect verdicts, model results and native outcomes each decis
 - Checked in this follow-up: code, the native pair above, #316, #952 and #1036 (none mentions the case) and the git history of the guard (see Q-03).
 - Most reasonable assumption: for `install`, A, because the I blocks state the guard without an exception. For `load`, the answer follows Q-03.
 - Decision requested: A, extend the guard to dependencies for `install` and also for `load` if Q-03 brings `load` under the guard. Or B, add an explicit exception for dependencies to `dev-mode.overwrite-guard` and `install.refusal`, preferably with the warning of C. This answer also completes Q-03.
-- Findings affected: I3 in `bugs_issues.md`, whose entry asks for a new question or an extension of Q-03. Under the I blocks as written, the `install` variant is a suspected defect. The `load` variant depends on Q-03 and on this question.
+- Findings affected: I3 (the `load` variant, observed natively, conditional on Q-03 and this question) and D31 (the `install` variant, suspected from the code, decided by the same questions) in `bugs_issues.md`.
 - Stakes: developers debugging a dependency in place, as the code comment suggests. Under B, their next load or install of the parent silently switches that dependency to the repository version.
 
 ### Q-25: If a `NoJournal` dependency escapes, may its own dependencies be rolled back?
@@ -515,7 +515,7 @@ Ranked by how many defect verdicts, model results and native outcomes each decis
 - Checked in this follow-up: code, native NESTF and NESTS, the model, the ontology's load, uninstall and dependency pages and `wiki/00`, `wiki/02`.
 - Most reasonable assumption: no source decides it. B or C leaves the namespace in the state that IPM's other commands assume. A is the cheapest.
 - Decision requested (only if Q-22 is A): A, document that a failed load can leave an escaped module without its dependencies until the next load. Or B, propagate a dependency's own `NoJournal` to the dependencies it needs.
-- Findings affected: D21 in `bugs_issues.md`, which the revision in progress makes conditional on Q-22 and, under Q-22 A, on this question. D14.
+- Findings affected: D21 (conditional on Q-22 and, under Q-22 A, on this question), D14.
 - Stakes: users of applications that call into d2 through d1. Until a later load resolves d1's requirements again, that code fails at run time.
 
 ### Q-26: What `Committed` should a failed load's record show when only a `NoJournal` dependency's changes were kept?
@@ -547,7 +547,7 @@ Ranked by how many defect verdicts, model results and native outcomes each decis
 - Checked in this follow-up: `git log -S'DeleteHistoryGlobally'` and `git show f522900e`. The catch-all came with #1107 (isc-dchui, 2026-04-23), commit "Fix cleanup timing and history deletion permission bugs". The #1107 page does not describe the bug. The purge calls the same method (`General/History.cls:175`), so under A a purge error would surface, which is Q-13.
 - Most reasonable assumption: A, because both the comment and the wiki name only permission.
 - Decision requested: A, catch only the permission error, report the others per namespace and return an error. Or B, document that `-globally` skips any namespace where the delete fails. With the D2 repair (column check before any query), the unusable-column case is refused up front, so A then matters for other errors such as locks or read-only databases.
-- Findings affected: D23 (suspected, filed with no decision on the strength of the code comment and the wiki), D2, D3, OBS-H12 (Q-13).
+- Findings affected: D23 (suspected, decided by this question), D2, D3, OBS-H12 (Q-13).
 - Stakes: administrators who believe a global delete or purge removed old records everywhere.
 
 ### Q-28: Should the global history readers return each row's namespace and ID?
