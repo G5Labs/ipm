@@ -189,17 +189,26 @@ Accepted. Primary class: A2, V7.
 | R05 | CLOSED except R05d | `followup/models/loadtx.py` (receipt `followup/results/20261114T004842Z-final-loadtx-model`): per-activation mode resolution, nesting reduction, Q-22/Q-23 options, repair variants; native `followup/results/native/20261113T234817Z-r05-modes-nesting` (10 cases conform, including the first native Q-23 case, nesting, diamond, developer-mode and higher installed dependencies) | R05d deferred: remote or ORAS dependency sources not run (needs registry services). R05h: interaction checks are mode × fault × process end × retry; two simultaneous faults not modeled |
 | R06 | CLOSED except R06f | PREFIX clause in `loadtx.py` and `followup/models/prefix_cases.py` (receipt `followup/results/20261114T005359Z-final-prefix-cases`): permitted partial prefixes and three rejected impossible states; transient, settled, returned, caller rollback and retry separated; repair ordering challenged natively (N-P21, premise P-14) and in the model (Terminate window, guarded variant) | R06f: B1-C49T/K stay APPROXIMATE. An exact witness needs a hook between the C3 commit and `SetCommitted`, which the product does not have. No new native process end was run (destructive) |
 | R07 | CLOSED | `Verus_verification/followup/PROJECTIONS.md` | concurrency, restart (P-12), effects outside the database (Q-04), registry effects and liveness remain open, listed there |
-| R08 | WORKING | | |
-| R09 | WORKING | | |
+| R08 | CLOSED | `scope-ledger.md`: 313 rows (35 commitments, 42 catalog rows, 34 OBS rows, 39 commands, 163 coverage-map rows) with scope class, disposition, evidence, regression versus scope exclusion (6 regression rows, all D15 `.tar.gz`, `f83b207e`) and remaining work; section 2 traces the named in-scope parts to operations, commits, readers and baseline evidence | 93 in-scope rows rest on static review only or were not run (listed in its section 4) |
+| R09 | CLOSED | rewritten `Verus_verification/bugs_issues.md`: 54 entries by cause (14 supported, 13 conditional, 7 issues without a governing requirement, 13 suspected, 3 withdrawn or refuted, 4 out of scope); Appendix A reconciles OBS 34/34, defects 20/20, issues 2/2, V1–V12, deviation rows, violating B1 cases, native cases, follow-up cases and brief items, review findings 66/66 and A1 conflicts 37/37; Appendix B is the sampling record | suspected entries need ordinary native runs listed in each entry |
 | R10 | CLOSED | rewritten `Verus_verification/design_simplification.md` (S1–S9, each with owner, old complexity, preserved behavior, decisive pair, choices and exact model evidence) | S1, S5, S6, S7 not modeled as variants; their decisive cases are named |
-| R11 | WORKING | | |
-| R12 | WORKING | R12a: 19 reruns on the final inputs, all as expected (`followup/results/20261113T232529Z-r12-asbuilt-proofs` .. `20261113T233034Z-control-01-no-setcommitted-c1`); R12b: trace and controls in `Verus_verification/followup/README.md` section 5; R12c and the suite headline: `audit-validation.md`; R12d: corrected verdicts keep exact/approximate and expected/observed per field | R12e independent review and R12f counts pending |
+| R11 | CLOSED | `Verus_verification/open_questions.md`: a section for each of the 22 ontology questions, aliases Q-06b and Q-FIN, the resolved Q-12, and 8 new questions Q-24–Q-31; crosswalk of every Q identifier; decisions ordered by consequence; type, authority, product behavior, what was researched and a concrete decision for each | maintainer decisions themselves (30 open). Q-24–Q-31 have no ontology block yet: the historical ontology was not edited |
+| R12 | CLOSED | R12a: 19 reruns on the final inputs, all as expected (`followup/results/20261113T232529Z-r12-asbuilt-proofs` .. `20261113T233034Z-control-01-no-setcommitted-c1`); R12b: trace and controls in `Verus_verification/followup/README.md` section 5; R12c and the suite headline: `audit-validation.md`; R12d: corrected verdicts keep exact/approximate and expected/observed per field; R12e: two independent reviews with their coverage and dispositions in `review/README.md`; R12f: separate counts in `handoff.md` | the repairs made after the two reviews were validated by reruns and consistency checks, not by a third reviewer |
 
 ## Superseded files
 
-None yet.
+| File | Original | Replacement |
+|---|---|---|
+| `.g5/Verus_verification/bugs_issues.md` | `git show ae619795:.g5/Verus_verification/bugs_issues.md` | rewritten (R09) |
+| `.g5/Verus_verification/design_simplification.md` | `git show ae619795:.g5/Verus_verification/design_simplification.md` | rewritten (R10) |
+
+No other original file was changed. Original receipts and verdicts under `.g5/Verus_verification/results/` are unchanged.
 
 ## Revisions
 
 - Initial ledger, written before any artifact was revised. R01a–c and R03c were checked against the saved evidence before writing (see `audit-validation.md`).
-- R01–R03 closed. R03f closed for the return path by re-execution with the committed driver (45/45 identical); the T/K cases keep the residual. R02b narrowed: the qualified-row handling matched Verus, and the gaps were missing-data handling and the lost Q identity. R03d narrowed: the original did not rely on the return code alone.
+- R01–R03 closed. R03f closed for the return path by re-execution with the committed driver (45/45 identical); the T/K cases keep the residual.
+- R04–R07 and R10 closed with the residuals in the status table.
+- After the technical review: the load model's Terminate close order (P-06c) repaired; evaluator status vocabulary, snapshot hash and controls added; runner ownership checks added; every check rerun on the final inputs.
+- After the owner-file review: COMMITTED-UNENDED clause and REPAIR-103-GUARDED-GLOBAL variant added to the model; bugs_issues.md, open_questions.md, design_simplification.md and the scope ledger revised (classes of D12, D21, D24, I3, OBS-H10 changed; D31 split out; Q-24–Q-31 named; review findings and A1 conflicts reconciled).
+- R08, R09, R11 and R12 closed. All twelve findings closed, with the residuals listed. R02b narrowed: the qualified-row handling matched Verus, and the gaps were missing-data handling and the lost Q identity. R03d narrowed: the original did not rely on the return code alone.

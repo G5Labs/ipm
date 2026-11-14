@@ -5,7 +5,7 @@ Two fresh reviewers, each given the code and evidence rather than the author's c
 | Review | File | Covered | Not covered |
 |---|---|---|---|
 | Technical | `review-technical.md` | Corrected evaluator against `contract.rs` (line by line), its projection against `model.rs` and the driver, a rerun of its 289 controls, 15 single-check deletions (13 caught), adversarial observations; the re-evaluation claim with 5 cases checked by hand from `raw.log`; the load model's mode resolution, nesting reduction, P-14, PREFIX independence, the counts for COMMITTED 30, REPAIR-103 818/27/60 and GUARDED 141, and the Terminate window; the history-reader model against `ConstructSQLWhere` including key collation, and N-R04-SEL; native evidence integrity (expectations committed before the runs, snapshots against receipts, runner names); the R12a reruns and the 2322 = 2059 + 263 explanation | the replay re-executions `followup/results/native/20261114T000144Z-*` and `000251Z-*` and their comparison (they appeared during the review); the owner files |
-| Owner files | `review-owner-files.md` | see that file | see that file |
+| Owner files | `review-owner-files.md` | 55 citation groups (over 150 locators) in `bugs_issues.md`, `open_questions.md` and `design_simplification.md` checked against product source, ontology, wiki, run directories and receipts; the classification of 13 findings; reconciliation coverage against `work/id-registry.json` (OBS 34/34, defects, issues, V1–V12, native cases, all 47 Q IDs); cross-file consistency of IDs, classes and counts; every question's decision, type and authority, and the Q-12 resolution; each design proposal against R10's field list; misuse detail and prose style. It counted the guarded repair's hidden residual with scratch scripts importing `loadtx.py` read-only | GitHub issue and PR quotes (outside its allowed sources); the technical review file (not read, to stay independent) |
 
 ## Dispositions of the technical review's findings
 
@@ -26,4 +26,21 @@ Every follow-up check was rerun on the final inputs after these repairs (`follow
 
 ## Dispositions of the owner-file review's findings
 
-See the section appended below once that review completes.
+| Finding | Severity | Disposition | Where |
+|---|---|---|---|
+| M1: D21 is not decision-independent, and Q-25's reasoning cited D21's class | material | accepted. D21 is conditional on Q-22 and, under Q-22 A, on Q-25. Q-25 rests on primary sources only | `bugs_issues.md` D21, `open_questions.md` Q-25 |
+| M2: Q-24 to Q-31 were not referenced outside `open_questions.md`, so decisions differed between files (D12's class among them) | material | accepted. Each new question is named in the findings it decides and in the scope ledger. D12 is conditional on Q-31 | `bugs_issues.md`, `scope-ledger.md`, `design_simplification.md` |
+| M3: I3 was filed as an issue although `dev-mode.overwrite-guard` and `install.refusal` state the guard without a dependency exception | material | accepted. I3 (the native `load` case) is conditional on Q-03 and Q-24. The code-read `install` case is the new suspected D31. Q-24 is retyped with install and load separated | `bugs_issues.md` I3, D31; `open_questions.md` Q-24 |
+| M4: OBS-H10's remainder is not a defect, because the header is printed only when a row exists | material | accepted. Moved to refuted | `bugs_issues.md` |
+| M5: the guarded repair's residual was measured with a clause that skips unfinished rows | material | accepted and repaired in the model: new clause COMMITTED-UNENDED (Q-08's provisional answer, as the original `kill_rec`). The guard removes only the 60 window states. Every repair variant keeps the 9,216-state SIGKILL residual the original handoff named | `followup/models/loadtx.py`, receipts `followup/results/20261114T004842Z-final-loadtx-model` and `20261114T005807Z-final-committed-breakdown`; D1, S2, Q-30, Q-21 |
+| M6: the "one plan per load" evidence was M-GLOBAL-MODE, which loses dependency rows | material | accepted and repaired: new variant REPAIR-103-GUARDED-GLOBAL. Its only dependency residual is the SIGKILL case above. The intro now says the original PASS covers the transactional modes only | `design_simplification.md` intro and S8, `MODELS.md` |
+| M7: missing tradeoffs (S3–S6, S8, S9) and unresolved choices (S3, S6, S7, S9); S2 overclaimed the top rows and dropped the `Finalized` rule | material | accepted. Every proposal has both fields. S2 marks its top-row part as unmodeled and restores "`Finalized` only with `TimeEnd`" | `design_simplification.md` |
+| M8: no simplification disposition for about a dozen findings, I6 with an obvious structural option | material | accepted. A table maps every finding to a proposal or a reason. S10 (stage files until the commit) added for I6 | `design_simplification.md` |
+| M9: review findings (66) and A1 conflicts (37) not reconciled | material | accepted. Appendix A.6 (66 of 66) and A.7 (37 of 37) | `bugs_issues.md` |
+| D24 conditional although a defect under every Q-10 option | minor | accepted: supported | `bugs_issues.md`, `open_questions.md` Q-10 |
+| m2, m3: `history.read.api` at `:246`; first `-nodev` commit `8e136249` | minor | corrected | `open_questions.md` |
+| S2 and S6 line ranges | minor | corrected (`HistoryTemp.cls:9-26`; `UniversalSettings.cls:178-179`) | `design_simplification.md` |
+| runnable destructive command spans; S6's check left a 7-day retention on | minor | replaced by descriptions; S6's check now says the setting is instance-wide and must be restored | `open_questions.md`, `design_simplification.md` |
+| m16: semicolon and ", and" clause joins | minor | corrected in the three files | as listed |
+
+The revised owner files were not re-reviewed by a third reviewer. The revisions were checked by the follow-up author for consistency across the three files and the scope ledger.
