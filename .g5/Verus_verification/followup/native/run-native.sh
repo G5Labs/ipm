@@ -33,11 +33,20 @@ here="$(cd "$(dirname "$0")" && pwd)"
 repo="$(git -C "$here" rev-parse --show-toplevel)"
 results="$here/../results/native"
 
+orig="$here/../../native"
+
 stage() {
     mkdir -p "$EXPORT/.followup"
     rm -rf "$EXPORT/.followup/"*
     cp -r "$here/scripts" "$here/fixtures" "$EXPORT/.followup/"
     chmod -R a+rwX "$EXPORT/.followup"
+    # NATIVE_ORIGINAL=1: also stage the original replay driver and fixtures at /home/irisowner/zpm/.native/,
+    # where the original replay scripts expect them (committed sources, read-only).
+    if [ "${NATIVE_ORIGINAL:-0}" = 1 ]; then
+        rm -rf "$EXPORT/.native" && mkdir -p "$EXPORT/.native"
+        cp -r "$orig/scripts/." "$EXPORT/.native/" && cp -r "$orig/fixtures" "$EXPORT/.native/"
+        chmod -R a+rwX "$EXPORT/.native"
+    fi
 }
 
 cmd_up() {
@@ -75,6 +84,13 @@ cmd_exec() {
     mkdir -p "$out/inputs"
     cp "$script" "$out/input.cos"
     cp -r "$here/scripts" "$here/cases" "$out/inputs/"
+    local orig_helpers_sha=""
+    if [ "${NATIVE_ORIGINAL:-0}" = 1 ]; then
+        mkdir -p "$out/inputs/original-scripts"
+        cp -r "$orig/scripts/." "$out/inputs/original-scripts/"
+        cp "$orig/cases/replay-binding.json" "$orig"/cases/b1-cases-*.json "$out/inputs/"
+        orig_helpers_sha=$( (cd "$orig/scripts" && find . -type f -print0 | sort -z | xargs -0 sha256sum) | sha256sum | cut -d' ' -f1)
+    fi
     (cd "$here" && find fixtures -type f -print0 | sort -z | xargs -0 sha256sum) > "$out/inputs/fixtures.sha256"
     local helpers_sha cases_sha fixtures_sha
     helpers_sha=$( (cd "$here/scripts" && find . -type f -print0 | sort -z | xargs -0 sha256sum) | sha256sum | cut -d' ' -f1)
@@ -114,6 +130,8 @@ cmd_exec() {
   "helpers_sha256_at_start": "$helpers_sha",
   "expectations_sha256_at_start": "$cases_sha",
   "fixtures_sha256_at_start": "$fixtures_sha",
+  "original_helpers_sha256_at_start": "$orig_helpers_sha",
+  "original_helpers_git_revision": "$(git -C "$repo" log -1 --format=%H -- .g5/Verus_verification/native/scripts)",
   "substantive_verdict": "see the evaluator's verdict file; process_outcome alone is not a verdict"
 }
 EOF
