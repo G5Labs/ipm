@@ -1,0 +1,335 @@
+[
+  {
+    "name": "impl-dependents-only-nested",
+    "description": "CheckBeforeClean looks at dependents only below the top level",
+    "old": "(!p.force && p.level > 0 && exists|m: nat|",
+    "new": "(!p.force && p.level > 1 && exists|m: nat|",
+    "expect": [
+      "unin_refines_dependents_protect"
+    ]
+  },
+  {
+    "name": "impl-no-global-scope-skip",
+    "description": "CheckBeforeClean ignores global scope",
+    "old": "(gs && !p.global) ||",
+    "new": "(gs && !p.global && false) ||",
+    "expect": [
+      "unin_refines_blocked_unchanged"
+    ]
+  },
+  {
+    "name": "impl-top-record-kept",
+    "description": "the top-level %Clean never deletes the module record",
+    "old": "if p.level > 0 && !p.nested && o.w.present.contains(sd()) { record_delete(o, t) }",
+    "new": "if p.level > 1 && !p.nested && o.w.present.contains(sd()) { record_delete(o, t) }",
+    "expect": [
+      "unin_refines_honest"
+    ]
+  },
+  {
+    "name": "impl-filecopy-deletes-all-copies",
+    "description": "a file copy deletes every copied file, whatever its folder",
+    "old": "Acc { w: W { present: a.w.present.difference(folder_set(a.w, folder)), ..a.w }, ..a }",
+    "new": "Acc { w: W { present: a.w.present.difference(a.w.res.dom().filter(|x: nat| a.w.res[x].kind is Files)), ..a.w }, ..a }",
+    "expect": [
+      "unin_clean_res"
+    ]
+  },
+  {
+    "name": "impl-ignore-keep-flag",
+    "description": "FileCopy ignores KeepOnUninstall",
+    "old": "                if keep { a }\n                else if file",
+    "new": "                if false { a }\n                else if file",
+    "expect": [
+      "unin_clean_res"
+    ]
+  },
+  {
+    "name": "impl-code-not-collected",
+    "description": "%Clean does not collect code items for deletion",
+    "old": "RKind::Code { .. } => Acc { del: a.del.insert(r), ..a },",
+    "new": "RKind::Code { .. } => a,",
+    "expect": [
+      "unin_clean_res"
+    ]
+  },
+  {
+    "name": "impl-no-exit-flag",
+    "description": "uninstall zpm does not set the shell-exit flag",
+    "old": "storage_uninstall(W { exit_flag: true, ..w1 }, n.key",
+    "new": "storage_uninstall(w1, n.key",
+    "expect": [
+      "unin_main_shape"
+    ]
+  },
+  {
+    "name": "impl-record-delete-wrong-module",
+    "description": "the record delete removes IPM's record instead of the target's",
+    "old": "{ record_delete(o, t) } else { o }; // #L492-L500",
+    "new": "{ record_delete(o, ipm_id()) } else { o }; // #L492-L500",
+    "expect": [
+      "unin_exec_frame"
+    ]
+  },
+  {
+    "name": "impl-clean-deletes-code",
+    "description": "Clean at level 0 deletes the module's own code",
+    "old": "pub open spec fn after_code(w2: W, m: Module, p: P) -> W { if p.level > 0 {",
+    "new": "pub open spec fn after_code(w2: W, m: Module, p: P) -> W { if p.level >= 0 {",
+    "expect": [
+      "unin_refines_clean_keeps_target"
+    ]
+  },
+  {
+    "name": "impl-not-found-ok",
+    "description": "uninstall of an unknown name reports success",
+    "old": "None => Out { w: W { hist: w.hist.push(HRow { m: None, ok: false }), ..w }, ok: false, skip: false },",
+    "new": "None => Out { w: W { hist: w.hist.push(HRow { m: None, ok: false }), ..w }, ok: true, skip: false },",
+    "expect": [
+      "unin_refines_not_found"
+    ]
+  },
+  {
+    "name": "impl-clean-not-found-ok",
+    "description": "clean of an unknown name reports success",
+    "old": "        None => Out { w: w, ok: false, skip: false },\n        Some(t) => exec_clean(w, t, P { level: 0,",
+    "new": "        None => Out { w: w, ok: true, skip: false },\n        Some(t) => exec_clean(w, t, P { level: 0,",
+    "expect": [
+      "unin_refines_clean_not_found"
+    ]
+  },
+  {
+    "name": "impl-row-always-success",
+    "description": "the uninstall log is always finalized as a success",
+    "old": "Out { w: W { hist: o.w.hist.push(HRow { m: Some(t), ok: o.ok }), ..o.w }, ..o }",
+    "new": "Out { w: W { hist: o.w.hist.push(HRow { m: Some(t), ok: true }), ..o.w }, ..o }",
+    "expect": [
+      "unin_refines_rows_honest"
+    ]
+  },
+  {
+    "name": "impl-record-delete-keeps-manifest",
+    "description": "StudioDocument.Module:Delete keeps the stored manifest",
+    "old": "Out { w: W { mods: o.w.mods.remove(t), streams: o.w.streams.remove(t), ..o.w }, ..o }",
+    "new": "Out { w: W { mods: o.w.mods.remove(t), streams: o.w.streams, ..o.w }, ..o }",
+    "expect": [
+      "unin_refines_manifest_with_record"
+    ]
+  },
+  {
+    "name": "impl-success-reported-failed",
+    "description": "worked => success: an uninstall that removed the module reports failure",
+    "old": "                        ipm_block(o2, t, p)\n",
+    "new": "                        Out { ok: false, ..ipm_block(o2, t, p) }\n",
+    "expect": [
+      "unin_refines_honest"
+    ]
+  },
+  {
+    "name": "impl-row-always-failure",
+    "description": "worked => success row: the uninstall log is always finalized as a failure",
+    "old": "Out { w: W { hist: o.w.hist.push(HRow { m: Some(t), ok: o.ok }), ..o.w }, ..o }",
+    "new": "Out { w: W { hist: o.w.hist.push(HRow { m: Some(t), ok: false }), ..o.w }, ..o }",
+    "expect": [
+      "unin_refines_rows_honest"
+    ]
+  },
+  {
+    "name": "impl-hook-failure-ok",
+    "description": "failed => no success: a failing Unconfigure hook is reported as success",
+    "old": "if m.installer && !m.hook_ok { Out { w: w2, ok: false, skip: false } }",
+    "new": "if m.installer && !m.hook_ok { Out { w: w2, ok: true, skip: false } }",
+    "expect": [
+      "unin_refines_honest"
+    ]
+  },
+  {
+    "name": "premise-drop-pw",
+    "description": "drop PW from the blocked-unchanged lemma",
+    "old": "premise_pg(w), premise_pw(w, lookup(w, n.key)->0),",
+    "new": "premise_pg(w),",
+    "expect": [
+      "unin_refines_blocked_unchanged"
+    ]
+  },
+  {
+    "name": "premise-drop-pb",
+    "description": "drop PB from the honest lemma",
+    "old": "        premise_pb(w, lookup(w, n.key)->0, force, global),\n        premise_pg(w), premise_pi",
+    "new": "        premise_pg(w), premise_pi",
+    "expect": [
+      "unin_refines_honest"
+    ]
+  },
+  {
+    "name": "premise-drop-pg",
+    "description": "drop PG from the dependents lemma",
+    "old": "requires wf_cmd(w, n), lookup(w, n.key) is Some, premise_pg(w),\n    ensures l1_dependents_protect",
+    "new": "requires wf_cmd(w, n), lookup(w, n.key) is Some,\n    ensures l1_dependents_protect",
+    "expect": [
+      "unin_refines_dependents_protect"
+    ]
+  },
+  {
+    "name": "premise-drop-pga",
+    "description": "drop PGA from the completeness lemma",
+    "old": "premise_pga(w, lookup(w, n.key)->0), premise_pnf(n, force, answer),",
+    "new": "premise_pnf(n, force, answer),",
+    "expect": [
+      "unin_refines_complete"
+    ]
+  },
+  {
+    "name": "premise-drop-pf",
+    "description": "drop PF from the only-own lemma",
+    "old": "premise_pf(w), premise_pnf(n, force, answer),\n    ensures l1_only_own",
+    "new": "premise_pnf(n, force, answer),\n    ensures l1_only_own",
+    "expect": [
+      "unin_refines_only_own"
+    ]
+  },
+  {
+    "name": "premise-drop-pn",
+    "description": "drop PN from the self-guard lemma",
+    "old": "lookup(w, n.key) == Some(ipm_id()), premise_pn(w, n),",
+    "new": "lookup(w, n.key) == Some(ipm_id()),",
+    "expect": [
+      "unin_refines_self_guard"
+    ]
+  },
+  {
+    "name": "premise-drop-pi",
+    "description": "drop PI from the IPM-kept lemma",
+    "old": "        premise_pi(w, lookup(w, n.key)->0, recurse),\n    ensures l1_ipm_kept",
+    "new": "\n    ensures l1_ipm_kept",
+    "expect": [
+      "unin_refines_ipm_kept"
+    ]
+  },
+  {
+    "name": "premise-drop-pcw",
+    "description": "drop PCW from the clean lemma",
+    "old": "premise_pcw(w, lookup(w, k)->0), premise_pf(w),",
+    "new": "premise_pf(w),",
+    "expect": [
+      "unin_refines_clean_keeps_target"
+    ]
+  },
+  {
+    "name": "premise-drop-pnf",
+    "description": "drop PNF from the kept-files lemma",
+    "old": "premise_pf(w), premise_pnf(n, force, answer),\n    ensures l1_kept_files",
+    "new": "premise_pf(w),\n    ensures l1_kept_files",
+    "expect": [
+      "unin_refines_kept_files"
+    ]
+  },
+  {
+    "name": "premise-drop-pr",
+    "description": "drop PR from the manifest lemma",
+    "old": "lookup(w, n.key) is Some, premise_pr(recurse), premise_pnf(n, force, answer),\n    ensures l1_manifest_with_record",
+    "new": "lookup(w, n.key) is Some, premise_pnf(n, force, answer),\n    ensures l1_manifest_with_record",
+    "expect": [
+      "unin_refines_manifest_with_record"
+    ]
+  },
+  {
+    "name": "wf-drop-ipm-no-deps",
+    "description": "drop the manifest fact that IPM declares no dependencies (needed for worked => success of uninstall zpm -r)",
+    "old": "\n            && w.mods[ipm_id()].deps.len() == 0                 // IPM's manifest declares no <Dependencies> (module.xml)",
+    "new": "",
+    "expect": [
+      "unin_refines_honest"
+    ]
+  },
+  {
+    "name": "bound-drop-fuel",
+    "description": "drop the fuel bound from the honest lemma (fuel spent at the top makes uninstall zpm -r fail after removing IPM)",
+    "old": "        recurse ==> fuel > 0,\n",
+    "new": "",
+    "expect": [
+      "unin_refines_honest"
+    ]
+  },
+  {
+    "name": "l1-same-ns-ignores-present",
+    "description": "vacuity: L1 'unchanged' that ignores deleted artifacts loses the blocked-uninstall witness",
+    "old": "a.present == b.present && a.mods == b.mods",
+    "new": "a.mods == b.mods",
+    "expect": [
+      "unin_witness_blocked_deletes_webapp"
+    ]
+  },
+  {
+    "name": "l1-self-guard-trivial",
+    "description": "vacuity: L1 without the self-uninstall guard loses the external-name witness",
+    "old": "(o.w.exit_flag && (o.w.prompted || force)) || (!o.ok && same_ns(w, o.w))",
+    "new": "true",
+    "expect": [
+      "unin_witness_external_name_bypass"
+    ]
+  },
+  {
+    "name": "l1-no-dependents-rule",
+    "description": "vacuity: L1 without 'dependents protect' loses the unresolvable-dependent witness",
+    "old": "!force && intent_dependent(w, t) ==> o.w.mods.contains_key(t)",
+    "new": "false ==> o.w.mods.contains_key(t)",
+    "expect": [
+      "unin_witness_unresolvable_dependent"
+    ]
+  },
+  {
+    "name": "l1-globals-exempt",
+    "description": "vacuity: L1 that lets every global stay loses the global witness",
+    "old": "RKind::Gbl { preserve, .. } => preserve,",
+    "new": "RKind::Gbl { preserve, .. } => true,",
+    "expect": [
+      "unin_witness_global_kept"
+    ]
+  },
+  {
+    "name": "l1-no-kept-files",
+    "description": "vacuity: L1 without the keep flag rule loses the shared-folder witness",
+    "old": "w.present.contains(r) && w.res.contains_key(r) && (w.res[r].kind matches RKind::Files { keep: true, .. }) ==> o.w.present.contains(r)",
+    "new": "w.present.contains(r) && w.res.contains_key(r) && false ==> o.w.present.contains(r)",
+    "expect": [
+      "unin_witness_shared_folder"
+    ]
+  },
+  {
+    "name": "l1-clean-record-only",
+    "description": "vacuity: L1 for clean that checks only the record loses the clean witness",
+    "old": "    &&& forall|r: nat| #![trigger o.w.present.contains(r)] owns(w, t, r) && w.present.contains(r) ==> o.w.present.contains(r)\n    &&& forall|i: int| w.hooks.len() <= i < o.w.hooks.len() ==> o.w.hooks[i] != t\n",
+    "new": "",
+    "expect": [
+      "unin_witness_clean_own_module"
+    ]
+  },
+  {
+    "name": "l1-ipm-record-only",
+    "description": "vacuity: L1 that checks only IPM's record loses the -r-removes-IPM witness",
+    "old": "o.w.present.contains(sd()) && (w.mods.contains_key(ipm_id()) ==> o.w.mods.contains_key(ipm_id()))",
+    "new": "(w.mods.contains_key(ipm_id()) ==> o.w.mods.contains_key(ipm_id()))",
+    "expect": [
+      "unin_witness_recurse_removes_ipm"
+    ]
+  },
+  {
+    "name": "l1-rows-unchecked",
+    "description": "vacuity: L1 that does not check success rows loses the skipped-dependency witness",
+    "old": "        ==> (o.w.hist[i].ok <==> removed(o.w, o.w.hist[i].m->0))",
+    "new": "        ==> true",
+    "expect": [
+      "unin_witness_recurse_skipped_dep"
+    ]
+  },
+  {
+    "name": "l1-manifest-unchecked",
+    "description": "vacuity: L1 that does not check stored manifests loses the leftover-manifest witness",
+    "old": "w.mods.contains_key(m) && !o.w.mods.contains_key(m) ==> !o.w.streams.contains(m)",
+    "new": "w.mods.contains_key(m) && !o.w.mods.contains_key(m) ==> true",
+    "expect": [
+      "unin_witness_recurse_leaves_manifest"
+    ]
+  }
+]

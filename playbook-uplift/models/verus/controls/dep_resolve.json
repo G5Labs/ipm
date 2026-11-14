@@ -1,0 +1,155 @@
+[
+  {
+    "name": "ignore-recorded-requirements",
+    "description": "a requirement is checked without the requirements already recorded on the module (#L1096-L1104 removed)",
+    "old": "pub open spec fn base(g: Inp, s: Rs, q: Req, v: nat) -> bool { q.range.contains(v) && rec_ok(s, q.name, v) && inst_ok(g, s, q.name, v) }",
+    "new": "pub open spec fn base(g: Inp, s: Rs, q: Req, v: nat) -> bool { q.range.contains(v) && inst_ok(g, s, q.name, v) }",
+    "expect": [
+      "dep_step_process"
+    ]
+  },
+  {
+    "name": "ignore-installed-requirements",
+    "description": "installed modules' requirements are not applied (#L1106-L1121 removed)",
+    "old": "pub open spec fn base(g: Inp, s: Rs, q: Req, v: nat) -> bool { q.range.contains(v) && rec_ok(s, q.name, v) && inst_ok(g, s, q.name, v) }",
+    "new": "pub open spec fn base(g: Inp, s: Rs, q: Req, v: nat) -> bool { q.range.contains(v) && rec_ok(s, q.name, v) }",
+    "expect": [
+      "dep_step_process"
+    ]
+  },
+  {
+    "name": "no-downgrade-floor",
+    "description": "the '>=installed' bound is not added (#L1148-L1154 removed)",
+    "old": "pub open spec fn cand(g: Inp, s: Rs, q: Req, v: nat) -> bool { base(g, s, q, v) && floor_ok(g, q.name, v) }",
+    "new": "pub open spec fn cand(g: Inp, s: Rs, q: Req, v: nat) -> bool { base(g, s, q, v) }",
+    "expect": [
+      "dep_lemma_pick"
+    ]
+  },
+  {
+    "name": "keep-installed-unchecked",
+    "description": "the installed version is kept without checking it against the constraints",
+    "old": "    &&& !g.ignore && g.inst.contains_key(q.name) && base(g, s, q, g.inst[q.name])",
+    "new": "    &&& !g.ignore && g.inst.contains_key(q.name)",
+    "expect": [
+      "dep_lemma_pick"
+    ]
+  },
+  {
+    "name": "chosen-module-not-queued",
+    "description": "a chosen module is not added to the next depth, so its own requirements are never read",
+    "old": "            next: s.next.insert(q.name, Entry { path: it.dpath.push(q.name), scope: q.scope }),\n",
+    "new": "",
+    "expect": [
+      "dep_step_process"
+    ]
+  },
+  {
+    "name": "record-under-wrong-version",
+    "description": "the requirement is recorded under the wrong parent version",
+    "old": "recs: s.recs.insert((q.name, s.par, s.par_ver), q.range),",
+    "new": "recs: s.recs.insert((q.name, s.par, 0), q.range),",
+    "expect": [
+      "dep_step_process"
+    ]
+  },
+  {
+    "name": "classify-drops-fuzzy",
+    "description": "classification keeps only exact requirements",
+    "old": "    items_from(ph, reqs, path, true, 0) + items_from(ph, reqs, path, false, 0)",
+    "new": "    items_from(ph, reqs, path, true, 0)",
+    "expect": [
+      "dep_lemma_classify"
+    ]
+  },
+  {
+    "name": "done-with-queue-left",
+    "description": "the resolver stops although the next depth still has modules",
+    "old": "if s.next.dom() == Set::<nat>::empty() { Rs { st: St::Done, ..s } }",
+    "new": "if true { Rs { st: St::Done, ..s } }",
+    "expect": [
+      "dep_step_level"
+    ]
+  },
+  {
+    "name": "no-premise-pu",
+    "description": "drop premise PU (a manifest names a module once)",
+    "old": "            ==> manifest(g, n, v)[i].name != manifest(g, n, v)[j].name\n}",
+    "new": "            ==> true\n}",
+    "expect": [
+      "dep_step_process"
+    ]
+  },
+  {
+    "name": "no-premise-pr",
+    "description": "drop premise PR (no requirement names the root)",
+    "old": "manifest(g, n, v)[i].name != g.root\n}",
+    "new": "true\n}",
+    "expect": [
+      "dep_step_process"
+    ]
+  },
+  {
+    "name": "l1-newest-only-solutions",
+    "description": "vacuity: an L1 that accepts only newest versions makes nc-dep-11 unsolvable; the DEC-DEP-1 witness must break",
+    "old": "sel.contains_key(d) ==> versions(g, d).contains(sel[d]) || (g.inst.contains_key(d) && sel[d] == g.inst[d])",
+    "new": "sel.contains_key(d) ==> (versions(g, d).len() > 0 && sel[d] == versions(g, d)[0]) || (g.inst.contains_key(d) && sel[d] == g.inst[d])",
+    "expect": [
+      "dep_witness_greedy_rejects_solvable"
+    ]
+  },
+  {
+    "name": "l1-permit-unconstrained",
+    "description": "vacuity: L1 without 'a PermitDowngrade resolution can be loaded' must lose the F-DEP-1 witness",
+    "old": "==> !load_refuses(g.inst[d], sel[d])",
+    "new": "==> true",
+    "expect": [
+      "dep_witness_permit_downgrade_refused"
+    ]
+  },
+  {
+    "name": "l1-lockfile-unordered",
+    "description": "vacuity: L1 without 'needed modules come first' must lose the F-DEP-2 witness",
+    "old": "needs.contains((o[a], o[b])) ==> b < a",
+    "new": "needs.contains((o[a], o[b])) ==> true",
+    "expect": [
+      "dep_witness_lockfile_name_order"
+    ]
+  },
+  {
+    "name": "l1-case-sensitive",
+    "description": "vacuity: L1 that allows a case-sensitive lookup must lose the F-DEP-3 witness",
+    "old": "pub open spec fn case_blind(keys: Set<Seq<nat>>, typed: Seq<nat>) -> bool { keys.contains(lower_all(typed)) ==> listed(keys, typed) }",
+    "new": "pub open spec fn case_blind(keys: Set<Seq<nat>>, typed: Seq<nat>) -> bool { true }",
+    "expect": [
+      "dep_witness_list_dependents_case"
+    ]
+  },
+  {
+    "name": "spurious-cycle",
+    "description": "finding 1 analogue: the cycle test reports a cycle for every module (a resolution fails with no cycle)",
+    "old": "    if has_cycle(g.phases, reqs, path) { Rs { st: St::Failed, why: Why::Cycle(n, path), ..s } }",
+    "new": "    if true { Rs { st: St::Failed, why: Why::Cycle(n, path), ..s } }",
+    "expect": [
+      "dep_step_dequeue"
+    ]
+  },
+  {
+    "name": "exact-requirement-fails",
+    "description": "finding 1 analogue: an exact requirement fails resolution although a version meets it",
+    "old": "    match pick(g, s, q) {",
+    "new": "    match (if q.exact { Option::None } else { pick(g, s, q) }) {",
+    "expect": [
+      "dep_step_process"
+    ]
+  },
+  {
+    "name": "finished-reported-failed",
+    "description": "finding 1 analogue: a resolution whose queue is empty ends Failed instead of Done",
+    "old": "if s.next.dom() == Set::<nat>::empty() { Rs { st: St::Done, ..s } }",
+    "new": "if s.next.dom() == Set::<nat>::empty() { Rs { st: St::Failed, ..s } }",
+    "expect": [
+      "dep_step_level"
+    ]
+  }
+]

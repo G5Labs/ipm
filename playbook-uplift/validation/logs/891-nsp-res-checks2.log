@@ -1,0 +1,303 @@
+# container: ipm-uplift-iris-nsp  image: containers.intersystems.com/intersystems/iris-community:2026.1  at: 2026-11-13T18:30:39Z
+# script: validation/iris/nsp/91-res-checks2.script
+
+Node: 1176f046b99d, Instance: IRIS
+
+USER>
+
+Load of directory started on 11/13/2026 18:30:39
+Loading file /tmp/uplift/nsp/Uplift/Nsp/Cap.cls as cls
+Imported class: Uplift.Nsp.Cap
+Loading file /tmp/uplift/nsp/Uplift/Nsp/Fresh.cls as cls
+Imported class: Uplift.Nsp.Fresh
+Loading file /tmp/uplift/nsp/Uplift/Nsp/Util.cls as cls
+Imported class: Uplift.Nsp.Util
+Loading file /tmp/uplift/nsp/Uplift/Nsp/Ns.cls as cls
+Imported class: Uplift.Nsp.Ns
+Loading file /tmp/uplift/nsp/Uplift/Nsp/Res.cls as cls
+Imported class: Uplift.Nsp.Res
+Compiling 5 classes
+Compiling class Uplift.Nsp.Fresh
+Compiling class Uplift.Nsp.Cap
+Compiling class Uplift.Nsp.Res
+Compiling class Uplift.Nsp.Ns
+Compiling class Uplift.Nsp.Util
+Compiling routine Uplift.Nsp.Fresh.1
+Compiling routine Uplift.Nsp.Cap.1
+Compiling routine Uplift.Nsp.Res.1
+Compiling routine Uplift.Nsp.Util.1
+Compiling routine Uplift.Nsp.Ns.1
+Load finished successfully.
+
+LOADED 1
+
+USER>
+
+>>> zpm "cos set $namespace=""%SYS"" write ""INSIDE:"",$namespace" (not captured)
+
+INSIDE:%SYS
+OBS|nc-res-N16-exec-namespace-v2|after=USER;before=USER;status=ok;
+
+USER>
+
+>>> zpm "run-from-file /tmp/uplift/nsp/fixtures/rff2/cmds.text"
+  | 
+  | [31mERROR![0m Unsupported file extension: text
+<<< status ERROR ERROR #5001: Unsupported file extension: text
+
+>>> zpm "run-from-file /tmp/uplift/nsp/fixtures/rff2/cmds-array.json"
+  | 
+  | [31mERROR![0m Unexpected format of file. Expected JSON object at root level but not found.
+<<< status ERROR ERROR #5001: Unexpected format of file. Expected JSON object at root level but not found.
+
+>>> zpm "run-from-file /tmp/uplift/nsp/fixtures/rff2/cmds-object.json"
+  | 
+  | Running commands found in file:
+  | 
+  | zpm:USER[39m>[0mrepo -name nc-rff-o -filesystem -path /tmp/nc-rff/o/
+  | nc-rff-o
+  | 	Source: 		/tmp/nc-rff/o/*
+  | 	Enabled?		Yes
+  | 	Available?		Yes
+  | 	Use for Snapshots?	Yes
+  | 	Use for Prereleases?	Yes
+  | 	Is Read-Only?		No
+  | 
+  | nc-nsp-stub
+  | 	Source: 			http://127.0.0.1:8765/
+  | 	Enabled?			Yes
+  | 	Available?			No
+  | 	Use for Snapshots?		No
+  | 	Use for Prereleases?		No
+  | 	Is Read-Only?			No
+  | 	Default Deployment Registry? 	No
+  | 
+  | nc-nsp-user
+  | 	Source: 		/tmp/*
+  | 	Enabled?		Yes
+  | 	Available?		Yes
+  | 	Use for Snapshots?	Yes
+  | 	Use for Prereleases?	Yes
+  | 	Is Read-Only?		No
+  | 
+  | nc-rff-o
+  | 	Source: 		/tmp/nc-rff/o/*
+  | 	Enabled?		Yes
+  | 	Available?		Yes
+  | 	Use for Snapshots?	Yes
+  | 	Use for Prereleases?	Yes
+  | 	Is Read-Only?		No
+  | 
+  | 
+<<< status OK
+
+>>> zpm "run-from-file /tmp/uplift/nsp/fixtures/rff2/cmds3.txt"
+  | 
+  | Running commands found in file:
+  | 
+  | zpm:USER[39m>[0mrepo -fs -n nc-rff-c1 -path /tmp/nc-rff/c1/
+  | nc-rff-c1
+  | 	Source: 		/tmp/nc-rff/c1/*
+  | 	Enabled?		Yes
+  | 	Available?		Yes
+  | 	Use for Snapshots?	Yes
+  | 	Use for Prereleases?	Yes
+  | 	Is Read-Only?		No
+  | 
+  | nc-nsp-stub
+  | 	Source: 			http://127.0.0.1:8765/
+  | 	Enabled?			Yes
+  | 	Available?			No
+  | 	Use for Snapshots?		No
+  | 	Use for Prereleases?		No
+  | 	Is Read-Only?			No
+  | 	Default Deployment Registry? 	No
+  | 
+  | nc-nsp-user
+  | 	Source: 		/tmp/*
+  | 	Enabled?		Yes
+  | 	Available?		Yes
+  | 	Use for Snapshots?	Yes
+  | 	Use for Prereleases?	Yes
+  | 	Is Read-Only?		No
+  | 
+  | nc-rff-o
+  | 	Source: 		/tmp/nc-rff/o/*
+  | 	Enabled?		Yes
+  | 	Available?		Yes
+  | 	Use for Snapshots?	Yes
+  | 	Use for Prereleases?	Yes
+  | 	Is Read-Only?		No
+  | 
+  | nc-rff-c1
+  | 	Source: 		/tmp/nc-rff/c1/*
+  | 	Enabled?		Yes
+  | 	Available?		Yes
+  | 	Use for Snapshots?	Yes
+  | 	Use for Prereleases?	Yes
+  | 	Is Read-Only?		No
+  | 
+  | 
+  | zpm:USER[39m>[0mload /tmp/nc-rff-does-not-exist/
+  | [31mERROR![0m File not found to obtain module object: /tmp/nc-rff-does-not-exist/module.xml
+  | [31mERROR![0m File not found to obtain module object: /tmp/nc-rff-does-not-exist/module.xml
+<<< status ERROR ERROR #5001: File not found to obtain module object: /tmp/nc-rff-does-not-exist/module.xml
+
+>>> zpm "run-from-file -dry-run /tmp/uplift/nsp/fixtures/rff2/cmds3.txt"
+  | 
+  | The following commands will be run in the shell if the -dry-run flag is not used:
+  | 
+  | zpm:USER[39m>[0mrepo -fs -n nc-rff-c1 -path /tmp/nc-rff/c1/
+  | 
+  | zpm:USER[39m>[0mload /tmp/nc-rff-does-not-exist/
+  | 
+  | zpm:USER[39m>[0mrepo -fs -n nc-rff-c3 -path /tmp/nc-rff/c3/
+  | 
+<<< status OK
+
+OBS|nc-res-N17-run-from-file-v2|a.repoMade=0;a.text=err:ERROR #5001: Unsupported file extension: text;b.array=err:ERROR #5001: Unexpected format of file. Expected JSON object at root level but not found.;b.repoMade=0;c.line1Ran=1;c.line3Ran=0;c.txt=err:ERROR #5001: File not found to obtain module object: /tmp/nc-rff-does-not-exist/module.xml;dryRun=ok;dryRunShowsLine3=1;o.object=ok;o.repoMade=1;
+
+USER>
+
+>>> zpm "uninstall lune-wheel -force"
+  | 
+  | [USER|lune-wheel]	Clean START
+  | [USER|lune-wheel]	Unconfigure START
+  | [USER|lune-wheel]	Unconfigure SUCCESS
+  | [USER|lune-wheel]	Clean SUCCESS
+<<< status OK
+
+>>> zpm "load -v /tmp/nc-lune/"Processing /tmp/nc-lune/lune-1.6.2-py3-none-any.whl
+Installing collected packages: lune
+Successfully installed lune-1.6.2
+WARNING: Target directory /usr/irissys/mgr/python/lune already exists. Specify --upgrade to force replacement.
+WARNING: Target directory /usr/irissys/mgr/python/lune-1.6.2.dist-info already exists. Specify --upgrade to force replacement.
+WARNING: Target directory /usr/irissys/mgr/python/bin already exists. Specify --upgrade to force replacement.
+ERROR: Could not find a version that satisfies the requirement lune==1.6.4 (from versions: none)
+ERROR: No matching distribution found for lune==1.6.4
+
+  | 
+  | Load started on 11/13/2026 18:30:39
+  | Loading file /tmp/nc-lune/module.xml as xml
+  | Imported document: lune-wheel.ZPM
+  | Load finished successfully.
+  | 
+  | Building dependency graph...Done.
+  | Created inverted dependency graph from dependency graph
+  | Constructed flat dependency list from inverted dependency graph
+  | Starting installation of dependencies...
+  | 
+  | Load started on 11/13/2026 18:30:39
+  | Loading file /tmp/nc-lune/module.xml as xml
+  | Imported document: lune-wheel.ZPM
+  | Load finished successfully.
+  | 
+  | Loading lune-wheel in process 3426
+  | [USER|lune-wheel]	Initialize START
+  | Installing wheel package "/tmp/nc-lune/lune-1.6.2-py3-none-any.whl"...
+  | Detecting pip caller
+  | Attempting to find flexible python... 
+  | Attempting to find python3 or python...Success!
+  | Running command=$lb("python3","-m","pip","install","-t","/usr/irissys/mgr/python/","/tmp/nc-lune/lune-1.6.2-py3-none-any.whl")
+  | 
+  | Skipping preload - directory does not exist.
+  | [USER|lune-wheel]	Initialize SUCCESS
+  | [USER|lune-wheel]	Reload START (/tmp/nc-lune/)
+  | [USER|lune-wheel]	requirements.txt START
+  | 
+  | Detecting pip caller
+  | Attempting to find flexible python... 
+  | Attempting to find python3 or python...Success!
+  | Running command=$lb("python3","-m","pip","install","-t","/usr/irissys/mgr/python/","-r","requirements.txt","--python-version","3.12.3","--only-binary=:all:")
+  | 
+  | [USER|lune-wheel]	requirements.txt FAILURE
+  | [lune-wheel]	Reload FAILURE
+  | [31mERROR![0m Running os command 'python3 -m pip install -t /usr/irissys/mgr/python/ -r requirements.txt --python-version 3.12.3 --only-binary=:all:' failed with return code: 1
+<<< status ERROR ERROR #5001: Running os command 'python3 -m pip install -t /usr/irissys/mgr/python/ -r requirements.txt --python-version 3.12.3 --only-binary=:all:' failed with return code: 1
+
+>>> zpm "load -v -bypass-py-deps /tmp/nc-lune/"Processing /tmp/nc-lune/lune-1.6.2-py3-none-any.whl
+Installing collected packages: lune
+Successfully installed lune-1.6.2
+WARNING: Target directory /usr/irissys/mgr/python/lune already exists. Specify --upgrade to force replacement.
+WARNING: Target directory /usr/irissys/mgr/python/lune-1.6.2.dist-info already exists. Specify --upgrade to force replacement.
+WARNING: Target directory /usr/irissys/mgr/python/bin already exists. Specify --upgrade to force replacement.
+
+  | 
+  | Load started on 11/13/2026 18:30:40
+  | Loading file /tmp/nc-lune/module.xml as xml
+  | Imported document: lune-wheel.ZPM
+  | Load finished successfully.
+  | 
+  | Building dependency graph...Done.
+  | Created inverted dependency graph from dependency graph
+  | Constructed flat dependency list from inverted dependency graph
+  | Starting installation of dependencies...
+  | 
+  | Load started on 11/13/2026 18:30:40
+  | Loading file /tmp/nc-lune/module.xml as xml
+  | Imported document: lune-wheel.ZPM
+  | Load finished successfully.
+  | 
+  | Loading lune-wheel in process 3426
+  | [USER|lune-wheel]	Initialize START
+  | Installing wheel package "/tmp/nc-lune/lune-1.6.2-py3-none-any.whl"...
+  | Detecting pip caller
+  | Attempting to find flexible python... 
+  | Attempting to find python3 or python...Success!
+  | Running command=$lb("python3","-m","pip","install","-t","/usr/irissys/mgr/python/","/tmp/nc-lune/lune-1.6.2-py3-none-any.whl")
+  | 
+  | Skipping preload - directory does not exist.
+  | [USER|lune-wheel]	Initialize SUCCESS
+  | [USER|lune-wheel]	Reload START (/tmp/nc-lune/)
+  | Skipping installation of Python dependencies because -bypass-py-deps is set.
+  | [USER|lune-wheel]	Reload SUCCESS
+  | [lune-wheel]	Module object refreshed.
+  | [USER|lune-wheel]	Validate START
+  | [USER|lune-wheel]	Validate SUCCESS
+  | [USER|lune-wheel]	Compile START
+  | [USER|lune-wheel]	Compile SUCCESS
+  | [USER|lune-wheel]	Activate START
+  | [USER|lune-wheel]	Configure START
+  | [USER|lune-wheel]	Configure SUCCESS
+  | Seeding update steps for module = lune-wheel, for version = 1.6.2
+  | 
+  | [USER|lune-wheel]	Activate SUCCESS
+<<< status OK
+
+>>> zpm "lune-wheel compile -v"Processing /tmp/nc-lune/lune-1.6.2-py3-none-any.whl
+Installing collected packages: lune
+Successfully installed lune-1.6.2
+WARNING: Target directory /usr/irissys/mgr/python/lune already exists. Specify --upgrade to force replacement.
+WARNING: Target directory /usr/irissys/mgr/python/lune-1.6.2.dist-info already exists. Specify --upgrade to force replacement.
+WARNING: Target directory /usr/irissys/mgr/python/bin already exists. Specify --upgrade to force replacement.
+
+  | 
+  | [USER|lune-wheel]	Initialize START
+  | Installing wheel package "/tmp/nc-lune/lune-1.6.2-py3-none-any.whl"...
+  | Detecting pip caller
+  | Attempting to find flexible python... 
+  | Attempting to find python3 or python...Success!
+  | Running command=$lb("python3","-m","pip","install","-t","/usr/irissys/mgr/python/","/tmp/nc-lune/lune-1.6.2-py3-none-any.whl")
+  | 
+  | Skipping preload - directory does not exist.
+  | [USER|lune-wheel]	Initialize SUCCESS
+  | [USER|lune-wheel]	Reload START (/tmp/nc-lune/)
+  | [USER|lune-wheel]	Reload SUCCESS
+  | [lune-wheel]	Module object refreshed.
+  | [USER|lune-wheel]	Validate START
+  | [USER|lune-wheel]	Validate SUCCESS
+  | [USER|lune-wheel]	Compile START
+  | [USER|lune-wheel]	Compile SUCCESS
+<<< status OK
+
+OBS|nc-res-N14-bypass-py-deps|bypassPipLine=Installing wheel package "/tmp/nc-lune/lune-1.6.2-py3-none-any.whl"...;bypassRecord=1.6.2;bypassReqsLines=0;bypassWheelLines=2;compile=ok;compilePipLine=Installing wheel package "/tmp/nc-lune/lune-1.6.2-py3-none-any.whl"...;compileReqsLines=0;compileWheelLines=2;loadBypass=ok;loadNoFlag=err:ERROR #5001: Running os command 'python3 -m pip install -t /usr/irissys/mgr/python/ -r requirements.txt --python-version 3.12.3 --only-binary::all:' failed with;luneImportVersion=1.6.2;noFlagRecord=-;reqs=--no-index lune::1.6.4 ;
+
+>>> zpm "uninstall lune-wheel"
+  | 
+  | [USER|lune-wheel]	Clean START
+  | [USER|lune-wheel]	Unconfigure START
+  | [USER|lune-wheel]	Unconfigure SUCCESS
+  | [USER|lune-wheel]	Clean SUCCESS
+<<< status OK
+
+USER>

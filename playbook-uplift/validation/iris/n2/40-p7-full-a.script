@@ -1,0 +1,6 @@
+set sc=$system.OBJ.LoadDir("/tmp/uplift/n2/Uplift/","ck-d",.err,1) write !,"LOAD ",$system.Status.IsOK(sc)," ",$system.Status.GetErrorText(sc),!
+do ##class(Uplift.N2.Self).Prepare("nc-gap-P7-full-prepare")
+set sc=##class(%IPM.Main).Shell("uninstall zpm")
+Yes
+do ##class(Uplift.N2.Self).After("nc-gap-P7-full-cleanup-yes", sc)
+halt

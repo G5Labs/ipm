@@ -1,0 +1,48 @@
+# container: ipm-uplift-iris-repo  image: containers.intersystems.com/intersystems/iris-community:2026.1  at: 2026-11-13T19:38:01Z
+# script: validation/iris/repo/76-model-ipmdep-a.script
+
+Node: 2e8609ed30a0, Instance: IRIS
+
+USER>
+
+LOAD 1 
+
+USER>
+
+>>> load /tmp/uplift/repo/fixtures/nc-rec-ipmdep/
+
+Building dependency graph...Done.
+[USER|nc-rec-ipmdep]	Initialize START
+[USER|nc-rec-ipmdep]	Initialize SUCCESS
+[USER|nc-rec-ipmdep]	Reload START (/tmp/uplift/repo/fixtures/nc-rec-ipmdep/)
+[USER|nc-rec-ipmdep]	Reload SUCCESS
+[nc-rec-ipmdep]	Module object refreshed.
+[USER|nc-rec-ipmdep]	Validate START
+[USER|nc-rec-ipmdep]	Validate SUCCESS
+[USER|nc-rec-ipmdep]	Compile START
+[USER|nc-rec-ipmdep]	Compile SUCCESS
+[USER|nc-rec-ipmdep]	Activate START
+[USER|nc-rec-ipmdep]	Configure START
+[USER|nc-rec-ipmdep]	Configure SUCCESS
+[USER|nc-rec-ipmdep]	Activate SUCCESS
+<<< status=OK
+
+>>> uninstall nc-rec-ipmdep -r
+
+[USER|nc-rec-ipmdep]	Clean START
+[USER|nc-rec-ipmdep]	Unconfigure START
+[USER|nc-rec-ipmdep]	Unconfigure SUCCESS
+[USER|ZPM]	Clean START
+[USER|ZPM]	Unconfigure START
+[USER|ZPM]	Unconfigure SUCCESS
+WARNING: 1 module(s) orphaned:
+  - nc-rec-ipmdep (1.0.0)
+Reinstalling IPM will automatically re-adopt these modules.
+[USER|ZPM]	Clean SUCCESS
+[nc-rec-ipmdep]	Clean FAILURE
+ERROR! ObjectScript error: <CLASS DOES NOT EXIST>%Clean+146^%IPM.Lifecycle.Base.1 *%IPM.Storage.Module
+<<< status=ERROR #5002: ObjectScript error: <CLASS DOES NOT EXIST>%Clean+146^%IPM.Lifecycle.Base.1 *%IPM.Storage.Module
+
+OBS|nc-repo-model-unin-recurse-ipm-dependency|error=ERROR #5002: ObjectScript error: <CLASS DOES NOT EXIST>%Clean+146^%IPM.Lifecycle.Base.1 *%IPM.Storage.Module;historyRows=166;ipmMain=absent;ipmStorageModule=absent;ipmStudioDocModule=absent;load=1;manifestStreams=11;moduleIndex=10;moduleRecordNames=1:zpm 66:nc-rec-ipmdep;moduleRecords=2;ncGhostAClass=absent;ncRecIpmClass=absent;ncRecIpmRecord=1;pre.installed=1;pre.ipmMain=compiled;printedCleanZpm=0;printedListHeader=0;printedOrphanWarning=1;printedPrompt=0;repoDefinitions=0;selfUninstallFlagLeft=0;status=err;webAppNcW=0;zpmRecords=1;
+
+USER>

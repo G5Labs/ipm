@@ -1,0 +1,8 @@
+do ##class(Uplift.Probe.Scenario).Reset()
+kill ^IPM.Storage.FileHashD, ^IPM.Storage.FileHashI
+set before=$query(^IPM.Storage.FileHashD("")) set bI=$data(^IPM.Storage.FileHashI)
+set sc=##class(%IPM.Main).Shell("load /tmp/uplift/fixtures/up-res-fail/ -DNoTransaction=1")
+set dump="" set q="^IPM.Storage.FileHashD" for { set q=$query(@q) quit:q=""  set dump=dump_$translate(q,";|=","::_")_"~"_$translate($extract($get(@q),1,60),";|=,","::_ ")_" " }
+set dumpI="" set q="^IPM.Storage.FileHashI" for { set q=$query(@q) quit:q=""  set dumpI=dumpI_$translate(q,";|=","::_")_" " }
+write "OBS|ws-filehash-after-plain-load|status=",$system.Status.IsOK(sc),";dataNodes=",$extract(dump,1,400),";indexNodes=",$extract(dumpI,1,300),";",!
+halt

@@ -1,0 +1,61 @@
+# container: ipm-uplift-iris-nsp  image: containers.intersystems.com/intersystems/iris-community:2026.1  at: 2026-11-13T18:23:33Z
+# script: validation/iris/nsp/84-nsp-namespace2.script
+
+Node: 1176f046b99d, Instance: IRIS
+
+USER>
+
+Load of directory started on 11/13/2026 18:23:33
+Loading file /tmp/uplift/nsp/Uplift/Nsp/Util.cls as cls
+Imported class: Uplift.Nsp.Util
+Loading file /tmp/uplift/nsp/Uplift/Nsp/Ns.cls as cls
+Imported class: Uplift.Nsp.Ns
+Compiling 2 classes
+Compiling class Uplift.Nsp.Util
+Compiling class Uplift.Nsp.Ns
+Compiling routine Uplift.Nsp.Ns.1
+Compiling routine Uplift.Nsp.Util.1
+Load finished successfully.
+
+LOADED 1
+
+USER>
+
+>>> zpm "load /tmp/uplift/nsp/fixtures/nc-version-req-snap/"
+  | 
+  | Building dependency graph...Done.
+  | [USER|nc-version-req-snap]	Initialize START
+  | [USER|nc-version-req-snap]	Initialize SUCCESS
+  | [USER|nc-version-req-snap]	Reload START (/tmp/uplift/nsp/fixtures/nc-version-req-snap/)
+  | [USER|nc-version-req-snap]	Reload SUCCESS
+  | [nc-version-req-snap]	Module object refreshed.
+  | [USER|nc-version-req-snap]	Validate START
+  | [USER|nc-version-req-snap]	Validate SUCCESS
+  | [USER|nc-version-req-snap]	Compile START
+  | [USER|nc-version-req-snap]	Compile SUCCESS
+  | [USER|nc-version-req-snap]	Activate START
+  | [USER|nc-version-req-snap]	Configure START
+  | [USER|nc-version-req-snap]	Configure SUCCESS
+  | [USER|nc-version-req-snap]	Activate SUCCESS
+<<< status OK
+
+>>> zpm "uninstall nc-version-req-snap"
+  | 
+  | [USER|nc-version-req-snap]	Clean START
+  | [USER|nc-version-req-snap]	Unconfigure START
+  | [USER|nc-version-req-snap]	Unconfigure SUCCESS
+  | [USER|nc-version-req-snap]	Clean SUCCESS
+<<< status OK
+
+>>> zpm "load /tmp/uplift/nsp/fixtures/nc-version-req-snap/"
+  | 
+  | [31mERROR![0m The module requires IPM version >=0.10.11-SNAPSHOT. Current IPM version is .0.0
+<<< status ERROR ERROR #5001: The module requires IPM version >=0.10.11-SNAPSHOT. Current IPM version is .0.0
+
+OBS|nc-nsp-N9-ipmversion-mapped-snap|ncaLoad=err:ERROR #5001: The module requires IPM version >:0.10.11-SNAPSHOT. Current IPM version is .0.0;ncaPkgDest=^/usr/irissys/mgr/user/;ncaRecord=-;ncaZpmRecord=-;userLoad=ok;userRecord=0.0.1;
+
+USER>
+
+>>> zpm "enable -ns NCT -v 9.9.9 -remote nc-nsp-stub"
+<FRAMESTACK>
+<FRAMESTACK>

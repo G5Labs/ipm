@@ -1,0 +1,90 @@
+# container: ipm-uplift-iris-nsp  image: containers.intersystems.com/intersystems/iris-community:2026.1  at: 2026-11-13T20:39:15Z
+# script: validation/iris/nsp/80-nsp-fix-probes.script
+
+Node: 1176f046b99d, Instance: IRIS
+
+USER>
+
+Load of directory started on 11/13/2026 20:39:15
+Loading file /tmp/uplift/nsp/Uplift/Nsp/Cap.cls as cls
+Imported class: Uplift.Nsp.Cap
+Loading file /tmp/uplift/nsp/Uplift/Nsp/Fix.cls as cls
+Imported class: Uplift.Nsp.Fix
+Loading file /tmp/uplift/nsp/Uplift/Nsp/Fresh.cls as cls
+Imported class: Uplift.Nsp.Fresh
+Loading file /tmp/uplift/nsp/Uplift/Nsp/Ns.cls as cls
+Imported class: Uplift.Nsp.Ns
+Loading file /tmp/uplift/nsp/Uplift/Nsp/Model.cls as cls
+Imported class: Uplift.Nsp.Model
+Loading file /tmp/uplift/nsp/Uplift/Nsp/Res.cls as cls
+Imported class: Uplift.Nsp.Res
+Loading file /tmp/uplift/nsp/Uplift/Nsp/Sync.cls as cls
+Imported class: Uplift.Nsp.Sync
+Loading file /tmp/uplift/nsp/Uplift/Nsp/Util.cls as cls
+Imported class: Uplift.Nsp.Util
+Compiling 8 classes
+Compiling class Uplift.Nsp.Cap
+Compiling class Uplift.Nsp.Fix
+Compiling class Uplift.Nsp.Fresh
+Compiling class Uplift.Nsp.Model
+Compiling class Uplift.Nsp.Sync
+Compiling class Uplift.Nsp.Util
+Compiling class Uplift.Nsp.Ns
+Compiling class Uplift.Nsp.Res
+Compiling routine Uplift.Nsp.Fresh.1
+Compiling routine Uplift.Nsp.Cap.1
+Compiling routine Uplift.Nsp.Fix.1
+Compiling routine Uplift.Nsp.Res.1
+Compiling routine Uplift.Nsp.Model.1
+Compiling routine Uplift.Nsp.Sync.1
+Compiling routine Uplift.Nsp.Ns.1
+Compiling routine Uplift.Nsp.Util.1
+Load finished successfully.
+
+LOADED 1
+
+USER>
+
+>>> zpm "load /tmp/nc-sync/ -dev"
+<<< status OK
+
+>>> zpm "load /tmp/nc-sdep-c/ -dev"
+<<< status OK
+
+>>> zpm "sync"
+  | 
+  | [USER|sync-test]	Sync START
+  | [sync-test]	Sync FAILURE
+  | ERROR #5373: Class 'NcMissing.Base', used by 'SyncTest.SuperClass:superclass', does not exist
+  | [USER|sync-dep-c]	Sync START
+  |   Updated: src/cls/SyncDepC/Base.cls
+  | [sync-dep-c] Sync complete: 1 file(s) updated.
+  | [sync-dep-c] Sync done in 0.01s
+  | [USER|sync-dep-c]	Sync SUCCESS
+  | 
+  | ================================================================
+  | Sync Summary
+  | ================================================================
+  | Modules checked:  2  (sync-test, sync-dep-c)
+  | Modules updated:  1
+  |   sync-test   ERROR
+  |   sync-dep-c   1 file
+  | Errors:    sync-test
+  | ================================================================
+<<< status OK
+
+OBS|nc-nsp-fix-sync-N20-summary|depCValue=c-edited;loads=ok / ok;summaryChecked=Modules checked:  2  (sync-test, sync-dep-c);summaryErrors=Errors:    sync-test;summaryFailedModuleLine=sync-test   ERROR;summaryHeader=Sync Summary;summaryUpdated=Modules updated:  1;syncAll=ok;syncTestRow=hash:a5f640cc47 syncFailed:1 testPending:0;
+
+>>> zpm "uninstall sync-test -force"
+<<< status OK
+
+>>> zpm "uninstall sync-dep-c -force"
+<<< status OK
+
+USER>
+
+        set s(ns) = ##class(Uplift.Nsp.Util).Maps(ns)_" cpf:"_##class(Uplift.Nsp
+        ^
+.Ns).CpfMap(ns)
+<CLASS DOES NOT EXIST>Snap+11^Uplift.Nsp.Fix.1 *Uplift.Nsp.Util
+%SYS 4f2>

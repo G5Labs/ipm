@@ -1,0 +1,6 @@
+set sc=$system.OBJ.Load("/tmp/uplift/Uplift/Probe/WriteSet.cls","ck-d") write !,"LOAD ",$system.Status.IsOK(sc),!
+do ##class(Uplift.Probe.WriteSet).Snapshot(.s) set l="" for { set l=$order(s(l)) quit:l=""  set c=0,g="" for { set g=$order(s(l,g)) quit:g=""  set c=c+1 } write "SCANNED ",l," ",c,! }
+do ##class(Uplift.Probe.WriteSet).RunAll()
+do ##class(Uplift.Probe.WriteSet).RunMore()
+do ##class(Uplift.Probe.WriteSet).RunReview()
+halt

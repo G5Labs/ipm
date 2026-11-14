@@ -1,0 +1,52 @@
+# container: ipm-uplift-iris  image: containers.intersystems.com/intersystems/iris-community:2026.1  at: 2026-11-13T23:28:48Z
+# script: validation/iris/r4/hist/08-delete-dep-row-txn.script
+
+Node: 37eecb272560, Instance: IRIS
+
+USER>
+
+LOAD 1 
+
+USER>
+
+SETUP hooks 1
+
+USER>
+
+OBS|r4-hist-delete-dep-row-txn-during|cls:R4HDep.Marker=compiled;depRowId=195;historyRows=2;historyTempData=11;mod:r4h-dep-wait=1.0.0;mod:r4h-parent=1.0.0;parentRowId=194;row1=id194/load//success:err/committed:0/ended:0/finalized:0/phases:/start:23:28:48/end:/cmd:load /tmp/uplift/r4/hist/fixtures/r4h-parent/;row2=id195/load/r4h-dep-wait/success:err/committed:0/ended:0/finalized:0/phases:/start:23:28:48/end:/cmd:load /tmp/uplift/r4/hist/fixtures/r4h-parent/;tlevel=0;tlevelInDepActivate=2;waiting=1;
+
+CMD> history delete -DID=195
+
+[31mERROR![0m SQLCODE: -110 Message: Unable to acquire lock for DELETE of table '%IPM_General.History' on row with RowID = '195'
+CMD< ERROR #5540: SQLCODE: -110 Message: Unable to acquire lock for DELETE of table '%IPM_General.History' on row with RowID : '195'
+
+CMD> history delete -DID=194
+
+Deleted 1 record(s).
+CMD< OK
+
+OBS|r4-hist-delete-dep-row-txn-after-release|cls:R4HDep.Marker=compiled;cls:R4HPar.Marker=compiled;deleteDep=err:ERROR #5540: SQLCODE: -110 Message: Unable to acquire lock for DELETE of table '%IPM_General.History' on row with RowID : '195';deleteDepSecs=10.0;deleteParent=ok;depRowExistsAfterDelete=1;depRowExistsAfterRelease=1;depWaitLoops=41;historyRows=1;historyTempData=1;jobGone=1;jobResult=ok;mod:r4h-dep-wait=1.0.0;mod:r4h-parent=1.0.0;parentRowExistsAfterDelete=0;parentRowExistsAfterRelease=0;releaseSetAt=23:28:58;releasedAt=23:29:00;row1=id195/load/r4h-dep-wait/success:ok/committed:1/ended:1/finalized:1/phases:Initialize:ok Reload:ok Validate:ok Compile:ok Activate:ok/start:23:28:48/end:23:28:58/cmd:load /tmp/uplift/r4/hist/fixtures/r4h-parent/;tlevel=0;
+
+CMD> uninstall r4h-parent -force
+
+[USER|r4h-parent]	Clean START
+[USER|r4h-parent]	Unconfigure START
+[USER|r4h-parent]	Unconfigure SUCCESS
+[USER|r4h-parent]	Clean SUCCESS
+CMD< OK
+
+CMD> uninstall r4h-dep-wait -force
+
+[USER|r4h-dep-wait]	Clean START
+[USER|r4h-dep-wait]	Unconfigure START
+[USER|r4h-dep-wait]	Unconfigure SUCCESS
+[USER|r4h-dep-wait]	Clean SUCCESS
+CMD< OK
+
+USER>
+
+USER>
+
+OBS|r4-hist-delete-dep-row-txn-later|historyRows=19;historyTempData=1;row1=id163/load/rest-demo/success:ok/committed:1/ended:1/finalized:1/phases:Initialize:ok Reload:ok Validate:ok Compile:ok Activate:ok/start:23:19:55/end:23:19:56/cmd:load /home/irisowner/zpm/tests/integration_tests/Test/PM/Int;row10=id186/uninstall/r4h-parent/success:ok/committed:1/ended:1/finalized:1/phases:Clean:ok/start:23:27:39/end:23:27:39/cmd:uninstall r4h-parent -force;row11=id187/uninstall/r4h-dep-wait/success:ok/committed:1/ended:1/finalized:1/phases:Clean:ok/start:23:27:39/end:23:27:39/cmd:uninstall r4h-dep-wait -force;row12=id188/uninstall/r4h-parent/success:err/committed:0/ended:1/finalized:1/phases:/start:23:27:39/end:23:27:39/cmd:uninstall r4h-parent -force;row13=id189/uninstall/r4h-dep-wait/success:err/committed:0/ended:1/finalized:1/phases:/start:23:27:39/end:23:27:39/cmd:uninstall r4h-dep-wait -force;row14=id191/load/r4h-dep-wait/success:ok/committed:1/ended:1/finalized:1/phases:Initialize:ok Reload:ok Validate:ok Compile:ok Activate:ok/start:23:27:39/end:23:27:49/cmd:load /tmp/uplift/r4/hist/fixtures/r4h-parent/ -dev;row15=id192/uninstall/r4h-parent/success:ok/committed:1/ended:1/finalized:1/phases:Clean:ok/start:23:27:51/end:23:27:51/cmd:uninstall r4h-parent -force;row16=id193/uninstall/r4h-dep-wait/success:ok/committed:1/ended:1/finalized:1/phases:Clean:ok/start:23:27:51/end:23:27:51/cmd:uninstall r4h-dep-wait -force;row17=id195/load/r4h-dep-wait/success:ok/committed:1/ended:1/finalized:1/phases:Initialize:ok Reload:ok Validate:ok Compile:ok Activate:ok/start:23:28:48/end:23:28:58/cmd:load /tmp/uplift/r4/hist/fixtures/r4h-parent/;row18=id196/uninstall/r4h-parent/success:ok/committed:1/ended:1/finalized:1/phases:Clean:ok/start:23:29:00/end:23:29:00/cmd:uninstall r4h-parent -force;row19=id197/uninstall/r4h-dep-wait/success:ok/committed:1/ended:1/finalized:1/phases:Clean:ok/start:23:29:00/end:23:29:00/cmd:uninstall r4h-dep-wait -force;row2=id164/uninstall/rest-demo/success:ok/committed:1/ended:1/finalized:1/phases:Clean:ok/start:23:19:58/end:23:19:58/cmd:uninstall rest-demo;row3=id165/load/rest-demo/success:ok/committed:1/ended:1/finalized:1/phases:Initialize:ok Reload:ok Validate:ok Compile:ok Activate:ok/start:23:20:25/end:23:20:26/cmd:load /home/irisowner/zpm/tests/integration_tests/Test/PM/Int;row4=id166/uninstall/rest-demo/success:ok/committed:1/ended:1/finalized:1/phases:Clean:ok/start:23:20:28/end:23:20:28/cmd:uninstall rest-demo;row5=id176/uninstall/r4h-wait-compile/success:ok/committed:1/ended:1/finalized:1/phases:Clean:ok/start:23:25:32/end:23:25:32/cmd:uninstall r4h-wait-compile -force;row6=id178/uninstall/r4h-wait-compile/success:ok/committed:1/ended:1/finalized:1/phases:Clean:ok/start:23:25:34/end:23:25:34/cmd:uninstall r4h-wait-compile -force;row7=id180/load/r4h-dep-wait/success:ok/committed:1/ended:1/finalized:1/phases:Initialize:ok Reload:ok Validate:ok Compile:ok Activate:ok/start:23:25:34/end:23:27:36/cmd:load /tmp/uplift/r4/hist/fixtures/r4h-parent/;row8=id182/uninstall/r4h-parent/success:ok/committed:1/ended:1/finalized:1/phases:Clean:ok/start:23:27:37/end:23:27:37/cmd:uninstall r4h-parent -force;row9=id183/uninstall/r4h-dep-wait/success:ok/committed:1/ended:1/finalized:1/phases:Clean:ok/start:23:27:37/end:23:27:37/cmd:uninstall r4h-dep-wait -force;tlevel=0;
+
+USER>

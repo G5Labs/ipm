@@ -1,0 +1,103 @@
+# container: ipm-uplift-iris-repo  image: containers.intersystems.com/intersystems/iris-community:2026.1  at: 2026-11-13T18:23:51Z
+# script: validation/iris/repo/74-self-uninstall-ipm-a.script
+
+Node: 2e8609ed30a0, Instance: IRIS
+
+USER>
+
+LOAD 1 
+
+USER>
+
+>>> uninstall nc-web-w -force
+
+[USER|nc-web-w]	Clean START
+[USER|nc-web-w]	Unconfigure START
+[USER|nc-web-w]	Unconfigure SUCCESS
+[USER|nc-web-w]	Clean SUCCESS
+<<< status=OK
+
+>>> uninstall nc-ghost-a -force
+
+[USER|nc-ghost-a]	Clean START
+[USER|nc-ghost-a]	Unconfigure START
+[USER|nc-ghost-a]	Unconfigure SUCCESS
+[USER|nc-ghost-a]	Clean SUCCESS
+<<< status=OK
+
+>>> load /tmp/uplift/repo/fixtures/nc-ghost-a/
+
+Building dependency graph...Done.
+[USER|nc-ghost-a]	Initialize START
+[USER|nc-ghost-a]	Initialize SUCCESS
+[USER|nc-ghost-a]	Reload START (/tmp/uplift/repo/fixtures/nc-ghost-a/)
+[USER|nc-ghost-a]	Reload SUCCESS
+[nc-ghost-a]	Module object refreshed.
+[USER|nc-ghost-a]	Validate START
+[USER|nc-ghost-a]	Validate SUCCESS
+[USER|nc-ghost-a]	Compile START
+[USER|nc-ghost-a]	Compile SUCCESS
+[USER|nc-ghost-a]	Activate START
+[USER|nc-ghost-a]	Configure START
+[USER|nc-ghost-a]	Configure SUCCESS
+[USER|nc-ghost-a]	Activate SUCCESS
+<<< status=OK
+
+>>> load /tmp/uplift/repo/fixtures/nc-web-w/
+
+Building dependency graph...Done.
+[USER|nc-web-w]	Initialize START
+[USER|nc-web-w]	Initialize SUCCESS
+[USER|nc-web-w]	Reload START (/tmp/uplift/repo/fixtures/nc-web-w/)
+[USER|nc-web-w]	Reload SUCCESS
+[nc-web-w]	Module object refreshed.
+[USER|nc-web-w]	Validate START
+[USER|nc-web-w]	Validate SUCCESS
+[USER|nc-web-w]	Compile START
+[USER|nc-web-w]	Compile SUCCESS
+[USER|nc-web-w]	Activate START
+[USER|nc-web-w]	Configure START
+[USER|nc-web-w]	Configure SUCCESS
+[USER|nc-web-w]	Activate SUCCESS
+<<< status=OK
+
+>>> repo -fs -n nc-repo-self -path /tmp/uplift/repo/fixtures/fsrepo-extra/
+
+nc-fs2 1.0.0 @ /tmp/uplift/repo/fixtures/fsrepo-extra/nc-fs2/
+nc-repo-self
+	Source: 		/tmp/uplift/repo/fixtures/fsrepo-extra/*
+	Enabled?		Yes
+	Available?		Yes
+	Use for Snapshots?	Yes
+	Use for Prereleases?	Yes
+	Is Read-Only?		No
+
+nc-repo-self
+	Source: 		/tmp/uplift/repo/fixtures/fsrepo-extra/*
+	Enabled?		Yes
+	Available?		Yes
+	Use for Snapshots?	Yes
+	Use for Prereleases?	Yes
+	Is Read-Only?		No
+
+<<< status=OK
+
+OBS|nc-unin-self-prepare|loadA=1;loadW=1;pre.historyRows=129;pre.ipmMain=compiled;pre.ipmStorageModule=compiled;pre.ipmStudioDocModule=compiled;pre.manifestStreams=11;pre.moduleIndex=10;pre.moduleRecordNames=1:zpm 51:nc-ghost-a 52:nc-web-w;pre.moduleRecords=3;pre.ncGhostAClass=compiled;pre.repoDefinitions=11;pre.webAppNcW=1;pre.zpmRecords=1;repoFs=1;
+
+USER>
+
+>>> uninstall IPM
+
+[USER|ZPM]	Clean START
+[USER|ZPM]	Unconfigure START
+[USER|ZPM]	Unconfigure SUCCESS
+WARNING: 2 module(s) orphaned:
+  - nc-ghost-a (1.0.0)
+  - nc-web-w (1.0.0)
+Reinstalling IPM will automatically re-adopt these modules.
+[USER|ZPM]	Clean SUCCESS
+<<< status=OK
+
+OBS|nc-unin-self-external-name-IPM|historyRows=130;ipmMain=absent;ipmStorageModule=absent;ipmStudioDocModule=absent;manifestStreams=11;moduleIndex=10;moduleRecordNames=1:zpm 51:nc-ghost-a 52:nc-web-w;moduleRecords=3;ncGhostAClass=compiled;printedCleanSuccess=1;printedExitMessage=0;printedListHeader=0;printedOrphanWarning=1;printedPrompt=0;repoDefinitions=11;selfUninstallFlagLeft=0;status=ok;webAppNcW=1;zpmRecords=1;
+
+USER>

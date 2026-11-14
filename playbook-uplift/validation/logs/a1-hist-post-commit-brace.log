@@ -1,0 +1,126 @@
+# container: ipm-uplift-iris  image: containers.intersystems.com/intersystems/iris-community:2026.1  at: 2026-11-13T23:18:57Z
+# script: validation/iris/r4/hist/02-post-commit-brace.script
+
+Node: 37eecb272560, Instance: IRIS
+
+USER>
+
+LOAD 1 
+
+USER>
+
+SETUP hooks 1
+
+USER>
+
+OBS|r4-hist-macro-probe-iserr|evalMacro=throws:ERROR #5475: Error compiling routine: %IPM.Generated.MacroEval. Errors: %IPM.Generated.MacroEval.cls ERROR: %IPM.Generated.MacroEval.1(4) : MPP5611 : Function macro missing arguments: 'ISERR' TEXT: Quit $$$ISERR;moduleEvaluate=ok:Installed $$$ISERR;text=Installed $$$ISERR;tlevel=0;
+
+OBS|r4-hist-macro-probe-undefined|evalMacro=ok:Installed;moduleEvaluate=ok:Installed $$$NoSuchMacroR4h;text=Installed $$$NoSuchMacroR4h;tlevel=0;
+
+OBS|r4-hist-macro-probe-expr|evalMacro=ok:Installed #{1/0};moduleEvaluate=ok:Installed;text=Installed #{1/0};tlevel=0;
+
+OBS|r4-hist-macro-probe-brace-iserr|evalMacro=throws:ERROR #5475: Error compiling routine: %IPM.Generated.MacroEval. Errors: %IPM.Generated.MacroEval.cls ERROR: %IPM.Generated.MacroEval.1(4) : MPP5611 : Function macro missing arguments: 'ISERR' TEXT: Quit $$$ISERR;moduleEvaluate=throws:ERROR #5475: Error compiling routine: %IPM.Generated.MacroEval. Errors: %IPM.Generated.MacroEval.cls ERROR: %IPM.Generated.MacroEval.1(4) : MPP5611 : Function macro missing arguments: 'ISERR' TEXT: Quit $$$ISERR;text=Installed {$root} $$$ISERR;tlevel=0;
+
+USER>
+
+CMD> load /tmp/uplift/r4/hist/fixtures/r4h-msg2/
+
+Building dependency graph...Done.
+[USER|r4h-msg2]	Initialize START
+[USER|r4h-msg2]	Initialize SUCCESS
+[USER|r4h-msg2]	Reload START (/tmp/uplift/r4/hist/fixtures/r4h-msg2/)
+[USER|r4h-msg2]	Reload SUCCESS
+[r4h-msg2]	Module object refreshed.
+[USER|r4h-msg2]	Validate START
+[USER|r4h-msg2]	Validate SUCCESS
+[USER|r4h-msg2]	Compile START
+[USER|r4h-msg2]	Compile SUCCESS
+[USER|r4h-msg2]	Activate START
+[USER|r4h-msg2]	Configure START
+[USER|r4h-msg2]	Configure SUCCESS
+[USER|r4h-msg2]	Activate SUCCESS
+
+[31mERROR![0m Error compiling routine: %IPM.Generated.MacroEval.  Errors:  %IPM.Generated.MacroEval.cls
+ERROR:  %IPM.Generated.MacroEval.1(4) : MPP5611 : Function macro missing arguments: 'ISERR'
+ TEXT:  Quit $$$ISERR
+CMD< ERROR #5475: Error compiling routine: %IPM.Generated.MacroEval. Errors: %IPM.Generated.MacroEval.cls ERROR: %IPM.Generated.MacroEval.1(4) : MPP5611 : Function macro missing arguments: 'ISERR' TEXT: Quit $$$ISERR
+
+OBS|r4-hist-post-commit-throw-r4h-msg2-txn|cls:R4HMsg.Marker=compiled;cmdError=ERROR #5475: Error compiling routine: %IPM.Generated.MacroEval. Errors: %IPM.Generated.MacroEval.cls ERROR: %IPM.Generated.MacroEval.1(4) : MPP5611 : Function macro missing arguments: 'ISERR' TEXT: Quit $$$ISERR;cmdStatus=err;historyRows=1;historyTempData=1;mod:r4h-msg2=1.0.0;row1=id157/load/r4h-msg2/success:err/committed:1/ended:1/finalized:1/phases:Initialize:ok Reload:ok Validate:ok Compile:ok Activate:ok;tlevel=0;
+
+CMD> uninstall r4h-msg2 -force
+
+[USER|r4h-msg2]	Clean START
+[USER|r4h-msg2]	Unconfigure START
+[USER|r4h-msg2]	Unconfigure SUCCESS
+[USER|r4h-msg2]	Clean SUCCESS
+CMD< OK
+
+USER>
+
+CMD> load /tmp/uplift/r4/hist/fixtures/r4h-msg2/ -DNoTransaction=1
+
+Building dependency graph...Done.
+[USER|r4h-msg2]	Initialize START
+[USER|r4h-msg2]	Initialize SUCCESS
+[USER|r4h-msg2]	Reload START (/tmp/uplift/r4/hist/fixtures/r4h-msg2/)
+[USER|r4h-msg2]	Reload SUCCESS
+[r4h-msg2]	Module object refreshed.
+[USER|r4h-msg2]	Validate START
+[USER|r4h-msg2]	Validate SUCCESS
+[USER|r4h-msg2]	Compile START
+[USER|r4h-msg2]	Compile SUCCESS
+[USER|r4h-msg2]	Activate START
+[USER|r4h-msg2]	Configure START
+[USER|r4h-msg2]	Configure SUCCESS
+[USER|r4h-msg2]	Activate SUCCESS
+
+[31mERROR![0m Error compiling routine: %IPM.Generated.MacroEval.  Errors:  %IPM.Generated.MacroEval.cls
+ERROR:  %IPM.Generated.MacroEval.1(4) : MPP5611 : Function macro missing arguments: 'ISERR'
+ TEXT:  Quit $$$ISERR
+CMD< ERROR #5475: Error compiling routine: %IPM.Generated.MacroEval. Errors: %IPM.Generated.MacroEval.cls ERROR: %IPM.Generated.MacroEval.1(4) : MPP5611 : Function macro missing arguments: 'ISERR' TEXT: Quit $$$ISERR
+
+OBS|r4-hist-post-commit-throw-r4h-msg2-notxn|cls:R4HMsg.Marker=compiled;cmdError=ERROR #5475: Error compiling routine: %IPM.Generated.MacroEval. Errors: %IPM.Generated.MacroEval.cls ERROR: %IPM.Generated.MacroEval.1(4) : MPP5611 : Function macro missing arguments: 'ISERR' TEXT: Quit $$$ISERR;cmdStatus=err;historyRows=1;historyTempData=1;mod:r4h-msg2=1.0.0;row1=id159/load/r4h-msg2/success:err/committed:1/ended:1/finalized:1/phases:Initialize:ok Reload:ok Validate:ok Compile:ok Activate:ok;tlevel=0;
+
+CMD> uninstall r4h-msg2 -force
+
+[USER|r4h-msg2]	Clean START
+[USER|r4h-msg2]	Unconfigure START
+[USER|r4h-msg2]	Unconfigure SUCCESS
+[USER|r4h-msg2]	Clean SUCCESS
+CMD< OK
+
+USER>
+
+CMD> load /tmp/uplift/r4/hist/fixtures/r4h-msg2/ -dev
+
+Building dependency graph...Done.
+[USER|r4h-msg2]	Initialize START
+[USER|r4h-msg2]	Initialize SUCCESS
+[USER|r4h-msg2]	Reload START (/tmp/uplift/r4/hist/fixtures/r4h-msg2/)
+[USER|r4h-msg2]	Reload SUCCESS
+[r4h-msg2]	Module object refreshed.
+[USER|r4h-msg2]	Validate START
+[USER|r4h-msg2]	Validate SUCCESS
+[USER|r4h-msg2]	Compile START
+[USER|r4h-msg2]	Compile SUCCESS
+[USER|r4h-msg2]	Activate START
+[USER|r4h-msg2]	Configure START
+[USER|r4h-msg2]	Configure SUCCESS
+[USER|r4h-msg2]	Activate SUCCESS
+
+[31mERROR![0m Error compiling routine: %IPM.Generated.MacroEval.  Errors:  %IPM.Generated.MacroEval.cls
+ERROR:  %IPM.Generated.MacroEval.1(4) : MPP5611 : Function macro missing arguments: 'ISERR'
+ TEXT:  Quit $$$ISERR
+CMD< ERROR #5475: Error compiling routine: %IPM.Generated.MacroEval. Errors: %IPM.Generated.MacroEval.cls ERROR: %IPM.Generated.MacroEval.1(4) : MPP5611 : Function macro missing arguments: 'ISERR' TEXT: Quit $$$ISERR
+
+OBS|r4-hist-post-commit-throw-r4h-msg2-dev|cls:R4HMsg.Marker=compiled;cmdError=ERROR #5475: Error compiling routine: %IPM.Generated.MacroEval. Errors: %IPM.Generated.MacroEval.cls ERROR: %IPM.Generated.MacroEval.1(4) : MPP5611 : Function macro missing arguments: 'ISERR' TEXT: Quit $$$ISERR;cmdStatus=err;historyRows=1;historyTempData=1;mod:r4h-msg2=1.0.0/dev;row1=id161/load/r4h-msg2/success:err/committed:1/ended:1/finalized:1/phases:Initialize:ok Reload:ok Validate:ok Compile:ok Activate:ok;tlevel=0;
+
+CMD> uninstall r4h-msg2 -force
+
+[USER|r4h-msg2]	Clean START
+[USER|r4h-msg2]	Unconfigure START
+[USER|r4h-msg2]	Unconfigure SUCCESS
+[USER|r4h-msg2]	Clean SUCCESS
+CMD< OK
+
+USER>

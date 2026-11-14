@@ -1,0 +1,85 @@
+[
+  {
+    "name": "dev-no-setcommitted",
+    "description": "the developer-mode commit does not mark the log committed",
+    "old": "L2 { db: db, snap: Some(db), temp: Row { committed: true, ..t }, pc: Pc::Deps, ..s }",
+    "new": "L2 { db: db, snap: Some(db), temp: t, pc: Pc::Deps, ..s }",
+    "expect": [
+      "lemma_refines",
+      "lemma_inv_step"
+    ]
+  },
+  {
+    "name": "no-rollback-on-failure",
+    "description": "the failure path keeps the open transaction's writes",
+    "old": "let rolled = match s.snap { Some(d) => d, None => s.db };\n    let t = Row { ok: false, ended: true, ..s.temp };",
+    "new": "let rolled = s.db;\n    let t = Row { ok: false, ended: true, ..s.temp };",
+    "expect": [
+      "lemma_refines"
+    ]
+  },
+  {
+    "name": "finalize-overwrites-committed",
+    "description": "Finalize(error) clears Committed",
+    "old": "let t = Row { ok: false, ended: true, ..s.temp };",
+    "new": "let t = Row { ok: false, ended: true, committed: false, ..s.temp };",
+    "expect": [
+      "lemma_refines"
+    ]
+  },
+  {
+    "name": "commit-before-activate",
+    "description": "a transactional load commits before Activate",
+    "old": "if s.mode == Mode::Dev { L2 { snap: None, ..s1 } } else { s1 }\n        },\n        DepOutcome::Ok",
+    "new": "L2 { snap: None, ..s1 }\n        },\n        DepOutcome::Ok",
+    "expect": [
+      "lemma_refines",
+      "lemma_inv_step"
+    ]
+  },
+  {
+    "name": "crash-keeps-open-writes",
+    "description": "a halt commits the open transaction (premise P2 broken)",
+    "old": "let rolled = match s.snap { Some(d) => d, None => closed };",
+    "new": "let rolled = closed;",
+    "expect": [
+      "lemma_refines"
+    ]
+  },
+  {
+    "name": "no-premise-pc",
+    "description": "drop premise PC",
+    "old": "!(s.mode == Mode::Dev && s.pc == Pc::Deps &&",
+    "new": "!(false &&",
+    "expect": [
+      "lemma_refines"
+    ]
+  },
+  {
+    "name": "no-premise-pd-strict",
+    "description": "drop premise PD for the strict contract",
+    "old": "!(uses_txn(s.mode) && s.snap is Some && (",
+    "new": "!(false && (",
+    "expect": [
+      "lemma_refines_strict"
+    ]
+  },
+  {
+    "name": "l1-without-commit-soundness",
+    "description": "vacuity: L1 without 'Committed = 0 means nothing kept' must lose the dev-crash witness",
+    "old": "&&& (!a.top.committed ==> !a.m && !a.d)                       // Committed = 0: nothing kept\n",
+    "new": "",
+    "expect": [
+      "witness_dev_crash_commit_flag"
+    ]
+  },
+  {
+    "name": "l1-without-dep-record",
+    "description": "vacuity: strict L1 without the dependency record rule must lose the dependency witness",
+    "old": "pub open spec fn honest_end_strict(a: L1) -> bool { honest_end(a) && (a.dep_began ==> a.dep.exists) }",
+    "new": "pub open spec fn honest_end_strict(a: L1) -> bool { honest_end(a) }",
+    "expect": [
+      "witness_dependency_record_lost"
+    ]
+  }
+]

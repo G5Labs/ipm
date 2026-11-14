@@ -1,0 +1,6 @@
+set old = ##class(%IPM.General.History).%New(), old.Action="load", old.Package="old-a", old.CommandString="x", old.TimeStart="2000-01-01 00:00:00" do old.SetVersion("1.0.0") set idA=old.%Id() kill old
+set old = ##class(%IPM.General.History).%New(), old.Action="load", old.Package="old-b", old.CommandString="x", old.TimeStart="2000-01-01 00:00:00" do old.SetVersion("1.0.0") set idB=old.%Id() kill old
+kill f set f("TimeStart")="<='2026-10-14 00:00:00'" set nQuoted=##class(%IPM.General.History).DeleteHistory(.f)
+kill f set f("TimeStart")="<=2026-10-14 00:00:00" set nPlain=##class(%IPM.General.History).DeleteHistory(.f)
+write !,"OBS|ipm-history-purge-filter-cause|deletedWithQuotedValue=",nQuoted,";deletedWithPlainValue=",nPlain,";oldAExists=",##class(%IPM.General.History).%ExistsId(idA),";oldBExists=",##class(%IPM.General.History).%ExistsId(idB),";",!
+halt

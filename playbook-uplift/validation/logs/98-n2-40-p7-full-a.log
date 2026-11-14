@@ -1,0 +1,185 @@
+# container: ipm-uplift-n2-c3  image: containers.intersystems.com/intersystems/iris-community:2026.1  at: 2026-11-13T19:25:38Z
+# script: validation/iris/n2/40-p7-full-a.script
+
+Node: 68dc24f5df29, Instance: IRIS
+
+USER>
+
+LOAD 1 
+
+USER>
+
+SETUP hooks 1
+
+CMD> uninstall -all
+
+CMD< OK
+
+CMD> repo -delete-all
+
+CMD< OK
+
+CMD> repo -n n2 -fs -path /tmp/uplift/n2/fixtures/p9/repo/
+
+n2-cb 1.0.0 @ /tmp/uplift/n2/fixtures/p9/repo/n2-cb/
+n2-cc 1.0.0 @ /tmp/uplift/n2/fixtures/p9/repo/n2-cc/
+n2-d1 1.0.0 @ /tmp/uplift/n2/fixtures/p9/repo/n2-d1/
+n2-d2 1.0.0 @ /tmp/uplift/n2/fixtures/p9/repo/n2-d2/
+n2-pd 1.0.0 @ /tmp/uplift/n2/fixtures/p9/repo/n2-pd-1.0.0/
+n2-pd 1.1.0 @ /tmp/uplift/n2/fixtures/p9/repo/n2-pd-1.1.0/
+n2
+	Source: 		/tmp/uplift/n2/fixtures/p9/repo/*
+	Enabled?		Yes
+	Available?		Yes
+	Use for Snapshots?	Yes
+	Use for Prereleases?	Yes
+	Is Read-Only?		No
+
+n2
+	Source: 		/tmp/uplift/n2/fixtures/p9/repo/*
+	Enabled?		Yes
+	Available?		Yes
+	Use for Snapshots?	Yes
+	Use for Prereleases?	Yes
+	Is Read-Only?		No
+
+CMD< OK
+
+CMD> history delete -confirm
+
+Deleted 20 record(s).
+CMD< OK
+
+CMD> load /tmp/uplift/n2/fixtures/p9/top/n2-solo/
+
+Building dependency graph...Done.
+[USER|n2-solo]	Initialize START
+[USER|n2-solo]	Initialize SUCCESS
+[USER|n2-solo]	Reload START (/tmp/uplift/n2/fixtures/p9/top/n2-solo/)
+[USER|n2-solo]	Reload SUCCESS
+[n2-solo]	Module object refreshed.
+[USER|n2-solo]	Validate START
+[USER|n2-solo]	Validate SUCCESS
+[USER|n2-solo]	Compile START
+[USER|n2-solo]	Compile SUCCESS
+[USER|n2-solo]	Activate START
+[USER|n2-solo]	Configure START
+[USER|n2-solo]	Configure SUCCESS
+[USER|n2-solo]	Activate SUCCESS
+CMD< OK
+
+CMD> load /tmp/uplift/n2/fixtures/p9/top/n2-ca/
+
+Building dependency graph...Done.
+Building dependency graph...Done.
+[USER|n2-cc]	Initialize START
+[USER|n2-cc]	Initialize SUCCESS
+[USER|n2-cc]	Reload START (/tmp/uplift/n2/fixtures/p9/repo/n2-cc/)
+[USER|n2-cc]	Reload SUCCESS
+[n2-cc]	Module object refreshed.
+[USER|n2-cc]	Validate START
+[USER|n2-cc]	Validate SUCCESS
+[USER|n2-cc]	Compile START
+[USER|n2-cc]	Compile SUCCESS
+[USER|n2-cc]	Activate START
+[USER|n2-cc]	Configure START
+[USER|n2-cc]	Configure SUCCESS
+[USER|n2-cc]	Activate SUCCESS
+Building dependency graph...Done.
+[USER|n2-cb]	Initialize START
+[USER|n2-cb]	Initialize SUCCESS
+[USER|n2-cb]	Reload START (/tmp/uplift/n2/fixtures/p9/repo/n2-cb/)
+[USER|n2-cb]	Reload SUCCESS
+[n2-cb]	Module object refreshed.
+[USER|n2-cb]	Validate START
+[USER|n2-cb]	Validate SUCCESS
+[USER|n2-cb]	Compile START
+[USER|n2-cb]	Compile SUCCESS
+[USER|n2-cb]	Activate START
+[USER|n2-cb]	Configure START
+[USER|n2-cb]	Configure SUCCESS
+[USER|n2-cb]	Activate SUCCESS
+[USER|n2-ca]	Initialize START
+[USER|n2-ca]	Initialize SUCCESS
+[USER|n2-ca]	Reload START (/tmp/uplift/n2/fixtures/p9/top/n2-ca/)
+[USER|n2-ca]	Reload SUCCESS
+[n2-ca]	Module object refreshed.
+[USER|n2-ca]	Validate START
+[USER|n2-ca]	Validate SUCCESS
+[USER|n2-ca]	Compile START
+[USER|n2-ca]	Compile SUCCESS
+[USER|n2-ca]	Activate START
+[USER|n2-ca]	Configure START
+[USER|n2-ca]	Configure SUCCESS
+[USER|n2-ca]	Activate SUCCESS
+CMD< OK
+
+CMD> load /tmp/uplift/n2/fixtures/p6/n2-upd-1.0.0/
+
+Building dependency graph...Done.
+[USER|n2-upd]	Initialize START
+[USER|n2-upd]	Initialize SUCCESS
+[USER|n2-upd]	Reload START (/tmp/uplift/n2/fixtures/p6/n2-upd-1.0.0/)
+[USER|n2-upd]	Reload SUCCESS
+[n2-upd]	Module object refreshed.
+[USER|n2-upd]	Validate START
+[USER|n2-upd]	Validate SUCCESS
+[USER|n2-upd]	Compile START
+[USER|n2-upd]	Compile SUCCESS
+[USER|n2-upd]	Activate START
+[USER|n2-upd]	Configure START
+[USER|n2-upd]	Configure SUCCESS
+[USER|n2-upd]	Activate SUCCESS
+CMD< OK
+
+OBS|nc-gap-P7-full-prepare|loadChain=1;loadSolo=1;loadUpd=1;pre.cls:%IPM.General.History=compiled;pre.cls:%IPM.General.HistoryTemp=compiled;pre.cls:%IPM.Main=compiled;pre.cls:%IPM.Storage.Module=compiled;pre.cls:N2CA.Marker=compiled;pre.cls:N2CB.Marker=compiled;pre.cls:N2CC.Marker=compiled;pre.cls:N2Solo.Marker=compiled;pre.cls:N2Upd.Upd.V1=compiled;pre.historyLast=id38/load/n2-upd/committed:1/ended:1/finalized:1;pre.historyRows=5;pre.ipmClassDefs=183;pre.ipmGlobals=IPM.General.HistoryD IPM.General.HistoryI IPM.Repo.DefinitionD IPM.Repo.DefinitionI IPM.Repo.Filesystem.CacheD IPM.Repo.Filesystem.CacheI IPM.Repo.Filesystem.CacheS IPM.Storage.InvokeReferenceC IPM.Storage.ModuleD IPM.Storage.ModuleI IPM.Storage.ResourceReferenceC IPM.Storage.ResourceReferenceI IPM.Storage.SystemRequirementsD IPM.StudioDoc.ModuleStreamD IPM.StudioDoc.ModuleStreamI IPM.StudioDoc.ModuleStreamS IPM.UpdateStep.AnyMemberD IPM.UpdateStep.AnyMemberI;pre.iristempHistoryTemp=1;pre.iristempLoadedResource=11;pre.moduleRecordNames=1:zpm 5:n2-solo 6:n2-ca 7:n2-cc 8:n2-cb 9:n2-upd;pre.moduleRecords=6;pre.sysClassMappingIPM=1;pre.sysIpmSettings=10;pre.sysRoutineMappingIPM=1;pre.userData=1;
+
+USER>
+
+The following modules are currently installed:
+  - n2-solo (1.0.0)
+  - n2-ca (1.0.0)
+  - n2-cc (1.0.0)
+  - n2-cb (1.0.0)
+  - n2-upd (1.0.0)
+
+Do you want to fully remove all modules and IPM metadata (except history log)? This is required for downgrading IPM. 
+  No => 
+Performing full cleanup: uninstalling all modules...
+Uninstalling n2-ca
+[USER|n2-ca]	Clean START
+[USER|n2-ca]	Unconfigure START
+[USER|n2-ca]	Unconfigure SUCCESS
+[USER|n2-ca]	Clean SUCCESS
+Uninstalling n2-cb
+[USER|n2-cb]	Clean START
+[USER|n2-cb]	Unconfigure START
+[USER|n2-cb]	Unconfigure SUCCESS
+[USER|n2-cb]	Clean SUCCESS
+Uninstalling n2-cc
+[USER|n2-cc]	Clean START
+[USER|n2-cc]	Unconfigure START
+[USER|n2-cc]	Unconfigure SUCCESS
+[USER|n2-cc]	Clean SUCCESS
+Uninstalling n2-solo
+[USER|n2-solo]	Clean START
+[USER|n2-solo]	Unconfigure START
+[USER|n2-solo]	Unconfigure SUCCESS
+[USER|n2-solo]	Clean SUCCESS
+Uninstalling n2-upd
+[USER|n2-upd]	Clean START
+[USER|n2-upd]	Unconfigure START
+[USER|n2-upd]	Unconfigure SUCCESS
+[USER|n2-upd]	Clean SUCCESS
+[USER|ZPM]	Clean START
+[USER|ZPM]	Unconfigure START
+[USER|ZPM]	Unconfigure SUCCESS
+[USER|ZPM]	Clean SUCCESS
+
+IPM has been uninstalled from this namespace. Exiting shell...
+
+USER>
+
+OBS|nc-gap-P7-full-cleanup-yes|cls:%IPM.General.History=absent;cls:%IPM.General.HistoryTemp=absent;cls:%IPM.Main=absent;cls:%IPM.Storage.Module=absent;cls:N2CA.Marker=absent;cls:N2CB.Marker=absent;cls:N2CC.Marker=absent;cls:N2Solo.Marker=absent;cls:N2Upd.Upd.V1=absent;historyLast=id44/uninstall/zpm/committed:1/ended:1/finalized:1;historyRows=11;ipmClassDefs=0;ipmGlobals=IPM.General.HistoryD IPM.General.HistoryI IPM.Repo.Filesystem.CacheI IPM.Repo.Filesystem.CacheS;iristempHistoryTemp=0;iristempLoadedResource=0;moduleRecordNames=<none>;moduleRecords=0;selfUninstallFlagLeft=0;status=ok;sysClassMappingIPM=1;sysIpmSettings=10;sysRoutineMappingIPM=1;userData=1;
+
+USER>

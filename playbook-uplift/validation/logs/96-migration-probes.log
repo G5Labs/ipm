@@ -1,0 +1,40 @@
+# container: ipm-uplift-n1-mig  image: containers.intersystems.com/intersystems/iris-community:2026.1  at: 2026-11-13T19:38:55Z
+# script: validation/iris/n1/96-migration-probes.script
+
+Node: 5f4c9d0b68d7, Instance: IRIS
+
+USER>
+
+%SYS>
+
+OBS|nc-mig-ipm-mapped-globally|allNamespacesShareUserIPMdb=0;sysEqualsUser=1;perNamespace=%SYS:userDB USER:userDB ^^/usr/irissys/mgr/:^/usr/irissys/mgr/irislib/ ;
+
+%SYS>
+
+OBS|nc-mig-legacy-classes-remain|hasLegacyZPMPackage=1;zpmPackageManagerCompiled=1;
+
+%SYS>
+
+OBS|nc-mig-module-records|perNamespace=%SYS:ipm=1(zpm,)/legacy=1 USER:ipm=4(dsw,mdx2json,sslclient,ipm-migration-v0.7-to-v0.9,)/legacy=3 ;
+
+USER 1S1>
+
+USER 1S1>
+
+OBS|nc-mig-repos-user|repos=registry[%IPM.Repo.Remote.Definition enabled:1 url:http://registry:52773/registry/ user:admin] ;legacyRepoRows=1;
+
+USER 1S1>
+
+OBS|nc-mig-community-registry-enabled|communityRepoEnabledInUSER=0;
+
+USER 1S1>
+
+%SYS 1S1>
+
+OBS|nc-mig-repo-storage-not-mapped|repoGlobalDestUSER=^/usr/irissys/mgr/user/;repoGlobalDestSYS=^/usr/irissys/mgr/;sysRepoRows=1;
+
+%SYS 1S1>
+
+OBS|nc-mig-package-mappings|mappings=%SYS>%IPM@IRISSYS USER>%IPM@IRISSYS USER>CSPX.Dashboard@ENSLIB USER>Ens@ENSLIB USER>EnsLib@ENSLIB USER>EnsPortal@ENSLIB ;
+
+%SYS 1S1>

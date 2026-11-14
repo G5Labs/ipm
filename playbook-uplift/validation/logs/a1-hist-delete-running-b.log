@@ -1,0 +1,173 @@
+# container: ipm-uplift-iris  image: containers.intersystems.com/intersystems/iris-community:2026.1  at: 2026-11-13T23:25:31Z
+# script: validation/iris/r4/hist/07-delete-running-b.script
+
+Node: 37eecb272560, Instance: IRIS
+
+USER>
+
+LOAD 1 
+
+USER>
+
+SETUP hooks 1
+
+CMD> repo -n r4hist -fs -path /tmp/uplift/r4/hist/fixtures/repo/
+
+r4h-dep-wait 1.0.0 @ /tmp/uplift/r4/hist/fixtures/repo/r4h-dep-wait/
+r4hist
+	Source: 		/tmp/uplift/r4/hist/fixtures/repo/*
+	Enabled?		Yes
+	Available?		Yes
+	Use for Snapshots?	Yes
+	Use for Prereleases?	Yes
+	Is Read-Only?		No
+
+uplift
+	Source: 		/tmp/uplift/fixtures/repo/*
+	Enabled?		Yes
+	Available?		Yes
+	Use for Snapshots?	Yes
+	Use for Prereleases?	Yes
+	Is Read-Only?		No
+
+r4hist
+	Source: 		/tmp/uplift/r4/hist/fixtures/repo/*
+	Enabled?		Yes
+	Available?		Yes
+	Use for Snapshots?	Yes
+	Use for Prereleases?	Yes
+	Is Read-Only?		No
+
+CMD< OK
+
+USER>
+
+OBS|r4-hist-delete-in-compile-txn-during|cls:R4HWc.Marker=defined;historyRows=1;historyTempData=11;mod:r4h-wait-compile=1.0.0;row1=id175/load//success:err/committed:0/ended:0/finalized:0/phases:;rowId=175;tlevel=0;tlevelInPhase=1;waiting=1;
+
+CMD> history delete -DID=175
+
+Deleted 1 record(s).
+CMD< OK
+
+OBS|r4-hist-delete-in-compile-txn-after-release|cls:R4HWc.Marker=compiled;deleteById=ok;historyRows=0;historyTempData=1;jobGone=1;jobResult=ok;mod:r4h-wait-compile=1.0.0;rowExistsAfterDelete=0;rowExistsAfterRelease=0;tlevel=0;
+
+CMD> uninstall r4h-wait-compile -force
+
+[USER|r4h-wait-compile]	Clean START
+[USER|r4h-wait-compile]	Unconfigure START
+[USER|r4h-wait-compile]	Unconfigure SUCCESS
+[USER|r4h-wait-compile]	Clean SUCCESS
+CMD< OK
+
+USER>
+
+OBS|r4-hist-delete-in-compile-dev-during|cls:R4HWc.Marker=defined;historyRows=1;historyTempData=11;mod:r4h-wait-compile=1.0.0/dev;row1=id177/load//success:err/committed:0/ended:0/finalized:0/phases:;rowId=177;tlevel=0;tlevelInPhase=0;waiting=1;
+
+CMD> history delete -DID=177
+
+Deleted 1 record(s).
+CMD< OK
+
+OBS|r4-hist-delete-in-compile-dev-after-release|cls:R4HWc.Marker=compiled;deleteById=ok;historyRows=0;historyTempData=1;jobGone=1;jobResult=ok;mod:r4h-wait-compile=1.0.0/dev;rowExistsAfterDelete=0;rowExistsAfterRelease=0;tlevel=0;
+
+CMD> uninstall r4h-wait-compile -force
+
+[USER|r4h-wait-compile]	Clean START
+[USER|r4h-wait-compile]	Unconfigure START
+[USER|r4h-wait-compile]	Unconfigure SUCCESS
+[USER|r4h-wait-compile]	Clean SUCCESS
+CMD< OK
+
+USER>
+
+OBS|r4-hist-delete-dep-row-txn-during|cls:R4HDep.Marker=compiled;depRowId=180;historyRows=2;historyTempData=11;mod:r4h-dep-wait=1.0.0;mod:r4h-parent=1.0.0;parentRowId=179;row1=id179/load//success:err/committed:0/ended:0/finalized:0/phases:;row2=id180/load/r4h-dep-wait/success:err/committed:0/ended:0/finalized:0/phases:;tlevel=0;tlevelInDepActivate=2;waiting=1;
+
+CMD> history delete -DID=180
+
+[31mERROR![0m SQLCODE: -110 Message: Unable to acquire lock for DELETE of table '%IPM_General.History' on row with RowID = '180'
+CMD< ERROR #5540: SQLCODE: -110 Message: Unable to acquire lock for DELETE of table '%IPM_General.History' on row with RowID : '180'
+
+CMD> history delete -DID=179
+
+Deleted 1 record(s).
+CMD< OK
+
+OBS|r4-hist-delete-dep-row-txn-after-release|cls:R4HDep.Marker=compiled;cls:R4HPar.Marker=compiled;deleteDep=err:ERROR #5540: SQLCODE: -110 Message: Unable to acquire lock for DELETE of table '%IPM_General.History' on row with RowID : '180';deleteDepSecs=10.0;deleteParent=ok;depRowExistsAfterDelete=1;depRowExistsAfterRelease=1;historyRows=2;historyTempData=1;jobGone=1;jobResult=ok;mod:r4h-dep-wait=1.0.0;mod:r4h-parent=1.0.0;parentRowExistsAfterDelete=0;parentRowExistsAfterRelease=0;row1=id180/load/r4h-dep-wait/success:ok/committed:1/ended:1/finalized:1/phases:Initialize:ok Reload:ok Validate:ok Compile:ok Activate:ok;row2=id181/load//success:err/committed:0/ended:1/finalized:1/phases:;tlevel=0;
+
+CMD> uninstall r4h-parent -force
+
+[USER|r4h-parent]	Clean START
+[USER|r4h-parent]	Unconfigure START
+[USER|r4h-parent]	Unconfigure SUCCESS
+[USER|r4h-parent]	Clean SUCCESS
+CMD< OK
+
+CMD> uninstall r4h-dep-wait -force
+
+[USER|r4h-dep-wait]	Clean START
+[USER|r4h-dep-wait]	Unconfigure START
+[USER|r4h-dep-wait]	Unconfigure SUCCESS
+[USER|r4h-dep-wait]	Clean SUCCESS
+CMD< OK
+
+USER>
+
+OBS|r4-hist-delete-dep-row-notxn-during|cls:R4HDep.Marker=compiled;depRowId=184;historyRows=1;historyTempData=11;mod:r4h-dep-wait=1.0.0;mod:r4h-parent=1.0.0;parentRowId=184;row1=id184/load//success:err/committed:0/ended:0/finalized:0/phases:;tlevel=0;tlevelInDepActivate=0;waiting=1;
+
+CMD> history delete -DID=184
+
+Deleted 1 record(s).
+CMD< OK
+
+CMD> history delete -DID=184
+
+Deleted 0 record(s).
+CMD< OK
+
+OBS|r4-hist-delete-dep-row-notxn-after-release|deleteDep=ok;deleteDepSecs=0.0;deleteParent=ok;depRowExistsAfterDelete=0;depRowExistsAfterRelease=0;historyRows=2;historyTempData=1;jobGone=1;jobResult=ok;parentRowExistsAfterDelete=0;parentRowExistsAfterRelease=0;row1=id186/uninstall/r4h-parent/success:ok/committed:1/ended:1/finalized:1/phases:Clean:ok;row2=id187/uninstall/r4h-dep-wait/success:ok/committed:1/ended:1/finalized:1/phases:Clean:ok;tlevel=0;
+
+CMD> uninstall r4h-parent -force
+
+[31mERROR![0m Module 'r4h-parent' not found.
+CMD< ERROR #5001: Module 'r4h-parent' not found.
+
+CMD> uninstall r4h-dep-wait -force
+
+[31mERROR![0m Module 'r4h-dep-wait' not found.
+CMD< ERROR #5001: Module 'r4h-dep-wait' not found.
+
+USER>
+
+OBS|r4-hist-delete-dep-row-dev-during|cls:R4HDep.Marker=compiled;depRowId=191;historyRows=2;historyTempData=11;mod:r4h-dep-wait=1.0.0;mod:r4h-parent=1.0.0/dev;parentRowId=190;row1=id190/load//success:err/committed:0/ended:0/finalized:0/phases:;row2=id191/load/r4h-dep-wait/success:err/committed:0/ended:0/finalized:0/phases:;tlevel=0;tlevelInDepActivate=2;waiting=1;
+
+CMD> history delete -DID=191
+
+[31mERROR![0m SQLCODE: -110 Message: Unable to acquire lock for DELETE of table '%IPM_General.History' on row with RowID = '191'
+CMD< ERROR #5540: SQLCODE: -110 Message: Unable to acquire lock for DELETE of table '%IPM_General.History' on row with RowID : '191'
+
+CMD> history delete -DID=190
+
+Deleted 1 record(s).
+CMD< OK
+
+OBS|r4-hist-delete-dep-row-dev-after-release|cls:R4HDep.Marker=compiled;cls:R4HPar.Marker=compiled;deleteDep=err:ERROR #5540: SQLCODE: -110 Message: Unable to acquire lock for DELETE of table '%IPM_General.History' on row with RowID : '191';deleteDepSecs=10.0;deleteParent=ok;depRowExistsAfterDelete=1;depRowExistsAfterRelease=1;historyRows=1;historyTempData=1;jobGone=1;jobResult=ok;mod:r4h-dep-wait=1.0.0;mod:r4h-parent=1.0.0/dev;parentRowExistsAfterDelete=0;parentRowExistsAfterRelease=0;row1=id191/load/r4h-dep-wait/success:ok/committed:1/ended:1/finalized:1/phases:Initialize:ok Reload:ok Validate:ok Compile:ok Activate:ok;tlevel=0;
+
+CMD> uninstall r4h-parent -force
+
+[USER|r4h-parent]	Clean START
+[USER|r4h-parent]	Unconfigure START
+[USER|r4h-parent]	Unconfigure SUCCESS
+[USER|r4h-parent]	Clean SUCCESS
+CMD< OK
+
+CMD> uninstall r4h-dep-wait -force
+
+[USER|r4h-dep-wait]	Clean START
+[USER|r4h-dep-wait]	Unconfigure START
+[USER|r4h-dep-wait]	Unconfigure SUCCESS
+[USER|r4h-dep-wait]	Clean SUCCESS
+CMD< OK
+
+USER>
+
+USER>

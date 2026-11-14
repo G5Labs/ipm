@@ -1,0 +1,50 @@
+# container: ipm-uplift-iris  image: containers.intersystems.com/intersystems/iris-community:2026.1  at: 2026-11-13T23:29:13Z
+# script: validation/iris/r4/hist/09-delete-dep-row-notxn.script
+
+Node: 37eecb272560, Instance: IRIS
+
+USER>
+
+LOAD 1 
+
+USER>
+
+SETUP hooks 1
+
+USER>
+
+PRE mods: 00
+
+USER>
+
+OBS|r4-hist-delete-dep-row-notxn-during|cls:R4HDep.Marker=compiled;depRowId=199;historyRows=2;historyTempData=11;mod:r4h-dep-wait=1.0.0;mod:r4h-parent=1.0.0;parentRowId=198;row1=id198/load//success:err/committed:0/ended:0/finalized:0/phases:/start:23:29:13/end:/cmd:load /tmp/uplift/r4/hist/fixtures/r4h-parent/ -DNoTransactio;row2=id199/load/r4h-dep-wait/success:err/committed:0/ended:0/finalized:0/phases:/start:23:29:13/end:/cmd:load /tmp/uplift/r4/hist/fixtures/r4h-parent/ -DNoTransactio;tlevel=0;tlevelInDepActivate=0;waiting=1;
+
+CMD> history delete -DID=199
+
+Deleted 1 record(s).
+CMD< OK
+
+CMD> history delete -DID=198
+
+Deleted 1 record(s).
+CMD< OK
+
+OBS|r4-hist-delete-dep-row-notxn-after-release|cls:R4HDep.Marker=compiled;cls:R4HPar.Marker=compiled;deleteDep=ok;deleteDepSecs=0.0;deleteParent=ok;depRowExistsAfterDelete=0;depRowExistsAfterRelease=0;depWaitLoops=2;historyRows=0;historyTempData=1;jobGone=1;jobResult=ok;mod:r4h-dep-wait=1.0.0;mod:r4h-parent=1.0.0;parentRowExistsAfterDelete=0;parentRowExistsAfterRelease=0;releaseSetAt=23:29:14;releasedAt=23:29:15;tlevel=0;
+
+CMD> uninstall r4h-parent -force
+
+[USER|r4h-parent]	Clean START
+[USER|r4h-parent]	Unconfigure START
+[USER|r4h-parent]	Unconfigure SUCCESS
+[USER|r4h-parent]	Clean SUCCESS
+CMD< OK
+
+CMD> uninstall r4h-dep-wait -force
+
+[USER|r4h-dep-wait]	Clean START
+[USER|r4h-dep-wait]	Unconfigure START
+[USER|r4h-dep-wait]	Unconfigure SUCCESS
+[USER|r4h-dep-wait]	Clean SUCCESS
+CMD< OK
+
+USER>

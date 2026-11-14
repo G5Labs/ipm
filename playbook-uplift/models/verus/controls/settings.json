@@ -1,0 +1,290 @@
+[
+  {
+    "name": "impl-set-stores-wrong-value",
+    "description": "SetValue stores another value",
+    "old": "nodes: c.nodes.insert(k, Node { val: Some(v), dflt: d })",
+    "new": "nodes: c.nodes.insert(k, Node { val: Some(v + 1), dflt: d })",
+    "expect": [
+      "repo_refines_config_set"
+    ]
+  },
+  {
+    "name": "impl-get-per-namespace",
+    "description": "config get reads a per-namespace store",
+    "old": "    if c.conf.contains(k) { Some(get_value(c, k)) } else { None }",
+    "new": "    if c.conf.contains(k) && ns == 0 { Some(get_value(c, k)) } else { None }",
+    "expect": [
+      "repo_settings_shared"
+    ]
+  },
+  {
+    "name": "impl-default-overwritten",
+    "description": "SetValue overwrites the default node",
+    "old": "let d = if old.dflt is None { Some(v) } else { old.dflt };",
+    "new": "let d = Some(v);",
+    "expect": [
+      "repo_ps_kept"
+    ]
+  },
+  {
+    "name": "impl-reset-to-value",
+    "description": "ResetToDefault restores the current value",
+    "old": "else if k == k_mroot() { mroot_default() } else { default_value(c, k) };",
+    "new": "else if k == k_mroot() { mroot_default() } else { get_value(c, k) };",
+    "expect": [
+      "repo_refines_config_delete"
+    ]
+  },
+  {
+    "name": "impl-unknown-key-stored",
+    "description": "UpdateOne stores an unknown key",
+    "old": "if !c.conf.contains(k) { (c, St::Ok) }",
+    "new": "if !c.conf.contains(k) { (set_value(c, k, v), St::Ok) }",
+    "expect": [
+      "repo_config_errors_unchanged"
+    ]
+  },
+  {
+    "name": "impl-dm-set-replaces",
+    "description": "-set replaces the list",
+    "old": "dm_store(s, ns).union_prefer_right(d)) } }",
+    "new": "d) } }",
+    "expect": [
+      "repo_dm_laws"
+    ]
+  },
+  {
+    "name": "impl-dm-set-wrong-db",
+    "description": "-set writes another database",
+    "old": "pub open spec fn dm_set(s: Dm, ns: nat, d: Map<nat, nat>) -> Dm { Dm { dbs: s.dbs.insert(pct_db(ns),",
+    "new": "pub open spec fn dm_set(s: Dm, ns: nat, d: Map<nat, nat>) -> Dm { Dm { dbs: s.dbs.insert(pct_db(ns) + 1,",
+    "expect": [
+      "repo_refines_dm_set"
+    ]
+  },
+  {
+    "name": "impl-first-row-ignores-enabled",
+    "description": "the per-kind query has no Enabled filter",
+    "old": "else if rs.last().kind == k && rs.last().enabled { Some(rs.len() - 1) }",
+    "new": "else if rs.last().kind == k { Some(rs.len() - 1) }",
+    "expect": [
+      "repo_first_of"
+    ]
+  },
+  {
+    "name": "impl-missing-name-falls-back",
+    "description": "publish -r with an unknown name falls back to registry ID 1",
+    "old": "match t { Some(i) => if rs[i].kind == Kind::Folder { None } else { Some(i) }, None => None }",
+    "new": "match t { Some(i) => if rs[i].kind == Kind::Folder { None } else { Some(i) }, None => if rs.len() > 0 { Some(0) } else { None } }",
+    "expect": [
+      "repo_publish_named_missing"
+    ]
+  },
+  {
+    "name": "impl-flag-ranked-last",
+    "description": "the publish flag ranks after credentials",
+    "old": "if r.deploy { 1 } else",
+    "new": "if r.deploy { 4 } else",
+    "expect": [
+      "repo_refines_publish_default"
+    ]
+  },
+  {
+    "name": "impl-publish-to-folder",
+    "description": "publish accepts a folder registry",
+    "old": "Some(i) => if rs[i].kind == Kind::Folder { None } else { Some(i) }, None => None }",
+    "new": "Some(i) => Some(i), None => None }",
+    "expect": [
+      "repo_refines_publish_named"
+    ]
+  },
+  {
+    "name": "impl-search-extra-row",
+    "description": "search lists a row past the end",
+    "old": "pub open spec fn search_lists(rs: Seq<Reg>, i: int) -> bool { 0 <= i < rs.len() }",
+    "new": "pub open spec fn search_lists(rs: Seq<Reg>, i: int) -> bool { 0 <= i <= rs.len() }",
+    "expect": [
+      "repo_refines_search"
+    ]
+  },
+  {
+    "name": "impl-install-ignores-enabled",
+    "description": "install lookup has no Enabled filter",
+    "old": "if !rs[i].enabled || rs[i].offer is None { b }",
+    "new": "if rs[i].offer is None { b }",
+    "expect": [
+      "repo_install_pick"
+    ]
+  },
+  {
+    "name": "impl-install-tie-to-newest-id",
+    "description": "equal versions go to the newest registry",
+    "old": "else if b is None || rs[i].offer->0 > rs[b->0].offer->0 { Some(i) } else { b }",
+    "new": "else if b is None || rs[i].offer->0 >= rs[b->0].offer->0 { Some(i) } else { b }",
+    "expect": [
+      "repo_install_pick"
+    ]
+  },
+  {
+    "name": "impl-valid-set-reports-err",
+    "description": "worked => success: config set of a known key with a valid value reports failure",
+    "old": "if v == empty_v() { (c, St::Ok) } else { (update_one(c, k, v).0, St::Ok) }",
+    "new": "if v == empty_v() { (c, St::Ok) } else { (update_one(c, k, v).0, if c.conf.contains(k) { St::Err } else { St::Ok }) }",
+    "expect": [
+      "repo_refines_config_set"
+    ]
+  },
+  {
+    "name": "impl-delete-reports-err",
+    "description": "worked => success: config delete of a known key reports failure",
+    "old": "(reset(c, k), St::Ok)",
+    "new": "(reset(c, k), St::Err)",
+    "expect": [
+      "repo_refines_config_delete"
+    ]
+  },
+  {
+    "name": "impl-publish-both-kinds-none",
+    "description": "worked => success: publish with no -repo finds no target when both kinds have an enabled registry",
+    "old": "else if key_lt(rs[o->0], rs[r->0]) { o } else { r }",
+    "new": "else { None }",
+    "expect": [
+      "repo_refines_publish_default"
+    ]
+  },
+  {
+    "name": "premise-drop-ps",
+    "description": "drop PS",
+    "old": "requires c.conf.contains(k), premise_ps(c, k)\n",
+    "new": "requires c.conf.contains(k)\n",
+    "expect": [
+      "repo_refines_config_delete"
+    ]
+  },
+  {
+    "name": "premise-drop-pns",
+    "description": "drop PNS",
+    "old": "requires nss.contains(ns), premise_pns(nss, ns)\n",
+    "new": "requires nss.contains(ns)\n",
+    "expect": [
+      "repo_refines_dm_set"
+    ]
+  },
+  {
+    "name": "premise-drop-ph",
+    "description": "drop PH",
+    "old": "requires premise_ph(rs), premise_pu(rs), premise_pk(rs)",
+    "new": "requires premise_pu(rs), premise_pk(rs)",
+    "expect": [
+      "repo_refines_publish_default"
+    ]
+  },
+  {
+    "name": "premise-drop-pu",
+    "description": "drop PU",
+    "old": "requires premise_ph(rs), premise_pu(rs), premise_pk(rs)",
+    "new": "requires premise_ph(rs), premise_pk(rs)",
+    "expect": [
+      "repo_refines_publish_default"
+    ]
+  },
+  {
+    "name": "premise-drop-pk",
+    "description": "drop PK",
+    "old": "requires premise_ph(rs), premise_pu(rs), premise_pk(rs)",
+    "new": "requires premise_ph(rs), premise_pu(rs)",
+    "expect": [
+      "repo_refines_publish_default"
+    ]
+  },
+  {
+    "name": "premise-drop-pe-named",
+    "description": "drop PE for publish -r",
+    "old": "requires wf_regs(rs), premise_pe_named(rs, n)",
+    "new": "requires wf_regs(rs)",
+    "expect": [
+      "repo_refines_publish_named"
+    ]
+  },
+  {
+    "name": "premise-drop-pe-search",
+    "description": "drop PE for search",
+    "old": "    requires premise_pe_all(rs)\n",
+    "new": "",
+    "expect": [
+      "repo_refines_search"
+    ]
+  },
+  {
+    "name": "premise-drop-pt",
+    "description": "drop PT",
+    "old": "    requires premise_pt(rs)\n",
+    "new": "",
+    "expect": [
+      "repo_refines_install_pick"
+    ]
+  },
+  {
+    "name": "l1-factory-is-stored-default",
+    "description": "vacuity: L1 whose factory default is the stored default loses the config-delete witness",
+    "old": "    else if c.seed.contains_key(k) { c.seed[k] } else { empty_v() }",
+    "new": "    else if c.seed.contains_key(k) { c.seed[k] } else { default_value(c, k) }",
+    "expect": [
+      "repo_witness_delete_restores_first_value"
+    ]
+  },
+  {
+    "name": "l1-status-unchecked",
+    "description": "vacuity: L1 without a status rule loses the config-errors witness",
+    "old": "pub open spec fn l1_config_status(c: Cfg, k: nat, v: nat, st: St) -> bool { (st == St::Ok) == valid_set(c, k, v) }",
+    "new": "pub open spec fn l1_config_status(c: Cfg, k: nat, v: nat, st: St) -> bool { true }",
+    "expect": [
+      "repo_witness_config_errors_report_ok"
+    ]
+  },
+  {
+    "name": "l1-dm-shared",
+    "description": "vacuity: L1 with one shared list loses the default-modifiers witness",
+    "old": "    a.insert(ns, (if a.contains_key(ns) { a[ns] } else { Map::empty() }).union_prefer_right(d))",
+    "new": "    Map::new(a.dom(), |x: nat| (if a.contains_key(ns) { a[ns] } else { Map::empty() }).union_prefer_right(d))",
+    "expect": [
+      "repo_witness_dm_shared"
+    ]
+  },
+  {
+    "name": "l1-publish-any-enabled-a",
+    "description": "vacuity: L1 that accepts any enabled registry loses the fallback witness",
+    "old": "            Some(i) => holder(rs, i),",
+    "new": "            Some(i) => 0 <= i < rs.len() && rs[i].enabled,",
+    "expect": [
+      "repo_witness_publish_fallback"
+    ]
+  },
+  {
+    "name": "l1-publish-any-enabled-b",
+    "description": "vacuity: L1 that accepts any enabled registry loses the ignored-flag witness",
+    "old": "            Some(i) => holder(rs, i),",
+    "new": "            Some(i) => 0 <= i < rs.len() && rs[i].enabled,",
+    "expect": [
+      "repo_witness_publish_flag_ignored"
+    ]
+  },
+  {
+    "name": "l1-search-any",
+    "description": "vacuity: L1 search that lists disabled registries loses the disabled-registry witness",
+    "old": "pub open spec fn l1_search(rs: Seq<Reg>, i: int) -> bool { 0 <= i < rs.len() && rs[i].enabled }",
+    "new": "pub open spec fn l1_search(rs: Seq<Reg>, i: int) -> bool { 0 <= i < rs.len() }",
+    "expect": [
+      "repo_witness_disabled_registry_used"
+    ]
+  },
+  {
+    "name": "l1-no-sort-order",
+    "description": "vacuity: L1 without the sort-order tie-break loses the tie-break witness",
+    "old": " || (rs[i].offer->0 == rs[j].offer->0 && sort_order(rs, i) < sort_order(rs, j))",
+    "new": "",
+    "expect": [
+      "repo_witness_install_tie_break"
+    ]
+  }
+]

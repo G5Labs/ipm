@@ -1,0 +1,451 @@
+{
+  "about": "Playbook 3.3a system semantics for IPM 571e04a1. Axioms, shared mechanisms, lifecycles, global invariants with read sets, and the coverage of every (invariant, command) pair whose measured write set meets the invariant's read set. Write sets are measured on IRIS (validation/iris/Uplift/Probe/WriteSet.cls, observations ws-*). scripts/semantics_gate.py generates semantics/COVERAGE.md and fails on any uncovered pair.",
+  "axioms": {
+    "A1": "Every install, load, update and uninstall leaves a history record; other commands (compile, sync, package, publish, configuration) are not logged by design.",
+    "A2": "A refusal changes nothing and reports a failure.",
+    "A3": "A normal command is all or nothing.",
+    "A4": "Developer mode and no-transaction loads may keep part of their work, and the record says so.",
+    "A5": "Each fact has one owning mechanism that writes it.",
+    "A6": "A command changes only the modules and records it names (frame).",
+    "A7": "What a record says (success, committed, end time, module) is true, including after a crash.",
+    "A8": "Module and registry names are identities compared without case.",
+    "A9": "A module's version moves forward only; going back needs an explicit uninstall.",
+    "A10": "Removing a module removes exactly what it owns and keeps what is shared or marked kept.",
+    "A11": "After any command, every installed module's requirements are satisfied.",
+    "A12": "A setting reads back what was last written, in the scope the documentation gives it.",
+    "A13": "Module author code runs only in the phase it declares, and its failure fails that phase."
+  },
+  "mechanisms": {
+    "M-HIST": {
+      "owns": [
+        "History"
+      ],
+      "axioms": [
+        "A1",
+        "A7"
+      ],
+      "where": "General/AbstractHistory.cls, HistoryTemp.cls, History.cls"
+    },
+    "M-TXN": {
+      "owns": [],
+      "axioms": [
+        "A3",
+        "A4"
+      ],
+      "where": "Utils/Module.cls LoadNewModule #L1152-L1364"
+    },
+    "M-GUARD": {
+      "owns": [],
+      "axioms": [
+        "A2",
+        "A9"
+      ],
+      "where": "Utils/Module.cls #L1213-L1222, LoadModuleReference #L102-L126"
+    },
+    "M-RESOLVE": {
+      "owns": [],
+      "axioms": [
+        "A11"
+      ],
+      "where": "Storage/Module.cls BuildDependencyGraph"
+    },
+    "M-MODREC": {
+      "owns": [
+        "ModuleRecords",
+        "ModuleCode"
+      ],
+      "axioms": [
+        "A5",
+        "A6"
+      ],
+      "where": "Storage/Module.cls, Lifecycle/Base.cls"
+    },
+    "M-STEPS": {
+      "owns": [
+        "UpdateSteps"
+      ],
+      "axioms": [
+        "A9",
+        "A13"
+      ],
+      "where": "Storage/Module.cls ApplyUpdateSteps, General/Update"
+    },
+    "M-CLEAN": {
+      "owns": [],
+      "axioms": [
+        "A10",
+        "A11"
+      ],
+      "where": "Lifecycle/Base.cls %Clean, ResourceProcessor/*"
+    },
+    "M-REPO": {
+      "owns": [
+        "Registries"
+      ],
+      "axioms": [
+        "A5",
+        "A8"
+      ],
+      "where": "Repo/*"
+    },
+    "M-SETTINGS": {
+      "owns": [
+        "Settings"
+      ],
+      "axioms": [
+        "A12"
+      ],
+      "where": "Repo/UniversalSettings.cls, Main.cls config/default-modifiers"
+    },
+    "M-MAP": {
+      "owns": [
+        "InstanceConfig",
+        "MappedNamespaceMeta"
+      ],
+      "axioms": [
+        "A12",
+        "A6"
+      ],
+      "where": "Main.cls enable/unmap, preload Installer.cls"
+    },
+    "M-SYNC": {
+      "owns": [
+        "SyncBaselines"
+      ],
+      "axioms": [
+        "A7"
+      ],
+      "where": "General/Sync/*, Storage/FileHash.cls"
+    }
+  },
+  "lifecycles": {
+    "module": {
+      "states": [
+        "absent",
+        "installed",
+        "installed (developer mode)",
+        "manifest only (developer mode, failed after first commit)"
+      ],
+      "commands": [
+        "load",
+        "install",
+        "update",
+        "reinstall",
+        "uninstall",
+        "sync",
+        "compile"
+      ],
+      "spec": "ontology/01, 03, 05, 09 cells"
+    },
+    "history record": {
+      "states": [
+        "absent",
+        "running (Init row durable)",
+        "finalized",
+        "crashed (no end time)"
+      ],
+      "commands": [
+        "command start",
+        "end",
+        "crash",
+        "history delete",
+        "auto-purge"
+      ],
+      "spec": "ontology/02 cells H1-H6 x E1-E7"
+    }
+  },
+  "modules": {
+    "00-system": {
+      "mechanisms": [],
+      "axioms": [
+        "A1",
+        "A5",
+        "A6"
+      ]
+    },
+    "01-package-loading": {
+      "mechanisms": [
+        "M-TXN",
+        "M-GUARD",
+        "M-MODREC",
+        "M-HIST"
+      ],
+      "axioms": [
+        "A2",
+        "A3",
+        "A4",
+        "A6",
+        "A9"
+      ]
+    },
+    "02-transaction-history": {
+      "mechanisms": [
+        "M-HIST"
+      ],
+      "axioms": [
+        "A1",
+        "A7"
+      ]
+    },
+    "03-install-update": {
+      "mechanisms": [
+        "M-GUARD",
+        "M-STEPS",
+        "M-TXN"
+      ],
+      "axioms": [
+        "A2",
+        "A9",
+        "A13"
+      ]
+    },
+    "04-dependencies": {
+      "mechanisms": [
+        "M-RESOLVE"
+      ],
+      "axioms": [
+        "A11",
+        "A8"
+      ]
+    },
+    "05-uninstall": {
+      "mechanisms": [
+        "M-CLEAN",
+        "M-HIST"
+      ],
+      "axioms": [
+        "A10",
+        "A11",
+        "A7"
+      ]
+    },
+    "06-registries": {
+      "mechanisms": [
+        "M-REPO",
+        "M-SETTINGS"
+      ],
+      "axioms": [
+        "A8",
+        "A12",
+        "A5"
+      ]
+    },
+    "07-namespace": {
+      "mechanisms": [
+        "M-MAP"
+      ],
+      "axioms": [
+        "A12",
+        "A6"
+      ]
+    },
+    "08-resources": {
+      "mechanisms": [
+        "M-MODREC"
+      ],
+      "axioms": [
+        "A13",
+        "A10"
+      ]
+    },
+    "09-sync": {
+      "mechanisms": [
+        "M-SYNC"
+      ],
+      "axioms": [
+        "A7"
+      ]
+    }
+  },
+  "global_classes": {
+    "History": [
+      "USERDB:^IPM.General.HistoryD",
+      "USERDB:^IPM.General.HistoryI",
+      "IRISTEMP:^IRIS.Temp.HistoryTempD"
+    ],
+    "ModuleRecords": [
+      "USERDB:^IPM.Storage.ModuleD",
+      "USERDB:^IPM.Storage.ModuleI",
+      "USERDB:^IPM.Storage.ResourceReferenceC",
+      "USERDB:^IPM.Storage.ResourceReferenceI",
+      "USERDB:^IPM.Storage.InvokeReferenceC",
+      "USERDB:^IPM.StudioDoc.ModuleStreamD",
+      "USERDB:^IPM.StudioDoc.ModuleStreamI",
+      "USERDB:^IPM.StudioDoc.ModuleStreamS"
+    ],
+    "ModuleCode": [
+      "USERDB:^oddDEF",
+      "USERDB:^oddCOM",
+      "USERDB:^oddDEP",
+      "USERDB:^rOBJ",
+      "USERDB:^ROUTINE",
+      "USERDB:^rINDEX",
+      "USERDB:^rINDEXCLASS",
+      "USERDB:^rMAP",
+      "USERDB:^ISC.Src.Jrn",
+      "USERDB:^Sources",
+      "USERDB:^oddEXT",
+      "USERDB:^oddPROJECT",
+      "USERDB:^rINC",
+      "USERDB:^rINCSAVE"
+    ],
+    "Registries": [
+      "USERDB:^IPM.Repo.DefinitionD",
+      "USERDB:^IPM.Repo.DefinitionI",
+      "USERDB:^IPM.Repo.Filesystem.CacheD",
+      "USERDB:^IPM.Repo.Filesystem.CacheI",
+      "USERDB:^IPM.Repo.Filesystem.CacheS"
+    ],
+    "SyncBaselines": [
+      "USERDB:^IPM.Storage.FileHashD",
+      "USERDB:^IPM.Storage.FileHashI"
+    ],
+    "Settings": [
+      "IRISSYS:^IPM.settings",
+      "IRISSYS:^%IPM.DefaultModifiers"
+    ],
+    "IpmWorkingData": [
+      "IRISTEMP:^IRIS.Temp.IPM.LoadedResourceD",
+      "IRISTEMP:^IRIS.Temp.IPM.LoadedResourceI"
+    ],
+    "SystemBookkeeping": [
+      "IRISLOCALDATA:^%sqlcq",
+      "IRISLOCALDATA:^IRIS.WorkQueue",
+      "IRISLOCALDATA:^ISC.Src.Jrn",
+      "IRISLOCALDATA:^oddCOM",
+      "IRISLOCALDATA:^oddDEF",
+      "IRISLOCALDATA:^rINDEX",
+      "IRISLOCALDATA:^rINDEXCLASS",
+      "IRISLOCALDATA:^rOBJ",
+      "IRISSYS:^%SYS",
+      "IRISSYS:^rINDEXSQL",
+      "IRISTEMP:^CacheTemp",
+      "IRISTEMP:^IRIS.Temp",
+      "IRISTEMP:^IRIS.Temp.RecompileInfo",
+      "IRISTEMP:^IRIS.Temp.StatementHashPP",
+      "IRISTEMP:^IRIS.Temp.SysMetrics",
+      "IRISTEMP:^IRIS.TempClassTree",
+      "IRISTEMP:^IRIS.TempNodes",
+      "IRISTEMP:^mtemp",
+      "USERDB:^rINDEXSQL"
+    ],
+    "MappedNamespaceMeta": [
+      "NCSEMDB:^oddDEF",
+      "NCSEMDB:^rINDEXEXT",
+      "NCSEMDB:^rINDEXSQL"
+    ],
+    "UpdateSteps": [
+      "USERDB:^IPM.UpdateStep.AnyMemberD",
+      "USERDB:^IPM.UpdateStep.AnyMemberI",
+      "USERDB:^IPM.UpdateStep.PrimaryOnlyD",
+      "USERDB:^IPM.UpdateStep.PrimaryOnlyI"
+    ],
+    "SystemCode": [
+      "IRISSYS:^ISC.Src.Jrn",
+      "IRISSYS:^oddCOM",
+      "IRISSYS:^oddDEF",
+      "IRISSYS:^rINDEX",
+      "IRISSYS:^rINDEXCLASS",
+      "IRISSYS:^rOBJ"
+    ],
+    "InstanceConfig": [
+      "IRISSECURITY:^SECURITY",
+      "IRISSYS:^CONFIG",
+      "IRISSYS:^SYS"
+    ],
+    "Audit": [
+      "IRISAUDIT:^IRIS.AuditD"
+    ]
+  },
+  "invariants": {
+    "INV-HIST": {
+      "text": "The history record of every command is honest (A1, A7).",
+      "reads": [
+        "History",
+        "ModuleRecords",
+        "ModuleCode"
+      ]
+    },
+    "INV-MOD": {
+      "text": "An installed module's record and its compiled code agree (A3, A5).",
+      "reads": [
+        "ModuleRecords",
+        "ModuleCode"
+      ]
+    },
+    "INV-DEP": {
+      "text": "Every installed module's requirements are satisfied (A11).",
+      "reads": [
+        "ModuleRecords"
+      ]
+    },
+    "INV-SET": {
+      "text": "A setting reads back what was last written (A12).",
+      "reads": [
+        "Settings"
+      ]
+    },
+    "INV-REPO": {
+      "text": "Registry definitions are unique and match what search reads (A5, A8).",
+      "reads": [
+        "Registries"
+      ]
+    },
+    "INV-SYNC": {
+      "text": "A developer-mode module's baseline matches its server code (A7).",
+      "reads": [
+        "SyncBaselines",
+        "ModuleCode"
+      ]
+    },
+    "INV-TEMP": {
+      "text": "No IPM working data outlives its command (A5).",
+      "reads": [
+        "IpmWorkingData"
+      ],
+      "residue_only": true
+    },
+    "INV-FRAME": {
+      "text": "A read-only command changes no IPM fact (A6).",
+      "reads": [
+        "History",
+        "InstanceConfig",
+        "ModuleCode",
+        "ModuleRecords",
+        "Registries",
+        "Settings",
+        "SyncBaselines",
+        "SystemCode",
+        "UpdateSteps"
+      ],
+      "commands": [
+        "list-installed",
+        "history-find",
+        "search",
+        "orphans",
+        "version"
+      ],
+      "must_not_write": true
+    },
+    "INV-MAP": {
+      "text": "A namespace uses IPM from where the last enable or unmap said, and nothing else changes (A6, A12).",
+      "reads": [
+        "InstanceConfig",
+        "MappedNamespaceMeta"
+      ]
+    },
+    "INV-STEPS": {
+      "text": "Each registered update step of a version transition runs once, in order; steps marked done are not rerun (A9, A13).",
+      "reads": [
+        "UpdateSteps"
+      ]
+    },
+    "INV-SYSCODE": {
+      "text": "IPM commands change no system (IRISSYS) code (A6).",
+      "reads": [
+        "SystemCode"
+      ]
+    }
+  },
+  "global_classes_note": "IRISLOCALDATA code globals hold IRIS's generated SQL cached-query classes (^%sqlcq); IRISAUDIT holds system audit records of security changes; IRISSECURITY ^SECURITY holds web, CSP, role and user definitions."
+}

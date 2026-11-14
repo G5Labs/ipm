@@ -1,0 +1,166 @@
+{
+  "baseline": [
+    11,
+    0
+  ],
+  "controls": [
+    {
+      "name": "dev-no-setcommitted",
+      "description": "the developer-mode commit does not mark the log committed",
+      "status": "killed",
+      "errors_in": [
+        "lemma_inv_step",
+        "witness_dev_crash_commit_flag"
+      ],
+      "expected_in": [
+        "lemma_refines",
+        "lemma_inv_step"
+      ],
+      "counts": [
+        9,
+        2
+      ]
+    },
+    {
+      "name": "no-rollback-on-failure",
+      "description": "the failure path keeps the open transaction's writes",
+      "status": "killed",
+      "errors_in": [
+        "lemma_refines",
+        "lemma_refines_strict",
+        "lemma_refines_txn_mode",
+        "lemma_refines_without_pd",
+        "witness_dependency_record_lost"
+      ],
+      "expected_in": [
+        "lemma_refines"
+      ],
+      "counts": [
+        6,
+        5
+      ]
+    },
+    {
+      "name": "finalize-overwrites-committed",
+      "description": "Finalize(error) clears Committed",
+      "status": "killed",
+      "errors_in": [
+        "lemma_refines",
+        "lemma_refines_notxn_mode",
+        "lemma_refines_strict",
+        "lemma_refines_without_pd"
+      ],
+      "expected_in": [
+        "lemma_refines"
+      ],
+      "counts": [
+        7,
+        4
+      ]
+    },
+    {
+      "name": "commit-before-activate",
+      "description": "a transactional load commits before Activate",
+      "status": "killed",
+      "errors_in": [
+        "lemma_inv_step",
+        "lemma_refines",
+        "lemma_refines_strict",
+        "lemma_refines_txn_mode",
+        "lemma_refines_without_pd"
+      ],
+      "expected_in": [
+        "lemma_refines",
+        "lemma_inv_step"
+      ],
+      "counts": [
+        6,
+        5
+      ]
+    },
+    {
+      "name": "crash-keeps-open-writes",
+      "description": "a halt commits the open transaction (premise P2 broken)",
+      "status": "killed",
+      "errors_in": [
+        "lemma_refines",
+        "lemma_refines_strict",
+        "lemma_refines_txn_mode",
+        "lemma_refines_without_pd",
+        "witness_dev_crash_commit_flag"
+      ],
+      "expected_in": [
+        "lemma_refines"
+      ],
+      "counts": [
+        6,
+        5
+      ]
+    },
+    {
+      "name": "no-premise-pc",
+      "description": "drop premise PC",
+      "status": "killed",
+      "errors_in": [
+        "lemma_refines",
+        "lemma_refines_strict",
+        "lemma_refines_without_pd",
+        "witness_dev_crash_commit_flag"
+      ],
+      "expected_in": [
+        "lemma_refines"
+      ],
+      "counts": [
+        7,
+        4
+      ]
+    },
+    {
+      "name": "no-premise-pd-strict",
+      "description": "drop premise PD for the strict contract",
+      "status": "killed",
+      "errors_in": [
+        "lemma_refines_strict",
+        "witness_dependency_record_lost"
+      ],
+      "expected_in": [
+        "lemma_refines_strict"
+      ],
+      "counts": [
+        9,
+        2
+      ]
+    },
+    {
+      "name": "l1-without-commit-soundness",
+      "description": "vacuity: L1 without 'Committed = 0 means nothing kept' must lose the dev-crash witness",
+      "status": "killed",
+      "errors_in": [
+        "witness_dev_crash_commit_flag"
+      ],
+      "expected_in": [
+        "witness_dev_crash_commit_flag"
+      ],
+      "counts": [
+        10,
+        1
+      ]
+    },
+    {
+      "name": "l1-without-dep-record",
+      "description": "vacuity: strict L1 without the dependency record rule must lose the dependency witness",
+      "status": "killed",
+      "errors_in": [
+        "witness_dependency_record_lost"
+      ],
+      "expected_in": [
+        "witness_dependency_record_lost"
+      ],
+      "counts": [
+        10,
+        1
+      ]
+    }
+  ],
+  "all_killed_in_expected_place": true
+}

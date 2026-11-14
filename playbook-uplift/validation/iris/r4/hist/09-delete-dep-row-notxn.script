@@ -1,0 +1,5 @@
+set sc=$system.OBJ.LoadDir("/tmp/uplift/r4/hist/Uplift/","ck-d",.err,1) write !,"LOAD ",$system.Status.IsOK(sc)," ",$system.Status.GetErrorText(sc),!
+do ##class(Uplift.R4.Hist).Setup()
+write !,"PRE mods: ",##class(%IPM.Storage.Module).NameExists("r4h-parent"),##class(%IPM.Storage.Module).NameExists("r4h-dep-wait"),!
+do ##class(Uplift.R4.Hist).DelDep("notxn")
+halt

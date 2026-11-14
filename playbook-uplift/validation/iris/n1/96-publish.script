@@ -1,0 +1,10 @@
+zpm "repo -r -name registry -url https://pm.community.intersystems.com/"
+zpm "repo -list"
+zpm "install dsw"
+zpm "install sslclient"
+zpm "list"
+zpm "repo -r -name registry -url ""http://registry:52773/registry/"" -username admin -password SYS"
+set sc=##class(%IPM.Main).Shell("publish zpm -v -export-python-deps") write !,"STEP publish-zpm ",$select($system.Status.IsOK(sc):"OK",1:$system.Status.GetErrorText(sc)),!
+set sc=##class(%IPM.Main).Shell("publish sslclient -v") write !,"STEP publish-sslclient ",$select($system.Status.IsOK(sc):"OK",1:$system.Status.GetErrorText(sc)),!
+zpm "search"
+halt

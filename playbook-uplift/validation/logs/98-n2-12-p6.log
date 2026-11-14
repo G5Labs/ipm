@@ -1,0 +1,194 @@
+# container: ipm-uplift-n2-a  image: containers.intersystems.com/intersystems/iris-community:2026.1  at: 2026-11-13T19:16:40Z
+# script: validation/iris/n2/12-p6.script
+
+Node: 804549afce9f, Instance: IRIS
+
+USER>
+
+LOAD 1 
+
+USER>
+
+SETUP hooks 1
+
+CMD> uninstall -all
+
+Uninstalling n2-arc
+[USER|n2-arc]	Clean START
+[USER|n2-arc]	Unconfigure START
+[USER|n2-arc]	Unconfigure SUCCESS
+[USER|n2-arc]	Clean SUCCESS
+CMD< OK
+
+CMD> repo -delete-all
+
+CMD< OK
+
+CMD> history delete -confirm
+
+Deleted 3 record(s).
+CMD< OK
+
+CMD> load /tmp/uplift/n2/fixtures/p6/n2-upd-1.0.0/
+
+Building dependency graph...Done.
+[USER|n2-upd]	Initialize START
+[USER|n2-upd]	Initialize SUCCESS
+[USER|n2-upd]	Reload START (/tmp/uplift/n2/fixtures/p6/n2-upd-1.0.0/)
+[USER|n2-upd]	Reload SUCCESS
+[n2-upd]	Module object refreshed.
+[USER|n2-upd]	Validate START
+[USER|n2-upd]	Validate SUCCESS
+[USER|n2-upd]	Compile START
+[USER|n2-upd]	Compile SUCCESS
+[USER|n2-upd]	Activate START
+[USER|n2-upd]	Configure START
+[USER|n2-upd]	Configure SUCCESS
+[USER|n2-upd]	Activate SUCCESS
+CMD< OK
+
+OBS|nc-gap-P6-txn-halt-in-step|B.runs=0;cls:N2Upd.Upd.V1=compiled;cmdStatus=n/a;fileLines=1;historyRows=2;historyTempLeft=0;incrementY=1;invokesRan=none;jobDone=<none: halted>;jobGone=1;load100=ok;mod:n2-upd=1.0.0;ordinaryX=undef;row1=id19/load/n2-upd/1.0.0/success:ok/committed:1/ended:1/finalized:1/phases:Initialize:ok Reload:ok Validate:ok Compile:ok Activate:ok;row2=id20/update/n2-upd/0.0.0/success:err/committed:0/ended:0/finalized:0/phases:;step:V1.S1=start:0/end:1/ok:1;step:V2.A=none;step:V2.B=none;stepARuns=1;tlevel=0;
+
+CMD> update n2-upd -path /tmp/uplift/n2/fixtures/p6/n2-upd-2.0.0/
+
+Building dependency graph...Done.
+[USER|n2-upd]	Initialize START
+[USER|n2-upd]	Initialize SUCCESS
+[USER|n2-upd]	Reload START (/tmp/uplift/n2/fixtures/p6/n2-upd-2.0.0/)
+[USER|n2-upd]	Reload SUCCESS
+[n2-upd]	Module object refreshed.
+[USER|n2-upd]	Validate START
+[USER|n2-upd]	Validate SUCCESS
+[USER|n2-upd]	Compile START
+[USER|n2-upd]	Compile SUCCESS
+[USER|n2-upd]	Activate START
+[USER|n2-upd]	Configure START
+[USER|n2-upd]	Configure SUCCESS
+[USER|n2-upd]	Activate SUCCESS
+[USER|n2-upd]	ApplyUpdateSteps START
+[USER|n2-upd]	ApplyUpdateSteps SUCCESS
+CMD< OK
+
+OBS|nc-gap-P6-txn-retry|B.runs=1;cls:N2Upd.Upd.V1=compiled;cls:N2Upd.Upd.V2=compiled;cmdStatus=ok;fileLines=2;historyRows=3;historyTempLeft=0;incrementY=2;invokesRan=none;mod:n2-upd=2.0.0;ordinaryX=1;row1=id19/load/n2-upd/1.0.0/success:ok/committed:1/ended:1/finalized:1/phases:Initialize:ok Reload:ok Validate:ok Compile:ok Activate:ok;row2=id20/update/n2-upd/0.0.0/success:err/committed:0/ended:0/finalized:0/phases:;row3=id21/update/n2-upd/2.0.0/success:ok/committed:1/ended:1/finalized:1/phases:Initialize:ok Reload:ok Validate:ok Compile:ok Activate:ok ApplyUpdateSteps:ok;step:V1.S1=start:0/end:1/ok:1;step:V2.A=start:1/end:1/ok:1;step:V2.B=start:1/end:1/ok:1;stepARuns=2;tlevel=0;
+
+CMD> uninstall -all
+
+Uninstalling n2-upd
+[USER|n2-upd]	Clean START
+[USER|n2-upd]	Unconfigure START
+[USER|n2-upd]	Unconfigure SUCCESS
+[USER|n2-upd]	Clean SUCCESS
+CMD< OK
+
+CMD> repo -delete-all
+
+CMD< OK
+
+CMD> history delete -confirm
+
+Deleted 4 record(s).
+CMD< OK
+
+CMD> load /tmp/uplift/n2/fixtures/p6/n2-upd-1.0.0/ -dev
+
+Building dependency graph...Done.
+[USER|n2-upd]	Initialize START
+[USER|n2-upd]	Initialize SUCCESS
+[USER|n2-upd]	Reload START (/tmp/uplift/n2/fixtures/p6/n2-upd-1.0.0/)
+[USER|n2-upd]	Reload SUCCESS
+[n2-upd]	Module object refreshed.
+[USER|n2-upd]	Validate START
+[USER|n2-upd]	Validate SUCCESS
+[USER|n2-upd]	Compile START
+[USER|n2-upd]	Compile SUCCESS
+[USER|n2-upd]	Activate START
+[USER|n2-upd]	Configure START
+[USER|n2-upd]	Configure SUCCESS
+[USER|n2-upd]	Activate SUCCESS
+CMD< OK
+
+OBS|nc-gap-P6-dev-halt-in-step|B.runs=0;cls:N2Upd.Upd.V1=compiled;cls:N2Upd.Upd.V2=compiled;cmdStatus=n/a;fileLines=1;historyRows=2;historyTempLeft=0;incrementY=1;invokesRan=none;jobDone=<none: halted>;jobGone=1;load100=ok;mod:n2-upd=2.0.0/dev;ordinaryX=1;row1=id23/load/n2-upd/1.0.0/success:ok/committed:1/ended:1/finalized:1/phases:Initialize:ok Reload:ok Validate:ok Compile:ok Activate:ok;row2=id24/update/n2-upd/2.0.0/success:err/committed:1/ended:0/finalized:1/phases:Initialize:ok Reload:ok Validate:ok Compile:ok Activate:ok ApplyUpdateSteps:err(open);step:V1.S1=start:1/end:1/ok:1;step:V2.A=start:0/end:0/ok:1;step:V2.B=none;stepARuns=1;tlevel=0;
+
+CMD> update -dev n2-upd -path /tmp/uplift/n2/fixtures/p6/n2-upd-2.0.0/
+
+Building dependency graph...Done.
+[USER|n2-upd]	Initialize START
+[USER|n2-upd]	Initialize SUCCESS
+[USER|n2-upd]	Reload START (/tmp/uplift/n2/fixtures/p6/n2-upd-2.0.0/)
+[USER|n2-upd]	Reload SUCCESS
+[n2-upd]	Module object refreshed.
+[USER|n2-upd]	Validate START
+[USER|n2-upd]	Validate SUCCESS
+[USER|n2-upd]	Compile START
+[USER|n2-upd]	Compile SUCCESS
+[USER|n2-upd]	Activate START
+[USER|n2-upd]	Configure START
+[USER|n2-upd]	Configure SUCCESS
+[USER|n2-upd]	Activate SUCCESS
+[USER|n2-upd]	ApplyUpdateSteps START
+[USER|n2-upd]	ApplyUpdateSteps SUCCESS
+CMD< OK
+
+OBS|nc-gap-P6-dev-retry|B.runs=1;cls:N2Upd.Upd.V1=compiled;cls:N2Upd.Upd.V2=compiled;cmdStatus=ok;fileLines=2;historyRows=3;historyTempLeft=0;incrementY=2;invokesRan=none;mod:n2-upd=2.0.0/dev;ordinaryX=2;row1=id23/load/n2-upd/1.0.0/success:ok/committed:1/ended:1/finalized:1/phases:Initialize:ok Reload:ok Validate:ok Compile:ok Activate:ok;row2=id24/update/n2-upd/2.0.0/success:err/committed:1/ended:0/finalized:1/phases:Initialize:ok Reload:ok Validate:ok Compile:ok Activate:ok ApplyUpdateSteps:err(open);row3=id25/update/n2-upd/2.0.0/success:ok/committed:1/ended:1/finalized:1/phases:Initialize:ok Reload:ok Validate:ok Compile:ok Activate:ok ApplyUpdateSteps:ok;step:V1.S1=start:1/end:1/ok:1;step:V2.A=start:1/end:1/ok:1;step:V2.B=start:1/end:1/ok:1;stepARuns=2;tlevel=0;
+
+CMD> uninstall -all
+
+Uninstalling n2-upd
+[USER|n2-upd]	Clean START
+[USER|n2-upd]	Unconfigure START
+[USER|n2-upd]	Unconfigure SUCCESS
+[USER|n2-upd]	Clean SUCCESS
+CMD< OK
+
+CMD> repo -delete-all
+
+CMD< OK
+
+CMD> history delete -confirm
+
+Deleted 4 record(s).
+CMD< OK
+
+CMD> load /tmp/uplift/n2/fixtures/p6/n2-upd-1.0.0/ -DNoTransaction=1
+
+Building dependency graph...Done.
+[USER|n2-upd]	Initialize START
+[USER|n2-upd]	Initialize SUCCESS
+[USER|n2-upd]	Reload START (/tmp/uplift/n2/fixtures/p6/n2-upd-1.0.0/)
+[USER|n2-upd]	Reload SUCCESS
+[n2-upd]	Module object refreshed.
+[USER|n2-upd]	Validate START
+[USER|n2-upd]	Validate SUCCESS
+[USER|n2-upd]	Compile START
+[USER|n2-upd]	Compile SUCCESS
+[USER|n2-upd]	Activate START
+[USER|n2-upd]	Configure START
+[USER|n2-upd]	Configure SUCCESS
+[USER|n2-upd]	Activate SUCCESS
+CMD< OK
+
+OBS|nc-gap-P6-notxn-halt-in-step|B.runs=0;cls:N2Upd.Upd.V1=compiled;cls:N2Upd.Upd.V2=compiled;cmdStatus=n/a;fileLines=1;historyRows=2;historyTempLeft=0;incrementY=1;invokesRan=none;jobDone=<none: halted>;jobGone=1;load100=ok;mod:n2-upd=2.0.0;ordinaryX=1;row1=id27/load/n2-upd/1.0.0/success:ok/committed:1/ended:1/finalized:1/phases:Initialize:ok Reload:ok Validate:ok Compile:ok Activate:ok;row2=id28/update/n2-upd/2.0.0/success:err/committed:1/ended:0/finalized:1/phases:Initialize:ok Reload:ok Validate:ok Compile:ok Activate:ok ApplyUpdateSteps:err(open);step:V1.S1=start:0/end:1/ok:1;step:V2.A=start:0/end:0/ok:1;step:V2.B=none;stepARuns=1;tlevel=0;
+
+CMD> update -DNoTransaction=1 n2-upd -path /tmp/uplift/n2/fixtures/p6/n2-upd-2.0.0/
+
+Building dependency graph...Done.
+[USER|n2-upd]	Initialize START
+[USER|n2-upd]	Initialize SUCCESS
+[USER|n2-upd]	Reload START (/tmp/uplift/n2/fixtures/p6/n2-upd-2.0.0/)
+[USER|n2-upd]	Reload SUCCESS
+[n2-upd]	Module object refreshed.
+[USER|n2-upd]	Validate START
+[USER|n2-upd]	Validate SUCCESS
+[USER|n2-upd]	Compile START
+[USER|n2-upd]	Compile SUCCESS
+[USER|n2-upd]	Activate START
+[USER|n2-upd]	Configure START
+[USER|n2-upd]	Configure SUCCESS
+[USER|n2-upd]	Activate SUCCESS
+[USER|n2-upd]	ApplyUpdateSteps START
+[USER|n2-upd]	ApplyUpdateSteps SUCCESS
+CMD< OK
+
+OBS|nc-gap-P6-notxn-retry|B.runs=1;cls:N2Upd.Upd.V1=compiled;cls:N2Upd.Upd.V2=compiled;cmdStatus=ok;fileLines=2;historyRows=3;historyTempLeft=0;incrementY=2;invokesRan=none;mod:n2-upd=2.0.0;ordinaryX=2;row1=id27/load/n2-upd/1.0.0/success:ok/committed:1/ended:1/finalized:1/phases:Initialize:ok Reload:ok Validate:ok Compile:ok Activate:ok;row2=id28/update/n2-upd/2.0.0/success:err/committed:1/ended:0/finalized:1/phases:Initialize:ok Reload:ok Validate:ok Compile:ok Activate:ok ApplyUpdateSteps:err(open);row3=id29/update/n2-upd/2.0.0/success:ok/committed:1/ended:1/finalized:1/phases:Initialize:ok Reload:ok Validate:ok Compile:ok Activate:ok ApplyUpdateSteps:ok;step:V1.S1=start:0/end:1/ok:1;step:V2.A=start:1/end:1/ok:1;step:V2.B=start:1/end:1/ok:1;stepARuns=2;tlevel=0;
+
+USER>

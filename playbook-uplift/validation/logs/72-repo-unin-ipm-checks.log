@@ -1,0 +1,122 @@
+# container: ipm-uplift-iris-repo  image: containers.intersystems.com/intersystems/iris-community:2026.1  at: 2026-11-13T18:22:26Z
+# script: validation/iris/repo/72-unin-ipm-checks.script
+
+Node: 2e8609ed30a0, Instance: IRIS
+
+USER>
+
+LOAD 1 
+
+USER>
+
+>>> uninstall nc-ghost-a -force
+
+[USER|nc-ghost-a]	Clean START
+[USER|nc-ghost-a]	Unconfigure START
+[USER|nc-ghost-a]	Unconfigure SUCCESS
+[USER|nc-ghost-a]	Clean SUCCESS
+<<< status=OK
+
+>>> load /tmp/uplift/repo/fixtures/nc-ghost-a/
+
+Building dependency graph...Done.
+[USER|nc-ghost-a]	Initialize START
+[USER|nc-ghost-a]	Initialize SUCCESS
+[USER|nc-ghost-a]	Reload START (/tmp/uplift/repo/fixtures/nc-ghost-a/)
+[USER|nc-ghost-a]	Reload SUCCESS
+[nc-ghost-a]	Module object refreshed.
+[USER|nc-ghost-a]	Validate START
+[USER|nc-ghost-a]	Validate SUCCESS
+[USER|nc-ghost-a]	Compile START
+[USER|nc-ghost-a]	Compile SUCCESS
+[USER|nc-ghost-a]	Activate START
+[USER|nc-ghost-a]	Configure START
+[USER|nc-ghost-a]	Configure SUCCESS
+[USER|nc-ghost-a]	Activate SUCCESS
+<<< status=OK
+
+>>> load /tmp/uplift/repo/fixtures/nc-web-w/
+
+Building dependency graph...Done.
+[USER|nc-web-w]	Initialize START
+[USER|nc-web-w]	Initialize SUCCESS
+[USER|nc-web-w]	Reload START (/tmp/uplift/repo/fixtures/nc-web-w/)
+[USER|nc-web-w]	Reload SUCCESS
+[nc-web-w]	Module object refreshed.
+[USER|nc-web-w]	Validate START
+[USER|nc-web-w]	Validate SUCCESS
+[USER|nc-web-w]	Compile START
+[USER|nc-web-w]	Compile SUCCESS
+[USER|nc-web-w]	Activate START
+[USER|nc-web-w]	Configure START
+[USER|nc-web-w]	Configure SUCCESS
+[USER|nc-web-w]	Activate SUCCESS
+<<< status=OK
+
+>>> zpm clean
+
+[USER|ZPM]	Clean START
+[USER|ZPM]	Unconfigure START
+[USER|ZPM]	Unconfigure SUCCESS
+WARNING: 2 module(s) orphaned:
+  - nc-ghost-a (1.0.0)
+  - nc-web-w (1.0.0)
+Reinstalling IPM will automatically re-adopt these modules.
+[USER|ZPM]	Clean SUCCESS
+<<< status=OK
+
+OBS|nc-unin-9-clean-on-ipm|aInstalled=1;ipmMainCompiled=compiled;loadA=1;loadW=1;otherModules=2;printedOrphanCountMatches=1;printedOrphaned=1;selfUninstallFlag=0;status=ok;wInstalled=1;zpmInstalled=1;
+
+>>> enable -map -ns NCMAP -q
+
+Version of IPM in current namespace: 
+USER> [32mzpm [0m0.10.11-SNAPSHOT
+<<< status=OK
+
+OBS|nc-unin-4-mapped-setup|createNs=1;enable.status=ok;pre.map.ipmMain=compiled;pre.map.ipmStorageModule=compiled;pre.map.pkgDest=^/usr/irissys/mgr/user/;pre.map.zpmRecord=0;pre.user.ipmMain=compiled;pre.user.ipmStorageModule=compiled;pre.user.pkgDest=^/usr/irissys/mgr/user/;pre.user.zpmRecord=1;
+
+>>> uninstall zpm
+
+[31mERROR![0m Cannot install 'zpm' in namespace 'NCMAP' because it is mapped from namespace 'USER'.
+<<< status=ERROR #5001: Cannot install 'zpm' in namespace 'NCMAP' because it is mapped from namespace 'USER'.
+
+OBS|nc-unin-4-mapped-uninstall-zpm|error=ERROR #5001: Cannot install 'zpm' in namespace 'NCMAP' because it is mapped from namespace 'USER'.;mappedFrom=USER;post.map.ipmMain=compiled;post.map.ipmStorageModule=compiled;post.map.pkgDest=^/usr/irissys/mgr/user/;post.map.zpmRecord=0;post.user.ipmMain=compiled;post.user.ipmStorageModule=compiled;post.user.pkgDest=^/usr/irissys/mgr/user/;post.user.zpmRecord=1;printedCleanStart=0;printedListHeader=0;printedPrompt=0;refusedMapped=1;status=err;
+
+>>> uninstall ZPM
+
+[31mERROR![0m Module 'ZPM' not found.
+<<< status=ERROR #5001: Module 'ZPM' not found.
+
+OBS|nc-unin-4-mapped-uninstall-ZPM|error=ERROR #5001: Module 'ZPM' not found.;mappedFrom=USER;post.map.ipmMain=compiled;post.map.ipmStorageModule=compiled;post.map.pkgDest=^/usr/irissys/mgr/user/;post.map.zpmRecord=0;post.user.ipmMain=compiled;post.user.ipmStorageModule=compiled;post.user.pkgDest=^/usr/irissys/mgr/user/;post.user.zpmRecord=1;printedCleanStart=0;printedListHeader=0;printedPrompt=0;refusedMapped=0;status=err;
+
+>>> uninstall ipm
+
+[31mERROR![0m Module 'ipm' not found.
+<<< status=ERROR #5001: Module 'ipm' not found.
+
+OBS|nc-unin-4-mapped-uninstall-ipm|error=ERROR #5001: Module 'ipm' not found.;mappedFrom=USER;post.map.ipmMain=compiled;post.map.ipmStorageModule=compiled;post.map.pkgDest=^/usr/irissys/mgr/user/;post.map.zpmRecord=0;post.user.ipmMain=compiled;post.user.ipmStorageModule=compiled;post.user.pkgDest=^/usr/irissys/mgr/user/;post.user.zpmRecord=1;printedCleanStart=0;printedListHeader=0;printedPrompt=0;refusedMapped=0;status=err;
+
+>>> uninstall IPM
+
+[31mERROR![0m Module 'IPM' not found.
+<<< status=ERROR #5001: Module 'IPM' not found.
+
+OBS|nc-unin-4-mapped-uninstall-IPM|error=ERROR #5001: Module 'IPM' not found.;mappedFrom=USER;post.map.ipmMain=compiled;post.map.ipmStorageModule=compiled;post.map.pkgDest=^/usr/irissys/mgr/user/;post.map.zpmRecord=0;post.user.ipmMain=compiled;post.user.ipmStorageModule=compiled;post.user.pkgDest=^/usr/irissys/mgr/user/;post.user.zpmRecord=1;printedCleanStart=0;printedListHeader=0;printedPrompt=0;refusedMapped=0;status=err;
+
+>>> uninstall nc-web-w -force
+
+[USER|nc-web-w]	Clean START
+[USER|nc-web-w]	Unconfigure START
+[USER|nc-web-w]	Unconfigure SUCCESS
+[USER|nc-web-w]	Clean SUCCESS
+<<< status=OK
+
+>>> uninstall nc-ghost-a -force
+
+[USER|nc-ghost-a]	Clean START
+[USER|nc-ghost-a]	Unconfigure START
+[USER|nc-ghost-a]	Unconfigure SUCCESS
+[USER|nc-ghost-a]	Clean SUCCESS
+<<< status=OK
+
+USER>

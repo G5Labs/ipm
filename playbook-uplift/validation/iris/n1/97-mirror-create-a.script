@@ -1,0 +1,9 @@
+zn "%SYS"
+write $zversion,!
+do $system.License.Decode()
+write !,"IsMember=",$system.Mirror.IsMember()," IsPrimary=",$system.Mirror.IsPrimary(),!
+kill p set sc=##class(Security.Services).Get("%Service_Mirror",.p) set p("Enabled")=1 set sc=##class(Security.Services).Modify("%Service_Mirror",.p) write !,"MIRRORSERVICE ",$select(sc=1:"enabled",1:$system.Status.GetErrorText(sc)),!
+kill mi set mi("UseSSL")=0, mi("ECPAddress")="mira", mi("MirrorAddress")="mira", mi("AgentAddress")="mira"
+set sc=##class(SYS.Mirror).CreateNewMirrorSet("UPLIFTMIR","MIRA",.mi) write !,"CREATEMIRROR ",$select(sc=1:"OK",1:$system.Status.GetErrorText(sc)),!
+hang 5 write !,"IsMember=",$system.Mirror.IsMember()," IsPrimary=",$system.Mirror.IsPrimary()," Status=",$system.Mirror.GetMemberStatus(),!
+halt

@@ -1,0 +1,5 @@
+set rs=##class(%SQL.Statement).%ExecDirect(,"SELECT ID,Package,CommandString FROM %IPM_General.History") while rs.%Next() { write !,rs.%Get("ID")," ",rs.%Get("Package")," ",rs.%Get("CommandString") }
+set rs=##class(%SQL.Statement).%ExecDirect(,"DELETE FROM %IPM_General.History WHERE Package = 'rest-demo'") write !,"deleted ",rs.%ROWCOUNT," sqlcode ",rs.%SQLCODE,!
+write "MacroEval defined: ",##class(%Dictionary.ClassDefinition).%ExistsId("%IPM.Generated.MacroEval"),!
+set rs=##class(%SQL.Statement).%ExecDirect(,"SELECT COUNT(*) c FROM %IPM_General.History") do rs.%Next() write !,"history rows left ",rs.%Get("c"),!
+halt

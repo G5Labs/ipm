@@ -1,0 +1,98 @@
+# container: ipm-uplift-iris-nsp  image: containers.intersystems.com/intersystems/iris-community:2026.1  at: 2026-11-13T19:30:42Z
+# script: validation/iris/nsp/86-nsp-model-sync.script
+
+Node: 1176f046b99d, Instance: IRIS
+
+USER>
+
+Load of directory started on 11/13/2026 19:30:42
+Loading file /tmp/uplift/nsp/Uplift/Nsp/Fresh.cls as cls
+Imported class: Uplift.Nsp.Fresh
+Loading file /tmp/uplift/nsp/Uplift/Nsp/Cap.cls as cls
+Imported class: Uplift.Nsp.Cap
+Loading file /tmp/uplift/nsp/Uplift/Nsp/Ns.cls as cls
+Imported class: Uplift.Nsp.Ns
+Loading file /tmp/uplift/nsp/Uplift/Nsp/Sync.cls as cls
+Imported class: Uplift.Nsp.Sync
+Loading file /tmp/uplift/nsp/Uplift/Nsp/Res.cls as cls
+Imported class: Uplift.Nsp.Res
+Loading file /tmp/uplift/nsp/Uplift/Nsp/Model.cls as cls
+Imported class: Uplift.Nsp.Model
+Loading file /tmp/uplift/nsp/Uplift/Nsp/Util.cls as cls
+Imported class: Uplift.Nsp.Util
+Compiling 7 classes
+Compiling class Uplift.Nsp.Fresh
+Compiling class Uplift.Nsp.Cap
+Compiling class Uplift.Nsp.Model
+Compiling class Uplift.Nsp.Res
+Compiling class Uplift.Nsp.Ns
+Compiling class Uplift.Nsp.Util
+Compiling class Uplift.Nsp.Sync
+Compiling routine Uplift.Nsp.Cap.1
+Compiling routine Uplift.Nsp.Fresh.1
+Compiling routine Uplift.Nsp.Res.1
+Compiling routine Uplift.Nsp.Model.1
+Compiling routine Uplift.Nsp.Sync.1
+Compiling routine Uplift.Nsp.Util.1
+Compiling routine Uplift.Nsp.Ns.1
+Load finished successfully.
+
+LOADED 1
+
+USER>
+
+>>> zpm "load /tmp/nc-sync/ -dev"
+<<< status OK
+
+>>> zpm "reload sync-test"
+  | 
+  | [USER|sync-test]	Initialize START
+  | [USER|sync-test]	Initialize SUCCESS
+  | [USER|sync-test]	Reload START (/tmp/nc-sync/)
+  | [USER|sync-test]	Reload SUCCESS
+  | [sync-test]	Module object refreshed.
+<<< status OK
+
+>>> zpm "sync sync-test -verbose"
+  | 
+  | [USER|sync-test]	Sync START
+  | [sync-test] Scanned 10 file(s) across 6 director(ies) in 0.00s
+  | [sync-test] Tracking 14 path(s) across 9 resource(s)
+  | [sync-test] Nothing to sync.
+  | [sync-test] 1 resource(s) skipped (no sync support): /static/
+  |   Use `reload sync-test` to apply changes to those resources.
+  | [sync-test] Sync done in 0.15s
+  | [USER|sync-test]	Sync SUCCESS
+<<< status OK
+
+OBS|nc-nsp-model-sync-reload-revert|loadDev=ok;nothingToSync=1;reload=ok;restoredExactBytes=1;rowAfterReload=hash:a5f640cc47 syncFailed:0 testPending:0;rowAfterSync=hash:a5f640cc47 syncFailed:0 testPending:0;sourceAfterReload=edited;sourceAfterSync=edited;sync=ok;
+
+USER>
+
+>>> zpm "uninstall sync-test -force"
+<<< status OK
+
+>>> zpm "load /tmp/nc-sync/ -dev"
+<<< status OK
+
+>>> zpm "load /tmp/nc-sync/ -dev -skip-sync"
+<<< status OK
+
+>>> zpm "sync sync-test -verbose"
+  | 
+  | [USER|sync-test]	Sync START
+  | [sync-test] Scanned 10 file(s) across 6 director(ies) in 0.00s
+  | [sync-test] Tracking 14 path(s) across 9 resource(s)
+  | [sync-test] Nothing to sync.
+  | [sync-test] 1 resource(s) skipped (no sync support): /static/
+  |   Use `reload sync-test` to apply changes to those resources.
+  | [sync-test] Sync done in 0.14s
+  | [USER|sync-test]	Sync SUCCESS
+<<< status OK
+
+OBS|nc-nsp-model-sync-skipsync-revert|loadDev=ok;loadSkipSync=ok;nothingToSync=1;restoredExactBytes=1;rowAfterLoad=hash:a5f640cc47 syncFailed:0 testPending:0;rowAfterSync=hash:a5f640cc47 syncFailed:0 testPending:0;sourceAfterSync=edited;sync=ok;valueAfterLoad=edited;valueAfterSync=edited;
+
+>>> zpm "uninstall sync-test -force"
+<<< status OK
+
+USER>

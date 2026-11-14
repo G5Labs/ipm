@@ -1,0 +1,209 @@
+[
+  {
+    "name": "enable-repoints-routine-mapping",
+    "description": "enable -map overwrites an existing %IPM.* routine mapping instead of creating one only when absent",
+    "old": "rtn: if c.rtn is None { Some(rtn_dest(s.ns[src].act)) } else { c.rtn }, ..c },",
+    "new": "rtn: Some(rtn_dest(s.ns[src].act)), ..c },",
+    "expect": [
+      "nsp_lemma_enable_one"
+    ]
+  },
+  {
+    "name": "repo-loop-ignores-rows",
+    "description": "the -repos loop maps a namespace that has registry rows of its own (NSP-B24 check dropped)",
+    "old": "mapped_from(s1, t, src) && !rows_at(s1, glo_dest(s1.ns[t].act, t))",
+    "new": "mapped_from(s1, t, src)",
+    "expect": [
+      "nsp_lemma_enable_one"
+    ]
+  },
+  {
+    "name": "enable-no-batch-activation",
+    "description": "enable -map never activates the new mappings (PerformBatchActivation dropped)",
+    "old": "activate(s2, s.ns.dom().filter(|n: int| ts.contains(n) && (!installed(s, n) || (repos && repo_mapped(s1, src, n)))))",
+    "new": "activate(s2, Set::empty())",
+    "expect": [
+      "nsp_lemma_enable_one"
+    ]
+  },
+  {
+    "name": "unmap-keeps-package-mapping",
+    "description": "unmap does not remove the %IPM package mapping",
+    "old": "remove_rtn(Maps { pkg: None, ..c1 }, RtnType::Other)",
+    "new": "remove_rtn(c1, RtnType::Other)",
+    "expect": [
+      "nsp_lemma_unmap_one"
+    ]
+  },
+  {
+    "name": "unmap-keeps-repo-mapping",
+    "description": "unmap does not remove the repo settings mapping",
+    "old": "let c1 = Maps { repo: None, ..c };",
+    "new": "let c1 = c;",
+    "expect": [
+      "nsp_lemma_unmap_one"
+    ]
+  },
+  {
+    "name": "installer-no-record",
+    "description": "the installer does not create the zpm record",
+    "old": "Ns { cfg: m, act: m, rec: Some(v), ..s.ns[n] }",
+    "new": "Ns { cfg: m, act: m, ..s.ns[n] }",
+    "expect": [
+      "nsp_lemma_installer"
+    ]
+  },
+  {
+    "name": "installer-no-activation",
+    "description": "the installer's mappings are not activated",
+    "old": "Ns { cfg: m, act: m, rec: Some(v), ..s.ns[n] }",
+    "new": "Ns { cfg: m, rec: Some(v), ..s.ns[n] }",
+    "expect": [
+      "nsp_lemma_installer"
+    ]
+  },
+  {
+    "name": "install-zpm-no-guard",
+    "description": "install zpm runs in a namespace GetMapInfo lists (CheckModuleNamespace dropped)",
+    "old": "    if listed(s, n) { s }\n    else {\n        let d = pkg_dest(s.ns[n].act);",
+    "new": "    if false { s }\n    else {\n        let d = pkg_dest(s.ns[n].act);",
+    "expect": [
+      "nsp_lemma_install_zpm_refused"
+    ]
+  },
+  {
+    "name": "version-read-none",
+    "description": "CheckIPMVersion never finds a version",
+    "old": "pub open spec fn check_ipm_version(s: S, n: int) -> Option<int> { s.ns[n].rec }",
+    "new": "pub open spec fn check_ipm_version(s: S, n: int) -> Option<int> { None }",
+    "expect": [
+      "nsp_lemma_version_read"
+    ]
+  },
+  {
+    "name": "community-no-reset",
+    "description": "enable -community skips repo -reset-defaults",
+    "old": "    let r = reset_repos(s, src);\n    enable_map(r, src, r.ns.dom(), true)",
+    "new": "    let r = s;\n    enable_map(r, src, r.ns.dom(), true)",
+    "expect": [
+      "nsp_lemma_community"
+    ]
+  },
+  {
+    "name": "no-premise-src",
+    "description": "drop premise SRC",
+    "old": "    s.ns.dom().contains(src) && installed(s, src) && pkg_dest(s.ns[src].act) == src && s.ns[src].act.repo is None",
+    "new": "    true",
+    "expect": [
+      "nsp_lemma_enable_one"
+    ]
+  },
+  {
+    "name": "no-premise-uniq",
+    "description": "drop premise UNIQ",
+    "old": "    forall |y: int| #[trigger] is_source(s, y) && pkg_dest(s.ns[y].act) == src ==> y <= src",
+    "new": "    true",
+    "expect": [
+      "nsp_lemma_enable_one"
+    ]
+  },
+  {
+    "name": "no-premise-tgt",
+    "description": "drop premise TGT (mapping clause)",
+    "old": "    forall |t: int| #[trigger] ts.contains(t) ==> s.ns.dom().contains(t)\n        && (s.ns[t].act.rtn is Some || s.ns[t].act.pkg is None || s.ns[t].act.pkg == Some(src))",
+    "new": "    forall |t: int| #[trigger] ts.contains(t) ==> s.ns.dom().contains(t)",
+    "expect": [
+      "nsp_lemma_enable_one"
+    ]
+  },
+  {
+    "name": "no-premise-repos",
+    "description": "drop defect premise REPOS (F-NSP-4)",
+    "old": "    repos ==> forall |t: int| #[trigger] ts.contains(t) && !installed(s, t) ==> has_ipm(s, t)",
+    "new": "    true",
+    "expect": [
+      "nsp_lemma_enable_one"
+    ]
+  },
+  {
+    "name": "no-premise-info",
+    "description": "drop premise INFO",
+    "old": "    forall |t: int| #[trigger] ts.contains(t) && s.ns.dom().contains(t) && mapped(view(s, t)) ==> listed(s, t)",
+    "new": "    true",
+    "expect": [
+      "nsp_lemma_unmap_one"
+    ]
+  },
+  {
+    "name": "no-premise-rtn",
+    "description": "drop defect premise RTN (F-NSP-6)",
+    "old": "    !repos_only ==> forall |t: int| #[trigger] ts.contains(t) && listed(s, t) ==> s.ns[t].act.rtn is None",
+    "new": "    true",
+    "expect": [
+      "nsp_lemma_unmap_one"
+    ]
+  },
+  {
+    "name": "no-premise-inst",
+    "description": "drop defect premise INST (F-NSP-5)",
+    "old": "    (a.pkg is None || a.pkg == Some(n)) && (a.rtn is None || a.rtn == Some(n))",
+    "new": "    true",
+    "expect": [
+      "nsp_lemma_installer"
+    ]
+  },
+  {
+    "name": "no-premise-own",
+    "description": "drop defect premise OWN (F-NSP-2)",
+    "old": "pub open spec fn premise_own(s: S, n: int) -> bool { pkg_dest(s.ns[n].act) == n }",
+    "new": "pub open spec fn premise_own(s: S, n: int) -> bool { true }",
+    "expect": [
+      "nsp_lemma_version_read"
+    ]
+  },
+  {
+    "name": "l1-enable-no-repo-sharing",
+    "description": "vacuity: L1 enable without the -repos sharing rule must lose the F-NSP-4 witness",
+    "old": "        let share = repos && code == a[src].code && v.repos == n && !rows_of(a, n);",
+    "new": "        let share = false;",
+    "expect": [
+      "nsp_witness_repos_second_run"
+    ]
+  },
+  {
+    "name": "l1-install-keeps-code",
+    "description": "vacuity: L1 independence that keeps the mapped code must lose the F-NSP-5 witness",
+    "old": "a.insert(n, View { code: Some(n), ver: Some(v),",
+    "new": "a.insert(n, View { code: a[n].code, ver: Some(v),",
+    "expect": [
+      "nsp_witness_installer_in_mapped"
+    ]
+  },
+  {
+    "name": "l1-unmap-keeps-code",
+    "description": "vacuity: L1 unmap that keeps the code must lose the F-NSP-6 witness",
+    "old": "    else { View { code: if repos_only { v.code } else { None }, repos: n, ..v } }",
+    "new": "    else { View { code: v.code, repos: n, ..v } }",
+    "expect": [
+      "nsp_witness_unmap_leaves_routines"
+    ]
+  },
+  {
+    "name": "l1-version-local-record",
+    "description": "vacuity: L1 version read from the namespace's own record must lose the F-NSP-2 witness",
+    "old": "    match a[n].code { Some(d) => if a.dom().contains(d) { a[d].ver } else { None }, None => None }",
+    "new": "    a[n].ver",
+    "expect": [
+      "nsp_witness_version_empty_when_mapped"
+    ]
+  },
+  {
+    "name": "l1-enable-share-new-only",
+    "description": "vacuity: L1 -repos sharing only for newly mapped targets must lose the tie witness (F-NSP-7)",
+    "old": "        let share = repos && code == a[src].code && v.repos == n && !rows_of(a, n);",
+    "new": "        let share = repos && code == a[src].code && v.repos == n && !rows_of(a, n) && v.code is None;",
+    "expect": [
+      "nsp_witness_repos_tie_other_source"
+    ]
+  }
+]

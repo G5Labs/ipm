@@ -1,0 +1,368 @@
+# container: ipm-uplift-iris-nsp  image: containers.intersystems.com/intersystems/iris-community:2026.1  at: 2026-11-13T18:22:20Z
+# script: validation/iris/nsp/83-nsp-namespace.script
+
+Node: 1176f046b99d, Instance: IRIS
+
+USER>
+
+Load of directory started on 11/13/2026 18:22:21
+Loading file /tmp/uplift/nsp/Uplift/Nsp/Util.cls as cls
+Imported class: Uplift.Nsp.Util
+Loading file /tmp/uplift/nsp/Uplift/Nsp/Ns.cls as cls
+Imported class: Uplift.Nsp.Ns
+Compiling 2 classes
+Compiling class Uplift.Nsp.Ns
+Compiling class Uplift.Nsp.Util
+Compiling routine Uplift.Nsp.Util.1
+Compiling routine Uplift.Nsp.Ns.1
+Load finished successfully.
+
+LOADED 1
+
+USER>
+
+>>> zpm "enable -map -ns NCB"
+  | 
+  | Version of IPM in current namespace: 
+  | NCC> [32mzpm [0m0.10.11-SNAPSHOT
+  | Mapping %IPM package in NCC equivalently to NCB
+  | Mapping %IPM.* routines in NCC equivalently to NCB
+  | Done.
+  | 
+  | [35mNCC> [0m [32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [35mUSER> [0m[32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [35mNCB> [0m [32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [39mInstalled In: [0mNCC 
+<<< status OK
+
+>>> zpm "enable -map -ns NCA,NCB,NCC"
+  | 
+  | Version of IPM in current namespace: 
+  | USER> [32mzpm [0m0.10.11-SNAPSHOT
+  | Mapping %IPM package in USER equivalently to NCA
+  | Mapping %IPM.* routines in USER equivalently to NCA
+  | Mapping %IPM package in USER equivalently to NCB
+  | Mapping %IPM.* routines in USER equivalently to NCB
+  | Skipping IPM mapping of NCC - IPM already installed.
+  | Done.
+  | 
+  | [35mNCC> [0m [32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [35mUSER> [0m[32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [35mNCA> [0m [32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [39mInstalled In: [0mUSER 
+  | [35mNCB> [0m [32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [39mInstalled In: [0mNCC 
+<<< status OK
+
+OBS|nc-nsp-N2-enable-map|cmdStatus=ok;ncaDestAfter=^/usr/irissys/mgr/user/;ncaDestBefore=^/usr/irissys/mgr/irislib/;ncaHasIPM=1;ncaMaps=pkg:USER rtn:USER repoD:-;ncbDestAfter=^/usr/irissys/mgr/NCC/;ncbDestBefore=^/usr/irissys/mgr/NCC/;ncbMaps=pkg:NCC rtn:NCC repoD:-;ncbStillOnNCC=1;nccDB=NCC@/usr/irissys/mgr/NCC/;nccDestAfter=^/usr/irissys/mgr/NCC/;nccOwnInstall=0.10.11-SNAPSHOT;prepNCBfromNCC=ok;printedMappingNCA=1;printedMappingNCB=1;printedSkipNCC=Skipping IPM mapping of NCC - IPM already installed.;userDB=USER@/usr/irissys/mgr/user/;
+
+USER>
+
+>>> zpm "repo -fs -n nc-nsp-own -path /tmp/"
+  | 
+  | up-dev-dep-fail 1.0.0 @ /tmp/uplift/fixtures/up-dev-dep-fail/
+  | up-dev-parent-crash 1.0.0 @ /tmp/uplift/fixtures/up-dev-parent-crash/
+  | up-halt 1.0.0 @ /tmp/uplift/fixtures/up-halt/
+  | up-hang 1.0.0 @ /tmp/uplift/fixtures/up-hang/
+  | up-parent-fail 1.0.0 @ /tmp/uplift/fixtures/up-parent-fail/
+  | up-parent-ok 1.0.0 @ /tmp/uplift/fixtures/up-parent-ok/
+  | up-res-fail 1.0.0 @ /tmp/uplift/fixtures/up-res-fail/
+  | up-dep 1.0.0 @ /tmp/uplift/fixtures/repo/up-dep/
+  | up-dep-halt 1.0.0 @ /tmp/uplift/fixtures/repo/up-dep-halt/
+  | nc-version-req 0.0.1 @ /tmp/uplift/nsp/fixtures/nc-version-req/
+  | zpm-registry 1.2.3+ncbuild @ /tmp/uplift/nsp/fixtures/nc-zpm-registry/
+  | nc-fc-other 1.0.0 @ /tmp/uplift/repo/fixtures/nc-fc-other/
+  | nc-fs1 1.0.0 @ /tmp/uplift/repo/fixtures/nc-fs1/
+  | nc-gbl1 1.0.0 @ /tmp/uplift/repo/fixtures/nc-gbl1/
+  | nc-gbl2 1.0.0 @ /tmp/uplift/repo/fixtures/nc-gbl2/
+  | nc-ghost-a 1.0.0 @ /tmp/uplift/repo/fixtures/nc-ghost-a/
+  | nc-ghost-b 1.0.0 @ /tmp/uplift/repo/fixtures/nc-ghost-b/
+  | nc-p 1.0.0 @ /tmp/uplift/repo/fixtures/nc-p/
+  | nc-purge 1.0.0 @ /tmp/uplift/repo/fixtures/nc-purge/
+  | nc-q 1.0.0 @ /tmp/uplift/repo/fixtures/nc-q/
+  | nc-repo-dpl 1.0.0 @ /tmp/uplift/repo/fixtures/nc-repo-dpl/
+  | nc-repo-pub 1.0.0 @ /tmp/uplift/repo/fixtures/nc-repo-pub/
+  | nc-web-dep 1.0.0 @ /tmp/uplift/repo/fixtures/nc-web-dep/
+  | nc-web-top 1.0.0 @ /tmp/uplift/repo/fixtures/nc-web-top/
+  | nc-web-w 1.0.0 @ /tmp/uplift/repo/fixtures/nc-web-w/
+  | nc-dep-a 1.0.0 @ /tmp/uplift/inst/fixtures/dep11/a-1.0.0/
+  | nc-dep-a 1.1.0 @ /tmp/uplift/inst/fixtures/dep11/a-1.1.0/
+  | nc-dep-b 1.0.0 @ /tmp/uplift/inst/fixtures/dep11/b-1.0.0/
+  | nc-dep-c 1.0.0 @ /tmp/uplift/inst/fixtures/dep11/c-1.0.0/
+  | nc-dep-c 2.0.0 @ /tmp/uplift/inst/fixtures/dep11/c-2.0.0/
+  | nc-dep-root 1.0.0 @ /tmp/uplift/inst/fixtures/dep11/root/
+  | nc-dep-aa-mid 1.0.0 @ /tmp/uplift/inst/fixtures/dep13/aa-mid/
+  | nc-dep-lroot 1.0.0 @ /tmp/uplift/inst/fixtures/dep13/lroot/
+  | nc-dep-zz-base 1.0.0 @ /tmp/uplift/inst/fixtures/dep13/zz-base/
+  | nc-dep-lf-base 1.0.0 @ /tmp/uplift/inst/fixtures/dep15/lf-base/
+  | nc-dep-lf-fail 1.0.0 @ /tmp/uplift/inst/fixtures/dep15/lf-fail/
+  | nc-dep-co-d 1.0.0 @ /tmp/uplift/inst/fixtures/dep19/d-1.0.0/
+  | nc-dep-co-d 2.0.0 @ /tmp/uplift/inst/fixtures/dep19/d-2.0.0/
+  | nc-dep-co-p 1.0.0 @ /tmp/uplift/inst/fixtures/dep19/p-1.0.0/
+  | nc-dep-co-p 2.0.0 @ /tmp/uplift/inst/fixtures/dep19/p-2.0.0/
+  | nc-inst-m 1.0.0 @ /tmp/uplift/inst/fixtures/m/1.0.0/
+  | nc-inst-m 2.0.0 @ /tmp/uplift/inst/fixtures/m/2.0.0-bad/
+  | nc-inst-m 2.0.0 @ /tmp/uplift/inst/fixtures/m/2.0.0-good/
+  | nc-inst-x 1.0.0 @ /tmp/uplift/inst/fixtures/r1/nc-inst-x/
+  | nc-inst-p 1.0.0 @ /tmp/uplift/inst/fixtures/r2/nc-inst-p/
+  | nc-inst-x 1.0.0 @ /tmp/uplift/inst/fixtures/r2/nc-inst-x/
+  | nc-fs2 1.0.0 @ /tmp/uplift/repo/fixtures/fsrepo-extra/nc-fs2/
+  | WARNING: nc-inst-m 2.0.0 previously found in /tmp/uplift/inst/fixtures/m/2.0.0-bad; also found in /tmp/uplift/inst/fixtures/m/2.0.0-good. The version in /tmp/uplift/inst/fixtures/m/2.0.0-bad will be used.
+  | WARNING: nc-inst-x 1.0.0 previously found in /tmp/uplift/inst/fixtures/r1/nc-inst-x; also found in /tmp/uplift/inst/fixtures/r2/nc-inst-x. The version in /tmp/uplift/inst/fixtures/r1/nc-inst-x will be used.
+  | nc-nsp-own
+  | 	Source: 		/tmp/*
+  | 	Enabled?		Yes
+  | 	Available?		Yes
+  | 	Use for Snapshots?	Yes
+  | 	Use for Prereleases?	Yes
+  | 	Is Read-Only?		No
+  | 
+  | nc-nsp-own
+  | 	Source: 		/tmp/*
+  | 	Enabled?		Yes
+  | 	Available?		Yes
+  | 	Use for Snapshots?	Yes
+  | 	Use for Prereleases?	Yes
+  | 	Is Read-Only?		No
+<<< status OK
+
+>>> zpm "repo -fs -n nc-nsp-user -path /tmp/"
+  | 
+  | up-dev-dep-fail 1.0.0 @ /tmp/uplift/fixtures/up-dev-dep-fail/
+  | up-dev-parent-crash 1.0.0 @ /tmp/uplift/fixtures/up-dev-parent-crash/
+  | up-halt 1.0.0 @ /tmp/uplift/fixtures/up-halt/
+  | up-hang 1.0.0 @ /tmp/uplift/fixtures/up-hang/
+  | up-parent-fail 1.0.0 @ /tmp/uplift/fixtures/up-parent-fail/
+  | up-parent-ok 1.0.0 @ /tmp/uplift/fixtures/up-parent-ok/
+  | up-res-fail 1.0.0 @ /tmp/uplift/fixtures/up-res-fail/
+  | up-dep 1.0.0 @ /tmp/uplift/fixtures/repo/up-dep/
+  | up-dep-halt 1.0.0 @ /tmp/uplift/fixtures/repo/up-dep-halt/
+  | nc-version-req 0.0.1 @ /tmp/uplift/nsp/fixtures/nc-version-req/
+  | zpm-registry 1.2.3+ncbuild @ /tmp/uplift/nsp/fixtures/nc-zpm-registry/
+  | nc-fc-other 1.0.0 @ /tmp/uplift/repo/fixtures/nc-fc-other/
+  | nc-fs1 1.0.0 @ /tmp/uplift/repo/fixtures/nc-fs1/
+  | nc-gbl1 1.0.0 @ /tmp/uplift/repo/fixtures/nc-gbl1/
+  | nc-gbl2 1.0.0 @ /tmp/uplift/repo/fixtures/nc-gbl2/
+  | nc-ghost-a 1.0.0 @ /tmp/uplift/repo/fixtures/nc-ghost-a/
+  | nc-ghost-b 1.0.0 @ /tmp/uplift/repo/fixtures/nc-ghost-b/
+  | nc-p 1.0.0 @ /tmp/uplift/repo/fixtures/nc-p/
+  | nc-purge 1.0.0 @ /tmp/uplift/repo/fixtures/nc-purge/
+  | nc-q 1.0.0 @ /tmp/uplift/repo/fixtures/nc-q/
+  | nc-repo-dpl 1.0.0 @ /tmp/uplift/repo/fixtures/nc-repo-dpl/
+  | nc-repo-pub 1.0.0 @ /tmp/uplift/repo/fixtures/nc-repo-pub/
+  | nc-web-dep 1.0.0 @ /tmp/uplift/repo/fixtures/nc-web-dep/
+  | nc-web-top 1.0.0 @ /tmp/uplift/repo/fixtures/nc-web-top/
+  | nc-web-w 1.0.0 @ /tmp/uplift/repo/fixtures/nc-web-w/
+  | nc-dep-a 1.0.0 @ /tmp/uplift/inst/fixtures/dep11/a-1.0.0/
+  | nc-dep-a 1.1.0 @ /tmp/uplift/inst/fixtures/dep11/a-1.1.0/
+  | nc-dep-b 1.0.0 @ /tmp/uplift/inst/fixtures/dep11/b-1.0.0/
+  | nc-dep-c 1.0.0 @ /tmp/uplift/inst/fixtures/dep11/c-1.0.0/
+  | nc-dep-c 2.0.0 @ /tmp/uplift/inst/fixtures/dep11/c-2.0.0/
+  | nc-dep-root 1.0.0 @ /tmp/uplift/inst/fixtures/dep11/root/
+  | nc-dep-aa-mid 1.0.0 @ /tmp/uplift/inst/fixtures/dep13/aa-mid/
+  | nc-dep-lroot 1.0.0 @ /tmp/uplift/inst/fixtures/dep13/lroot/
+  | nc-dep-zz-base 1.0.0 @ /tmp/uplift/inst/fixtures/dep13/zz-base/
+  | nc-dep-lf-base 1.0.0 @ /tmp/uplift/inst/fixtures/dep15/lf-base/
+  | nc-dep-lf-fail 1.0.0 @ /tmp/uplift/inst/fixtures/dep15/lf-fail/
+  | nc-dep-co-d 1.0.0 @ /tmp/uplift/inst/fixtures/dep19/d-1.0.0/
+  | nc-dep-co-d 2.0.0 @ /tmp/uplift/inst/fixtures/dep19/d-2.0.0/
+  | nc-dep-co-p 1.0.0 @ /tmp/uplift/inst/fixtures/dep19/p-1.0.0/
+  | nc-dep-co-p 2.0.0 @ /tmp/uplift/inst/fixtures/dep19/p-2.0.0/
+  | nc-inst-m 1.0.0 @ /tmp/uplift/inst/fixtures/m/1.0.0/
+  | nc-inst-m 2.0.0 @ /tmp/uplift/inst/fixtures/m/2.0.0-bad/
+  | nc-inst-m 2.0.0 @ /tmp/uplift/inst/fixtures/m/2.0.0-good/
+  | nc-inst-x 1.0.0 @ /tmp/uplift/inst/fixtures/r1/nc-inst-x/
+  | nc-inst-p 1.0.0 @ /tmp/uplift/inst/fixtures/r2/nc-inst-p/
+  | nc-inst-x 1.0.0 @ /tmp/uplift/inst/fixtures/r2/nc-inst-x/
+  | nc-fs2 1.0.0 @ /tmp/uplift/repo/fixtures/fsrepo-extra/nc-fs2/
+  | WARNING: nc-inst-m 2.0.0 previously found in /tmp/uplift/inst/fixtures/m/2.0.0-bad; also found in /tmp/uplift/inst/fixtures/m/2.0.0-good. The version in /tmp/uplift/inst/fixtures/m/2.0.0-bad will be used.
+  | WARNING: nc-inst-x 1.0.0 previously found in /tmp/uplift/inst/fixtures/r1/nc-inst-x; also found in /tmp/uplift/inst/fixtures/r2/nc-inst-x. The version in /tmp/uplift/inst/fixtures/r1/nc-inst-x will be used.
+  | nc-nsp-user
+  | 	Source: 		/tmp/*
+  | 	Enabled?		Yes
+  | 	Available?		Yes
+  | 	Use for Snapshots?	Yes
+  | 	Use for Prereleases?	Yes
+  | 	Is Read-Only?		No
+  | 
+  | nc-nsp-user
+  | 	Source: 		/tmp/*
+  | 	Enabled?		Yes
+  | 	Available?		Yes
+  | 	Use for Snapshots?	Yes
+  | 	Use for Prereleases?	Yes
+  | 	Is Read-Only?		No
+<<< status OK
+
+>>> zpm "enable -map -repos -ns NCA,NCB,NCD,NCE"
+  | 
+  | Version of IPM in current namespace: 
+  | USER> [32mzpm [0m0.10.11-SNAPSHOT
+  | Mapping %IPM package in USER equivalently to NCA
+  | Mapping %IPM.* routines in USER equivalently to NCA
+  | Mapping %IPM package in USER equivalently to NCB
+  | Mapping %IPM.* routines in USER equivalently to NCB
+  | Mapping %IPM package in USER equivalently to NCD
+  | Mapping %IPM.* routines in USER equivalently to NCD
+  | Mapping %IPM package in USER equivalently to NCE
+  | Mapping %IPM.* routines in USER equivalently to NCE
+  | Skipping repository mapping of NCA - IPM repositories found.
+  | Skipping repository mapping of NCB - IPM not mapped from source namespace.
+  | Skipping repository mapping of NCD - IPM not mapped from source namespace.
+  | Skipping repository mapping of NCE - IPM not mapped from source namespace.
+  | Done.
+  | 
+  | [35mNCC> [0m [32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [35mUSER> [0m[32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [35mNCA> [0m [32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [39mInstalled In: [0mUSER 
+  | [35mNCB> [0m [32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [39mInstalled In: [0mNCC 
+  | [35mNCD> [0m [32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [39mInstalled In: [0mUSER 
+  | [35mNCE> [0m [32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [39mInstalled In: [0mUSER 
+<<< status OK
+
+OBS|nc-nsp-N3-enable-map-repos|cmdStatus=ok;lineNCD=Skipping repository mapping of NCD - IPM not mapped from source namespace.;ncaMaps=pkg:USER rtn:USER repoD:-;ncaOwnRepo=ok nc-nsp-own;ncaRepos=nc-nsp-own;ncbMaps=pkg:NCC rtn:NCC repoD:-;ncdMaps=pkg:USER rtn:USER repoD:-;ncdRepos=<none>;skipNCA=Skipping repository mapping of NCA - IPM repositories found.;skipNCB=Skipping repository mapping of NCB - IPM not mapped from source namespace.;
+
+>>> zpm "enable -map -repos -ns NCD,NCE"
+  | 
+  | Version of IPM in current namespace: 
+  | USER> [32mzpm [0m0.10.11-SNAPSHOT
+  | Mapping %IPM package in USER equivalently to NCD
+  | Mapping %IPM.* routines in USER equivalently to NCD
+  | Mapping %IPM package in USER equivalently to NCE
+  | Mapping %IPM.* routines in USER equivalently to NCE
+  | Mapping IPM repository in USER equivalently to NCD
+  | Mapping IPM repository in USER equivalently to NCE
+  | Done.
+  | 
+  | [35mNCC> [0m [32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [35mUSER> [0m[32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [35mNCA> [0m [32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [39mInstalled In: [0mUSER 
+  | [35mNCB> [0m [32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [39mInstalled In: [0mNCC 
+  | [35mNCD> [0m [32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [39mInstalled In: [0mUSER 
+  | [35mNCE> [0m [32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [39mInstalled In: [0mUSER 
+<<< status OK
+
+OBS|nc-nsp-N3-enable-map-repos-rerun|cmdStatus=ok;lineNCD=;ncdMaps=pkg:USER rtn:USER repoD:USER;ncdRepoGlobalDest=^/usr/irissys/mgr/user/;ncdRepos=nc-nsp-user;nceMaps=pkg:USER rtn:USER repoD:USER;
+
+USER>
+
+>>> zpm "load /tmp/uplift/nsp/fixtures/nc-version-req/"
+  | 
+  | [31mERROR![0m The module requires IPM version >=0.9. Current IPM version is 0.10.11-SNAPSHOT
+<<< status ERROR ERROR #5001: The module requires IPM version >=0.9. Current IPM version is 0.10.11-SNAPSHOT
+
+>>> zpm "uninstall nc-version-req"
+  | 
+  | [31mERROR![0m Module 'nc-version-req' not found.
+<<< status ERROR ERROR #5001: Module 'nc-version-req' not found.
+
+>>> zpm "load /tmp/uplift/nsp/fixtures/nc-version-req/"
+  | 
+  | [31mERROR![0m The module requires IPM version >=0.9. Current IPM version is .0.0
+<<< status ERROR ERROR #5001: The module requires IPM version >=0.9. Current IPM version is .0.0
+
+>>> zpm "uninstall nc-version-req -force"
+  | 
+  | [31mERROR![0m Module 'nc-version-req' not found.
+<<< status ERROR ERROR #5001: Module 'nc-version-req' not found.
+
+OBS|nc-nsp-N9-ipmversion-mapped|ncaErrLine=[31mERROR![0m The module requires IPM version >:0.9. Current IPM version is .0.0;ncaLoad=err:ERROR #5001: The module requires IPM version >:0.9. Current IPM version is .0.0;ncaPkgDest=^/usr/irissys/mgr/user/;ncaRecord=-;ncaZpmRecord=-;userLoad=err:ERROR #5001: The module requires IPM version >:0.9. Current IPM version is 0.10.11-SNAPSHOT;userRecord=-;
+
+USER>
+
+>>> zpm "load /home/irisowner/zpm/tests/integration_tests/Test/PM/Integration/_data/sys-ns-module/"
+  | 
+  | [31mERROR![0m The module requires the %SYS namespace. Current namespace is USER
+<<< status ERROR ERROR #5001: The module requires the %SYS namespace. Current namespace is USER
+
+>>> zpm "load -dev /home/irisowner/zpm/tests/integration_tests/Test/PM/Integration/_data/sys-ns-module/"
+  | 
+  | [31mERROR![0m The module requires the %SYS namespace. Current namespace is USER
+<<< status ERROR ERROR #5001: The module requires the %SYS namespace. Current namespace is USER
+
+>>> zpm "list"
+  | [32mIPM (zpm)[0m     [39m0.10.11-SNAPSHOT[0m
+  | [32msys-ns-module[0m [39m1.0.0[0m [31m(DeveloperMode)[0m
+<<< status OK
+
+OBS|nc-nsp-N8-sysns-dev|devLoad=err:ERROR #5001: The module requires the %SYS namespace. Current namespace is USER;devRecord=1.0.0/dev;listedAfterDev=1;plainLoad=err:ERROR #5001: The module requires the %SYS namespace. Current namespace is USER;plainRecord=-;sysClass=absent;
+
+>>> zpm "uninstall sys-ns-module -force"
+  | 
+  | [USER|sys-ns-module]	Clean START
+  | [USER|sys-ns-module]	Unconfigure START
+  | [USER|sys-ns-module]	Unconfigure SUCCESS
+  | [USER|sys-ns-module]	Clean SUCCESS
+<<< status OK
+
+USER>
+
+>>> zpm "load /tmp/uplift/nsp/fixtures/nc-zpm-registry/"
+  | 
+  | Building dependency graph...Done.
+  | [USER|zpm-registry]	Initialize START
+  | [USER|zpm-registry]	Initialize SUCCESS
+  | [USER|zpm-registry]	Reload START (/tmp/uplift/nsp/fixtures/nc-zpm-registry/)
+  | [USER|zpm-registry]	Reload SUCCESS
+  | [zpm-registry]	Module object refreshed.
+  | [USER|zpm-registry]	Validate START
+  | [USER|zpm-registry]	Validate SUCCESS
+  | [USER|zpm-registry]	Compile START
+  | [USER|zpm-registry]	Compile SUCCESS
+  | [USER|zpm-registry]	Activate START
+  | [USER|zpm-registry]	Configure START
+  | [USER|zpm-registry]	Configure SUCCESS
+  | [USER|zpm-registry]	Activate SUCCESS
+<<< status OK
+
+>>> zpm "version"
+  | 
+  | [35mNCC> [0m [32mzpm[0m          [39m0.10.11-SNAPSHOT[0m
+  | [35mUSER> [0m[32mzpm[0m          [39m0.10.11-SNAPSHOT[0m
+  | [32mzpm-registry[0m [39m1.2.3+ncbuild[0m
+  | [35mNCA> [0m [32mzpm[0m          [39m0.10.11-SNAPSHOT[0m
+  | [39mInstalled In: [0mUSER 
+  | [32mzpm-registry[0m [39m1.2.3+ncbuild[0m
+  | [35mNCB> [0m [32mzpm[0m          [39m0.10.11-SNAPSHOT[0m
+  | [39mInstalled In: [0mNCC 
+  | [35mNCD> [0m [32mzpm[0m          [39m0.10.11-SNAPSHOT[0m
+  | [39mInstalled In: [0mUSER 
+  | [32mzpm-registry[0m [39m1.2.3+ncbuild[0m
+  | [35mNCE> [0m [32mzpm[0m          [39m0.10.11-SNAPSHOT[0m
+  | [39mInstalled In: [0mUSER 
+  | [32mzpm-registry[0m [39m1.2.3+ncbuild[0m
+<<< status OK
+
+>>> zpm "info"
+  | 
+  | Welcome to the Package Manager Shell (ZPM). Version: [32m0.10.11-SNAPSHOT[0m
+  | Enter q/quit to exit the shell. Enter ?/help to view available commands
+  | [36mNo registry configured[0m
+  | System Mode: <unset>
+  | Mirror Status: NOTINIT
+  | IRIS for UNIX (Ubuntu Server LTS for ARM64 Containers) 2026.1 (Build 234U) Fri Mar 27 2026 14:08:22 EDT
+  | 
+  | Currently installed top-level modules are listed below:
+  | [32mIPM[0m          [39m0.10.11-SNAPSHOT[0m
+  | [32mzpm-registry[0m [39m1.2.3[0m
+<<< status OK
+
+OBS|nc-nsp-N10-version-build|infoLine=[32mzpm-registry[0m [39m1.2.3[0m;infoShowsBuild=0;load=ok;record=1.2.3+ncbuild;versionLine=[32mzpm-registry[0m [39m1.2.3+ncbuild[0m;versionShowsBuild=1;versionStatus=ok;
+
+>>> zpm "uninstall zpm-registry -force"
+  | 
+  | [USER|zpm-registry]	Clean START
+  | [USER|zpm-registry]	Unconfigure START
+  | [USER|zpm-registry]	Unconfigure SUCCESS
+  | [USER|zpm-registry]	Clean SUCCESS
+<<< status OK
+
+USER>
