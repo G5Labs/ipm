@@ -1,0 +1,215 @@
+{
+ "cases": [
+  {
+   "id": "N-R05-Q23F",
+   "setup": [],
+   "cmd": "load /home/irisowner/zpm/.followup/fixtures/r05/q23f/m/2.0.0/",
+   "mods": [
+    "fu-q23f-m",
+    "fu-q23f-d"
+   ],
+   "source": "loadtx prediction N-R05-Q23F; Utils/Module.cls:1172,1194-1196 (the dependency skips only its own tstart), :1357-1362",
+   "expect": {
+    "cmd.ok": "0",
+    "after.fu-q23f-m.present": "0",
+    "after.fu-q23f-d.present": "0",
+    "after.fu-q23f-d.class": "0",
+    "rows": "1",
+    "row1.package": "fu-q23f-m",
+    "row1.success": "ERR",
+    "row1.committed": "0"
+   }
+  },
+  {
+   "id": "N-R05-Q23S",
+   "setup": [],
+   "cmd": "load /home/irisowner/zpm/.followup/fixtures/r05/q23s/m/2.0.0/",
+   "mods": [
+    "fu-q23s-m",
+    "fu-q23s-d"
+   ],
+   "source": "loadtx prediction N-R05-Q23S",
+   "expect": {
+    "cmd.ok": "1",
+    "after.fu-q23s-m.present": "1",
+    "after.fu-q23s-d.present": "1",
+    "after.fu-q23s-d.class": "1",
+    "rows": "2",
+    "row1.package": "fu-q23s-m",
+    "row2.package": "fu-q23s-d",
+    "row2.committed": "1",
+    "row2.success": "OK",
+    "row1.committed": "1"
+   }
+  },
+  {
+   "id": "N-R05-NESTF",
+   "setup": [],
+   "cmd": "load /home/irisowner/zpm/.followup/fixtures/r05/nestf/m/2.0.0/",
+   "mods": [
+    "fu-nestf-m",
+    "fu-nestf-d1",
+    "fu-nestf-d2"
+   ],
+   "source": "reduction in loadtx.py docstring: the top's LoadDependencies loads d2 then d1 with the top's params (Utils/Module.cls:1368-1405, Storage/Module.cls:1139-1154); d1's own NoJournal escapes the rollback (archived M5), d2 does not inherit it",
+   "expect": {
+    "cmd.ok": "0",
+    "after.fu-nestf-m.present": "0",
+    "after.fu-nestf-d2.present": "0",
+    "after.fu-nestf-d2.class": "0",
+    "after.fu-nestf-d1.present": "1",
+    "after.fu-nestf-d1.class": "1",
+    "rows": "1",
+    "row1.package": "fu-nestf-m"
+   }
+  },
+  {
+   "id": "N-R05-NESTS",
+   "setup": [],
+   "cmd": "load /home/irisowner/zpm/.followup/fixtures/r05/nests/m/2.0.0/",
+   "mods": [
+    "fu-nests-m",
+    "fu-nests-d1",
+    "fu-nests-d2"
+   ],
+   "source": "same reduction: rows in ID order top, d2, d1; d2 loaded once",
+   "expect": {
+    "cmd.ok": "1",
+    "rows": "3",
+    "row1.package": "fu-nests-m",
+    "row2.package": "fu-nests-d2",
+    "row3.package": "fu-nests-d1",
+    "row2.committed": "1",
+    "row3.committed": "1",
+    "after.fu-nests-d2.present": "1",
+    "after.fu-nests-d1.present": "1"
+   }
+  },
+  {
+   "id": "N-R05-DIA",
+   "setup": [],
+   "cmd": "load /home/irisowner/zpm/.followup/fixtures/r05/dia/m/2.0.0/",
+   "mods": [
+    "fu-dia-m",
+    "fu-dia-d1",
+    "fu-dia-d2",
+    "fu-dia-s"
+   ],
+   "source": "shared dependency loaded once, before its dependents (Utils/Module.cls:1381-1395)",
+   "expect": {
+    "cmd.ok": "1",
+    "rows": "4",
+    "row1.package": "fu-dia-m",
+    "row2.package": "fu-dia-s",
+    "after.fu-dia-s.present": "1",
+    "after.fu-dia-d1.present": "1",
+    "after.fu-dia-d2.present": "1",
+    "after.fu-dia-m.present": "1"
+   }
+  },
+  {
+   "id": "N-R05-DEVUP",
+   "setup": [
+    "load -dev /home/irisowner/zpm/.followup/fixtures/r05/devup/d/1.0.0/"
+   ],
+   "cmd": "load /home/irisowner/zpm/.followup/fixtures/r05/devup/m/2.0.0/",
+   "mods": [
+    "fu-devup-m",
+    "fu-devup-d"
+   ],
+   "source": "Storage/Module.cls:1139-1163 (installed 1.0.0 does not satisfy 2.0.0); Utils/Module.cls:307-311 (DeveloperMode overridden to 0 for a dependency); the developer-mode guard at :109 needs params(\"Install\"), which load never sets (Main.cls:2457-2460)",
+   "expect": {
+    "setup1.ok": "1",
+    "before.fu-devup-d.dev": "1",
+    "cmd.ok": "1",
+    "after.fu-devup-d.version": "2.0.0",
+    "after.fu-devup-d.dev": "0",
+    "rows": "2",
+    "row2.package": "fu-devup-d"
+   }
+  },
+  {
+   "id": "N-R05-DEVSAME",
+   "setup": [
+    "load -dev /home/irisowner/zpm/.followup/fixtures/r05/devsame/d/1.0.0/"
+   ],
+   "cmd": "load /home/irisowner/zpm/.followup/fixtures/r05/devsame/m/2.0.0/",
+   "mods": [
+    "fu-devsame-m",
+    "fu-devsame-d"
+   ],
+   "source": "Storage/Module.cls:1139-1154: an installed version that satisfies the requirement is skipped whatever its developer mode",
+   "expect": {
+    "setup1.ok": "1",
+    "cmd.ok": "1",
+    "after.fu-devsame-d.version": "1.0.0",
+    "after.fu-devsame-d.dev": "1",
+    "rows": "1",
+    "row1.package": "fu-devsame-m"
+   }
+  },
+  {
+   "id": "N-R05-HIGHER",
+   "setup": [
+    "load /home/irisowner/zpm/.followup/fixtures/r05/higher/d/3.0.0/"
+   ],
+   "cmd": "load /home/irisowner/zpm/.followup/fixtures/r05/higher/m/2.0.0/",
+   "mods": [
+    "fu-higher-m",
+    "fu-higher-d"
+   ],
+   "source": "Storage/Module.cls:1157-1163 (no downgrade: >=3.0.0 and 1.0.0 cannot both hold) and :1180-1182 (Could not find satisfactory version)",
+   "expect": {
+    "setup1.ok": "1",
+    "cmd.ok": "0",
+    "after.fu-higher-m.present": "0",
+    "after.fu-higher-d.version": "3.0.0",
+    "rows": "1",
+    "row1.success": "ERR",
+    "row1.committed": "0"
+   }
+  },
+  {
+   "id": "N-R05-HIGHEROK",
+   "setup": [
+    "load /home/irisowner/zpm/.followup/fixtures/r05/higherok/d/3.0.0/"
+   ],
+   "cmd": "load /home/irisowner/zpm/.followup/fixtures/r05/higherok/m/2.0.0/",
+   "mods": [
+    "fu-higherok-m",
+    "fu-higherok-d"
+   ],
+   "source": "Storage/Module.cls:1139-1154: 3.0.0 satisfies >=1.0.0 and is skipped",
+   "expect": {
+    "setup1.ok": "1",
+    "cmd.ok": "1",
+    "after.fu-higherok-m.present": "1",
+    "after.fu-higherok-d.version": "3.0.0",
+    "rows": "1"
+   }
+  },
+  {
+   "id": "N-R05-PARDEF",
+   "setup": [],
+   "cmd": "load /home/irisowner/zpm/.followup/fixtures/r05/pardef/m/2.0.0/",
+   "mods": [
+    "fu-pardef-m",
+    "fu-pardef-d"
+   ],
+   "source": "loadtx: the parent's <Defaults> are in the params its dependencies receive (Utils/Module.cls:1165-1169, :1323); without transactions everything written stays and both records read Committed=1 (:1224-1227)",
+   "expect": {
+    "cmd.ok": "0",
+    "after.fu-pardef-m.present": "1",
+    "after.fu-pardef-d.present": "1",
+    "after.fu-pardef-d.class": "1",
+    "rows": "2",
+    "row1.package": "fu-pardef-m",
+    "row1.committed": "1",
+    "row1.success": "ERR",
+    "row2.package": "fu-pardef-d",
+    "row2.committed": "1",
+    "row2.success": "OK"
+   }
+  }
+ ]
+}
