@@ -2,7 +2,7 @@
 
 Each audit claim is checked against the original sources before any artifact is revised. A claim can be CONFIRMED, NARROWED (true in part, with the part that does not hold stated), or REFUTED. Paths are relative to `.g5/` unless they start with `src/`.
 
-## R01 — evaluator versus Verus clause
+## R01: evaluator versus Verus clause
 
 Probe: `Verus_verification/followup/probes/audit_r01_r03_probe.py`, run with
 
@@ -19,7 +19,7 @@ It loads the original evaluator, parses the saved `raw.log` and evaluates in mem
 | the manifest-only rule omits the document-version check | `evaluate_replay.py:109-114`; `contract.rs:296` (`m.doc == e.ver`) | a synthetic observation with `zpm_document_version=9.9.9` passes `manifest_only 2.0.0` | CONFIRMED |
 | `slot_unchanged({}, 'top')` returns true | `evaluate_replay.py:80-86` | `True` | CONFIRMED. In addition, `unchanged` in Verus is `m == i` over all six `Mod` fields including `wr` (`model.rs:52-64`); the Python comparison omits the `LastUpdated` proxy that the same evaluator uses for `kept` (`evaluate_replay.py:175`) |
 
-## R03 — evidence completeness (first part)
+## R03: evidence completeness (first part)
 
 | Claim | Source checked | Observed | Result |
 |---|---|---|---|
@@ -28,7 +28,7 @@ It loads the original evaluator, parses the saved `raw.log` and evaluates in mem
 | only observed or begun IDs are evaluated | `evaluate_replay.py:297-300` | `not_realized` lists only binding entries whose `realized` is not `yes`, so a realized case absent from the log has no entry | CONFIRMED by reading |
 | repeated History rows for one slot | `native/scripts/B2Native/Replay.cls:301-327` | the driver reports the first row per slot and only counts the others in `history.S.x.rows`; the original evaluator ignores that field | CONFIRMED as an additional multiplicity gap at the driver level. No saved replay contains `x.rows` |
 
-## R01 and R03 — remaining subcases
+## R01 and R03: remaining subcases
 
 | Claim | Result | Evidence |
 |---|---|---|
@@ -39,7 +39,7 @@ It loads the original evaluator, parses the saved `raw.log` and evaluates in mem
 | R03e expectations revised after observation | CONFIRMED and quantified. `l1_permitted` in the final `cases.json` differs from the snapshot taken before the run in 27 of the 43 return-b cases, all 12 T/K cases and both approx-b cases (39 of the 55 final-run cases replayed against snapshot `fc7adec4`). c51-c52 and approx-c ran on a later snapshot and are unchanged. `l2_predicted` and `inputs` are unchanged in every final-run case, so re-evaluation without a new IRIS run is valid | `20261113T232332Z-replay-reeval/summary.json` (`l1_permitted_revised_after_run`) |
 | R03f driver and result revision | CONFIRMED, with a further gap. The runner hashes the helper sources after the run ends (`run-iris.sh:129`), and only one replay run's helper hash (`approx-c`, `a3989fa8…`) matches a committed helper revision (`3b5e633a`). The helper sources used by return-b, terminate-b, sigkill-b and c51-c52 were never committed and cannot be recovered | `git log -- .g5/Verus_verification/native/scripts`; receipts |
 
-## R02 — Committed and clause identity
+## R02: Committed and clause identity
 
 | Claim | Result | Evidence |
 |---|---|---|

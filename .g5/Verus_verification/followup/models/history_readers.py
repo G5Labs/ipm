@@ -4,7 +4,7 @@ retention purge. Run with python3 -I -B:  python3 -I -B history_readers.py OUT_D
 
 As built (571e04a1, src/cls/IPM/General/History.cls unless stated):
   filter      `history` passes every -D key/value (and, per native H2, the namespace's default
-              modifiers) as filter(col)=value (Main.cls:4135). ConstructSQLWhere (:93-126) walks the
+              modifiers) as filter(col)=value (Main.cls:4136). ConstructSQLWhere (:93-126) walks the
               keys in collation order and STOPS at the first key with no value or a name that is not
               ^[a-zA-Z][a-zA-Z0-9]*$ (an underscore column such as Version_Major). Earlier keys become
               conjuncts: >=, <=, <> / >, <, = / * -> LIKE / equality. An unknown column is an SQL error.

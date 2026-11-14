@@ -23,7 +23,7 @@ Status values: OPEN (not started), WORKING, CLOSED (closure evidence exists and 
 
 ## Ledger
 
-### R01 — native L1 evaluator accepts observations the Verus clause rejects
+### R01: native L1 evaluator accepts observations the Verus clause rejects
 
 Accepted. Primary class: A1, V5.
 
@@ -39,7 +39,7 @@ Accepted. Primary class: A1, V5.
 | R01h | L1-only controls, separate from L2 detection | accept | controls report L1 and L2 detection separately; a control counts for L1 only if the L1 verdict changes |
 | R01i | re-score existing receipts case by case | accept | new verdicts for every replay run in a new evidence directory, with an original versus corrected table |
 
-### R02 — Committed expectation and clause identity in native aggregation
+### R02: Committed expectation and clause identity in native aggregation
 
 Accepted. Primary class: A1, V5.
 
@@ -50,7 +50,7 @@ Accepted. Primary class: A1, V5.
 | R02c | aggregation compares one boolean, so a different failed clause can look like agreement | accept | compare the set of violated clauses per case with the model's `violated_clauses`; report exact, superset, subset or different |
 | R02d | validate individual failed clauses | accept | one synthetic negative control per clause family (`L1-STATUS`, `L1-NAMESPACE`, `H-RECORD-EXISTS`, `H-RECORD-FIELDS`, `H-COMMITTED`) per slot kind |
 
-### R03 — incomplete evidence accepted too readily
+### R03: incomplete evidence accepted too readily
 
 Accepted. Primary class: A2, V7.
 
@@ -65,7 +65,7 @@ Accepted. Primary class: A2, V7.
 | R03g | tests with copied or synthetic receipts: missing case, missing field, stale input, conflicting evidence | accept | a test suite that copies a real run into a temporary directory, mutates it, and asserts each outcome |
 | R03h | list the cases that need new ordinary execution | accept | list in the re-evaluation summary, and run the ordinary ones that fit the permissions |
 
-### R04 — history consumers are not modeled
+### R04: history consumers are not modeled
 
 Accepted. Primary class: A2, V1.
 
@@ -79,7 +79,7 @@ Accepted. Primary class: A2, V1.
 | R04f | a deliberately wrong model variant and a valid neighbor | accept | the wrong variant must be rejected by the checks; a valid neighbor (a correct filter) must pass |
 | R04g | narrowly scoped ordinary positive native cases | accept | native run in the dedicated container on test records only; no delete-all and no widening reproduction |
 
-### R05 — one global transaction mode; dependency defaults, nesting, installed state
+### R05: one global transaction mode; dependency defaults, nesting, installed state
 
 Accepted. Primary class: A2, V4. The maintainer decisions in Q-22 and Q-23 stay open.
 
@@ -94,7 +94,7 @@ Accepted. Primary class: A2, V4. The maintainer decisions in Q-22 and Q-23 stay 
 | R05g | ordinary paired fixtures on the pinned product, including the unobserved Q-23 case | accept | native runs of ordinary loads only |
 | R05h | quantify the abstraction; check interactions outside the single-fault domain where they change a conclusion | accept | state counts and bounds; two-fault cases where a conclusion could change |
 
-### R06 — process-end modeling and the repair ordering
+### R06: process-end modeling and the repair ordering
 
 Accepted. Primary class: A2, V4. New native process terminations are not run (see ground rules). Archived T/K observations and synthetic cases are used. Approximate status stays where no exact native witness exists.
 
@@ -107,7 +107,7 @@ Accepted. Primary class: A2, V4. New native process terminations are not run (se
 | R06e | the repair (variant 103) relies on write ordering beyond the R-01 probe | accept | re-derive the ordering the repair needs, compare with N-P20 sub-results (including the refuted c2), and state what stays conditional |
 | R06f | the two approximate interruption cases (C49T/K) | accept as residual | keep APPROXIMATE; state what an exact witness would need |
 
-### R07 — granularity and environment limits
+### R07: granularity and environment limits
 
 Accepted. Primary class: A2, V6.
 
@@ -117,7 +117,7 @@ Accepted. Primary class: A2, V6.
 | R07b | strengthen the high-impact abstractions with source or ordinary test evidence (producer versus final reader, phase order, multiple operations, persistence) | accept | per projection: evidence added or the premise left conditional |
 | R07c | concurrency, restart, files and registry effects, global progress | accept as explicit residual | listed as not established, with the reason |
 
-### R08 — broad intent recovery versus deep formal scope
+### R08: broad intent recovery versus deep formal scope
 
 Accepted. Primary class: A2, V7. No whole-product proof is attempted.
 
@@ -128,7 +128,7 @@ Accepted. Primary class: A2, V7. No whole-product proof is attempted.
 | R08c | in-scope parts of other load paths (write check, git and legacy XML, temporary repository cleanup, lock files, namespace defaults, dependency selection) traced to operations, commits and readers | accept | trace table with file:line and baseline evidence |
 | R08d | separate per-feature scope exclusions from regressions | accept | column in the scope ledger |
 
-### R09 — bugs and observations not comprehensively reconciled
+### R09: bugs and observations not comprehensively reconciled
 
 Accepted. Primary class: A1, V7.
 
@@ -140,7 +140,7 @@ Accepted. Primary class: A1, V7.
 | R09d | expected versus observed, evidence, impact, human decision, missing evidence, proposed direction; no operational misuse detail | accept | same |
 | R09e | sample widely across the whole intent inventory | accept | sampling record in the review folder |
 
-### R10 — design simplifications incomplete
+### R10: design simplifications incomplete
 
 Accepted. Primary class: A4.
 
@@ -152,7 +152,7 @@ Accepted. Primary class: A4.
 | R10d | temporary repository, cross-namespace and dependency-flag findings lack a simplification disposition | accept | explicit entries or a reason for no separate simplification |
 | R10e | per proposal: owner, old complexity, what gets simpler, preserved behavior, tradeoffs, decisive neighbor case, unresolved choices, model evidence | accept | rewritten `design_simplification.md` |
 
-### R11 — no owner-facing uncertainty file
+### R11: no owner-facing uncertainty file
 
 Accepted. Primary class: A1, V7. Maintainer decisions are not made by this follow-up.
 
@@ -165,7 +165,7 @@ Accepted. Primary class: A1, V7. Maintainer decisions are not made by this follo
 | R11e | statuses in historical notes that lag the final evidence | accept | listed in the crosswalk; historical files are not edited |
 | R11f | research each question through code, history, docs and runtime tests where possible; give the most reasonable assumption and alternatives | accept | per question: what was checked and what it showed |
 
-### R12 — final round repairs not independently re-reviewed
+### R12: final round repairs not independently re-reviewed
 
 Accepted. Primary class: A2, V7.
 

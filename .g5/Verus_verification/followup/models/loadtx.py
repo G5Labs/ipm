@@ -9,7 +9,7 @@ with what the source actually does (all lines at 571e04a1):
 
   mode       LoadNewModule merges the module's own <Defaults> under the params it was called with
              (Utils/Module.cls:1165-1169). A dependency is called with its parent's merged params
-             (LoadDependencies at :1323, LoadModuleReference -> LoadModuleFromDirectory :306-311),
+             (LoadDependencies at :1328, LoadModuleReference -> LoadModuleFromDirectory :306-311),
              so caller flags override the parent's defaults, which override the dependency's own.
              NoTransaction and NoJournal are separate keys, merged one by one.
   begin      NoJournal: process journaling off until the activation returns (:1191-1193,
