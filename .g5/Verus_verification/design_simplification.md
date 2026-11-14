@@ -13,16 +13,16 @@ Paths are relative to `.g5/Verus_verification/`. `FR` is `followup/results/`. Pr
 | S1 | Validate the whole load before the first write | `src/cls/IPM/Utils/Module.cls` `LoadNewModule` | D4, D9, D11, D12, V4, V7 | Q-17 (chooses option A) | none as a variant. The decisive cases are already L1 cases |
 | S2 | One durable history row per action, written so no rollback can remove it | `General/HistoryTemp.cls`, `General/AbstractHistory.cls` | D1, D10, V1, V2, V9, V10 | Q-05/Q-06b for caller transactions | repair variant 103 (original crate); follow-up `models/loadtx.py` variants REPAIR-103, REPAIR-103-GUARDED |
 | S3 | Mark `Committed` only where a write is kept | `AbstractHistory.cls` `Finalize` | needed for S2 to be correct | none | control 05 (original); REPAIR-NAIVE (follow-up) |
-| S4 | Structured history filters | `General/History.cls` `ConstructSQLWhere`, `AutoPurgeOldHistory` | D2, D3, D18 (if Q-18 says filters only) | Q-10, Q-18 | `models/history_readers.py` |
+| S4 | Structured history filters | `General/History.cls` `ConstructSQLWhere`, `AutoPurgeOldHistory` | D2, D3, D24, D18 (if Q-18 says filters only) | Q-10, Q-18 | `models/history_readers.py` |
 | S5 | One exit path per phase | `Storage/Module.cls` `ExecutePhases` | D6, V5 | Q-14 (chooses option A) | none as a variant |
 | S6 | Declared setting defaults | `Repo/UniversalSettings.cls` | D5 | none | none |
 | S7 | A temporary repository that cannot outlive or fail its load | `General/TempLocalRepoManager.cls`, `Main.cls` `LoadInternal` | D13, I2 | none | none |
-| S8 | One transaction plan per load | `Utils/Module.cls` `LoadNewModule`, `LoadDependencies`, `LoadModuleFromDirectory` | D14, the dependency-closure consequence and the `Committed` problems described under S8 | Q-22, Q-23 (the maintainer chooses the rule) | `models/loadtx.py` M-GLOBAL-MODE |
-| S9 | Namespace-aware history readers and setting scope | `General/History.cls` global readers, `Main.cls` default modifiers | D19, D20, the global-delete error handling | Q-12 (D block), Q-16 | `models/history_readers.py` |
+| S8 | One transaction plan per load | `Utils/Module.cls` `LoadNewModule`, `LoadDependencies`, `LoadModuleFromDirectory` | D14, D21, D22, D28 and the per-dependency-mode condition on the D1 repair | Q-22, Q-23 (the maintainer chooses the rule) | `models/loadtx.py` M-GLOBAL-MODE |
+| S9 | Namespace-aware history readers and setting scope | `General/History.cls` global readers, `Main.cls` default modifiers | D19, D20, D23, I4 | Q-12 (D block), Q-16 | `models/history_readers.py` |
 
 Findings that get no separate simplification, with the reason:
 
-- A developer-mode dependency replaced and its developer mode cleared (follow-up L-5). This is a policy decision, not a structural problem. Once decided, the rule belongs in S8's load plan.
+- A developer-mode dependency replaced and its developer mode cleared (I3). This is a policy decision, not a structural problem. Once decided, the rule belongs in S8's load plan.
 - I1 (unfinished phase displayed as running). This is a reader display choice that S2 and S5 make rarer but do not settle.
 - `.tar.gz` (D15) and relative paths (D17). These are local input checks, and S1's single validation point is where they would live.
 
@@ -95,7 +95,7 @@ Worked preserving and refusing pair (native `FR/native/20261113T234810Z-r04-hist
 
 Preserved behavior. Wildcard `*`, the comparison operators, the `-confirm` gate and the SQL-injection guard on column names.
 
-Policy choices. Whether default modifiers are filters (Q-18). Under S4 a default modifier that is not a column would be refused, so S4 together with Q-18 option A removes D18. Whether an in-progress record may be purged (Q-20). The model shows that once D3 is fixed, an in-progress record older than the cutoff is purged unless S4's purge triple excludes unfinished rows.
+Policy choices. Whether default modifiers are filters (Q-18). Under S4 a default modifier that is not a column would be refused, so S4 together with Q-18 option A removes D18. Whether an in-progress record may be purged (Q-20, Q-29). The model shows that once D3 is fixed, an in-progress record older than the cutoff is purged unless S4's purge triple excludes unfinished rows.
 
 Evidence. `models/history_readers.py` (receipt `FR/20261113T234915Z-history-readers-model`): the 69 commands of the valid neighbor (plain columns, no default modifiers) match the contract exactly. The deliberately wrong variant "skip invalid keys" (a tempting partial fix) still differs from the contract and is refuted natively by N-R04-SEL. So skipping instead of stopping is not a repair. The variant with an unquoted cutoff is refuted by the archived no-op purge (X4), which confirms the quoting is the cause of D3.
 

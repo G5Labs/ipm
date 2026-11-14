@@ -115,7 +115,7 @@ Contract.
 
 - SEL: exactly the rows matching every filter on a real column. An unknown key is refused.
 - DEL: removes exactly the selection, and refuses a local delete with no effective filter unless `-confirm`.
-- PURGE: removes exactly the rows started before the cutoff, in every namespace, once a day. In-progress rows are preserved under option QA, an open question.
+- PURGE: removes exactly the rows started before the cutoff, in every namespace, once a day. By default the model keeps in-progress rows (option QA). That is the alternative to Q-20's provisional answer, which lets a purge remove any matching record (open question Q-29). The run under the provisional answer, reported as `as-built (QA: active rows may be purged)`, gives the same violation counts.
 - GLOBAL: every namespace's rows once, with their namespace.
 - DETAILS: the current namespace's row.
 
