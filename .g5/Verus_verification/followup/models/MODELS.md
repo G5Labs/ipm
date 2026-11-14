@@ -64,7 +64,7 @@ Contract clauses (independent of the journal mechanics):
 
 Policy parameters. Q-22 (A: a dependency's own NoJournal makes its writes durable at once, as built; B: it cannot weaken the parent's transaction). Q-23 (A: a dependency's own NoTransaction suppresses the parent's transaction; B: it is ineffective inside it, as built).
 
-Results (`followup/results/20261114T004842Z-final-loadtx-model/loadtx.json`), under the product's policy Q-22 A, Q-23 B unless stated. COMMITTED-UNENDED totals are in the JSON. As built they are 39,410 (29,042 top rows, D26, and 10,368 dependency rows of loads without a transaction).
+Results (`followup/results/20261114T004842Z-final-loadtx-model/loadtx.json`), under the product's policy Q-22 A, Q-23 B unless stated. COMMITTED-UNENDED totals are in the JSON, and the breakdown by row, end kind and cause is `followup/results/20261114T005807Z-final-committed-breakdown` (`breakdown.py`). As built they are 39,410 (29,042 top rows, D26, and 10,368 dependency rows of loads without a transaction).
 
 | Variant | What it is | Result |
 |---|---|---|

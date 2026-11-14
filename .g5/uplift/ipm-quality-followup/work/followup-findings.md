@@ -44,7 +44,7 @@ Model `Verus_verification/followup/models/history_readers.py`, receipt `FR/20261
 
 `FR/20261113T232529Z-r12-asbuilt-proofs` .. `FR/20261113T233034Z-control-01-no-setcommitted-c1`: as-built 263/0 (crate), controls 01, 12, 13 and sanity detected, explorer as-built invariants and L1 conforming domains pass, repair-103 pass, as-built dep-clauses/r3-dep/l1-end/commit-exact violations, controls 12/13/01 explorer violations. All 19 as expected.
 
-## Corrections after the independent owner-file review (receipt `FR/20261114T004842Z-final-loadtx-model`)
+## Corrections after the independent owner-file review (receipts `FR/20261114T004842Z-final-loadtx-model` and, for the per-cause breakdowns, `FR/20261114T005807Z-final-committed-breakdown`)
 
 - R-1. The model now also checks `Committed` on records that exist but are not finalized and ended at a process end (clause COMMITTED-UNENDED, Q-08's provisional answer, as the original contract's `kill_rec`). Earlier counts checked finalized rows only, which hid violations.
 - R-2. Dependency rows, by variant (product policy Q-22 A, Q-23 B, no caller transaction):

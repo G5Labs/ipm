@@ -17,11 +17,12 @@ Abbreviations:
 | B1 | the original Verus model `Verus_verification/crates/ipm-load-history` (theorems, `case_*` lemmas, controls, V1 to V12) |
 | `VR/<suffix>` | original native run `Verus_verification/results/native/20261113T<suffix>` |
 | `FR/` | `Verus_verification/followup/results/` |
-| `LT` | follow-up load model `Verus_verification/followup/models/loadtx.py`, current receipt `FR/20261114T002647Z-final-loadtx-model` |
+| `LT` | follow-up load model `Verus_verification/followup/models/loadtx.py`, current receipt `FR/20261114T004842Z-final-loadtx-model` |
 | `HR` | follow-up history-reader model `Verus_verification/followup/models/history_readers.py`, receipt `FR/20261114T002647Z-final-history-readers-model` |
 | `R05`, `R04`, `P21` | follow-up native runs `FR/native/20261113T234817Z-r05-modes-nesting`, `FR/native/20261113T234810Z-r04-history-readers`, `FR/native/20261113T234716Z-p21-ordering-r2` |
 | D-, I- numbers | defects and issues in `Verus_verification/bugs_issues.md` |
 | E-, L-, H- numbers | findings in `uplift/ipm-quality-followup/work/followup-findings.md` |
+| Q-24 to Q-31 | new questions in `Verus_verification/open_questions.md` (Q-01 to Q-23 as in the ontology) |
 
 Scope class:
 
@@ -58,12 +59,12 @@ Regression or scope exclusion:
 | INT-LOAD-04 | `load` and `install` share one loading path | formal: load | static review only | Legacy XML bypass: section 2.3. Install and update: suites InstallModule, Update (`VR/182208Z-suite-verify-InstallModule`, `VR/182433Z-suite-verify-Update`) | n/a | Legacy XML native case not run, because it needs a registry serving a non-gzip payload (R05d deferred). Install and update paths not modeled |
 | INT-LOAD-05 | `-dev` keeps entries on failure | formal: load | modeled in original model | B1 controls 01 and 02, `case_c26_dev_failure_keeps_phase_work`. Native A2, A5, C2. Developer-mode configurations in `LT` | n/a | None |
 | INT-LOAD-06 | Developer mode commits the manifest before resources load | formal: load | decision pending Q-05 | C1 and C2 at `Utils/Module.cls:1309-1319`, `:1335-1339`. Q-05: B1 V8, native D1 caller case (`VR/184632Z-repro-caller-tx-history-lost`), caller-transaction configurations in `LT` | n/a | Q-05 decision |
-| INT-LOAD-07 | Developer mode is not propagated to dependencies | formal: load | static review only | Rule: B1, native A4, suite LoadModuleWithDeps. OBS-L4 is code-read only (`Utils/Module.cls:258`, `:309-311`). Related new finding L-5: N-R05-DEVUP in `R05` | n/a | `update m -dev` from a registry not run (R05d deferred). L-5 has no governing requirement (section 4) |
+| INT-LOAD-07 | Developer mode is not propagated to dependencies | formal: load | static review only | Rule: B1, native A4, suite LoadModuleWithDeps. OBS-L4 is code-read only (`Utils/Module.cls:258`, `:309-311`). Related new finding L-5: N-R05-DEVUP in `R05` | n/a | `update m -dev` from a registry not run (R05d deferred). L-5 (I3) waits on Q-24 (section 4) |
 | INT-LOAD-08 | Transactions, `NoTransaction`, `NoJournal`, flag sources | formal: load | static review only | Per-activation modes: `LT` (L-1 to L-3), N-R05-PARDEF, N-R05-Q23F, N-R05-Q23S in `R05`. D19: stage C X1. Non-database effects (Q-04): reading and A2 premise P-7 only | n/a | Q-04 decision. No native check of non-database effects |
 | INT-LOAD-09 | Downgrade always refused | formal: load | modeled in original model | B1 `case_c11_downgrade_refused`, control 08. Native g6, g7 (`VR/182832Z-cases-dg`). Guard at `Utils/Module.cls:1213-1217` | n/a (`PermitDowngrade` bypass removed in `f83b207e`, see section 4) | Maintainer view on OBS-L14 |
 | INT-LOAD-10 | Newer version with `UpdatePackage` refused unless `-force` | formal: load | decision pending Q-02 | B1 `case_c15_update_refused`, control 09, Q-02 parameter. Native g3, g4, g5 | n/a | Q-02 decision |
 | INT-LOAD-11 | System requirements validated before installation | formal: load | decision pending Q-17 | D4: B1 V3, `case_c23_sysreq_dev_keeps_manifest`. Native B2-B4 (`VR/182820Z-cases-b`, `VR/184630Z-repro-sysreq-dev-manifest-left`) | n/a | Q-17 decision |
-| INT-LOAD-12 | Developer-mode module not overwritten by a normal install | formal: load | static review only | Guard at `Utils/Module.cls:109-112` needs `params("Install")`. Top-level guard is code-read only. Dependencies are never guarded (L-5, N-R05-DEVUP and N-R05-DEVSAME in `R05`) | n/a | Q-03 decision. Native top-level `install` over a developer-mode module not run (ordinary) |
+| INT-LOAD-12 | Developer-mode module not overwritten by a normal install | formal: load | static review only | Guard at `Utils/Module.cls:109-112` needs `params("Install")`. Top-level guard is code-read only. Dependencies are never guarded (L-5, N-R05-DEVUP and N-R05-DEVSAME in `R05`) | n/a | Q-03 and Q-24 decisions. Native top-level `install` over a developer-mode module not run (ordinary) |
 | INT-LOAD-13 | Read-only repository forces normal mode | formal: load | static review only | `Utils/Module.cls:1277-1288`. Not modeled, not run | n/a | Optional native case: `install m -dev` from a read-only repository |
 | INT-LOAD-14 | Dependencies one at a time, `.modules` temporary repository | formal: load | native or suite evidence only | Order: N-R05-NESTF, N-R05-NESTS, N-R05-DIA (`R05`). D13: B1 `case_c29_error_after_commit`, replay `VR/193952Z-replay-return-b`. I2: `VR/210229Z-temp-repos-leftover`. Repository lifecycle not modeled (section 2.4) | n/a | D13 fix. I2 needs a governing requirement |
 | INT-LOAD-15 | Other load options, lock file, `-nodev` | formal: load | static review only | Lock file: section 2.5. Q-01 consistent natively (g8, g9) | n/a | Native `-create-lockfile` cases (first plain load, rollback after the write) not run. `-env`, `-bypass-py-deps`, `-skip-sync` have no evidence. Q-01 decision |
@@ -71,21 +72,21 @@ Regression or scope exclusion:
 | INT-LOAD-17 | Every `load` produces a history record | formal: history | modeled in original model | B1 `theorem_top_record_durable`. Record created at `Main.cls:2420`, before the path checks | n/a | None |
 | INT-LOAD-18 | Same-version install or load succeeds | formal: load | modeled in original model | B1 installed-equal state. Native g2 | n/a | Product test (maintainers) |
 | INT-HIST-01 | `install`, `load`, `uninstall`, `update` are recorded | formal: history | native or suite evidence only | Load: B1. Others: suite History (`VR/175623Z-smoke-history-suite-oras`). `reinstall` logs as `install` (`Main.cls:2698`) | n/a | None required. Non-load writers not modeled |
-| INT-HIST-02 | Failed actions logged and their record survives the rollback | formal: history | modeled in original model | D1: B1 V1, V2. Native A1-A3 (`VR/182759Z-cases-a`, `VR/184617Z-repro-dep-history-lost`). Per-activation D1 in `LT` (L-2, L-4), N-R05-Q23F, N-R05-NESTF. Q-05: B1 V8, native D1 case | n/a | D1 fix. Repair 103 needs the guarded close (L-12) and holds only for a global mode (L-9). Q-05 decision |
-| INT-HIST-03 | Record created at start and filled in at end | formal: history | modeled in original model | D10: B1 `kill_rec`, B1-C44..C48 T/K. Native C1, C3, C4R. Q-08: V9. Q-21: V10. PREFIX at process ends: `LT`, `FR/20261114T002830Z-final-prefix-cases` | n/a | D10 fix. Q-08, Q-21 decisions |
+| INT-HIST-02 | Failed actions logged and their record survives the rollback | formal: history | modeled in original model | D1: B1 V1, V2. Native A1-A3 (`VR/182759Z-cases-a`, `VR/184617Z-repro-dep-history-lost`). Per-activation D1 in `LT` (L-2, L-4), N-R05-Q23F, N-R05-NESTF. Q-05: B1 V8, native D1 case | n/a | D1 fix, repair design decided by Q-30. Repair 103 needs the guarded close (L-12) and holds only for a global mode (L-9). Q-05 decision |
+| INT-HIST-03 | Record created at start and filled in at end | formal: history | modeled in original model | D10: B1 `kill_rec`, B1-C44..C48 T/K. Native C1, C3, C4R. Q-08: V9. Q-21: V10. PREFIX at process ends: `LT`, `FR/20261114T005359Z-final-prefix-cases` | n/a | D10 fix. Q-08, Q-21 decisions |
 | INT-HIST-04 | Record fields | formal: history | native or suite evidence only | D9: B1 V7, native g3, g6, g7, R4. Q-15 label and source: native A0 only | n/a | Q-15 decision |
-| INT-HIST-05 | `Committed` means changes kept | formal: history | static review only | Legacy XML (OBS-L16) code-read only (section 2.3). Q-05: V8, native D1 case. Q-17: D4. Q-07: no evidence. Dependency `Committed` per activation: L-8 to L-10 and L-12 in `LT`, P-14 in `P21` | n/a | Legacy XML native case not run (registry needed). Q-05, Q-07, Q-17 decisions |
+| INT-HIST-05 | `Committed` means changes kept | formal: history | static review only | Legacy XML (OBS-L16) code-read only (section 2.3). Q-05: V8, native D1 case. Q-17: D4. Q-07: no evidence. Dependency `Committed` per activation: L-8 to L-10 and L-12 in `LT`, P-14 in `P21` | n/a | Legacy XML native case not run (registry needed). Q-05, Q-07, Q-17 decisions. Q-26 for L-8 (D22) |
 | INT-HIST-06 | Uninstall `Committed` equals success | in-scope part | static review only | OBS-L17, OBS-H8: skip with OK at `Lifecycle/Base.cls:290-293`. No transaction in `Storage/Module.cls:727-758`. Plain uninstall records: suite History | n/a | Ordinary native case (uninstall a required test module without `-force`) not run |
 | INT-HIST-07 | `Success` and `Committed` answer different questions | formal: history | modeled in original model | B1 failure-plus-commit cases. Native A5, B3, B4 | n/a | None |
-| INT-HIST-08 | Dependency installs logged as their own records | formal: history | native or suite evidence only | D1: B1 V1, `LT`. Q-06: the record is lost (D1), so its `Success` cannot be observed. Q-15: native A0 only | n/a | D1 fix. Q-06, Q-15 decisions |
+| INT-HIST-08 | Dependency installs logged as their own records | formal: history | native or suite evidence only | D1: B1 V1, `LT`. Q-06: the record is lost (D1), so its `Success` cannot be observed. Q-15: native A0 only | n/a | D1 fix (repair design Q-30). Q-06, Q-15 decisions |
 | INT-HIST-09 | When a record exists | formal: history | static review only | Refusals before the log: `update` at `Main.cls:4415-4424` before `:4438`, `reinstall` at `:2686-2688`, `uninstall` at `:2710-2712` before `Storage/Module.cls:734` | n/a | Q-09 decision. Ordinary native check not run |
-| INT-HIST-10 | `history` actions, sort, limit, filters | formal: history | modeled in follow-up model | D2: `HR`, N-R04-SEL, N-R04-SEL2 in `R04`. D18: stage C H2, Q-18 commands in `HR`. Valid neighbor: 69 commands, 0 violations | n/a | D2 fix. Q-10, Q-18 decisions |
-| INT-HIST-11 | `-globally` reads every namespace | formal: history | static review only | D20: stage C H10, GLOBAL clause in `HR`. OBS-H11 code-read only (`History.cls:28`, H-5) | n/a | Read-only native check of `Records` not run (ordinary). D20 fix |
-| INT-HIST-12 | `history delete` deletes the filtered records | formal: history | decision pending Q-11, Q-20 | DEL clause in `HR`. N-R04-DEL in `R04`. Q-20: N-P15 (`VR/181129Z-premises`), QA option in `HR` | n/a | Q-11, Q-20 decisions |
-| INT-HIST-13 | Retention purge deletes older records | formal: history | static review only | D3: N-R04-CUTOFF in `R04`, PURGE clause in `HR`, archived F1. D5: F0. A purge error stops the command: code-read only (`Main.cls:862-865`) | n/a | D3, D5 fixes. Q-13, Q-20 decisions. Purge failure not run, because no ordinary input makes it fail |
+| INT-HIST-10 | `history` actions, sort, limit, filters | formal: history | modeled in follow-up model | D2: `HR`, N-R04-SEL, N-R04-SEL2 in `R04`. D18: stage C H2, Q-18 commands in `HR`. Valid neighbor: 69 commands, 0 violations | n/a | D2 and D24 fixes. Q-18 decision. Q-10 stays open but decides neither defect |
+| INT-HIST-11 | `-globally` reads every namespace | formal: history | static review only | D20: stage C H10, GLOBAL clause in `HR`. OBS-H11 code-read only (`History.cls:28`, H-5) | n/a | Read-only native check of `Records` not run (ordinary). D20 fix. Q-28 decides the row shape (OBS-H11, H-5) |
+| INT-HIST-12 | `history delete` deletes the filtered records | formal: history | decision pending Q-11, Q-20, Q-27 | DEL clause in `HR`. N-R04-DEL in `R04`. Q-20: N-P15 (`VR/181129Z-premises`), QA option in `HR`. H-4 (D23, a global delete skips every error): code-read and `HR` | n/a | Q-11, Q-20, Q-27 decisions |
+| INT-HIST-13 | Retention purge deletes older records | formal: history | static review only | D3: N-R04-CUTOFF in `R04`, PURGE clause in `HR`, archived F1. D5: F0. A purge error stops the command: code-read only (`Main.cls:862-865`) | n/a | D3, D5 fixes. Q-13, Q-20, Q-29 decisions, and Q-27 if purge errors should surface. Purge failure not run, because no ordinary input makes it fail |
 | INT-HIST-14 | Finalized records cannot be edited | formal: history | decision pending Q-21 | N-P13, B1 `theorem_r2`. Q-21: B1 V10, native C2 | n/a | Q-21 decision |
 | INT-HIST-15 | History survives IPM's own uninstall | formal: history | not run: destructive self-uninstall, concurrent cleanup | `Storage/Module.cls:630-643`, `Lifecycle/Module.cls:51`. N-P06, N-P16, N-P17 (`VR/181129Z-premises`) | n/a | Run in a disposable namespace or instance. Q-16 decision |
-| INT-HIST-16 | History is scoped per namespace | formal: history | native or suite evidence only | N-P06, N-P17. Suite History `TestMultipleNamespaces`. Row identity H-6 in `HR` | n/a | None |
+| INT-HIST-16 | History is scoped per namespace | formal: history | native or suite evidence only | N-P06, N-P17. Suite History `TestMultipleNamespaces`. Row identity H-6 in `HR` | n/a | None. Row identity in the global readers: Q-28 |
 | INT-HIST-17 | IRIS audit database proposed, not implemented | excluded feature | future or not implemented | A3:58, A3:130 | scope exclusion | None |
 
 ### 1b. A1 catalog (42)
@@ -109,7 +110,7 @@ Regression or scope exclusion:
 | CAT-15 | update | in-scope part | static review only | OBS-L4, OBS-L5 code-read. OBS-L6 refuted, D16 native (stage C S3, S3N1). Suite Update | n/a | `update m -dev` from a registry not run. D16 fix |
 | CAT-16 | uninstall | in-scope part | static review only | OBS-L17 code-read (`Lifecycle/Base.cls:290-293`). Nothing reads `-purge` | n/a | Ordinary native case for OBS-L17. `-purge` stays excluded |
 | CAT-17 | orphans | excluded feature | static review only | A3:83 | scope exclusion | None |
-| CAT-18 | Dependency resolution | in-scope part | native or suite evidence only | Selection outcomes: N-R05-HIGHER, N-R05-HIGHEROK, N-R05-DIA, N-R05-DEVUP, N-R05-DEVSAME (`R05`). Suite DependencyResolution had no effective test (E-5). Section 2.7 | n/a | Remote and ORAS dependency sources not run (R05d) |
+| CAT-18 | Dependency resolution | in-scope part | native or suite evidence only | Selection outcomes: N-R05-HIGHER, N-R05-HIGHEROK, N-R05-DIA, N-R05-DEVUP, N-R05-DEVSAME (`R05`). Suite DependencyResolution had no effective test (E-5). Section 2.7 | n/a | Remote and ORAS dependency sources not run (R05d). Replacing a developer-mode dependency (N-R05-DEVUP) waits on Q-24 |
 | CAT-19 | Versions | excluded feature | static review only | No A2 operation (A3:85) | scope exclusion | None |
 | CAT-20 | Repository configuration | excluded feature | future or not implemented | `-app`, `-local`, `-info`, `-p4` in help only (A3:86, A3:135) | scope exclusion | None |
 | CAT-21 | Default registry | excluded feature | static review only | A3:87 | scope exclusion | None |
@@ -139,7 +140,7 @@ Regression or scope exclusion:
 
 | ID | Short statement | Scope class | Disposition | Evidence pointer | Regression or scope exclusion | Remaining work |
 |---|---|---|---|---|---|---|
-| OBS-L1 | Dependency history lost when the parent rolls back | formal: history | modeled in original model | D1. B1 V1, V2. Native A1-A3. `LT` L-2, L-4 | n/a | D1 fix. Repair conditions L-9, L-12 |
+| OBS-L1 | Dependency history lost when the parent rolls back | formal: history | modeled in original model | D1. B1 V1, V2. Native A1-A3. `LT` L-2, L-4 | n/a | D1 fix. Repair design Q-30 (L-9, L-12) |
 | OBS-L2 | `.tar.gz` not recognized by `load` | formal: load | native or suite evidence only | D15: stage C S1, S1N (`VR/204152Z-stagec`). `Main.cls:2466-2467` | regression (`.tar.gz`, `f83b207e`) | D15 fix |
 | OBS-L3 | Plain `load` does not persist Root/Repository/Deployed | formal: load | static review only | `Utils/Module.cls:1296-1304`, `:1332`, `LockFile.cls:82`. Section 2.5 | n/a | Ordinary native case not run |
 | OBS-L4 | `update m -dev` from a registry ends in normal mode | in-scope part | static review only | `Main.cls:2623-2630`, `Utils/Module.cls:258`, `:309-311` | n/a | Native case needs a registry source (R05d) |
@@ -157,7 +158,7 @@ Regression or scope exclusion:
 | OBS-L16 | Legacy XML installs: no transaction, `Committed=0` on failure | formal: load | static review only | Section 2.3 (`Utils/Module.cls:156-185`, `:207-209`, `Main.cls:2666-2670`) | n/a | Native case needs a registry serving a non-gzip payload (R05d) |
 | OBS-L17 | Uninstalling a required module reports success | in-scope part | static review only | `Lifecycle/Base.cls:290-293`, `Storage/Module.cls:745-756` | n/a | Ordinary native case not run |
 | OBS-H1 | One invalid filter column widens `find` and `delete` | formal: history | modeled in follow-up model | D2: `HR`, N-R04-SEL, N-R04-SEL2 (`R04`). Archived E1, E2, E4, E8 | n/a | D2 fix |
-| OBS-H2 | Namespace default modifiers become history filters | formal: history | decision pending Q-18 | D18: stage C H2. Default-modifier commands in `HR`. N-R04-UNKNOWN shows the hidden SQL error | n/a | Q-18 decision |
+| OBS-H2 | Namespace default modifiers become history filters | formal: history | modeled in follow-up model | D18: stage C H2. Default-modifier commands in `HR`. Hidden SQL error (D24, supported): N-R04-UNKNOWN, `HR` | n/a | Q-18 decision. D24 fix |
 | OBS-H3 | Auto-purge deletes nothing | formal: history | modeled in follow-up model | D3: N-R04-CUTOFF (`R04`), PURGE clause in `HR`, archived F1 | n/a | D3 fix |
 | OBS-H4 | `config delete HistoryRetain` restores the first value | in-scope part | native or suite evidence only | D5: native F0 | n/a | D5 fix |
 | OBS-H5 | Same as OBS-L1, seen from the history side | formal: history | modeled in original model | Alias of OBS-L1 (D1) | n/a | As OBS-L1 |
@@ -165,9 +166,9 @@ Regression or scope exclusion:
 | OBS-H7 | Action and source attribution for nested logs | formal: history | static review only | Stored label and source: native A0. Listing shows `n/a` unless `Action=install`: code-read (`History.cls:461-463`) | n/a | Q-15 decision |
 | OBS-H8 | Recursive uninstall records skipped dependencies as successes | in-scope part | static review only | `Lifecycle/Base.cls:290-293` reached from the recursive path (A2:639) | n/a | Ordinary native case not run |
 | OBS-H9 | `history delete -globally` needs no filter or confirmation | formal: history | modeled in follow-up model | QG option in `HR` (documented, D block) | n/a | None |
-| OBS-H10 | Global readers and namespaces without IPM | formal: history | static review only | D20: stage C H10, GLOBAL clause in `HR`. Unreachable "IPM is not enabled" message: code-read | n/a | D20 fix |
-| OBS-H11 | `Records` declares `CONTAINID=1`, first column `Action` | formal: history | static review only | `History.cls:28`. H-5 | n/a | Read-only native check not run (ordinary) |
-| OBS-H12 | AutoPurge runs only from `Shell` and its failure blocks the command | formal: history | static review only | `Main.cls:862-865` | n/a | Q-13 decision. Purge failure not run |
+| OBS-H10 | Global readers and namespaces without IPM | formal: history | modeled in follow-up model | D20: stage C H10, GLOBAL clause in `HR`. The rest is refuted: the namespace header is written only when a row exists (`History.cls:501-515`), so the unreachable message (`:496-499`) is no violation | n/a | D20 fix. Q-28 decision |
+| OBS-H11 | `Records` declares `CONTAINID=1`, first column `Action` | formal: history | static review only | `History.cls:28`. H-5 | n/a | Q-28 decision. Read-only native check not run (ordinary) |
+| OBS-H12 | AutoPurge runs only from `Shell` and its failure blocks the command | formal: history | static review only | `Main.cls:862-865` | n/a | Q-13 decision, and Q-27 if purge errors should surface. Purge failure not run |
 | OBS-H13 | Full cleanup kills the instance-wide history temp global | formal: history | not run: concurrent loads during a destructive cleanup | `Lifecycle/Module.cls:51`. IRISTEMP sharing: N-P06, N-P17 | n/a | Disposable instance run. Q-16 decision |
 | OBS-H14 | Invoke failures leave the phase unfinalized | formal: history | decision pending Q-14 | D6: B1 V5, `case_c28_phase_left_open`, `VR/184634Z-repro-activate-invoke-phase-open` | n/a | Q-14 decision |
 | OBS-H15 | Self-uninstall reports success before it runs | formal: history | not run: self-uninstall is destructive | `Storage/Module.cls:630-643`, `Main.cls:2746-2749`. Persist step only: N-P16 | n/a | Disposable namespace run |
@@ -251,7 +252,7 @@ Section 1, commitment map (51):
 | INT-HIST-09 (A3:50) | When a record exists | formal: history | static review only | Partial reason as A3:50. Evidence as INT-HIST-09 in table 1a | n/a | As INT-HIST-09 in table 1a |
 | INT-HIST-10 (A3:51) | `history` actions, sort, limit, filters | formal: history | modeled in follow-up model | Partial reason as A3:51. Evidence as INT-HIST-10 in table 1a | n/a | As INT-HIST-10 in table 1a |
 | INT-HIST-11 (A3:52) | `-globally` reads every namespace | formal: history | static review only | Partial reason as A3:52. Evidence as INT-HIST-11 in table 1a | n/a | As INT-HIST-11 in table 1a |
-| INT-HIST-12 (A3:53) | `history delete` deletes the filtered records | formal: history | decision pending Q-11, Q-20 | Partial reason as A3:53. Evidence as INT-HIST-12 in table 1a | n/a | As INT-HIST-12 in table 1a |
+| INT-HIST-12 (A3:53) | `history delete` deletes the filtered records | formal: history | decision pending Q-11, Q-20, Q-27 | Partial reason as A3:53. Evidence as INT-HIST-12 in table 1a | n/a | As INT-HIST-12 in table 1a |
 | INT-HIST-13 (A3:54) | Retention purge deletes older records | formal: history | static review only | Partial reason as A3:54. Evidence as INT-HIST-13 in table 1a | n/a | As INT-HIST-13 in table 1a |
 | INT-HIST-14 (A3:55) | Finalized records cannot be edited | formal: history | decision pending Q-21 | Partial reason as A3:55. Evidence as INT-HIST-14 in table 1a | n/a | As INT-HIST-14 in table 1a |
 | INT-HIST-15 (A3:56) | History survives IPM's own uninstall | formal: history | not run: destructive self-uninstall, concurrent cleanup | Partial reason as A3:56. Evidence as INT-HIST-15 in table 1a | n/a | As INT-HIST-15 in table 1a |
@@ -313,33 +314,33 @@ Section 4, partially covered clauses (32):
 |---|---|---|---|---|---|---|
 | load.path (A3:147) | `.tar.gz` archives | formal: load | native or suite evidence only | D15: stage C S1, S1N | regression (`.tar.gz`, `f83b207e`) | D15 fix |
 | load.refusal.path (A3:148) | only absolute paths | formal: load | native or suite evidence only | D17: stage C S4R | n/a | D17 fix |
-| load.refusal, load.refusal.manifest (A3:149) | refusals keep no module data in any mode | formal: load | modeled in original model | D11, D12: B1 L1-NAMESPACE refusals, B1-C08 to C10, C51, C52, replays | n/a | D11, D12 fixes |
+| load.refusal, load.refusal.manifest (A3:149) | refusals keep no module data in any mode | formal: load | modeled in original model | D11, D12: B1 L1-NAMESPACE refusals, B1-C08 to C10, C51, C52, replays | n/a | D11 fix. D12 is conditional on Q-31 |
 | load.refusal.requirements (A3:150) | checked before installation | formal: load | decision pending Q-17 | D4: V3, native B2-B4 | n/a | Q-17 decision |
 | load.refusal.downgrade (A3:151) | no bypass | formal: load | static review only | OBS-L14 code-read | n/a (section 4) | Maintainer view on `PermitDowngrade` |
 | load.path.archive, install.package (A3:152) | rollback leaves the namespace as it was | formal: load | static review only | OBS-L7 code-read (section 2.1) | n/a | Q-04 decision. Ordinary native pair not run |
 | load.dependencies.local-repo (A3:153) | removed even after an error | formal: load | native or suite evidence only | D13 replay, I2 native (section 2.4) | n/a | D13 fix. I2 requirement |
 | load.write-check (A3:154) | checked before installing | formal: load | static review only | Section 2.1 | n/a | Native case needs an unwritable `ModuleRoot` |
 | load.core (A3:155) | one loading path | formal: load | static review only | Section 2.3 | n/a | Native case needs a registry (R05d) |
-| load.outcome (A3:156) | normal mode rolls back the whole load, dependencies included | formal: load | modeled in follow-up model | D14 and the Q-23 case per activation in `LT` (Q-22/Q-23 options). Native M5, M5N, N-R05-Q23F, N-R05-Q23S. L-4 (broken closure) holds under either Q-22 option | n/a | Q-22, Q-23 decisions. L-4 (drafted as D21) needs a disposition |
+| load.outcome (A3:156) | normal mode rolls back the whole load, dependencies included | formal: load | decision pending Q-22, Q-23, Q-25 | D14 and the Q-23 case per activation in `LT` (Q-22/Q-23 options). Native M5, M5N, N-R05-Q23F, N-R05-Q23S. L-4 (D21, broken closure): N-R05-NESTF, conditional on Q-22 and Q-25 | n/a | Q-22, Q-23, Q-25 decisions |
 | deps.lockfile (A3:157) | file in the module root | formal: load | static review only | Section 2.5 | n/a | Ordinary native case not run |
 | dev-mode.not-propagated, update.dev-mode (A3:158) | `update -dev` | formal: load | static review only | OBS-L4 code-read | n/a | Native case needs a registry source (R05d) |
 | dev-mode.sticky (A3:159) | plain load keeps mode | formal: load | static review only | Q-01 consistent natively (g8, g9). `Root`/`Repository` not saved: code-read (section 2.5) | n/a | Q-01 decision |
 | update.steps (A3:160) | steps from current to new version | excluded feature | static review only | OBS-L9, OBS-L5 code-read | scope exclusion | None in scope |
 | update.refusal (A3:161) | `-path` mismatch refused with its message, no module data | in-scope part | native or suite evidence only | D16: stage C S3, S3N1 | n/a | D16 fix |
 | module.processor (A3:162) | processor errors fail the phase | in-scope part | static review only | OBS-L8 code-read (`Lifecycle/Base.cls:1081`) | n/a | Ordinary native case not run |
-| history.survives-rollback (A3:163) | dependency records survive a parent rollback | formal: history | modeled in original model | D1: B1 V1, V2. Native A1-A3. `LT` | n/a | D1 fix |
+| history.survives-rollback (A3:163) | dependency records survive a parent rollback | formal: history | modeled in original model | D1: B1 V1, V2. Native A1-A3. `LT` | n/a | D1 fix (repair design Q-30) |
 | history.record, history.phases (A3:164) | running or never-finished actions listed with their started phases | formal: history | modeled in original model | D10: B1 `kill_rec`. Native C1, C3, C4R | n/a | D10 fix |
 | history.record.abnormal-end (A3:165) | `Committed` on an unfinished record | formal: history | decision pending Q-08 | B1 V9. Native C4R | n/a | Q-08 decision |
 | history.phases (A3:166) | every phase records its end | formal: history | decision pending Q-14 | D6: B1 V5 | n/a | Q-14 decision |
-| history.committed, history.committed.nested, history.dependencies.parent-rollback (A3:167) | kept changes, including dependencies undone by the parent | formal: history | static review only | Legacy XML part code-read (section 2.3). Nested parts: V8, native D1 case, `LT` | n/a | Legacy XML native case. Q-05, Q-06 decisions |
+| history.committed, history.committed.nested, history.dependencies.parent-rollback (A3:167) | kept changes, including dependencies undone by the parent | formal: history | static review only | Legacy XML part code-read (section 2.3). Nested parts: V8, native D1 case, `LT` | n/a | Legacy XML native case. Q-05, Q-06, Q-26 (L-8) decisions. Repair design Q-30 |
 | history.committed.uninstall, uninstall.dependents, uninstall.recurse (A3:168) | success means removed | in-scope part | static review only | OBS-L17, OBS-H8 code-read | n/a | Ordinary native case not run |
 | history.fields (A3:169) | source empty for load | formal: history | static review only | Stored source: native A0. Listing `n/a`: code-read (`History.cls:461-463`) | n/a | Q-15 decision |
 | history.fields (A3:170) | `Package` empty only before any name is known | formal: history | modeled in original model | D9: B1 V7. Native g3, g6, g7, R4 | n/a | D9 fix |
 | history.locked (A3:171) | only ended actions are finalized | formal: history | decision pending Q-21 | B1 V10. Native C2 | n/a | Q-21 decision |
-| history.read.filter, history.delete (A3:172) | filters apply | formal: history | modeled in follow-up model | D2: `HR`, N-R04-SEL, N-R04-SEL2. Hidden query error: N-R04-UNKNOWN (H-3) | n/a | D2 fix. Q-10 decision |
+| history.read.filter, history.delete (A3:172) | filters apply | formal: history | modeled in follow-up model | D2: `HR`, N-R04-SEL, N-R04-SEL2. Hidden query error: N-R04-UNKNOWN (H-3) | n/a | D2, D24 fixes |
 | history.read.filter (A3:173) | explicit filters only | formal: history | decision pending Q-18 | D18: stage C H2. Q-18 commands in `HR` | n/a | Q-18 decision |
-| history.read.api (A3:174) | `GlobalRecords` reads all namespaces | formal: history | static review only | D20 in `HR` and stage C H10. `Records` ID column: code-read (`History.cls:28`) | n/a | Read-only native check not run |
-| history.retention (A3:175) | deletes old records | formal: history | static review only | D3: `HR`, N-R04-CUTOFF. D5: F0. Error blocks commands: code-read (`Main.cls:862-865`) | n/a | D3, D5 fixes. Q-13 decision |
+| history.read.api (A3:174) | `GlobalRecords` reads all namespaces | formal: history | static review only | D20 in `HR` and stage C H10. `Records` ID column: code-read (`History.cls:28`) | n/a | Q-28 decision. Read-only native check not run |
+| history.retention (A3:175) | deletes old records | formal: history | static review only | D3: `HR`, N-R04-CUTOFF. D5: F0. Error blocks commands: code-read (`Main.cls:862-865`) | n/a | D3, D5 fixes. Q-13, Q-29 decisions |
 | history.keep-on-ipm-uninstall, uninstall.ipm (A3:176) | log kept; uninstall recorded | formal: history | not run: destructive self-uninstall, concurrent cleanup | `Storage/Module.cls:630-643`, `Lifecycle/Module.cls:51` | n/a | Disposable namespace or instance run. Q-16 decision |
 | settings.default-modifiers (A3:177) | current namespace only | in-scope part | native or suite evidence only | D19: stage C X1 | n/a | D19 fix |
 | settings (A3:178) | `delete` restores the default | in-scope part | native or suite evidence only | D5: native F0 | n/a | D5 fix |
@@ -351,24 +352,24 @@ Section 9, native status rows that do not conform (23):
 | load.refusal.update-required.dev-bypass (Q-02), dev-mode.sticky (Q-01) (A3:248) | consistent with the provisional answer (g5, g8, g9) | formal: load | decision pending Q-01, Q-02 | Native g5, g8, g9 (`VR/182832Z-cases-dg`). B1 Q-02 parameter | n/a | Q-01, Q-02 decisions |
 | load.refusal.requirements.timing (Q-17) (A3:249) | confirmed defect D4 pending the decision (B2-B4); B0, B1 conform | formal: load | decision pending Q-17 | D4: native B2-B4. B1 V3 | n/a | Q-17 decision |
 | load.path (.tar.gz) (A3:252) | confirmed defect D15 (S1); `.tgz` neighbour S1N conforms | formal: load | native or suite evidence only | D15: `VR/204152Z-stagec` | regression (`.tar.gz`, `f83b207e`) | D15 fix |
-| load.refusal, load.refusal.manifest (A3:253) | confirmed defects D11 (S2, S2B, B1-C10, B1-C52) and D12 (B1-C08); S2N conforms | formal: load | modeled in original model | D11, D12: B1 cases and replays | n/a | D11, D12 fixes |
+| load.refusal, load.refusal.manifest (A3:253) | confirmed defects D11 (S2, S2B, B1-C10, B1-C52) and D12 (B1-C08); S2N conforms | formal: load | modeled in original model | D11, D12: B1 cases and replays | n/a | D11 fix. D12 is conditional on Q-31 |
 | update.refusal (-path mismatch) (A3:254) | confirmed defect D16 (S3, S3N1); OBS-L6 refuted; S3N2 conforms | in-scope part | native or suite evidence only | D16: `VR/204152Z-stagec` | n/a | D16 fix |
 | load.refusal.path (A3:255) | confirmed defect D17 (S4R); S4N1, S4N2 conform | formal: load | native or suite evidence only | D17: `VR/204405Z-stagec2` | n/a | D17 fix |
 | load.dependencies.local-repo (A3:256) | confirmed defect D13 (B1-C29); issue I2 (leftover temporary repositories after ... | formal: load | native or suite evidence only | D13: `VR/193952Z-replay-return-b`. I2: `VR/210229Z-temp-repos-leftover` | n/a | D13 fix. I2 requirement |
-| transaction.flag-sources.dependency-defaults (Q-22), transaction.flag-sources.dependency-no-transaction (Q-23, NoTransaction variant not run), load.outcome (A3:257) | M5 keeps a `NoJournal` dependency after the parent's rollback (D14, decision ... | formal: load | modeled in follow-up model | `LT` Q-22/Q-23 options. Q-23 case now run: N-R05-Q23F, N-R05-Q23S (`R05`). L-4 holds under either Q-22 option | n/a | Q-22, Q-23 decisions. L-4 disposition |
+| transaction.flag-sources.dependency-defaults (Q-22), transaction.flag-sources.dependency-no-transaction (Q-23, NoTransaction variant not run), load.outcome (A3:257) | M5 keeps a `NoJournal` dependency after the parent's rollback (D14, decision ... | formal: load | decision pending Q-22, Q-23, Q-25 | `LT` Q-22/Q-23 options. Q-23 case now run: N-R05-Q23F, N-R05-Q23S (`R05`). L-4 (D21): N-R05-NESTF, conditional on Q-22 and Q-25 | n/a | Q-22, Q-23, Q-25 decisions |
 | transaction.flag-sources, settings.default-modifiers (A3:258) | confirmed defect D19 (X1, instance-wide defaults) | in-scope part | native or suite evidence only | D19: `VR/204152Z-stagec` X1 | n/a | D19 fix |
 | history.read.filter.default-modifiers (Q-18) (A3:259) | D18, decision pending (H2) | formal: history | decision pending Q-18 | D18: stage C H2. `HR` | n/a | Q-18 decision |
-| history.read.global, history.read.api (A3:260) | `find -globally` conforms; `GlobalRecords` confirmed defect D20 (H10) | formal: history | modeled in follow-up model | D20: GLOBAL clause in `HR`, archived H10 | n/a | D20 fix |
+| history.read.global, history.read.api (A3:260) | `find -globally` conforms; `GlobalRecords` confirmed defect D20 (H10) | formal: history | modeled in follow-up model | D20: GLOBAL clause in `HR`, archived H10 | n/a | D20 fix. Q-28 decision |
 | history.record (A3:261) | D10 named (C1, C3, C4R); model cases C44-C48 T/K agree | formal: history | modeled in original model | D10: B1 `kill_rec`, C44-C48 T/K | n/a | D10 fix |
 | legacy XML (load.core) (A3:262) | not run | formal: load | static review only | Section 2.3. Still not run natively | n/a | Native case needs a registry serving a non-gzip payload (R05d) |
-| history.survives-rollback, history.dependencies, history.dependencies.parent-rollback (A3:263) | confirmed defect D1 (A1-A3) | formal: history | modeled in original model | D1: B1 V1, V2. `LT` | n/a | D1 fix |
+| history.survives-rollback, history.dependencies, history.dependencies.parent-rollback (A3:263) | confirmed defect D1 (A1-A3) | formal: history | modeled in original model | D1: B1 V1, V2. `LT` | n/a | D1 fix (repair design Q-30) |
 | history.committed.nested (Q-05) (A3:264) | deviates (D1 caller case); D0 conforms | formal: history | decision pending Q-05 | B1 V8. Native D1 case. `LT` caller configurations | n/a | Q-05 decision |
 | history.record, history.record.abnormal-end (Q-08), history.locked.unfinished (Q-21), history.survives-rollback.temp-copy (A3:265) | C1, C3, C4R show no phases; C2 finalized without end; C4R `Committed=0` ... | formal: history | modeled in original model | D10 (`kill_rec`), Q-08 (V9), Q-21 (V10). Temp-copy premise refuted for Terminate (N-P10) | n/a | D10 fix. Q-08, Q-21 decisions |
 | history.fields (A3:266) | deviation D9 (refused loads record no package) | formal: history | modeled in original model | D9: B1 V7 | n/a | D9 fix |
-| history.read.filter.invalid-column (Q-10) (A3:267) | confirmed defect D2 (E1, E2, E4, E8); E3/E7 differ | formal: history | modeled in follow-up model | D2: `HR`, N-R04-SEL, N-R04-SEL2 | n/a | D2 fix. Q-10 decision |
-| history.delete (A3:268) | E5, E6 conform; E4 under D2 | formal: history | modeled in follow-up model | DEL clause in `HR`. N-R04-DEL | n/a | D2 fix |
-| history.delete.running-records (Q-20) (A3:269) | observed: the record disappears and is not recreated (N-P15) | formal: history | decision pending Q-20 | N-P15. QA option in `HR` (H-7) | n/a | Q-20 decision |
-| history.retention, history.retention.effect, settings (A3:270) | confirmed defects D3 (F1) and D5 (F0); purge failure not run | formal: history | static review only | D3, D5 as INT-HIST-13. Purge failure: code-read only | n/a | D3, D5 fixes. Q-13 decision |
+| history.read.filter.invalid-column (Q-10) (A3:267) | confirmed defect D2 (E1, E2, E4, E8); E3/E7 differ | formal: history | modeled in follow-up model | D2: `HR`, N-R04-SEL, N-R04-SEL2 | n/a | D2, D24 fixes |
+| history.delete (A3:268) | E5, E6 conform; E4 under D2 | formal: history | modeled in follow-up model | DEL clause in `HR`. N-R04-DEL | n/a | D2 fix. Q-27 for global-delete errors (H-4, D23) |
+| history.delete.running-records (Q-20) (A3:269) | observed: the record disappears and is not recreated (N-P15) | formal: history | decision pending Q-20, Q-29 | N-P15. QA option in `HR` (H-7) | n/a | Q-20, Q-29 decisions |
+| history.retention, history.retention.effect, settings (A3:270) | confirmed defects D3 (F1) and D5 (F0); purge failure not run | formal: history | static review only | D3, D5 as INT-HIST-13. Purge failure: code-read only | n/a | D3, D5 fixes. Q-13, Q-29 decisions |
 | history.phases, history.phases.returned-errors (Q-14) (A3:271) | confirmed defect D6; reader defect D8 | formal: history | native or suite evidence only | D6: B1 V5. I1 (unfinished phase display): native `VR/184444Z-cases-hr` only | n/a | Q-14 decision. I1 requirement |
 | history.keep-on-ipm-uninstall and its Q-16, uninstall cases (A3:274) | not run (self-uninstall persist step probed in N-P16; IRISTEMP sharing ... | formal: history | not run: destructive self-uninstall, concurrent cleanup | N-P06, N-P16, N-P17 (`VR/181129Z-premises`) | n/a | Disposable namespace or instance run. Q-16 decision |
 
@@ -381,40 +382,40 @@ The short statement is the row's reliance text from `Verus_verification/coverage
 | load.path, load.path.archive (VV:29) | `.tgz` supported. `.tar.gz` confirmed violation D15 (regression `f83b207e`). ... | formal: load | static review only | `.tgz`: suite FileBinaryTar, S1N. `.tar.gz`: D15 (S1). Git URL: section 2.2 | regression (`.tar.gz`, `f83b207e`) | D15 fix. Git URL native case needs an HTTP git remote |
 | load.core (VV:30) | unestablished for install and update beyond the suites | formal: load | static review only | Install, update: suites only. Legacy XML: section 2.3 | n/a | Install and update paths not modeled. Legacy XML native case (R05d) |
 | load.options (VV:31) | supported for those flags. `-env`, `-bypass-py-deps`, `-create-lockfile` ... | formal: load | static review only | `-create-lockfile`: section 2.5. `-env`, `-bypass-py-deps`, `-skip-sync`: no evidence | n/a | Native option cases not run |
-| load.refusal (VV:32) | supported for downgrade and update-required in every mode. Confirmed ... | formal: load | native or suite evidence only | D11, D12: B1. D16: stage C S3 only. D4 under Q-17 | n/a | D11, D12, D16 fixes. Q-17 decision |
+| load.refusal (VV:32) | supported for downgrade and update-required in every mode. Confirmed ... | formal: load | native or suite evidence only | D11, D12: B1. D16: stage C S3 only. D4 under Q-17 | n/a | D11, D16 fixes. Q-17, Q-31 (D12) decisions |
 | load.refusal.path (VV:33) | relative nonexistent and absolute paths supported. Existing relative path ... | formal: load | native or suite evidence only | D17: stage C S4R | n/a | D17 fix |
-| load.refusal.manifest (VV:34) | default and `-dev` supported. NoTransaction and NoJournal: confirmed violations ... | formal: load | modeled in original model | D11, D12, D9: B1 cases, replays C08-C10, C51, C52 | n/a | D9, D11, D12 fixes |
+| load.refusal.manifest (VV:34) | default and `-dev` supported. NoTransaction and NoJournal: confirmed violations ... | formal: load | modeled in original model | D11, D12, D9: B1 cases, replays C08-C10, C51, C52 | n/a | D9, D11 fixes. Q-31 (D12) decision |
 | load.refusal.update-required (VV:36) | supported. Q-02 provisional matches the product (unresolved authority for the ... | formal: load | decision pending Q-02 | B1 `case_c15_update_refused`, native g3-g5 | n/a | Q-02 decision |
 | load.refusal.requirements (VV:37) | confirmed violation D4 under Q-17 provisional (decision pending) | formal: load | decision pending Q-17 | D4: V3, native B2-B4 | n/a | Q-17 decision |
-| load.outcome (VV:39) | supported for database state within scope (P-05, P-06b confirmed). Confirmed ... | formal: load | static review only | Database state: B1 and `LT` (PREFIX holds, L-7). D13, I2: native. D14: `LT`. Non-database effects (Q-04): reading only | n/a | Q-04, Q-22 decisions. D13 fix |
-| load.dependencies (VV:41) | module state supported. Dependency history: confirmed violation D1 | formal: load | modeled in original model | D1: B1 V1, V2. Nesting reduction in `LT`, checked by N-R05-NESTF, N-R05-NESTS, N-R05-DIA | n/a | D1 fix |
+| load.outcome (VV:39) | supported for database state within scope (P-05, P-06b confirmed). Confirmed ... | formal: load | static review only | Database state: B1 and `LT` (PREFIX holds, L-7). D13, I2: native. D14: `LT`. Non-database effects (Q-04): reading only | n/a | Q-04, Q-22, Q-25 decisions. D13 fix |
+| load.dependencies (VV:41) | module state supported. Dependency history: confirmed violation D1 | formal: load | modeled in original model | D1: B1 V1, V2. Nesting reduction in `LT`, checked by N-R05-NESTF, N-R05-NESTS, N-R05-DIA | n/a | D1 fix (repair design Q-30) |
 | load.dependencies.local-repo (VV:42) | supported by observation only | formal: load | native or suite evidence only | Native A0. Section 2.4 | n/a | Lifecycle not modeled |
 | load.write-check (VV:43) | unestablished | formal: load | static review only | Section 2.1 | n/a | Native case needs an unwritable `ModuleRoot` |
 | transaction (VV:49) | supported, conditional on P-01 | formal: load | modeled in original model | B1 `theorem_tlevel`, control 04. P-01 confirmed | n/a | None |
 | transaction.rollback-scope (VV:50) | unresolved authority | formal: load | static review only | A2 premise P-7 and reading only | n/a | Q-04 decision |
-| transaction.flag-sources (VV:52) | confirmed violation D19 (namespace defaults shared by every namespace). ... | formal: load | native or suite evidence only | D19: stage C X1 only. Per-activation `<Defaults>` (D14, Q-23) now in `LT` (L-1 to L-4) | n/a | D19 fix. Q-22, Q-23 decisions |
-| dev-mode.overwrite-guard (VV:55) | unestablished. Q-03 unresolved authority | formal: load | static review only | Top-level guard code-read (`Utils/Module.cls:109-112`). Dependencies never guarded: N-R05-DEVUP (L-5) | n/a | Q-03 decision. L-5 requirement |
+| transaction.flag-sources (VV:52) | confirmed violation D19 (namespace defaults shared by every namespace). ... | formal: load | native or suite evidence only | D19: stage C X1 only. Per-activation `<Defaults>` (D14, Q-23) now in `LT` (L-1 to L-4) | n/a | D19 fix. Q-22, Q-23, Q-25 decisions |
+| dev-mode.overwrite-guard (VV:55) | unestablished. Q-03 unresolved authority | formal: load | static review only | Top-level guard code-read (`Utils/Module.cls:109-112`). Dependencies never guarded: N-R05-DEVUP (L-5) | n/a | Q-03, Q-24 decisions |
 | dev-mode.sticky (VV:56) | provisional answer matches the product | formal: load | decision pending Q-01 | Native g8, g9. B1 Q-01 parameter | n/a | Q-01 decision |
 | history.actions (VV:62) | load supported. Others by suite only | formal: history | native or suite evidence only | Load: B1. Others: suite History | n/a | Non-load writers not modeled |
 | history.record (VV:63) | record existence supported for top-level actions. Unfinished record content ... | formal: history | modeled in original model | D10: B1 `kill_rec`, `theorem_top_record_durable` | n/a | D10 fix |
 | history.record.abnormal-end (VV:64) | confirmed violation under the provisional answer (decision pending) | formal: history | decision pending Q-08 | B1 V9. Native C4R | n/a | Q-08 decision |
 | history.record.unlogged-refusals (VV:65) | unresolved authority | formal: history | static review only | Section 2.8 (refusals before the log) | n/a | Q-09 decision |
-| history.survives-rollback (VV:66) | top-level supported. Dependencies: confirmed violation D1 | formal: history | modeled in original model | D1: B1 `theorem_r1`, V1, V2. `LT` | n/a | D1 fix |
+| history.survives-rollback (VV:66) | top-level supported. Dependencies: confirmed violation D1 | formal: history | modeled in original model | D1: B1 `theorem_r1`, V1, V2. `LT` | n/a | D1 fix (repair design Q-30) |
 | history.fields (VV:68) | Success supported. Package on refusals: confirmed violation D9 | formal: history | modeled in original model | D9: B1 V7 | n/a | D9 fix |
 | history.fields.dependency-source (VV:69) | unresolved authority | formal: history | decision pending Q-15 | Native A0 | n/a | Q-15 decision |
 | history.phases (VV:70) | confirmed violation D6 under Q-14 provisional (decision pending) | formal: history | decision pending Q-14 | D6: B1 V5, `case_c28_phase_left_open` | n/a | Q-14 decision |
-| history.committed (VV:71) | "changed implies committed" supported. "Committed implies changed": confirmed ... | formal: history | modeled in original model | D12: B1. Dependency `Committed` per activation: L-8 to L-10, L-12 in `LT`, P-14 in `P21` | n/a | D12 fix. Repair 103 limits (L-9, L-12) |
+| history.committed (VV:71) | "changed implies committed" supported. "Committed implies changed": confirmed ... | formal: history | decision pending Q-26, Q-31 | D12: B1-C08, `VR/193952Z-replay-return-b`, conditional on Q-31. L-8 (D22) in `LT`, conditional on Q-22 and Q-26. L-9, L-10, L-12 in `LT`, P-14 in `P21` | n/a | Q-26, Q-31 decisions. Repair design Q-30 (L-9, L-12) |
 | history.committed.uninstall (VV:73) | by suite only | in-scope part | native or suite evidence only | Suite History | n/a | Uninstall not modeled. OBS-L17, OBS-H8 |
 | history.committed.nested (VV:75) | confirmed deviation under the provisional answer (decision pending) | formal: history | decision pending Q-05 | B1 V8. Native D1 case | n/a | Q-05 decision |
 | history.committed.side-effects (VV:76) | unresolved authority | formal: history | static review only | No evidence. Reading only | n/a | Q-07 decision |
-| history.dependencies (VV:77) | confirmed violation D1 | formal: history | modeled in original model | D1: B1 V1. `LT` | n/a | D1 fix |
+| history.dependencies (VV:77) | confirmed violation D1 | formal: history | modeled in original model | D1: B1 V1. `LT` | n/a | D1 fix (repair design Q-30) |
 | history.namespace (VV:78) | supported by suite and premise | formal: history | native or suite evidence only | N-P06, N-P17. Suite History | n/a | None |
-| history.read, .find, .filter, .details (VV:79) | confirmed violation D2. Default modifiers as filters: D18 (decision Q-18). ... | formal: history | native or suite evidence only | D2, D18 now in `HR` and `R04`. I1 display: native only | n/a | D2 fix. Q-18 decision. I1 requirement |
-| history.read.global, .api (VV:80) | `-globally` supported. `GlobalRecords`: confirmed violation D20 | formal: history | modeled in follow-up model | D20: GLOBAL clause in `HR`, archived H10. `-globally` find in `HR` | n/a | D20 fix |
-| history.delete (VV:81) | confirmed violation D2 | formal: history | modeled in follow-up model | D2: DEL clause in `HR`, N-R04-DEL, archived X3 | n/a | D2 fix |
-| history.delete.running-records (VV:82) | unresolved authority | formal: history | decision pending Q-20 | N-P15. QA option in `HR` | n/a | Q-20 decision |
+| history.read, .find, .filter, .details (VV:79) | confirmed violation D2. Default modifiers as filters: D18 (decision Q-18). ... | formal: history | native or suite evidence only | D2, D18 now in `HR` and `R04`. I1 display: native only | n/a | D2, D24 fixes. Q-18 decision. I1 requirement |
+| history.read.global, .api (VV:80) | `-globally` supported. `GlobalRecords`: confirmed violation D20 | formal: history | modeled in follow-up model | D20: GLOBAL clause in `HR`, archived H10. `-globally` find in `HR` | n/a | D20 fix. Q-28 decision |
+| history.delete (VV:81) | confirmed violation D2 | formal: history | modeled in follow-up model | D2: DEL clause in `HR`, N-R04-DEL, archived X3 | n/a | D2 fix. Q-27 for global-delete errors (H-4, D23) |
+| history.delete.running-records (VV:82) | unresolved authority | formal: history | decision pending Q-20, Q-29 | N-P15. QA option in `HR` (H-7) | n/a | Q-20, Q-29 decisions |
 | history.locked.unfinished (VV:84) | confirmed violation under the provisional answer (decision pending) | formal: history | decision pending Q-21 | B1 V10. Native C2 | n/a | Q-21 decision |
-| history.retention (VV:85) | confirmed violations D3, D5 | formal: history | native or suite evidence only | D3: `HR`, N-R04-CUTOFF. D5: native F0 only | n/a | D3, D5 fixes |
+| history.retention (VV:85) | confirmed violations D3, D5 | formal: history | native or suite evidence only | D3: `HR`, N-R04-CUTOFF. D5: native F0 only | n/a | D3, D5 fixes. Q-29 decision |
 | history.keep-on-ipm-uninstall (VV:86) | unestablished. Self-uninstall suspected (OBS-H15) | formal: history | not run: destructive self-uninstall | N-P16 persist step only | n/a | Disposable namespace run. Q-16 decision |
 
 ## 2. In-scope parts of other load paths
@@ -514,7 +515,7 @@ Shell(cmd)                                    M:857
 | Operations | CMD-28 `ProcessDefaultModifiers`. EP `ShellInternal`. |
 | Code | Stored in `^%IPM.DefaultModifiers` (`inc/IPM/Common.inc:31`, `Main.cls:1682-1696`). `ShellInternal` merges them into every command's `data` before the parsed command (`Main.cls:1067-1070`). Every `-D` name without a dot is also copied under `data("zpm",...)` (`CLI.cls:815-819`). `load` copies `data` into its params (`Main.cls:2454`). `LoadNewModule` merges the module's `<Defaults>` under those params (`Utils/Module.cls:1165-1169`). A dependency receives its parent's merged params (`:1328`, `:1411`, `:308`). Order of precedence: command line, namespace defaults, the top module's `<Defaults>`, the dependency's own `<Defaults>`. |
 | Commit point | The merged `NoTransaction` and `NoJournal` decide whether an activation opens a transaction (`:1172`, `:1191-1196`). So they decide which of C1, C2 and C3 exist and whether the marker runs (`:1226-1227`). |
-| Record and readers | `history` takes `data("zpm")` as its filter (`Main.cls:4136`), so stored defaults become filters (D18). An unknown column gives an SQL error result that `find` shows as an empty list with OK status (H-3, N-R04-UNKNOWN). The global is shared by every namespace (D19). |
+| Record and readers | `history` takes `data("zpm")` as its filter (`Main.cls:4136`), so stored defaults become filters (D18). An unknown column gives an SQL error result that `find` shows as an empty list with OK status (H-3, N-R04-UNKNOWN, D24). The global is shared by every namespace (D19). |
 | Baseline | D19: stage C X1 (`VR/204152Z-stagec`). D18: stage C H2. Flag precedence per activation: `LT` (L-1), N-R05-PARDEF. Reader side: `HR`. |
 | Disposition | native or suite evidence only for D19. D18 waits on Q-18. |
 
@@ -524,7 +525,7 @@ Shell(cmd)                                    M:857
 |---|---|
 | Operations | OP-LOAD-13 `LoadDependencies`. OP-LOAD-18 `LoadModuleReference`. |
 | Code | `LoadDependencies` builds the graph (`Utils/Module.cls:1380`), flattens it in dependency order (`:1391`), skips modules the graph marked installed (`:1407-1410`) and loads the rest with the top's params (`:1411`). The graph keeps an installed version that satisfies the range (`Storage/Module.cls:1139-1155`). `PermitDowngrade` relaxes only the graph (`:1157`). Per dependency, the developer-mode guard needs `params("Install")` (`Utils/Module.cls:109`). `load` never sets it (`Main.cls:2457-2460`) and `install` removes it before the top's activation (`Utils/Module.cls:318-319`), so it never applies to a dependency (L-5). Then the check against installed modules' requirements (`:116-126`) and the `LoadNewModule` guards (`:1213-1222`). |
-| Commit point | Every dependency loads inside the top's transaction. In developer mode that is the second transaction after C1, committed at C2. A dependency's own `tcommit` is nested. A dependency whose own `<Defaults>` set `NoJournal` writes outside the journal and escapes the rollback (D14). Its own `NoTransaction` only skips its own `tstart` (N-R05-Q23F). |
+| Commit point | Every dependency loads inside the top's transaction. In developer mode that is the second transaction after C1, committed at C2. A dependency's own `tcommit` is nested. A dependency whose own `<Defaults>` set `NoJournal` writes outside the journal and escapes the rollback (D14). Its own dependencies then roll back while it stays (L-4, D21, Q-25). Its own `NoTransaction` only skips its own `tstart` (N-R05-Q23F). |
 | Record and readers | Each dependency has its own record (`Utils/Module.cls:63-70`). Its Action is `install` only under `install`. Its durable twin is inserted at the parent's level (`HistoryTemp.cls:21`) and is lost when the parent rolls back (D1). |
 | Baseline | B1 (up to two leaf dependencies). `LT` with the nesting reduction (L-3). `R05`: N-R05-NESTF, N-R05-NESTS, N-R05-DIA, N-R05-HIGHER, N-R05-HIGHEROK, N-R05-DEVUP, N-R05-DEVSAME, N-R05-PARDEF, N-R05-Q23F, N-R05-Q23S, all conforming. |
 | Disposition | native or suite evidence only for selection outcomes. Remote and ORAS sources were not run (R05d). |
@@ -547,7 +548,7 @@ Shell(cmd)                                    M:857
 - `Init` saves the IRISTEMP row and its durable twin at the current `$TLEVEL` (`AbstractHistory.cls:51-63`, `HistoryTemp.cls:9-26`). A twin saved inside a parent's transaction rolls back with it (D1).
 - `SetCommitted` and `Finalize` write only the IRISTEMP row (`AbstractHistory.cls:119-134`). `Finalize` sets `Committed` to `Committed` or OK.
 - `%OnClose` copies the IRISTEMP row into the twin, sets `Finalized=1` and deletes the temp row (`HistoryTemp.cls:30-73`).
-- Readers: `history find` and `details` (`Main.cls:4127-4149`, `History.cls:93-148`), `delete` (`History.cls:151-159`, `:199-230`), the purge (`History.cls:162-181`, called at `Main.cls:862`), and the `Records` and `GlobalRecords` queries. All are in `HR` and the native run `R04`. `Records` (OBS-H11) is code-read only.
+- Readers: `history find` and `details` (`Main.cls:4127-4149`, `History.cls:93-148`), `delete` (`History.cls:151-159`, `:199-230`, where the global delete ignores every exception at `:214-225`, H-4, D23, Q-27), the purge (`History.cls:162-181`, called at `Main.cls:862`), and the `Records` and `GlobalRecords` queries. All are in `HR` and the native run `R04`. `Records` (OBS-H11) is code-read only. Q-28 decides the row shape of `Records` and `GlobalRecords`, and Q-29 whether the purge may remove unfinished records (H-7).
 
 ### 2.11 What the trace adds or corrects
 
@@ -568,17 +569,17 @@ Each row has exactly one disposition. Denominators are the rows in the family. T
 |---|---|---|---|---|---|---|---|---|
 | A1 commitments | 35 | 7/35 | 1/35 | 6/35 | 14/35 | 1/35 | 1/35 | 5/35 |
 | A1 catalog | 42 | 2/42 | 1/42 | 5/42 | 28/42 | 0/42 | 4/42 | 2/42 |
-| A2 observations | 34 | 4/34 | 3/34 | 4/34 | 17/34 | 2/34 | 0/34 | 4/34 |
+| A2 observations | 34 | 4/34 | 5/34 | 4/34 | 16/34 | 2/34 | 0/34 | 3/34 |
 | A2 commands | 39 | 1/39 | 1/39 | 5/39 | 32/39 | 0/39 | 0/39 | 0/39 |
 | A3 section 1 rows | 51 | 4/51 | 1/51 | 6/51 | 26/51 | 1/51 | 5/51 | 8/51 |
 | A3 section 2 rows | 9 | 1/9 | 0/9 | 1/9 | 7/9 | 0/9 | 0/9 | 0/9 |
 | A3 section 3 rows | 10 | 0/10 | 0/10 | 0/10 | 1/10 | 0/10 | 9/10 | 0/10 |
-| A3 section 4 rows | 32 | 4/32 | 2/32 | 6/32 | 14/32 | 1/32 | 0/32 | 5/32 |
-| A3 section 9 rows | 23 | 5/23 | 4/23 | 6/23 | 2/23 | 1/23 | 0/23 | 5/23 |
-| VV coverage rows | 38 | 8/38 | 2/38 | 9/38 | 9/38 | 1/38 | 0/38 | 9/38 |
-| All rows | 313 | 36/313 | 15/313 | 48/313 | 150/313 | 7/313 | 19/313 | 38/313 |
+| A3 section 4 rows | 32 | 4/32 | 1/32 | 6/32 | 14/32 | 1/32 | 0/32 | 6/32 |
+| A3 section 9 rows | 23 | 5/23 | 3/23 | 6/23 | 2/23 | 1/23 | 0/23 | 6/23 |
+| VV coverage rows | 38 | 7/38 | 2/38 | 9/38 | 9/38 | 1/38 | 0/38 | 10/38 |
+| All rows | 313 | 35/313 | 15/313 | 48/313 | 149/313 | 7/313 | 19/313 | 40/313 |
 
-Totals over all 313 rows: 36 modeled in original model, 15 modeled in follow-up model, 48 native or suite evidence only, 150 static review only, 7 not run, 19 future or not implemented, 38 decision pending.
+Totals over all 313 rows: 35 modeled in original model, 15 modeled in follow-up model, 48 native or suite evidence only, 149 static review only, 7 not run, 19 future or not implemented, 40 decision pending.
 
 ### 3.2 By scope class, and regression versus scope exclusion
 
@@ -600,25 +601,44 @@ Totals over all 313 rows: 36 modeled in original model, 15 modeled in follow-up 
 
 ### 3.3 Decision-pending rows by question
 
-A row can wait on more than one question, so this table counts row-question pairs. No row waits only on Q-22 or Q-23. The rows for D14 and the Q-23 case (A3:156, A3:257) are modeled in follow-up model, because L-4 holds under either Q-22 option.
+A row can wait on more than one question, so this table counts row-question pairs. The second count includes rows that name the question only in evidence or remaining work. Q-24, Q-28 and Q-30 have no decision-pending row. Their rows also carry a static-only open part or a defect that holds under every option, such as D1 for Q-30.
 
-| Q | Rows | Row IDs |
-|---|---|---|
-| Q-01 | 2 | load.refusal.update-required.dev-bypass (Q-02), dev-mode.sticky (Q-01) (A3:248); dev-mode.sticky (VV:56) |
-| Q-02 | 4 | INT-LOAD-10; INT-LOAD-10 (A3:26); load.refusal.update-required.dev-bypass (Q-02), dev-mode.sticky (Q-01) (A3:248); load.refusal.update-required (VV:36) |
-| Q-05 | 5 | INT-LOAD-06; OBS-H16; INT-LOAD-06 (A3:22); history.committed.nested (Q-05) (A3:264); history.committed.nested (VV:75) |
-| Q-08 | 2 | history.record.abnormal-end (A3:165); history.record.abnormal-end (VV:64) |
-| Q-11 | 2 | INT-HIST-12; INT-HIST-12 (A3:53) |
-| Q-14 | 6 | CAT-06; OBS-H14; A1 3.2 Phases (A3:45); CAT-06 (A3:72); history.phases (A3:166); history.phases (VV:70) |
-| Q-15 | 1 | history.fields.dependency-source (VV:69) |
-| Q-17 | 8 | INT-LOAD-11; CAT-05; OBS-L10; INT-LOAD-11 (A3:27); CAT-05 (A3:71); load.refusal.requirements (A3:150); load.refusal.requirements.timing (Q-17) (A3:249); load.refusal.requirements (VV:37) |
-| Q-18 | 3 | OBS-H2; history.read.filter (A3:173); history.read.filter.default-modifiers (Q-18) (A3:259) |
-| Q-20 | 4 | INT-HIST-12; INT-HIST-12 (A3:53); history.delete.running-records (Q-20) (A3:269); history.delete.running-records (VV:82) |
-| Q-21 | 4 | INT-HIST-14; INT-HIST-14 (A3:55); history.locked (A3:171); history.locked.unfinished (VV:84) |
+| Q | Decision-pending rows | Rows naming it in any column | Decision-pending row IDs |
+|---|---|---|---|
+| Q-01 | 2 | 5 | load.refusal.update-required.dev-bypass (Q-02), dev-mode.sticky (Q-01) (A3:248); dev-mode.sticky (VV:56) |
+| Q-02 | 4 | 4 | INT-LOAD-10; INT-LOAD-10 (A3:26); load.refusal.update-required.dev-bypass (Q-02), dev-mode.sticky (Q-01) (A3:248); load.refusal.update-required (VV:36) |
+| Q-03 | 0 | 3 | none |
+| Q-04 | 0 | 8 | none |
+| Q-05 | 5 | 8 | INT-LOAD-06; OBS-H16; INT-LOAD-06 (A3:22); history.committed.nested (Q-05) (A3:264); history.committed.nested (VV:75) |
+| Q-06 | 0 | 2 | none |
+| Q-07 | 0 | 2 | none |
+| Q-08 | 2 | 4 | history.record.abnormal-end (A3:165); history.record.abnormal-end (VV:64) |
+| Q-09 | 0 | 4 | none |
+| Q-10 | 0 | 1 | none |
+| Q-11 | 2 | 2 | INT-HIST-12; INT-HIST-12 (A3:53) |
+| Q-13 | 0 | 5 | none |
+| Q-14 | 6 | 7 | CAT-06; OBS-H14; A1 3.2 Phases (A3:45); CAT-06 (A3:72); history.phases (A3:166); history.phases (VV:70) |
+| Q-15 | 1 | 5 | history.fields.dependency-source (VV:69) |
+| Q-16 | 0 | 5 | none |
+| Q-17 | 8 | 10 | INT-LOAD-11; CAT-05; OBS-L10; INT-LOAD-11 (A3:27); CAT-05 (A3:71); load.refusal.requirements (A3:150); load.refusal.requirements.timing (Q-17) (A3:249); load.refusal.requirements (VV:37) |
+| Q-18 | 2 | 7 | history.read.filter (A3:173); history.read.filter.default-modifiers (Q-18) (A3:259) |
+| Q-19 | 0 | 2 | none |
+| Q-20 | 4 | 5 | INT-HIST-12; INT-HIST-12 (A3:53); history.delete.running-records (Q-20) (A3:269); history.delete.running-records (VV:82) |
+| Q-21 | 4 | 6 | INT-HIST-14; INT-HIST-14 (A3:55); history.locked (A3:171); history.locked.unfinished (VV:84) |
+| Q-22 | 2 | 6 | load.outcome (A3:156); transaction.flag-sources.dependency-defaults (Q-22), transaction.flag-sources.dependency-no-transaction (Q-23, NoTransaction variant not run), load.outcome (A3:257) |
+| Q-23 | 2 | 4 | load.outcome (A3:156); transaction.flag-sources.dependency-defaults (Q-22), transaction.flag-sources.dependency-no-transaction (Q-23, NoTransaction variant not run), load.outcome (A3:257) |
+| Q-24 | 0 | 4 | none |
+| Q-25 | 2 | 4 | load.outcome (A3:156); transaction.flag-sources.dependency-defaults (Q-22), transaction.flag-sources.dependency-no-transaction (Q-23, NoTransaction variant not run), load.outcome (A3:257) |
+| Q-26 | 1 | 3 | history.committed (VV:71) |
+| Q-27 | 2 | 6 | INT-HIST-12; INT-HIST-12 (A3:53) |
+| Q-28 | 0 | 7 | none |
+| Q-29 | 2 | 6 | history.delete.running-records (Q-20) (A3:269); history.delete.running-records (VV:82) |
+| Q-30 | 0 | 10 | none |
+| Q-31 | 1 | 5 | history.committed (VV:71) |
 
 ## 4. What remains unestablished
 
-94 rows in formal scope or in an in-scope part are static review only or not run (A1 commitments 15, A1 catalog 10, A2 observations 16, A2 commands 3, A3 section 1 rows 22, A3 section 3 rows 1, A3 section 4 rows 14, A3 section 9 rows 3, VV coverage rows 10). They come down to these items.
+93 rows in formal scope or in an in-scope part are static review only or not run (A1 commitments 15, A1 catalog 10, A2 observations 15, A2 commands 3, A3 section 1 rows 22, A3 section 3 rows 1, A3 section 4 rows 14, A3 section 9 rows 3, VV coverage rows 10). They come down to these items.
 
 Rests on reading only:
 
@@ -633,8 +653,8 @@ Rests on reading only:
 - Uninstall of a required module, directly or through `-recurse`, reads success (OBS-L17, OBS-H8). Ordinary, not run.
 - Top-level developer-mode overwrite guard (INT-LOAD-12, Q-03) and read-only repository forcing (INT-LOAD-13).
 - Unrecorded refusals of `update`, `reinstall` and `uninstall` (Q-09) and the version `reinstall` uses (Q-19).
-- A purge error stops the user's command (OBS-H12, Q-13). No ordinary input makes the purge fail.
-- `Records` declares an ID column it does not return (OBS-H11) and the unreachable "IPM is not enabled" message (rest of OBS-H10).
+- A purge error stops the user's command (OBS-H12, Q-13, and Q-27 for errors the global delete swallows). No ordinary input makes the purge fail.
+- `Records` declares an ID column it does not return (OBS-H11, Q-28). The rest of OBS-H10 is refuted, because the namespace header is written only when a row exists (`History.cls:501-515`).
 - Listing shows source `n/a` for non-install records (OBS-H7, A3:169).
 - `test` and `verify` dependency loads and the VERIFY namespace load (CMD-8, CMD-10, CAT-33).
 - `-env`, `-bypass-py-deps` and `-skip-sync` (VV:31). `Committed` for non-database changes (Q-07).
@@ -652,13 +672,18 @@ Outside this ledger's row families, still open from other findings:
 
 Established, but without a governing requirement or with a classification left open:
 
-- L-5. A dependency installed in developer mode at another version is replaced and its developer mode cleared (N-R05-DEVUP). No requirement covers it. The developer-mode guard never applies to dependencies. Needs a new question or a decision under Q-03. The R09 rewrite of `bugs_issues.md` drafts it as I3.
-- L-4. With a dependency's own `NoJournal`, a failed parent leaves that dependency installed while its own dependency rolls back (N-R05-NESTF). This holds under either Q-22 option. The R09 rewrite drafts it as D21.
-- L-9 and L-12. Repair variant 103 meets the dependency clauses only when every activation uses the load's mode. It also needs a guarded close. The original handoff's "meets every dependency clause in default and developer modes" holds only for a global mode.
+- L-5. A dependency installed in developer mode at another version is replaced and its developer mode cleared (N-R05-DEVUP). The developer-mode guard never applies to dependencies. Q-24 decides it, with Q-03 for `load`. The R09 rewrite of `bugs_issues.md` files it as I3, likely conditional on Q-24.
+- L-4. With a dependency's own `NoJournal`, a failed parent leaves that dependency installed while its own dependency rolls back (N-R05-NESTF). It arises only under Q-22 option A. Q-25 decides whether that is acceptable. The R09 rewrite files it as D21, conditional on Q-22 and Q-25.
+- L-8. In the same setting the failed load's top record reads `Committed=0` although the dependency's changes were kept. Q-26 decides whether the top record covers dependency writes. Drafted as D22, conditional on Q-22.
+- H-4. A global delete skips every error, not only permission errors (`History.cls:214-225`). Code and `HR` only, not run natively because the container has one IPM namespace. Q-27 decides it. Drafted as D23.
+- H-5, H-6. The global readers return no namespace or ID column, and IDs restart per namespace. Q-28 decides the row shape. Drafted as I4, with OBS-H11 as an alias.
+- H-7. Once D3 is fixed, the purge would remove unfinished records older than the cutoff. Q-29 decides it.
+- L-9 and L-12. Repair variant 103 meets the dependency clauses only when every activation uses the load's mode. It also needs a guarded close. The original handoff's "meets every dependency clause in default and developer modes" holds only for a global mode. Q-30 decides the repair design.
+- D12. A refusal under `NoTransaction` or `NoJournal` reads `Committed=1` with nothing kept. Q-31 asks whether the marker may move after all refusals. The R09 rewrite makes D12 conditional on Q-31, so the D12 rows here name it.
 - I1 and I2 have no governing requirement.
 - OBS-L14 is marked n/a, not regression. Before `f83b207e`, `LoadModuleReference` skipped its downgrade check under `PermitDowngrade`. That commit moved the check into `LoadNewModule`, where `PermitDowngrade` is not read. A3 disagreement 1 keeps `PermitDowngrade` out of documented intent. A maintainer comment on PR #887 says the version check "has always been present". If maintainers treat `PermitDowngrade` as supported, this becomes a second regression.
 
-The R09 rewrite of `Verus_verification/bugs_issues.md` was uncommitted while this ledger was written. It keeps the D and I numbers cited here and drafts new IDs for items this ledger names by finding: D21 (L-4), D22 (L-8), I3 (L-5), I4 (H-5), I5 (OBS-L8), I6 (files outliving a rollback, Q-04), I7 (OBS-L14) and I8 (`NoLock`).
+The R09 rewrite of `Verus_verification/bugs_issues.md` was uncommitted while this ledger was written. It keeps the D and I numbers cited here and drafts new IDs for items this ledger names by finding: D21 (L-4), D22 (L-8), D23 (H-4), D24 (H-3), I3 (L-5), I4 (H-5), I5 (OBS-L8), I6 (files outliving a rollback, Q-04), I7 (OBS-L14) and I8 (`NoLock`). Its parallel classification changes are reflected here: D21 conditional (Q-22, Q-25), D12 conditional (Q-31), D24 supported, the rest of OBS-H10 refuted and I3 likely conditional (Q-24).
 
 New evidence that appeared while this ledger was written and is not used here: `FR/native/20261114T000144Z-replay-return-rerun` and `FR/native/20261114T000251Z-replay-c51-c52-rerun`.
 
@@ -693,6 +718,8 @@ Every product locator in section 2 was read in the source at the pin. These were
 | `Lifecycle/Base.cls:290-293` | "Clean SKIPPED - required by" with `pSkip=1` and no error |
 | `Lifecycle/Module.cls:51` | `kill ^IRIS.Temp.HistoryTempD` |
 | `History.cls:28` | `Records` declares `CONTAINID = 1` with `Action` first |
+| `History.cls:214-225` | the global delete catches and ignores every exception per namespace |
+| `History.cls:501-515` | `DisplayQueryResult` writes the namespace header only when a row exists |
 | `Main.cls:862-865` | purge runs first and its error is returned before the command |
 | `HistoryTemp.cls:21` | durable twin saved at `Init` |
 

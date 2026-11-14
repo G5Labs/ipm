@@ -10,9 +10,9 @@ Conventions:
 - `#NNN` is an issue or pull request on github.com/intersystems/ipm. Quotes were read from the public pages for this review.
 - Short uplift paths such as `handoff.md:67`, `A/coverage-map.md`, `B/model-notes.md` and `C/round-2/` are under `.g5/uplift/ipm-verus-20261113/`. `bugs_issues.md` and `design_simplification.md` sit next to this file.
 - `RN` is `.g5/Verus_verification/results/native/` (uplift runs). `FR` is `.g5/Verus_verification/followup/results/` (this follow-up). Follow-up native cases such as `N-R05-DEVUP` are in `FR/native/20261113T234817Z-r05-modes-nesting` (R05) and `FR/native/20261113T234810Z-r04-history-readers` (R04).
-- Labels L-1 to L-12, H-1 to H-8 and E-1 to E-5 are findings of this follow-up in `.g5/uplift/ipm-quality-followup/work/followup-findings.md`.
+- Labels L-1 to L-12, H-1 to H-8 and E-1 to E-5 are findings of this follow-up. R-1 to R-4 are its corrections after the independent owner-file review. All are in `.g5/uplift/ipm-quality-followup/work/followup-findings.md`.
 - Finding IDs refer to the rewritten [bugs_issues.md](bugs_issues.md). It keeps the original D1-D20, I1 and I2 and adds D21-D30 and I3-I8. Suspected findings keep their A2 IDs (OBS-L*, OBS-H*). The original file is in git at commit `ae619795`. A finding whose verdict depends on a question is "conditional" there.
-- Model results come from the original crate `crates/ipm-load-history` (59 cases, `cases/cases.json` sha256 `10410864…`) and from the follow-up models `followup/models/loadtx.py` (receipt `FR/20261114T002647Z-final-loadtx-model`) and `followup/models/history_readers.py` (receipt `FR/20261114T002647Z-final-history-readers-model`). "End states" are the outcomes the loadtx model explores: 62,764 for the product as built.
+- Model results come from the original crate `crates/ipm-load-history` (59 cases, `cases/cases.json` sha256 `10410864…`) and from the follow-up models `followup/models/loadtx.py` (receipt `FR/20261114T004842Z-final-loadtx-model`) and `followup/models/history_readers.py` (receipt `FR/20261114T002647Z-final-history-readers-model`). "End states" are the outcomes the loadtx model explores: 62,764 for the product as built.
 - Q-24 to Q-31 are new in this file. They continue the uplift's numbering and have no ontology block yet.
 
 Question types:
@@ -62,9 +62,9 @@ Every question identifier used in the uplift, the follow-up and this file.
 | Q-25 | this file (L-4) | none yet; nearest Q-22 | new, open (only if Q-22 is A) | Q-25 |
 | Q-26 | this file (L-8) | none yet; nearest [`history.committed`](../ontology/features/history.g5.md#history.committed) (`features/history.g5.md:125`) | new, open (only if Q-22 is A) | Q-26 |
 | Q-27 | this file (H-4), readers model parameter QE | none yet; nearest [`history.delete`](../ontology/features/history.g5.md#history.delete) (`features/history.g5.md:253`) | new, open | Q-27 |
-| Q-28 | this file (H-5, H-6, OBS-H11) | none yet; nearest [`history.read.api`](../ontology/features/history.g5.md#history.read.api) (`features/history.g5.md:247`) | new, open; the `details` part is settled by `wiki/09` L171 | Q-28 |
+| Q-28 | this file (H-5, H-6, OBS-H11) | none yet; nearest [`history.read.api`](../ontology/features/history.g5.md#history.read.api) (`features/history.g5.md:246`) | new, open; the `details` part is settled by `wiki/09` L171 | Q-28 |
 | Q-29 | this file (H-7), readers model parameter QA | none yet; nearest Q-20 and [`history.retention`](../ontology/features/history.g5.md#history.retention) (`features/history.g5.md:299`) | new, open | Q-29 |
-| Q-30 | this file (L-9 to L-12) | none yet; nearest [`history.survives-rollback`](../ontology/features/history.g5.md#history.survives-rollback) (`features/history.g5.md:67`) | new, open, design choice | Q-30 |
+| Q-30 | this file (L-9 to L-12, R-1 to R-4) | none yet; nearest [`history.survives-rollback`](../ontology/features/history.g5.md#history.survives-rollback) (`features/history.g5.md:67`) | new, open, design choice | Q-30 |
 | Q-31 | this file (raised inside `bugs_issues.md` D12) | none yet; nearest D block [`history.committed.marking`](../ontology/features/history.g5.md#history.committed.marking) (`features/history.g5.md:136`) | new, open | Q-31 |
 
 Model parameters and option labels:
@@ -88,14 +88,14 @@ Coverage of the final question set:
 Ranked by how many defect verdicts, model results and native outcomes each decision changes.
 
 1. Q-22 and Q-23, taken together, with Q-25 and Q-26 that follow from them. They decide the class of D14, D22 and D28, the repair of D21 and the shape of the D1 repair. In the follow-up model the product conforms to the "what a process end or return leaves" clause only under Q-22 A with Q-23 B. Choosing Q-22 B makes 2,440 of 62,764 end states violations. Choosing Q-23 A (the provisional answer) makes 5,780 violations. Native evidence: M5, N-R05-NESTF, N-R05-Q23F.
-2. Q-30, the D1 repair design. D1 loses history records, which is data loss. Every variant of the proposed repair leaves violations unless Q-22 and Q-23 are settled one way.
-3. Q-05 with its alias Q-06b. Decides D25. Under the alternative of Q-06b, 4 of the 59 original model cases change verdict (B1-C42, C43, C50T, C50K), more than any other parameter. It also decides whether IPM may write history outside a caller's transaction, which the repair needs. IPM's own installer runs nested shell commands inside a load (`ontology/features/ipm-setup.g5.md:43`).
+2. Q-30, the D1 repair design. D1 loses history records, which is data loss. Only the variant with one transaction plan per load and the guarded close leaves no dependency residual beyond the SIGKILL case of loads without a transaction (Q-08). That needs Q-22 and Q-23 answered as one rule and the product changed to follow one plan (S8).
+3. Q-05 with its alias Q-06b. Decides D25. Under the alternative of Q-06b, 4 of the 59 original model cases change verdict (B1-C42, C43, C50T, C50K), as many cases as Q-08's alternative concerns (`B/model-notes.md:37`). Q-05 also decides whether IPM may write history outside a caller's transaction, which the repair needs. IPM's own installer runs nested shell commands inside a load (`ontology/features/ipm-setup.g5.md:43`).
 4. Q-17. Decides D4 (native B2, B3, B4) and model cases B1-C23 and C24.
-5. Q-08 and Q-21. They decide D26 (C4R) and D27 (C2) and part of the D10 repair. They also decide whether the guarded D1 repair may leave dependency rows unfinalized at a process end. Q-FIN's alternative changes 2 model verdicts (B1-C46T, C48T).
+5. Q-08 and Q-21. They decide D26 (C4R) and D27 (C2) and part of the D10 repair. They also decide whether the guarded D1 repair may leave dependency rows unfinalized at a process end and what those rows must say. Q-FIN's alternative changes 2 overall verdicts in `cases.json` (B1-C46T, C48T). `B/model-notes.md:40` lists a third case, B1-C49T, which also fails other clauses.
 6. Q-14. Decides whether D6 is a supported defect or documented behavior. One native reproduction, one model case (B1-C28).
 7. Q-18. Decides D18. Because of D19, one namespace's defaults break `history` in every namespace.
 8. Q-10, Q-27 and Q-28, the history readers. They decide D24, the repair of D23 and issue I4. In the readers model the product returns OK for 104 `find` and 52 global-delete commands where the contract wants an error (unknown column or default modifier). D2 and D20 are supported defects regardless.
-9. Q-31. Decides the repair path of D12 (B1-C08).
+9. Q-31. Decides whether D12 is a defect (A, repaired through S1) or documented behavior (B, D12 withdrawn). Model case B1-C08.
 10. Q-24. A developer's in-place debugging setup is overwritten without notice (N-R05-DEVUP).
 11. Q-13, Q-20 and Q-29, the purge. Q-13 decides the suspected OBS-H12. The others matter once D3 is fixed, because today the purge deletes nothing.
 12. Q-01, Q-02, Q-03, Q-11 and Q-19. The product matches the provisional answer, so the decision mostly fixes documentation. Q-01 and Q-02 each change one model case.
@@ -113,7 +113,7 @@ Ranked by how many defect verdicts, model results and native outcomes each decis
   - A (provisional), keep the stored mode. The fix for #892 removed the default that put every `load` in developer mode (`git show f83b207e`, #887, removed `set tParams("DeveloperMode") = $get(tParams("DeveloperMode"), 1)`). `-nodev` exists to turn it off (help `Main.cls:307`).
   - B, a plain load always uses normal mode. Issue #892 (isc-jili, 2025-09-16): "The module should only be DevMode if the -dev flag is included in the command."
 - Product behavior: A. `LoadNewModule` keeps the stored `DeveloperMode` when the command does not set it (`Utils/Module.cls:1298-1307`). Native g8 keeps developer mode and g9 (`-nodev`) clears it (`RN/20261113T182832Z-cases-dg`).
-- Checked in this follow-up: the #892 thread reports a load that turned developer mode on. isc-kiyer closed it as fixed by #890. It says nothing about a module already in developer mode. `git log -S'name="nodev"'` shows `-nodev` in the help long before the fix (commit `56346977`, 2022-11-03).
+- Checked in this follow-up: the #892 thread reports a load that turned developer mode on. isc-kiyer closed it as fixed by #890. It says nothing about a module already in developer mode. `git log -S'name="nodev"'` shows `-nodev` in the help long before the fix (first in commit `8e136249`, 2022-09-27).
 - Most reasonable assumption: A. Under B, every plain reload during development would drop developer mode.
 - Decision requested: A, keep the stored mode and document that `-nodev` turns it off. Or B, make a plain load reset to normal mode. B changes `LoadNewModule` and makes model case B1-C20 a violation.
 - Findings affected: none. Related: OBS-L3 (suspected), a plain load does not save `Root` and `Repository`.
@@ -179,7 +179,7 @@ Ranked by how many defect verdicts, model results and native outcomes each decis
   - B, compare `$TLEVEL` at the end with its value at the start, so any commit nested in a caller transaction reads uncommitted. Issue #1237 option 1, which it called "the smallest change that fixes both directions". PR #1322 chose per-commit marking instead (D block `history.committed.marking`).
   - C, caller-held transactions are unsupported, so the record may be lost with them.
 - Product behavior: C in effect. Native case D1 (`tstart`, `load`, `trollback`) leaves no record. One ID was allocated and in flight the record read `Committed=1` and `Finalized=1` (`RN/20261113T184632Z-repro-caller-tx-history-lost`). D0 (`tcommit`) conforms. IRIS premise P-11 (nested commits are undone by an outer rollback) is confirmed.
-- Checked in this follow-up: the #366, #1237 and #1322 threads. #366 notes the rollback as "a minor wrinkle from a transaction handling perspective" and says no more. #1237 and #1322 discuss only IPM's own transaction. In the follow-up loadtx model, every D1 repair variant still loses the top record under a caller's rollback (the saved examples of the 846 record-existence violations are of that kind), because the repair changes only dependency rows.
+- Checked in this follow-up: the #366, #1237 and #1322 threads. #366 notes the rollback as "a minor wrinkle from a transaction handling perspective" and says no more. #1237 and #1322 discuss only IPM's own transaction. In the follow-up loadtx model, every D1 repair variant still loses the top record under a caller's rollback (846 record-existence violations, all of that kind, `followup/models/MODELS.md:71`), because the repair changes only dependency rows.
 - Most reasonable assumption: A for survival, because #366 asks for history that survives rollback in general. IPM's own installer runs nested shell commands inside a load (`ontology/features/ipm-setup.g5.md:43`), so the case is not only exotic callers.
 - Decision requested: A, records survive a caller's rollback. That needs history written outside the caller's transaction (for example with journaling off, as in `design_simplification.md` S2). `Committed` is then documented as exact only at `$TLEVEL` 0. Or C, declare caller-held transactions unsupported and document that records may be lost. B is a third option that changes only `Committed`.
 - Findings affected: D25 (conditional on this question, formerly the deviation row "Q-05", model V8), D1 (same mechanism), Q-30.
@@ -262,13 +262,13 @@ Ranked by how many defect verdicts, model results and native outcomes each decis
 - Checked in this follow-up: native N-R04-UNKNOWN (no rows, SQLCODE -29 hidden, OK status), N-R04-SEL (all 9 rows returned for a filter that should match 1) and N-R04-SEL2 (the version filter dropped, 2 rows instead of 1). The readers model reproduces the archived D2 cases.
 - Most reasonable assumption: A, with an error for unknown columns, because `delete` already fails that way and a warning is easy to miss in scripts.
 - Decision requested: refuse an unknown column with an error in both `find` and `delete`, or warn and apply the remaining filters. Either way, `find` must stop reporting success for a failed query.
-- Findings affected: D24 (conditional on this question, but a defect under every listed option), D2 (supported regardless), D18, D23 (Q-27).
+- Findings affected: D24 (supported, because it is a defect under every option listed here), D2 (supported regardless), D18, D23 (Q-27).
 - Stakes: anyone filtering or deleting history. A silently widened filter is how D2 deletes a whole namespace's records.
 
 ### Q-11: Does `-confirm` with a filter delete everything?
 
 - Canonical: [`history.delete.confirm-with-filter`](../ontology/features/history.g5.md#history.delete.confirm-with-filter), `ontology/features/history.g5.md:262`.
-- Question: does `history delete -confirm` with a filter delete every record in the namespace or only the matching ones?
+- Question: does a history delete that passes both `-confirm` and a filter delete every record in the namespace or only the matching ones?
 - Type: policy disagreement between sources. Second type: missing test evidence, because no native run combined `-confirm` with a filter.
 - Status: open. The product does the provisional answer, so the decision confirms it and fixes the help text.
 - Interpretations and authority:
@@ -284,7 +284,7 @@ Ranked by how many defect verdicts, model results and native outcomes each decis
 ### Q-12: Global unfiltered delete without `-confirm` (resolved)
 
 - Canonical: D block [`history.delete.global-unfiltered`](../ontology/features/history.g5.md#history.delete.global-unfiltered), `ontology/features/history.g5.md:271`. Former A1 Q-12 (`A/intent-inventory.md:201`).
-- Status: resolved by the sources. `wiki/09` L195 (isc-dchui, 2026-09-03): "`-globally` bypasses the `-confirm` requirement, so `history delete -globally` with no filter deletes every record on the instance without prompting." Help `Main.cls:825`: "Ignored if -globally is passed too." A4 disposition R10 turned it into a D block.
+- Status: resolved by the sources. `wiki/09` L195 (isc-dchui, 2026-09-03): a global delete (`-globally`) bypasses the `-confirm` requirement, so an unfiltered global delete removes every record on the instance without prompting. Help `Main.cls:825`: "Ignored if -globally is passed too." A4 disposition R10 turned it into a D block.
 - Open proposal, not a question: require `-confirm` for an unfiltered global delete (ontology metadata). The readers model keeps this as parameter QG. `bugs_issues.md` withdraws OBS-H9 for the same reason.
 - Related new question: Q-27 (what a global delete does with errors).
 
@@ -373,13 +373,13 @@ Ranked by how many defect verdicts, model results and native outcomes each decis
 ### Q-18: Do namespace default modifiers act as `history` filters?
 
 - Canonical: [`history.read.filter.default-modifiers`](../ontology/features/history.g5.md#history.read.filter.default-modifiers), `ontology/features/history.g5.md:223`.
-- Question: should the namespace's default modifiers (such as `-DNoTransaction=1`) become filters of `history find` and `history delete`?
+- Question: should the namespace's default modifiers (such as `-DNoTransaction=1`) become filters of the history `find` and `delete` actions?
 - Type: design choice.
 - Status: open. The product departs from the provisional answer.
 - Interpretations and authority:
   - A (provisional), no. Default modifiers are meant for package changes. The help of `history` (`Main.cls:820`) says filters come from "the -Dcol=val syntax".
   - B, apply them and document it. No source.
-- Product behavior: B. Defaults merge into every command's data (`Main.cls:1067-1069`) and `history` reads that data as its filter (`Main.cls:4136`). After the product's own help example `default-modifiers -set -DNoTransaction=1 -DUpdateSnapshots=1`, `history find` shows no rows with an OK status and `history delete -confirm` fails (D18, stage C H2).
+- Product behavior: B. Defaults merge into every command's data (`Main.cls:1067-1069`) and `history` reads that data as its filter (`Main.cls:4136`). After the default modifiers of the product's own help example (`NoTransaction=1` and `UpdateSnapshots=1`) are set, `history find` shows no rows with an OK status and an unfiltered delete with `-confirm` fails (D18, stage C H2).
 - Checked in this follow-up: `git log -S` shows the default merge dates from the 2021 import and the filter read from the history feature (`8a88d5bf`, #578). The interaction looks unplanned. D19 stores defaults instance-wide, so a default set in one namespace breaks `history` in all of them.
 - Most reasonable assumption: A.
 - Decision requested: A, `history` reads only its own command-line filters. Or B, document that defaults filter history, which also needs Q-10 so that a non-column default is reported.
@@ -428,10 +428,10 @@ Ranked by how many defect verdicts, model results and native outcomes each decis
   - A (provisional), no. The ontology defines a finalized record as one whose action ended and `wiki/09` L197 says a finalized record rejects updates, so a locked unfinished record could never be corrected.
   - B, finalize whenever IPM releases the record and accept locked records without an end time.
 - Product behavior: B. `PersistToTwin` sets `Finalized=1` without checking the end time (`General/HistoryTemp.cls:53`, since #578). `$SYSTEM.Process.Terminate` runs `%OnClose` before IRIS rolls back (premise P-06b), so C2 is finalized with an open Activate phase and no end time (`RN/20261113T182903Z-cases-c-terminate`).
-- Checked in this follow-up: the guarded D1 repair (L-12) leaves dependency rows unfinalized at such a Terminate. That is what A requires, so Q-21 also decides whether the guarded repair's behavior is a feature or a gap.
+- Checked in this follow-up: the guarded D1 repair (L-12) leaves dependency rows unfinalized at a Terminate inside the load's transaction, which is what A requires. A alone does not make those rows right. With a dependency's own `NoJournal` default they still read the wrong `Committed` (2,338 unended violations in REPAIR-103-GUARDED, R-2). Q-08 decides what they must say (see Q-30).
 - Most reasonable assumption: A.
 - Decision requested: A, set `Finalized` only when the action ended. Or B, document that a record can be locked with no end time.
-- Findings affected: D27 (conditional on this question, formerly the deviation row "new Q (round 1)", model V10), D10, Q-30. Model cases B1-C46T and C48T change verdict under B.
+- Findings affected: D27 (conditional on this question, formerly the deviation row "new Q (round 1)", model V10), D10, Q-30. Model cases B1-C46T and C48T change verdict under B. B1-C49T also uses the parameter but fails other clauses.
 - Stakes: administrators who find an unfinished record after a terminated install. Under B it cannot be corrected.
 
 ### Q-22: Does a dependency's own `NoJournal` default escape its parent's rollback?
@@ -441,14 +441,14 @@ Ranked by how many defect verdicts, model results and native outcomes each decis
 - Type: policy disagreement between sources.
 - Status: open. The product does the provisional answer (A). If A is confirmed, Q-25 and Q-26 need answers too.
 - Interpretations and authority:
-  - A (provisional), yes. `wiki/00` L175 (isc-dchui, 2026-05-13): `<Defaults>` are "applied whenever this module is installed". `wiki/00` L155: with `NoJournal`, "changes cannot be rolled back". Issue #779 (isc-tleavitt, 2025-04-08) asked that `<Defaults>` be "respected in load/install". PR #879 (isc-dchui) did it. The maintainer doc comment `Utils/Module.cls:1033-1040` shows `<Defaults>` with `NoTransaction`.
+  - A (provisional), yes. `wiki/00` L175 (isc-dchui, 2026-05-13): `<Defaults>` are "applied whenever this module is installed". `wiki/00` L155, stated for a crash: with `NoJournal`, "if the process crashes mid-install, changes cannot be rolled back". Issue #779 (isc-tleavitt, 2025-04-08) asked that `<Defaults>` be "respected in load/install". PR #879 (isc-dchui) did it. The maintainer doc comment `Utils/Module.cls:1033-1040` shows `<Defaults>` with `NoTransaction`.
   - B, the parent's transaction governs every nested load, so the dependency's `NoJournal` is ignored or the dependency is refused while a parent transaction is open. `wiki/00` L126 and L147: the whole load is one transaction and "a failure mid-way through is fully rolled back". `load.outcome`: "including dependencies loaded for it". Maintainer comment from the 2021 import, `Utils/Module.cls:1316-1317`: "Nested transactions in underlying calls to LoadNewModule during the dependency resolution process may be rolled back at the end of this method."
 - Product behavior: A. Each activation merges its own `<Defaults>` under the parameters it received (`Utils/Module.cls:1166-1169`). Caller flags win over the parent's defaults, which win over the dependency's own, key by key (L-1, N-R05-PARDEF). A dependency's `NoJournal` turns journaling off inside the parent's open transaction (`:1191-1193`). Native M5 keeps the dependency after the parent's rollback (`RN/20261113T204405Z-stagec2`).
 - Checked in this follow-up: #779, #879, #952 and #316. None discusses a dependency's defaults inside a parent transaction. #779 is about top-level modules. The follow-up modeled per-activation modes (loadtx.py) and ran 10 native cases (all as predicted). Findings: the top-level load loads the whole dependency closure with its own parameters, so a middle dependency's defaults do not reach its own dependencies (L-3). After a failed parent, a `NoJournal` dependency can stay installed while its own dependency is rolled back (L-4, N-R05-NESTF, Q-25). The top record then reads `Committed=0` (L-8, Q-26). In the model, with Q-23 as built, the product conforms to the end-state clause under A and violates it in 2,440 of 62,764 end states under B.
 - Empirical unknowns: none for the database effect (premise P-03, N-P07). Remote and ORAS repositories were not run as dependency sources.
 - Most reasonable assumption: no source decides it. A follows the flag-specific wiki lines and the product. B follows the general rule and the oldest code comment.
 - Decision requested: A, the escape is intended. D14 becomes documented behavior (its lost record stays D1). Q-25 and Q-26 then need answers. Or B, the parent governs. D14 is then a defect and the fix ignores or refuses dependency-level `NoJournal` while a parent transaction is open. Under B, Q-25 and Q-26 disappear and the D1 repair works as proved (Q-30). `design_simplification.md` S8 makes Q-22 and Q-23 one load-wide rule.
-- Findings affected: D14 (conditional: a defect only under B), D21 (broken dependency closure, Q-25), D22 (top record `Committed`, Q-26), D1, Q-30.
+- Findings affected: D14 (conditional: a defect only under B), D21 (broken dependency closure, conditional on Q-22 and Q-25), D22 (top record `Committed`, Q-26), D1, Q-30.
 - Stakes: module authors who put `NoJournal` in `<Defaults>` to speed up installs and users whose install of a parent fails. Under A, part of the dependency tree stays installed after a "rolled back" failure, with no record (D1).
 
 ### Q-23: Does a dependency's own `NoTransaction` default suppress its parent's transaction?
@@ -476,44 +476,46 @@ Ranked by how many defect verdicts, model results and native outcomes each decis
 ### Q-FIN (alias of Q-21)
 
 - Model-only parameter `qfin_unended` (`contract.rs:47`), first defined in `B/model-notes.md:40`. It asks whether a record whose action never ended may be finalized. Provisional value: false.
-- Under the alternative, model cases B1-C46T and C48T change verdict.
+- Under the alternative, model cases B1-C46T and C48T change verdict. `B/model-notes.md:40` also lists B1-C49T, whose verdict does not change because it fails other clauses.
 - Answer it with Q-21.
 
 ## New questions from this follow-up
 
-### Q-24: May loading a parent replace a dependency that is in developer mode?
+### Q-24: May loading or installing a parent replace a dependency that is in developer mode?
 
-- Canonical: no ontology block yet. Source: follow-up L-5. Nearest blocks: [`dev-mode.overwrite-guard`](../ontology/concepts/transactions-and-dev-mode.g5.md#dev-mode.overwrite-guard) (`ontology/concepts/transactions-and-dev-mode.g5.md:100`) and [`dev-mode.not-propagated`](../ontology/concepts/transactions-and-dev-mode.g5.md#dev-mode.not-propagated) (`:90`).
-- Question: when a parent needs another version of a dependency that is installed in developer mode, should IPM replace it and clear its developer mode without notice?
-- Type: policy disagreement between sources. No source addresses dependencies directly.
-- Status: open. No provisional answer exists.
+- Canonical: no ontology block yet. Source: follow-up L-5. Governing blocks: [`dev-mode.overwrite-guard`](../ontology/concepts/transactions-and-dev-mode.g5.md#dev-mode.overwrite-guard) (`ontology/concepts/transactions-and-dev-mode.g5.md:100`) and [`install.refusal`](../ontology/features/install.g5.md#install.refusal) (`ontology/features/install.g5.md:23`).
+- Question: when a parent needs another version of a dependency that is installed in developer mode, may IPM replace that dependency in normal mode and clear its developer mode?
+- Type: policy disagreement between sources and the product. `dev-mode.overwrite-guard` says "A module installed in developer mode cannot be overwritten by a normal-mode install" and `install.refusal` lists the guard among the reasons an install is refused. Neither makes an exception for dependencies. Q-03's provisional answer and the code limit the guard to the module named in a top-level `install`.
+- Status: open. No provisional answer exists. The two commands differ:
+  - `install` of the parent: the two I blocks as written cover the dependency, so the product contradicts them. Code reading only. `install` removes `params("Install")` before the top module's activation (`Utils/Module.cls:318-319`), so the guard never sees a dependency. Not run natively.
+  - `load` of the parent: whether the guard covers `load` at all is the open part of Q-03. Observed natively (N-R05-DEVUP).
 - Interpretations and authority:
-  - A, refuse (or ask for `-force`), as for a top-level install. `wiki/00` L129: "A module loaded in dev mode cannot be overwritten by a non-dev install". Maintainer comment `Utils/Module.cls:1317`: "To debug a dependency, that module itself should be loaded in 'developer mode'", which is the setup this replacement destroys.
-  - B, replace it in normal mode, as today. `wiki/00` L133: do not use `-dev` "for modules you are consuming as dependencies". `dev-mode.not-propagated`: dependencies install in normal mode.
-  - C, replace it but warn and name the module whose developer mode was cleared.
-- Product behavior: B. N-R05-DEVUP: a dependency in developer mode at 1.0.0, required at 2.0.0, is replaced and its `DeveloperMode` set to 0. The guard (`Utils/Module.cls:109`) needs `params("Install")`, which `load` never sets (`Main.cls:2455-2460`) and `install` removes before the top module's activation (`Utils/Module.cls:318-319`), so it never sees a dependency. By code reading, `Root` also moves to the repository folder (`Utils/Module.cls:1298-1303`). N-R05-DEVSAME: at the required version the dependency is skipped and keeps developer mode.
-- Checked in this follow-up: code, native pair above, #316, #952 and #1036 (none mentions it), git history of the guard (Q-03).
-- Most reasonable assumption: none. The wiki's general guard rule favors A and the not-propagated rule favors B.
-- Decision requested: A, extend the guard to dependencies, so the parent's load fails with the guard's message unless the developer uninstalls or forces. Or B, keep replacing and document it, preferably with the warning of C. This answer also completes Q-03.
-- Findings affected: I3 (issue). Its entry asks this question.
-- Stakes: developers debugging a dependency in place, as the code comment suggests. Under B, their next load of the parent silently switches that dependency to the repository version.
+  - A, the guard covers dependencies. A normal-mode load of another version does not replace a dependency in developer mode and the parent's command fails with the guard's message. Authority: the two I blocks as written, `wiki/00` L129 ("A module loaded in dev mode cannot be overwritten by a non-dev install") and the maintainer comment `Utils/Module.cls:1317` ("To debug a dependency, that module itself should be loaded in 'developer mode'"), which describes the setup the replacement removes.
+  - B, the guard covers only the module named on the command line and dependencies are replaced in normal mode as today. Authority: Q-03's provisional answer (install-only scope) and the code since the guard was added for the top-level install (`d541c5b4`). `dev-mode.not-propagated` and `wiki/00` L133 support B only indirectly. They say dependencies install in normal mode and that `-dev` is not for consumed dependencies. They do not say that a module already in developer mode may be overwritten.
+  - C, replace as in B, but warn and name the module whose developer mode was cleared.
+- Product behavior: B, natively for `load` and by code reading for `install`. N-R05-DEVUP: a dependency in developer mode at 1.0.0, required at 2.0.0, is replaced and its `DeveloperMode` set to 0. The guard (`Utils/Module.cls:109`) needs `params("Install")`, which `load` never sets (`Main.cls:2455-2460`). By code reading, `Root` also moves to the repository folder (`Utils/Module.cls:1298-1303`). N-R05-DEVSAME: at the required version the dependency is skipped and keeps developer mode.
+- Checked in this follow-up: code, the native pair above, #316, #952 and #1036 (none mentions the case) and the git history of the guard (see Q-03).
+- Most reasonable assumption: for `install`, A, because the I blocks state the guard without an exception. For `load`, the answer follows Q-03.
+- Decision requested: A, extend the guard to dependencies for `install` and also for `load` if Q-03 brings `load` under the guard. Or B, add an explicit exception for dependencies to `dev-mode.overwrite-guard` and `install.refusal`, preferably with the warning of C. This answer also completes Q-03.
+- Findings affected: I3 in `bugs_issues.md`, whose entry asks for a new question or an extension of Q-03. Under the I blocks as written, the `install` variant is a suspected defect. The `load` variant depends on Q-03 and on this question.
+- Stakes: developers debugging a dependency in place, as the code comment suggests. Under B, their next load or install of the parent silently switches that dependency to the repository version.
 
 ### Q-25: If a `NoJournal` dependency escapes, may its own dependencies be rolled back?
 
-- Canonical: no ontology block yet. Source: follow-up L-4 (with L-3). Nearest block: Q-22 and [`load.outcome`](../ontology/features/load.g5.md#load.outcome) (`ontology/features/load.g5.md:145`).
+- Canonical: no ontology block yet. Source: follow-up L-4 (with L-3). Nearest blocks: Q-22 and [`load.outcome`](../ontology/features/load.g5.md#load.outcome) (`ontology/features/load.g5.md:145`).
 - Question: if Q-22 is answered A, may a failed load leave the escaped `NoJournal` dependency installed while that dependency's own dependency is rolled back?
 - Type: design choice, which follows from Q-22 A.
-- Status: open. It does not arise under Q-22 B. The sources lean against A: `bugs_issues.md` files the broken closure as D21, supported under both options of Q-22.
+- Status: open. It does not arise under Q-22 B. No source decides it.
 - Interpretations and authority:
-  - A, accept it and document it. `wiki/00` L155 already warns that `NoJournal` may leave "an inconsistent state" (stated for crashes).
-  - B, keep the closure consistent: a `NoJournal` dependency's own dependencies load under its `NoJournal` too, so they also stay.
+  - A, accept it and document it. `load.outcome` leaves the effect of a dependency's own transaction flags open (its bullet points to Q-22 and Q-23). For loads without a transaction it accepts that "the namespace may be left inconsistent" after a process end. `wiki/00` L155 says the same for `NoJournal`: "if the process crashes mid-install, changes cannot be rolled back and the namespace may be left in an inconsistent state". Both speak of crashes, not of a load that returns a failure.
+  - B, keep the closure consistent. A `NoJournal` dependency's own dependencies load under its `NoJournal` too, so they also stay.
   - C, avoid the case by answering Q-22 with B.
-  - Against A: [`uninstall.dependents`](../ontology/features/uninstall.g5.md#uninstall.dependents) (`ontology/features/uninstall.g5.md:20`) says "IPM prevents uninstalling a module that other installed modules depend on". `load.dependencies` loads dependencies before the module and fails the whole load when one fails. The D21 entry reads these as implying that an installed module has its dependencies.
-- Product behavior: N-R05-NESTF, chain m -> d1 (own `NoJournal`) -> d2, parent fails: d1 stays installed with its class and d2 is rolled back. Neither dependency has a record (D1). Mechanism: the top-level `LoadDependencies` loads the whole closure in dependency order with the top's parameters, so d2 loads before d1. d1's own `LoadDependencies` then skips d2 (`Utils/Module.cls:1368-1405`, `Storage/Module.cls:1139-1154`; L-3). The model shows that rerunning the same load without the fault installs every module (L-7).
-- Checked in this follow-up: code, native NESTF and NESTS, model.
-- Most reasonable assumption: not A. B or C keeps the namespace consistent and IPM's other rules protect dependency closures.
+  - Authority for B and C: IPM protects dependency closures in other operations. [`uninstall.dependents`](../ontology/features/uninstall.g5.md#uninstall.dependents) (`ontology/features/uninstall.g5.md:20`) says "IPM prevents uninstalling a module that other installed modules depend on, unless `-force` is given", as does `wiki/02` L1253. [`load.dependencies`](../ontology/features/load.g5.md#load.dependencies) (`ontology/features/load.g5.md:179`) loads dependencies before the module and fails the whole load when one fails. These rules state what other operations guarantee. None states what a failed load may leave behind, so they do not decide the case.
+- Product behavior: N-R05-NESTF, chain m -> d1 (own `NoJournal`) -> d2, parent fails: d1 stays installed with its class and d2 is rolled back. Neither dependency has a record (D1). Mechanism: the top-level `LoadDependencies` loads the whole closure in dependency order with the top's parameters, so d2 loads before d1. d1's own `LoadDependencies` then skips d2 (`Utils/Module.cls:1368-1405`, `Storage/Module.cls:1139-1154`, L-3). The model shows that rerunning the same load without the fault installs every module (L-7).
+- Checked in this follow-up: code, native NESTF and NESTS, the model, the ontology's load, uninstall and dependency pages and `wiki/00`, `wiki/02`.
+- Most reasonable assumption: no source decides it. B or C leaves the namespace in the state that IPM's other commands assume. A is the cheapest.
 - Decision requested (only if Q-22 is A): A, document that a failed load can leave an escaped module without its dependencies until the next load. Or B, propagate a dependency's own `NoJournal` to the dependencies it needs.
-- Findings affected: D21 (supported), D14.
+- Findings affected: D21 in `bugs_issues.md`, which the revision in progress makes conditional on Q-22 and, under Q-22 A, on this question. D14.
 - Stakes: users of applications that call into d2 through d1. Until a later load resolves d1's requirements again, that code fails at run time.
 
 ### Q-26: What `Committed` should a failed load's record show when only a `NoJournal` dependency's changes were kept?
@@ -525,14 +527,14 @@ Ranked by how many defect verdicts, model results and native outcomes each decis
 - Interpretations and authority:
   - A, yes. Property comment `General/AbstractHistory.cls:41`: "Whether any of the action's changes were kept". `wiki/09` L215-219: the recipe for "an install left the namespace in a bad state" looks for committed failures. Today the dependency's own record is lost (D1), so the top record is the only one left. The follow-up model's contract uses this reading ("top: any module").
   - B, no. The top record covers its own module and the dependency's own record (once D1 is fixed) shows `Committed=1`. `history.dependencies`: dependency installs have their own records.
-- Product behavior: the top record reads `Committed=0` (N-R05-NESTF row 1, archived M5). In the model this happens in 30 end states. It also appears in the guarded D1 repair variant. Only the one-plan-per-load variant (M-GLOBAL-MODE) removes it.
+- Product behavior: the top record reads `Committed=0` (N-R05-NESTF row 1, archived M5). In the model this happens in 30 end states. It also appears in the REPAIR-103 and REPAIR-103-GUARDED variants. Only the variants with one transaction plan per load (M-GLOBAL-MODE and REPAIR-103-GUARDED-GLOBAL) remove it, because no dependency escapes there.
 - Checked in this follow-up: model and native NESTF. #1237 does not discuss dependencies.
 - Most reasonable assumption: no source. B is consistent with per-action records but depends on fixing D1 first.
 - Decision requested (only if Q-22 is A): A, mark the top record committed when any dependency's changes were kept. Or B, keep it per module and rely on the dependency's own record.
-- Findings affected: D22 (conditional on Q-22, read with option A of this question; under B it reduces to D1), D14, D1, Q-30.
+- Findings affected: D22, conditional on Q-22 and read with option A of this question. Under option B it reduces to D1. Also D14 and Q-30.
 - Stakes: administrators using the `wiki/09` recipe after a failed install. Under the current product, nothing in the log says that anything was kept.
 
-### Q-27: Should `history delete -globally` report errors other than missing permission?
+### Q-27: Should a global history delete report errors other than missing permission?
 
 - Canonical: no ontology block yet. Source: follow-up H-4. Nearest blocks: [`history.delete`](../ontology/features/history.g5.md#history.delete) (`ontology/features/history.g5.md:253`) and the Q-12 D block.
 - Question: when a global delete fails in one namespace for a reason other than missing permission, should it report that namespace's error instead of skipping it silently?
@@ -541,16 +543,16 @@ Ranked by how many defect verdicts, model results and native outcomes each decis
 - Interpretations and authority:
   - A, report non-permission errors per namespace and return an error after trying every namespace. Code comments `General/History.cls:213` ("handle permission errors in locked-down namespaces") and `:221` ("Ignore permission errors in locked namespaces") and the verbose message "Skipped <ns> (no permission)". `wiki/09` L195: `-verbose` shows "which namespaces were skipped for lack of permission". The local delete already fails on an SQL error (`General/History.cls:151-159`). Q-10's provisional answer: never hide a failed query.
   - B, keep skipping every failing namespace and document it.
-- Product behavior: B. The `catch` ignores every exception (`General/History.cls:214-225`). By code reading and in the readers model, `history delete -globally` with an unusable column prints "Deleted 0 record(s)" with no error while the local delete fails (52 global-delete commands in the model). Not run natively.
+- Product behavior: B. The `catch` ignores every exception (`General/History.cls:214-225`). By code reading and in the readers model, a global delete with an unusable column prints "Deleted 0 record(s)" with no error while the local delete fails (52 global-delete commands in the model). Not run natively.
 - Checked in this follow-up: `git log -S'DeleteHistoryGlobally'` and `git show f522900e`. The catch-all came with #1107 (isc-dchui, 2026-04-23), commit "Fix cleanup timing and history deletion permission bugs". The #1107 page does not describe the bug. The purge calls the same method (`General/History.cls:175`), so under A a purge error would surface, which is Q-13.
 - Most reasonable assumption: A, because both the comment and the wiki name only permission.
 - Decision requested: A, catch only the permission error, report the others per namespace and return an error. Or B, document that `-globally` skips any namespace where the delete fails. With the D2 repair (column check before any query), the unusable-column case is refused up front, so A then matters for other errors such as locks or read-only databases.
-- Findings affected: D23 (suspected; filed with no decision, from the code comment and the wiki), D2, D3, OBS-H12 (Q-13).
+- Findings affected: D23 (suspected, filed with no decision on the strength of the code comment and the wiki), D2, D3, OBS-H12 (Q-13).
 - Stakes: administrators who believe a global delete or purge removed old records everywhere.
 
 ### Q-28: Should the global history readers return each row's namespace and ID?
 
-- Canonical: no ontology block yet. Sources: follow-up H-5, H-6 and OBS-H11. Nearest blocks: [`history.read.api`](../ontology/features/history.g5.md#history.read.api) (`ontology/features/history.g5.md:247`) and [`history.read.global`](../ontology/features/history.g5.md#history.read.global) (`:237`).
+- Canonical: no ontology block yet. Sources: follow-up H-5, H-6 and OBS-H11. Nearest blocks: [`history.read.api`](../ontology/features/history.g5.md#history.read.api) (`ontology/features/history.g5.md:246`) and [`history.read.global`](../ontology/features/history.g5.md#history.read.global) (`:237`).
 - Question: should the class query `GlobalRecords` return each row's namespace and record ID? Should `Records` return the ID column it declares?
 - Type: design choice (API shape).
 - Status: open. The `history details` part is settled: `wiki/09` L171 documents that IDs are unique only within a namespace and that `details` reads the current namespace.
@@ -574,7 +576,7 @@ Ranked by how many defect verdicts, model results and native outcomes each decis
   - A, purge by start time only. `wiki/09` L185: "It compares against `TimeStart`". `history.retention`: records "that started more than that many days ago". Q-20 provisional.
   - B, skip records whose action has not ended. `wiki/09` L229-233 uses unfinished records to find killed processes and N-P15 shows a running action's record disappears completely if removed.
 - Product behavior: today the purge deletes nothing (D3). Its filter is `TimeStart` only (`General/History.cls:172-173`), so after the D3 fix it follows A. The readers model with D3 fixed (variant M-NO-QUOTES) purges the in-progress row.
-- Checked in this follow-up: native N-R04-CUTOFF (the quoted cutoff selects 0 rows, the unquoted one selects the 40-day-old row; H-2). The readers model's purge contract defaults to B (`followup/models/history_readers.py:226`, `qa="preserve-active"`), so its one purge verdict for M-NO-QUOTES depends on this question. #977 and #992 do not discuss unfinished records.
+- Checked in this follow-up: native N-R04-CUTOFF (H-2). The quoted cutoff selects 0 rows and the unquoted one selects the 40-day-old row. The readers model's purge contract defaults to B (`followup/models/history_readers.py:226`, `qa="preserve-active"`), so its one purge verdict for M-NO-QUOTES depends on this question. #977 and #992 do not discuss unfinished records.
 - Most reasonable assumption: A. Records of crashed actions would otherwise never age out and a running action older than the retention window is rare.
 - Decision requested: A, purge by age and document it. Or B, add "has ended" to the purge filter and say how records of crashed actions are removed.
 - Findings affected: D3 (its fix makes this reachable and its entry names Q-20 for it).
@@ -582,39 +584,41 @@ Ranked by how many defect verdicts, model results and native outcomes each decis
 
 ### Q-30: How should D1 be repaired?
 
-- Canonical: no ontology block yet. Sources: follow-up L-9, L-10, L-11 and L-12, `bugs_issues.md` D1 repair proposal, `design_simplification.md` S2 and S8. Nearest block: [`history.survives-rollback`](../ontology/features/history.g5.md#history.survives-rollback) (`ontology/features/history.g5.md:67`).
+- Canonical: no ontology block yet. Sources: follow-up L-9 to L-12 and the corrections R-1 to R-4 (section "Corrections after the independent owner-file review" of the brief), the D1 entry of `bugs_issues.md` and `design_simplification.md` S2, S3 and S8. Nearest block: [`history.survives-rollback`](../ontology/features/history.g5.md#history.survives-rollback) (`ontology/features/history.g5.md:67`).
 - Question: which repair design should make dependency records survive a parent's rollback (D1) while their `Committed` stays true?
 - Type: design choice for the maintainers. Second type: unknown platform behavior, because history rows written with journaling off do not reach mirror members and mirroring was never tested.
 - Status: open.
-- What the follow-up established, so the choice is between designs that work:
-  - The proposed mechanism (variant 103) writes the row with journaling off and marks `Committed=1` with a journaled update as the row's last write before the commit. That rule is load-bearing: a rollback restores a journaled write only if the row still holds the value that write set (new premise P-14, native N-P21A and N-P21R, `FR/native/20261113T234716Z-p21-ordering-r2`). A mutant that writes the row unjournaled between mark and commit is detected (1,004 against 962 `Committed` violations).
-  - A naive fix that only makes the row survive marks rolled-back dependencies `Committed=1` through `Finalize`'s "`Committed` or OK" (`General/AbstractHistory.cls:127-133`) and the no-transaction marker (2,712 violations, L-10). So `design_simplification.md` S3 is part of any repair.
-  - Variant 103 as proposed has two gaps. With a dependency's own `NoJournal` default (Q-22 A), its surviving row reads `Committed=0` although its changes were kept (818 dependency-clause violations, L-9). At a Terminate between the mark and its commit, IRIS runs the top-level `%OnClose` first (premise P-06b). Finalizing dependency rows there unjournaled keeps the mark after the rollback (60 end states, 30 of them distinct, L-12). The window comes from the design text "dependency rows are finalized at the top-level close". The crate's variant 103 models the mark as atomic with the commit and cannot show it.
-  - The guarded variant finalizes dependency rows at the close only when no transaction of the load is open. It leaves 141 violations, all with a dependency's own `NoJournal` default. Part of that drop comes from rows left unfinalized at such a Terminate, which is what Q-21's provisional answer requires.
-  - One transaction plan per load (variant M-GLOBAL-MODE, S8) has no `Committed` violation under any option of Q-22 and Q-23.
-  - In every repair variant, the top record is still lost under a caller's rollback, because variant 103 changes only dependency rows. That part is Q-05.
+- What the follow-up established. Counts are from the loadtx receipt `FR/20261114T004842Z-final-loadtx-model`, with the product's policy (Q-22 A, Q-23 B) and no caller transaction:
+  - What the model checks. It checks `Committed` on finalized, ended rows and on rows that exist but did not end (clause COMMITTED-UNENDED, Q-08's provisional answer). Earlier counts, including those first given for these variants, checked finalized rows only and hid violations (R-1).
+  - The ordering rule. Variant 103 writes the row with journaling off and marks `Committed=1` with a journaled update as the row's last write before the commit. A rollback restores a journaled write only if the row still holds the value that write set (new premise P-14, native N-P21A and N-P21R, `FR/native/20261113T234716Z-p21-ordering-r2`), so the rule is load-bearing. A mutant that writes the row unjournaled between mark and commit is detected (1,004 against 962 `Committed` violations).
+  - A naive fix that only makes the row survive marks rolled-back dependencies `Committed=1` (2,712 violations, L-10). Three paths do it: `Finalize`'s "`Committed` or OK" (`General/AbstractHistory.cls:127-133`), the no-transaction marker and the dependency's own commit marker after its nested commit (`Utils/Module.cls:1347-1351`), which the parent's rollback later undoes. So `design_simplification.md` S3 is part of any repair.
+  - REPAIR-103, the design as proposed. Finalized dependency rows read the wrong `Committed` in 902 end states. 842 have a dependency's own `NoJournal` default (Q-22 A). 60 fall in the Terminate window between the mark and its commit, where IRIS runs the top-level `%OnClose` before the rollback (premise P-06b, L-12). Unended dependency rows read the wrong `Committed` in 10,775 end states: 1,559 with a dependency's own `NoJournal` and 9,216 SIGKILLs of a load that runs without a transaction (R-2).
+  - REPAIR-103-GUARDED, where the close finalizes dependency rows only when no transaction of the load is open. It removes the 60 window states and nothing else. The `NoJournal` case is not fixed. Those rows now stay unfinalized and still read the wrong `Committed`: unended `NoJournal` violations rise from 1,559 to 2,338. 81 finalized ones remain, all `NoJournal` (R-2).
+  - REPAIR-103-GUARDED-GLOBAL, one transaction plan per load (dependencies ignore their own defaults) plus the guarded close. It is the only variant with no finalized dependency violation and no other dependency residual. What remains are the 9,216 SIGKILL end states of loads that run without a transaction, before the dependency's close. The original handoff named that residual: "In NoTransaction and NoJournal, residual violations come from D12 and the Q-08 deviation" (`handoff.md:80`).
+  - M-GLOBAL-MODE, the product as built but with one mode per load, still loses dependency rows (D1), so it says nothing about the repair (R-4). The original crate's proof of variant 103 covers transactional loads only (default and `-dev`).
+  - The top row is outside the dependency repair. Unended top rows read `Committed=0` with kept writes in 29,042 process-end states as built and in REPAIR-103. The count is 28,141 in REPAIR-103-GUARDED-GLOBAL (D26 under Q-08). The top record is also lost under a caller's rollback in every variant (846 record-existence violations, Q-05). The top-row part of S2 is not modeled (R-3).
 - Options:
-  - A, one transaction plan per load (S8) plus variant 103 with the guarded close, the ordering rule and S3. The repair then runs in the domain where it was proved. It needs Q-22 and Q-23 answered as one rule.
-  - B, keep per-activation modes (Q-22 A) and extend variant 103: a dependency whose own `NoJournal` applies marks its row committed at its own close, plus the guarded close, the ordering rule and S3. No model variant covers this extension yet.
-- Decision requested: A or B. In both cases also confirm three things. First, IPM may write history rows with journaling off. Such rows also survive a caller's rollback (Q-05) and do not replicate to mirror members. Second, the ordering rule and the guarded close are part of the repair. Third, the naive fix is rejected.
-- Findings affected: D1. Through the same mechanism (S2) also D10, D12, D22, D25, D26 and D27. The handoff's statement that variant 103 "meets every dependency clause" in default and developer modes (`uplift/ipm-verus-20261113/handoff.md:80`) holds only with one mode per load.
+  - A, one transaction plan per load (S8) plus variant 103 with the guarded close, the ordering rule and S3. The evidence is REPAIR-103-GUARDED-GLOBAL. It needs Q-22 and Q-23 answered as one load-wide rule.
+  - B, keep per-activation modes (Q-22 A) and extend variant 103 so that a dependency whose own `NoJournal` applies marks its row committed durably at its own close, plus the guarded close, the ordering rule and S3. No model variant covers this extension. The guard and the ordering rule alone do not fix the `NoJournal` case (REPAIR-103-GUARDED).
+- Decision requested: A or B. In both cases also confirm four things. First, IPM may write history rows with journaling off. Such rows also survive a caller's rollback (Q-05) and do not replicate to mirror members. Second, the ordering rule and the guarded close are part of the repair. Third, the naive fix is rejected. Fourth, how to treat the 9,216-state SIGKILL residual of loads without a transaction. Under Q-08's provisional answer it is a defect that needs a further rule. Under Q-08's alternative it is documented. The top row (D10, D26) needs its own repair either way.
+- Findings affected: D1. Through the same mechanism (S2), also D10, D12, D22, D25, D26 and D27. The handoff's statement that variant 103 "meets every dependency clause" in default and developer modes (`handoff.md:80`) holds only with one transaction plan per load and the guarded close. Its stated residual for NoTransaction and NoJournal loads remains.
 - Stakes: everyone who relies on the log after a failed install with dependencies. A wrong repair turns "record lost" into "record says committed for a module that was rolled back", which is harder to notice.
 
 ### Q-31: May the no-transaction `Committed` marker move after all refusals?
 
-- Canonical: no ontology block yet. Source: `bugs_issues.md` D12, whose decision field says the repair changes the D block `history.committed.marking`, "which needs maintainer agreement". Nearest blocks: D block [`history.committed.marking`](../ontology/features/history.g5.md#history.committed.marking) (`ontology/features/history.g5.md:136`) and [`history.committed`](../ontology/features/history.g5.md#history.committed) (`:125`).
-- Question: should a `-DNoTransaction=1` or `-DNoJournal=1` load that is refused before it writes anything read `Committed=0`, which means setting the marker only after every refusal check?
-- Type: policy disagreement between sources.
-- Status: open.
+- Canonical: no ontology block yet. Source: `bugs_issues.md` D12, whose decision field says the repair changes the D block `history.committed.marking`, "which needs maintainer agreement". Nearest blocks: D block [`history.committed.marking`](../ontology/features/history.g5.md#history.committed.marking) (`ontology/features/history.g5.md:136`) and I block [`history.committed`](../ontology/features/history.g5.md#history.committed) (`:125`).
+- Question: should a `-DNoTransaction=1` or `-DNoJournal=1` load that is refused before it writes anything read `Committed=0`? That needs the marker to run only after every refusal check. It refines the D block `history.committed.marking`.
+- Type: design choice, the wording of a D block. The I block `history.committed` and the property comment point to A. B rests only on the literal wording of one CHANGELOG sentence and of PR #1322.
+- Status: open. In the revised `bugs_issues.md`, D12 is conditional on this question.
 - Interpretations and authority:
-  - A, a refusal that wrote nothing reads uncommitted in every mode. Property comment `General/AbstractHistory.cls:41-42` ("A non-committed load, install or update wrote nothing or was rolled back"). Issue #1237: `Committed` "should reflect whether the action's changes were actually retained". The I block `history.committed` states it as its last bullet.
-  - B, a no-transaction run reads committed once it starts. CHANGELOG 0.10.11 `#1237`: "one run with `-DNoTransaction=1` or `-DNoJournal=1` reads committed". PR #1322 body: it marks "before writing when there is no transaction".
+  - A, a refusal that wrote nothing reads uncommitted in every mode. Property comment `General/AbstractHistory.cls:41-42` ("A non-committed load, install or update wrote nothing or was rolled back"). Issue #1237: `Committed` "should reflect whether the action's changes were actually retained". The I block `history.committed` states it as its last bullet ("A refusal before anything is written is not committed, in any mode").
+  - B, a no-transaction run reads committed from its start, refusals included. CHANGELOG 0.10.11 `#1237`, second sentence: "one run with `-DNoTransaction=1` or `-DNoJournal=1` reads committed". PR #1322 body: it marks "before writing when there is no transaction". The entry's first sentence frames the change as whether a failed action "kept any changes". The uplift's seed document also treats "an early validation refusal" as a separate case (`docs/ipm-uplift/index.md` L31, next to the repository). So B reads that sentence beyond its context.
 - Product behavior: B. The marker runs at `Utils/Module.cls:1224-1227`, before the manifest import (`:1251`), so a later refusal reads `Committed=1` with nothing kept (D12, model case B1-C08, `RN/20261113T193952Z-replay-return-b`).
 - Checked in this follow-up: the #1237 and #1322 text. Neither mentions refusals. The evaluator rerun kept the D12 verdict (`FR/20261114T002646Z-final-replay-reeval`).
-- Most reasonable assumption: A, because the CHANGELOG sentence describes failures that ran and S1 (validate before the first write) keeps the marker "before writing" while moving every refusal ahead of it.
-- Decision requested: A, validate first (S1) so the marker follows every refusal and refine the D block to "after validation, before the first write". Or B, keep the marker where it is and withdraw D12 as documented behavior.
-- Findings affected: D12 (filed as supported; under B it would be withdrawn), D11 (moving the marker alone is unsafe until D11 is fixed), D4, Q-17.
-- Stakes: users of `-DNoTransaction=1` (also when set as a default modifier, D19). A refused load shows up in the "committed failures" recipe although nothing changed.
+- Most reasonable assumption: A. S1 (validate before the first write) keeps the marker "before writing" and moves every refusal ahead of it.
+- Decision requested: A, D12 is a defect. Validate first (S1) so the marker follows every refusal and refine the D block to "after validation, before the first write". Or B, keep the marker where it is. B withdraws D12. A refused no-transaction load then reads `Committed=1` by design. The last bullet of the I block `history.committed` must change.
+- Findings affected: D12 (conditional on this question, a defect under A and withdrawn under B), D11 (moving the marker alone is unsafe until D11 is fixed), D4, Q-17.
+- Stakes: users of `-DNoTransaction=1`, also when it is set as a default modifier (D19). A refused load shows up in the "committed failures" recipe although nothing changed.
 
 ## Historical files and statuses that lag the final evidence
 
@@ -623,12 +627,12 @@ Files under `.g5/uplift/ipm-verus-20261113/` are the record of the original upli
 - `handoff.md:59`, `:86` and `:98`: Q-23 "not observed natively". It is now observed (N-R05-Q23F and N-R05-Q23S, L-2).
 - `handoff.md:67`: the collapsed row says "no current defect verdict" for eleven questions. The product departs from the provisional answers of Q-09, Q-13 and Q-16 by code reading and of Q-10 natively (E3, N-R04-UNKNOWN). Q-06 is missing from the table.
 - `handoff.md:72-76`: history readers, per-module `<Defaults>` flags, nested dependencies and dependencies already installed at another version or in developer mode are "not modeled". They are now modeled (`followup/models/loadtx.py`, `followup/models/history_readers.py`) and run natively (R05 and R04 cases).
-- `handoff.md:80`: variant 103 "meets every dependency clause" in default and developer modes. True only with one mode per load (L-9) and with the guarded close (L-12).
+- `handoff.md:80`: variant 103 "meets every dependency clause" in default and developer modes. True only with one transaction plan per load and the guarded close (L-9, L-12, R-2). Its caveat for NoTransaction and NoJournal loads still holds (9,216 SIGKILL end states).
 - `handoff.md:96`: the repair's write ordering "was not probed natively". It is now probed (P-14, L-11).
 - `handoff.md:14`: lists premises P-01 to P-11 and P-12 but omits P-13 (E-5).
 - `A/coverage-map.md:238`: "Q-01 to Q-19 need maintainer answers. Q-02, Q-17, Q-10 and Q-06 change required outcomes most." Q-12 is closed and Q-20 to Q-23 are missing. The ranking is superseded by the ordering above.
 - `A/coverage-map.md:223` and `:257`: Q-23's "NoTransaction variant not run". Now run.
-- `A/coverage-map.md:6`: attributes Q-21 to Q-23 to round 1. Q-22 and Q-23 come from `C/round-2/repairs-ontology.md`.
+- `A/coverage-map.md:6`: assigns Q-22 to round 2 and Q-23 to round 3 correctly, but its link points at `C/round-1/repairs-ontology.md`. Both come from `C/round-2/repairs-ontology.md`.
 - `A/intent-inventory.md:190-206`: A1 provisional answers later changed for Q-03, Q-05, Q-06, Q-08, Q-09, Q-12, Q-13 and Q-15 (see the crosswalk).
 - `B/model-notes.md:5` and `:150`: per-module `<Defaults>` transaction flags "not representable". The follow-up model represents them.
 - `B/native-report.md:216`: D6 as a plain confirmed defect, while `bugs_issues.md` files it as conditional on Q-14.
@@ -652,7 +656,7 @@ Files outside that folder that other owners may update:
 - Sections: 22 ontology Q blocks, 1 resolved former Q (Q-12), 2 aliases (Q-06b, Q-FIN) and 8 new questions (Q-24 to Q-31).
 - Resolved: 1 (Q-12, by `wiki/09` L195 and the help). Partly settled: the `details` part of Q-28 (`wiki/09` L171).
 - Open: 30 (all 22 ontology questions and the 8 new ones).
-  - By main type: policy disagreement between sources 12 (Q-01, Q-02, Q-03, Q-04, Q-11, Q-15, Q-17, Q-19, Q-22, Q-23, Q-24, Q-31). Design choice 17 (Q-05, Q-07, Q-08, Q-09, Q-10, Q-13, Q-14, Q-16, Q-18, Q-20, Q-21, Q-25, Q-26, Q-27, Q-28, Q-29, Q-30). Missing test evidence 1 (Q-06). Unknown platform behavior 0.
+  - By main type: policy disagreement between sources 11 (Q-01, Q-02, Q-03, Q-04, Q-11, Q-15, Q-17, Q-19, Q-22, Q-23, Q-24). Design choice 18 (Q-05, Q-07, Q-08, Q-09, Q-10, Q-13, Q-14, Q-16, Q-18, Q-20, Q-21, Q-25, Q-26, Q-27, Q-28, Q-29, Q-30, Q-31). Missing test evidence 1 (Q-06). Unknown platform behavior 0.
   - With a second type: missing test evidence for Q-04, Q-09, Q-11, Q-13, Q-16 and Q-27. Unknown platform behavior for Q-08 (IRISTEMP at restart) and Q-30 (mirroring).
-- Cross-check with the rewritten `bugs_issues.md`: its 11 conditional findings (D4, D6, D14, D18, D22, D24, D25, D26, D27, D28, OBS-H7), its question-dependent suspected findings (D29, OBS-H12, OBS-H13) and issue I6 each name a question that has a section here. Issue I3 asks Q-24.
+- Cross-check with `bugs_issues.md` and the revision in progress there (D12 and D21 become conditional, D24 becomes supported): its conditional findings D4 (Q-17), D6 (Q-14), D12 (Q-31), D14 and D22 (Q-22), D21 (Q-22 and Q-25), D18 (Q-18), D25 (Q-05), D26 (Q-08), D27 (Q-21), D28 (Q-23) and OBS-H7 (Q-15) each have their question here. So do its question-dependent suspected findings D29 (Q-09), OBS-H12 (Q-13) and OBS-H13 (Q-16) and issue I6 (Q-04). D24 depends on Q-10 only for its repair. Issue I3 asks for a new question or an extension of Q-03. Q-24 is that question.
 - Of the 22 ontology questions, the product already does the provisional answer in 10, so the decision only confirms it (Q-01, Q-02, Q-03, Q-04, Q-07, Q-11, Q-15, Q-19, Q-20, Q-22). It departs in 11 (Q-05, Q-08, Q-09, Q-10, Q-13, Q-14, Q-16, Q-17, Q-18, Q-21, Q-23). One cannot be observed until D1 is fixed (Q-06).
