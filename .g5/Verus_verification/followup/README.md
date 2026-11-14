@@ -56,7 +56,7 @@ python3 -I -B followup/bin/receipt.py prefix-cases "exit 0" --inputs followup/mo
 python3 -I -B followup/bin/receipt.py loadtx-model "11 correspondence rows hold" --inputs followup/models/loadtx.py -- python3 -I -B followup/models/loadtx.py {OUT}
 ```
 
-The last one takes about 10 minutes. Expected results are in `models/MODELS.md` and in the current receipts `results/20261114T002647Z-final-history-readers-model`, `results/20261114T002830Z-final-prefix-cases` and `results/20261114T002647Z-final-loadtx-model`.
+The last one takes about 10 minutes. Expected results are in `models/MODELS.md` and in the current receipts `results/20261114T002647Z-final-history-readers-model`, `results/20261114T005359Z-final-prefix-cases` and `results/20261114T004842Z-final-loadtx-model`.
 
 ## 3. Native cases (R04, R05, R06e)
 
