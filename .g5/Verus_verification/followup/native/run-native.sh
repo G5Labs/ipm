@@ -75,9 +75,14 @@ cmd_up() {
     exit 1
 }
 
+ours() {
+    docker container inspect "$NAME" >/dev/null 2>&1 && [ "$(docker inspect -f '{{index .Config.Labels "ipm-quality-followup"}}' "$NAME")" = 1 ]
+}
+
 cmd_exec() {
     local label="$1" script="$2"
     [ -f "$script" ] || { echo "no script $script" >&2; exit 2; }
+    ours || { echo "$NAME is missing or not labeled ipm-quality-followup=1" >&2; exit 1; }
     local run_id out
     run_id="$(date -u +%Y%m%dT%H%M%SZ)-$label"
     out="$results/$run_id"
@@ -142,10 +147,13 @@ case "${1:-}" in
     up) cmd_up ;;
     exec) shift; cmd_exec "$@" ;;
     down)
-        if docker container inspect "$NAME" >/dev/null 2>&1 && [ "$(docker inspect -f '{{index .Config.Labels "ipm-quality-followup"}}' "$NAME")" = 1 ]; then
+        if ours; then
             docker rm -f "$NAME" >/dev/null
         fi
-        docker network rm "$NET" >/dev/null 2>&1 || true
+        # The network name is assigned to this session. Remove it only when nothing is attached to it.
+        if docker network inspect "$NET" >/dev/null 2>&1 && [ "$(docker network inspect -f '{{len .Containers}}' "$NET")" = 0 ]; then
+            docker network rm "$NET" >/dev/null
+        fi
         echo "down: $NAME" ;;
     *) sed -n '2,12p' "$0"; exit 2 ;;
 esac

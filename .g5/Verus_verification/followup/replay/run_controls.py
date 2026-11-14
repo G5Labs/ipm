@@ -224,6 +224,9 @@ def family_c():
     pair("B1-C01", "record: missing", RUN_B, {"history.top.row": "0"}, "VIOLATES H-RECORD-EXISTS[top]", cs)
     pair("B1-C01", "status: error returned", RUN_B, {"status": "ERR"}, "VIOLATES L1-STATUS", cs)
     pair("B1-C01", "status: not observed", RUN_B, {"status": None}, "INDETERMINATE L1-STATUS", cs)
+    pair("B1-C01", "status: value outside the driver vocabulary", RUN_B, {"status": "OKAY"}, "INDETERMINATE L1-STATUS", cs)
+    pair("B1-C05", "kind 0 unchanged (absent): resources appeared without a module record", RUN_B, {"modules.top.resources_loaded": "1"},
+         "VIOLATES H-COMMITTED[top],L1-NAMESPACE", cs)
     pair("B1-C08", "committed: not observed", RUN_B, {"history.top.committed": None}, "INDETERMINATE H-COMMITTED[top]", cs)
     pair("B1-C31", "record exists: dependency row restored as the contract requires (valid neighbor)", RUN_B,
          {"history.dep1.row": "1", "history.dep1.success": "OK", "history.dep1.committed": "0", "history.dep1.time_end_set": "1",
@@ -376,6 +379,18 @@ def family_d():
         edit_log(r, lambda ls: sum(([l, "OBS B1-C01 history.top.x.rows=2"] if l.startswith("OBS B1-C01 history_rows=") else [l] for l in ls), []))
         v = run_e2(r, CASES, out)
         record("D", "B1-C01", "driver reported one of two History rows for a slot", "INCOMPLETE", v["cases"]["B1-C01"]["l1_verdict"])
+        # 9c a case that began twice
+        r = copy_run(RUN_B, tmp, "two-begins")
+        edit_log(r, lambda ls: sum(([l, l] if l.startswith("CASE-BEGIN B1-C01 ") else [l] for l in ls), []))
+        v = run_e2(r, CASES, out)
+        record("D", "B1-C01", "case began twice", "INCOMPLETE", v["cases"]["B1-C01"]["l1_verdict"])
+        # 9d an expectation snapshot changed after the run
+        r = copy_run(RUN_B, tmp, "snapshot")
+        with open(os.path.join(r, "inputs", "expected-repro.json"), "a") as fh:
+            fh.write(" ")
+        v = run_e2(r, CASES, out)
+        record("D", "*", "inputs/ differs from the receipt's expectations snapshot hash", "INCOMPLETE",
+               sorted({c["l1_verdict"] for c in v["cases"].values()})[0] if len({c["l1_verdict"] for c in v["cases"].values()}) == 1 else "mixed")
         # 10 the real run is complete
         v = run_e2(RUN_B, CASES, out)
         record("D", "*", "unmodified run: every scheduled case is complete", 43, sum(1 for c in v["cases"].values() if c["evidence"]["complete"]))

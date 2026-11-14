@@ -357,8 +357,8 @@ def st_ok(e, o):
     if e["st"] == 0:
         return True
     s = o.get("status")
-    if s is None or s == "<none>":
-        return None
+    if s not in ("OK", "ERR"):
+        return None          # missing, <none> after a process end, or a value outside the driver's vocabulary
     return EQ(s == "OK", e["st"] == 1)
 
 

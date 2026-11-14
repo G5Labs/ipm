@@ -274,6 +274,7 @@ def program(cfg):
         if m["NoJournal"]:
             def jm_off(st, ctx, a=a):
                 ctx["jprev"][a] = st.jrn
+                ctx["jm_open"].add(a)
                 st.jrn = False
             A((f"{a}:journal-off", jm_off))
         elif uses_tx(a):
@@ -345,7 +346,7 @@ def run(cfg, init, cut=None, end="return"):
     st = Store(init)
     if cfg.variant == "M-BEFORE-IMAGE":
         st.before_image = False
-    ctx = {"acts": acts, "started": set(), "failed": set(), "completed": set(), "itl": {}, "jprev": {}, "entry": 1 if cfg.caller_tx else 0,
+    ctx = {"acts": acts, "started": set(), "failed": set(), "completed": set(), "itl": {}, "jprev": {}, "jm_open": set(), "entry": 1 if cfg.caller_tx else 0,
            "kept_now": lambda st, a: True}
     i, unwinding = 0, None
     obs = {}
@@ -354,7 +355,14 @@ def run(cfg, init, cut=None, end="return"):
         if cut is not None and i == cut:
             obs["transient"] = st.snapshot()
             if end == "terminate":
-                for a in reversed(acts):                         # %OnClose of open log objects, innermost first (P-06c)
+                # %OnClose of live objects, innermost frame first (P-06c, native N-P19). Frames, outermost
+                # first: Main.Load (top log) > top LoadNewModule (top JournalManager) > LoadModuleReference
+                # (dependency log) > dependency LoadNewModule (dependency JournalManager). A JournalManager's
+                # %OnClose restores the journaling it found (Utils/JournalManager.cls:14, :22-25).
+                for a in [x for x in reversed(acts) if x != "top"] + ["top"]:
+                    if a in ctx["jm_open"] and cfg.variant != "M-JOURNAL-NOT-RESTORED":
+                        st.jrn = ctx["jprev"][a]
+                        ctx["jm_open"].discard(a)
                     if a in st.temp:
                         close(a, st, ctx, cfg.variant)
             st.rollback_all()                                    # P-05
@@ -362,7 +370,7 @@ def run(cfg, init, cut=None, end="return"):
             obs["end"] = end
             obs["cut_label"] = steps[i][0]
             obs["trace"] = trace
-            obs["ctx"] = {k: sorted(v) if isinstance(v, set) else v for k, v in ctx.items() if k != "kept_now"}
+            obs["ctx"] = {k: sorted(v) if isinstance(v, set) else v for k, v in ctx.items() if k not in ("kept_now", "acts")}
             return obs
         label, fn = steps[i]
         if unwinding is not None and fn != "EXIT:" + unwinding:
@@ -387,6 +395,7 @@ def run(cfg, init, cut=None, end="return"):
                     st.trollback1()
                 if mode(a)["NoJournal"] and a in ctx["jprev"] and cfg.variant != "M-JOURNAL-NOT-RESTORED":
                     st.jrn = ctx["jprev"][a]
+                ctx["jm_open"].discard(a)
                 if unwinding == a:
                     unwinding = None
         else:
@@ -403,7 +412,7 @@ def run(cfg, init, cut=None, end="return"):
         obs["caller_rollback"] = st2.snapshot()
     obs["end"] = "return"
     obs["trace"] = trace
-    obs["ctx"] = {k: sorted(v) if isinstance(v, set) else v for k, v in ctx.items() if k != "kept_now"}
+    obs["ctx"] = {k: sorted(v) if isinstance(v, set) else v for k, v in ctx.items() if k not in ("kept_now", "acts")}
     return obs
 
 
@@ -622,6 +631,15 @@ def corresponding_cases():
     v = returned(Cfg(None, None, ("NoTransaction",), False, None, False, "as-built"))
     out.append(("prediction N-R05-Q23S: same, parent succeeds: dependency installed, row Committed=1",
                 v.get(("mod", "dep1"), {}).get("present") == 1 and v.get(("hist", "dep1"), {}).get("com") == 1))
+    # P-06c (native N-P19, results/native/20261113T204146Z-premise-p19): NoJournal load with a dependency
+    # under a caller transaction, Terminate inside the dependency's Activate. The dependency's row
+    # survives finalized; the top row is rolled back.
+    cfg = Cfg("NoJournal", None, (None,), False, None, True, "as-built")
+    steps, acts, _, _ = program(cfg)
+    k = [i for i, (l, _) in enumerate(steps) if l == "dep1:activate"][0]
+    v = run(cfg, {}, k, "terminate")["settled"]["v"]
+    out.append(("N-P19: NoJournal load under a caller transaction, Terminate in the dependency's Activate: dependency row survives finalized, top row rolled back",
+                v.get(("hist", "dep1"), {}).get("fin") == 1 and ("hist", "top") not in v))
     # P-14: the store's rollback against the four native probe sequences
     def seq(steps, end):
         st = Store({})

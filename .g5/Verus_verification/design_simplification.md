@@ -40,7 +40,7 @@ Policy choice. Adopting S1 answers Q-17 with option A ("check system requirement
 
 Tradeoffs. A manifest read twice (once in memory, once by `OBJ.Load`) must not diverge. Validation that depends on the imported document (multiple documents, B1-C51/C52) has to run against the parsed file instead.
 
-Evidence. Not modeled as a variant. The L1 contract already encodes the required outcome. The cases it would change are B1-C08, C09, C10, C11–C15, C18, C23, C24, C51 and C52 (re-evaluated in `FR/20261113T232332Z-replay-reeval/delta.md`). Native B2-B4 and g3 show today's behavior.
+Evidence. Not modeled as a variant. The L1 contract already encodes the required outcome. The cases it would change are B1-C08, C09, C10, C11–C15, C18, C23, C24, C51 and C52 (re-evaluated in `FR/20261114T002646Z-final-replay-reeval/delta.md`). Native B2-B4 and g3 show today's behavior.
 
 ## S2: One durable history row per action
 
@@ -48,10 +48,10 @@ Old complexity. A log has an IRISTEMP copy and a namespace twin. The twin is wri
 
 What gets simpler. Every setter writes the durable row directly, with process journaling off for that save (`%IPM.Utils.JournalManager(0)`), so no rollback and no process end can remove it. IRISTEMP becomes a cache. `Committed` is the one field written journaled, set to 1 just before the commit that makes the action's changes durable, as the row's last write before that commit. Any rollback then restores 0.
 
-Corrections from the follow-up (model `models/loadtx.py`, receipt `FR/20261113T235302Z-loadtx-model`):
+Corrections from the follow-up (model `models/loadtx.py`, receipt `FR/20261114T002647Z-final-loadtx-model`):
 
 1. One transaction mode per load. Variant 103 meets every dependency clause only when every activation uses the load's mode. A dependency whose own `<Defaults>` set NoJournal keeps its changes after a parent rollback (the product's behavior, D14), but under S2 its row stays at `Committed=0`. That gives 818 dependency-clause violations (27 at returned ends, 791 at process ends). S2 therefore needs S8, or a rule that marks such a dependency's row committed at its own close.
-2. Write ordering at the close. A rollback undoes a journaled write only if the row still holds the value that write set (new premise P-14, native `FR/native/20261113T234716Z-p21-ordering-r2`). IRIS runs `%OnClose` at a Terminate before its rollback (P-06b). If the top-level close finalizes dependency rows with journaling off while the load's transaction is open, a Terminate between the `Committed=1` mark and its commit leaves `Committed=1` on a dependency that was rolled back (60 end states in variant REPAIR-103). The window is two adjacent statements wide. The guarded variant (REPAIR-103-GUARDED) finalizes dependency rows at the close only when no transaction of the load is open, and it removes every violation that does not come from a dependency's own NoJournal default (141 remain, all with such a dependency). That count is lower partly because the guarded close leaves dependency rows unfinalized at such a Terminate, and this model checks `Committed` only on finalized rows. The original contract allows an unfinalized dependency row at a process end. A mutant that writes the rows unjournaled between the mark and the commit is detected.
+2. Write ordering at the close. A rollback undoes a journaled write only if the row still holds the value that write set (new premise P-14, native `FR/native/20261113T234716Z-p21-ordering-r2`). IRIS runs `%OnClose` at a Terminate before its rollback (P-06b). If the top-level close finalizes dependency rows with journaling off while the load's transaction is open, a Terminate between the `Committed=1` mark and its commit leaves `Committed=1` on a dependency that was rolled back (60 end states, 30 of them distinct, in variant REPAIR-103). The window is two adjacent statements wide. It follows from the design text "dependency rows are finalized at the top-level close". The original crate's variant 103 models the mark as atomic with the commit and finalizes dependency rows only at a returned close, so it could not show this window. The guarded variant (REPAIR-103-GUARDED) finalizes dependency rows at the close only when no transaction of the load is open, and it removes every violation that does not come from a dependency's own NoJournal default (141 remain, all with such a dependency). That count is lower partly because the guarded close leaves dependency rows unfinalized at such a Terminate, and this model checks `Committed` only on finalized rows. The original contract allows an unfinalized dependency row at a process end. A mutant that writes the rows unjournaled between the mark and the commit is detected.
 3. The premise S2 depends on is now stated precisely. The rollback-proof insert is R-01 (native N-P20). The ordering rule is P-14 (N-P20c, N-P20c2, N-P21A, N-P21R). The original text described the hazard of a journaled insert followed by unjournaled updates (N-P20c2). The follow-up shows the opposite order, an unjournaled write after the journaled mark, is the one that defeats the rollback.
 
 Preserved behavior. Finalized rows stay immutable (`history.locked`). A top-level failure reads `Committed=0`. IDs follow start order. In developer mode, a dependency committed by C2 keeps `Committed=1` when the parent fails later (B1-C38).
@@ -62,7 +62,7 @@ Unresolved choices. Whether IPM may write history outside a caller's transaction
 
 Tradeoffs. IRIS mirroring replicates through the journal, so a history row written with journaling off would not reach a mirror member. Neither the original uplift nor this review tested mirroring, and the update framework distinguishes mirror members (`src/cls/IPM/General/Update/VersionBase.cls`).
 
-Evidence. Original: variant 103, `repair-103-dep-clauses` PASS (189,577 states) and `repair-103-invariants` PASS, rerun on the final inputs (`FR/20261113T233031Z-repair-103-dep-clauses`, `FR/20261113T233031Z-repair-103-invariants`). Follow-up: `FR/20261113T235302Z-loadtx-model` variants REPAIR-103, REPAIR-103-GUARDED, REPAIR-103-M-LATE-MARK.
+Evidence. Original: variant 103, `repair-103-dep-clauses` PASS (189,577 states) and `repair-103-invariants` PASS, rerun on the final inputs (`FR/20261113T233031Z-repair-103-dep-clauses`, `FR/20261113T233031Z-repair-103-invariants`). Follow-up: `FR/20261114T002647Z-final-loadtx-model` variants REPAIR-103, REPAIR-103-GUARDED, REPAIR-103-M-LATE-MARK.
 
 ## S3: Mark `Committed` only where a write is kept
 
@@ -97,7 +97,7 @@ Preserved behavior. Wildcard `*`, the comparison operators, the `-confirm` gate 
 
 Policy choices. Whether default modifiers are filters (Q-18). Under S4 a default modifier that is not a column would be refused, so S4 together with Q-18 option A removes D18. Whether an in-progress record may be purged (Q-20, Q-29). The model shows that once D3 is fixed, an in-progress record older than the cutoff is purged unless S4's purge triple excludes unfinished rows.
 
-Evidence. `models/history_readers.py` (receipt `FR/20261113T234915Z-history-readers-model`): the 69 commands of the valid neighbor (plain columns, no default modifiers) match the contract exactly. The deliberately wrong variant "skip invalid keys" (a tempting partial fix) still differs from the contract and is refuted natively by N-R04-SEL. So skipping instead of stopping is not a repair. The variant with an unquoted cutoff is refuted by the archived no-op purge (X4), which confirms the quoting is the cause of D3.
+Evidence. `models/history_readers.py` (receipt `FR/20261114T002647Z-final-history-readers-model`): the 69 commands of the valid neighbor (plain columns, no default modifiers) match the contract exactly. The deliberately wrong variant "skip invalid keys" (a tempting partial fix) still differs from the contract and is refuted natively by N-R04-SEL. So skipping instead of stopping is not a repair. The variant with an unquoted cutoff is refuted by the archived no-op purge (X4), which confirms the quoting is the cause of D3.
 
 ## S5: One exit path per phase
 
@@ -111,7 +111,7 @@ Decisive neighboring pair. B1-C28 (an Activate-phase Invoke returns an error) to
 
 Policy choice. Adopting S5 answers Q-14 with option A.
 
-Evidence. Not modeled as a variant. The L1 clause with Q-14 option A rejects B1-C28 and accepts B1-C25 (`FR/20261113T232332Z-replay-reeval`). Native: archived `repro-activate-invoke-phase-open`.
+Evidence. Not modeled as a variant. The L1 clause with Q-14 option A rejects B1-C28 and accepts B1-C25 (`FR/20261114T002646Z-final-replay-reeval`). Native: archived `repro-activate-invoke-phase-open`.
 
 ## S6: Declared setting defaults
 
@@ -137,7 +137,7 @@ Decisive neighboring pair. B1-C29 (cleanup fails after the commit) must report t
 
 Tradeoffs. A sweep needs a reliable "owner is gone" test. Two concurrent loads of the same directory would each need their own repository.
 
-Evidence. Not modeled. Native: B1-C29 (`FR/20261113T232332Z-replay-reeval`), archived `results/native/20261113T210229Z-temp-repos-leftover`.
+Evidence. Not modeled. Native: B1-C29 (`FR/20261114T002646Z-final-replay-reeval`), archived `results/native/20261113T210229Z-temp-repos-leftover`.
 
 ## S8: One transaction plan per load
 
@@ -157,7 +157,7 @@ Decisive neighboring cases. N-R05-NESTF (parent fails; middle dependency declare
 
 Policy choice. S8 makes Q-22 and Q-23 one decision. It does not answer them.
 
-Evidence. `models/loadtx.py` variant M-GLOBAL-MODE is the "one mode per load" design, with the dependency defaults ignored (receipt `FR/20261113T235302Z-loadtx-model`). It has no `Committed` violation under any option, so the 30 top-record and 818 repair-103 dependency violations disappear. Under Q-22 B and Q-23 B, 144 end states still differ from the contract. All are caller rollbacks of a load that runs without its own transaction while a dependency declares NoJournal: the contract as written still lets that dependency's NoJournal survive the caller's rollback, and the single plan ignores it. The plan rule has to say which wins. Under the product's current policy (Q-22 A) the variant differs in 3,080 end states, as expected, because it no longer lets a dependency's NoJournal escape.
+Evidence. `models/loadtx.py` variant M-GLOBAL-MODE is the "one mode per load" design, with the dependency defaults ignored (receipt `FR/20261114T002647Z-final-loadtx-model`). It has no `Committed` violation under any option, so the 30 top-record and 818 repair-103 dependency violations disappear. Under Q-22 B and Q-23 B, 144 end states still differ from the contract. All are caller rollbacks of a load that runs without its own transaction while a dependency declares NoJournal: the contract as written still lets that dependency's NoJournal survive the caller's rollback, and the single plan ignores it. The plan rule has to say which wins. Under the product's current policy (Q-22 A) the variant differs in 3,080 end states, as expected, because it no longer lets a dependency's NoJournal escape.
 
 ## S9: Namespace-aware history readers and setting scope
 

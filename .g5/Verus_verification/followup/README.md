@@ -30,7 +30,7 @@ python3 -I -B followup/bin/receipt.py replay-controls "exit 0; counts A/B/C/D al
 python3 -I -B followup/bin/receipt.py replay-reeval "final runs: 0 verdicts changed" --inputs followup/replay cases/cases.json -- python3 -I -B followup/replay/reevaluate_all.py {OUT}
 ```
 
-Expected: controls A 175, B 59, C 43, D 12, all pass (`results/20261113T232331Z-replay-controls/controls.json`). Re-evaluation: in the five final runs, 59 cases, 0 verdicts changed, and every case's failed clauses equal the model's (`results/20261113T232332Z-replay-reeval/delta.md`). To evaluate one run by hand:
+Expected: controls A 175, B 59, C 45, D 14, all pass (`results/20261114T002645Z-final-replay-controls/controls.json`). Re-evaluation: in the five final runs, 59 cases, 0 verdicts changed, and every case's failed clauses equal the model's (`results/20261114T002646Z-final-replay-reeval/delta.md`). To evaluate one run by hand:
 
 ```sh
 python3 -I -B followup/replay/evaluate_replay2.py results/native/20261113T193952Z-replay-return-b --cases cases/cases.json --out /tmp/eval
@@ -44,7 +44,7 @@ python3 -I -B followup/replay/evaluate_replay2.py results/native/20261113T193952
 
 Expected: `B1-C01 … l1=VIOLATES L1-NAMESPACE`.
 
-Re-execution with the committed driver (R03f). The archived scripts of the two return-path runs are `native/sessions/replay-return-b.cos` and `replay-c51-c52.cos`. `NATIVE_ORIGINAL=1 ./run-native.sh exec …` stages the committed original driver and fixtures and records their hash at start. `replay/compare_reruns.py` compares the fresh observations with the archived ones field by field. Expected: identical 45/45 (`results/20261114T000320Z-replay-rerun-compare`).
+Re-execution with the committed driver (R03f). The archived scripts of the two return-path runs are `native/sessions/replay-return-b.cos` and `replay-c51-c52.cos`. `NATIVE_ORIGINAL=1 ./run-native.sh exec …` stages the committed original driver and fixtures and records their hash at start. `replay/compare_reruns.py` compares the fresh observations with the archived ones field by field. Expected: identical 45/45 (`results/20261114T002647Z-final-replay-rerun-compare`).
 
 ## 2. Models (R04–R06)
 
@@ -56,7 +56,7 @@ python3 -I -B followup/bin/receipt.py prefix-cases "exit 0" --inputs followup/mo
 python3 -I -B followup/bin/receipt.py loadtx-model "11 correspondence rows hold" --inputs followup/models/loadtx.py -- python3 -I -B followup/models/loadtx.py {OUT}
 ```
 
-The last one takes about 10 minutes. Expected results are in `models/MODELS.md` and in the current receipts `results/20261113T234915Z-history-readers-model`, `results/20261113T235732Z-prefix-cases` and `results/20261113T235302Z-loadtx-model`.
+The last one takes about 10 minutes. Expected results are in `models/MODELS.md` and in the current receipts `results/20261114T002647Z-final-history-readers-model`, `results/20261114T002830Z-final-prefix-cases` and `results/20261114T002647Z-final-loadtx-model`.
 
 ## 3. Native cases (R04, R05, R06e)
 
@@ -97,7 +97,7 @@ Defect D1, a dependency's record lost when its parent rolls back, from intent to
  L3        results/native/20261113T193952Z-replay-return-b raw.log: OBS B1-C31 status=ERR,
    │       history.dep1.row=0, history_temp.dep1.row=0
    │
- verdict   followup/results/20261113T232332Z-replay-reeval: B1-C31 l1=VIOLATES H-RECORD-EXISTS[dep1],
+ verdict   followup/results/20261114T002646Z-final-replay-reeval: B1-C31 l1=VIOLATES H-RECORD-EXISTS[dep1],
            same clauses as the model
 ```
 

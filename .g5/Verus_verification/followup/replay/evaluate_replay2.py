@@ -286,6 +286,14 @@ def load_run(run, target_cases):
     flags = []
     if sha256_file(cos) != rec["script_sha256"]:
         flags.append("input.cos does not match the receipt's script hash")
+    if rec.get("expectations_snapshot_sha256"):
+        # native/run-iris.sh hashes inputs/ file by file (sorted), then the list
+        h = hashlib.sha256()
+        root = os.path.join(run, "inputs")
+        for f in sorted(os.path.relpath(os.path.join(d, x), root) for d, _, xs in os.walk(root) for x in xs):
+            h.update(f"{sha256_file(os.path.join(root, f))}  ./{f}\n".encode())
+        if h.hexdigest() != rec["expectations_snapshot_sha256"]:
+            flags.append("inputs/ does not match the receipt's expectations snapshot hash")
     if rec["process_outcome"] != "COMPLETED":
         flags.append("process outcome " + rec["process_outcome"])
     obs, marks, env, native_end, stray = parse_log(os.path.join(run, "raw.log"))

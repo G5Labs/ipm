@@ -17,8 +17,8 @@ Abbreviations:
 | B1 | the original Verus model `Verus_verification/crates/ipm-load-history` (theorems, `case_*` lemmas, controls, V1 to V12) |
 | `VR/<suffix>` | original native run `Verus_verification/results/native/20261113T<suffix>` |
 | `FR/` | `Verus_verification/followup/results/` |
-| `LT` | follow-up load model `Verus_verification/followup/models/loadtx.py`, current receipt `FR/20261113T235302Z-loadtx-model` |
-| `HR` | follow-up history-reader model `Verus_verification/followup/models/history_readers.py`, receipt `FR/20261113T234915Z-history-readers-model` |
+| `LT` | follow-up load model `Verus_verification/followup/models/loadtx.py`, current receipt `FR/20261114T002647Z-final-loadtx-model` |
+| `HR` | follow-up history-reader model `Verus_verification/followup/models/history_readers.py`, receipt `FR/20261114T002647Z-final-history-readers-model` |
 | `R05`, `R04`, `P21` | follow-up native runs `FR/native/20261113T234817Z-r05-modes-nesting`, `FR/native/20261113T234810Z-r04-history-readers`, `FR/native/20261113T234716Z-p21-ordering-r2` |
 | D-, I- numbers | defects and issues in `Verus_verification/bugs_issues.md` |
 | E-, L-, H- numbers | findings in `uplift/ipm-quality-followup/work/followup-findings.md` |
@@ -72,7 +72,7 @@ Regression or scope exclusion:
 | INT-LOAD-18 | Same-version install or load succeeds | formal: load | modeled in original model | B1 installed-equal state. Native g2 | n/a | Product test (maintainers) |
 | INT-HIST-01 | `install`, `load`, `uninstall`, `update` are recorded | formal: history | native or suite evidence only | Load: B1. Others: suite History (`VR/175623Z-smoke-history-suite-oras`). `reinstall` logs as `install` (`Main.cls:2698`) | n/a | None required. Non-load writers not modeled |
 | INT-HIST-02 | Failed actions logged and their record survives the rollback | formal: history | modeled in original model | D1: B1 V1, V2. Native A1-A3 (`VR/182759Z-cases-a`, `VR/184617Z-repro-dep-history-lost`). Per-activation D1 in `LT` (L-2, L-4), N-R05-Q23F, N-R05-NESTF. Q-05: B1 V8, native D1 case | n/a | D1 fix. Repair 103 needs the guarded close (L-12) and holds only for a global mode (L-9). Q-05 decision |
-| INT-HIST-03 | Record created at start and filled in at end | formal: history | modeled in original model | D10: B1 `kill_rec`, B1-C44..C48 T/K. Native C1, C3, C4R. Q-08: V9. Q-21: V10. PREFIX at process ends: `LT`, `FR/20261113T235732Z-prefix-cases` | n/a | D10 fix. Q-08, Q-21 decisions |
+| INT-HIST-03 | Record created at start and filled in at end | formal: history | modeled in original model | D10: B1 `kill_rec`, B1-C44..C48 T/K. Native C1, C3, C4R. Q-08: V9. Q-21: V10. PREFIX at process ends: `LT`, `FR/20261114T002830Z-final-prefix-cases` | n/a | D10 fix. Q-08, Q-21 decisions |
 | INT-HIST-04 | Record fields | formal: history | native or suite evidence only | D9: B1 V7, native g3, g6, g7, R4. Q-15 label and source: native A0 only | n/a | Q-15 decision |
 | INT-HIST-05 | `Committed` means changes kept | formal: history | static review only | Legacy XML (OBS-L16) code-read only (section 2.3). Q-05: V8, native D1 case. Q-17: D4. Q-07: no evidence. Dependency `Committed` per activation: L-8 to L-10 and L-12 in `LT`, P-14 in `P21` | n/a | Legacy XML native case not run (registry needed). Q-05, Q-07, Q-17 decisions |
 | INT-HIST-06 | Uninstall `Committed` equals success | in-scope part | static review only | OBS-L17, OBS-H8: skip with OK at `Lifecycle/Base.cls:290-293`. No transaction in `Storage/Module.cls:727-758`. Plain uninstall records: suite History | n/a | Ordinary native case (uninstall a required test module without `-force`) not run |
@@ -194,7 +194,7 @@ Regression or scope exclusion:
 | CMD-14 | `unpublish` | excluded feature | static review only | A2:58 | scope exclusion | None |
 | CMD-15 | `config` | in-scope part | native or suite evidence only | D5: F0. Suite CLI `TestAutoPurgeOldHistory` | n/a | D5 fix |
 | CMD-16 | `repo` | excluded feature | static review only | Read-only forcing inside a load is on INT-LOAD-13 | scope exclusion | None |
-| CMD-17 | `load` | formal: load | modeled in original model | B1 final proof `Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3` (263 verified), rechecked in `FR/20261113T232529Z-r12-asbuilt-proofs`. `LT`. Replay re-evaluation `FR/20261113T232332Z-replay-reeval` | n/a | Open parts are on the INT-LOAD rows |
+| CMD-17 | `load` | formal: load | modeled in original model | B1 final proof `Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3` (263 verified), rechecked in `FR/20261113T232529Z-r12-asbuilt-proofs`. `LT`. Replay re-evaluation `FR/20261114T002646Z-final-replay-reeval` | n/a | Open parts are on the INT-LOAD rows |
 | CMD-18 | `import` | excluded feature | static review only | No module record, no history (A2:62) | scope exclusion | None |
 | CMD-19 | `run-from-file` | excluded feature | static review only | Each line runs through `Shell`, so CAT-41 applies per line | scope exclusion | None |
 | CMD-20 | `install` | in-scope part | native or suite evidence only | Suite InstallModule. Section 2.8 | n/a | Install path not modeled |
