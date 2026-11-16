@@ -45,6 +45,15 @@ As built, `show` lists only direct, unscoped dependents and hides scoped depende
 - A missing installed dependency version reads `not installed`; a present version that fails the requested range reads `unsatisfied`.
 - Requirements-file display skips blank lines and lines starting with `#` after trimming. Inline comments remain in the displayed line.
 
+<a id="inspect.list-installed"></a>
+[D · inspect.list-installed]
+
+`list-installed` prints installed modules with their versions: IPM first, then the others by displayed name. A module with an external name shows as `External (name)`.
+
+- A developer-mode module is marked `(DeveloperMode)`, and `-showsource` adds each module's root.
+- `-s` sorts by name, version or date, ascending or descending, and IPM stays first. As built, `-s version` compares prereleases of the same version as text, so `1.0.0-rc.10` sorts before `1.0.0-rc.2` (defect C:D42).
+- `-tree` ignores `-s`. It starts from installed modules that no other installed module depends on, in name order, and prints each dependency under every module that needs it, marking an uninstalled one `[missing]`.
+
 <a id="inspect.list-dependents"></a>
 [D · inspect.list-dependents]
 
@@ -103,6 +112,16 @@ Extension Verus: [thin_surfaces.rs::inspection_choice](../../Verus_verification/
 Authority: product method comments and `General/ModuleSummary.cls::GetDirectDependents`, `::GetLines`, `::GetInstalledStatus`, `::ParseRequirements`. [Scoped Verus reader contracts](../../Verus_verification/consolidated/iter2/readers.rs) and [native reader observations](../../uplift/consolidated/iter2/native/receipt.json) distinguish selection and output; SQL ordering, arbitrary formatting and the whole graph remain outside these proofs.
 
 Findings: [P:F-DEP-3 — e2e reproduced](../../../playbook-uplift/BUGS.md#p-f-dep-3). The linked entry qualifies the caller, reader and providers.
+
+### inspect.list-installed
+
+- agent
+- user-facing-behavior
+- Expands: [Inspection](#inspect).
+
+Sources: `Main.cls::ListInstalled`, `::SortList`, `::DisplayModules`, `::GetListModule`, `::AccumulateTreeRecursive`. Model: [listing.rs](../../Verus_verification/consolidated/iter35/listing.rs) `flat_pos`, `sort_neighbors`, `tree`, `tree_neighbors` ([handoff](../../uplift/consolidated/iter35/HANDOFF.md)). Date sort, `-python`, `-showupstream`, `-description`, `-repository` and namespace patterns are not assessed.
+
+Findings: [`list-installed -s version` orders prereleases of one version as text](../../uplift/consolidated/BUGS.md#c-d42)
 
 ### inspect.list-dependents
 

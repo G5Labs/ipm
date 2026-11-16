@@ -94,6 +94,8 @@ Iteration34 index order: [versions.rs](../../Verus_verification/consolidated/ite
 
 Findings: [A filesystem repository install picks a prerelease over its own release and orders prerelease numbers as text](../../uplift/consolidated/BUGS.md#c-d39)
 
+Findings: [`list-installed -s version` orders prereleases of one version as text](../../uplift/consolidated/BUGS.md#c-d42)
+
 ### version.range
 
 - human-provided

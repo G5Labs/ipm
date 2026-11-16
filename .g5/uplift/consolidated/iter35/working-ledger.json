@@ -1,0 +1,100 @@
+{
+ "recorded_utc": "2026-11-16T17:25:49.609233+00:00",
+ "batch": 3,
+ "iteration": 35,
+ "prior_seal": "c74d9c41",
+ "workflow": "list-installed [flags] -> installed module rows (namespace) -> flat list / tree / sort -> printed report",
+ "unbound_members": [
+  "Main.cls::ListInstalled",
+  "Main.cls::DisplayModules",
+  "Main.cls::GetListModule",
+  "Main.cls::GetListNamespace",
+  "Main.cls::SortList",
+  "Main.cls::AccumulateTreeRecursive",
+  "Main.cls::DrawColumn"
+ ],
+ "owner": ".g5/ontology/features/inspection.g5.md#inspect",
+ "exposure": "Main.cls bodies for ListInstalled/DisplayModules/GetList*/SortList/AccumulateTreeRecursive not read when these predictions were written; only their names and line counts (from the iter28 unlinked list) and the owner sentence were seen.",
+ "predictions": [
+  {
+   "case": "installed chain c -> b -> a plus independent d; list-installed",
+   "changing_input": "none (baseline)",
+   "reader": "printed rows",
+   "owner": "each installed module once with its version"
+  },
+  {
+   "case": "same, list-installed -tree",
+   "changing_input": "tree flag",
+   "reader": "printed rows and indentation",
+   "owner": "dependents above dependencies: c at depth 0 with b and a indented below; d at depth 0"
+  },
+  {
+   "case": "same, sorted listing",
+   "changing_input": "sort flag",
+   "reader": "row order",
+   "owner": "alphabetical (or by a chosen key) rather than installation order"
+  },
+  {
+   "case": "developer-mode module present",
+   "changing_input": "load -dev",
+   "reader": "row text",
+   "owner": "unspecified by owner; possibly a dev marker"
+  }
+ ],
+ "exposure_after_source": "Read Main.cls list-installed help, ListInstalled, GetListModules, GetListModule, SortList, AccumulateTreeRecursive, PrintTree, DisplayModules and General/ModuleInfo DisplayName after the owner predictions.",
+ "source_predictions": [
+  {
+   "case": "flat default",
+   "predicted": "IPM (zpm) always first, then ascending by lowercase display label; an ExternalName module is labelled \"Ext (name)\" and sorts by Ext; DeveloperMode marker after the version"
+  },
+  {
+   "case": "-s v",
+   "predicted": "zpm first, then ascending zero-padded major.minor.patch, prerelease text before \"~\" release; 1.9.0 before 1.10.0; same-triple prereleases compare as text, so rc.10 before rc.2 (semver puts rc.2 first)"
+  },
+  {
+   "case": "-s n-d",
+   "predicted": "zpm first, then descending label"
+  },
+  {
+   "case": "search i35b*",
+   "predicted": "only matching names (SQL LIKE on internal name)"
+  },
+  {
+   "case": "-tree",
+   "predicted": "roots = installed modules that are no module dependency, in lowercase-name order; each dependency printed under each parent (diamond child printed twice), depth by 3-char padding; -s ignored"
+  },
+  {
+   "case": "-tree after uninstall a -force",
+   "predicted": "b and d show a child \"i35a [missing]\"; a not a root"
+  },
+  {
+   "case": "-showsource",
+   "predicted": "Root printed after version for every module (dev or not)"
+  }
+ ],
+ "outcome": {
+  "status": "lane complete, not sealed",
+  "model": "listing.rs 13 verified, 6/6 controls rejected",
+  "native": "20261116T173038793473Z 441 fields all gated; 368 replayed; flips l1.pos.i35pb, t2.version.i35a, l0.pos.i35n rejected",
+  "wall_s": 230.9,
+  "misses": [
+   "explore1 reader: zpm prints as \"IPM (zpm)\" and tree depth offset; reader corrected, no product claim"
+  ],
+  "discrepancies": [
+   "-s version orders same-triple prereleases by text: 1.0.0-rc.10 before 1.0.0-rc.2 ascending, contrary to version.order (Low)"
+  ],
+  "facts": [
+   "name sort uses the displayed label, so an ExternalName module sorts by its external name",
+   "tree shows a shared dependency once per parent and an uninstalled dependency as [missing]",
+   "IPM pinned first in every sort including name-desc",
+   "-s ignored with -tree"
+  ]
+ },
+ "integration": {
+  "by": "main thread",
+  "independent_rerun": "run.py --no-native: 13 verified, 6/6 controls, 368 replayed (224 s)",
+  "ontology": "new D inspect.list-installed",
+  "findings": "C:D42 Low",
+  "fork_cost": "~522k subagent tokens, 566 s"
+ }
+}

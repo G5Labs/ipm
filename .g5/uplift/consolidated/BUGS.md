@@ -435,6 +435,19 @@ Reproduced by: E2E reproduced. [Iteration32 native receipt](iter32/native/202611
 
 The helper keeps only dependency edges whose both ends are in developer mode and never follows edges through other modules. The [sync statement](../../ontology/features/developer-tools.g5.md#devtools.sync) promises dependency order so that each module recompiles against dependencies already synced in the run. Here `tx` recompiles before `ty` is synced. A repair would order by the transitive closure of dependencies restricted to the developer-mode set. It was not checked.
 
+<a id="c-d42"></a>
+### C:D42: `list-installed -s version` orders prereleases of one version as text
+
+Severity: Low · Decision: Open
+
+Run: Uplift 2026-11-16
+
+Found by: source review of `Main.cls::SortList`, then [iteration35 model](../../Verus_verification/consolidated/iter35/listing.rs) `sort_neighbors` with control `version-prerelease-semantic` ([proof receipt](iter35/proofs/models.json)).
+
+Reproduced by: E2E reproduced. [Iteration35 native receipt](iter35/native/20261116T173038793473Z/observations.json) on IRIS 2026.1 x86-64 at `571e04a1`. `list-installed -s v` lists i35pb `1.0.0-rc.10` at position 2 and i35pa `1.0.0-rc.2` at position 3. The passing neighbour is i35y `1.9.0` listed before i35x `1.10.0`, so numeric parts are compared as numbers.
+
+The [version order](../../ontology/concepts/versions.g5.md#version.order) compares numeric prerelease identifiers as numbers, so rc.2 comes before rc.10, and the [listing statement](../../ontology/features/inspection.g5.md#inspect.list-installed) promises a version sort. The same text comparison drives the install choice in C:D39, but through different code. A repair would compare prerelease identifiers in semantic-version order. It was not checked.
+
 ## Outside active reproduction scope
 
 <a id="c-d17"></a>
