@@ -578,6 +578,19 @@ Reproduced by: E2E reproduced. [Iteration46 native receipt](iter46/native/202611
 
 A reader of `show` cannot tell that the module refuses IRIS for Health, contrary to the [inspection statement](../../ontology/features/inspection.g5.md#inspect) that `show` shows the module's details. A repair would list "not supported on IRIS for Health" when Health is explicitly false. It was not checked.
 
+<a id="c-d53"></a>
+### C:D53: YAML and TOON test reports change assertion message text
+
+Severity: Low · Decision: Open
+
+Run: Uplift 2026-11-16
+
+Found by: iteration47 exploration with byte-exact file reads, then source review of `Test/YamlOutput.cls::BuildYamlRows` (block scalars that re-indent only LF) and `Test/ToonOutput.cls::BuildToonRows`, and [iteration47 model](../../Verus_verification/consolidated/iter47/formats.rs) `fixture_rendering` with controls `toon-keeps-cr`, `yaml-no-trailing-newline` and `yaml-keeps-leading-spaces` ([proof receipt](iter47/proofs/models.json)).
+
+Reproduced by: E2E reproduced. [Iteration47 native receipt](iter47/native/20261116T180053540899Z/observations.json) on IRIS 2026.1 x86-64 at `571e04a1`. For an assertion message `"one"_$c(13,10)_"two"`, the JSON report file keeps `one\r\ntwo` while the YAML and TOON files read back `one\ntwo`. `"  leading spaces"` reads back from YAML as `leading spaces\n`, and every YAML description gains a trailing newline. Passing neighbours: JSON is exact for every message, TOON is exact apart from CR, and all formats agree on counts.
+
+A CI tool reading the YAML or TOON report gets assertion text that differs from the JSON report for the same run, although the [test output statement](../../ontology/features/build-and-publish.g5.md#build.test-output) offers these formats as alternative renderings of the same full results. A repair would write YAML descriptions as escaped double-quoted scalars and escape CR in TOON quoted fields. It was not checked.
+
 ## Outside active reproduction scope
 
 <a id="c-d17"></a>

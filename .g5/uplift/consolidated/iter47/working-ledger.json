@@ -1,0 +1,127 @@
+{
+ "recorded_utc": "2026-11-16T17:56:34.155340+00:00",
+ "batch": 8,
+ "iteration": 47,
+ "prior_seal": "02cc12fe",
+ "workflow": "test result report formats: test -only -f json|yaml|toon (device summary) and -output-file .json/.yaml/.toon/.xml (exported file) -> same facts in each format",
+ "unbound_members": [
+  "Test/YamlOutput.cls::*",
+  "Test/ToonOutput.cls::*",
+  "Test/Utils.cls::*"
+ ],
+ "owner": ".g5/ontology/features/build-and-publish.g5.md#build.test-output (and .counted-rows, .run-identity)",
+ "exposure": "Only class names and line counts of Test/*.cls seen; JSON export (JsonOutput) behaviour known from iteration17 owner text. YAML/TOON/Utils bodies unread.",
+ "predictions": [
+  {
+   "case": "suite with 1 passing, 1 failing, 1 erroring method; -f json/yaml/toon",
+   "reader": "per-format counts and per-method status",
+   "owner": "all formats report the same counts and statuses (format is presentation only)"
+  },
+  {
+   "case": "failing assertion message with a colon, quote and #",
+   "reader": "YAML/TOON parsed message",
+   "owner": "message preserved verbatim in each format"
+  },
+  {
+   "case": "failing assertion message with a newline",
+   "reader": "parsed message",
+   "owner": "preserved (escaped or block form)"
+  },
+  {
+   "case": "-output-file r.yaml / r.toon / r.json / r.xml",
+   "reader": "file exists, format matches extension, same facts",
+   "owner": "written in the format picked by extension"
+  },
+  {
+   "case": "-output-file with unsupported extension .txt",
+   "reader": "file / status",
+   "owner": "unspecified; likely refused or JSON"
+  },
+  {
+   "case": "-f with an empty-suite (no failures) module",
+   "reader": "counts zero failures",
+   "owner": "consistent across formats"
+  }
+ ],
+ "exposure_after_source": "Read Test/Abstract (ToFile, OutputToDevice, BuildResultTree, GetSummary), YamlOutput, ToonOutput, JsonOutput; Test/Utils (namespace/user helpers with no product caller: left unassessed).",
+ "source_predictions": [
+  {
+   "case": "pass/fail/error methods, all formats",
+   "predicted": "same counts: tree and summary are shared (GetSummary)"
+  },
+  {
+   "case": "message with comma, quote, colon, #",
+   "predicted": "JSON exact; YAML block scalar exact; TOON quoted field with doubled quotes, exact after CSV parse"
+  },
+  {
+   "case": "message with LF",
+   "predicted": "JSON exact; YAML re-indents continuation lines -> exact (plus trailing newline from block scalar clip); TOON quoted multi-line field exact"
+  },
+  {
+   "case": "message with CR LF",
+   "predicted": "YAML: CR is not re-indented; YAML treats CR as a line break, so the following text sits at column 0 and the document no longer parses (or the text is cut); TOON/JSON exact"
+  },
+  {
+   "case": "message with leading spaces",
+   "predicted": "YAML block indentation auto-detected from the first line swallows the leading spaces; JSON/TOON exact"
+  },
+  {
+   "case": "thrown error in a method",
+   "predicted": "method error \"<category>: <text>\" present in each format"
+  },
+  {
+   "case": "-output-file .xml",
+   "predicted": "JUnit XML written (JUnitOutput, unbound, not this lane)"
+  }
+ ],
+ "explore": {
+  "explore1": "all formats agree on counts; text-mode file reader made CR handling ambiguous (retained, not counted)",
+  "explore2": "byte-exact reads: JSON keeps CR (escaped), YAML and TOON files contain no CR; YAML descriptions gain a trailing newline and lose first-line leading spaces; TOON emits two rows for the erroring method; device captures needed the IPM phase lines cut (observer fix only)"
+ },
+ "prediction_outcomes": {
+  "counts agree": "hit",
+  "punctuation exact": "hit (YAML only after trailing-newline strip)",
+  "LF exact": "hit (YAML after strip)",
+  "CRLF YAML parse break": "miss: CR never reaches the YAML file, so the document parses; the CR is lost instead (also in TOON, not predicted)",
+  "leading spaces YAML": "hit",
+  "throw error present": "hit"
+ },
+ "outcome": {
+  "status": "complete, unsealed (main thread integrates)",
+  "model": "formats.rs 7 verified, 4/4 controls",
+  "native": "20261116T180053540899Z 71 fields, 33 replayed, flips of yamlf.stripped.TestELeading, toonf.exact.TestDCrLf, toonf.rows.TestFThrow rejected",
+  "findings_proposed": [
+   "Low: YAML and TOON test reports change assertion text (CR dropped; YAML trailing newline and lost leading spaces)"
+  ],
+  "reach_candidates_new": [
+   "Test/YamlOutput.cls::BuildYaml",
+   "::BuildYamlRows",
+   "::EscapeYamlString",
+   "::OutputToDevice",
+   "::WriteToFileStream",
+   "Test/ToonOutput.cls::BuildToonRows",
+   "::EscapeToonField",
+   "::OutputToDevice",
+   "::WriteToFileStream"
+  ],
+  "strengthened": [
+   "Test/Abstract.cls::BuildResultTree",
+   "::GetSummary",
+   "::ToFile",
+   "Test/JsonOutput.cls::WriteToFileStream",
+   "::OutputToDevice"
+  ],
+  "unassessed": "Test/Utils.cls (namespace/user helpers; no product caller)",
+  "cost": {
+   "run_wall_s": 13.0
+  }
+ },
+ "integration": {
+  "by": "main thread",
+  "independent_rerun": "run.py --no-native: 7 verified, 4/4 controls, 33 replayed",
+  "findings": [
+   "C:D53 Low"
+  ],
+  "fork_cost": "~753k subagent tokens, 352 s"
+ }
+}

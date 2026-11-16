@@ -94,6 +94,9 @@ Test results gather in a per-process list. Each test resource counts only the re
 
 - Command status and report-file existence are separate observations. Verification uses a different namespace lifecycle, so a test reporting check does not prove verify cleanup.
 
+- All formats print the same method and assertion counts, and JSON keeps assertion and error text exactly. As built, YAML and TOON files drop carriage returns from that text, and YAML descriptions read back with a trailing newline and without the first line's leading spaces (defect C:D53).
+- TOON writes one row per assertion. A method with an error and no assertions gets an error row and a status row.
+
 <a id="build.test-output.run-identity"></a>
 [D · build.test-output.run-identity]
 
@@ -311,6 +314,10 @@ Sources: `Main.cls:76-79`; `wiki/02` L1194-1246; CHANGELOG 0.10.7 (`#971`). Inve
 
 Extension Verus: [thin_surfaces.rs::report_result](../../Verus_verification/consolidated/verus/thin_surfaces.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
 
+
+Iteration47 formats: [formats.rs](../../Verus_verification/consolidated/iter47/formats.rs) `fixture_rendering`, `summaries_agree`, `error_method_two_toon_rows` ([handoff](../../uplift/consolidated/iter47/HANDOFF.md)).
+
+Findings: [YAML and TOON test reports change assertion message text](../../uplift/consolidated/BUGS.md#c-d53)
 ### build.test-output.run-identity
 
 - agent
