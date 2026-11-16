@@ -1,0 +1,112 @@
+{
+ "verus_dir": ".g5/Verus_verification/consolidated/iter33",
+ "changed_files": [
+  "dependents.rs",
+  "cases.json",
+  "run.py",
+  "native/Reader.cls",
+  "native/loose/*",
+  "native/repo/*"
+ ],
+ "rows": [
+  {
+   "id": "S33-01",
+   "owner": ".g5/ontology/features/inspection.g5.md#inspect.list-dependents",
+   "model": "dependents.rs",
+   "symbols": [
+    "is_root",
+    "root_ver",
+    "chain_node",
+    "depth_in",
+    "in_graph",
+    "graph_ok",
+    "listed",
+    "warned",
+    "any_warned_from",
+    "flat_neighbors",
+    "repo_neighbors",
+    "removed_target_neighbors"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/Utils/Module.cls",
+     "BuildAllDependencyGraphs"
+    ],
+    [
+     "src/cls/IPM/Utils/Module.cls",
+     "GetDependentsList"
+    ]
+   ],
+   "reader": [
+    [
+     "src/cls/IPM/Main.cls",
+     "ListDependents"
+    ]
+   ],
+   "scope": "Flat report: roots are installed modules (or -r repository manifests that declare a dependency, installed modules ignored); a root is listed when its graph succeeds and contains the target, with optional filter on the target version resolved inside that root graph; failed graphs are printed as warnings whatever the target. Fixture: single-dependency chains, lower-bound ranges, r33 filesystem repository. Native l0..l3v1, lr, lrv2."
+  },
+  {
+   "id": "S33-02",
+   "owner": ".g5/ontology/features/inspection.g5.md#inspect.list-dependents",
+   "model": "dependents.rs",
+   "symbols": [
+    "tree_path_has",
+    "tree_has",
+    "tree_depth",
+    "tree_ver",
+    "tree_count_from",
+    "col",
+    "tree_omits_roots"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/Utils/Module.cls",
+     "GetDependentsAsTree"
+    ],
+    [
+     "src/cls/IPM/Utils/Module.cls",
+     "InvertDependencies"
+    ],
+    [
+     "src/cls/IPM/Storage/Module.cls",
+     "BuildDependencyGraph"
+    ]
+   ],
+   "reader": [
+    [
+     "src/cls/IPM/Main.cls",
+     "ListDependents"
+    ],
+    [
+     "src/cls/IPM/Main.cls",
+     "PrintTree"
+    ]
+   ],
+   "scope": "Tree report: InvertDependencies walks parent edges recorded by BuildDependencyGraph, which records an edge only for a non-root parent, so the printed tree holds the target and intermediate modules but no graph root (no direct dependent, no top-level dependent). PrintTree name column 1, then 2*depth+2 (depths 0-2 observed). Chain-shaped trees only; sibling order and diamonds unassessed. Native l0t, lbt, ldt; raw tree dump attempts/explore2-tree-dump.log."
+  },
+  {
+   "id": "S33-03",
+   "owner": ".g5/ontology/features/dependencies.g5.md#deps.installed",
+   "model": "dependents.rs",
+   "symbols": [
+    "others_ok_from",
+    "acceptable",
+    "resolve_installed",
+    "removed_target_neighbors"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/Storage/Module.cls",
+     "ProcessSingleDependencyIterative"
+    ]
+   ],
+   "reader": [
+    [
+     "src/cls/IPM/Utils/Module.cls",
+     "BuildAllDependencyGraphs"
+    ]
+   ],
+   "scope": "Reader-side consequence of the iteration31 installed-requirement rule: with the target uninstalled, one installed module requiring >=2.0.0 makes every other root graph fail when only 1.0.0 is offered, so all dependents become warnings; removing that module lists them again at the repository version. Native un-a, l2, l2v1, un-d, l3, l3v1."
+  }
+ ]
+}

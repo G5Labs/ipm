@@ -1,0 +1,86 @@
+{
+ "recorded_utc": "2026-11-16T17:09:13.171949+00:00",
+ "batch": 2,
+ "iteration": 33,
+ "prior_seal": "aab17e2c",
+ "workflow": "list-dependents <module> [version] [-r repos]: dependency graphs -> dependents tree -> printed report",
+ "unbound_members": [
+  "Main.cls::ListDependents",
+  "Utils/Module.cls::GetDependentsAsTree",
+  "Utils/Module.cls::BuildAllDependencyGraphs",
+  "Main.cls::PrintTree",
+  "Utils/Module.cls::InvertDependencies"
+ ],
+ "owner": ".g5/ontology/features/inspection.g5.md (list-dependents summary line); uninstall.dependents is a separate consumer of dependents",
+ "exposure": "No ListDependents/GetDependentsAsTree body read by the main thread; only the Main.cls:3161 call site via grep.",
+ "predictions": [
+  {
+   "case": "installed chain C -> B -> A, list-dependents A",
+   "reader": "printed report",
+   "predicted": "B and C (transitive) shown, C under B"
+  },
+  {
+   "case": "list-dependents C (leaf)",
+   "reader": "printed report",
+   "predicted": "no dependents message"
+  },
+  {
+   "case": "dependent whose range excludes the installed version of A",
+   "reader": "printed report",
+   "predicted": "unspecified by owner"
+  }
+ ],
+ "fork_exposure": {
+  "utc": "2026-11-16T17:09:31.231042+00:00",
+  "note": "Lane fork starts reading ListDependents, PrintTree, GetDependentsAsTree, GetDependentsList, BuildAllDependencyGraphs, InvertDependencies bodies now; owner-based predictions above were written before any body was read. Source predictions added afterwards are source-informed."
+ },
+ "source_predictions": {
+  "written": "after reading ListDependents, PrintTree, GetDependentsList, GetDependentsAsTree, InvertDependencies, BuildAllDependencyGraphs; before explore1",
+  "flat": "every installed module (graph root) whose transitive dependency graph contains the target is listed with its own version and \"(installed)\"; version argument compares the version the target resolves to inside that root graph; roots whose graph fails go to a WARNING list",
+  "tree": "expected tree rooted at target listing dependents by inversion (prediction: full transitive tree); source inversion depends on parent edges recorded by BuildDependencyGraph, not yet traced",
+  "repo": "with -r, roots are repository manifests with dependencies, installed modules ignored, server shown as @ repo"
+ },
+ "exploration": [
+  {
+   "log": "attempts/explore1.log",
+   "result": "flat transitive list confirmed; tree printed only target and b; directory downgrade of i33a refused (Cannot downgrade), so the broken-requirement case was changed to uninstall -force"
+  },
+  {
+   "log": "attempts/explore2-tree-dump.log",
+   "result": "BuildAllDependencyGraphs records parent edges only for non-root parents (g(4,\"i33a\",\"i33b 1.0.0\")); direct dependencies of a root carry no parent subscript, so InvertDependencies stops one level below each root. Tree omits every root dependent."
+  },
+  {
+   "log": "attempts/explore3.log",
+   "result": "fixture with i33g->c and uninstall -force cases; all observations consistent with the source after the tree trace. Prediction misses vs owner prediction: tree omits roots (owner predicted b and c shown); uninstalled target with a stricter installed requirement turns every dependent into a warning."
+  }
+ ],
+ "outcome": {
+  "model": "dependents.rs 13 verified, 7/7 controls rejected",
+  "native": "20261116T171635420146Z 524 fields all expected, source pin no mismatches; replay 471 fields; flips l0t.count.i33d, l0.list.i33g, l2.warn.i33b rejected",
+  "superseded": "run 1 native 20261116T171554601881Z passed but flipped trivial fields (attempts/run1-trivial-flips)",
+  "reach_candidates": {
+   "new": [
+    "Main.cls::ListDependents",
+    "Main.cls::PrintTree",
+    "Utils/Module.cls::GetDependentsAsTree",
+    "Utils/Module.cls::InvertDependencies",
+    "Utils/Module.cls::BuildAllDependencyGraphs"
+   ],
+   "strengthened": [
+    "Utils/Module.cls::GetDependentsList",
+    "Storage/Module.cls::BuildDependencyGraph",
+    "Storage/Module.cls::ProcessSingleDependencyIterative"
+   ]
+  },
+  "cost": {
+   "harness_wall_s": 22.7
+  }
+ },
+ "integration": {
+  "by": "main thread",
+  "independent_rerun": "run.py --no-native: 13 verified, 7/7 controls rejected, 471 fields replayed, 3 meaningful flips rejected",
+  "ontology": "new D inspect.list-dependents in inspection.g5.md",
+  "findings": "C:D38 (tree omits graph-top dependents), Medium, E2E",
+  "fork_cost": "~383k subagent tokens, 519 s"
+ }
+}

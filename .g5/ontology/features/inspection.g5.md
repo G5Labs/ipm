@@ -45,6 +45,15 @@ As built, `show` lists only direct, unscoped dependents and hides scoped depende
 - A missing installed dependency version reads `not installed`; a present version that fails the requested range reads `unsatisfied`.
 - Requirements-file display skips blank lines and lines starting with `#` after trimming. Inline comments remain in the displayed line.
 
+<a id="inspect.list-dependents"></a>
+[D · inspect.list-dependents]
+
+`list-dependents <module> [<version>]` lists every installed module whose dependency graph contains the module, directly or through other modules. A version argument keeps only dependents whose graph resolves the module to that version.
+
+- With `-r <repos>`, it lists repository manifests instead and ignores installed modules.
+- A dependent whose graph cannot be resolved is printed as a warning instead of a dependent. When the module is absent, the namespace's installed requirements on it can make every dependent's graph fail this way.
+- As built, `-t` prints only the module and the modules between it and the top of each graph. It never prints a module that is itself the top of a dependency graph, so those dependents are missing from the tree (defect C:D38).
+
 <a id="inspect.webapp.detail"></a>
 [D · inspect.webapp.detail]
 
@@ -94,6 +103,16 @@ Extension Verus: [thin_surfaces.rs::inspection_choice](../../Verus_verification/
 Authority: product method comments and `General/ModuleSummary.cls::GetDirectDependents`, `::GetLines`, `::GetInstalledStatus`, `::ParseRequirements`. [Scoped Verus reader contracts](../../Verus_verification/consolidated/iter2/readers.rs) and [native reader observations](../../uplift/consolidated/iter2/native/receipt.json) distinguish selection and output; SQL ordering, arbitrary formatting and the whole graph remain outside these proofs.
 
 Findings: [P:F-DEP-3 — e2e reproduced](../../../playbook-uplift/BUGS.md#p-f-dep-3). The linked entry qualifies the caller, reader and providers.
+
+### inspect.list-dependents
+
+- agent
+- user-facing-behavior
+- Expands: [Inspection](#inspect).
+
+Sources: `Main.cls::ListDependents`, `::PrintTree`; `Utils/Module.cls::GetDependentsList`, `::GetDependentsAsTree`, `::BuildAllDependencyGraphs`, `::InvertDependencies`. Model: [dependents.rs](../../Verus_verification/consolidated/iter33/dependents.rs) `listed`, `warned`, `flat_neighbors`, `repo_neighbors`, `removed_target_neighbors`, `tree_omits_roots`. Iteration33 native cases replay the flat, version-filtered, repository and tree reports ([handoff](../../uplift/consolidated/iter33/HANDOFF.md)).
+
+Findings: [`list-dependents -t` leaves out modules at the top of a dependency graph](../../uplift/consolidated/BUGS.md#c-d38)
 
 ### inspect.webapp.detail
 
