@@ -77,6 +77,54 @@ The G, C and P prefixes retain the original register identities. [Iteration 28 r
 <a id="p-summary"></a><!-- historical section alias -->
 <a id="p-how-to-read-this-file"></a><!-- historical section alias -->
 
+<a id="d1-a-dependencys-history-record-is-lost-when-its-parents-transaction-rolls-back"></a><!-- historical fragment alias -->
+<a id="g-d1"></a>
+### G:D1: A dependency's history record is lost when its parent's transaction rolls back
+
+Severity: Critical · Decision: Open
+
+Severity basis: A parent rollback removes a dependency's durable audit record entirely. The through-product witness establishes audit-data loss, which the G5 severity convention rates Critical.
+
+Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-d1)
+
+Reproduced by: e2e reproduced. dependency row absent after parent rollback; successful load neighbor.
+
+[Executable regression receipt](../uplift/consolidated/findings-audit-iter28/runs/20261116T031715006352Z-early/receipt.json); [Runner](../uplift/consolidated/findings-audit-iter28/run_regressions.py) `early`. The receipt records commands, expected observations, actual readers and provider qualifications.
+
+[Governing owner](../ontology/features/history.g5.md#history.survives-rollback). No product repair or maintainer approval is claimed.
+
+<a id="d2-a-filter-column-with-_-drops-every-later-filter-so-history-find-widens-and-a-filtered-history-delete-can-remove-every-record"></a><!-- historical fragment alias -->
+<a id="g-d2"></a>
+### G:D2: A filter column with `_` drops every later filter, so find widens and a filtered delete can remove every record
+
+Severity: Critical · Decision: Open
+
+Severity basis: A documented version-part filter can turn a filtered delete into deletion of the entire history. The witness establishes unintended loss of unrelated persisted audit data.
+
+Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-d2)
+
+Reproduced by: e2e reproduced. history delete removes three seeded identities despite unmatched Version_Major; Package filter preserves nonmatches.
+
+[Executable regression receipt](../uplift/consolidated/findings-audit-iter28/runs/20261116T031715006352Z-early/receipt.json); [Runner](../uplift/consolidated/findings-audit-iter28/run_regressions.py) `early`. The receipt records commands, expected observations, actual readers and provider qualifications.
+
+[Governing owner](../ontology/features/history.g5.md#history.read.filter). No product repair or maintainer approval is claimed.
+
+<a id="d25-q-05q-06b-a-callers-rollback-removes-the-record-of-a-load-it-wrapped"></a><!-- historical fragment alias -->
+<a id="g-d25"></a>
+### G:D25: A caller's rollback removes the record of a load it wrapped
+
+Severity: Critical · Decision: Open
+
+Severity basis: A caller rollback removes the action's durable history. Critical is the conditional audit-data-loss impact if caller-survival is required; Q-05 remains unresolved.
+
+Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-d25)
+
+Reproduced by: e2e reproduced. supported caller transaction rollback removes the row/module; the ordinary no-caller successful return retains a finalized row; policy remains Q-05.
+
+[Executable regression receipt](../uplift/consolidated/findings-audit-iter28/runs/20261116T031958567291Z-returns/receipt.json); [Runner](../uplift/consolidated/findings-audit-iter28/run_regressions.py) `returns`. The receipt records commands, expected observations, actual readers and provider qualifications.
+
+[Governing owner](open_questions.md#history.committed.nested). No product repair or maintainer approval is claimed. This is a reproduced discrepancy under an open policy assumption, not a settled defect verdict.
+
 <a id="c-d6"></a>
 ### C:D6: An operator on a partial version is dropped. `<2` means `2.x` (`>=2.0.0 <3.0.0-0`), `>=1.2` and `>1.2` mean `1.2.x`, `<=1` means `1.x`. A dependency declared...
 
@@ -181,33 +229,20 @@ Reproduced by: e2e reproduced. dependent graph error lets uninstall remove requi
 
 [Governing owner](../ontology/features/uninstall.g5.md#uninstall.dependents). No product repair or maintainer approval is claimed.
 
-<a id="d1-a-dependencys-history-record-is-lost-when-its-parents-transaction-rolls-back"></a><!-- historical fragment alias -->
-<a id="g-d1"></a>
-### G:D1: A dependency's history record is lost when its parent's transaction rolls back
+<a id="c-d32"></a>
+### C:D32: Cache a valid1.0.0 directory, then replace its manifest/code with2.0.0 without rebuilding the cache. Search/API stilloffer1, but ordinary explicit `install t...
 
-Severity: Medium · Decision: Open
+Severity: High · Decision: Open
 
-Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-d1)
+Severity basis: An explicit requested-version install succeeds with another version's callable bytes. This is a wrong installation result, not merely stale listing text.
 
-Reproduced by: e2e reproduced. dependency row absent after parent rollback; successful load neighbor.
+Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#c-d32)
 
-[Executable regression receipt](../uplift/consolidated/findings-audit-iter28/runs/20261116T031715006352Z-early/receipt.json); [Runner](../uplift/consolidated/findings-audit-iter28/run_regressions.py) `early`. The receipt records commands, expected observations, actual readers and provider qualifications.
+Reproduced by: e2e reproduced. ordinary explicit-version install reads changed directory bytes; stable/rebuilt/refusal neighbors.
 
-[Governing owner](../ontology/features/history.g5.md#history.survives-rollback). No product repair or maintainer approval is claimed.
+[Executable regression receipt](../uplift/consolidated/findings-audit-iter28/runs/20261116T030008965338Z-iter21/receipt.json); [Runner](../uplift/consolidated/findings-audit-iter28/run_regressions.py) `iter21`. The receipt records commands, expected observations, actual readers and provider qualifications.
 
-<a id="d2-a-filter-column-with-_-drops-every-later-filter-so-history-find-widens-and-a-filtered-history-delete-can-remove-every-record"></a><!-- historical fragment alias -->
-<a id="g-d2"></a>
-### G:D2: A filter column with `_` drops every later filter, so find widens and a filtered delete can remove every record
-
-Severity: Medium · Decision: Open
-
-Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-d2)
-
-Reproduced by: e2e reproduced. history delete removes three seeded identities despite unmatched Version_Major; Package filter preserves nonmatches.
-
-[Executable regression receipt](../uplift/consolidated/findings-audit-iter28/runs/20261116T031715006352Z-early/receipt.json); [Runner](../uplift/consolidated/findings-audit-iter28/run_regressions.py) `early`. The receipt records commands, expected observations, actual readers and provider qualifications.
-
-[Governing owner](../ontology/features/history.g5.md#history.read.filter). No product repair or maintainer approval is claimed.
+[Governing owner](../ontology/concepts/repositories.g5.md#repo.install.version-request). No product repair or maintainer approval is claimed.
 
 <a id="d3-the-retention-purge-deletes-nothing-and-still-marks-the-days-purge-as-done"></a><!-- historical fragment alias -->
 <a id="g-d3"></a>
@@ -390,20 +425,6 @@ Reproduced by: e2e reproduced. misspelled history column returns OK; valid Succe
 [Executable regression receipt](../uplift/consolidated/findings-audit-iter28/runs/20261116T031710701394Z-misc/receipt.json); [Runner](../uplift/consolidated/findings-audit-iter28/run_regressions.py) `misc`. The receipt records commands, expected observations, actual readers and provider qualifications.
 
 [Governing owner](open_questions.md#history.read.filter.invalid-column). No product repair or maintainer approval is claimed.
-
-<a id="d25-q-05q-06b-a-callers-rollback-removes-the-record-of-a-load-it-wrapped"></a><!-- historical fragment alias -->
-<a id="g-d25"></a>
-### G:D25: A caller's rollback removes the record of a load it wrapped
-
-Severity: Medium · Decision: Open
-
-Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-d25)
-
-Reproduced by: e2e reproduced. supported caller transaction rollback removes the row/module; the ordinary no-caller successful return retains a finalized row; policy remains Q-05.
-
-[Executable regression receipt](../uplift/consolidated/findings-audit-iter28/runs/20261116T031958567291Z-returns/receipt.json); [Runner](../uplift/consolidated/findings-audit-iter28/run_regressions.py) `returns`. The receipt records commands, expected observations, actual readers and provider qualifications.
-
-[Governing owner](open_questions.md#history.committed.nested). No product repair or maintainer approval is claimed. This is a reproduced discrepancy under an open policy assumption, not a settled defect verdict.
 
 <a id="d28-q-23-a-dependencys-own-defaults-notransaction-does-not-keep-it-out-of-its-parents-transaction"></a><!-- historical fragment alias -->
 <a id="g-d28"></a>
@@ -600,19 +621,6 @@ Reproduced by: e2e reproduced. actual outer/child Shell test runs, final file/de
 [Executable regression receipt](../uplift/consolidated/findings-audit-iter28/runs/20261116T030004292651Z-iter17/receipt.json); [Runner](../uplift/consolidated/findings-audit-iter28/run_regressions.py) `iter17`. The receipt records commands, expected observations, actual readers and provider qualifications.
 
 [Governing owner](../ontology/features/build-and-publish.g5.md#build.test-output.run-identity). No product repair or maintainer approval is claimed.
-
-<a id="c-d32"></a>
-### C:D32: Cache a valid1.0.0 directory, then replace its manifest/code with2.0.0 without rebuilding the cache. Search/API stilloffer1, but ordinary explicit `install t...
-
-Severity: Medium · Decision: Open
-
-Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#c-d32)
-
-Reproduced by: e2e reproduced. ordinary explicit-version install reads changed directory bytes; stable/rebuilt/refusal neighbors.
-
-[Executable regression receipt](../uplift/consolidated/findings-audit-iter28/runs/20261116T030008965338Z-iter21/receipt.json); [Runner](../uplift/consolidated/findings-audit-iter28/run_regressions.py) `iter21`. The receipt records commands, expected observations, actual readers and provider qualifications.
-
-[Governing owner](../ontology/concepts/repositories.g5.md#repo.install.version-request). No product repair or maintainer approval is claimed.
 
 <a id="c-d33"></a>
 ### C:D33: Install a parent with exact dependency `1.0.0+snapshot`, change that dependency's source payload, then ordinarily reinstall the parent. The forced refresh ad...
@@ -977,6 +985,38 @@ Reproduced by: e2e reproduced. blocked uninstall returns OK and logs success wit
 [Executable regression receipt](../uplift/consolidated/findings-audit-iter28/runs/20261116T031648777527Z-repo/receipt.json); [Runner](../uplift/consolidated/findings-audit-iter28/run_regressions.py) `repo`. The receipt records commands, expected observations, actual readers and provider qualifications.
 
 [Governing owner](../ontology/features/uninstall.g5.md#uninstall.dependents). No product repair or maintainer approval is claimed.
+
+<a id="p-f-load-4"></a>
+### P:F-LOAD-4: A load can fail after its final commit: an after-install message with `{` and a `$$$` macro that does not compile throws in `%EvaluateMacro`. The command ret...
+
+Severity: Medium · Decision: Open
+
+Severity basis: An ordinary load returns failure after its changes commit, leaving installed code and a failed command result. This can misdirect scripts and recovery even though the trigger is an after-install message.
+
+Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-load-4)
+
+Reproduced by: e2e reproduced. ordinary after-install macro failure with durable module/history committed; successful message neighbor.
+
+[Executable regression receipt](../uplift/consolidated/findings-audit-iter28/runs/20261116T031715006352Z-early/receipt.json); [Runner](../uplift/consolidated/findings-audit-iter28/run_regressions.py) `early`. The receipt records commands, expected observations, actual readers and provider qualifications.
+
+[Governing owner](../ontology/features/load.g5.md#load). No product repair or maintainer approval is claimed.
+
+<a id="p-f-repo-4"></a>
+### P:F-REPO-4: `config delete` restores the first value ever set, not the factory default, for keys the installer does not seed (`TerminalPrompt`, `PublishTimeout`, `Histor...
+
+Severity: Medium · Decision: Open
+
+Severity basis: Config delete restores a prior assigned value instead of the documented default, changing effective configuration. This is administrator-repairable behavior, not merely cosmetic text.
+
+Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-repo-4)
+
+Reproduced by: e2e reproduced. config delete restores first stored value; recorded changed-value prestate.
+
+[Executable regression receipt](../uplift/consolidated/findings-audit-iter28/runs/20261116T031648777527Z-repo/receipt.json); [Runner](../uplift/consolidated/findings-audit-iter28/run_regressions.py) `repo`. The receipt records commands, expected observations, actual readers and provider qualifications.
+
+Fresh reproduction on Linux x86-64 IRIS 2026.1: [iteration41 receipt](../uplift/consolidated/iter41/native/20261116T174828407055Z/observations.json), with the [iteration41 model](consolidated/iter41/settings.rs) replaying the same outcome.
+
+[Governing owner](../ontology/concepts/settings.g5.md#settings). No product repair or maintainer approval is claimed.
 
 <a id="c-d2"></a>
 ### C:D2: When IPM cannot create a load's temporary `.modules` repository, it prints "Failed to clean up repository 'ipm-temp-modules-N'. You may need to manually dele...
@@ -1446,34 +1486,6 @@ Reproduced by: e2e reproduced. ordinary local-loaded dependency produces lockfil
 
 [Governing owner](open_questions.md#deps.lockfile.local-supplier-policy). No product repair or maintainer approval is claimed. This is a reproduced discrepancy under an open policy assumption, not a settled defect verdict.
 
-<a id="p-f-load-4"></a>
-### P:F-LOAD-4: A load can fail after its final commit: an after-install message with `{` and a `$$$` macro that does not compile throws in `%EvaluateMacro`. The command ret...
-
-Severity: Low · Decision: Open
-
-Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-load-4)
-
-Reproduced by: e2e reproduced. ordinary after-install macro failure with durable module/history committed; successful message neighbor.
-
-[Executable regression receipt](../uplift/consolidated/findings-audit-iter28/runs/20261116T031715006352Z-early/receipt.json); [Runner](../uplift/consolidated/findings-audit-iter28/run_regressions.py) `early`. The receipt records commands, expected observations, actual readers and provider qualifications.
-
-[Governing owner](../ontology/features/load.g5.md#load). No product repair or maintainer approval is claimed.
-
-<a id="p-f-repo-4"></a>
-### P:F-REPO-4: `config delete` restores the first value ever set, not the factory default, for keys the installer does not seed (`TerminalPrompt`, `PublishTimeout`, `Histor...
-
-Severity: Low · Decision: Open
-
-Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-repo-4)
-
-Reproduced by: e2e reproduced. config delete restores first stored value; recorded changed-value prestate.
-
-[Executable regression receipt](../uplift/consolidated/findings-audit-iter28/runs/20261116T031648777527Z-repo/receipt.json); [Runner](../uplift/consolidated/findings-audit-iter28/run_regressions.py) `repo`. The receipt records commands, expected observations, actual readers and provider qualifications.
-
-Fresh reproduction on Linux x86-64 IRIS 2026.1: [iteration41 receipt](../uplift/consolidated/iter41/native/20261116T174828407055Z/observations.json), with the [iteration41 model](consolidated/iter41/settings.rs) replaying the same outcome.
-
-[Governing owner](../ontology/concepts/settings.g5.md#settings). No product repair or maintainer approval is claimed.
-
 <a id="p-f-repo-8"></a>
 ### P:F-REPO-8: `config` with an unknown key or a bad value prints a message and returns OK, so scripts cannot detect typos.
 
@@ -1515,10 +1527,16 @@ Reproduced by: e2e reproduced. ordinary recursive uninstall removes dependency c
 
 [Governing owner](../ontology/features/uninstall.g5.md#uninstall.recurse). No product repair or maintainer approval is claimed.
 
+## Review records
+
+These ratings describe the retained consequence or review priority. Aliases do not add defects; closed, withdrawn, excluded and unconfirmed records retain their existing dispositions.
+
 <a id="g-oos-1"></a>
 ### G:OOS-1 review record
 
-Severity: Unranked
+Severity: High
+
+Severity basis: Unquoted URL/branch values at a shell boundary present potential command injection. Potential Critical compromise is discounted because reachability/exploitation is unconfirmed; defensive review only.
 
 G:OOS-1: defensive source/existing-evidence review only; outside active reproduction scope. [Preserved claim and scope](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-oos-1)
 
@@ -1526,7 +1544,9 @@ G:OOS-1: defensive source/existing-evidence review only; outside active reproduc
 <a id="g-d5"></a>
 ### G:D5 review record
 
-Severity: Unranked
+Severity: Medium
+
+Severity basis: Same scoped trigger/consequence as P:F-REPO-4; inherit its impact rating without creating another defect. The alias disposition and reproduction limits remain unchanged.
 
 G:D5: alias. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-d5)
 
@@ -1534,7 +1554,9 @@ G:D5: alias. [Disposition, source and remaining gate](../uplift/consolidated/fin
 <a id="g-d10"></a>
 ### G:D10 review record
 
-Severity: Unranked
+Severity: Medium
+
+Severity basis: Abnormal termination leaves a durable history row with start values rather than the known action progress/outcome. This impairs administrative diagnosis; fresh process-death qualification remains open.
 
 G:D10: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-d10)
 
@@ -1542,7 +1564,9 @@ G:D10: inconclusive. [Disposition, source and remaining gate](../uplift/consolid
 <a id="g-d14"></a>
 ### G:D14 review record
 
-Severity: Unranked
+Severity: Medium
+
+Severity basis: A dependency can retain changes when its parent rolls back. This is an installation-state/atomicity policy consequence, not a defect under the current NoJournal working assumption.
 
 G:D14: policy-only/as-built-observed. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-d14)
 
@@ -1550,7 +1574,9 @@ G:D14: policy-only/as-built-observed. [Disposition, source and remaining gate](.
 <a id="g-d15"></a>
 ### G:D15 review record
 
-Severity: Unranked
+Severity: Medium
+
+Severity basis: A documented archive format does not load, while the equivalent supported extension works. The failure is visible and an administrator can rename/use a supported input.
 
 G:D15: inconclusive/execution-scope-blocked. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-d15)
 
@@ -1558,7 +1584,9 @@ G:D15: inconclusive/execution-scope-blocked. [Disposition, source and remaining 
 <a id="g-d16"></a>
 ### G:D16 review record
 
-Severity: Unranked
+Severity: Medium
+
+Severity basis: The wrong-module archive gives an internal error, a false commit marker in NoTransaction mode and leftover extracted files. No unwanted module-manifest installation is inferred.
 
 G:D16: inconclusive/execution-scope-blocked. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-d16)
 
@@ -1566,7 +1594,9 @@ G:D16: inconclusive/execution-scope-blocked. [Disposition, source and remaining 
 <a id="g-d17"></a>
 ### G:D17 review record
 
-Severity: Unranked
+Severity: Low
+
+Severity basis: Relative-path acceptance is evidenced, but loading an unintended module or violating a required refusal is not established. This rates the limited interface/documentation candidate.
 
 G:D17: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-d17)
 
@@ -1574,7 +1604,9 @@ G:D17: inconclusive. [Disposition, source and remaining gate](../uplift/consolid
 <a id="g-d19"></a>
 ### G:D19 review record
 
-Severity: Unranked
+Severity: Medium
+
+Severity basis: Same scoped trigger/consequence as P:F-REPO-5; inherit its impact rating without creating another defect. The alias disposition and reproduction limits remain unchanged.
 
 G:D19: alias. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-d19)
 
@@ -1582,7 +1614,9 @@ G:D19: alias. [Disposition, source and remaining gate](../uplift/consolidated/fi
 <a id="g-d26"></a>
 ### G:D26 review record
 
-Severity: Unranked
+Severity: Medium
+
+Severity basis: An unfinished record can report uncommitted after changes were retained, misleading audit/recovery decisions. The abnormal-end outcome policy and exact fresh witness remain open.
 
 G:D26: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-d26)
 
@@ -1590,7 +1624,9 @@ G:D26: inconclusive. [Disposition, source and remaining gate](../uplift/consolid
 <a id="g-d27"></a>
 ### G:D27 review record
 
-Severity: Unranked
+Severity: Medium
+
+Severity basis: Finalizing an unfinished record prevents ordinary correction and misstates its lifecycle state. This is a recoverable history-management consequence, conditional on the open finalization policy.
 
 G:D27: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-d27)
 
@@ -1598,7 +1634,9 @@ G:D27: inconclusive. [Disposition, source and remaining gate](../uplift/consolid
 <a id="g-d30"></a>
 ### G:D30 review record
 
-Severity: Unranked
+Severity: Medium
+
+Severity basis: Same scoped trigger/consequence as P:F-UNIN-2; inherit its impact rating without creating another defect. The alias disposition and reproduction limits remain unchanged.
 
 G:D30: alias. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-d30)
 
@@ -1606,7 +1644,9 @@ G:D30: alias. [Disposition, source and remaining gate](../uplift/consolidated/fi
 <a id="g-d31"></a>
 ### G:D31 review record
 
-Severity: Unranked
+Severity: Medium
+
+Severity basis: Same scoped trigger/consequence as P:F-INST-9; inherit its impact rating without creating another defect. The alias disposition and reproduction limits remain unchanged.
 
 G:D31: alias. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-d31)
 
@@ -1614,7 +1654,9 @@ G:D31: alias. [Disposition, source and remaining gate](../uplift/consolidated/fi
 <a id="g-i1"></a>
 ### G:I1 review record
 
-Severity: Unranked
+Severity: Low
+
+Severity basis: Same scoped trigger/consequence as C:D12; inherit its impact rating without creating another defect. The alias disposition and reproduction limits remain unchanged.
 
 G:I1: alias. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-i1)
 
@@ -1622,7 +1664,9 @@ G:I1: alias. [Disposition, source and remaining gate](../uplift/consolidated/fin
 <a id="g-i2"></a>
 ### G:I2 review record
 
-Severity: Unranked
+Severity: Low
+
+Severity basis: A stopped load can leave a temporary registry entry. The broader claim of always winning later resolution was narrowed; unqualified downstream selection keeps this below Medium.
 
 G:I2: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-i2)
 
@@ -1630,7 +1674,9 @@ G:I2: inconclusive. [Disposition, source and remaining gate](../uplift/consolida
 <a id="g-i4"></a>
 ### G:I4 review record
 
-Severity: Unranked
+Severity: Medium
+
+Severity basis: Programmatic global-history rows cannot identify their namespace/record ID, limiting reliable attribution. Whether that API shape must change remains an owner question.
 
 G:I4: policy-only/source-reviewed. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-i4)
 
@@ -1638,7 +1684,9 @@ G:I4: policy-only/source-reviewed. [Disposition, source and remaining gate](../u
 <a id="g-i5"></a>
 ### G:I5 review record
 
-Severity: Unranked
+Severity: Medium
+
+Severity basis: A processor compile error could be reported as successful compilation. High-impact silent incomplete work is discounted one level because a supported failing compile entry remains unconfirmed.
 
 G:I5: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-i5)
 
@@ -1646,7 +1694,9 @@ G:I5: inconclusive. [Disposition, source and remaining gate](../uplift/consolida
 <a id="g-i6"></a>
 ### G:I6 review record
 
-Severity: Unranked
+Severity: Medium
+
+Severity basis: External files/effects can remain after database rollback and require reconciliation. This is a conditional compensation-policy consequence; database transactions alone never promised filesystem rollback.
 
 G:I6: policy-only/source-reviewed. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-i6)
 
@@ -1654,7 +1704,9 @@ G:I6: policy-only/source-reviewed. [Disposition, source and remaining gate](../u
 <a id="g-i7"></a>
 ### G:I7 review record
 
-Severity: Unranked
+Severity: Low
+
+Severity basis: Same scoped trigger/consequence as P:F-DEP-1; inherit its impact rating without creating another defect. The alias disposition and reproduction limits remain unchanged.
 
 G:I7: alias. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-i7)
 
@@ -1662,7 +1714,9 @@ G:I7: alias. [Disposition, source and remaining gate](../uplift/consolidated/fin
 <a id="g-i8"></a>
 ### G:I8 review record
 
-Severity: Unranked
+Severity: Low
+
+Severity basis: The NoLock argument may enable compile locking rather than bypass it. The anticipated effect is contention/timeouts, discounted from Medium because the actual competing compile schedule is unqualified.
 
 G:I8: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-i8)
 
@@ -1670,7 +1724,9 @@ G:I8: inconclusive. [Disposition, source and remaining gate](../uplift/consolida
 <a id="g-obs-l3"></a>
 ### G:OBS-L3 review record
 
-Severity: Unranked
+Severity: Medium
+
+Severity basis: Same scoped trigger/consequence as C:D16; inherit its impact rating without creating another defect. The alias disposition and reproduction limits remain unchanged.
 
 G:OBS-L3: alias. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-obs-l3)
 
@@ -1678,7 +1734,9 @@ G:OBS-L3: alias. [Disposition, source and remaining gate](../uplift/consolidated
 <a id="g-obs-l4"></a>
 ### G:OBS-L4 review record
 
-Severity: Unranked
+Severity: Medium
+
+Severity basis: Same scoped trigger/consequence as P:F-INST-5; inherit its impact rating without creating another defect. The alias disposition and reproduction limits remain unchanged.
 
 G:OBS-L4: alias. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-obs-l4)
 
@@ -1686,7 +1744,9 @@ G:OBS-L4: alias. [Disposition, source and remaining gate](../uplift/consolidated
 <a id="g-obs-l5"></a>
 ### G:OBS-L5 review record
 
-Severity: Unranked
+Severity: Medium
+
+Severity basis: Same scoped trigger/consequence as P:F-INST-10; inherit its impact rating without creating another defect. The alias disposition and reproduction limits remain unchanged.
 
 G:OBS-L5: alias. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-obs-l5)
 
@@ -1694,7 +1754,9 @@ G:OBS-L5: alias. [Disposition, source and remaining gate](../uplift/consolidated
 <a id="g-obs-l9"></a>
 ### G:OBS-L9 review record
 
-Severity: Unranked
+Severity: High
+
+Severity basis: Same scoped trigger/consequence as P:F-INST-1; inherit its impact rating without creating another defect. The alias disposition and reproduction limits remain unchanged.
 
 G:OBS-L9: alias. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-obs-l9)
 
@@ -1702,7 +1764,9 @@ G:OBS-L9: alias. [Disposition, source and remaining gate](../uplift/consolidated
 <a id="g-obs-l16"></a>
 ### G:OBS-L16 review record
 
-Severity: Unranked
+Severity: Low
+
+Severity basis: A failed legacy install may misreport retained changes as uncommitted. The Medium audit consequence is discounted because the exact legacy-provider path remains unqualified.
 
 G:OBS-L16: inconclusive/execution-scope-blocked. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-obs-l16)
 
@@ -1710,7 +1774,9 @@ G:OBS-L16: inconclusive/execution-scope-blocked. [Disposition, source and remain
 <a id="g-obs-l17"></a>
 ### G:OBS-L17 review record
 
-Severity: Unranked
+Severity: Medium
+
+Severity basis: Same scoped trigger/consequence as P:F-UNIN-6; inherit its impact rating without creating another defect. The alias disposition and reproduction limits remain unchanged.
 
 G:OBS-L17: alias. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-obs-l17)
 
@@ -1718,7 +1784,9 @@ G:OBS-L17: alias. [Disposition, source and remaining gate](../uplift/consolidate
 <a id="g-obs-h7"></a>
 ### G:OBS-H7 review record
 
-Severity: Unranked
+Severity: Low
+
+Severity basis: Dependency source is hidden in an install-only display while the stored source remains available. This is a display/policy record, not a demonstrated installation error.
 
 G:OBS-H7: policy-only/source-reviewed. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-obs-h7)
 
@@ -1726,7 +1794,9 @@ G:OBS-H7: policy-only/source-reviewed. [Disposition, source and remaining gate](
 <a id="g-obs-h12"></a>
 ### G:OBS-H12 review record
 
-Severity: Unranked
+Severity: Low
+
+Severity basis: A failed maintenance purge could stop the requested command. The recoverable Medium command failure is discounted because an ordinary failing provider trigger is unconfirmed.
 
 G:OBS-H12: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-obs-h12)
 
@@ -1734,7 +1804,9 @@ G:OBS-H12: inconclusive. [Disposition, source and remaining gate](../uplift/cons
 <a id="g-obs-h13"></a>
 ### G:OBS-H13 review record
 
-Severity: Unranked
+Severity: High
+
+Severity basis: Shared temporary history clearing could lose or mix another namespace's in-progress audit records. Potential Critical data loss is discounted one level because the concurrent trigger is unconfirmed.
 
 G:OBS-H13: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-obs-h13)
 
@@ -1742,461 +1814,593 @@ G:OBS-H13: inconclusive. [Disposition, source and remaining gate](../uplift/cons
 <a id="g-obs-h15"></a>
 ### G:OBS-H15 review record
 
-Severity: Unranked
+Severity: Low
+
+Severity basis: A skipped self-uninstall may still report success and exit the shell. This rates the limited diagnostic/control-flow candidate; the full interactive outcome remains unqualified.
 
 G:OBS-H15: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-obs-h15)
 
 <a id="g-d7"></a>
 ### G:D7 review record
 
-Severity: Unranked
+Severity: Low
+
+Severity basis: The raw-status display is documented and this allegation is withdrawn. Low labels the retained documentation/review record; no current defect is asserted.
 
 G:D7: withdrawn/source-settled. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-d7)
 
 <a id="g-obs-h9"></a>
 ### G:OBS-H9 review record
 
-Severity: Unranked
+Severity: Low
+
+Severity basis: Unconfirmed global deletion is documented behavior and the allegation is withdrawn. Low labels the policy reference, not a newly alleged unsafe-delete defect.
 
 G:OBS-H9: withdrawn/source-settled. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-obs-h9)
 
 <a id="g-obs-h10"></a>
 ### G:OBS-H10 review record
 
-Severity: Unranked
+Severity: Low
+
+Severity basis: The claimed empty namespace groups were refuted. Low is administrative priority for the closed display record; no surviving product consequence is asserted.
 
 G:OBS-H10: refuted. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-obs-h10)
 
 <a id="g-obs-l15"></a>
 ### G:OBS-L15 review record
 
-Severity: Unranked
+Severity: Low
+
+Severity basis: Temporary LoadedResource lifetime is outside the reviewed functional contract. No material consequence through a supported caller is established; this remains a scoped reference record.
 
 G:OBS-L15: outside-functional-contract. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-obs-l15)
 
 <a id="g-oos-2"></a>
 ### G:OOS-2 review record
 
-Severity: Unranked
+Severity: Low
+
+Severity basis: A verify phase has a history-coverage difference, but phase commands are excluded by the recorded history contract. This rates the observability/scope reference without reopening a defect.
 
 G:OOS-2: inconclusive/execution-scope-blocked. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-oos-2)
 
 <a id="g-oos-3"></a>
 ### G:OOS-3 review record
 
-Severity: Unranked
+Severity: Low
+
+Severity basis: A skipped method is displayed as passed. Only misleading test-count output is established, not an incorrect command verdict or a demonstrated faulty release.
 
 G:OOS-3: outside-functional-contract. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-oos-3)
 
 <a id="c-d17"></a>
 ### C:D17 review record
 
-Severity: Unranked
+Severity: Medium
+
+Severity basis: Authenticated metadata succeeds but protected artifact bytes cannot be downloaded; this blocks installation and is recoverable by fixing the request authentication.
 
 C:D17: defensive source/existing-evidence review only; outside active reproduction scope. [Preserved claim and scope](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#c-d17)
 
 <a id="c-d18"></a>
 ### C:D18 review record
 
-Severity: Unranked
+Severity: High
+
+Severity basis: Existing evidence shows invalid artifact bytes reported as successfully extracted and activated. This is a false installation result; decoder and broader archive-safety claims remain outside scope.
 
 C:D18: defensive source/existing-evidence review only; outside active reproduction scope. [Preserved claim and scope](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#c-d18)
 
 <a id="c-d20"></a>
 ### C:D20 review record
 
-Severity: Unranked
+Severity: High
+
+Severity basis: Repository credentials can reach a different origin or redirect hop. This rates potential credential disclosure, not an observed production compromise; the origin policy remains open.
 
 C:D20: defensive source/existing-evidence review only; outside active reproduction scope. [Preserved claim and scope](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#c-d20)
 
 <a id="c-d22"></a>
 ### C:D22 review record
 
-Severity: Unranked
+Severity: Low
+
+Severity basis: Only digest spelling differs: uppercase hexadecimal rejects valid bytes. No integrity bypass is alleged, and real-registry prevalence remains unconfirmed.
 
 C:D22: defensive source/existing-evidence review only; outside active reproduction scope. [Preserved claim and scope](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#c-d22)
 
 <a id="c-d23"></a>
 ### C:D23 review record
 
-Severity: Unranked
+Severity: Low
+
+Severity basis: An invalid attribute is silently ignored. The demonstrated consequence is missing validation/diagnostics; no authentication bypass is established.
 
 C:D23: defensive source/existing-evidence review only; outside active reproduction scope. [Preserved claim and scope](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#c-d23)
 
 <a id="c-d25"></a>
 ### C:D25 review record
 
-Severity: Unranked
+Severity: High
+
+Severity basis: Same scoped trigger/consequence as P:F-UNIN-1; inherit its impact rating without creating another defect. The alias disposition and reproduction limits remain unchanged.
 
 C:D25: alias. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#c-d25)
 
 <a id="c-d26"></a>
 ### C:D26 review record
 
-Severity: Unranked
+Severity: Medium
+
+Severity basis: A formerly declared web application remains after replacement and later uninstall, requiring administrator cleanup. Upgrade ownership policy remains unresolved.
 
 C:D26: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#c-d26)
 
 <a id="c-d30"></a>
 ### C:D30 review record
 
-Severity: Unranked
+Severity: Low
+
+Severity basis: The service/listing selects a different deep-build tag while the checked installer selects the expected artifact. The demonstrated impact is misleading listing order.
 
 C:D30: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#c-d30)
 
 <a id="p-f-repo-1"></a>
 ### P:F-REPO-1 review record
 
-Severity: Unranked
+Severity: Medium
+
+Severity basis: The selected token-auth protocol is ignored, causing valid authenticated registry requests to fail. No credential disclosure to a new destination is alleged for this entry.
 
 P:F-REPO-1: defensive source/existing-evidence review only; outside active reproduction scope. [Preserved claim and scope](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-repo-1)
 
 <a id="p-f-repo-10"></a>
 ### P:F-REPO-10 review record
 
-Severity: Unranked
+Severity: High
+
+Severity basis: Publication can go to the wrong configured registry despite its publish flag. This is an incorrect publication destination with potential source exposure; no production disclosure is claimed.
 
 P:F-REPO-10: defensive source/existing-evidence review only; outside active reproduction scope. [Preserved claim and scope](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-repo-10)
 
 <a id="p-f-repo-11"></a>
 ### P:F-REPO-11 review record
 
-Severity: Unranked
+Severity: High
+
+Severity basis: Changing an ORAS address retains credentials that can reach the new host. Potential Critical credential exposure is discounted for the unqualified delivery/authorization policy; source/existing-evidence review only.
 
 P:F-REPO-11: defensive source/existing-evidence review only; outside active reproduction scope. [Preserved claim and scope](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-repo-11)
 
 <a id="p-f-repo-2"></a>
 ### P:F-REPO-2 review record
 
-Severity: Unranked
+Severity: Medium
+
+Severity basis: Documented SSL and publication endpoint options are ignored, preventing the intended registry configuration. No TLS-verification bypass or actual disclosure is inferred.
 
 P:F-REPO-2: defensive source/existing-evidence review only; outside active reproduction scope. [Preserved claim and scope](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-repo-2)
 
 <a id="p-f-repo-7"></a>
 ### P:F-REPO-7 review record
 
-Severity: Unranked
+Severity: High
+
+Severity basis: A disabled registry can still be contacted with credentials or selected for publication. Potential Critical exposure is discounted because harmful-recipient/authorization consequences are unconfirmed.
 
 P:F-REPO-7: defensive source/existing-evidence review only; outside active reproduction scope. [Preserved claim and scope](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-repo-7)
 
 <a id="p-f-unin-3"></a>
 ### P:F-UNIN-3 review record
 
-Severity: Unranked
+Severity: Medium
+
+Severity basis: Aliases skip self-uninstall safeguards and can leave the package manager unusable until reinstalled. Existing evidence supports administrative recovery impact, not a new authorization/exploitation claim.
 
 P:F-UNIN-3: defensive source/existing-evidence review only; outside active reproduction scope. [Preserved claim and scope](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-unin-3)
 
 <a id="p-f-unin-8"></a>
 ### P:F-UNIN-8 review record
 
-Severity: Unranked
+Severity: High
+
+Severity basis: Recursive uninstall can remove the package manager mid-operation and leave partial cleanup/records behind. Core package-management operations remain unavailable until recovery.
 
 P:F-UNIN-8: defensive source/existing-evidence review only; outside active reproduction scope. [Preserved claim and scope](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-unin-8)
 
 <a id="p-f-dep-4"></a>
 ### P:F-DEP-4 review record
 
-Severity: Unranked
+Severity: Low
+
+Severity basis: A dependency-scope comment contradicts the implemented/tested behavior. This is documentation drift.
 
 P:F-DEP-4: documentation-or-test-gap. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-dep-4)
 
 <a id="p-f-dep-5"></a>
 ### P:F-DEP-5 review record
 
-Severity: Unranked
+Severity: Low
+
+Severity basis: A test comment still describes an already-fixed intersection edge case. This is stale documentation.
 
 P:F-DEP-5: documentation-or-test-gap. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-dep-5)
 
 <a id="p-f-dep-6"></a>
 ### P:F-DEP-6 review record
 
-Severity: Unranked
+Severity: Low
+
+Severity basis: Empty/swallowing assertions weaken test evidence. No additional product failure follows from the test gap alone.
 
 P:F-DEP-6: documentation-or-test-gap. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-dep-6)
 
 <a id="p-f-hist-1"></a>
 ### P:F-HIST-1 review record
 
-Severity: Unranked
+Severity: Critical
+
+Severity basis: Same scoped trigger/consequence as G:D1; inherit its impact rating without creating another defect. The alias disposition and reproduction limits remain unchanged.
 
 P:F-HIST-1: alias. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-hist-1)
 
 <a id="p-f-hist-10"></a>
 ### P:F-HIST-10 review record
 
-Severity: Unranked
+Severity: Low
+
+Severity basis: The blanket deleted-active-row claim was withdrawn and now points to C:Q7. Low labels the retained policy/alias record; neither deletion/close schedule is newly called a defect.
 
 P:F-HIST-10: alias. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-hist-10)
 
 <a id="p-f-hist-2"></a>
 ### P:F-HIST-2 review record
 
-Severity: Unranked
+Severity: Medium
+
+Severity basis: A developer-mode crash retains the module but leaves misleading commit/name history fields, impairing recovery diagnosis. The exact fresh crash-in-dependency gate remains open.
 
 P:F-HIST-2: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-hist-2)
 
 <a id="p-f-hist-3"></a>
 ### P:F-HIST-3 review record
 
-Severity: Unranked
+Severity: Critical
+
+Severity basis: Same scoped trigger/consequence as G:D25; inherit its impact rating without creating another defect. The alias disposition and reproduction limits remain unchanged.
 
 P:F-HIST-3: alias. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-hist-3)
 
 <a id="p-f-hist-4"></a>
 ### P:F-HIST-4 review record
 
-Severity: Unranked
+Severity: Low
+
+Severity basis: The retained record concerns an operator-selected terminal commit and its documentation. It does not establish a product defect under an accepted supported-input contract.
 
 P:F-HIST-4: documentation-or-test-gap. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-hist-4)
 
 <a id="p-f-hist-5"></a>
 ### P:F-HIST-5 review record
 
-Severity: Unranked
+Severity: Medium
+
+Severity basis: Same scoped trigger/consequence as G:D9; inherit its impact rating without creating another defect. The alias disposition and reproduction limits remain unchanged.
 
 P:F-HIST-5: alias. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-hist-5)
 
 <a id="p-f-hist-6"></a>
 ### P:F-HIST-6 review record
 
-Severity: Unranked
+Severity: Medium
+
+Severity basis: Same scoped trigger/consequence as G:D3; inherit its impact rating without creating another defect. The alias disposition and reproduction limits remain unchanged.
 
 P:F-HIST-6: alias. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-hist-6)
 
 <a id="p-f-hist-7"></a>
 ### P:F-HIST-7 review record
 
-Severity: Unranked
+Severity: Low
+
+Severity basis: A narrow commit-to-marker window can misreport retained work. Medium audit impact is discounted because the deterministic witness uses a patched stall and the graceful-stop cause remains unidentified.
 
 P:F-HIST-7: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-hist-7)
 
 <a id="p-f-hist-8"></a>
 ### P:F-HIST-8 review record
 
-Severity: Unranked
+Severity: Medium
+
+Severity basis: Restart can leave a misleading, editable unfinished audit row after changes survived. This affects administrative recovery; no fresh restart witness is claimed.
 
 P:F-HIST-8: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-hist-8)
 
 <a id="p-f-hist-9"></a>
 ### P:F-HIST-9 review record
 
-Severity: Unranked
+Severity: Medium
+
+Severity basis: Same scoped trigger/consequence as G:D6; inherit its impact rating without creating another defect. The alias disposition and reproduction limits remain unchanged.
 
 P:F-HIST-9: alias. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-hist-9)
 
 <a id="p-f-inst-11"></a>
 ### P:F-INST-11 review record
 
-Severity: Unranked
+Severity: Low
+
+Severity basis: Help/README descriptions disagree about developer bypass and reinstall version. This is documentation and unresolved-intent clarification, not a new runtime defect.
 
 P:F-INST-11: documentation-or-test-gap. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-inst-11)
 
 <a id="p-f-inst-2"></a>
 ### P:F-INST-2 review record
 
-Severity: Unranked
+Severity: Low
+
+Severity basis: The mirror-role-change comment promises unsupported behavior and a test can skip silently. The retained issue is documentation/test quality.
 
 P:F-INST-2: documentation-or-test-gap. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-inst-2)
 
 <a id="p-f-inst-3"></a>
 ### P:F-INST-3 review record
 
-Severity: Unranked
+Severity: Low
+
+Severity basis: Update interruption/failure tests assert too little. This rates a coverage gap without inventing another product failure.
 
 P:F-INST-3: documentation-or-test-gap. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-inst-3)
 
 <a id="p-f-load-1"></a>
 ### P:F-LOAD-1 review record
 
-Severity: Unranked
+Severity: Low
+
+Severity basis: A failed clone is reported later as a missing manifest, obscuring its cause. The demonstrated issue is misleading diagnostics; the URL/shell boundary is not reprobed.
 
 P:F-LOAD-1: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-load-1)
 
 <a id="p-f-load-2"></a>
 ### P:F-LOAD-2 review record
 
-Severity: Unranked
+Severity: Medium
+
+Severity basis: URL loads retain a clone in a temporary directory used by later reload/sync, creating persistent cleanup/source-location dependence. No URL/shell reproduction was run in this review.
 
 P:F-LOAD-2: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-load-2)
 
 <a id="p-f-load-3"></a>
 ### P:F-LOAD-3 review record
 
-Severity: Unranked
+Severity: Medium
+
+Severity basis: A failed archive load can replace installed source files while database state rolls back, requiring administrator reconciliation. The excluded archive entry is not exercised or widened to irreversible business-data loss.
 
 P:F-LOAD-3: inconclusive/execution-scope-blocked. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-load-3)
 
 <a id="p-f-nsp-1"></a>
 ### P:F-NSP-1 review record
 
-Severity: Unranked
+Severity: Medium
+
+Severity basis: Enable can report success despite installer failure, leaving the namespace incompletely enabled. This is visible, administratively repairable installation misbehavior.
 
 P:F-NSP-1: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-nsp-1)
 
 <a id="p-f-nsp-10"></a>
 ### P:F-NSP-10 review record
 
-Severity: Unranked
+Severity: Low
+
+Severity basis: Legacy module records may remain unmigrated. Medium upgrade-management impact is discounted because the evidence uses simulated legacy records rather than a fully qualified old installation.
 
 P:F-NSP-10: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-nsp-10)
 
 <a id="p-f-nsp-11"></a>
 ### P:F-NSP-11 review record
 
-Severity: Unranked
+Severity: Low
+
+Severity basis: Enable-community returns success after a component failure. Medium partial-enable impact is discounted because the exact current failure/consumer gate remains unqualified.
 
 P:F-NSP-11: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-nsp-11)
 
 <a id="p-f-nsp-12"></a>
 ### P:F-NSP-12 review record
 
-Severity: Unranked
+Severity: Medium
+
+Severity basis: Same scoped trigger/consequence as G:D4; inherit its impact rating without creating another defect. The alias disposition and reproduction limits remain unchanged.
 
 P:F-NSP-12: alias. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-nsp-12)
 
 <a id="p-f-nsp-3"></a>
 ### P:F-NSP-3 review record
 
-Severity: Unranked
+Severity: Low
+
+Severity basis: Version help omits the build labels that the command prints. This is display/documentation drift.
 
 P:F-NSP-3: documentation-or-test-gap. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-nsp-3)
 
 <a id="p-f-nsp-5"></a>
 ### P:F-NSP-5 review record
 
-Severity: Unranked
+Severity: Medium
+
+Severity basis: Installing through an existing code mapping can update shared source code and leave ownership/unmap state inconsistent. Existing observations support an administrator-repairable mapping defect.
 
 P:F-NSP-5: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-nsp-5)
 
 <a id="p-f-nsp-7"></a>
 ### P:F-NSP-7 review record
 
-Severity: Unranked
+Severity: Medium
+
+Severity basis: An ambiguous shared-code source can produce the wrong owner and skip repository mapping/warnings. This affects namespace administration; source-selection policy remains open.
 
 P:F-NSP-7: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-nsp-7)
 
 <a id="p-f-nsp-8"></a>
 ### P:F-NSP-8 review record
 
-Severity: Unranked
+Severity: Low
+
+Severity basis: The argument-slot error causes extra configuration activations without a demonstrated final-state difference. A collation/data consequence is not asserted.
 
 P:F-NSP-8: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-nsp-8)
 
 <a id="p-f-nsp-9"></a>
 ### P:F-NSP-9 review record
 
-Severity: Unranked
+Severity: Low
+
+Severity basis: Upgrade CLI scripts may be written under an unexpanded placeholder instead of installed. Medium missing-command impact is discounted because a genuine legacy-upgrade producer remains unqualified.
 
 P:F-NSP-9: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-nsp-9)
 
 <a id="p-f-repo-12"></a>
 ### P:F-REPO-12 review record
 
-Severity: Unranked
+Severity: Medium
+
+Severity basis: A deployed platform-tagged version cannot be unpublished using its version. This breaks a registry-management operation and needs an administrator workaround.
 
 P:F-REPO-12: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-repo-12)
 
 <a id="p-f-repo-3"></a>
 ### P:F-REPO-3 review record
 
-Severity: Unranked
+Severity: Low
+
+Severity basis: Publish selection help is stale relative to the supported fallback policy. This is documentation drift.
 
 P:F-REPO-3: documentation-or-test-gap. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-repo-3)
 
 <a id="p-f-repo-6"></a>
 ### P:F-REPO-6 review record
 
-Severity: Unranked
+Severity: Low
+
+Severity basis: The claimed unrelated-class dispatch is unreachable through the supported parser and was refuted. Low labels the closed review record, not a surviving code-execution vulnerability.
 
 P:F-REPO-6: refuted/unreachable-CLI-trigger. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-repo-6)
 
 <a id="p-f-repo-9"></a>
 ### P:F-REPO-9 review record
 
-Severity: Unranked
+Severity: Low
+
+Severity basis: An invalid repository type prompts rather than producing the intended diagnostic and can consume subsequent script input. No unrelated-class dispatch is inferred.
 
 P:F-REPO-9: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-repo-9)
 
 <a id="p-f-res-1"></a>
 ### P:F-RES-1 review record
 
-Severity: Unranked
+Severity: Medium
+
+Severity basis: Same scoped trigger/consequence as C:D19; inherit its impact rating without creating another defect. The alias disposition and reproduction limits remain unchanged.
 
 P:F-RES-1: alias. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-res-1)
 
 <a id="p-f-res-2"></a>
 ### P:F-RES-2 review record
 
-Severity: Unranked
+Severity: Low
+
+Severity basis: The documented register phase is absent or silently ineffective in a sequence. The established scope is an incomplete documented option and misleading status.
 
 P:F-RES-2: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-res-2)
 
 <a id="p-f-res-3"></a>
 ### P:F-RES-3 review record
 
-Severity: Unranked
+Severity: Medium
+
+Severity basis: A developer-mode deployment command changes class/source availability despite saying it will only report. The shown effects require source reload/administrator repair; irreversible business-data loss is not established.
 
 P:F-RES-3: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-res-3)
 
 <a id="p-f-res-4"></a>
 ### P:F-RES-4 review record
 
-Severity: Unranked
+Severity: Low
+
+Severity basis: A successful package command omits its output-file location without verbosity. This is missing user-facing information.
 
 P:F-RES-4: documentation-or-test-gap. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-res-4)
 
 <a id="p-f-res-5"></a>
 ### P:F-RES-5 review record
 
-Severity: Unranked
+Severity: Low
+
+Severity basis: Command-file help specifies the wrong extension/JSON shape. This is documentation that misleads users into invalid inputs.
 
 P:F-RES-5: documentation-or-test-gap. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-res-5)
 
 <a id="p-f-res-6"></a>
 ### P:F-RES-6 review record
 
-Severity: Unranked
+Severity: Low
+
+Severity basis: An exec example promises a persistent namespace change that is deliberately isolated. This is a documentation error.
 
 P:F-RES-6: documentation-or-test-gap. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-res-6)
 
 <a id="p-f-res-7"></a>
 ### P:F-RES-7 review record
 
-Severity: Unranked
+Severity: Medium
+
+Severity basis: Long names are truncated in produced packages, making required artifacts unusable or missing under the expected name. The original input remains available; irreversible source-data loss is not asserted.
 
 P:F-RES-7: inconclusive/execution-scope-blocked. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-res-7)
 
 <a id="p-f-res-8"></a>
 ### P:F-RES-8 review record
 
-Severity: Unranked
+Severity: Low
+
+Severity basis: Nested quiet output can close the outer null device and fail. Medium command failure is discounted because this audit has not qualified the ordinary nested command/reader beyond inherited test evidence.
 
 P:F-RES-8: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-res-8)
 
 <a id="p-f-sync-2"></a>
 ### P:F-SYNC-2 review record
 
-Severity: Unranked
+Severity: Low
+
+Severity basis: The first sync after skip-sync deliberately absorbs a baseline; the flag documentation should disclose this. This is a documentation record.
 
 P:F-SYNC-2: documentation-or-test-gap. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-sync-2)
 
 <a id="p-f-unin-10"></a>
 ### P:F-UNIN-10 review record
 
-Severity: Unranked
+Severity: Medium
+
+Severity basis: Cleanup leaves cache indices that prevent later filesystem-registry creation until they are repaired. This is recoverable administrative breakage.
 
 P:F-UNIN-10: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-unin-10)
 
 <a id="p-f-unin-11"></a>
 ### P:F-UNIN-11 review record
 
-Severity: Unranked
+Severity: Low
+
+Severity basis: Level-zero self-Clean prints an orphan warning and may skip its expected hooks. The confirmed warning is misleading; the broader hook consequence remains unqualified.
 
 P:F-UNIN-11: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-unin-11)
 
 <a id="p-f-unin-7"></a>
 ### P:F-UNIN-7 review record
 
-Severity: Unranked
+Severity: Low
+
+Severity basis: Untyped orphan listings contain system/mapped items that should not be treated as user-owned cleanup targets. Only misleading inventory output is established.
 
 P:F-UNIN-7: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-unin-7)
