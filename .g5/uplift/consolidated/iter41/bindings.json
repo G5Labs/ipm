@@ -1,0 +1,109 @@
+{
+ "verus_dir": ".g5/Verus_verification/consolidated/iter41",
+ "changed_files": [
+  "settings.rs",
+  "cases.json",
+  "run.py",
+  "native/Reader.cls"
+ ],
+ "rows": [
+  {
+   "id": "S41-01",
+   "owner": ".g5/ontology/concepts/settings.g5.md#settings",
+   "model": "settings.rs",
+   "symbols": [
+    "Slot",
+    "set_value",
+    "set",
+    "delete",
+    "delete_restores_first_write",
+    "delete_restores_seed",
+    "unknown_key_reports_ok",
+    "invalid_format_refused_with_ok",
+    "schedule"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/Repo/UniversalSettings.cls",
+     "UpdateOne"
+    ],
+    [
+     "src/cls/IPM/Repo/UniversalSettings.cls",
+     "SetValue"
+    ],
+    [
+     "src/cls/IPM/Repo/UniversalSettings.cls",
+     "ResetToDefault"
+    ],
+    [
+     "src/cls/IPM/Repo/UniversalSettings.cls",
+     "GetDefaultValue"
+    ],
+    [
+     "src/cls/IPM/Main.cls",
+     "Config"
+    ]
+   ],
+   "reader": [
+    [
+     "src/cls/IPM/Repo/UniversalSettings.cls",
+     "GetValue"
+    ],
+    [
+     "src/cls/IPM/Repo/UniversalSettings.cls",
+     "PrintOne"
+    ]
+   ],
+   "scope": "config set/delete over the observed fresh-install slots: first write becomes the default, delete writes the stored default (P:F-REPO-4), unknown key and invalid TestReportFormat print and keep state while the shell status stays OK (P:F-REPO-8). Native c0-c6. ModuleRoot validation (iter29 scope) excluded."
+  },
+  {
+   "id": "S41-02",
+   "owner": ".g5/ontology/concepts/settings.g5.md#settings",
+   "model": "settings.rs",
+   "symbols": [
+    "configurable",
+    "schedule"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/Repo/UniversalSettings.cls",
+     "GetAll"
+    ]
+   ],
+   "reader": [
+    [
+     "src/cls/IPM/Repo/UniversalSettings.cls",
+     "PrintList"
+    ],
+    [
+     "src/cls/IPM/Main.cls",
+     "Config"
+    ]
+   ],
+   "scope": "config list prints exactly the CONFIGURABLE keys (default_registry not listed). Native c9. Value formatting not modelled."
+  },
+  {
+   "id": "S41-03",
+   "owner": ".g5/ontology/concepts/settings.g5.md#settings.analytics",
+   "model": "settings.rs",
+   "symbols": [
+    "analytics_disabled",
+    "text_analytics_counts_as_disabled",
+    "schedule"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/Repo/UniversalSettings.cls",
+     "UpdateOne"
+    ]
+   ],
+   "reader": [
+    [
+     "src/cls/IPM/Repo/UniversalSettings.cls",
+     "GetAnalyticsAvailable"
+    ]
+   ],
+   "scope": "analytics stored raw by config set; the remote consumer test negates the stored text, so 0 and any text such as yes disable usage data. Native c7-c8 via the getter; the remote PackageService send itself is not exercised (network)."
+  }
+ ]
+}

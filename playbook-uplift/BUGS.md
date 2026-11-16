@@ -353,6 +353,8 @@ Reproduced by: e2e reproduced. config delete restores first stored value; record
 
 [Executable regression receipt](../.g5/uplift/consolidated/findings-audit-iter28/runs/20261116T031648777527Z-repo/receipt.json); [Runner](../.g5/uplift/consolidated/findings-audit-iter28/run_regressions.py) `repo`. The receipt records commands, expected observations, actual readers and provider qualifications.
 
+Fresh reproduction on Linux x86-64 IRIS 2026.1: [iteration41 receipt](../.g5/uplift/consolidated/iter41/native/20261116T174828407055Z/observations.json), with the [iteration41 model](../.g5/Verus_verification/consolidated/iter41/settings.rs) replaying the same outcome.
+
 [Governing owner](../.g5/ontology/concepts/settings.g5.md#settings). No product repair or maintainer approval is claimed.
 
 <a id="p-f-repo-8"></a>
@@ -365,6 +367,8 @@ Found by: [Starting entry and evidence](../.g5/uplift/consolidated/findings-audi
 Reproduced by: e2e reproduced. ordinary config invalid key/value returns OK; valid config neighbor.
 
 [Executable regression receipt](../.g5/uplift/consolidated/findings-audit-iter28/runs/20261116T031648777527Z-repo/receipt.json); [Runner](../.g5/uplift/consolidated/findings-audit-iter28/run_regressions.py) `repo`. The receipt records commands, expected observations, actual readers and provider qualifications.
+
+Fresh reproduction on Linux x86-64 IRIS 2026.1: [iteration41 receipt](../.g5/uplift/consolidated/iter41/native/20261116T174828407055Z/observations.json), with the [iteration41 model](../.g5/Verus_verification/consolidated/iter41/settings.rs) replaying the same outcome.
 
 [Governing owner](../.g5/ontology/concepts/settings.g5.md#settings.print). No product repair or maintainer approval is claimed.
 

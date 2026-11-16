@@ -1,0 +1,36 @@
+verification results:: 4 verified, 2 errors
+error: postcondition not satisfied
+  --> /home/ziniu_wu_g5labs_ai/experiments/iris-ipm-continuous-20261116/ipm/.g5/uplift/consolidated/iter41/proofs/controls/settings.rs/first-write-not-default.rs:55:13
+   |
+53 | pub proof fn delete_restores_first_write(slots: Seq<Slot>, k: int, v: int)
+   | -------------------------------------------------------------------------- at the end of the function body
+54 |     requires 0 <= k < slots.len(), configurable(k), k != TRF(), !slots[k].has_default
+55 |     ensures delete(set(slots, k, v).slots, k).slots[k].value == v
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+note: function body check: not all errors may have been reported; rerun with a higher value for --multiple-errors to find other potential errors in this function
+  --> /home/ziniu_wu_g5labs_ai/experiments/iris-ipm-continuous-20261116/ipm/.g5/uplift/consolidated/iter41/proofs/controls/settings.rs/first-write-not-default.rs:92:1
+   |
+92 | pub proof fn schedule()
+   | ^^^^^^^^^^^^^^^^^^^^^^^
+
+error: postcondition not satisfied
+  --> /home/ziniu_wu_g5labs_ai/experiments/iris-ipm-continuous-20261116/ipm/.g5/uplift/consolidated/iter41/proofs/controls/settings.rs/first-write-not-default.rs:94:9
+   |
+92 | pub proof fn schedule()
+   | ----------------------- at the end of the function body
+93 |     ensures
+94 |         c2().slots[9].value == 5, c2().reset, c3d().slots[4].value == 99,
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: postcondition not satisfied
+  --> /home/ziniu_wu_g5labs_ai/experiments/iris-ipm-continuous-20261116/ipm/.g5/uplift/consolidated/iter41/proofs/controls/settings.rs/first-write-not-default.rs:94:47
+   |
+92 | pub proof fn schedule()
+   | ----------------------- at the end of the function body
+93 |     ensures
+94 |         c2().slots[9].value == 5, c2().reset, c3d().slots[4].value == 99,
+   |                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: aborting due to 3 previous errors
+

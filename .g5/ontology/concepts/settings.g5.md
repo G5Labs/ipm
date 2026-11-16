@@ -59,7 +59,7 @@ Besides the [transaction flags](transactions-and-dev-mode.g5.md#transaction.opt-
 <a id="settings.analytics"></a>
 [I · settings.analytics]
 
-`config set analytics 0` stops IPM from sending usage data.
+`config set analytics 0` stops IPM from sending usage data. The value is stored as given; any value that is not a positive number, such as `yes`, also stops usage data.
 
 <a id="settings.print"></a>
 [D · settings.print]
@@ -87,6 +87,8 @@ Sources: `wiki/02` L93-141; `Main.cls:210-220`; CHANGELOG 0.9.0 (`#224`); `prelo
 
 Findings: [P:F-REPO-4 — e2e reproduced](../../../playbook-uplift/BUGS.md#p-f-repo-4). The linked entry qualifies the caller, reader and providers.
 
+
+Iteration41: [settings.rs](../../Verus_verification/consolidated/iter41/settings.rs) `set`, `delete`, `delete_restores_first_write`, `unknown_key_reports_ok`, `invalid_format_refused_with_ok`, `analytics_disabled` ([handoff](../../uplift/consolidated/iter41/HANDOFF.md)).
 ### settings.writes
 
 - agent

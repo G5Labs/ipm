@@ -1,0 +1,102 @@
+{
+ "recorded_utc": "2026-11-16T17:45:19.592730+00:00",
+ "batch": 6,
+ "iteration": 41,
+ "prior_seal": "d0bb0707",
+ "workflow": "config set/get/delete/list over UniversalSettings keys and their readers (getters used by consumers)",
+ "owner": ".g5/ontology/concepts/settings.g5.md#settings (+ settings.writes, settings.print, settings.analytics)",
+ "exposure": "settings.g5.md statements read; UniversalSettings/Main config bodies not yet read. Parent transcript read UniversalSettings.UpdateOne ModuleRoot branch only incidentally (iter28/29).",
+ "predictions": [
+  {
+   "case": "config set HistoryRetain 5; config get",
+   "reader": "GetHistoryRetain / config get output",
+   "owner": "5"
+  },
+  {
+   "case": "config delete HistoryRetain after set",
+   "reader": "GetHistoryRetain",
+   "owner": "default 0 (known delete defect may restore first stored value instead)"
+  },
+  {
+   "case": "config set analytics 0",
+   "reader": "GetAnalyticsAvailable",
+   "owner": "0"
+  },
+  {
+   "case": "config set <unknown key> 1",
+   "reader": "status, config list",
+   "owner": "refused/no new key (print of unknown key is a diagnostic)"
+  },
+  {
+   "case": "config list",
+   "reader": "printed keys",
+   "owner": "every key with its effective value"
+  },
+  {
+   "case": "config set HistoryRetain abc",
+   "reader": "stored value",
+   "owner": "unspecified (no validation stated except TestReportFormat)"
+  }
+ ],
+ "exposure_after_source": "Read UniversalSettings (CONFIGURABLE, GetAll, PrintList, PrintOne, ResetToDefault, UpdateOne, Get/SetValue, GetDefaultValue, analytics/registry/retain getters), Main.Config, History.AutoPurgeOldHistory consumer (owned by G:D3).",
+ "source_predictions": [
+  {
+   "case": "c1 config set HistoryRetain 5",
+   "predicted": "stored 5, shell OK"
+  },
+  {
+   "case": "c2 config delete HistoryRetain",
+   "predicted": "restores the first stored value (install-time seed if any, else 5)"
+  },
+  {
+   "case": "c3 set/delete a key with no install-time seed (e.g. PublishTimeout)",
+   "predicted": "delete keeps the user value (first write became the default)"
+  },
+  {
+   "case": "c4 config set TestReportFormat xml",
+   "predicted": "printed error, value unchanged, but Main.Config drops the status: shell OK (owner: error)"
+  },
+  {
+   "case": "c5 config set Bogus 1",
+   "predicted": "\"not found\" printed, no node written, shell OK (owner: refusal)"
+  },
+  {
+   "case": "c6 config delete Bogus",
+   "predicted": "\"not found\", shell OK"
+  },
+  {
+   "case": "c7 config set analytics 0 / yes",
+   "predicted": "stored raw; GetAnalyticsAvailable returns raw text; \"yes\" counts as disabled for the remote consumer (+\"yes\"=0)"
+  },
+  {
+   "case": "c8 config list",
+   "predicted": "CONFIGURABLE keys in collation order with current values; DefaultRegistry not listed"
+  },
+  {
+   "case": "scope",
+   "predicted": "values live in %SYS ^IPM.settings, so they are instance-wide"
+  }
+ ],
+ "explore": {
+  "explore1": "reader bugs: c1g looked at an undefined lines array; error marker text wrong. Outcomes otherwise matched source predictions.",
+  "explore2": "SysView reader crashed: %IPM classes are not visible in %SYS; dropped (no instance-scope claim beyond the raw %SYS node).",
+  "explore3": "complete, used for expectations"
+ },
+ "outcome": {
+  "status": "lane complete, unsealed (main thread integrates)",
+  "model": "settings.rs 6 verified, 5/5 controls",
+  "native": "20261116T174828407055Z 132 fields; 125 replayed; flips c2.HistoryRetain.value, c5.ok, c8.consumerdisabled rejected",
+  "findings": "no new defect: delete (P:F-REPO-4) and dropped status (P:F-REPO-8) re-qualified; analytics text value counts as disabled recorded as fact",
+  "reach_candidates": [
+   "Repo/UniversalSettings.cls::GetAll",
+   "Repo/UniversalSettings.cls::PrintList",
+   "Repo/UniversalSettings.cls::GetAnalyticsAvailable"
+  ]
+ },
+ "integration": {
+  "by": "main thread",
+  "independent_rerun": "run.py --no-native: 6 verified, 5/5 controls, 125 replayed",
+  "findings": "none new; fresh reproductions of P:F-REPO-4 and P:F-REPO-8 recorded",
+  "fork_cost": "~645k subagent tokens, 259 s"
+ }
+}
