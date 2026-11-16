@@ -471,6 +471,8 @@ Findings: [C:D4 — e2e reproduced](../../uplift/consolidated/BUGS.md#c-d4). The
 
 Findings: [C:D5 — e2e reproduced](../../uplift/consolidated/BUGS.md#c-d5). The linked entry qualifies the caller, reader and providers.
 
+Findings: [The installer class does not receive `<Default>` values](../../uplift/consolidated/BUGS.md#c-d41)
+
 ### module.parameter.expressions
 
 - agent

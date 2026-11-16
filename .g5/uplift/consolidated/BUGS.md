@@ -305,6 +305,19 @@ Reproduced by: E2E reproduced. [Iteration33 native receipt](iter33/native/202611
 
 The tree is built by inverting each installed module's dependency graph. That graph records parent links for nested dependencies but none from the top module to its direct dependencies, so the inversion never reaches a graph's top module. A user checking dependents before removing a module sees an incomplete tree, contrary to the [list-dependents statement](../../ontology/features/inspection.g5.md#inspect.list-dependents). A repair would seed the inversion with each graph's top module as the parent of its direct dependencies. It was not checked.
 
+<a id="c-d41"></a>
+### C:D41: The installer class does not receive `<Default>` values
+
+Severity: Medium · Decision: Open
+
+Run: Uplift 2026-11-16
+
+Found by: source review of `Lifecycle/Base.cls::%Configure`, whose `GetCustomParameters` result is unused, and [iteration36 model](../../Verus_verification/consolidated/iter36/installer.rs) `default_versus_parameter` with control `default-reaches-installer-vars` ([proof receipt](iter36/proofs/models.json)).
+
+Reproduced by: E2E reproduced. [Iteration36 native receipt](iter36/native/20261116T173156335552Z/observations.json) on IRIS 2026.1 x86-64 at `571e04a1`. Module m36a declares `<Default Name="Greeting" Value="hello"/>` and `<Parameter Name="Mode">param</Parameter>`. On load, `OnConfigureComponent` receives Mode=param but no Greeting (case l1), while the module's After-Activate Invoke receives `${Greeting}`=hello. Passing neighbour: with `-DGreeting=bye`, both receive bye (l3).
+
+`%Configure` calls `GetCustomParameters` into `customParams`, then builds the installer variables only from the phase parameters, which hold `<Parameter>` and `-D` values. This contradicts [module defaults](../../ontology/concepts/modules.g5.md#module.parameter), which says the module receives both kinds of default, and the [installer parameters statement](../../ontology/concepts/lifecycle.g5.md#lifecycle.installer.parameters). A repair would merge `customParams` into the variables before `OnConfigureComponent`, keeping `-D` precedence. It was not checked.
+
 <a id="c-d2"></a>
 ### C:D2: When IPM cannot create a load's temporary `.modules` repository, it prints "Failed to clean up repository 'ipm-temp-modules-N'. You may need to manually dele...
 

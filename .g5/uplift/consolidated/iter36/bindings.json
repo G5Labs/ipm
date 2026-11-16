@@ -1,0 +1,109 @@
+{
+ "verus_dir": ".g5/Verus_verification/consolidated/iter36",
+ "changed_files": [
+  "installer.rs",
+  "cases.json",
+  "run.py",
+  "native/Reader.cls",
+  "native/m36a/**",
+  "native/m36n/**"
+ ],
+ "rows": [
+  {
+   "id": "S36-01",
+   "owner": ".g5/ontology/concepts/lifecycle.g5.md#lifecycle.installer",
+   "model": "installer.rs",
+   "symbols": [
+    "install_call",
+    "configure_call",
+    "upgrade",
+    "param_mode",
+    "param_greeting",
+    "load",
+    "upgrade_ignores_installed_state",
+    "refusal_stops",
+    "no_installer_no_calls",
+    "schedule"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/Lifecycle/Base.cls",
+     "%Configure"
+    ]
+   ],
+   "reader": [
+    [
+     "src/cls/IPM/Lifecycle/Module.cls",
+     "%Activate"
+    ],
+    [
+     "src/cls/IPM/Lifecycle/Base.cls",
+     "%DispatchMethod"
+    ]
+   ],
+   "scope": "With InstallerClass, Configure (nested in Activate) calls OnInstallComponent(DatabaseName \"\", Verbose, DeveloperMode, IsUpgrade) then OnConfigureComponent($namespace, Verbose, vars); IsUpgrade/DatabaseName come only from Configure.* params (no product writer); a refused OnInstallComponent fails Configure/Activate, skips OnConfigureComponent and the normal-mode load rolls back. Native l1,l2,l3,l5,e1,n1."
+  },
+  {
+   "id": "S36-02",
+   "owner": ".g5/ontology/concepts/lifecycle.g5.md#lifecycle.installer",
+   "model": "installer.rs",
+   "symbols": [
+    "param_mode",
+    "param_greeting",
+    "custom_greeting",
+    "configure_call",
+    "note_call",
+    "default_versus_parameter",
+    "override_reaches_both"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/Storage/Module.cls",
+     "GetDefaultParameters"
+    ],
+    [
+     "src/cls/IPM/Storage/ModuleSetting/Default.cls",
+     "GetCustomParameters"
+    ],
+    [
+     "src/cls/IPM/Storage/ModuleSetting/Default.cls",
+     "EvaluateArgs"
+    ]
+   ],
+   "reader": [
+    [
+     "src/cls/IPM/Storage/Module.cls",
+     "ExecutePhases"
+    ],
+    [
+     "src/cls/IPM/Storage/InvokeReference.cls",
+     "doInvoke"
+    ]
+   ],
+   "scope": "<Defaults><Parameter> values merge into phase params and reach installer vars; <Default Name Value> values reach Invoke ${...} arguments via GetCustomParameters/EvaluateArgs but not installer vars (%Configure computes customParams and does not use it); -D overrides both. Native l1,l3. LifecycleClass filtering and dotted Parameter names beyond Configure.IsUpgrade not assessed."
+  },
+  {
+   "id": "S36-03",
+   "owner": ".g5/ontology/concepts/lifecycle.g5.md#lifecycle.installer",
+   "model": "installer.rs",
+   "symbols": [
+    "uninstall",
+    "no_installer_no_calls",
+    "schedule"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/Lifecycle/Base.cls",
+     "%Unconfigure"
+    ]
+   ],
+   "reader": [
+    [
+     "src/cls/IPM/Lifecycle/Module.cls",
+     "%Clean"
+    ]
+   ],
+   "scope": "Uninstall Clean runs Unconfigure first: OnUnconfigureComponent($namespace, Verbose, Purge 0, vars) then OnUnInstallComponent(DatabaseName \"\", Verbose). Purge forwarding itself is owned by uninstall.purge.as-built (iter27 purge.rs) and is not re-modelled. Native u1,u2."
+  }
+ ]
+}

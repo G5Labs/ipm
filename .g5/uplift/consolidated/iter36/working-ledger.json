@@ -1,0 +1,129 @@
+{
+ "recorded_utc": "2026-11-16T17:28:35.394439+00:00",
+ "batch": 4,
+ "iteration": 36,
+ "prior_seal": "276b7229",
+ "workflow": "module <InstallerClass>: load/uninstall -> Activate/Configure and Unconfigure phases -> installer callbacks with arguments and variables -> command status and installed state",
+ "gap": "No ontology owner for the installer class callbacks; Lifecycle/Base %Configure, %Unconfigure, %Installer and ModuleSetting.Default GetCustomParameters unbound.",
+ "intent_sources": [
+  "tests/integration_tests/.../_data/simple-app (TSL.TestInstaller declares OnInstallComponent, OnUnInstallComponent, OnConfigureComponent, OnUnconfigureComponent, all returning OK)",
+  "InstallApplication.cls / Uninstall.cls (no installer assertions)",
+  "lifecycle.g5.md: \"Activate runs post-compile setup, including Configure\"; phase list includes Unconfigure",
+  "CHANGELOG: no InstallerClass entry"
+ ],
+ "exposure": "Parent thread read Lifecycle/Base.cls %Configure and %Unconfigure (lines 512-560) before this ledger: OnInstallComponent(db, verbose, devmode, isUpgrade) then OnConfigureComponent(namespace, verbose, vars) with vars merged from params and Configure.Parameters, IsUpgrade/DatabaseName/Purge read from pParams(\"Configure\",...) with defaults. Predictions are therefore partly source-informed; caller setting of Configure.* not yet traced.",
+ "predictions": [
+  {
+   "case": "L1 load (normal)",
+   "reader": "callback log",
+   "owner": "installer configured once during Activate",
+   "source": "OnInstallComponent then OnConfigureComponent once each; devmode 0; isUpgrade 0"
+  },
+  {
+   "case": "L2 load -dev",
+   "reader": "devmode argument",
+   "owner": "unspecified",
+   "source": "devmode 1"
+  },
+  {
+   "case": "L3 Default vs -D override",
+   "reader": "vars passed to OnConfigureComponent",
+   "owner": "modules.g5.md: -D overrides <Default>",
+   "source": "-D value wins; Default value when no -D"
+  },
+  {
+   "case": "L4 load again over installed",
+   "reader": "isUpgrade",
+   "owner": "unspecified",
+   "source": "0 unless a caller sets Configure.IsUpgrade (to trace)"
+  },
+  {
+   "case": "U1 uninstall",
+   "reader": "OnUnconfigureComponent call and purge argument",
+   "owner": "Unconfigure phase exists",
+   "source": "Unconfigure runs OnUnconfigureComponent, purge 0 unless set"
+  },
+  {
+   "case": "U2 uninstall with purge (if flag exists)",
+   "reader": "purge argument",
+   "owner": "unspecified",
+   "source": "purge 1 if a modifier maps to Configure.Purge"
+  },
+  {
+   "case": "E1 OnInstallComponent returns error",
+   "reader": "status, OnConfigureComponent called, module installed",
+   "owner": "a failing phase fails the load",
+   "source": "load fails, OnConfigureComponent not called, module rolled back"
+  },
+  {
+   "case": "N1 module without InstallerClass",
+   "reader": "callback log",
+   "owner": "nothing called",
+   "source": "nothing called"
+  }
+ ],
+ "exposure_after_source": "Read %Unconfigure tail, %Installer, Lifecycle/Module.%Clean, ModuleSetting.Default.GetCustomParameters, Storage/Module.GetDefaultParameters and ExecutePhases parameter merge; grep shows no product writer of pParams(\"Configure\",...). Purge forwarding is already owned by uninstall.purge.as-built (iter27 purge.rs, P:F-UNIN-2) and is not re-modelled.",
+ "source_predictions": [
+  {
+   "case": "l1 load m36a",
+   "predicted": "calls Install(db \"\", dev 0, upgrade 0), Configure(ns USER, Mode=param from <Parameter>, Greeting \"\" because <Default> values go only to unused customParams, InstallDir set, Lifecycle object), then Note invoke with ${Greeting}=hello"
+  },
+  {
+   "case": "l3 load again -DGreeting=bye -DMode=cli",
+   "predicted": "Install upgrade 0 although the module is installed; Configure Mode=cli, Greeting=bye; Note bye"
+  },
+  {
+   "case": "l5 load -DConfigure.IsUpgrade=1",
+   "predicted": "Install upgrade 1"
+  },
+  {
+   "case": "u1 uninstall",
+   "predicted": "Unconfigure(purge 0) then UnInstall"
+  },
+  {
+   "case": "l2 load -dev",
+   "predicted": "Install dev 1"
+  },
+  {
+   "case": "e1 OnInstallComponent error",
+   "predicted": "load fails; Configure and Note not called; module not installed"
+  },
+  {
+   "case": "n1 module without InstallerClass",
+   "predicted": "no installer calls"
+  }
+ ],
+ "owner_contrast": "modules.g5.md module.parameter: \"<Default> and <Defaults><Parameter> give values the module receives at load and install\" -> owner predicts Greeting=hello reaches installer vars; source predicts \"\".",
+ "outcome": {
+  "status": "lane complete, not sealed (main thread integrates)",
+  "model": "installer.rs 6 verified, 7/7 controls rejected",
+  "native": "20261116T173156335552Z 81 fields, all gated, all replayed; flips l1.call2.greeting, l3.call1.upgrade, e1.call1.kind rejected",
+  "explore": [
+   "explore1: all predictions matched; reader crashed on rolled-back e1 record (not counted)",
+   "explore2: fixed reader; values used as expected gates"
+  ],
+  "reach_candidates": {
+   "new": [
+    "Lifecycle/Base.cls::%Configure",
+    "Storage/Module.cls::GetDefaultParameters",
+    "Storage/ModuleSetting/Default.cls::EvaluateArgs"
+   ],
+   "strengthened": [
+    "Lifecycle/Base.cls::%Unconfigure",
+    "Lifecycle/Module.cls::%Clean",
+    "Lifecycle/Module.cls::%Activate",
+    "Lifecycle/Base.cls::%DispatchMethod",
+    "Storage/ModuleSetting/Default.cls::GetCustomParameters",
+    "Storage/Module.cls::ExecutePhases",
+    "Storage/InvokeReference.cls::doInvoke"
+   ]
+  }
+ },
+ "integration": {
+  "by": "main thread",
+  "independent_rerun": "run.py --no-native: 6 verified, 7/7 controls, 81 replayed",
+  "ontology": "lifecycle.installer, lifecycle.installer.parameters, Q lifecycle.installer.upgrade-policy (C:Q27)",
+  "findings": "C:D41 Medium (fork proposed Low; raised because module.parameter promises module receives <Default> values and the fix path is admin-side only)",
+  "fork_cost": "~545k subagent tokens, 305 s"
+ }
+}

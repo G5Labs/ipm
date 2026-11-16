@@ -151,3 +151,5 @@ C:Q24: [When a phase list mixes standard phases with a custom or unknown name, w
 C:Q25: [Should an unversioned install fall back to the newest offer that satisfies installed requirements?](../../ontology/features/dependencies.g5.md#deps.installed.unversioned-policy) Iteration31 case S4 observed a refusal although an older offer satisfied every requirement.
 
 C:Q26: [Should a directory load refuse or warn when it breaks an installed module's requirement?](../../ontology/features/dependencies.g5.md#deps.installed.directory-policy) Iteration31 case S6 observed a silent success; S7 is the passing neighbour after the requiring module is removed.
+
+C:Q27: [What should the installer's upgrade flag and database name mean?](../../ontology/concepts/lifecycle.g5.md#lifecycle.installer.upgrade-policy) Iteration36 observed that IPM never sets them, even when a newer version replaces an installed one.

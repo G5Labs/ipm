@@ -49,6 +49,29 @@ A module can define custom phases with `<Invoke>` or `<CPF>`. A custom phase run
 
 Resource processors can act before, during and after each phase, so the same phases behave differently depending on a module's resources.
 
+<a id="lifecycle.installer"></a>
+[D · lifecycle.installer]
+
+A module can name an installer class with `<InstallerClass>`. During Activate, IPM's Configure step calls its `OnInstallComponent` and then its `OnConfigureComponent`. At uninstall, Clean first calls `OnUnconfigureComponent` and then `OnUnInstallComponent`.
+
+- `OnInstallComponent` receives the database name, the verbose flag, the developer-mode flag and an upgrade flag. `OnConfigureComponent` receives the namespace, the verbose flag and the phase parameters, plus the module root as `InstallDir`.
+- If `OnInstallComponent` returns an error, `OnConfigureComponent` is not called and the load fails. An ordinary load then rolls back, including data the installer wrote.
+- A module without an installer class gets no callbacks.
+
+<a id="lifecycle.installer.parameters"></a>
+[D · lifecycle.installer.parameters]
+
+The installer's parameters include `<Defaults><Parameter>` values and `-D` values, with `-D` winning. As built, `<Default Name Value>` values are not included, although Invoke arguments can use them (defect C:D41).
+
+<a id="lifecycle.installer.upgrade-policy"></a>
+[Q · lifecycle.installer.upgrade-policy]
+
+What should the installer's upgrade flag and database name mean?
+
+- Working assumption: as built, IPM never sets them. The upgrade flag is 0 and the database name is empty unless `-DConfigure.IsUpgrade` or `-DConfigure.DatabaseName` supplies them, even when a newer version replaces an installed one.
+- Alternative and implications: set the upgrade flag when the module is already installed. That lets installers migrate data but changes the calls existing installers receive.
+- This assumption guides review; it is not a maintainer decision.
+
 <a id="lifecycle.alias"></a>
 [D · lifecycle.alias]
 
@@ -141,6 +164,32 @@ Findings: [A phase list silently drops custom and unknown names listed beside a 
 - Expands: [Lifecycle](#lifecycle).
 
 Sources: `wiki/00` L5-7. Inventory: A2 1.3 resource processor hooks (`ResourceProcessor/Abstract.cls:168-209`), `Storage.Module:ExecutePhases` (`Storage/Module.cls:575-691`).
+
+### lifecycle.installer
+
+- agent
+- user-facing-behavior
+- Expands: [Lifecycle](#lifecycle).
+
+Sources: `Lifecycle/Base.cls::%Configure`, `::%Unconfigure`; `Lifecycle/Module.cls::%Clean`; the `simple-app` test installer. Model: [installer.rs](../../Verus_verification/consolidated/iter36/installer.rs) `load`, `uninstall`, `refusal_stops`, `no_installer_no_calls` ([handoff](../../uplift/consolidated/iter36/HANDOFF.md)). Purge forwarding is owned by the uninstall purge statement.
+
+### lifecycle.installer.parameters
+
+- agent
+- user-facing-behavior
+- Expands: [Installer class](#lifecycle.installer).
+
+Sources: `Lifecycle/Base.cls::%Configure` (`GetCustomParameters` result unused). Model: [installer.rs](../../Verus_verification/consolidated/iter36/installer.rs) `default_versus_parameter`, `override_reaches_both`.
+
+Findings: [The installer class does not receive `<Default>` values](../../uplift/consolidated/BUGS.md#c-d41)
+
+### lifecycle.installer.upgrade-policy
+
+- agent
+- uncertain
+- Expands: [Installer class](#lifecycle.installer).
+
+Sources: no IPM caller writes `Configure.IsUpgrade` or `Configure.DatabaseName`. Model: [installer.rs](../../Verus_verification/consolidated/iter36/installer.rs) `upgrade_ignores_installed_state`.
 
 ### lifecycle.alias
 
