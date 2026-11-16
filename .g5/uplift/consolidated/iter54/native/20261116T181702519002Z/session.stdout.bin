@@ -1,0 +1,1618 @@
+
+Node: 8b84fc1d3d19, Instance: IRIS
+
+USER>
+
+USER>
+
+LOADSTATUS|1
+
+USER>
+
+OUT|h1|
+OUT|h1|Available commands:
+OUT|h1|arrange                                        Rearranges the resources in a module manifest to follow the standard format.
+OUT|h1|compile                                        This command is an alias for `module-action module-name compile`
+OUT|h1|config                                        Update ZPM settings. Setting is a key-value pair.
+OUT|h1|default-modifiers                                        Manages default modifiers to use for all package manager commands in the current namespace.
+OUT|h1|dependency-analyzer, deps                                        Computes references to other items/modules for a given module/item.
+OUT|h1|enable                                        Enable IPM in other namespaces.
+OUT|h1|exec, cos                                        Executes the provided ObjectScript expression.
+OUT|h1|generate, gen                                        Generates module.xml
+OUT|h1|help, ?                                        Displays help information for the shell or a particular command.
+OUT|h1|history, log                                        Manage history of package installation/uninstallation.
+OUT|h1|import                                        Imports classes from a file or file(s), reexporting to source control if needed.
+OUT|h1|information, info                                        Output information about the current ZPM environment.
+OUT|h1|init, initialize                                        Configures the current namespace for package manager use.
+OUT|h1|install                                        Installs a module available in a configured repository.
+OUT|h1|list-dependents, dependents                                        Lists modules dependent on the specified module.
+OUT|h1|list-installed, list                                        Lists modules installed in the current namespace.
+OUT|h1|load                                        Loads a module from the specified directory into the current namespace.
+OUT|h1|makedeployed                                        This command is an alias for `module-action module-name makedeployed`
+OUT|h1|module-action                                        Performs operations on modules - compiling, running tests, packaging/registering, etc.
+OUT|h1|module-version, modver                                        Updates the version of the module in the current namespace.
+OUT|h1|namespace, zn                                        See list modules in namespace and go to the namespace
+OUT|h1|orphans                                        Lists resources in the current namespace's default code database that are not part of any module.
+OUT|h1|package                                        This command is an alias for `module-action module-name package`
+OUT|h1|publish                                        This command is an alias for `module-action module-name publish`
+OUT|h1|quit, q, exit                                        Exits the package manager shell.
+OUT|h1|reinstall                                        Reinstalls the already installed version of the provided module.
+OUT|h1|reload                                        This command is an alias for `module-action module-name reload`
+OUT|h1|repo, repository                                        Configures the current namespace to search for modules in a repository.
+OUT|h1|run-from-file, run                                        Runs Package Manager Shell commands provided in a file.
+OUT|h1|search, find                                        Shows all modules matching the search string in all configured registries
+OUT|h1|show                                        Shows an installed module's details, what it contains, and the modules it depends on or is required by. Use list-dependents for modules that depend on it transitively.
+OUT|h1|sync                                        Incrementally syncs changed files from disk into the namespace.
+OUT|h1|test                                        This command is an alias for `module-action module-name test`
+OUT|h1|uninstall                                        Uninstalls a module currently installed in this namespace.
+OUT|h1|unmap                                        Unmap %IPM package and routines in specified namespaces.
+OUT|h1|unpublish                                        Delete package from repository
+OUT|h1|update                                        Updates a module to a newer version.
+OUT|h1|verify                                        This command is an alias for `module-action module-name verify`
+OUT|h1|version, ver                                        Prints the currently-installed package manager and registry version (excluding +snapshot or other build information)
+OUT|h1|
+OUT|h1|For more detail, run:
+OUT|h1|  help <command-name>
+OUT|h1|or
+OUT|h1|  help -v
+OBS|h1.ok|1
+
+OBS|h1.warning|0
+
+OBS|h1.available|1
+
+OBS|h1.descriptions|0
+
+OBS|h1.flags|0
+
+OBS|h1.arguments|0
+
+OBS|h1.examples|0
+
+OBS|h1.only|0
+
+OBS|h1.dev|0
+
+OBS|h1.versiondesc|1
+
+OBS|h1.moredetail|1
+
+OBS|h1.listed|39
+
+OUT|h2|
+OUT|h2|
+OUT|h2|install [flags] <module> [<version>]
+OUT|h2|    ? Description: Installs a module available in a configured repository.
+OUT|h2|
+OUT|h2|    ? Arguments
+OUT|h2|        ? module: Name of module to install
+OUT|h2|        ? version: Version (or version expression) of module to install; defaults to the latest available if unspecified.
+OUT|h2|
+OUT|h2|    ? Flags:
+OUT|h2|        ? -env, -e <value> : Semicolon separated paths to the environment files in json format. See wiki for details.
+OUT|h2|        ? -latest, -l : Installs the latest available version of this module without prompting the user.
+OUT|h2|        ? -prompt, -p : Prompts user which version to install, if more then one found.
+OUT|h2|        ? -dev : Sets the DeveloperMode flag for the module's lifecycle. Key consequences of this are that ^Sources will be configured for resources in the module, and installer methods will be called with the dev mode flag set. In addition, transactions will not be rolled back if installation fails.
+OUT|h2|        ? -quiet, -q : Produces minimal output from the command.
+OUT|h2|        ? -verbose, -v : Produces verbose output from the command.
+OUT|h2|        ? -keywords, -k <value> : Searches for modules matching some set of keywords.
+OUT|h2|        ? -bypass-py-deps : Skip installing python dependencies
+OUT|h2|        ? -extra-pip-flags <value> : Extra flags to pass to pip when installing python dependencies. Surround the flags (and values) with quotes if spaces are present. Default flags are "--target <target> --python-version <pyversion> --only-binary=:all:".
+OUT|h2|        ? -synchronous : DEPRECATED. Dependencies are now always loaded synchronously with independent lifecycle phases doing their own multi-threading as needed.
+OUT|h2|        ? -force, -f : Allows the user to install a newer version of an existing module without running update steps.
+OUT|h2|        ? -create-lockfile, -lock : Upon install, creates/updates the module's lock file.
+OUT|h2|        ? -skip-sync : In developer mode, skips recording the file hashes that sync uses to detect changes. The next sync of the module records them instead.
+OUT|h2|
+OUT|h2|    ? Examples
+OUT|h2|        ?     install HS.JSON 1.x        
+OUT|h2|            Installs the most recent 1.x version of HS.JSON available in any configured repository in the current namespace.
+OUT|h2|        ?     install registry/HS.JSON        
+OUT|h2|            Installs the most recent version of HS.JSON from the `registry` repository.
+OUT|h2|        ?     install -bypass-py-deps HS.JSON        
+OUT|h2|            Installs HS.JSON without installing python dependencies
+OUT|h2|        ?     install -extra-pip-flags "--timeout 30" HS.JSON        
+OUT|h2|            Installs HS.JSON but set pip timeout to 30 seconds
+OUT|h2|        ? install -env /path/to/env1.json;/path/to/env2.json example-package        
+OUT|h2|            Installs example-package using the /path/to/env1.json and /path/to/env2.json as the install time configuration
+OBS|h2.ok|1
+
+OBS|h2.warning|0
+
+OBS|h2.available|0
+
+OBS|h2.descriptions|1
+
+OBS|h2.flags|1
+
+OBS|h2.arguments|1
+
+OBS|h2.examples|1
+
+OBS|h2.only|0
+
+OBS|h2.dev|1
+
+OBS|h2.versiondesc|0
+
+OBS|h2.moredetail|0
+
+OBS|h2.listed|1
+
+OUT|h3|
+OUT|h3|
+OUT|h3|version
+OUT|h3|    ? Alias: ver
+OUT|h3|    ? Description:     Prints the currently-installed package manager and registry version (excluding +snapshot or other build information)
+OBS|h3.ok|1
+
+OBS|h3.warning|0
+
+OBS|h3.available|0
+
+OBS|h3.descriptions|1
+
+OBS|h3.flags|0
+
+OBS|h3.arguments|0
+
+OBS|h3.examples|0
+
+OBS|h3.only|0
+
+OBS|h3.dev|0
+
+OBS|h3.versiondesc|1
+
+OBS|h3.moredetail|0
+
+OBS|h3.listed|1
+
+OUT|h4|
+OUT|h4|WARNING: Command "nosuchcmd" does not exist so showing all available commands.
+OUT|h4|
+OUT|h4|Available commands:
+OUT|h4|arrange                                        Rearranges the resources in a module manifest to follow the standard format.
+OUT|h4|compile                                        This command is an alias for `module-action module-name compile`
+OUT|h4|config                                        Update ZPM settings. Setting is a key-value pair.
+OUT|h4|default-modifiers                                        Manages default modifiers to use for all package manager commands in the current namespace.
+OUT|h4|dependency-analyzer, deps                                        Computes references to other items/modules for a given module/item.
+OUT|h4|enable                                        Enable IPM in other namespaces.
+OUT|h4|exec, cos                                        Executes the provided ObjectScript expression.
+OUT|h4|generate, gen                                        Generates module.xml
+OUT|h4|help, ?                                        Displays help information for the shell or a particular command.
+OUT|h4|history, log                                        Manage history of package installation/uninstallation.
+OUT|h4|import                                        Imports classes from a file or file(s), reexporting to source control if needed.
+OUT|h4|information, info                                        Output information about the current ZPM environment.
+OUT|h4|init, initialize                                        Configures the current namespace for package manager use.
+OUT|h4|install                                        Installs a module available in a configured repository.
+OUT|h4|list-dependents, dependents                                        Lists modules dependent on the specified module.
+OUT|h4|list-installed, list                                        Lists modules installed in the current namespace.
+OUT|h4|load                                        Loads a module from the specified directory into the current namespace.
+OUT|h4|makedeployed                                        This command is an alias for `module-action module-name makedeployed`
+OUT|h4|module-action                                        Performs operations on modules - compiling, running tests, packaging/registering, etc.
+OUT|h4|module-version, modver                                        Updates the version of the module in the current namespace.
+OUT|h4|namespace, zn                                        See list modules in namespace and go to the namespace
+OUT|h4|orphans                                        Lists resources in the current namespace's default code database that are not part of any module.
+OUT|h4|package                                        This command is an alias for `module-action module-name package`
+OUT|h4|publish                                        This command is an alias for `module-action module-name publish`
+OUT|h4|quit, q, exit                                        Exits the package manager shell.
+OUT|h4|reinstall                                        Reinstalls the already installed version of the provided module.
+OUT|h4|reload                                        This command is an alias for `module-action module-name reload`
+OUT|h4|repo, repository                                        Configures the current namespace to search for modules in a repository.
+OUT|h4|run-from-file, run                                        Runs Package Manager Shell commands provided in a file.
+OUT|h4|search, find                                        Shows all modules matching the search string in all configured registries
+OUT|h4|show                                        Shows an installed module's details, what it contains, and the modules it depends on or is required by. Use list-dependents for modules that depend on it transitively.
+OUT|h4|sync                                        Incrementally syncs changed files from disk into the namespace.
+OUT|h4|test                                        This command is an alias for `module-action module-name test`
+OUT|h4|uninstall                                        Uninstalls a module currently installed in this namespace.
+OUT|h4|unmap                                        Unmap %IPM package and routines in specified namespaces.
+OUT|h4|unpublish                                        Delete package from repository
+OUT|h4|update                                        Updates a module to a newer version.
+OUT|h4|verify                                        This command is an alias for `module-action module-name verify`
+OUT|h4|version, ver                                        Prints the currently-installed package manager and registry version (excluding +snapshot or other build information)
+OUT|h4|
+OUT|h4|For more detail, run:
+OUT|h4|  help <command-name>
+OUT|h4|or
+OUT|h4|  help -v
+OBS|h4.ok|1
+
+OBS|h4.warning|1
+
+OBS|h4.available|1
+
+OBS|h4.descriptions|0
+
+OBS|h4.flags|0
+
+OBS|h4.arguments|0
+
+OBS|h4.examples|0
+
+OBS|h4.only|0
+
+OBS|h4.dev|0
+
+OBS|h4.versiondesc|1
+
+OBS|h4.moredetail|1
+
+OBS|h4.listed|39
+
+OUT|h5|
+OUT|h5|Available commands:
+OUT|h5|arrange                                        Rearranges the resources in a module manifest to follow the standard format.
+OUT|h5|compile                                        This command is an alias for `module-action module-name compile`
+OUT|h5|config                                        Update ZPM settings. Setting is a key-value pair.
+OUT|h5|default-modifiers                                        Manages default modifiers to use for all package manager commands in the current namespace.
+OUT|h5|dependency-analyzer, deps                                        Computes references to other items/modules for a given module/item.
+OUT|h5|enable                                        Enable IPM in other namespaces.
+OUT|h5|exec, cos                                        Executes the provided ObjectScript expression.
+OUT|h5|generate, gen                                        Generates module.xml
+OUT|h5|help, ?                                        Displays help information for the shell or a particular command.
+OUT|h5|history, log                                        Manage history of package installation/uninstallation.
+OUT|h5|import                                        Imports classes from a file or file(s), reexporting to source control if needed.
+OUT|h5|information, info                                        Output information about the current ZPM environment.
+OUT|h5|init, initialize                                        Configures the current namespace for package manager use.
+OUT|h5|install                                        Installs a module available in a configured repository.
+OUT|h5|list-dependents, dependents                                        Lists modules dependent on the specified module.
+OUT|h5|list-installed, list                                        Lists modules installed in the current namespace.
+OUT|h5|load                                        Loads a module from the specified directory into the current namespace.
+OUT|h5|makedeployed                                        This command is an alias for `module-action module-name makedeployed`
+OUT|h5|module-action                                        Performs operations on modules - compiling, running tests, packaging/registering, etc.
+OUT|h5|module-version, modver                                        Updates the version of the module in the current namespace.
+OUT|h5|namespace, zn                                        See list modules in namespace and go to the namespace
+OUT|h5|orphans                                        Lists resources in the current namespace's default code database that are not part of any module.
+OUT|h5|package                                        This command is an alias for `module-action module-name package`
+OUT|h5|publish                                        This command is an alias for `module-action module-name publish`
+OUT|h5|quit, q, exit                                        Exits the package manager shell.
+OUT|h5|reinstall                                        Reinstalls the already installed version of the provided module.
+OUT|h5|reload                                        This command is an alias for `module-action module-name reload`
+OUT|h5|repo, repository                                        Configures the current namespace to search for modules in a repository.
+OUT|h5|run-from-file, run                                        Runs Package Manager Shell commands provided in a file.
+OUT|h5|search, find                                        Shows all modules matching the search string in all configured registries
+OUT|h5|show                                        Shows an installed module's details, what it contains, and the modules it depends on or is required by. Use list-dependents for modules that depend on it transitively.
+OUT|h5|sync                                        Incrementally syncs changed files from disk into the namespace.
+OUT|h5|test                                        This command is an alias for `module-action module-name test`
+OUT|h5|uninstall                                        Uninstalls a module currently installed in this namespace.
+OUT|h5|unmap                                        Unmap %IPM package and routines in specified namespaces.
+OUT|h5|unpublish                                        Delete package from repository
+OUT|h5|update                                        Updates a module to a newer version.
+OUT|h5|verify                                        This command is an alias for `module-action module-name verify`
+OUT|h5|version, ver                                        Prints the currently-installed package manager and registry version (excluding +snapshot or other build information)
+OUT|h5|
+OUT|h5|For more detail, run:
+OUT|h5|  help <command-name>
+OUT|h5|or
+OUT|h5|  help -v
+OBS|h5.ok|1
+
+OBS|h5.warning|0
+
+OBS|h5.available|1
+
+OBS|h5.descriptions|0
+
+OBS|h5.flags|0
+
+OBS|h5.arguments|0
+
+OBS|h5.examples|0
+
+OBS|h5.only|0
+
+OBS|h5.dev|0
+
+OBS|h5.versiondesc|1
+
+OBS|h5.moredetail|1
+
+OBS|h5.listed|39
+
+OUT|h6|
+OUT|h6|
+OUT|h6|compile [flags] <module>
+OUT|h6|    ? Description: This command is an alias for `module-action module-name compile`
+OUT|h6|
+OUT|h6|    ? Arguments
+OUT|h6|        ? module: Name of module on which to perform compile action
+OUT|h6|
+OUT|h6|    ? Flags:
+OUT|h6|        ? -env, -e <value> : Semicolon separated paths to the environment files in json format. See wiki for details.
+OUT|h6|        ? -only, -o : Only runs the specified phase(s), rather than also running predecessors.
+OUT|h6|        ? -dev : Sets the DeveloperMode flag for the module's lifecycle. Key consequences of this are that ^Sources will be configured for resources in the module, and installer methods will be called with the dev mode flag set.
+OUT|h6|        ? -quiet, -q : Produces minimal output. For test and verify: suppresses build/install noise while still showing the result summary and any failures.
+OUT|h6|        ? -verbose, -v : Produces verbose output. For test and verify: shows per-method results in the result summary when combined with -f; without -f only the summary is shown.
+OUT|h6|        ? -format, -f <json/yaml/toon> : (test and verify only) One-shot output format override for the test result summary. Overrides the persistent default set via 'config set TestReportFormat <format>'. When neither -f nor config is set, the default summary and legacy failure lines are shown. Use 'config delete TestReportFormat' to revert to default.
+OUT|h6|        ? -output-file <value> : (test and verify only) Path to write full test results to a file. Format is inferred from the file extension (.json, .yaml, .toon, .xml).
+OUT|h6|        ? -export-deps <0/1> : If specified, controls whether dependencies are exported. If omitted, defaults to the value of the #EXPORTDEPENDENCIES in lifecycle class. This modifier is only used in "Package" and "Publish" lifecycles.
+OUT|h6|        ? -skip-sync : In developer mode, skips recording the file hashes that sync uses to detect changes during the compile phase. The next sync of the module records them instead.
+OBS|h6.ok|1
+
+OBS|h6.warning|0
+
+OBS|h6.available|0
+
+OBS|h6.descriptions|1
+
+OBS|h6.flags|1
+
+OBS|h6.arguments|1
+
+OBS|h6.examples|0
+
+OBS|h6.only|1
+
+OBS|h6.dev|1
+
+OBS|h6.versiondesc|0
+
+OBS|h6.moredetail|0
+
+OBS|h6.listed|1
+
+OUT|h7|
+OUT|h7|Available commands:
+OUT|h7|
+OUT|h7|
+OUT|h7|arrange [flags] [<module>]
+OUT|h7|    ? Description:     Rearranges the resources in a module manifest to follow the standard format.
+OUT|h7|
+OUT|h7|    ? Arguments
+OUT|h7|        ? module: Name of module to rearrange
+OUT|h7|
+OUT|h7|    ? Flags:
+OUT|h7|        ? -all : If specified, rearrange all modules loaded in development mode (rather than just the current one).
+OUT|h7|
+OUT|h7|
+OUT|h7|compile [flags] <module>
+OUT|h7|    ? Description: This command is an alias for `module-action module-name compile`
+OUT|h7|
+OUT|h7|    ? Arguments
+OUT|h7|        ? module: Name of module on which to perform compile action
+OUT|h7|
+OUT|h7|    ? Flags:
+OUT|h7|        ? -env, -e <value> : Semicolon separated paths to the environment files in json format. See wiki for details.
+OUT|h7|        ? -only, -o : Only runs the specified phase(s), rather than also running predecessors.
+OUT|h7|        ? -dev : Sets the DeveloperMode flag for the module's lifecycle. Key consequences of this are that ^Sources will be configured for resources in the module, and installer methods will be called with the dev mode flag set.
+OUT|h7|        ? -quiet, -q : Produces minimal output. For test and verify: suppresses build/install noise while still showing the result summary and any failures.
+OUT|h7|        ? -verbose, -v : Produces verbose output. For test and verify: shows per-method results in the result summary when combined with -f; without -f only the summary is shown.
+OUT|h7|        ? -format, -f <json/yaml/toon> : (test and verify only) One-shot output format override for the test result summary. Overrides the persistent default set via 'config set TestReportFormat <format>'. When neither -f nor config is set, the default summary and legacy failure lines are shown. Use 'config delete TestReportFormat' to revert to default.
+OUT|h7|        ? -output-file <value> : (test and verify only) Path to write full test results to a file. Format is inferred from the file extension (.json, .yaml, .toon, .xml).
+OUT|h7|        ? -export-deps <0/1> : If specified, controls whether dependencies are exported. If omitted, defaults to the value of the #EXPORTDEPENDENCIES in lifecycle class. This modifier is only used in "Package" and "Publish" lifecycles.
+OUT|h7|        ? -skip-sync : In developer mode, skips recording the file hashes that sync uses to detect changes during the compile phase. The next sync of the module records them instead.
+OUT|h7|
+OUT|h7|
+OUT|h7|config <action> [<key> [<value>]]
+OUT|h7|    ? Description: Update ZPM settings. Setting is a key-value pair.
+OUT|h7|
+OUT|h7|    ? Arguments
+OUT|h7|        ? action: One of settings actions: list, get, set, delete
+OUT|h7|        ? key: Setting key
+OUT|h7|        ? value: Setting value
+OUT|h7|
+OUT|h7|    ? Flags:
+OUT|h7|
+OUT|h7|    ? Examples
+OUT|h7|        ? config set analytics 0        
+OUT|h7|            Disable collecting analytics data
+OUT|h7|        ? config set analytics 1        
+OUT|h7|            Enable collecting analytics data
+OUT|h7|        ? config list        
+OUT|h7|            list all settings
+OUT|h7|        ? config get analytics        
+OUT|h7|            get value for analytics key
+OUT|h7|        ? config delete analytics        
+OUT|h7|            reset to default value for analytics key
+OUT|h7|
+OUT|h7|
+OUT|h7|default-modifiers [flags]
+OUT|h7|    ? Description:     Manages default modifiers to use for all package manager commands in the current namespace.
+OUT|h7|
+OUT|h7|    ? Flags:
+OUT|h7|        ? -set : Set the default modifiers to the provided modifiers. Note: this just appends to existing modifiers. DOES NOT delete any defaults.
+OUT|h7|        ? -get : Prints the default modifiers to the current device.
+OUT|h7|        ? -delete : Deletes all registered default modifiers.
+OUT|h7|
+OUT|h7|    ? Examples
+OUT|h7|        ?     default-modifiers -set -DNoTransaction=1 -DUpdateSnapshots=1        
+OUT|h7|            Set custom modifiers -DNoTransaction=1 and -DUpdateSnapshots=1 with every package manager command
+OUT|h7|        ?     default-modifiers -get        
+OUT|h7|            Get currently set custom modifiers.
+OUT|h7|        ?     default-modifiers -delete        
+OUT|h7|            Delete currently set custom modifiers.
+OUT|h7|
+OUT|h7|
+OUT|h7|dependency-analyzer [flags] <moduleOrItem>
+OUT|h7|    ? Alias: deps
+OUT|h7|    ? Description:         For a module, inspects all items in the provided module and checks for invalid references to items
+OUT|h7|        that are not in the module and not in any of the module's dependencies.
+OUT|h7|        For an item, finds all its references to other items, or optionally list
+OUT|h7|        just the invalid references of the item as well.
+OUT|h7|        Dependency analyzer supports .cls and .inc items. Other item types are not yet supported.
+OUT|h7|        The references are written to the current device.
+OUT|h7|    
+OUT|h7|
+OUT|h7|    ? Arguments
+OUT|h7|        ? moduleOrItem: Name of module / item to inspect
+OUT|h7|
+OUT|h7|    ? Flags:
+OUT|h7|        ? -invalid-only <value> : Will only be applied when the input is an item name. Default to 1, i.e default to show invalid references only. If specified to 0, will show all references to the item.
+OUT|h7|        ? -ignore-str <value> : If specified, ignore specific string references provided as a comma-separated string, including class names
+OUT|h7|        ? -ignore-str-all : If specified, ignore all string references, including class names
+OUT|h7|        ? -direct-deps-only : If specified, flag references based on direct dependencies only instead of allowing for transitive dependencies
+OUT|h7|
+OUT|h7|    ? Examples
+OUT|h7|        ?         deps MyModuleName -ignore-str MyClassName1,MyClassName2
+OUT|h7|            
+OUT|h7|            Runs the dependency analyzer on the module MyModuleName to find invalid references, and ignore string references MyClassName1 and MyClassName2.
+OUT|h7|        ?         deps MyClassName3.cls -invalid-only 0 -ignore-str-all
+OUT|h7|            
+OUT|h7|            Runs the dependency analyzer on item MyClassName3.cls to find all its references, and ignore all string references.
+OUT|h7|        ?         deps MyIncludeName.inc
+OUT|h7|            
+OUT|h7|            Runs the dependency analyzer on item MyIncludeName.inc to find all invalid references in it.
+OUT|h7|
+OUT|h7|
+OUT|h7|enable [flags]
+OUT|h7|
+OUT|h7|    ? Flags:
+OUT|h7|        ? -version, -v <value> : A special version of IPM can be provided. If not specified, the latest version from the registry will be installed (hence is not required if quiet flag is set).
+OUT|h7|        ? -namespaces, -ns <value> : Comma-separated namespaces in which IPM needs to be enabled.
+OUT|h7|        ? -globally, -g : Will install IPM in all explicit namespaces that currently do not have IPM installed. Unless using it together with the -map option, will not include %SYS. By default, this modifier is not set and will not install globally.
+OUT|h7|        ? -local-only : If specified, only local artifacts will be used for installation. By default, this modifier is not set and will not limit to local artifacts.
+OUT|h7|        ? -allow-upgrade : If specified, will also check for IPM version in specified namespaces and upgrade if version is lower than the target version. By default, this modifier is not ste and will not allow upgrade.
+OUT|h7|        ? -map, -m : If specified, will map IPM code from the current namespace-default code database rather than installing a separate copy.
+OUT|h7|        ? -repos, -r : If specified, will map repository settings across namespaces. Must be used together with -map.
+OUT|h7|        ? -remote <value> : If specified, will use fetch IPM versions from this remote repository. If this is omitted and multiple remote repositories are present, an error will occur.
+OUT|h7|        ? -quiet, -q : Quiet mode. By default, this modifier is not set and will display the contents onto the terminal/caller command line.
+OUT|h7|        ? -preview, -p : Preview what will be changed without actually making the changes.
+OUT|h7|        ? -community : If specified, will reset repository to the community repository and map IPM to all namespaces along with the repository settings. This is functionaly equivalent to "repo -delete-all", "repo -reset-defaults", and "enable -map -repos -globally". With this modifier, all other modifiers will be ignored.
+OUT|h7|
+OUT|h7|    ? Examples
+OUT|h7|        ?             enable -map -globally
+OUT|h7|                
+OUT|h7|            Make IPM available in all namespaces (including %SYS) by mapping the version in the current namespace default routine database. Namespace-specific installation will override this.
+OUT|h7|        ?             enable -v 0.3.4 -q -ns NS1,NS2,NS3 -remote registry
+OUT|h7|                
+OUT|h7|            Install IPM version 0.3.4 from the remote registry namd "registry" in quiet mode in namespaces: NS1, NS2, NS3.
+OUT|h7|        ?             enable -globally
+OUT|h7|                
+OUT|h7|            Install IPM in all non-%SYS explicit namespaces, and select version later in terminal prompt menu. This works if there is only 1 remote repository configured.
+OUT|h7|        ?             enable -v latest -globally
+OUT|h7|                
+OUT|h7|            User wants to get the latest version of IPM from the registry server, and install it in all non-%SYS explicit namespaces. This works if there is only 1 remote repository configured.
+OUT|h7|        ?             enable -v latest -allow-upgrade NS1,NS2,NS3
+OUT|h7|                
+OUT|h7|            Install or upgrade IPM to latest IPM version in namespaces: NS1, NS2, NS3. This works if there is only 1 remote repository configured.
+OUT|h7|        ?             enable -community
+OUT|h7|                
+OUT|h7|            Reset repository to the community repository and map IPM to all namespaces along with the repository settings.
+OUT|h7|
+OUT|h7|
+OUT|h7|exec <expression>
+OUT|h7|    ? Alias: cos
+OUT|h7|    ? Description:     Executes the provided ObjectScript expression.
+OUT|h7|
+OUT|h7|    ? Arguments
+OUT|h7|        ? expression: ObjectScript expression(s) to execute
+OUT|h7|
+OUT|h7|    ? Flags:
+OUT|h7|
+OUT|h7|    ? Examples
+OUT|h7|        ?     cos set $Namespace = "MYAPP"        
+OUT|h7|            Run the Objectscript expression to set the namespace to MYAPP
+OUT|h7|
+OUT|h7|
+OUT|h7|generate [flags] [<path>]
+OUT|h7|    ? Alias: gen
+OUT|h7|    ? Description: Generates module.xml
+OUT|h7|
+OUT|h7|    ? Arguments
+OUT|h7|        ? path: Directory on the local filesystem, containing a file named module.xml
+OUT|h7|
+OUT|h7|    ? Flags:
+OUT|h7|        ? -template, -t : Generates module.xml template in the specified folder
+OUT|h7|        ? -author, -a : Request information about the author
+OUT|h7|        ? -export, -e <value> : Export resource in path
+OUT|h7|
+OUT|h7|    ? Examples
+OUT|h7|        ? generate        
+OUT|h7|            Generates module.xml for your module in interactive mode 
+OUT|h7|        ? generate -t /my/path        
+OUT|h7|            Generates template in the specified folder /my/path
+OUT|h7|        ? generate /my/path -export 00000,PacketName2,IgnorePacket2^00000,PacketName3,IgnorePacket3
+OUT|h7| byte=1 isGenerated
+OUT|h7| byte=2 isSystem
+OUT|h7| byte=3 isPercented
+OUT|h7| byte=4 isMapped
+OUT|h7| byte=5 isDFI        
+OUT|h7|            Export CLS,MAC,INC,DFI in the specified folder /my/path/src
+OUT|h7|
+OUT|h7|
+OUT|h7|help [flags] [<command>]
+OUT|h7|    ? Alias: ?
+OUT|h7|    ? Description: Displays help information for the shell or a particular command.
+OUT|h7|
+OUT|h7|    ? Arguments
+OUT|h7|        ? command: Command for which help information should be displayed
+OUT|h7|
+OUT|h7|    ? Flags:
+OUT|h7|        ? -verbose, -v : Show full detail
+OUT|h7|        ? -markdown, -m : Print detail in markdown format (for easy transfer to external documentation)
+OUT|h7|
+OUT|h7|
+OUT|h7|history [flags] [<action> [<argument>]]
+OUT|h7|    ? Alias: log
+OUT|h7|    ? Description: Manage history of package installation/uninstallation. Commands logged are install, load, uninstall, and update. By default, all entries will be affected. To specify filters, use the -Dcol=val syntax. See examples for more.
+OUT|h7|
+OUT|h7|    ? Arguments
+OUT|h7|        ? action: One of history actions: find (default), details, delete, schema
+OUT|h7|        ? argument: Argument for `details` command
+OUT|h7|
+OUT|h7|    ? Flags:
+OUT|h7|        ? -globally, -g : If specified, will affect all namespaces instead of the current one. Defaults to false.
+OUT|h7|        ? -sort, -asc <value> : List the history logs in a specific order. Allowed values are asc and desc. Default behaviour is to list logs in descending order of %ID.
+OUT|h7|        ? -limit <value> : If specified, will only list the specified number of logs. If set to 0, all logs will be displayed. If omitted, will use the value returned by `zpm "config get DefaultLogEntryLimit"`.
+OUT|h7|        ? -showPhases, -p, -phases : Show lifecycle phase information in details view.
+OUT|h7|        ? -confirm : If present, will delete all records in the current namespace. Ignored if -globally is passed too.
+OUT|h7|        ? -verbose, -v : Produces verbose output from the command.
+OUT|h7|
+OUT|h7|    ? Examples
+OUT|h7|        ? history find         
+OUT|h7|            Show history of all packages in the current namespace in descending order
+OUT|h7|        ? history find -DCommandString="load*"        
+OUT|h7|            Show history of all packages in the current namespace where command starts with "load"
+OUT|h7|        ? history find -DCommitted=1        
+OUT|h7|            Show history of all packages in the current namespace where the command has been committed `to disk`. Committed is not the same as successful, because a failed action can keep changes, for example in dev mode or without a transaction.
+OUT|h7|        ? history find -DSucess="0*"        
+OUT|h7|            Show history of all packages in the current namespace where the command has errored
+OUT|h7|        ? history find -DTimeStart=">2000-01-01 00:00:00"        
+OUT|h7|            Show history of all packages in the current namespace where start time is later than 2000-01-01 00:00:00
+OUT|h7|        ? history find -sort asc -limit 5        
+OUT|h7|            Show 5 history records in the current namespace in ascending order
+OUT|h7|        ? history schema        
+OUT|h7|            Show column names that the table can be filtered by
+OUT|h7|        ? history find -Daction=install -Dpackage=zpip        
+OUT|h7|            Show only installation history of package "zpip" in the current namespace 
+OUT|h7|        ? history find -globally -Daction=install -Dpackage=zpip        
+OUT|h7|            Show only installation history of package "zpip" in all namespaces 
+OUT|h7|        ? history delete -confirm        
+OUT|h7|            Delete all histories in the namespace
+OUT|h7|        ? history details 3 -phases        
+OUT|h7|            Show details of history item with ID 3 and information for each undergone lifecyle phase
+OUT|h7|        ? config set HistoryRetain "days"         
+OUT|h7|            Enable history auto-purge. Example: config set HistoryRetain 30.
+OUT|h7|        ? config set HistoryRetain 0        
+OUT|h7|            Disable history auto-purge
+OUT|h7|        ? config get HistoryRetain        
+OUT|h7|            Display the current history retention setting.
+OUT|h7|
+OUT|h7|
+OUT|h7|import [flags] <source>
+OUT|h7|    ? Description: Imports classes from a file or file(s), reexporting to source control if needed.
+OUT|h7|
+OUT|h7|    ? Arguments
+OUT|h7|        ? source: File or directory to import
+OUT|h7|
+OUT|h7|    ? Flags:
+OUT|h7|        ? -quiet, -q : Produces minimal output from the command.
+OUT|h7|        ? -verbose, -v : Produces verbose output from the command.
+OUT|h7|        ? -norecurse : If importing a directory, do not recurse (default is to load directories recursively)
+OUT|h7|        ? -nocompile : Skip compiling imported classes (default is to compile them)
+OUT|h7|
+OUT|h7|    ? Examples
+OUT|h7|        ?     import C:\Temp\MyExport.xml        
+OUT|h7|            Import and compile the class or classes from the given file
+OUT|h7|        ?     import C:\Temp\MyFlatExportDir\ -norecurse -nocompile        
+OUT|h7|            Import the classes from the given directory, located at its root level only. Classes are loaded but not compiled.
+OUT|h7|
+OUT|h7|
+OUT|h7|information [flags]
+OUT|h7|    ? Alias: info
+OUT|h7|    ? Description: Output information about the current ZPM environment.
+OUT|h7|
+OUT|h7|    ? Flags:
+OUT|h7|        ? -verbose, -v : Show more detailed information
+OUT|h7|
+OUT|h7|    ? Examples
+OUT|h7|        ?         info
+OUT|h7|            
+OUT|h7|            Show basic information about the current ZPM environment
+OUT|h7|        ?         info -verbose
+OUT|h7|            
+OUT|h7|            Show detailed information about the current ZPM environment
+OUT|h7|
+OUT|h7|
+OUT|h7|init [flags]
+OUT|h7|    ? Alias: initialize
+OUT|h7|    ? Description: Configures new namespace for use of package manager (interactive). This sets up the
+OUT|h7|local cache and allows for configuration of studio extensions for source control and
+OUT|h7|the package manager itself. In the case of Perforce-based source control, prompts are
+OUT|h7|included for username, password, Perforce workspace, and a few other settings.
+OUT|h7|
+OUT|h7|    ? Flags:
+OUT|h7|        ? -noprompt, -quiet, -q : If specified, no prompts will be shown.
+OUT|h7|        ? -zpm, -cli : If specified, the zpm command will be configured.
+OUT|h7|        ? -extension, -ext <value> : Generic extension (e.g., extension class for source control) to configure for the current namespace 
+OUT|h7|        ? -menuextension, -menuext <value> : Server menu extension (Package Manager extension for server menus such as Studio, vscode menu, etc.) to configure for the current namespace
+OUT|h7|
+OUT|h7|
+OUT|h7|install [flags] <module> [<version>]
+OUT|h7|    ? Description: Installs a module available in a configured repository.
+OUT|h7|
+OUT|h7|    ? Arguments
+OUT|h7|        ? module: Name of module to install
+OUT|h7|        ? version: Version (or version expression) of module to install; defaults to the latest available if unspecified.
+OUT|h7|
+OUT|h7|    ? Flags:
+OUT|h7|        ? -env, -e <value> : Semicolon separated paths to the environment files in json format. See wiki for details.
+OUT|h7|        ? -latest, -l : Installs the latest available version of this module without prompting the user.
+OUT|h7|        ? -prompt, -p : Prompts user which version to install, if more then one found.
+OUT|h7|        ? -dev : Sets the DeveloperMode flag for the module's lifecycle. Key consequences of this are that ^Sources will be configured for resources in the module, and installer methods will be called with the dev mode flag set. In addition, transactions will not be rolled back if installation fails.
+OUT|h7|        ? -quiet, -q : Produces minimal output from the command.
+OUT|h7|        ? -verbose, -v : Produces verbose output from the command.
+OUT|h7|        ? -keywords, -k <value> : Searches for modules matching some set of keywords.
+OUT|h7|        ? -bypass-py-deps : Skip installing python dependencies
+OUT|h7|        ? -extra-pip-flags <value> : Extra flags to pass to pip when installing python dependencies. Surround the flags (and values) with quotes if spaces are present. Default flags are "--target <target> --python-version <pyversion> --only-binary=:all:".
+OUT|h7|        ? -synchronous : DEPRECATED. Dependencies are now always loaded synchronously with independent lifecycle phases doing their own multi-threading as needed.
+OUT|h7|        ? -force, -f : Allows the user to install a newer version of an existing module without running update steps.
+OUT|h7|        ? -create-lockfile, -lock : Upon install, creates/updates the module's lock file.
+OUT|h7|        ? -skip-sync : In developer mode, skips recording the file hashes that sync uses to detect changes. The next sync of the module records them instead.
+OUT|h7|
+OUT|h7|    ? Examples
+OUT|h7|        ?     install HS.JSON 1.x        
+OUT|h7|            Installs the most recent 1.x version of HS.JSON available in any configured repository in the current namespace.
+OUT|h7|        ?     install registry/HS.JSON        
+OUT|h7|            Installs the most recent version of HS.JSON from the `registry` repository.
+OUT|h7|        ?     install -bypass-py-deps HS.JSON        
+OUT|h7|            Installs HS.JSON without installing python dependencies
+OUT|h7|        ?     install -extra-pip-flags "--timeout 30" HS.JSON        
+OUT|h7|            Installs HS.JSON but set pip timeout to 30 seconds
+OUT|h7|        ? install -env /path/to/env1.json;/path/to/env2.json example-package        
+OUT|h7|            Installs example-package using the /path/to/env1.json and /path/to/env2.json as the install time configuration
+OUT|h7|
+OUT|h7|
+OUT|h7|list-dependents [flags] <module> [<version>]
+OUT|h7|    ? Alias: dependents
+OUT|h7|    ? Description:     Lists modules dependent on the specified module.
+OUT|h7|
+OUT|h7|    ? Arguments
+OUT|h7|        ? module: Name of module for which dependent modules will be found
+OUT|h7|        ? version: Version of the module for which dependent modules will be found (in all configured repositories)
+OUT|h7|
+OUT|h7|    ? Flags:
+OUT|h7|        ? -tree, -t : If specified, show as a tree (rather than a flattened list)
+OUT|h7|        ? -repos, -r <value> : Comma-separated list of repository names to search in. If unspecified, the version of the module in the current namespace will be used instead.
+OUT|h7|
+OUT|h7|    ? Examples
+OUT|h7|        ?     list-dependents HS.JSON        
+OUT|h7|            Lists all currently-installed modules dependent on all 'HS.JSON' versions
+OUT|h7|        ?     list-dependents -repos AppModules HS.JSON        
+OUT|h7|            Lists all currently-installed modules in the 'AppModules' repository dependent on all 'HS.JSON' versions
+OUT|h7|        ?     dependents -t -r AppModules HS.JSON 0.0.1+snapshot        
+OUT|h7|            Lists all currently-installed modules in the 'AppModules' repository dependent on 'HS.JSON' version '0.0.1+snapshot', as a tree
+OUT|h7|
+OUT|h7|
+OUT|h7|list-installed [flags] [<searchString>]
+OUT|h7|    ? Alias: list
+OUT|h7|    ? Description:     Lists modules installed in the current namespace.
+OUT|h7|
+OUT|h7|    ? Arguments
+OUT|h7|        ? searchString: Search string, * can be used.
+OUT|h7|
+OUT|h7|    ? Flags:
+OUT|h7|        ? -tree, -t : If specified, show dependency tree for installed modules.
+OUT|h7|        ? -description, -d : Additional information is displayed for each module.
+OUT|h7|        ? -showsource, -ss : If specified, show dependency list with local source for installed modules.
+OUT|h7|        ? -showtime, -st : If specified, show the time of last update for each module
+OUT|h7|        ? -showupstream, -su : If specified, show the latest version for each module in configured repos if it's different than the local version.
+OUT|h7|        ? -repository, -repo <value> : If specified, only show modules installed that belong to the provided repository.
+OUT|h7|        ? -python, -py : If specified, lists installed Embedded Python libraries instead of IPM modules.
+OUT|h7|        ? -sort, -s <value> : Sort the list. Default (no -s) is ascending by name with IPM on top. Options: name, name-desc, date, date-desc, version, version-desc. Shortforms: n, d, v; append -d for descending (e.g. n-d, d-d, v-d). Has no effect with -tree or -python.
+OUT|h7|
+OUT|h7|    ? Examples
+OUT|h7|        ?     list-installed -tree        
+OUT|h7|            Shows all installed modules in tree format.
+OUT|h7|        ?     list -python        
+OUT|h7|            Shows all installed Python packages.
+OUT|h7|        ?     list -s [name|date|version]        
+OUT|h7|            Sort by name ascending (default). Shortforms: n=name, d=date, v=version. Append -d for descending.
+OUT|h7|        ?     list -s name-desc        
+OUT|h7|            Sort by name descending
+OUT|h7|        ?     list -s d-d        
+OUT|h7|            Sort by installation date descending
+OUT|h7|
+OUT|h7|
+OUT|h7|load [flags] <path>
+OUT|h7|    ? Description: Loads a module from the specified directory into the current namespace.
+OUT|h7|Dependencies are also loaded automatically, provided that they can be found in
+OUT|h7|repositories configured with the 'repo' command.
+OUT|h7|
+OUT|h7|    ? Arguments
+OUT|h7|        ? path: Directory on the local filesystem, containing a file named module.xml
+OUT|h7|
+OUT|h7|    ? Flags:
+OUT|h7|        ? -env, -e <value> : Semicolon separated paths to the environment files in json format. See wiki for details.
+OUT|h7|        ? -branch, -b <value> : The name of the branch in the repository
+OUT|h7|        ? -dev : Sets the DeveloperMode flag for the module's lifecycle. Key consequences of this are that ^Sources will be configured for resources in the module, and installer methods will be called with the dev mode flag set. In addition, transactions will not be rolled back if installation fails.
+OUT|h7|        ? -nodev : Disables the DeveloperMode flag for the module's lifecycle.
+OUT|h7|        ? -quiet, -q : Produces minimal output from the command.
+OUT|h7|        ? -verbose, -v : Produces verbose output from the command.
+OUT|h7|        ? -bypass-py-deps : Skip installing python dependencies
+OUT|h7|        ? -extra-pip-flags <value> : Extra flags to pass to pip when installing python dependencies. Surround the flags (and values) with quotes if spaces are present. Default flags are "--target <target> --python-version <pyversion> --only-binary=:all:".
+OUT|h7|        ? -synchronous : DEPRECATED. Dependencies are now always loaded synchronously with independent lifecycle phases doing their own multi-threading as needed.
+OUT|h7|        ? -force, -f : Allows the user to load a newer version of an existing module without running update steps.
+OUT|h7|        ? -create-lockfile, -lock : Upon load, creates/updates the module's lock file.
+OUT|h7|        ? -skip-sync : In developer mode, skips recording the file hashes that sync uses to detect changes. The next sync of the module records them instead.
+OUT|h7|
+OUT|h7|    ? Examples
+OUT|h7|        ? load C:\module\root\path\
+OUT|h7|load C:\module\root\path\module-0.0.1.tgz
+OUT|h7|load C:\module\root\path\module-0.0.1.tar.gz        
+OUT|h7|            Loads the module described in C:\module\root\path\module.xml
+OUT|h7|        ? load -dev -verbose C:\module\root\path\
+OUT|h7|load -dev -verbose C:\module\root\path\module-0.0.1.tgz        
+OUT|h7|            Loads the module described in C:\module\root\path\module.xml in developer mode and with verbose output.
+OUT|h7|        ? load https://github.com/user/repository.git
+OUT|h7|load https://github.com/user/repository.git -branch feature-1        
+OUT|h7|            Loads the module in branch feature-1 from remote repository https://github.com/user/repository.git.
+OUT|h7|        ?     load -bypass-py-deps C:\module\root\path\        
+OUT|h7|            Loads the module described in C:\module\root\path\module.xml without installing python dependencies
+OUT|h7|        ?     load -extra-pip-flags "--timeout 30" C:\module\root\path\        
+OUT|h7|            Loads the module described in C:\module\root\path\module.xml but set pip timeout to 30 seconds
+OUT|h7|        ? load C:\module\root\path -env C:\path\to\env1.json;C:\path\to\env2.json        
+OUT|h7|            Loads the module described in C:\module\root\path\module.xml using the C:\path\to\env.json1 and C:\path\to\env.json2 as the install time configuration
+OUT|h7|
+OUT|h7|
+OUT|h7|makedeployed [flags] <module>
+OUT|h7|    ? Description: This command is an alias for `module-action module-name makedeployed`
+OUT|h7|
+OUT|h7|    ? Arguments
+OUT|h7|        ? module: Name of module on which to perform reload action
+OUT|h7|
+OUT|h7|    ? Flags:
+OUT|h7|        ? -env, -e <value> : Semicolon separated paths to the environment files in json format. See wiki for details.
+OUT|h7|        ? -only, -o : Only runs the specified phase(s), rather than also running predecessors.
+OUT|h7|        ? -dev : Sets the DeveloperMode flag for the module's lifecycle. Key consequences of this are that ^Sources will be configured for resources in the module, and installer methods will be called with the dev mode flag set.
+OUT|h7|        ? -quiet, -q : Produces minimal output. For test and verify: suppresses build/install noise while still showing the result summary and any failures.
+OUT|h7|        ? -verbose, -v : Produces verbose output. For test and verify: shows per-method results in the result summary when combined with -f; without -f only the summary is shown.
+OUT|h7|        ? -format, -f <json/yaml/toon> : (test and verify only) One-shot output format override for the test result summary. Overrides the persistent default set via 'config set TestReportFormat <format>'. When neither -f nor config is set, the default summary and legacy failure lines are shown. Use 'config delete TestReportFormat' to revert to default.
+OUT|h7|        ? -output-file <value> : (test and verify only) Path to write full test results to a file. Format is inferred from the file extension (.json, .yaml, .toon, .xml).
+OUT|h7|        ? -export-deps <0/1> : If specified, controls whether dependencies are exported. If omitted, defaults to the value of the #EXPORTDEPENDENCIES in lifecycle class. This modifier is only used in "Package" and "Publish" lifecycles.
+OUT|h7|        ? -skip-sync : In developer mode, skips recording the file hashes that sync uses to detect changes during the compile phase. The next sync of the module records them instead.
+OUT|h7|        ? -recurse, -r : Runs the specified phase (makedeployed) on the module and all of its dependencies.
+OUT|h7|
+OUT|h7|
+OUT|h7|module-action <module> <actions> [flags]
+OUT|h7|    ? Description: Performs operations on modules - compiling, running tests, packaging/registering, etc.
+OUT|h7|You can use this by starting a command with the module name.
+OUT|h7|Note that flags appear *after* all actions.
+OUT|h7|
+OUT|h7|The standard lifecycle phases are:
+OUT|h7|* clean: removes all dependencies that are not required by other installed modules and
+OUT|h7|their resources. Dependencies required by other modules will also be removed if the -DClean.Force=1 flag is specified.
+OUT|h7|* reload: pulls module source code into the namespace from disk. Does not compile.
+OUT|h7|* validate: ensures that module resource processor attributes are valid, and that the
+OUT|h7|resources exported to the filesystem (and possible to source control) are consistent
+OUT|h7|with what is in the database.
+OUT|h7|* compile: compiles all resources within the module.
+OUT|h7|* activate: performs post-compilation installation/configuration steps.
+OUT|h7|* makedeployed: deploys resources within the module for which deployment is enabled.
+OUT|h7|* document: regenerates the API documentation for the module
+OUT|h7|* test: runs any unit tests associated with the module, in the current namespace.
+OUT|h7|* package: exports the module's resources and bundles them into a module artifact (.tgz file).
+OUT|h7|* verify: installs that artifact in a separate namespace, then runs integration tests (if any).
+OUT|h7|* register: saves that artifact into the current namespace's module cache.
+OUT|h7|This is accessible to other instances configured to look at the current namespace as a
+OUT|h7|module repository.
+OUT|h7|* publish: saves that artifact to the repository for which deployment is enabled.
+OUT|h7|Currently, there may only be one of these per namespace.
+OUT|h7|* applyupdatesteps: run any update steps for the module to become updated to the latest available version.
+OUT|h7|Can also specify desired version to update to.
+OUT|h7|
+OUT|h7|    ? Arguments
+OUT|h7|        ? module: Name of module on which to perform lifecycle actions
+OUT|h7|        ? actions: Space-delimited list of module lifecycle phases to run
+OUT|h7|
+OUT|h7|    ? Flags:
+OUT|h7|        ? -env, -e <value> : Semicolon separated paths to the environment files in json format. See wiki for details.
+OUT|h7|        ? -only, -o : Only runs the specified phase(s), rather than also running predecessors.
+OUT|h7|        ? -dev : Sets the DeveloperMode flag for the module's lifecycle. Key consequences of this are that ^Sources will be configured for resources in the module, and installer methods will be called with the dev mode flag set.
+OUT|h7|        ? -quiet, -q : Produces minimal output. For test and verify: suppresses build/install noise while still showing the result summary and any failures.
+OUT|h7|        ? -verbose, -v : Produces verbose output. For test and verify: shows per-method results in the result summary when combined with -f; without -f only the summary is shown.
+OUT|h7|        ? -format, -f <json/yaml/toon> : (test and verify only) One-shot output format override for the test result summary. Overrides the persistent default set via 'config set TestReportFormat <format>'. When neither -f nor config is set, the default summary and legacy failure lines are shown. Use 'config delete TestReportFormat' to revert to default.
+OUT|h7|        ? -output-file <value> : (test and verify only) Path to write full test results to a file. Format is inferred from the file extension (.json, .yaml, .toon, .xml).
+OUT|h7|        ? -export-deps <0/1> : If specified, controls whether dependencies are exported. If omitted, defaults to the value of the #EXPORTDEPENDENCIES in lifecycle class. This modifier is only used in "Package" and "Publish" lifecycles.
+OUT|h7|        ? -skip-sync : In developer mode, skips recording the file hashes that sync uses to detect changes during the compile phase. The next sync of the module records them instead.
+OUT|h7|        ? -path, -p <value> : the specified path to export package.
+OUT|h7|        ? -export-python-deps : If specified, exports Python dependencies. If omitted, defaults to false.
+OUT|h7|        ? -include-tests : If specified, includes test-scoped resources in the package.
+OUT|h7|        ? -repo, -r : Namespace-unique name of repository for the module to publish to (if deployment is enabled)
+OUT|h7|        ? -use-external-name, -use-ext : Publish the package under the <ExternalName> of the package. If ExternalName is unspecified or illegal, an error will be thrown.
+OUT|h7|        ? -recurse, -r : Runs the specified phase (makedeployed) on the module and all of its dependencies.
+OUT|h7|
+OUT|h7|    ? Examples
+OUT|h7|        ? module-action MyModuleName compile        
+OUT|h7|            Compiles the module named "MyModuleName"
+OUT|h7|        ? MyModuleName clean register        
+OUT|h7|            Performs multiple actions on the module named "MyModuleName"; "clean" deletes all of its dependenices, and "install" will then re-download them, package the module, and register it in the current namespace's module cache.
+OUT|h7|        ? MyUIModule compile -v -DUIFW.force=42        
+OUT|h7|            Compiles the module named MyUIModule with verbose output and pParams("UIFW","force") (passed to all lifecycle phases) set to 42.
+OUT|h7|        ? MyModule verify -env /path/to/env.json        
+OUT|h7|            Verify the module MyModule with the env file /path/to/env.json. The module is responsible for accessing the data using %IPM.General.EnvironmentConfig:GetArg()
+OUT|h7|
+OUT|h7|
+OUT|h7|module-version [flags] <module> [<version>]
+OUT|h7|    ? Alias: modver
+OUT|h7|    ? Description:         Updates the version of the module in the current namespace.
+OUT|h7|    
+OUT|h7|
+OUT|h7|    ? Arguments
+OUT|h7|        ? module: Name of the module to update the version for.
+OUT|h7|        ? version: Either a valid SemVer string, or 'major', 'minor', 'patch'. If it's 'major', 'minor', or 'patch', will bump the cooresponding part of SemVer.
+OUT|h7|
+OUT|h7|    ? Flags:
+OUT|h7|        ? -prerelease, -p <value> : Set the prerelease to a specific value
+OUT|h7|        ? -build, -b <value> : Set the build to a specific value
+OUT|h7|        ? -force : Permit the version to be downgraded. By default, trying to downgrade the version will fail
+OUT|h7|        ? -quiet, -q : Suppress output (except for errors)
+OUT|h7|
+OUT|h7|    ? Examples
+OUT|h7|        ?         module-version HS.JSON 1.2.3
+OUT|h7|            
+OUT|h7|            Sets the version of the module HS.JSON to 1.2.3
+OUT|h7|        ?         module-version HS.JSON major
+OUT|h7|            
+OUT|h7|            Bump the major version the module HS.JSON. If current version is 1.2.3, the new version will be 2.0.0
+OUT|h7|        ?         module-version HS.JSON minor -prerelease alpha -build xyz
+OUT|h7|            
+OUT|h7|            Bump the minor version and set prerelease to 'alpha' and build to 'xyz'. If current version is 1.2.3, the new version will be 1.3.0-alpha+xyz
+OUT|h7|        ?         module-version HS.JSON 1.2.3 -force
+OUT|h7|            
+OUT|h7|            Downgrade the version to 1.2.3. If the current version is 1.3.0, this will still work because the force flag is set.
+OUT|h7|
+OUT|h7|
+OUT|h7|namespace [flags] [<name>]
+OUT|h7|    ? Alias: zn
+OUT|h7|    ? Description: See list modules in namespace and go to the namespace
+OUT|h7|
+OUT|h7|    ? Arguments
+OUT|h7|        ? name: Name namespace, * or context name*
+OUT|h7|
+OUT|h7|    ? Flags:
+OUT|h7|        ? -description, -d : Shows description for each module.
+OUT|h7|
+OUT|h7|    ? Examples
+OUT|h7|        ? zn *        
+OUT|h7|            Show all modules in all namespaces
+OUT|h7|        ? zn sql*        
+OUT|h7|            Show all modules in namespaces by context
+OUT|h7|
+OUT|h7|
+OUT|h7|orphans [flags]
+OUT|h7|    ? Description:     Lists resources in the current namespace's default code database that are not part of any module.
+OUT|h7|
+OUT|h7|    ? Flags:
+OUT|h7|        ? -type, -t <value> : Type (e.g., extension) of resource to show; if unspecified, all types are included.
+OUT|h7|
+OUT|h7|    ? Examples
+OUT|h7|        ?     orphans -type CLS        
+OUT|h7|            List resources that are classes that are not part of any module in the current namespace
+OUT|h7|
+OUT|h7|
+OUT|h7|package [flags] <module>
+OUT|h7|    ? Description: This command is an alias for `module-action module-name package`
+OUT|h7|
+OUT|h7|    ? Arguments
+OUT|h7|        ? module: Name of module on which to perform package actions
+OUT|h7|
+OUT|h7|    ? Flags:
+OUT|h7|        ? -env, -e <value> : Semicolon separated paths to the environment files in json format. See wiki for details.
+OUT|h7|        ? -only, -o : Only runs the specified phase(s), rather than also running predecessors.
+OUT|h7|        ? -dev : Sets the DeveloperMode flag for the module's lifecycle. Key consequences of this are that ^Sources will be configured for resources in the module, and installer methods will be called with the dev mode flag set.
+OUT|h7|        ? -quiet, -q : Produces minimal output. For test and verify: suppresses build/install noise while still showing the result summary and any failures.
+OUT|h7|        ? -verbose, -v : Produces verbose output. For test and verify: shows per-method results in the result summary when combined with -f; without -f only the summary is shown.
+OUT|h7|        ? -format, -f <json/yaml/toon> : (test and verify only) One-shot output format override for the test result summary. Overrides the persistent default set via 'config set TestReportFormat <format>'. When neither -f nor config is set, the default summary and legacy failure lines are shown. Use 'config delete TestReportFormat' to revert to default.
+OUT|h7|        ? -output-file <value> : (test and verify only) Path to write full test results to a file. Format is inferred from the file extension (.json, .yaml, .toon, .xml).
+OUT|h7|        ? -skip-sync : In developer mode, skips recording the file hashes that sync uses to detect changes during the compile phase. The next sync of the module records them instead.
+OUT|h7|        ? -path, -p <value> : the specified path to export package.
+OUT|h7|        ? -export-deps <0/1> : If specified, controls whether dependencies are exported. If omitted, defaults to the value of the #EXPORTDEPENDENCIES in lifecycle class. This modifier is only used in "Package" and "Publish" lifecycles.
+OUT|h7|        ? -export-python-deps : If specified, exports Python dependencies. If omitted, defaults to false.
+OUT|h7|        ? -include-tests : If specified, includes test-scoped resources in the package.
+OUT|h7|
+OUT|h7|
+OUT|h7|publish [flags] <module>
+OUT|h7|    ? Description: This command is an alias for `module-action module-name publish`
+OUT|h7|
+OUT|h7|    ? Arguments
+OUT|h7|        ? module: Name of module on which to perform publish actions
+OUT|h7|
+OUT|h7|    ? Flags:
+OUT|h7|        ? -env, -e <value> : Semicolon separated paths to the environment files in json format. See wiki for details.
+OUT|h7|        ? -only, -o : Only runs the specified phase(s), rather than also running predecessors.
+OUT|h7|        ? -dev : Sets the DeveloperMode flag for the module's lifecycle. Key consequences of this are that ^Sources will be configured for resources in the module, and installer methods will be called with the dev mode flag set.
+OUT|h7|        ? -quiet, -q : Produces minimal output. For test and verify: suppresses build/install noise while still showing the result summary and any failures.
+OUT|h7|        ? -verbose, -v : Produces verbose output. For test and verify: shows per-method results in the result summary when combined with -f; without -f only the summary is shown.
+OUT|h7|        ? -format, -f <json/yaml/toon> : (test and verify only) One-shot output format override for the test result summary. Overrides the persistent default set via 'config set TestReportFormat <format>'. When neither -f nor config is set, the default summary and legacy failure lines are shown. Use 'config delete TestReportFormat' to revert to default.
+OUT|h7|        ? -output-file <value> : (test and verify only) Path to write full test results to a file. Format is inferred from the file extension (.json, .yaml, .toon, .xml).
+OUT|h7|        ? -export-deps <0/1> : If specified, controls whether dependencies are exported. If omitted, defaults to the value of the #EXPORTDEPENDENCIES in lifecycle class. This modifier is only used in "Package" and "Publish" lifecycles.
+OUT|h7|        ? -skip-sync : In developer mode, skips recording the file hashes that sync uses to detect changes during the compile phase. The next sync of the module records them instead.
+OUT|h7|        ? -repo, -r : Namespace-unique name of repository for the module to publish to (if deployment is enabled)
+OUT|h7|        ? -use-external-name, -use-ext : Publish the package under the <ExternalName> of the package. If ExternalName is unspecified or illegal, an error will be thrown.
+OUT|h7|        ? -export-python-deps : If specified, exports Python dependencies. If omitted, defaults to false.
+OUT|h7|        ? -include-tests : If specified, includes test-scoped resources in the package.
+OUT|h7|
+OUT|h7|
+OUT|h7|quit
+OUT|h7|    ? Aliases: q, exit
+OUT|h7|    ? Description: Exits the package manager shell.
+OUT|h7|
+OUT|h7|
+OUT|h7|reinstall [flags] <module>
+OUT|h7|    ? Description:     Reinstalls an already-installed module from the latest version available in a configured
+OUT|h7|    repository. By default, updates dependencies of that module as well.
+OUT|h7|
+OUT|h7|    ? Arguments
+OUT|h7|        ? module: Name of module to reinstall
+OUT|h7|
+OUT|h7|    ? Flags:
+OUT|h7|        ? -dev : Sets the DeveloperMode flag for the module's lifecycle. Key consequences of this are that ^Sources will be configured for resources in the module, and installer methods will be called with the dev mode flag set.
+OUT|h7|        ? -env, -e <value> : Semicolon separated paths to the environment files in json format. See wiki for details.
+OUT|h7|        ? -quiet, -q : Produces minimal output from the command.
+OUT|h7|        ? -verbose, -v : Produces verbose output from the command.
+OUT|h7|        ? -shallow, -s : Suppresses updating of dependencies with '+snapshot' versions.
+OUT|h7|        ? -bypass-py-deps : Skip installing python dependencies
+OUT|h7|        ? -extra-pip-flags <value> : Extra flags to pass to pip when installing python dependencies. Surround the flags (and values) with quotes if spaces are present. Default flags are "--target <target> --python-version <pyversion> --only-binary=:all:".
+OUT|h7|        ? -skip-sync : In developer mode, skips recording the file hashes that sync uses to detect changes. The next sync of the module records them instead.
+OUT|h7|
+OUT|h7|    ? Examples
+OUT|h7|        ?     reinstall -dev MyTestModule        
+OUT|h7|            Reinstalls the currently-installed version of the MyTestModule module, in development mode
+OUT|h7|        ?     reinstall -bypass-py-deps MyTestModule        
+OUT|h7|            Reinstalls the currently-installed vresion of the MyTestModule module without reinstalling python dependencies
+OUT|h7|        ?     reinstall -extra-pip-flags "--timeout 30" MyTestModule        
+OUT|h7|            Reinstalls MyTestModule but set pip timeout to 30 seconds
+OUT|h7|        ? reinstall -env /path/to/env1.json;/path/to/env2.json example-package        
+OUT|h7|            Reinstalls example-package using the /path/to/env1.json and /path/to/env2.json as the install time configuration
+OUT|h7|
+OUT|h7|
+OUT|h7|reload [flags] <module>
+OUT|h7|    ? Description: This command is an alias for `module-action module-name reload`
+OUT|h7|
+OUT|h7|    ? Arguments
+OUT|h7|        ? module: Name of module on which to perform reload action
+OUT|h7|
+OUT|h7|    ? Flags:
+OUT|h7|        ? -env, -e <value> : Semicolon separated paths to the environment files in json format. See wiki for details.
+OUT|h7|        ? -only, -o : Only runs the specified phase(s), rather than also running predecessors.
+OUT|h7|        ? -dev : Sets the DeveloperMode flag for the module's lifecycle. Key consequences of this are that ^Sources will be configured for resources in the module, and installer methods will be called with the dev mode flag set.
+OUT|h7|        ? -quiet, -q : Produces minimal output. For test and verify: suppresses build/install noise while still showing the result summary and any failures.
+OUT|h7|        ? -verbose, -v : Produces verbose output. For test and verify: shows per-method results in the result summary when combined with -f; without -f only the summary is shown.
+OUT|h7|        ? -format, -f <json/yaml/toon> : (test and verify only) One-shot output format override for the test result summary. Overrides the persistent default set via 'config set TestReportFormat <format>'. When neither -f nor config is set, the default summary and legacy failure lines are shown. Use 'config delete TestReportFormat' to revert to default.
+OUT|h7|        ? -output-file <value> : (test and verify only) Path to write full test results to a file. Format is inferred from the file extension (.json, .yaml, .toon, .xml).
+OUT|h7|        ? -export-deps <0/1> : If specified, controls whether dependencies are exported. If omitted, defaults to the value of the #EXPORTDEPENDENCIES in lifecycle class. This modifier is only used in "Package" and "Publish" lifecycles.
+OUT|h7|        ? -skip-sync : In developer mode, skips recording the file hashes that sync uses to detect changes during the compile phase. The next sync of the module records them instead.
+OUT|h7|
+OUT|h7|
+OUT|h7|repo [flags]
+OUT|h7|    ? Alias: repository
+OUT|h7|    ? Description: Configures the current namespace to search for modules on a remote server or on the
+OUT|h7|local filesystem.
+OUT|h7|
+OUT|h7|    ? Flags:
+OUT|h7|        ? -delete-all : Deletes all repositories (possibly subject to a type filter: e.g -filesystem, -remote, -local)
+OUT|h7|        ? -list : Lists all repositories (possibly subject to a type filter: e.g. -filesystem, -remote, -local)
+OUT|h7|        ? -list-modules, -modules, -listmodules : List modules available in the specified repository (-n\[ame]), or in all configured repositories if no repository was specified.
+OUT|h7|        ? -info : Shows configuration details for the current namespace as a remote repository.
+OUT|h7|        ? -copy-from <value> : Copies repository configuration from a different (specified) namespace
+OUT|h7|        ? -name, -n <value> : Namespace-unique name for the module
+OUT|h7|        ? -delete : Deletes the current namespace's reference to the named repository
+OUT|h7|        ? -publish <0/1> : When configuring a remote repository, specifies that publishing of packages to the repository is allowed. When configuring the current namespace with -enable, specifies that publishing is also enabled. 
+OUT|h7|        ? -enable : For any repository, specifies that it can be used.
+OUT|h7|        ? -disable : For any repository, specifies that it can not be used.
+OUT|h7|        ? -snapshots, -s <0/1> : For any repository, specifies that it should be used to look for snapshot builds (i.e., those with a semantic version ending in '+snapshot', indicating a 'latest' build of a particular version).
+OUT|h7|        ? -prereleases, -pre <0/1> : For any repository, specifies that it should be used to look for prerelease software
+OUT|h7|        ? -read-only, -ro <0/1> : For any repository, specifies that modules installed from it are ALWAYS installed in non-developer mode, effectively making them read only
+OUT|h7|        ? -type, -t <value> : Subclass of %IPM.Repo.Definition to create/modify/delete or implementation of %IPM.Repo.IPackageService or %IPM.Repo.IPublishService to enable/disable
+OUT|h7|
+OUT|h7|    ? Examples
+OUT|h7|        ? repo -list        
+OUT|h7|            List all repositories
+OUT|h7|        ? repo -delete-all        
+OUT|h7|            Delete all repositories
+OUT|h7|        ? repo -n LocalFiles -delete        
+OUT|h7|            Delete the repository named "LocalFiles"
+OUT|h7|        ? repo -n AppModules -list-modules        
+OUT|h7|            Lists all modules (and versions) available from the repository named "AppModules"
+OUT|h7|        ? repo -enable -app /csp/mynamespace -publish 1        
+OUT|h7|            Enables package manager web services in this namespace via the /csp/mynamespace/ web application, including web services for publishing. Note that security (e.g., authentication settings, required role) should be configured separately as part of this web application.
+OUT|h7|
+OUT|h7|    ? Filesystem repository:
+OUT|h7|        ? -filesystem, -f, -fs : Create/update a filesystem repository
+OUT|h7|        ? -depth, -d <value> : For filesystem repositories, specifies the depth (number of folders underneath the root) to search for files named module.xml
+OUT|h7|        ? -path, -p <value> : For filesystem repositories, specifies the path to the root directory
+OUT|h7|
+OUT|h7|    ? Examples
+OUT|h7|        ? repo -name LocalFiles -snapshots 1 -fs -depth 2 -path C:\MyWorkspace\RootModuleDir\        
+OUT|h7|            Create a repository pointing to the filesystem with name LocalFiles, accepting snapshots, looking for files named module.xml up to 2 directories deep in C:\MyWorkspace\RootModuleDir\
+OUT|h7|        ? repo -delete-all        
+OUT|h7|            Delete all repositories
+OUT|h7|        ? repo -n LocalFiles -delete        
+OUT|h7|            Delete the repository named "LocalFiles"
+OUT|h7|        ? repo -n AppModules -list-modules        
+OUT|h7|            Lists all modules (and versions) available from the repository named "AppModules"
+OUT|h7|        ? repo -enable -app /csp/mynamespace -publish 1        
+OUT|h7|            Enables package manager web services in this namespace via the /csp/mynamespace/ web application, including web services for publishing. Note that security (e.g., authentication settings, required role) should be configured separately as part of this web application.
+OUT|h7|
+OUT|h7|    ? HTTP(s) repository:
+OUT|h7|        ? -url <value> : For HTTP(s) repositories, specifies the URL for package retrieval web services.
+OUT|h7|        ? -publish-url <value> : For HTTP(s) repositories, specifies the URL for package publishing web services.
+OUT|h7|        ? -username, -user <value> : For HTTP(s) repositories, specifies the username to use when connecting.
+OUT|h7|        ? -password, -pass <value> : For HTTP(s) repositories, specifies the password to use when connecting.
+OUT|h7|        ? -password-stdin, -pass-stdin : For HTTP(s) repositories, specifies the password to use when connecting, but prompt user in secret input terminal mode.
+OUT|h7|        ? -password-env, -pass-env <value> : For HTTP(s) repositories, reads the password from the named environment variable.
+OUT|h7|        ? -token <value> : For HTTP(s) repositories, specifies the key to use when connecting.
+OUT|h7|        ? -token-env <value> : For HTTP(s) repositories, reads the token from the named environment variable.
+OUT|h7|        ? -token-auth-method <value> : Enum of { basic, bearer, apiKey }. Defaults to apiKey. If set to 'basic', token will be included as 'Authorization: Basic <token>'. If set to 'bearer', token will be included as 'Authorization: Bearer <token>'. If set to 'apiKey', token will be included as 'apiKey: <token>'
+OUT|h7|        ? -sslconfig, -ssl <value> : For HTTP(s) repositories, specifies the SSL configuration name to use when connecting.
+OUT|h7|
+OUT|h7|    ? Examples
+OUT|h7|        ? repo -name LocalFiles -snapshots 1 -fs -depth 2 -path C:\MyWorkspace\RootModuleDir\        
+OUT|h7|            Create a repository pointing to the filesystem with name LocalFiles, accepting snapshots, looking for files named module.xml up to 2 directories deep in C:\MyWorkspace\RootModuleDir\
+OUT|h7|        ? repo -delete-all        
+OUT|h7|            Delete all repositories
+OUT|h7|        ? repo -n LocalFiles -delete        
+OUT|h7|            Delete the repository named "LocalFiles"
+OUT|h7|        ? repo -n AppModules -list-modules        
+OUT|h7|            Lists all modules (and versions) available from the repository named "AppModules"
+OUT|h7|        ? repo -enable -app /csp/mynamespace -publish 1        
+OUT|h7|            Enables package manager web services in this namespace via the /csp/mynamespace/ web application, including web services for publishing. Note that security (e.g., authentication settings, required role) should be configured separately as part of this web application.
+OUT|h7|
+OUT|h7|    ? ORAS repository:
+OUT|h7|        ? -oras, -o : Create/update an ORAS server repository
+OUT|h7|        ? -namespace, -ns <value> : For ORAS repositories, specifies the registry namespace, i.e. the fully specified path to a package is <url>/<namespace>/<package>. Note, this is not the IRIS namespace, but a namespace in the sense of a (sub)directory in the registry's storage system. For example, if in a custom managed registry, the base url is 'registry.company.com', and the package is 'objectscript-example', but it will be stored at 'registry.company.com/packages/ipm/objectscript-example', then the namespace will be 'packages/ipm'.
+OUT|h7|
+OUT|h7|    ? Examples
+OUT|h7|        ? repo -name LocalFiles -snapshots 1 -fs -depth 2 -path C:\MyWorkspace\RootModuleDir\        
+OUT|h7|            Create a repository pointing to the filesystem with name LocalFiles, accepting snapshots, looking for files named module.xml up to 2 directories deep in C:\MyWorkspace\RootModuleDir\
+OUT|h7|        ? repo -delete-all        
+OUT|h7|            Delete all repositories
+OUT|h7|        ? repo -n LocalFiles -delete        
+OUT|h7|            Delete the repository named "LocalFiles"
+OUT|h7|        ? repo -n AppModules -list-modules        
+OUT|h7|            Lists all modules (and versions) available from the repository named "AppModules"
+OUT|h7|        ? repo -enable -app /csp/mynamespace -publish 1        
+OUT|h7|            Enables package manager web services in this namespace via the /csp/mynamespace/ web application, including web services for publishing. Note that security (e.g., authentication settings, required role) should be configured separately as part of this web application.
+OUT|h7|
+OUT|h7|    ? Remote repository:
+OUT|h7|        ? -remote, -r : Create/update a remote server repository
+OUT|h7|        ? -reset-defaults : Reset to default repository
+OUT|h7|
+OUT|h7|    ? Examples
+OUT|h7|        ? repo -r -n registry -url https://test.pm.community.intersystems.com/registry/ -user "test" -pass "test"        
+OUT|h7|            Switch to test registery
+OUT|h7|        ? repo -r -n registry -reset-defaults        
+OUT|h7|            Reset to default registry (pm.community.intersystems.com) and it is equivalent to a command
+OUT|h7|        ? repo -r -n registry -url https://pm.community.intersystems.com/ -user "" -pass ""        
+OUT|h7|             
+OUT|h7|        ? repo -n AppModules -list-modules        
+OUT|h7|            Lists all modules (and versions) available from the repository named "AppModules"
+OUT|h7|        ? repo -enable -app /csp/mynamespace -publish 1        
+OUT|h7|            Enables package manager web services in this namespace via the /csp/mynamespace/ web application, including web services for publishing. Note that security (e.g., authentication settings, required role) should be configured separately as part of this web application.
+OUT|h7|
+OUT|h7|
+OUT|h7|run-from-file [flags] <file>
+OUT|h7|    ? Alias: run
+OUT|h7|    ? Description:         Imports either a text file or a JSON file that contains Package Manager Shell commands and runs them sequentially
+OUT|h7|        in the current namespace.
+OUT|h7|        Expected format if the file is a text file (with a .txt extension):
+OUT|h7|        Each line of the file should contain a single command to be run
+OUT|h7|        Expected format if the file is a JSON file (with a .json extension):
+OUT|h7|        The file must contain a single array whose items are JSON objects matching the following format -
+OUT|h7|        {
+OUT|h7|            "command": "command name",
+OUT|h7|            "parameters": { ... },
+OUT|h7|            "modifiers": { ... },
+OUT|h7|            "custom_modifiers": { ... }
+OUT|h7|        }
+OUT|h7|        where each nested object contains key-value pairs. Note that for modifiers that have no value associated with them
+OUT|h7|        (such as -verbose), the value of the key-value pair for the modifier is ignored.
+OUT|h7|
+OUT|h7|    ? Arguments
+OUT|h7|        ? file: File to import
+OUT|h7|
+OUT|h7|    ? Flags:
+OUT|h7|        ? -dry-run, -d : Does not actually run the commands. Simply displays what would be run.
+OUT|h7|
+OUT|h7|    ? Examples
+OUT|h7|        ? run-from-file C:\Temp\MyCommands.text, where contents of the file are as follows:
+OUT|h7|    repo -name Test -p4 -path //Users/test/
+OUT|h7|    install -dev TestModule -latest -DNoMapping=1 -DDeploy.Parameter="TESTDEPLOY"        
+OUT|h7|            Run the commands present in the text file.
+OUT|h7|        ? run C:\Temp\MyCommands.json, where contents of the file are as follows:
+OUT|h7|    {
+OUT|h7|        "commands": [
+OUT|h7|            {
+OUT|h7|                "command": "repo",
+OUT|h7|                "modifiers": {
+OUT|h7|                    "name": "Test",
+OUT|h7|                    "p4": "",
+OUT|h7|                    "path": "//Users/test/"
+OUT|h7|                }
+OUT|h7|            },
+OUT|h7|            {
+OUT|h7|                "command": "install",
+OUT|h7|                "parameters": {
+OUT|h7|                    "module": "TestModule"
+OUT|h7|                },
+OUT|h7|                "modifiers": {
+OUT|h7|                    "dev": "",
+OUT|h7|                    "latest": ""
+OUT|h7|                },
+OUT|h7|                "custom_modifiers": {
+OUT|h7|                    "Deploy.Parameter": "TESTDEPLOY"
+OUT|h7|                }
+OUT|h7|            }
+OUT|h7|        ]
+OUT|h7|    }        
+OUT|h7|            Run the commands present in the JSON file.
+OUT|h7|
+OUT|h7|
+OUT|h7|search [flags] [<searchString>]
+OUT|h7|    ? Alias: find
+OUT|h7|    ? Description: Shows all modules matching the search string in all configured registries
+OUT|h7|
+OUT|h7|    ? Arguments
+OUT|h7|        ? searchString: Search string, * can be used
+OUT|h7|
+OUT|h7|    ? Flags:
+OUT|h7|        ? -show-repo, -r : Shows github repository only for each module.
+OUT|h7|        ? -description, -d : Shows description for each module.
+OUT|h7|        ? -versions : Shows all versions for each module.
+OUT|h7|
+OUT|h7|    ? Examples
+OUT|h7|        ? search -versions zpm*        
+OUT|h7|            Shows all versions of all modules starting with `zpm`
+OUT|h7|        ? find -d *tools*        
+OUT|h7|            Shows a description of all modules in the name of which there is a context
+OUT|h7|
+OUT|h7|
+OUT|h7|show <module>
+OUT|h7|    ? Description:     Shows an installed module's details, what it contains, and the modules it depends on or is required by. Use list-dependents for modules that depend on it transitively.
+OUT|h7|
+OUT|h7|    ? Arguments
+OUT|h7|        ? module: Name of an installed module
+OUT|h7|
+OUT|h7|    ? Flags:
+OUT|h7|
+OUT|h7|    ? Examples
+OUT|h7|        ?     show MyModule        
+OUT|h7|            Shows the details, resources, and dependencies of the installed module MyModule.
+OUT|h7|
+OUT|h7|
+OUT|h7|sync [flags] [<module>]
+OUT|h7|    ? Description: Detects files changed on disk since the last load/sync for development-mode modules,
+OUT|h7|routes each to its resource processor, and recompiles only what is stale.
+OUT|h7|If no module is specified, syncs all modules in development mode.
+OUT|h7|
+OUT|h7|    ? Arguments
+OUT|h7|        ? module: Name of module to sync (optional; if omitted, syncs all dev-mode modules)
+OUT|h7|
+OUT|h7|    ? Flags:
+OUT|h7|        ? -delete : Also process deleted files (remove server documents and recompile dependents).
+OUT|h7|        ? -test, -t : After sync, run test-phase unit tests that were added or modified.
+OUT|h7|        ? -verbose, -v : Produces verbose output.
+OUT|h7|
+OUT|h7|
+OUT|h7|test [flags] <module>
+OUT|h7|    ? Description: This command is an alias for `module-action module-name test`
+OUT|h7|
+OUT|h7|    ? Arguments
+OUT|h7|        ? module: Name of module on which to perform test action
+OUT|h7|
+OUT|h7|    ? Flags:
+OUT|h7|        ? -env, -e <value> : Semicolon separated paths to the environment files in json format. See wiki for details.
+OUT|h7|        ? -only, -o : Only runs the specified phase(s), rather than also running predecessors.
+OUT|h7|        ? -dev : Sets the DeveloperMode flag for the module's lifecycle. Key consequences of this are that ^Sources will be configured for resources in the module, and installer methods will be called with the dev mode flag set.
+OUT|h7|        ? -quiet, -q : Produces minimal output. For test and verify: suppresses build/install noise while still showing the result summary and any failures.
+OUT|h7|        ? -verbose, -v : Produces verbose output. For test and verify: shows per-method results in the result summary when combined with -f; without -f only the summary is shown.
+OUT|h7|        ? -format, -f <json/yaml/toon> : (test and verify only) One-shot output format override for the test result summary. Overrides the persistent default set via 'config set TestReportFormat <format>'. When neither -f nor config is set, the default summary and legacy failure lines are shown. Use 'config delete TestReportFormat' to revert to default.
+OUT|h7|        ? -output-file <value> : (test and verify only) Path to write full test results to a file. Format is inferred from the file extension (.json, .yaml, .toon, .xml).
+OUT|h7|        ? -export-deps <0/1> : If specified, controls whether dependencies are exported. If omitted, defaults to the value of the #EXPORTDEPENDENCIES in lifecycle class. This modifier is only used in "Package" and "Publish" lifecycles.
+OUT|h7|        ? -skip-sync : In developer mode, skips recording the file hashes that sync uses to detect changes during the compile phase. The next sync of the module records them instead.
+OUT|h7|
+OUT|h7|
+OUT|h7|uninstall [flags] [<module>]
+OUT|h7|    ? Description:     Uninstalls a module currently installed locally. This will be prevented if other modules
+OUT|h7|    depend on the named module, unless the -force flag is specified.
+OUT|h7|
+OUT|h7|    ? Arguments
+OUT|h7|        ? module: Name of module to uninstall
+OUT|h7|
+OUT|h7|    ? Flags:
+OUT|h7|        ? -all, -a : Uninstalls all modules installed in the current namespace.
+OUT|h7|        ? -global, -g : Also uninstalls modules with 'global scope' (available in all namespaces); by default, these are skipped.
+OUT|h7|        ? -force, -f : If specified, the module will be uninstalled even if other modules depend on it.
+OUT|h7|        ? -recurse, -r : Also recursively uninstall dependencies. By default, will not uninstall dependencies that are also required by other installed modules; the -force flag overrides this.
+OUT|h7|        ? -quiet, -q : Produces minimal output from the command.
+OUT|h7|        ? -verbose, -v : Produces verbose output from the command.
+OUT|h7|        ? -purge : Purge data from tables during uninstall.
+OUT|h7|
+OUT|h7|    ? Examples
+OUT|h7|        ?     uninstall HS.JSON        
+OUT|h7|            Uninstalls HS.JSON from the current namespace.
+OUT|h7|
+OUT|h7|
+OUT|h7|unmap [flags]
+OUT|h7|    ? Description:         Unmap %IPM package and routines in specified namespaces. Will Skip non-mapped namespaces.
+OUT|h7|        If repository settings are mapped, will also unmap repository settings.
+OUT|h7|    
+OUT|h7|
+OUT|h7|    ? Flags:
+OUT|h7|        ? -namespaces, -ns <value> : Comma-separated namespaces in which IPM mapping needs to be deleted.
+OUT|h7|        ? -globally, -g : Will unmap IPM in all explicit namespaces that currently do not have IPM installed.
+OUT|h7|        ? -quiet, -q : Quiet mode. By default, this modifier is not set and will display the contents onto the terminal/caller command line.
+OUT|h7|        ? -repos-only : If specified, will only unmap repository settings across namespaces. This doesn't affect mapping of IPM packages and routines.
+OUT|h7|
+OUT|h7|    ? Examples
+OUT|h7|        ?         unmap -ns NS1,NS2,NS3
+OUT|h7|            
+OUT|h7|            Unmap IPM from namespaces NS1, NS2, NS3.
+OUT|h7|        ?         unmap -g
+OUT|h7|            
+OUT|h7|            Unmap IPM from all namespaces
+OUT|h7|
+OUT|h7|
+OUT|h7|unpublish [flags] <module> <version>
+OUT|h7|    ? Description: Delete package from repository
+OUT|h7|
+OUT|h7|    ? Arguments
+OUT|h7|        ? module: Name of module on which to perform unpublish actions
+OUT|h7|        ? version: Version of module on which to perform unpublish actions. Use "all" to delete all versions of the package
+OUT|h7|
+OUT|h7|    ? Flags:
+OUT|h7|        ? -force, -f : Will delete module from the repository without prompting user for confirmation. Still requires authorization from the repository
+OUT|h7|        ? -quiet, -q : Produces minimal output from the command.
+OUT|h7|        ? -verbose, -v : Produces verbose output from the command.
+OUT|h7|
+OUT|h7|    ? Examples
+OUT|h7|        ? unpublish MyModuleName all        
+OUT|h7|            Delete all versions of the package "MyModuleName" from the repository
+OUT|h7|        ? unpublish MyRepo/MyModuleName 1.0.0        
+OUT|h7|            Delete version "1.0.0" of the package "MyModuleName" from the repository named MyRepo
+OUT|h7|
+OUT|h7|
+OUT|h7|update [flags] <module> [<version>]
+OUT|h7|    ? Description: Updates a module to a newer version. By default, updates to the latest available version. Also runs all of the update steps from the current version to the newer version.
+OUT|h7|    This command is an alias for module-action module-name applyupdatesteps.
+OUT|h7|
+OUT|h7|    ? Arguments
+OUT|h7|        ? module: Name of module on which to perform update actions
+OUT|h7|        ? version: Version (or version expression) of module to update; defaults to the latest available if unspecified. Is ignored if -path is provided.
+OUT|h7|
+OUT|h7|    ? Flags:
+OUT|h7|        ? -verbose, -v : Produces verbose output from the command.
+OUT|h7|        ? -env, -e <value> : Semicolon separated paths to the environment files in json format.
+OUT|h7|        ? -path, -p <value> : Location of local tarball containing the updated version of the module. Overrides 'version' parameter if present.
+OUT|h7|        ? -dev : Sets the DeveloperMode flag for the module's lifecycle. Key consequences of this are that ^Sources will be configured for resources in the module, and installer methods will be called with the dev mode flag set.
+OUT|h7|        ? -create-lockfile, -lock : Upon update, creates/updates the module's lock file.
+OUT|h7|        ? -skip-sync : In developer mode, skips recording the file hashes that sync uses to detect changes. The next sync of the module records them instead.
+OUT|h7|
+OUT|h7|    ? Examples
+OUT|h7|        ? update HS.JSON 3.0.0        
+OUT|h7|            Updates the HS.JSON module from the current version to version 3.0.0.
+OUT|h7|
+OUT|h7|
+OUT|h7|verify [flags] <module>
+OUT|h7|    ? Description: This command is an alias for `module-action module-name verify`
+OUT|h7|
+OUT|h7|    ? Arguments
+OUT|h7|        ? module: Name of module on which to perform verify action
+OUT|h7|
+OUT|h7|    ? Flags:
+OUT|h7|        ? -env, -e <value> : Semicolon separated paths to the environment files in json format. See wiki for details.
+OUT|h7|        ? -only, -o : Only runs the specified phase(s), rather than also running predecessors.
+OUT|h7|        ? -dev : Sets the DeveloperMode flag for the module's lifecycle. Key consequences of this are that ^Sources will be configured for resources in the module, and installer methods will be called with the dev mode flag set.
+OUT|h7|        ? -quiet, -q : Produces minimal output. For test and verify: suppresses build/install noise while still showing the result summary and any failures.
+OUT|h7|        ? -verbose, -v : Produces verbose output. For test and verify: shows per-method results in the result summary when combined with -f; without -f only the summary is shown.
+OUT|h7|        ? -format, -f <json/yaml/toon> : (test and verify only) One-shot output format override for the test result summary. Overrides the persistent default set via 'config set TestReportFormat <format>'. When neither -f nor config is set, the default summary and legacy failure lines are shown. Use 'config delete TestReportFormat' to revert to default.
+OUT|h7|        ? -output-file <value> : (test and verify only) Path to write full test results to a file. Format is inferred from the file extension (.json, .yaml, .toon, .xml).
+OUT|h7|        ? -export-deps <0/1> : If specified, controls whether dependencies are exported. If omitted, defaults to the value of the #EXPORTDEPENDENCIES in lifecycle class. This modifier is only used in "Package" and "Publish" lifecycles.
+OUT|h7|        ? -skip-sync : In developer mode, skips recording the file hashes that sync uses to detect changes during the compile phase. The next sync of the module records them instead.
+OUT|h7|
+OUT|h7|
+OUT|h7|version
+OUT|h7|    ? Alias: ver
+OUT|h7|    ? Description:     Prints the currently-installed package manager and registry version (excluding +snapshot or other build information)
+OUT|h7|
+OBS|h7.ok|1
+
+OBS|h7.warning|0
+
+OBS|h7.available|1
+
+OBS|h7.descriptions|38
+
+OBS|h7.flags|37
+
+OBS|h7.arguments|30
+
+OBS|h7.examples|30
+
+OBS|h7.only|8
+
+OBS|h7.dev|17
+
+OBS|h7.versiondesc|1
+
+OBS|h7.moredetail|0
+
+OBS|h7.listed|39
+
+OUT|h8|
+OUT|h8|WARNING: Command "INSTALL" does not exist so showing all available commands.
+OUT|h8|
+OUT|h8|Available commands:
+OUT|h8|arrange                                        Rearranges the resources in a module manifest to follow the standard format.
+OUT|h8|compile                                        This command is an alias for `module-action module-name compile`
+OUT|h8|config                                        Update ZPM settings. Setting is a key-value pair.
+OUT|h8|default-modifiers                                        Manages default modifiers to use for all package manager commands in the current namespace.
+OUT|h8|dependency-analyzer, deps                                        Computes references to other items/modules for a given module/item.
+OUT|h8|enable                                        Enable IPM in other namespaces.
+OUT|h8|exec, cos                                        Executes the provided ObjectScript expression.
+OUT|h8|generate, gen                                        Generates module.xml
+OUT|h8|help, ?                                        Displays help information for the shell or a particular command.
+OUT|h8|history, log                                        Manage history of package installation/uninstallation.
+OUT|h8|import                                        Imports classes from a file or file(s), reexporting to source control if needed.
+OUT|h8|information, info                                        Output information about the current ZPM environment.
+OUT|h8|init, initialize                                        Configures the current namespace for package manager use.
+OUT|h8|install                                        Installs a module available in a configured repository.
+OUT|h8|list-dependents, dependents                                        Lists modules dependent on the specified module.
+OUT|h8|list-installed, list                                        Lists modules installed in the current namespace.
+OUT|h8|load                                        Loads a module from the specified directory into the current namespace.
+OUT|h8|makedeployed                                        This command is an alias for `module-action module-name makedeployed`
+OUT|h8|module-action                                        Performs operations on modules - compiling, running tests, packaging/registering, etc.
+OUT|h8|module-version, modver                                        Updates the version of the module in the current namespace.
+OUT|h8|namespace, zn                                        See list modules in namespace and go to the namespace
+OUT|h8|orphans                                        Lists resources in the current namespace's default code database that are not part of any module.
+OUT|h8|package                                        This command is an alias for `module-action module-name package`
+OUT|h8|publish                                        This command is an alias for `module-action module-name publish`
+OUT|h8|quit, q, exit                                        Exits the package manager shell.
+OUT|h8|reinstall                                        Reinstalls the already installed version of the provided module.
+OUT|h8|reload                                        This command is an alias for `module-action module-name reload`
+OUT|h8|repo, repository                                        Configures the current namespace to search for modules in a repository.
+OUT|h8|run-from-file, run                                        Runs Package Manager Shell commands provided in a file.
+OUT|h8|search, find                                        Shows all modules matching the search string in all configured registries
+OUT|h8|show                                        Shows an installed module's details, what it contains, and the modules it depends on or is required by. Use list-dependents for modules that depend on it transitively.
+OUT|h8|sync                                        Incrementally syncs changed files from disk into the namespace.
+OUT|h8|test                                        This command is an alias for `module-action module-name test`
+OUT|h8|uninstall                                        Uninstalls a module currently installed in this namespace.
+OUT|h8|unmap                                        Unmap %IPM package and routines in specified namespaces.
+OUT|h8|unpublish                                        Delete package from repository
+OUT|h8|update                                        Updates a module to a newer version.
+OUT|h8|verify                                        This command is an alias for `module-action module-name verify`
+OUT|h8|version, ver                                        Prints the currently-installed package manager and registry version (excluding +snapshot or other build information)
+OUT|h8|
+OUT|h8|For more detail, run:
+OUT|h8|  help <command-name>
+OUT|h8|or
+OUT|h8|  help -v
+OBS|h8.ok|1
+
+OBS|h8.warning|1
+
+OBS|h8.available|1
+
+OBS|h8.descriptions|0
+
+OBS|h8.flags|0
+
+OBS|h8.arguments|0
+
+OBS|h8.examples|0
+
+OBS|h8.only|0
+
+OBS|h8.dev|0
+
+OBS|h8.versiondesc|1
+
+OBS|h8.moredetail|1
+
+OBS|h8.listed|39
+
+OUT|h9|
+OUT|h9|
+OUT|h9|module-action <module> <actions> [flags]
+OUT|h9|    ? Description: Performs operations on modules - compiling, running tests, packaging/registering, etc.
+OUT|h9|You can use this by starting a command with the module name.
+OUT|h9|Note that flags appear *after* all actions.
+OUT|h9|
+OUT|h9|The standard lifecycle phases are:
+OUT|h9|* clean: removes all dependencies that are not required by other installed modules and
+OUT|h9|their resources. Dependencies required by other modules will also be removed if the -DClean.Force=1 flag is specified.
+OUT|h9|* reload: pulls module source code into the namespace from disk. Does not compile.
+OUT|h9|* validate: ensures that module resource processor attributes are valid, and that the
+OUT|h9|resources exported to the filesystem (and possible to source control) are consistent
+OUT|h9|with what is in the database.
+OUT|h9|* compile: compiles all resources within the module.
+OUT|h9|* activate: performs post-compilation installation/configuration steps.
+OUT|h9|* makedeployed: deploys resources within the module for which deployment is enabled.
+OUT|h9|* document: regenerates the API documentation for the module
+OUT|h9|* test: runs any unit tests associated with the module, in the current namespace.
+OUT|h9|* package: exports the module's resources and bundles them into a module artifact (.tgz file).
+OUT|h9|* verify: installs that artifact in a separate namespace, then runs integration tests (if any).
+OUT|h9|* register: saves that artifact into the current namespace's module cache.
+OUT|h9|This is accessible to other instances configured to look at the current namespace as a
+OUT|h9|module repository.
+OUT|h9|* publish: saves that artifact to the repository for which deployment is enabled.
+OUT|h9|Currently, there may only be one of these per namespace.
+OUT|h9|* applyupdatesteps: run any update steps for the module to become updated to the latest available version.
+OUT|h9|Can also specify desired version to update to.
+OUT|h9|
+OUT|h9|    ? Arguments
+OUT|h9|        ? module: Name of module on which to perform lifecycle actions
+OUT|h9|        ? actions: Space-delimited list of module lifecycle phases to run
+OUT|h9|
+OUT|h9|    ? Flags:
+OUT|h9|        ? -env, -e <value> : Semicolon separated paths to the environment files in json format. See wiki for details.
+OUT|h9|        ? -only, -o : Only runs the specified phase(s), rather than also running predecessors.
+OUT|h9|        ? -dev : Sets the DeveloperMode flag for the module's lifecycle. Key consequences of this are that ^Sources will be configured for resources in the module, and installer methods will be called with the dev mode flag set.
+OUT|h9|        ? -quiet, -q : Produces minimal output. For test and verify: suppresses build/install noise while still showing the result summary and any failures.
+OUT|h9|        ? -verbose, -v : Produces verbose output. For test and verify: shows per-method results in the result summary when combined with -f; without -f only the summary is shown.
+OUT|h9|        ? -format, -f <json/yaml/toon> : (test and verify only) One-shot output format override for the test result summary. Overrides the persistent default set via 'config set TestReportFormat <format>'. When neither -f nor config is set, the default summary and legacy failure lines are shown. Use 'config delete TestReportFormat' to revert to default.
+OUT|h9|        ? -output-file <value> : (test and verify only) Path to write full test results to a file. Format is inferred from the file extension (.json, .yaml, .toon, .xml).
+OUT|h9|        ? -export-deps <0/1> : If specified, controls whether dependencies are exported. If omitted, defaults to the value of the #EXPORTDEPENDENCIES in lifecycle class. This modifier is only used in "Package" and "Publish" lifecycles.
+OUT|h9|        ? -skip-sync : In developer mode, skips recording the file hashes that sync uses to detect changes during the compile phase. The next sync of the module records them instead.
+OUT|h9|        ? -path, -p <value> : the specified path to export package.
+OUT|h9|        ? -export-python-deps : If specified, exports Python dependencies. If omitted, defaults to false.
+OUT|h9|        ? -include-tests : If specified, includes test-scoped resources in the package.
+OUT|h9|        ? -repo, -r : Namespace-unique name of repository for the module to publish to (if deployment is enabled)
+OUT|h9|        ? -use-external-name, -use-ext : Publish the package under the <ExternalName> of the package. If ExternalName is unspecified or illegal, an error will be thrown.
+OUT|h9|        ? -recurse, -r : Runs the specified phase (makedeployed) on the module and all of its dependencies.
+OUT|h9|
+OUT|h9|    ? Examples
+OUT|h9|        ? module-action MyModuleName compile        
+OUT|h9|            Compiles the module named "MyModuleName"
+OUT|h9|        ? MyModuleName clean register        
+OUT|h9|            Performs multiple actions on the module named "MyModuleName"; "clean" deletes all of its dependenices, and "install" will then re-download them, package the module, and register it in the current namespace's module cache.
+OUT|h9|        ? MyUIModule compile -v -DUIFW.force=42        
+OUT|h9|            Compiles the module named MyUIModule with verbose output and pParams("UIFW","force") (passed to all lifecycle phases) set to 42.
+OUT|h9|        ? MyModule verify -env /path/to/env.json        
+OUT|h9|            Verify the module MyModule with the env file /path/to/env.json. The module is responsible for accessing the data using %IPM.General.EnvironmentConfig:GetArg()
+OBS|h9.ok|1
+
+OBS|h9.warning|0
+
+OBS|h9.available|0
+
+OBS|h9.descriptions|1
+
+OBS|h9.flags|1
+
+OBS|h9.arguments|1
+
+OBS|h9.examples|1
+
+OBS|h9.only|1
+
+OBS|h9.dev|1
+
+OBS|h9.versiondesc|0
+
+OBS|h9.moredetail|0
+
+OBS|h9.listed|1
+
+OUT|v1|
+OUT|v1|USER> zpm 0.10.11-SNAPSHOT
+OBS|v1.ok|1
+
+OBS|v1.zpm|0
+
+OBS|v1.user|1
+
+OBS|v1.installedin|0
+
+OBS|v1.snapshotupper|1
+
+OUT|i1|
+OUT|i1|Welcome to the Package Manager Shell (ZPM). Version: 0.10.11-SNAPSHOT
+OUT|i1|Enter q/quit to exit the shell. Enter ?/help to view available commands
+OUT|i1|No registry configured
+OUT|i1|System Mode: <unset>
+OUT|i1|Mirror Status: NOTINIT
+OUT|i1|IRIS for UNIX (Ubuntu Server LTS for x86-64 Containers) 2026.1 (Build 234U) Fri Mar 27 2026 14:07:14 EDT
+OUT|i1|
+OUT|i1|Currently installed top-level modules are listed below:
+OUT|i1|IPM 0.10.11-SNAPSHOT
+OBS|i1.ok|1
+
+OBS|i1.noregistry|1
+
+OBS|i1.currentregistry|0
+
+OUT|r1|
+OUT|r1|fs54
+OUT|r1|Source: /tmp/iter54/repo54/*
+OUT|r1|Enabled?Yes
+OUT|r1|Available?Yes
+OUT|r1|Use for Snapshots?Yes
+OUT|r1|Use for Prereleases?Yes
+OUT|r1|Is Read-Only?No
+OUT|r1|
+OUT|r1|fs54
+OUT|r1|Source: /tmp/iter54/repo54/*
+OUT|r1|Enabled?Yes
+OUT|r1|Available?Yes
+OUT|r1|Use for Snapshots?Yes
+OUT|r1|Use for Prereleases?Yes
+OUT|r1|Is Read-Only?No
+OBS|r1.ok|1
+
+OUT|i2|
+OUT|i2|Welcome to the Package Manager Shell (ZPM). Version: 0.10.11-SNAPSHOT
+OUT|i2|Enter q/quit to exit the shell. Enter ?/help to view available commands
+OUT|i2|No registry configured
+OUT|i2|System Mode: <unset>
+OUT|i2|Mirror Status: NOTINIT
+OUT|i2|IRIS for UNIX (Ubuntu Server LTS for x86-64 Containers) 2026.1 (Build 234U) Fri Mar 27 2026 14:07:14 EDT
+OUT|i2|
+OUT|i2|Currently installed top-level modules are listed below:
+OUT|i2|IPM 0.10.11-SNAPSHOT
+OBS|i2.ok|1
+
+OBS|i2.noregistry|1
+
+OBS|i2.currentregistry|0
+
+OUT|r2|
+OUT|r2|reg54
+OUT|r2|Source: http://127.0.0.1:9/
+OUT|r2|Enabled?Yes
+OUT|r2|Available?No
+OUT|r2|Use for Snapshots?Yes
+OUT|r2|Use for Prereleases?Yes
+OUT|r2|Is Read-Only?No
+OUT|r2|Default Deployment Registry? No
+OUT|r2|
+OUT|r2|reg54
+OUT|r2|Source: http://127.0.0.1:9/
+OUT|r2|Enabled?Yes
+OUT|r2|Available?No
+OUT|r2|Use for Snapshots?Yes
+OUT|r2|Use for Prereleases?Yes
+OUT|r2|Is Read-Only?No
+OUT|r2|Default Deployment Registry? No
+OUT|r2|
+OUT|r2|fs54
+OUT|r2|Source: /tmp/iter54/repo54/*
+OUT|r2|Enabled?Yes
+OUT|r2|Available?Yes
+OUT|r2|Use for Snapshots?Yes
+OUT|r2|Use for Prereleases?Yes
+OUT|r2|Is Read-Only?No
+OBS|r2.ok|1
+
+OBS|r2.remotedefs|1
+
+OUT|i3|
+OUT|i3|Welcome to the Package Manager Shell (ZPM). Version: 0.10.11-SNAPSHOT
+OUT|i3|Enter q/quit to exit the shell. Enter ?/help to view available commands
+OUT|i3|Current registry http://127.0.0.1:9/
+OUT|i3|System Mode: <unset>
+OUT|i3|Mirror Status: NOTINIT
+OUT|i3|IRIS for UNIX (Ubuntu Server LTS for x86-64 Containers) 2026.1 (Build 234U) Fri Mar 27 2026 14:07:14 EDT
+OUT|i3|
+OUT|i3|Currently installed top-level modules are listed below:
+OUT|i3|IPM 0.10.11-SNAPSHOT
+OBS|i3.ok|1
+
+OBS|i3.noregistry|0
+
+OBS|i3.currentregistry|1
+
+NATIVE-END
+
+USER>

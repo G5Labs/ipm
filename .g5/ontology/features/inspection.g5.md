@@ -18,7 +18,15 @@ These commands show information without changing installed modules:
 - `info` and `version` show the IPM environment and version.
 - `namespace` (`zn`) lists modules by namespace and switches to a namespace.
 - `orphans` lists items in the namespace's code database that belong to no module.
-- `help` shows help for the shell or for one command.
+- `help` shows help for the shell or for one command ([help details](#inspect.help)).
+
+<a id="inspect.help"></a>
+[D · inspect.help]
+
+`help` lists every command with its aliases and summary. `help <command>` or an alias shows that command's arguments, flags and examples, and phase commands such as `compile` also show `module-action`'s flags.
+
+- An unknown name, including a different-case name such as `INSTALL`, prints a warning and the full list.
+- `version` prints IPM's version per namespace and each remote registry's version. The shell intro names the current registry only when a remote registry is defined.
 
 <a id="inspect.show"></a>
 [D · inspect.show]
@@ -100,6 +108,14 @@ Extension Verus: [thin_surfaces.rs::inspection_choice](../../Verus_verification/
 
 
 Iteration51 `information`: [toplevel.rs](../../Verus_verification/consolidated/iter51/toplevel.rs) `listed`, `neighbors` ([handoff](../../uplift/consolidated/iter51/HANDOFF.md)).
+### inspect.help
+
+- agent
+- user-facing-behavior
+- Expands: [Inspection](#inspect).
+
+Sources: `CLI.cls` (`%Help`, `%HelpForCommand*`, `UnifyLifecycles`, `%GetCommandStructure`); `Main.cls::Version`, `::GetVersion`, `::BuildIntroMessages`. Model: [helpcmd.rs](../../Verus_verification/consolidated/iter54/helpcmd.rs) `help`, `shows_only`, `intro_current_registry`, `neighbors` ([handoff](../../uplift/consolidated/iter54/HANDOFF.md)). The remote-registry part of `version` is outside the run's scope.
+
 ### inspect.show
 
 - agent

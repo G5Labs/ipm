@@ -1,0 +1,112 @@
+{
+ "recorded_utc": "2026-11-16T18:14:06.536004+00:00",
+ "batch": 11,
+ "iteration": 54,
+ "prior_seal": "afec28cf",
+ "workflow": "help [<command>] rendering from the Commands XDATA and the version command",
+ "unbound_members": [
+  "CLI.cls::%Help",
+  "::%HelpForCommand",
+  "::%HelpForCommandDetails",
+  "::%HelpForCommandExamples",
+  "::%HelpForCommandModifiers",
+  "::%HelpForCommandParameters",
+  "::DrawBorder",
+  "::FormatName",
+  "::TerminalPromptColor",
+  "::UnifyLifecycles",
+  "::%GetCommandStructure",
+  "Main.cls::Version",
+  "Main.cls::GetVersion",
+  "Main.cls::GetVersionModule"
+ ],
+ "owner": ".g5/ontology/features/inspection.g5.md#inspect (\"help shows help for the shell or for one command\"; \"info and version show the IPM environment and version\"); Commands XDATA in Main.cls",
+ "exposure": "Only the help/version command XDATA definitions and the owner bullets read; CLI.cls bodies and Main.Version body not read (Main.Version first 12 lines were seen in the parent context: GetListModules for zpm and the server registry module, AddIPMMappedNamespaces, DisplayModules, then Remote.Definition registry loop).",
+ "predictions": [
+  {
+   "case": "help (no command)",
+   "reader": "printed command names",
+   "owner": "lists every command (summary form)"
+  },
+  {
+   "case": "help install",
+   "reader": "modifiers/parameters/examples printed",
+   "owner": "lists every modifier, parameter and example defined for install"
+  },
+  {
+   "case": "help ? alias / help ver (alias)",
+   "reader": "which command is described",
+   "owner": "alias resolves to its command"
+  },
+  {
+   "case": "help nosuchcmd",
+   "reader": "status and output",
+   "owner": "unspecified; likely error or \"no such command\""
+  },
+  {
+   "case": "help install -v vs help install",
+   "reader": "amount of detail",
+   "owner": "-v shows full detail"
+  },
+  {
+   "case": "version with no remote repositories",
+   "reader": "printed IPM version line, registry lines",
+   "owner": "prints IPM version (without build metadata); no registry lines"
+  }
+ ],
+ "exposure_after_source": "Read CLI.cls %Help, UnifyLifecycles, %HelpForCommand, %HelpForCommandDetails/Parameters/Modifiers/Examples, %ParseCommandInput command lookup, %GetCommandStructure; Main.cls Version, GetVersionModule, AddIPMMappedNamespaces, BuildIntroMessages.",
+ "source_predictions": [
+  {
+   "case": "help",
+   "predicted": "\"Available commands:\" then one summary line per command (39), alphabetical, aliases appended, closing \"For more detail\" hint"
+  },
+  {
+   "case": "help install",
+   "predicted": "detailed: description, Arguments, Flags, Examples"
+  },
+  {
+   "case": "help ver",
+   "predicted": "alias resolves; version detailed"
+  },
+  {
+   "case": "help nosuchcmd / help INSTALL",
+   "predicted": "warning, then full listing (lookup is case-sensitive)"
+  },
+  {
+   "case": "help 1",
+   "predicted": "no warning, full listing (subscript 1 holds the alias table)"
+  },
+  {
+   "case": "help compile / help module-action",
+   "predicted": "compile has no own modifiers but shows module-action flags (-only, -dev) via UnifyLifecycles"
+  },
+  {
+   "case": "help -v",
+   "predicted": "every command detailed; 38 descriptions (enable has only a summary)"
+  },
+  {
+   "case": "version (no remote registry)",
+   "predicted": "one line \"USER> zpm <version>\", no registry lines"
+  },
+  {
+   "case": "info intro",
+   "predicted": "\"No registry configured\" until a remote registry is defined; a filesystem repo does not count"
+  }
+ ],
+ "outcome": {
+  "status": "complete, not sealed (lane)",
+  "native": "20261116T181702519002Z 125 fields gated; 35 replayed; flips h5.warning, h6.only, i3.currentregistry rejected",
+  "model": "helpcmd.rs 1 verified (one conjunctive neighbours lemma), 5/5 controls rejected",
+  "findings": "none new. Fact only: `help 1` (and other structural subscripts) lists all commands without the unknown-command warning.",
+  "cost": {
+   "run_wall_s": 17.4
+  }
+ },
+ "integration": {
+  "by": "main thread",
+  "independent_rerun": "run.py --no-native: 1 verified, 5/5 controls, 35 replayed",
+  "ontology": "new D inspect.help",
+  "findings": "none",
+  "convergence_role": "remaining untested commands"
+ }
+}
