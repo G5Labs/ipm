@@ -154,6 +154,7 @@ Resource processors with special behavior include:
 - `FileCopy`, which copies files or folders ([file copy](#module.processor.file-copy)).
 - `Copy`, which copies classes from another namespace ([namespace copy](#module.processor.copy)).
 - `.DFI` resources, which load Analytics folder items ([DeepSee items](#module.processor.deepsee)).
+- `.LUT`, `.HL7`, `.X12` and `.ESD` interoperability documents ([interoperability documents](#module.processor.interoperability)).
 - `WebApplication`, which sets up [web applications](#module.webapp). `CSPApplication` is deprecated.
 - `CPF`, which merges configuration into the instance ([CPF timing](#module.processor.cpf)).
 - `SystemSetting`, [Artifactory downloads](../features/artifact-download.g5.md#artifact), unit test and [localization](#module.processor.localized-messages) processors.
@@ -178,6 +179,7 @@ A `<WebApplication>` resource creates the named web application during install a
 - Reinstalling resets declared properties that someone edited by hand, and keeps edits to properties the manifest does not declare.
 - A second module that declares a web application name another installed module already lists is refused when its manifest is read, so two modules cannot share one application.
 - `NameSpace` defaults to the namespace being installed into. Whether IPM should take over or delete applications it did not create is an [open question](#module.webapp.ownership).
+- Attribute values are expanded like other resource attributes, so `{$mgrdir}` becomes the manager directory. Loading again writes only the attributes still declared, so a removed attribute keeps its previous value. `compile -only` does not touch the application, while Activate and Configure update it.
 
 <a id="module.webapp.failure"></a>
 [D · module.webapp.failure]
@@ -227,6 +229,14 @@ A `.DFI` resource loads an Analytics folder item, such as a dashboard or pivot, 
 
 - As built on Linux, a wildcard resource loads only files ending in `.xml` or `.DFI`. Files ending in `.dfi` or `.XML` are silently skipped (defect C:D62).
 - Uninstall removes explicitly named items. As built, items loaded through a wildcard resource remain (defect C:D63).
+
+<a id="module.processor.interoperability"></a>
+[D · module.processor.interoperability]
+
+Interoperability documents such as `.LUT` lookup tables load from `<SourcesRoot>/i14y/<name>.xml`, or from `<SourcesRoot>/misc/` when only that folder exists, unless the resource declares a Directory. With neither folder present, a file directly under SourcesRoot is also found.
+
+- Loading a changed lookup table replaces the whole table, so a removed key disappears, and uninstall removes the table.
+- HL7, X12 and ESD documents need the matching document class in the namespace. On an instance without it the load fails.
 
 <a id="module.processor.localized-messages"></a>
 [D · module.processor.localized-messages]
@@ -662,6 +672,8 @@ Sources: `ResourceProcessor/Abstract.cls::{%OnNew,SetParams,CopyAttributes,Apply
 
 Direct decision: `ResourceProcessor/WebApplication.cls::{OnBeforePhase,CreateOrUpdateWebApp,DeleteWebApp,CopyAttributes,OnGetUniqueName}`. Readers and callers: `Storage/Module.cls::ExecutePhases` (processor `OnBeforePhase` for Configure, Activate, Unconfigure and Clean), `Storage/Module.cls` duplicate-resource check at manifest import (`:1568`), `%SYS` `Security.Applications::{Exists,Get,Modify,Create,Delete}`. CHANGELOG 0.9.0 `#562`. Verus [webapp.rs](../../Verus_verification/consolidated/iter5/webapp.rs) `{merged,install_app,modify_called,refused_at_import,lemma_adoption_keeps_undeclared,webapp_neighbors}`; controls `adoption-overwrites-undeclared`, `existing-app-not-adopted`, `modify-always-called` rejected. Native W1 (create), W2/W3 (administrator app adopted, then deleted), W4 (second module refused), W5 (manual edits) in a fresh container; replayed as Verus assertions. Iteration 5 discovery.
 
+
+Iteration61: [webappphases.rs](../../Verus_verification/consolidated/iter61/webappphases.rs) `apply`, `load`, `neighbors` ([handoff](../../uplift/consolidated/iter61/HANDOFF.md)).
 ### module.webapp.failure
 
 - agent
@@ -727,6 +739,14 @@ Sources: `ResourceProcessor/Default/DeepSeeItem.cls`; product fixture `resource-
 Findings: [On Linux, a wildcard DFI resource skips `.dfi` and `.XML` files](../../uplift/consolidated/BUGS.md#c-d62)
 
 Findings: [Uninstall leaves DFI items loaded through a wildcard resource](../../uplift/consolidated/BUGS.md#c-d63)
+
+### module.processor.interoperability
+
+- agent
+- user-facing-behavior
+- Expands: [Resource processors](#module.processor).
+
+Sources: `ResourceProcessor/Default/Interoperability.cls::DirectoryGet`; `Lifecycle/Base.cls::GetDefaultResourceProcessor`. Model: [interopres.rs](../../Verus_verification/consolidated/iter62/interopres.rs) `directory_neighbors`, `reload_replaces`, `uninstall_clears` ([handoff](../../uplift/consolidated/iter62/HANDOFF.md)). Only `.LUT` was exercised natively; IRIS Community lacks an HL7 document class.
 
 ### module.processor.localized-messages
 

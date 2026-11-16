@@ -1,0 +1,99 @@
+{
+ "recorded_utc": "2026-11-16T18:31:46.545034+00:00",
+ "batch": 13,
+ "iteration": 61,
+ "prior_seal": "976937f3",
+ "workflow": "WebApplication resource processor: declared attributes (incl. expressions) -> web application properties on install/reload; name normalization; phase timing; uninstall",
+ "unbound_members": [
+  "ResourceProcessor/WebApplication.cls::OnPhase",
+  "::CopyAttributes",
+  "::NameGet",
+  "::OnItemRelativePath",
+  "::GetSourceControlInfo"
+ ],
+ "owner": ".g5/ontology/concepts/modules.g5.md#module.webapp (+ failure, upgrade, validation, ownership)",
+ "reused": "iteration5 webapp.rs (takeover, reinstall resets declared, duplicate-name refusal, uninstall), iteration57 CSPApplication contrast; C:D23 unknown attribute; C:D26 upgrade drop (renamed app across versions is the same trigger: not re-filed)",
+ "exposure": "WebApplication.cls bodies not read; only member names from the census.",
+ "predictions": [
+  {
+   "case": "attribute value with ${namespace} / {$mgrdir} expression",
+   "reader": "stored application property",
+   "owner": "expanded (module.parameter expressions)"
+  },
+  {
+   "case": "reload/load again after removing a previously declared attribute (e.g. Description)",
+   "reader": "property",
+   "owner": "owner says only declared properties are changed -> removed attribute keeps old value"
+  },
+  {
+   "case": "reload after changing a declared attribute value",
+   "reader": "property",
+   "owner": "updated"
+  },
+  {
+   "case": "name declared with trailing slash or different case",
+   "reader": "which application exists",
+   "owner": "unspecified; expect one normalized application"
+  },
+  {
+   "case": "invalid property value (e.g. AutheEnabled=abc)",
+   "reader": "status, application, module",
+   "owner": "load fails and rolls back (module.webapp.failure)"
+  },
+  {
+   "case": "compile -only / activate -only",
+   "reader": "application created/updated?",
+   "owner": "created during install (Activate per CSP contrast); not on compile -only"
+  }
+ ],
+ "exposure_after_source": "Read WebApplication.cls NameGet, CopyAttributes (NameSpace default, %Evaluate of every attribute), OnPhase (Validate), OnBeforePhase (create/update on Configure and Activate, delete on Unconfigure and Clean), CreateOrUpdateWebApp (Modify with declared properties only), DeleteWebApp, OnGetUniqueName (Name as unique name), OnItemRelativePath, GetSourceControlInfo.",
+ "source_predictions": [
+  {
+   "case": "w1 Path=\"{$mgrdir}ipmcont61a\"",
+   "predicted": "expanded to the manager directory; NameSpace USER"
+  },
+  {
+   "case": "w2 Description removed, Timeout added",
+   "predicted": "Description keeps old value; Timeout set"
+  },
+  {
+   "case": "c1 manual edit then compile -only",
+   "predicted": "no reset (no Activate/Configure)"
+  },
+  {
+   "case": "c2 activate -only",
+   "predicted": "reset to declared"
+  },
+  {
+   "case": "n1 second module declares the same name in other case",
+   "predicted": "not refused by the case-sensitive unique-name index; if IRIS application names are case-insensitive it takes over the first module's application"
+  },
+  {
+   "case": "n2 uninstall that second module",
+   "predicted": "deletes the shared application while the first module is still installed"
+  },
+  {
+   "case": "t1 trailing slash in name",
+   "predicted": "used as given; IRIS normalization decides"
+  },
+  {
+   "case": "f1 invalid property value",
+   "predicted": "Create/Modify error fails the load; rollback removes the application and the module"
+  }
+ ],
+ "outcome": {
+  "status": "ready for integration (not sealed)",
+  "model": "webappphases.rs 1 verified, 5/5 controls",
+  "native": "20261116T183332131799Z 171 fields; 43 replayed; 3 flips rejected",
+  "findings": "none new",
+  "refuted": [
+   "case-insensitive duplicate takeover (refused as duplicate)"
+  ],
+  "attempts": "run1 replay failed: new application default Timeout 900 not in model; premise added, rerun --no-native on the same receipt"
+ },
+ "integration": {
+  "by": "main thread",
+  "independent_rerun": "run.py --no-native passed",
+  "findings": "none"
+ }
+}

@@ -1,0 +1,87 @@
+{
+ "recorded_utc": "2026-11-16T18:31:56.747779+00:00",
+ "batch": 13,
+ "iteration": 62,
+ "prior_seal": "976937f3",
+ "workflow": "Interoperability resources (.LUT lookup tables, .HL7 custom schemas) in an interoperability-enabled namespace: load (default and explicit Directory), reload of an edited table, uninstall -> lookup entries/schema documents present, command status",
+ "unbound_members": [
+  "ResourceProcessor/Default/Interoperability.cls::DirectoryGet"
+ ],
+ "owner": "none specific; .g5/ontology/concepts/modules.g5.md#module.resource (\"IPM picks a resource processor for each one from its type\") and #module.processor; SystemRequirements Interoperability statements concern refusal only",
+ "exposure": "Lifecycle/Base.cls::GetDefaultResourceProcessor was read earlier in this run (LUT/X12/ESD/HL7 -> Default.Interoperability). Interoperability.cls and the Document base load/clean bodies for these types not read.",
+ "predictions": [
+  {
+   "case": "load module with a .LUT in the default directory",
+   "reader": "Ens.Util.LookupTable entries",
+   "owner": "table entries present"
+  },
+  {
+   "case": "load with explicit Directory attribute",
+   "reader": "entries",
+   "owner": "present"
+  },
+  {
+   "case": "edit the .LUT (change a value, remove a key, add a key) and load again",
+   "reader": "entries",
+   "owner": "table replaced: changed value, removed key gone, new key present"
+  },
+  {
+   "case": "uninstall",
+   "reader": "entries / document",
+   "owner": "lookup table removed"
+  },
+  {
+   "case": "custom .HL7 schema resource",
+   "reader": "schema present after load, gone after uninstall",
+   "owner": "same"
+  },
+  {
+   "case": "default directory",
+   "reader": "which folder is read",
+   "owner": "unspecified; guess lowercase extension folder under SourcesRoot (like other Document types)"
+  }
+ ],
+ "exposure_after_source": "Read ResourceProcessor/Default/Interoperability.cls (Directory default i14y/, DirectoryGet probes i14y then misc under SourcesRoot, FilenameExtension xml, identifier translation).",
+ "source_predictions": [
+  {
+   "case": "a1 LUT at src/i14y/I62A.xml",
+   "predicted": "loaded"
+  },
+  {
+   "case": "m1 LUT at src/misc/I62M.xml (no i14y folder)",
+   "predicted": "loaded via misc probe"
+  },
+  {
+   "case": "x1 explicit Directory=\"tables\"",
+   "predicted": "loaded from src/tables"
+  },
+  {
+   "case": "f1 LUT file directly under src (no i14y/misc folder, no Directory)",
+   "predicted": "loaded through the Document \"\" fallback, since DirectoryGet leaves DirectoryDefined=0"
+  },
+  {
+   "case": "a2 edit table (change a, remove b, add c) and load again",
+   "predicted": "unknown: depends on the LUT document import replacing or merging"
+  },
+  {
+   "case": "a3 uninstall",
+   "predicted": "table entries removed via document delete"
+  }
+ ],
+ "explore": {
+  "explore1": "all LUT cases matched (reload replaced the table, uninstall removed it)",
+  "explore2": "added HL7 custom schema: load fails with #5844 \"No user defined document class in this namespace\" on IRIS Community; provider boundary, not an IPM defect"
+ },
+ "outcome": {
+  "status": "complete, not sealed (main thread integrates)",
+  "model": "interopres.rs 4 verified, 4/4 controls",
+  "native": "20261116T183351877491Z 92 gated fields; 11 replayed; flips a2.I62A.b, a3.I62A.a, f1.I62F.k rejected",
+  "findings": "none new",
+  "setup": "USER enabled for interoperability from %SYS with %EnsembleMgr.EnableNamespace(\"USER\",1) inside the disposable container; existing IPM in USER used"
+ },
+ "integration": {
+  "by": "main thread",
+  "independent_rerun": "run.py --no-native passed",
+  "findings": "none"
+ }
+}
