@@ -461,13 +461,18 @@ State machines: [Inherited load and history checks](../../Verus_verification/mod
 ### history.committed.marking
 
 - uncertain
+- design-verified
 - human-provided
 - architecture-decision
 - Expands: [Committed](#history.committed).
 
 Sources: PR #1322 body ("`LoadNewModule` now marks it at each commit, or before writing when there is no transaction"); `SetCommitted` doc `General/AbstractHistory.cls:119-125`. Inventory: OP-HIST-06 (callers `Utils/Module.cls:1227`, `:1313`, `:1350`), OP-HIST-07 (`Finalize` sets `Committed` when the status is OK). Issue #1237 listed comparing transaction levels as the smallest fix. The merged change chose per-commit marking instead ([nested](../../Verus_verification/open_questions.md#history.committed.nested)).
 
+Formal scope: The inherited [commit-soundness predicate](../../Verus_verification/crates/ipm-load-history/src/proofs.rs#L195-L211) covers a live top-level load with no caller transaction. It permits the interval between the modeled commit and the marker write. The [product bindings](../../Verus_verification/crates/ipm-load-history/BINDINGS.md) document the dispatch and storage assumptions. The refusal policy remains open.
+
 Open questions: [history.committed.marking.refusal-policy](../../Verus_verification/open_questions.md#history.committed.marking.refusal-policy)
+
+State machines: [Inherited load and history checks](../../Verus_verification/models/load-history/manifest.json)
 
 ### history.committed.uninstall
 
