@@ -1,0 +1,610 @@
+# container: ipm-uplift-iris-repo  image: containers.intersystems.com/intersystems/iris-community:2026.1  at: 2026-11-13T18:28:56Z
+# script: validation/iris/repo/75-registry-checks.script
+
+Node: 2e8609ed30a0, Instance: IRIS
+
+USER>
+
+LOAD 1 
+
+USER>
+
+>>> repo -r -n nc-repo-a -url http://127.0.0.1:9/ -token t
+
+[33mWARNING: Using -token via the CLI is insecure. Use -token-env.[0m
+nc-repo-a
+	Source: 			http://127.0.0.1:9/
+	Enabled?			Yes
+	Available?			No
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	No
+	Token: 				<set>
+	Token Auth Method: 		apiKey
+
+nc-repo-a
+	Source: 			http://127.0.0.1:9/
+	Enabled?			Yes
+	Available?			No
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	No
+	Token: 				<set>
+	Token Auth Method: 		apiKey
+
+<<< status=OK
+
+>>> load /tmp/uplift/repo/fixtures/nc-repo-pub/
+
+Building dependency graph...Done.
+[USER|nc-repo-pub]	Initialize START
+[USER|nc-repo-pub]	Initialize SUCCESS
+[USER|nc-repo-pub]	Reload START (/tmp/uplift/repo/fixtures/nc-repo-pub/)
+[USER|nc-repo-pub]	Reload SUCCESS
+[nc-repo-pub]	Module object refreshed.
+[USER|nc-repo-pub]	Validate START
+[USER|nc-repo-pub]	Validate SUCCESS
+[USER|nc-repo-pub]	Compile START
+[USER|nc-repo-pub]	Compile SUCCESS
+[USER|nc-repo-pub]	Activate START
+[USER|nc-repo-pub]	Configure START
+[USER|nc-repo-pub]	Configure SUCCESS
+[USER|nc-repo-pub]	Activate SUCCESS
+<<< status=OK
+
+>>> publish nc-repo-pub -v
+
+[USER|nc-repo-pub]	Initialize START
+Skipping preload - directory does not exist.
+[USER|nc-repo-pub]	Initialize SUCCESS
+[USER|nc-repo-pub]	Reload START (/tmp/uplift/repo/fixtures/nc-repo-pub/)
+[USER|nc-repo-pub]	Reload SUCCESS
+[nc-repo-pub]	Module object refreshed.
+[USER|nc-repo-pub]	Validate START
+[USER|nc-repo-pub]	Validate SUCCESS
+[USER|nc-repo-pub]	Compile START
+Compilation started on 11/13/2026 18:29:02 with qualifiers 'd-lck'
+Compiling class NCRepoPub.Hello
+Compiling routine NCRepoPub.Hello.1
+Compilation finished successfully in 0.006s.
+
+[USER|nc-repo-pub]	Compile SUCCESS
+[USER|nc-repo-pub]	Activate START
+[USER|nc-repo-pub]	Configure START
+[USER|nc-repo-pub]	Configure SUCCESS
+Seeding update steps for module = nc-repo-pub, for version = 1.0.0
+
+[USER|nc-repo-pub]	Activate SUCCESS
+[USER|nc-repo-pub]	Publish START
+[USER|nc-repo-pub]	Package START
+Exporting 'NCRepoPub.Hello.CLS' to '/usr/irissys/mgr/Temp/dirsE4F3R/nc-repo-pub-1.0.0/src/cls/NCRepoPub/Hello.cls'
+Exported to /usr/irissys/mgr/Temp/dirsE4F3R/nc-repo-pub-1.0.0/module.xml
+Module contents exported to temporary directory:
+	/usr/irissys/mgr/Temp/dirsE4F3R/nc-repo-pub-1.0.0/
+
+Module package generated:
+	/usr/irissys/mgr/Temp/dirsE4F3R/nc-repo-pub-1.0.0.tgz
+[USER|nc-repo-pub]	Package SUCCESS
+Publish to: http://127.0.0.1:9/
+[nc-repo-pub]	Publish FAILURE
+[31mERROR![0m Unable to open TCP/IP socket to server 127.0.0.1:9
+<<< status=ERROR #6059: Unable to open TCP/IP socket to server 127.0.0.1:9
+
+OBS|nc-repo-1-publish-no-flag|deploymentEnabled=;error=ERROR #6059: Unable to open TCP/IP socket to server 127.0.0.1:9;load=1;printedNoServer=0;printedPublishTo=1;publishingServerPick=nc-repo-a;repo=1;status=err;
+
+>>> uninstall nc-repo-pub -force
+
+[USER|nc-repo-pub]	Clean START
+[USER|nc-repo-pub]	Unconfigure START
+[USER|nc-repo-pub]	Unconfigure SUCCESS
+[USER|nc-repo-pub]	Clean SUCCESS
+<<< status=OK
+
+>>> repo -o -n nc-repo-o3 -url http://nc-host-a:5000 -username u -password p
+
+[33mWARNING: Using -password via the CLI is insecure. Use -password-stdin or -password-env.[0m
+nc-repo-o3
+	Source: 			http://nc-host-a:5000
+	Enabled?			Yes
+	Available?			No
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	No
+	Username: 			u
+	Password: 			<set>
+	Authenticated?			No
+
+nc-repo-o3
+	Source: 			http://nc-host-a:5000
+	Enabled?			Yes
+	Available?			No
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	No
+	Username: 			u
+	Password: 			<set>
+	Authenticated?			No
+
+<<< status=OK
+
+>>> repo -n nc-repo-o3 -url http://nc-host-b:5000
+
+nc-repo-o3
+	Source: 			http://nc-host-b:5000
+	Enabled?			Yes
+	Available?			No
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	No
+	Username: 			u
+	Password: 			<set>
+	Authenticated?			No
+
+nc-repo-o3
+	Source: 			http://nc-host-b:5000
+	Enabled?			Yes
+	Available?			No
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	No
+	Username: 			u
+	Password: 			<set>
+	Authenticated?			No
+
+<<< status=OK
+
+>>> repo -r -n nc-repo-r3 -url http://nc-host-c:5000 -username u -password p
+
+[33mWARNING: Using -password via the CLI is insecure. Use -password-stdin or -password-env.[0m
+nc-repo-r3
+	Source: 			http://nc-host-c:5000
+	Enabled?			Yes
+	Available?			No
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	No
+	Username: 			u
+	Password: 			<set>
+
+nc-repo-r3
+	Source: 			http://nc-host-c:5000
+	Enabled?			Yes
+	Available?			No
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	No
+	Username: 			u
+	Password: 			<set>
+
+nc-repo-o3
+	Source: 			http://nc-host-b:5000
+	Enabled?			Yes
+	Available?			No
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	No
+	Username: 			u
+	Password: 			<set>
+	Authenticated?			No
+
+<<< status=OK
+
+>>> repo -n nc-repo-r3 -url http://nc-host-d:5000
+
+nc-repo-r3
+	Source: 			http://nc-host-d:5000
+	Enabled?			Yes
+	Available?			No
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	No
+
+nc-repo-r3
+	Source: 			http://nc-host-d:5000
+	Enabled?			Yes
+	Available?			No
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	No
+
+nc-repo-o3
+	Source: 			http://nc-host-b:5000
+	Enabled?			Yes
+	Available?			No
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	No
+	Username: 			u
+	Password: 			<set>
+	Authenticated?			No
+
+<<< status=OK
+
+>>> repo -r -n nc-repo-r3b -url http://nc-host-b:5000
+
+[31mERROR![0m Repo 'nc-repo-o3' already uses this URL.
+<<< status=ERROR #5001: Repo 'nc-repo-o3' already uses this URL.
+
+OBS|nc-repo-3-url-change-credentials|crossKindSameUrl.error=ERROR #5001: Repo 'nc-repo-o3' already uses this URL.;crossKindSameUrl.status=err;o.change=1;o.create=1;o.passwordSetAfter=1;o.passwordSetBefore=1;o.urlAfter=http://nc-host-b:5000;o.userAfter=u;o.userBefore=u;r.change=1;r.create=1;r.passwordSetAfter=0;r.passwordSetBefore=1;r.urlAfter=http://nc-host-d:5000;r.userAfter=;r.userBefore=u;
+
+>>> repo -r -n nc-repo-r4 -url http://127.0.0.1:19/ -token t -token-auth-method bearer
+
+[33mWARNING: Using -token via the CLI is insecure. Use -token-env.[0m
+nc-repo-r4
+	Source: 			http://127.0.0.1:19/
+	Enabled?			Yes
+	Available?			No
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	No
+	Token: 				<set>
+	Token Auth Method: 		apiKey
+
+nc-repo-r4
+	Source: 			http://127.0.0.1:19/
+	Enabled?			Yes
+	Available?			No
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	No
+	Token: 				<set>
+	Token Auth Method: 		apiKey
+
+<<< status=OK
+
+>>> repo -o -n nc-repo-o4 -url http://127.0.0.1:29 -token t -token-auth-method bearer
+
+[33mWARNING: Using -token via the CLI is insecure. Use -token-env.[0m
+nc-repo-o4
+	Source: 			http://127.0.0.1:29
+	Enabled?			Yes
+	Available?			No
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	No
+	Token: 				<set>
+	Token Auth Method: 		bearer
+	Authenticated?			No
+
+nc-repo-o4
+	Source: 			http://127.0.0.1:29
+	Enabled?			Yes
+	Available?			No
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	No
+	Token: 				<set>
+	Token Auth Method: 		bearer
+	Authenticated?			No
+
+nc-repo-r4
+	Source: 			http://127.0.0.1:19/
+	Enabled?			Yes
+	Available?			No
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	No
+	Token: 				<set>
+	Token Auth Method: 		apiKey
+
+<<< status=OK
+
+OBS|nc-repo-4-token-auth-method|o.create=1;o.stored=bearer;r.create=1;r.headerApikey=t;r.headerAuthorization=;r.stored=apiKey;
+
+>>> repo -r -n nc-repo-r5 -url https://nc-example.invalid/ -sslconfig NcCfg -publish-url http://nc-example.invalid/ncpubpath
+
+nc-repo-r5
+	Source: 			https://nc-example.invalid/
+	Enabled?			Yes
+	Available?			No
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	No
+
+nc-repo-r5
+	Source: 			https://nc-example.invalid/
+	Enabled?			Yes
+	Available?			No
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	No
+
+<<< status=OK
+
+OBS|nc-repo-5-sslconfig-publish-url|create.status=ok;requestHttps=1;requestSSLConfiguration=nc-example.invalid;sslConfigHostExists=1;sslConfigNcCfgExists=0;storedHasNcCfg=0;storedHasPublishUrl=0;
+
+>>> config set HistoryRetain 30
+
+Key "HistoryRetain" succesfully updated
+
+<<< status=OK
+
+>>> config set HistoryRetain 1
+
+Key "HistoryRetain" succesfully updated
+
+<<< status=OK
+
+>>> config delete HistoryRetain
+
+Value for "HistoryRetain" succesfully reset to default
+
+<<< status=OK
+
+>>> config get HistoryRetain
+HistoryRetain:30
+
+<<< status=OK
+
+OBS|nc-repo-6-config-delete|after1.default=30;after1.value=1;after30.default=30;after30.value=30;afterDelete.default=30;afterDelete.value=30;delete.status=ok;fresh.default=<undef>;fresh.value=<undef>;getPrinted=30;
+
+>>> default-modifiers -delete
+
+Successfully deleted default modifiers!
+
+<<< status=OK
+
+>>> default-modifiers -set -DNcProbe=1
+
+Successfully updated default modifiers!
+
+<<< status=OK
+
+>>> default-modifiers -get
+
+
+[4mAvailable default modifiers:[0m
+
+-DNcProbe=1
+-Dzpm.NcProbe=1
+
+<<< status=OK
+
+>>> default-modifiers -delete
+
+Successfully deleted default modifiers!
+
+<<< status=OK
+
+OBS|nc-repo-7-default-modifiers-namespaces|destMap=^/usr/irissys/mgr/;destSys=^/usr/irissys/mgr/;destUser=^/usr/irissys/mgr/;map.data=10;map.dataAfterUserDelete=0;map.get.status=ok;map.getListsNcProbe=1;map.getSaysNone=0;map.ipmMain=compiled;set=1;sys.data=10;
+
+OBS|nc-repo-env-percent-global-shared|destMap=^/usr/irissys/mgr/;destUser=^/usr/irissys/mgr/;seenInMap=1;seenInSys=1;
+
+>>> config set NoSuchKey 1
+Config key = "NoSuchKey" not found
+
+<<< status=OK
+
+>>> config get NoSuchKey
+Config key = "NoSuchKey" not found
+
+<<< status=OK
+
+>>> config set TestReportFormat xml
+
+ERROR #5001: Unknown format 'xml'. Valid formats: json,yaml,toon
+
+<<< status=OK
+
+OBS|nc-repo-8-config-errors|getUnknown.status=ok;setBadFormat.printed=ERROR #5001: Unknown format 'xml'. Valid formats: json,yaml,toon;setBadFormat.status=ok;setBadFormat.valueAfter=;setUnknown.printedNotFound=1;setUnknown.status=ok;
+
+>>> repo -type remote -n nc-repo-x2 -url http://127.0.0.1:39/
+
+nc-repo-x2
+	Source: 			http://127.0.0.1:39/
+	Enabled?			Yes
+	Available?			No
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	No
+
+nc-repo-x2
+	Source: 			http://127.0.0.1:39/
+	Enabled?			Yes
+	Available?			No
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	No
+
+<<< status=OK
+
+OBS|nc-repo-10-control-type-moniker|createdClass=%IPM.Repo.Remote.Definition;status=ok;
+
+>>> repo -fs -n nc-repo-f -path /tmp/nc-repo-fs/
+
+nc-fs1 1.0.0 @ /tmp/nc-repo-fs/nc-fs1/
+nc-repo-f
+	Source: 		/tmp/nc-repo-fs/*
+	Enabled?		Yes
+	Available?		Yes
+	Use for Snapshots?	Yes
+	Use for Prereleases?	Yes
+	Is Read-Only?		No
+
+nc-repo-f
+	Source: 		/tmp/nc-repo-fs/*
+	Enabled?		Yes
+	Available?		Yes
+	Use for Snapshots?	Yes
+	Use for Prereleases?	Yes
+	Is Read-Only?		No
+
+<<< status=OK
+
+>>> search
+nc-repo-f /tmp/nc-repo-fs/*:
+[32mnc-fs1[0m [39m1.0.0[0m
+<<< status=OK
+
+>>> search
+nc-repo-f /tmp/nc-repo-fs/*:
+[32mnc-fs1[0m [39m1.0.0[0m
+<<< status=OK
+
+>>> install nc-fs2
+
+[31mERROR![0m 'nc-fs2' not found in any repository.
+<<< status=ERROR #5001: 'nc-fs2' not found in any repository.
+
+>>> repo -n nc-repo-f -path /tmp/nc-repo-fs/
+
+nc-fs1 1.0.0 @ /tmp/nc-repo-fs/nc-fs1/
+nc-fs2 1.0.0 @ /tmp/nc-repo-fs/nc-fs2/
+nc-repo-f
+	Source: 		/tmp/nc-repo-fs/*
+	Enabled?		Yes
+	Available?		Yes
+	Use for Snapshots?	Yes
+	Use for Prereleases?	Yes
+	Is Read-Only?		No
+
+nc-repo-f
+	Source: 		/tmp/nc-repo-fs/*
+	Enabled?		Yes
+	Available?		Yes
+	Use for Snapshots?	Yes
+	Use for Prereleases?	Yes
+	Is Read-Only?		No
+
+<<< status=OK
+
+>>> search
+nc-repo-f /tmp/nc-repo-fs/*:
+[32mnc-fs1[0m [39m1.0.0[0m
+[32mnc-fs2[0m [39m1.0.0[0m
+<<< status=OK
+
+>>> install nc-fs2
+
+Building dependency graph...Done.
+[USER|nc-fs2]	Initialize START
+[USER|nc-fs2]	Initialize SUCCESS
+[USER|nc-fs2]	Reload START (/tmp/nc-repo-fs/nc-fs2/)
+[USER|nc-fs2]	Reload SUCCESS
+[nc-fs2]	Module object refreshed.
+[USER|nc-fs2]	Validate START
+[USER|nc-fs2]	Validate SUCCESS
+[USER|nc-fs2]	Compile START
+[USER|nc-fs2]	Compile SUCCESS
+[USER|nc-fs2]	Activate START
+[USER|nc-fs2]	Configure START
+[USER|nc-fs2]	Configure SUCCESS
+[USER|nc-fs2]	Activate SUCCESS
+<<< status=OK
+
+OBS|nc-repo-11-folder-cache|copy1=1;copy2=1;fs2Installed=1;installAfterRescan.status=ok;installBeforeRescan.error=ERROR #5001: 'nc-fs2' not found in any repository.;installBeforeRescan.status=err;repo=1;rescan=1;s1.fs1=1;s1.fs2=0;s2.fs1=1;s2.fs2=0;s3.fs1=1;s3.fs2=1;
+
+>>> uninstall nc-fs2
+
+[USER|nc-fs2]	Clean START
+[USER|nc-fs2]	Unconfigure START
+[USER|nc-fs2]	Unconfigure SUCCESS
+[USER|nc-fs2]	Clean SUCCESS
+<<< status=OK
+
+>>> repo -r -n nc-repo-r13 -url http://127.0.0.1:49/ -username u -password-env NC_PW
+
+nc-repo-r13
+	Source: 			http://127.0.0.1:49/
+	Enabled?			Yes
+	Available?			No
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	No
+	Username: 			u
+	Password: 			<set>
+
+nc-repo-r13
+	Source: 			http://127.0.0.1:49/
+	Enabled?			Yes
+	Available?			No
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	No
+	Username: 			u
+	Password: 			<set>
+
+<<< status=OK
+
+>>> repo -o -n nc-repo-o13 -url http://127.0.0.1:59 -token-env NC_TOK
+
+nc-repo-o13
+	Source: 			http://127.0.0.1:59
+	Enabled?			Yes
+	Available?			No
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	No
+	Token: 				<set>
+	Token Auth Method: 		apiKey
+	Authenticated?			No
+
+nc-repo-o13
+	Source: 			http://127.0.0.1:59
+	Enabled?			Yes
+	Available?			No
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	No
+	Token: 				<set>
+	Token Auth Method: 		apiKey
+	Authenticated?			No
+
+nc-repo-r13
+	Source: 			http://127.0.0.1:49/
+	Enabled?			Yes
+	Available?			No
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	No
+	Username: 			u
+	Password: 			<set>
+
+<<< status=OK
+
+OBS|nc-repo-13-secret-at-rest|envVisible=1;pw.listShowsValue=0;pw.status=ok;pw.storedPlain=1;pw.storedVarName=0;tok.listShowsValue=0;tok.status=ok;tok.storedPlain=1;
+
+USER>
+
+
+1) Filesystem
+2) ORAS
+3) Remote Repository
+
+Which sort of repository do you wish to configure? 
+[31mERROR![0m Operation cancelled.
+USER>
+
+USER>
+
+OBS|nc-repo-10-invalid-type|created=0;error=ERROR #5001: Operation cancelled.;status=err;
+
+USER>
+
+USER>

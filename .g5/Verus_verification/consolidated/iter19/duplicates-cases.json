@@ -1,0 +1,255 @@
+{
+  "models": {
+    "duplicates.rs": {
+      "last-duplicate-overwrites-row": [
+        "Admission{cache:Cache{rows:c.rows,warnings:c.warnings+seq!",
+        "Admission{cache:Cache{rows:c.rows.insert(e.key,Row{key:e.key,subdir:e.subdir,manifest:e.manifest}),warnings:c.warnings+seq!"
+      ],
+      "duplicate-overwrites-manifest-only": [
+        "Admission{cache:Cache{rows:c.rows,warnings:c.warnings+seq!",
+        "Admission{cache:Cache{rows:c.rows.insert(e.key,Row{manifest:e.manifest,..c.rows[e.key]}),warnings:c.warnings+seq!"
+      ],
+      "duplicate-overwrites-directory-only": [
+        "Admission{cache:Cache{rows:c.rows,warnings:c.warnings+seq!",
+        "Admission{cache:Cache{rows:c.rows.insert(e.key,Row{subdir:e.subdir,..c.rows[e.key]}),warnings:c.warnings+seq!"
+      ],
+      "duplicate-is-error": [
+        "key:e.key,retained:c.rows[e.key].subdir,duplicate:e.subdir}]},ok:true}",
+        "key:e.key,retained:c.rows[e.key].subdir,duplicate:e.subdir}]},ok:false}"
+      ],
+      "duplicate-warning-dropped": [
+        "warnings:c.warnings+seq![Warning{\n   key:e.key,retained:c.rows[e.key].subdir,duplicate:e.subdir}]",
+        "warnings:c.warnings"
+      ],
+      "warning-reports-duplicate-as-retained": [
+        "retained:c.rows[e.key].subdir",
+        "retained:e.subdir"
+      ],
+      "warning-reports-retained-as-duplicate": [
+        "duplicate:e.subdir",
+        "duplicate:c.rows[e.key].subdir"
+      ],
+      "reverse-provider-sequence": [
+        "seq![Entry{key:key(s.root,m),subdir:dir,manifest:m}]+materialize(s,i+1)",
+        "materialize(s,i+1)+seq![Entry{key:key(s.root,m),subdir:dir,manifest:m}]"
+      ],
+      "logical-key-ignores-root": [
+        "Key{root,name:m.name,version:m.version}",
+        "Key{root:root_ab(),name:m.name,version:m.version}"
+      ],
+      "logical-key-ignores-name": [
+        "Key{root,name:m.name,version:m.version}",
+        "Key{root,name:name(),version:m.version}"
+      ],
+      "logical-key-ignores-full-version": [
+        "Key{root,name:m.name,version:m.version}",
+        "Key{root,name:m.name,version:version()}"
+      ],
+      "manifest-reader-uses-unselected-source": [
+        "Some(r)=>Some(r.manifest)",
+        "Some(r)=>Some(disk_b().manifest)"
+      ],
+      "directory-reader-uses-fixed-subdir": [
+        "Some(r)=>Some(directory_text(r.key,r.subdir))",
+        "Some(r)=>Some(directory_text(r.key,low_a()))"
+      ],
+      "directory-loses-normalized-trailing-slash": [
+        "k.root+subdir+slash()",
+        "k.root+subdir"
+      ],
+      "consumer-reads-other-physical-directory": [
+        "let row=lookup(b,k).unwrap();let disk=s.directories[row.subdir];",
+        "let row=lookup(b,k).unwrap();let disk=s.directories[if s.directories.contains_key(low_a()){low_a()}else{row.subdir}];"
+      ],
+      "consumer-payload-is-constant": [
+        "payload:disk.payload",
+        "payload:101"
+      ],
+      "consumer-description-is-constant": [
+        "description:disk.manifest.marker",
+        "description:source_a()"
+      ],
+      "consumer-root-is-fixed-subdir": [
+        "root:directory_text(row.key,row.subdir)",
+        "root:directory_text(row.key,low_a())"
+      ],
+      "consumer-supplier-is-single": [
+        "root:directory_text(row.key,row.subdir),repository:s.repository",
+        "root:directory_text(row.key,row.subdir),repository:single_a().repository"
+      ],
+      "consumer-loses-full-version": [
+        "name:disk.manifest.name,version:disk.manifest.version",
+        "name:disk.manifest.name,version:seq![]"
+      ],
+      "first-row-stores-wrong-directory": [
+        "Row{key:e.key,subdir:e.subdir,manifest:e.manifest}",
+        "Row{key:e.key,subdir:low_a(),manifest:e.manifest}"
+      ]
+    }
+  },
+  "dependency_controls": {},
+  "control_functions": {
+    "duplicates.rs": {
+      "last-duplicate-overwrites-row": "admission_neighbor",
+      "duplicate-overwrites-manifest-only": "admission_neighbor",
+      "duplicate-overwrites-directory-only": "admission_neighbor",
+      "duplicate-is-error": "warning_neighbor",
+      "duplicate-warning-dropped": "warning_neighbor",
+      "warning-reports-duplicate-as-retained": "warning_neighbor",
+      "warning-reports-retained-as-duplicate": "warning_neighbor",
+      "reverse-provider-sequence": "admission_neighbor",
+      "logical-key-ignores-root": "logical_key_neighbor",
+      "logical-key-ignores-name": "logical_key_neighbor",
+      "logical-key-ignores-full-version": "logical_key_neighbor",
+      "manifest-reader-uses-unselected-source": "service_neighbor",
+      "directory-reader-uses-fixed-subdir": "service_neighbor",
+      "directory-loses-normalized-trailing-slash": "service_neighbor",
+      "consumer-reads-other-physical-directory": "installation_neighbor",
+      "consumer-payload-is-constant": "installation_neighbor",
+      "consumer-description-is-constant": "installation_neighbor",
+      "consumer-root-is-fixed-subdir": "installation_neighbor",
+      "consumer-supplier-is-single": "installation_neighbor",
+      "consumer-loses-full-version": "installation_neighbor",
+      "first-row-stores-wrong-directory": "admission_neighbor"
+    }
+  },
+  "control_options": [
+    "--multiple-errors",
+    "0"
+  ],
+  "replay_model": "duplicates.rs",
+  "replay": {
+    "repo-single": "b(build(single_a()).ok)",
+    "repo-ab": "b(build(ab_a_first()).ok)",
+    "repo-ba": "b(build(ba_b_first()).ok)",
+    "single-scan-count": "single_a().order.len()",
+    "single-scan-1-marker": "marker_code(single_a().directories[single_a().order[0]].manifest.marker)",
+    "single-first-marker": "marker_code(single_a().directories[single_a().order[0]].manifest.marker)",
+    "single-cache-first-directory": "b(retained_dir(single_a())==single_a().order[0])",
+    "single-cache-marker": "marker_code(cached_marker(single_a()))",
+    "single-cache-count": "rows(single_a())",
+    "single-service-marker": "marker_code(match service_manifest(build(single_a()),target(single_a())){Some(m)=>m.marker,None=>seq![]})",
+    "single-service-directory-cache": "b(service_directory(build(single_a()),target(single_a()))==Some(single_a().root+retained_dir(single_a())+slash()))",
+    "single-service-directory-marker": "marker_code(single_a().directories[retained_dir(single_a())].manifest.marker)",
+    "single-cache-service-agree": "b(cached_marker(single_a())==(match service_manifest(build(single_a()),target(single_a())){Some(m)=>m.marker,None=>seq![]}))",
+    "single-cache-first-marker": "b(cached_marker(single_a())==single_a().directories[single_a().order[0]].manifest.marker)",
+    "single-installed": "b(loaded(single_a()).module.is_some())",
+    "single-installed-root": "b(installed_root(loaded(single_a()))==Some(single_a().root+single_a().order[0]+slash()))",
+    "single-installed-supplier": "b(supplier(loaded(single_a()))==single_a().repository)",
+    "single-installed-version": "b(installed_version(loaded(single_a()))==version())",
+    "single-installed-marker": "marker_code(description(loaded(single_a())))",
+    "single-installed-description-exact": "b(description(loaded(single_a()))==source_a())",
+    "single-payload": "payload(loaded(single_a()))",
+    "single-duplicate-warning": "b(warnings(single_a())>0)",
+    "single-show-supplier": "b(shown_supplier(loaded(single_a()))==Some(single_a().repository))",
+    "single-listed-module": "b(listed_for_repository(loaded(single_a()),single_a().repository))",
+    "install-single": "b(loaded(single_a()).ok)",
+    "ab-scan-count": "ab_a_first().order.len()",
+    "ab-scan-1-marker": "marker_code(ab_a_first().directories[ab_a_first().order[0]].manifest.marker)",
+    "ab-first-marker": "marker_code(ab_a_first().directories[ab_a_first().order[0]].manifest.marker)",
+    "ab-cache-first-directory": "b(retained_dir(ab_a_first())==ab_a_first().order[0])",
+    "ab-cache-marker": "marker_code(cached_marker(ab_a_first()))",
+    "ab-cache-count": "rows(ab_a_first())",
+    "ab-service-marker": "marker_code(match service_manifest(build(ab_a_first()),target(ab_a_first())){Some(m)=>m.marker,None=>seq![]})",
+    "ab-service-directory-cache": "b(service_directory(build(ab_a_first()),target(ab_a_first()))==Some(ab_a_first().root+retained_dir(ab_a_first())+slash()))",
+    "ab-service-directory-marker": "marker_code(ab_a_first().directories[retained_dir(ab_a_first())].manifest.marker)",
+    "ab-cache-service-agree": "b(cached_marker(ab_a_first())==(match service_manifest(build(ab_a_first()),target(ab_a_first())){Some(m)=>m.marker,None=>seq![]}))",
+    "ab-cache-first-marker": "b(cached_marker(ab_a_first())==ab_a_first().directories[ab_a_first().order[0]].manifest.marker)",
+    "ab-installed": "b(loaded(ab_a_first()).module.is_some())",
+    "ab-installed-root": "b(installed_root(loaded(ab_a_first()))==Some(ab_a_first().root+ab_a_first().order[0]+slash()))",
+    "ab-installed-supplier": "b(supplier(loaded(ab_a_first()))==ab_a_first().repository)",
+    "ab-installed-version": "b(installed_version(loaded(ab_a_first()))==version())",
+    "ab-installed-marker": "marker_code(description(loaded(ab_a_first())))",
+    "ab-installed-description-exact": "b(description(loaded(ab_a_first()))==source_a())",
+    "ab-payload": "payload(loaded(ab_a_first()))",
+    "ab-duplicate-warning": "b(warnings(ab_a_first())>0)",
+    "ab-show-supplier": "b(shown_supplier(loaded(ab_a_first()))==Some(ab_a_first().repository))",
+    "ab-listed-module": "b(listed_for_repository(loaded(ab_a_first()),ab_a_first().repository))",
+    "ab-scan-2-marker": "marker_code(ab_a_first().directories[ab_a_first().order[1]].manifest.marker)",
+    "install-ab": "b(loaded(ab_a_first()).ok)",
+    "ba-scan-count": "ba_b_first().order.len()",
+    "ba-scan-1-marker": "marker_code(ba_b_first().directories[ba_b_first().order[0]].manifest.marker)",
+    "ba-first-marker": "marker_code(ba_b_first().directories[ba_b_first().order[0]].manifest.marker)",
+    "ba-cache-first-directory": "b(retained_dir(ba_b_first())==ba_b_first().order[0])",
+    "ba-cache-marker": "marker_code(cached_marker(ba_b_first()))",
+    "ba-cache-count": "rows(ba_b_first())",
+    "ba-service-marker": "marker_code(match service_manifest(build(ba_b_first()),target(ba_b_first())){Some(m)=>m.marker,None=>seq![]})",
+    "ba-service-directory-cache": "b(service_directory(build(ba_b_first()),target(ba_b_first()))==Some(ba_b_first().root+retained_dir(ba_b_first())+slash()))",
+    "ba-service-directory-marker": "marker_code(ba_b_first().directories[retained_dir(ba_b_first())].manifest.marker)",
+    "ba-cache-service-agree": "b(cached_marker(ba_b_first())==(match service_manifest(build(ba_b_first()),target(ba_b_first())){Some(m)=>m.marker,None=>seq![]}))",
+    "ba-cache-first-marker": "b(cached_marker(ba_b_first())==ba_b_first().directories[ba_b_first().order[0]].manifest.marker)",
+    "ba-installed": "b(loaded(ba_b_first()).module.is_some())",
+    "ba-installed-root": "b(installed_root(loaded(ba_b_first()))==Some(ba_b_first().root+ba_b_first().order[0]+slash()))",
+    "ba-installed-supplier": "b(supplier(loaded(ba_b_first()))==ba_b_first().repository)",
+    "ba-installed-version": "b(installed_version(loaded(ba_b_first()))==version())",
+    "ba-installed-marker": "marker_code(description(loaded(ba_b_first())))",
+    "ba-installed-description-exact": "b(description(loaded(ba_b_first()))==source_b())",
+    "ba-payload": "payload(loaded(ba_b_first()))",
+    "ba-duplicate-warning": "b(warnings(ba_b_first())>0)",
+    "ba-show-supplier": "b(shown_supplier(loaded(ba_b_first()))==Some(ba_b_first().repository))",
+    "ba-listed-module": "b(listed_for_repository(loaded(ba_b_first()),ba_b_first().repository))",
+    "ba-scan-2-marker": "marker_code(ba_b_first().directories[ba_b_first().order[1]].manifest.marker)",
+    "install-ba": "b(loaded(ba_b_first()).ok)",
+    "single-constructor-count": "single_a().order.len()",
+    "single-constructor-1-marker": "marker_code(single_a().directories[single_a().order[0]].manifest.marker)",
+    "ab-constructor-count": "ab_a_first().order.len()",
+    "ab-constructor-1-marker": "marker_code(ab_a_first().directories[ab_a_first().order[0]].manifest.marker)",
+    "ab-constructor-2-marker": "marker_code(ab_a_first().directories[ab_a_first().order[1]].manifest.marker)",
+    "ba-constructor-count": "ba_b_first().order.len()",
+    "ba-constructor-1-marker": "marker_code(ba_b_first().directories[ba_b_first().order[0]].manifest.marker)",
+    "ba-constructor-2-marker": "marker_code(ba_b_first().directories[ba_b_first().order[1]].manifest.marker)"
+  },
+  "replay_prelude": "admission_neighbor();warning_neighbor();service_neighbor();installation_neighbor();reveal_with_fuel(materialize,3);reveal_with_fuel(fold,3);",
+  "native_expected": {
+    "driver-compile": 1,
+    "repo-clear": 1,
+    "single-definition": 1,
+    "single-root": 1,
+    "single-depth": 1,
+    "single-scan-ok": 1,
+    "single-cache-name": 1,
+    "single-cache-version": 1,
+    "single-service-full-manifest-equal": 1,
+    "single-code": 1,
+    "show-single": 1,
+    "list-single": 1,
+    "ab-definition": 1,
+    "ab-root": 1,
+    "ab-depth": 1,
+    "ab-scan-ok": 1,
+    "ab-cache-name": 1,
+    "ab-cache-version": 1,
+    "ab-service-full-manifest-equal": 1,
+    "ab-code": 1,
+    "show-ab": 1,
+    "list-ab": 1,
+    "ba-definition": 1,
+    "ba-root": 1,
+    "ba-depth": 1,
+    "ba-scan-ok": 1,
+    "ba-cache-name": 1,
+    "ba-cache-version": 1,
+    "ba-service-full-manifest-equal": 1,
+    "ba-code": 1,
+    "show-ba": 1,
+    "list-ba": 1,
+    "final-tlevel": 0,
+    "single-constructor-agrees-sampled-scan": 1,
+    "ab-constructor-agrees-sampled-scan": 1,
+    "ba-constructor-agrees-sampled-scan": 1
+  },
+  "scope_notes": [
+    "Fresh purged filesystem cache; distinct provider-enumerated directories, valid parsed manifests, successful new-row persistence or recognized RootNameVersion duplicate handling. Other save errors, concurrency, refresh/stale/removed-source behavior are unassessed.",
+    "ScanDirectory order is a provider input preserved by materialize. Native qualifies single00-a;AB00-a,99-b;BA00-b,99-a. Opposite-order witnesses are conditional model neighbors, not portable runtime ordering promises.",
+    "Final native constructor per-entry BuildCache verbose lines supply that constructor order directly; independent normal ScanDirectory sample agrees on these stable fixtures only. Cross-call/provider order stability and portable sorting remain unassessed.",
+    "Logical key is normalized root/name/fullVersion tuple. First admitted valid row retains subdir and Description marker together; duplicate adds a retained/duplicate warning and is nonerror.",
+    "GetModuleManifest/GetModuleDirectory open the same logical key. Ordinary supported directory install reads actual source manifest/code from retained physical directory map; successful runtime load/compile/save providers are explicit boundaries.",
+    "Constructor-produced indexed rows store the same Root/Name/VersionString tuple as their lookup key. indexed is preserved from empty through admission/fold/build; generic reader relation requires it and directory reader uses stored row root, matching source. Inconsistent manual maps are outside correspondence.",
+    "Manifest represents name/fullVersion/Description marker only. Full cache/service XML text equality is independently native-qualified, not a generic XML/stream serialization proof.",
+    "Physical roots are /tmp/iter19/repos/{single,ab,ba}/; subdirectories lowercase with no trailing slash; selected directories normalized to root+subdir+/. Actual aliases single,ab,ba; moduleiter19-dupe1.0.0; physicalpayload101/202.",
+    "Actual cache IDs/allocator gaps are qualification only. Map key/row identity is logical; no generated SQL/index/status body or generic parser proof.",
+    "Unchanged inherited owners Set-of-key valid cache properties remain. Their abstraction cannot derive which physical same-key source survives. Previously withdrawn constructor/outer-lock correspondence stays withdrawn; importing its abstract theorem does not restore source credit.",
+    "All21 local controls use five direct-definition focused selectors and same-source positives, plus full positive candidate baseline. No proof-lemma calls in negative selector witnesses; no inherited dependency mutation/new trust.",
+    "Archive boundary remains UNASSESSED/UNPURSUED. One broad source window incidentally displayed an adjacent excluded method; discarded without follow-up/model/probe/reproduction. Only permitted directory readers and ordinary directory branch are bound."
+  ]
+}

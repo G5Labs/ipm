@@ -1,0 +1,441 @@
+[
+  {
+    "ontology": "reinstall.version",
+    "path": ".g5/ontology/features/install.g5.md",
+    "status": "open",
+    "question_or_resolution": "Does `reinstall` install the version already installed, or the latest available version?",
+    "assumption": "- Provisional answer: the version already installed, as the command summary and its examples say.",
+    "alternatives": [
+      "- Alternative: the latest version, as the command description and the wiki say."
+    ],
+    "evidence": "owning block and same-ID metadata",
+    "audit_limit": "No fresh maintainer decision; missing historical intent is carried open."
+  },
+  {
+    "ontology": "devtools.authoring.module-version.file",
+    "path": ".g5/ontology/features/developer-tools.g5.md",
+    "status": "open",
+    "question_or_resolution": "Should `module-version` also update the `module.xml` file a module was loaded from?",
+    "assumption": "- Provisional answer: no, as built. The command edits the namespace's copy, and source control hooks, when present, take it from there.",
+    "alternatives": [
+      "- Alternative: yes for a module loaded in developer mode, whose folder is its working copy."
+    ],
+    "evidence": "owning block and same-ID metadata",
+    "audit_limit": "No fresh maintainer decision; missing historical intent is carried open."
+  },
+  {
+    "ontology": "history.record.unlogged-refusals",
+    "path": ".g5/ontology/features/history.g5.md",
+    "status": "open",
+    "question_or_resolution": "Should IPM record `update`, `reinstall` and `uninstall` attempts it refuses because of their arguments, as it records refused loads and installs?",
+    "assumption": "- Provisional answer: record them. Examples are `update` or `reinstall` of a module that is not installed, and `uninstall` with no name.",
+    "alternatives": [
+      "- Alternative: argument refusals are not attempts, because IPM refuses them before the action starts."
+    ],
+    "evidence": "owning block and same-ID metadata",
+    "audit_limit": "No fresh maintainer decision; missing historical intent is carried open."
+  },
+  {
+    "ontology": "history.record.abnormal-end",
+    "path": ".g5/ontology/features/history.g5.md",
+    "status": "open",
+    "question_or_resolution": "What should `Committed` say on the record of an action that never ended?",
+    "assumption": "- Provisional answer: `Committed` reflects the changes kept, even on an unfinished record. IPM writes it to the permanent record at each commit.",
+    "alternatives": [
+      "- Alternative: an empty end time means the outcome is unknown, so readers must not trust `Committed=0` on such a record."
+    ],
+    "evidence": "owning block and same-ID metadata",
+    "audit_limit": "No fresh maintainer decision; missing historical intent is carried open."
+  },
+  {
+    "ontology": "history.fields.dependency-source",
+    "path": ".g5/ontology/features/history.g5.md",
+    "status": "open",
+    "question_or_resolution": "How should the log label and show a dependency that IPM pulled from a repository while running a `load` or `update`, and what source does an `update` from a registry store?",
+    "assumption": "- Provisional answer: keep the `load` label for dependencies of `load` and `update`, keep their stored source, and keep the rule that listings show a source only for installs.",
+    "alternatives": [
+      "- Alternative: label them `install` with their source, following the original request's wording \"install (including as a dependency)\". That changes the maintainer test.",
+      "- Alternative: keep the `load` label and show the stored source in listings for any record that has one. That changes the wiki's rule that listings show `n/a` for anything other than install.",
+      "- Alternative: clear the source of records labeled `load`, as the field's description says for loads. This was not chosen, because hiding a real source loses useful history."
+    ],
+    "evidence": "owning block and same-ID metadata",
+    "audit_limit": "No fresh maintainer decision; missing historical intent is carried open."
+  },
+  {
+    "ontology": "history.phases.returned-errors",
+    "path": ".g5/ontology/features/history.g5.md",
+    "status": "open",
+    "question_or_resolution": "Must every phase that starts also record its end and status, including when an `<Invoke>` returns an error status instead of throwing one?",
+    "assumption": "- Provisional answer: yes. The docs read a phase with no end time as a hang or crash, so an ordinary error must not look like one.",
+    "alternatives": [
+      "- Alternative: accept open phases for returned errors and document it."
+    ],
+    "evidence": "owning block and same-ID metadata",
+    "audit_limit": "No fresh maintainer decision; missing historical intent is carried open."
+  },
+  {
+    "ontology": "history.committed.nested",
+    "path": ".g5/ontology/features/history.g5.md",
+    "status": "open",
+    "question_or_resolution": "When a caller wraps an IPM command in its own transaction, must the record survive the caller's rollback, and what should `Committed` say?",
+    "assumption": "- Provisional answer: the record survives, because the original request says \"if install rolls back we still need the history\". `Committed` is exact only for actions started outside any caller transaction, because IPM cannot know the caller's later outcome. Record this limit.",
+    "alternatives": [
+      "- Alternative: compare the transaction level at the end with the level at the start, so any commit nested in a caller transaction reads uncommitted.",
+      "- Alternative: treat caller-held transactions as unsupported, so the record may be lost with them."
+    ],
+    "evidence": "owning block and same-ID metadata",
+    "audit_limit": "No fresh maintainer decision; missing historical intent is carried open."
+  },
+  {
+    "ontology": "history.committed.side-effects",
+    "path": ".g5/ontology/features/history.g5.md",
+    "status": "settled-meaning-alias-preserved",
+    "question_or_resolution": "This question is resolved for the field's meaning: `Committed` covers database changes. It makes no filesystem rollback promise.",
+    "assumption": null,
+    "alternatives": [],
+    "evidence": "owning block and same-ID metadata",
+    "audit_limit": "No fresh maintainer decision; missing historical intent is carried open."
+  },
+  {
+    "ontology": "history.dependencies.parent-rollback",
+    "path": ".g5/ontology/features/history.g5.md",
+    "status": "settled-meaning-alias-preserved",
+    "question_or_resolution": "A dependency's `Success` records its own returned status, even if its parent's later rollback undoes its data. `Committed` describes kept database writes.",
+    "assumption": null,
+    "alternatives": [],
+    "evidence": "owning block and same-ID metadata",
+    "audit_limit": "No fresh maintainer decision; missing historical intent is carried open."
+  },
+  {
+    "ontology": "history.read.filter.invalid-column",
+    "path": ".g5/ontology/features/history.g5.md",
+    "status": "open",
+    "question_or_resolution": "What should happen to a filter on a column such as `Version_Major`, on a column that does not exist, or when the query fails?",
+    "assumption": "- Provisional answer: filters on listed columns, including version parts, must work, and IPM must never silently drop a filter. When `find` cannot run its query, it reports the error instead of showing an empty log.",
+    "alternatives": [
+      "- Alternative: refuse an unknown column with an error, or ignore it with a warning and apply the rest."
+    ],
+    "evidence": "owning block and same-ID metadata",
+    "audit_limit": "No fresh maintainer decision; missing historical intent is carried open."
+  },
+  {
+    "ontology": "history.read.filter.default-modifiers",
+    "path": ".g5/ontology/features/history.g5.md",
+    "status": "open",
+    "question_or_resolution": "Should the namespace's [default modifiers](../concepts/settings.g5.md#settings.default-modifiers) act as `history` filters?",
+    "assumption": "- Provisional answer: no. Default modifiers are meant for package changes, such as `-DNoTransaction=1`, while `history` filters are explicit requests.",
+    "alternatives": [
+      "- Alternative: apply them as filters and document it."
+    ],
+    "evidence": "owning block and same-ID metadata",
+    "audit_limit": "No fresh maintainer decision; missing historical intent is carried open."
+  },
+  {
+    "ontology": "history.delete.confirm-with-filter",
+    "path": ".g5/ontology/features/history.g5.md",
+    "status": "open",
+    "question_or_resolution": "Does `-confirm` together with a filter delete every record, or only the matching ones?",
+    "assumption": "- Provisional answer: only the matching ones. `-confirm` only permits a delete without a filter.",
+    "alternatives": [
+      "- Alternative: follow the command help."
+    ],
+    "evidence": "owning block and same-ID metadata",
+    "audit_limit": "No fresh maintainer decision; missing historical intent is carried open."
+  },
+  {
+    "ontology": "history.delete.running-records",
+    "path": ".g5/ontology/features/history.g5.md",
+    "status": "open",
+    "question_or_resolution": "May `history delete` or the daily [purge](#history.retention) remove the record of an action that is still running, and what should that action's final write do then?",
+    "assumption": "- Provisional answer: a delete or purge may remove any matching record, and the running action must still finish normally whether or not its record comes back.",
+    "alternatives": [
+      "- Alternative: skip records of running actions, or always write the final result back."
+    ],
+    "evidence": "owning block and same-ID metadata",
+    "audit_limit": "No fresh maintainer decision; missing historical intent is carried open."
+  },
+  {
+    "ontology": "history.locked.unfinished",
+    "path": ".g5/ontology/features/history.g5.md",
+    "status": "open",
+    "question_or_resolution": "May IPM finalize, and so lock, the record of an action that never ended?",
+    "assumption": "- Provisional answer: no. A finalized record is one whose action has ended, so a record without an end time stays unfinalized.",
+    "alternatives": [
+      "- Alternative: finalize whenever IPM releases the record, and accept locked records with no end time."
+    ],
+    "evidence": "owning block and same-ID metadata",
+    "audit_limit": "No fresh maintainer decision; missing historical intent is carried open."
+  },
+  {
+    "ontology": "history.retention.effect",
+    "path": ".g5/ontology/features/history.g5.md",
+    "status": "open",
+    "question_or_resolution": "May a failure of the daily purge stop the user's command?",
+    "assumption": "- Provisional answer: no. The command should still run, which is a proposed change.",
+    "alternatives": [
+      "- Alternative: report the purge error and stop, as a signal that retention is broken."
+    ],
+    "evidence": "owning block and same-ID metadata",
+    "audit_limit": "No fresh maintainer decision; missing historical intent is carried open."
+  },
+  {
+    "ontology": "history.keep-on-ipm-uninstall.other-namespaces",
+    "path": ".g5/ontology/features/history.g5.md",
+    "status": "open",
+    "question_or_resolution": "May uninstalling IPM in one namespace delete the in-progress records of other namespaces?",
+    "assumption": "- Provisional answer: no. History belongs to each namespace.",
+    "alternatives": [
+      "- Alternative: accept it, because removing IPM is rare."
+    ],
+    "evidence": "owning block and same-ID metadata",
+    "audit_limit": "No fresh maintainer decision; missing historical intent is carried open."
+  },
+  {
+    "ontology": "history.committed.escaped-dependency",
+    "path": ".g5/ontology/features/history.g5.md",
+    "status": "open",
+    "question_or_resolution": "Should a parent record count writes kept only by its NoJournal dependency?",
+    "assumption": "- Working assumption: Count surviving child writes in the parent outcome; retain the distinction between parent and child records.",
+    "alternatives": [
+      "- Alternative: Keep per-activation marker only and rely on independent child records after a repair."
+    ],
+    "evidence": "owning block and same-ID metadata",
+    "audit_limit": "No fresh maintainer decision; missing historical intent is carried open."
+  },
+  {
+    "ontology": "history.delete.global-errors",
+    "path": ".g5/ontology/features/history.g5.md",
+    "status": "open",
+    "question_or_resolution": "Must global delete report namespace errors other than missing permission?",
+    "assumption": "- Working assumption: Report errors that mean requested deletion was not performed.",
+    "alternatives": [
+      "- Alternative: Keep best-effort behavior and explicitly list skipped namespaces and errors."
+    ],
+    "evidence": "owning block and same-ID metadata",
+    "audit_limit": "No fresh maintainer decision; missing historical intent is carried open."
+  },
+  {
+    "ontology": "history.read.global-shape",
+    "path": ".g5/ontology/features/history.g5.md",
+    "status": "open",
+    "question_or_resolution": "Must programmatic global history rows carry their namespace and ID?",
+    "assumption": "- Working assumption: Return identities sufficient for a caller to distinguish colliding namespace-local IDs.",
+    "alternatives": [
+      "- Alternative: Keep the legacy row shape and document a separate namespace-aware API."
+    ],
+    "evidence": "owning block and same-ID metadata",
+    "audit_limit": "No fresh maintainer decision; missing historical intent is carried open."
+  },
+  {
+    "ontology": "history.retention.running-policy",
+    "path": ".g5/ontology/features/history.g5.md",
+    "status": "open",
+    "question_or_resolution": "May automatic retention remove an action that has not ended?",
+    "assumption": "- Working assumption: Retain the documented age rule while keeping deletion/finalization races explicit; no repair outcome is claimed.",
+    "alternatives": [
+      "- Alternative: Skip active rows and define how killed actions eventually expire."
+    ],
+    "evidence": "owning block and same-ID metadata",
+    "audit_limit": "No fresh maintainer decision; missing historical intent is carried open."
+  },
+  {
+    "ontology": "history.survives-rollback.repair-policy",
+    "path": ".g5/ontology/features/history.g5.md",
+    "status": "open",
+    "question_or_resolution": "Which repair should preserve child history without lying about Committed?",
+    "assumption": "- Working assumption: Keep current survival requirement and report the repair as undecided; no product repair applied.",
+    "alternatives": [
+      "- Alternative: Use one load-wide mode plus guarded close and mark ordering, or extend the repair to durably mark escaped child writes."
+    ],
+    "evidence": "owning block and same-ID metadata",
+    "audit_limit": "No fresh maintainer decision; missing historical intent is carried open."
+  },
+  {
+    "ontology": "history.committed.marking.refusal-policy",
+    "path": ".g5/ontology/features/history.g5.md",
+    "status": "open",
+    "question_or_resolution": "Should the no-transaction marker run only after every refusal?",
+    "assumption": "- Working assumption: Keep the intent that a no-write refusal is uncommitted; classify the early marker as a defect.",
+    "alternatives": [
+      "- Alternative: Declare every no-transaction attempt committed from its start and change the owning I rule explicitly."
+    ],
+    "evidence": "owning block and same-ID metadata",
+    "audit_limit": "No fresh maintainer decision; missing historical intent is carried open."
+  },
+  {
+    "ontology": "load.refusal.update-required.dev-bypass",
+    "path": ".g5/ontology/features/load.g5.md",
+    "status": "open",
+    "question_or_resolution": "Should `-dev` also lift the update-required refusal?",
+    "assumption": "- Provisional answer: yes. A maintainer test expects a newer version to install with `-dev`, and the original request asked IPM to point users to `-dev` or `-force`.",
+    "alternatives": [
+      "- Alternative: only `-force` lifts it, as the README says."
+    ],
+    "evidence": "owning block and same-ID metadata",
+    "audit_limit": "No fresh maintainer decision; missing historical intent is carried open."
+  },
+  {
+    "ontology": "load.refusal.requirements.timing",
+    "path": ".g5/ontology/features/load.g5.md",
+    "status": "open",
+    "question_or_resolution": "Must IPM check system requirements before it writes anything, even in developer mode or without a transaction?",
+    "assumption": "- Provisional answer: yes. The manifest docs say requirements are checked \"before module installation\", and a module that fails them was never installable.",
+    "alternatives": [
+      "- Alternative: accept that a refused developer-mode or `-DNoTransaction=1` load keeps its saved manifest, since developer mode keeps what it did."
+    ],
+    "evidence": "owning block and same-ID metadata",
+    "audit_limit": "No fresh maintainer decision; missing historical intent is carried open."
+  },
+  {
+    "ontology": "load.dependencies.local-repo.precedence",
+    "path": ".g5/ontology/features/load.g5.md",
+    "status": "open",
+    "question_or_resolution": "When another repository offers the same version of a dependency as the `.modules` folder, which copy should IPM install?",
+    "assumption": "- Provisional answer: the copy in the older repository, as built. The changelog says ties go to the repository created first.",
+    "alternatives": [
+      "- Alternative: the `.modules` copy, because the code that creates the temporary repository says it should be found first and gives it the first sort position."
+    ],
+    "evidence": "owning block and same-ID metadata",
+    "audit_limit": "No fresh maintainer decision; missing historical intent is carried open."
+  },
+  {
+    "ontology": "repo.filesystem.bad-module",
+    "path": ".g5/ontology/concepts/repositories.g5.md",
+    "status": "open",
+    "question_or_resolution": "Should a module with an invalid name in a filesystem repository's folder block the whole repository?",
+    "assumption": "- Provisional answer: no. Skip it with a warning, like an unreadable manifest, so the other modules stay available.",
+    "alternatives": [
+      "- Alternative: fail every bad manifest, including unreadable ones, so nothing is silently hidden."
+    ],
+    "evidence": "owning block and same-ID metadata",
+    "audit_limit": "No fresh maintainer decision; missing historical intent is carried open."
+  },
+  {
+    "ontology": "version.range.year",
+    "path": ".g5/ontology/concepts/versions.g5.md",
+    "status": "open",
+    "question_or_resolution": "Should a partial version such as `2024.1` mean exactly `2024.1.0`, as built, while `2024.12` and `1.2` mean a whole minor series?",
+    "assumption": "- Provisional answer: keep the special case for IRIS-style versions, because IPM's tests require `2022.2` to match only `2022.2`.",
+    "alternatives": [
+      "- Alternative: one rule for every partial version. Then `2022.2` would also accept `2022.2.1`."
+    ],
+    "evidence": "owning block and same-ID metadata",
+    "audit_limit": "No fresh maintainer decision; missing historical intent is carried open."
+  },
+  {
+    "ontology": "module.env.failure",
+    "path": ".g5/ontology/concepts/modules.g5.md",
+    "status": "open",
+    "question_or_resolution": "When one of several `-env` files is missing, malformed or an array, what should the command keep, and how should two arrays merge?",
+    "assumption": "- Provisional answer: as built. The command fails and keeps nothing from any file, and a later array overwrites the earlier one position by position, so it cannot remove items.",
+    "alternatives": [],
+    "evidence": "owning block and same-ID metadata",
+    "audit_limit": "No fresh maintainer decision; missing historical intent is carried open."
+  },
+  {
+    "ontology": "module.parameter.expressions.brace-policy",
+    "path": ".g5/ontology/concepts/modules.g5.md",
+    "status": "open",
+    "question_or_resolution": "Should a `$$$macro` expand when the attribute contains no opening brace?",
+    "assumption": "- Working assumption: keep the observed brace gate until a maintainer chooses otherwise.",
+    "alternatives": [
+      "- Alternative: expand macros with or without a brace."
+    ],
+    "evidence": "owning block and same-ID metadata",
+    "audit_limit": "No fresh maintainer decision; missing historical intent is carried open."
+  },
+  {
+    "ontology": "transaction.rollback-scope",
+    "path": ".g5/ontology/concepts/transactions-and-dev-mode.g5.md",
+    "status": "settled-meaning-alias-preserved",
+    "question_or_resolution": "A database rollback undoes journaled writes in its transaction. It does not undo filesystem copies, lock files, CPF effects, pip installs or remote calls.",
+    "assumption": null,
+    "alternatives": [],
+    "evidence": "owning block and same-ID metadata",
+    "audit_limit": "No fresh maintainer decision; missing historical intent is carried open."
+  },
+  {
+    "ontology": "transaction.flag-sources.dependency-defaults",
+    "path": ".g5/ontology/concepts/transactions-and-dev-mode.g5.md",
+    "status": "open",
+    "question_or_resolution": "Does a dependency's own `<Defaults>` `NoJournal` apply inside its parent's transaction, so that the dependency's changes escape the parent's normal-mode rollback?",
+    "assumption": "- Provisional answer: yes. A module's `<Defaults>` apply whenever that module is installed, including as a dependency. A `NoJournal` dependency therefore keeps its changes when the parent rolls back, and its history record must survive and say so.",
+    "alternatives": [
+      "- Alternative: the parent's transaction governs every nested load, so a dependency's `<Defaults>` `NoJournal` is ignored, or the dependency is refused, while a parent transaction is open. This keeps [the whole-load rollback](../features/load.g5.md#load.outcome)."
+    ],
+    "evidence": "owning block and same-ID metadata",
+    "audit_limit": "No fresh maintainer decision; missing historical intent is carried open."
+  },
+  {
+    "ontology": "transaction.flag-sources.dependency-no-transaction",
+    "path": ".g5/ontology/concepts/transactions-and-dev-mode.g5.md",
+    "status": "open",
+    "question_or_resolution": "Should a dependency's own `<Defaults>` `NoTransaction` suppress its parent's transaction?",
+    "assumption": "- Provisional answer: yes. A module that declares `NoTransaction` must not run inside a transaction opened for its parent, so the package change runs without one, and a failure may leave a partial install.",
+    "alternatives": [
+      "- Alternative: the flag affects only the dependency's own load, so the parent's transaction still wraps it and undoes it on failure. A user whose install contains a conflicting module passes `-DNoTransaction=1` for the whole command."
+    ],
+    "evidence": "owning block and same-ID metadata",
+    "audit_limit": "No fresh maintainer decision; missing historical intent is carried open."
+  },
+  {
+    "ontology": "dev-mode.overwrite-guard.force",
+    "path": ".g5/ontology/concepts/transactions-and-dev-mode.g5.md",
+    "status": "open",
+    "question_or_resolution": "May `-force` lift the developer-mode overwrite guard, and does the guard cover `load`?",
+    "assumption": "- Provisional answer: keep the current scope. The guard covers `install` only, and `-force` does not lift it.",
+    "alternatives": [
+      "- Alternative: let `-force` lift the guard as the wiki says, and decide whether `load` is covered."
+    ],
+    "evidence": "owning block and same-ID metadata",
+    "audit_limit": "No fresh maintainer decision; missing historical intent is carried open."
+  },
+  {
+    "ontology": "dev-mode.sticky",
+    "path": ".g5/ontology/concepts/transactions-and-dev-mode.g5.md",
+    "status": "open",
+    "question_or_resolution": "When a module is already in developer mode, does a plain `load` with neither `-dev` nor `-nodev` keep developer mode?",
+    "assumption": "- Provisional answer: yes, it keeps the stored mode.",
+    "alternatives": [
+      "- Alternative: a plain load always uses normal mode, following that fix's wording that a module \"should only be DevMode if the -dev flag is included\"."
+    ],
+    "evidence": "owning block and same-ID metadata",
+    "audit_limit": "No fresh maintainer decision; missing historical intent is carried open."
+  },
+  {
+    "ontology": "transaction.rollback-scope.policy",
+    "path": ".g5/ontology/concepts/transactions-and-dev-mode.g5.md",
+    "status": "open",
+    "question_or_resolution": "Should a failed package change compensate external effects that the database cannot roll back?",
+    "assumption": "- Working assumption: database rollback is the existing boundary; external effects need separate receipts and must be reported.",
+    "alternatives": [
+      "- Alternative: add explicit compensating actions for each external writer."
+    ],
+    "evidence": "owning block and same-ID metadata",
+    "audit_limit": "No fresh maintainer decision; missing historical intent is carried open."
+  },
+  {
+    "ontology": "dev-mode.overwrite-guard.dependency-policy",
+    "path": ".g5/ontology/concepts/transactions-and-dev-mode.g5.md",
+    "status": "open",
+    "question_or_resolution": "May a parent replace a dependency that is already in developer mode?",
+    "assumption": "- Working assumption: Preserve the stated install overwrite guard for dependencies; load scope follows the parent force/load question.",
+    "alternatives": [
+      "- Alternative: Allow top-level guard only, with a warning when dependency developer mode is cleared."
+    ],
+    "evidence": "owning block and same-ID metadata",
+    "audit_limit": "No fresh maintainer decision; missing historical intent is carried open."
+  },
+  {
+    "ontology": "transaction.flag-sources.dependency-closure",
+    "path": ".g5/ontology/concepts/transactions-and-dev-mode.g5.md",
+    "status": "open",
+    "question_or_resolution": "May an escaped NoJournal dependency remain without its own dependencies?",
+    "assumption": "- Working assumption: Require closure consistency as intent; record the observed violating state rather than assuming a repair.",
+    "alternatives": [
+      "- Alternative: Document temporary inconsistency after failure, or use one load-wide transaction mode."
+    ],
+    "evidence": "owning block and same-ID metadata",
+    "audit_limit": "No fresh maintainer decision; missing historical intent is carried open."
+  }
+]

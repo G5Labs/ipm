@@ -1,0 +1,8 @@
+// LK5 rerun: a refresh inside an open outer transaction (opened in a method; the terminal refuses TSTART).
+set r=##class(%IPM.Repo.Filesystem.Definition).%New(), r.Name="reglock", r.Root="/tmp/c4/reglock/", r.Snapshots=1, r.Prereleases=1
+write !,"OBS LK5.setup build=",$system.Status.IsOK(r.BuildCache(1,0,0)),!
+do ##class(Consolidated.Obs).LockInTx("LK5",r.%Id())
+// Depth control: the same tree as D.setup (dd-dep-*/.modules/broken has an invalid name) with Depth=0 and Depth=1.
+for d=0,1 { set q=##class(%IPM.Repo.Filesystem.Definition).%New(), q.Name="regdepth"_d, q.Root="/tmp/c1e/regd/", q.Depth=d set sc=q.BuildCache(1,0,0) write "OBS DC",d," buildcache=",$system.Status.IsOK(sc),! if $system.Status.IsOK(sc) { do ##class(%IPM.Repo.Definition).%DeleteId(q.%Id()) } }
+write !,"NATIVE-END",!
+halt

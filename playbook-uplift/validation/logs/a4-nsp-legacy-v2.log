@@ -1,0 +1,76 @@
+# container: ipm-uplift-iris-nsp  image: containers.intersystems.com/intersystems/iris-community:2026.1  at: 2026-11-13T23:23:05Z
+# script: validation/iris/r4/nsp/a4-nsp-legacy-v2.script
+
+Node: 1176f046b99d, Instance: IRIS
+
+USER>
+
+Load of directory started on 11/13/2026 23:23:05
+Loading file /tmp/uplift/r4nsp/Uplift/R4Nsp/Probe.cls as cls
+Imported class: Uplift.R4Nsp.Probe
+Compiling class Uplift.R4Nsp.Probe
+Compiling routine Uplift.R4Nsp.Probe.1
+Load finished successfully.
+
+LOADED 1
+
+USER>
+
+OBS|r4-nsp-legacy-setup|beforeIpmRows=0;beforeLegacyRows=1;beforeProbeMod=<no-ipm>;compileCls=ok;hasIPMBefore=0;legacyNCA=0;legacyNCR4L=1;legacyUSERAfterSetup=0;legacyUSERBefore=0;mapZPM=ok;mk=ok;saveCls=err:ERROR #5805: ID key not unique for extent '%Dictionary.ClassDefinition' : '^oddDEF("%ZPM.PackageManager.NcR4Probe")' exists. Id counter location : '';
+
+>>> zpm "enable -map -ns NCR4L"
+  | 
+  | Version of IPM in current namespace: 
+  | USER> [32mzpm [0m0.10.11-SNAPSHOT
+  | Mapping %IPM package in USER equivalently to NCR4L
+  | Mapping %IPM.* routines in USER equivalently to NCR4L
+  | Done.
+  | 
+  | [35mNCC> [0m               [32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [35mNCD> [0m               [32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [35mNCFRESH3> [0m          [32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [35mNCX> [0m               [32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [35mUSER> [0m              [32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [35mUSER-VERIFY> [0m       [32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [35m%SYS> [0m              [32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [39mInstalled In: [0mUSER-VERIFY 
+  | [35mNCA> [0m               [32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [39mInstalled In: [0mUSER-VERIFY 
+  | [35mNCB> [0m               [32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [39mInstalled In: [0mUSER-VERIFY 
+  | [35mNCE> [0m               [32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [39mInstalled In: [0mUSER-VERIFY 
+  | [35mNCM1> [0m              [32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [39mInstalled In: [0mUSER-VERIFY 
+  | [35mNCM2> [0m              [32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [39mInstalled In: [0mUSER-VERIFY 
+  | [35mNCM3> [0m              [32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [39mInstalled In: [0mUSER-VERIFY 
+  | [35mNCM4> [0m              [32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [39mInstalled In: [0mUSER-VERIFY 
+  | [35mNCM5> [0m              [32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [39mInstalled In: [0mUSER-VERIFY 
+  | [35mNCM6> [0m              [32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [39mInstalled In: [0mUSER-VERIFY 
+  | [35mNCR4L> [0m             [32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [39mInstalled In: [0mUSER-VERIFY 
+  | [35mNCT> [0m               [32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [39mInstalled In: [0mUSER-VERIFY 
+  | [35mUSER-VERIFY-VERIFY> [0m[32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [39mInstalled In: [0mUSER-VERIFY 
+<<< status OK
+
+OBS|r4-nsp-legacy-enable-map|afterIpmRows=0;afterLegacyRows=1;afterProbeMod=-;cmdStatus=ok;hasIPMAfter=1;legacyNCR4LAfter=1;mapLine=Mapping %IPM package in USER equivalently to NCR4L;maps=pkg:USER rtn:USER repoD:-;migrateLine=0;
+
+Migrating ZPM data to IPM... in namespace NCR4L
+Migrating storage for legacy-probe ... done.
+IPM data migration was not fully successful. You may be able to reinstall the impacted packages to correct the issues.
+Failed to migrate: 
+legacy-probe
+ERROR #5002: ObjectScript error: <CLASS DOES NOT EXIST>MigrateOnePackageToIPM+35^%IPM.Utils.Migration.1 *%ZPM.PackageManager.Developer.Document.ModuleStream
+
+OBS|r4-nsp-legacy-migrate-direct|afterMigrateIpmRows=0;afterMigrateLegacyRows=1;afterMigrateProbeMod=-;migrateCall=err:<CLASS DOES NOT EXIST>  MigrateOnePackageToIPM+35^%IPM.Utils.Migration.1 %ZPM.PackageManager.Developer.Document.ModuleStream;
+
+OBS|r4-nsp-legacy-cleanup|cleanIPM=ok;delCls=ok;legacyNCR4L=0;legacyUSER=0;unmapZPM=ok;userShell=1;userZpm=0.10.11-SNAPSHOT;
+
+USER>

@@ -1,0 +1,255 @@
+{
+  "verus_dir": ".g5/Verus_verification/consolidated/iter7",
+  "changed_files": [
+    ".g5/ontology/root.g5.md",
+    ".g5/ontology/concepts/modules.g5.md",
+    ".g5/ontology/features/inspection.g5.md",
+    ".g5/ontology/features/developer-tools.g5.md",
+    ".g5/ontology/features/load.g5.md",
+    ".g5/ontology/concepts/settings.g5.md",
+    ".g5/uplift/consolidated/BUGS.md",
+    ".g5/uplift/consolidated/DESIGN-SIMPLIFICATIONS.md",
+    ".g5/uplift/consolidated/QUESTIONS.md"
+  ],
+  "rows": [
+    {
+      "id": "S7-01",
+      "owner": ".g5/ontology/concepts/modules.g5.md#module.processor.default-sweep",
+      "model": "inputs.rs",
+      "symbols": [
+        "replace",
+        "sweep"
+      ],
+      "direct": [
+        [
+          "src/cls/IPM/Storage/ModuleSetting/Default.cls",
+          "EvaluateAttribute"
+        ],
+        [
+          "src/cls/IPM/Utils/Module.cls",
+          "%RegExReplace"
+        ]
+      ],
+      "reader": [
+        [
+          "src/cls/IPM/ResourceProcessor/Abstract.cls",
+          "%Evaluate"
+        ]
+      ]
+    },
+    {
+      "id": "S7-02",
+      "owner": ".g5/ontology/concepts/modules.g5.md#module.csp.directory",
+      "model": "inputs.rs",
+      "symbols": [
+        "csp_directory",
+        "csp_after_before",
+        "csp_path"
+      ],
+      "direct": [
+        [
+          "src/cls/IPM/ResourceProcessor/CSPApplication.cls",
+          "OnBeforePhase"
+        ]
+      ],
+      "reader": [
+        [
+          "src/cls/IPM/ResourceProcessor/CSPApplication.cls",
+          "OnPhaseInternal"
+        ]
+      ]
+    },
+    {
+      "id": "S7-03",
+      "owner": ".g5/ontology/features/inspection.g5.md#inspect.webapp.detail",
+      "model": "inputs.rs",
+      "symbols": [
+        "detail"
+      ],
+      "direct": [
+        [
+          "src/cls/IPM/General/ModuleSummary.cls",
+          "GetWebApplicationDetail"
+        ]
+      ],
+      "reader": [
+        [
+          "src/cls/IPM/General/ModuleSummary.cls",
+          "GetAttribute"
+        ]
+      ]
+    },
+    {
+      "id": "S7-04",
+      "owner": ".g5/ontology/concepts/modules.g5.md#module.list.delimiter",
+      "model": "inputs.rs",
+      "symbols": [
+        "split",
+        "delimiter"
+      ],
+      "direct": [
+        [
+          "src/cls/IPM/DataType/ListOfOptions.cls",
+          "XSDToLogical"
+        ]
+      ],
+      "reader": [
+        [
+          "src/cls/IPM/ResourceProcessor/Abstract.cls",
+          "CopyAttributes"
+        ]
+      ]
+    },
+    {
+      "id": "S7-05",
+      "owner": ".g5/ontology/concepts/modules.g5.md#module.webapp.provider-status",
+      "model": "inputs.rs",
+      "symbols": [
+        "differs",
+        "app_status"
+      ],
+      "direct": [
+        [
+          "src/cls/IPM/ResourceProcessor/WebApplication.cls",
+          "CreateOrUpdateWebApp"
+        ]
+      ],
+      "reader": [
+        [
+          "src/cls/IPM/ResourceProcessor/WebApplication.cls",
+          "OnBeforePhase"
+        ],
+        [
+          "src/cls/IPM/Storage/Module.cls",
+          "ExecutePhases"
+        ]
+      ]
+    },
+    {
+      "id": "S7-06",
+      "owner": ".g5/ontology/features/developer-tools.g5.md#devtools.generate.cors",
+      "model": "inputs.rs",
+      "symbols": [
+        "split",
+        "cors_calls",
+        "cors_ok"
+      ],
+      "direct": [
+        [
+          "src/cls/IPM/Storage/ModuleTemplate.cls",
+          "ValidateCorsOrigin"
+        ]
+      ],
+      "reader": [
+        [
+          "src/cls/IPM/Main.cls",
+          "Generate"
+        ],
+        [
+          "src/cls/IPM/Storage/ModuleTemplate.cls",
+          "SetCORSProps"
+        ]
+      ]
+    },
+    {
+      "id": "S7-07",
+      "owner": ".g5/ontology/features/developer-tools.g5.md#devtools.sync.empty-hash",
+      "model": "inputs.rs",
+      "symbols": [
+        "stamp"
+      ],
+      "direct": [
+        [
+          "src/cls/IPM/Storage/FileHash.cls",
+          "StampOneFileWithHash"
+        ]
+      ],
+      "reader": [
+        [
+          "src/cls/IPM/Storage/FileHash.cls",
+          "StampModule"
+        ],
+        [
+          "src/cls/IPM/Storage/FileHash.cls",
+          "OpenByPath"
+        ]
+      ]
+    },
+    {
+      "id": "S7-08",
+      "owner": ".g5/ontology/features/load.g5.md#load.reload.root",
+      "model": "inputs.rs",
+      "symbols": [
+        "reload",
+        "reload_status"
+      ],
+      "direct": [
+        [
+          "src/cls/IPM/Lifecycle/Base.cls",
+          "%Reload"
+        ]
+      ],
+      "reader": [
+        [
+          "src/cls/IPM/Lifecycle/Base.cls",
+          "LoadEnvironmentConfig"
+        ],
+        [
+          "src/cls/IPM/Storage/Module.cls",
+          "ExecutePhases"
+        ]
+      ]
+    },
+    {
+      "id": "S7-09",
+      "owner": ".g5/ontology/concepts/settings.g5.md#settings.print",
+      "model": "inputs.rs",
+      "symbols": [
+        "config_get_called",
+        "config_line"
+      ],
+      "direct": [
+        [
+          "src/cls/IPM/Repo/UniversalSettings.cls",
+          "PrintOne"
+        ]
+      ],
+      "reader": [
+        [
+          "src/cls/IPM/Repo/UniversalSettings.cls",
+          "GetValue"
+        ],
+        [
+          "src/cls/IPM/Main.cls",
+          "Config"
+        ]
+      ]
+    },
+    {
+      "id": "S7-10",
+      "owner": ".g5/ontology/concepts/modules.g5.md#module.system-setting",
+      "model": "inputs.rs",
+      "symbols": [
+        "split",
+        "system_target",
+        "system_value"
+      ],
+      "direct": [
+        [
+          "src/cls/IPM/ResourceProcessor/SystemSetting.cls",
+          "OnPhase"
+        ]
+      ],
+      "reader": [
+        [
+          "src/cls/IPM/ResourceProcessor/SystemSetting.cls",
+          "OnResolveChildren"
+        ],
+        [
+          "src/cls/IPM/Storage/Module.cls",
+          "ExecutePhases"
+        ]
+      ]
+    }
+  ]
+}

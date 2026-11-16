@@ -1,0 +1,301 @@
+do $system.OBJ.Load("/tmp/Obs.cls","ck-d")
+set ^||c="r1"
+do ##class(Consolidated.Obs).Repos("init")
+// TR1: no .modules directory
+do ##class(Consolidated.Obs).Run("TR1","load /tmp/c1/tr1/")
+do ##class(Consolidated.Obs).Mod("TR1","tr1-main")
+do ##class(Consolidated.Obs).Repos("TR1")
+// TR2: .modules supplies the dependency
+do ##class(Consolidated.Obs).Run("TR2","load /tmp/c1/tr2/")
+do ##class(Consolidated.Obs).Mod("TR2","tr2-dep")
+do ##class(Consolidated.Obs).Repos("TR2")
+// TR3: a leftover registration already holds the first temporary name
+do ##class(Consolidated.Obs).Run("TR3.setup","repo -fs -name ipm-temp-modules-1 -path /tmp/c1/elsewhere/")
+do ##class(Consolidated.Obs).Run("TR3","load /tmp/c1/tr3/")
+do ##class(Consolidated.Obs).Mod("TR3","tr3-dep")
+do ##class(Consolidated.Obs).Repos("TR3")
+do ##class(Consolidated.Obs).Run("TR3.teardown","repo -delete -n ipm-temp-modules-1")
+// TR4: an existing repository already has the .modules folder as its root
+do ##class(Consolidated.Obs).Run("TR4.setup","repo -fs -name keepme -path /tmp/c1/tr4/.modules/")
+do ##class(Consolidated.Obs).Run("TR4","load /tmp/c1/tr4/")
+do ##class(Consolidated.Obs).Mod("TR4","tr4-dep")
+do ##class(Consolidated.Obs).Repos("TR4")
+do ##class(Consolidated.Obs).Run("TR4.teardown","repo -delete -n keepme")
+// TR5: an older registry holds the same version as .modules
+do ##class(Consolidated.Obs).Run("TR5.setup","repo -fs -name reg5 -path /tmp/c1/reg5/")
+do ##class(Consolidated.Obs).Run("TR5","load /tmp/c1/tr5/")
+do ##class(Consolidated.Obs).Mod("TR5","tr5-dep")
+do ##class(Consolidated.Obs).Repos("TR5")
+// TR5b: .modules holds a higher version
+do ##class(Consolidated.Obs).Run("TR5b","load /tmp/c1/tr5b/")
+do ##class(Consolidated.Obs).Mod("TR5b","tr5b-dep")
+// TR5c: the registry holds a higher version
+do ##class(Consolidated.Obs).Run("TR5c","load /tmp/c1/tr5c/")
+do ##class(Consolidated.Obs).Mod("TR5c","tr5c-dep")
+do ##class(Consolidated.Obs).Repos("TR5c")
+do ##class(Consolidated.Obs).Run("TR5.teardown","repo -delete -n reg5")
+// TR7: creating the temporary repository fails (invalid module name in .modules)
+do ##class(Consolidated.Obs).Run("TR7","load /tmp/c1/tr7/")
+do ##class(Consolidated.Obs).Mod("TR7","tr7-main")
+do ##class(Consolidated.Obs).Hist("TR7","tr7-main")
+do ##class(Consolidated.Obs).Repos("TR7")
+// TR7b: neighbor with a valid unused module in .modules
+do ##class(Consolidated.Obs).Run("TR7b","load /tmp/c1/tr7b/")
+do ##class(Consolidated.Obs).Mod("TR7b","tr7b-main")
+do ##class(Consolidated.Obs).Mod("TR7b","tr7b-unused")
+do ##class(Consolidated.Obs).Hist("TR7b","tr7b-main")
+do ##class(Consolidated.Obs).Repos("TR7b")
+write !,"NATIVE-END",!
+set o="Consolidated.Obs"
+// ---------- E: attribute evaluator, no install ----------
+write !,"OBS ENV mgrdir=",##class(%Library.File).ManagerDirectory(),!
+write "OBS ENV moduleroot=",##class(%IPM.Repo.UniversalSettings).GetModuleRoot(),!
+set m=##class(%IPM.Storage.Module).%New(), m.Name="evalmod", m.VersionString="1.2.3", m.Root="/tmp/evalroot"
+for pair="greeting|hello","a|${b}","b|${a}","c|${d}","d|${namespace}","version|9.9.9","a.b|DOT","e|{$f}x","f|${greeting}" { set d=##class(%IPM.Storage.ModuleSetting.Default).%New(), d.Name=$piece(pair,"|"), d.Value=$piece(pair,"|",2) do m.Defaults.Insert(d) }
+set cases=$listbuild("E01|plain text","E02|{$namespace}","E03|${namespace}","E04|{$NAMESPACE}","E05|{$namespaceLower}","E06|${greeting} world","E08|{name}/{NAME}","E09|{$packagename}-{$version}","E10|#{1+2}","E11|#{ 1+2}","E12|#{$$$OK}","E13|#{1/0}","E14|#{undefinedvar}","E15|$$$OK no brace","E16|{$x} $$$OK","E17|$$$NoSuchMacroXyz {}","E18|${a}","E19|${c}","E20|{$version}","E21|{$axb}","E22|${e}","E23|{$mgrDir}","E25|${verbose}","E26|{$root}","E27|{$ipmDir}","E28|{$namespace}#{""-""}{$NAMESPACELOWER}")
+for i=1:1:$listlength(cases) { set c=$list(cases,i) set id=$piece(c,"|"), s=$piece(c,"|",2,*) kill p set v=m.%Evaluate(s,.p) write "OBS ",id," value=",v,! }
+kill p set p("greeting")="hi", p("Verbose")=1
+write "OBS E07 value=",m.%Evaluate("${greeting}",.p),!
+write "OBS E24 value=",m.%Evaluate("${verbose}",.p),!
+write "OBS E29 macroclass=",##class(%Dictionary.ClassDefinition).%ExistsId("%IPM.Generated.MacroEval"),!
+// circular placeholders as the product resolves them, with no error raised
+kill cp set cp("a")="${b}", cp("b")="${a}"
+set ok=1 try { do ##class(%IPM.Storage.ModuleSetting.Default).ResolvePlaceholders(.cp) } catch ex { set ok=0 }
+write "OBS E30 resolve.raised=",'ok," a=",$get(cp("a"))," b=",$get(cp("b")),!
+kill cp set cp("x")="${y}", cp("y")="${z}", cp("z")="end"
+do ##class(%IPM.Storage.ModuleSetting.Default).ResolvePlaceholders(.cp)
+write "OBS E31 x=",cp("x")," y=",cp("y"),!
+// ---------- P: after-install message after the final commit ----------
+do ##class(Consolidated.Obs).Run("P1","load /tmp/c1e/p1/")
+do ##class(Consolidated.Obs).Mod("P1","pc-ok") do ##class(Consolidated.Obs).Hist("P1","pc-ok")
+do ##class(Consolidated.Obs).Run("P2txn","load /tmp/c1e/p2-txn/")
+do ##class(Consolidated.Obs).Mod("P2txn","pc-bad-txn") do ##class(Consolidated.Obs).Hist("P2txn","pc-bad-txn")
+write "OBS P2txn macroclass=",##class(%Dictionary.ClassDefinition).%ExistsId("%IPM.Generated.MacroEval"),!
+do $system.OBJ.Delete("%IPM.Generated.MacroEval","-d")
+do ##class(Consolidated.Obs).Run("P2notxn","load /tmp/c1e/p2-notxn/ -DNoTransaction=1")
+do ##class(Consolidated.Obs).Mod("P2notxn","pc-bad-notxn") do ##class(Consolidated.Obs).Hist("P2notxn","pc-bad-notxn")
+do $system.OBJ.Delete("%IPM.Generated.MacroEval","-d")
+do ##class(Consolidated.Obs).Run("P2dev","load /tmp/c1e/p2-dev/ -dev")
+do ##class(Consolidated.Obs).Mod("P2dev","pc-bad-dev") do ##class(Consolidated.Obs).Hist("P2dev","pc-bad-dev")
+do $system.OBJ.Delete("%IPM.Generated.MacroEval","-d")
+do ##class(Consolidated.Obs).Run("P3","load /tmp/c1e/p3/")
+do ##class(Consolidated.Obs).Mod("P3","pc-neighbor") do ##class(Consolidated.Obs).Hist("P3","pc-neighbor")
+do ##class(Consolidated.Obs).Run("P4","load /tmp/c1e/p4/")
+// ---------- D: dependency-level .modules failure inside the parent's load ----------
+set r=##class(%IPM.Repo.Filesystem.Definition).%New(), r.Name="regd", r.Root="/tmp/c1e/regd/", r.Depth=1, r.Snapshots=1, r.Prereleases=1
+write "OBS D.setup buildcache=",$system.Status.IsOK(r.BuildCache(1,0,0)),!
+do ##class(Consolidated.Obs).Run("Dtxn","load /tmp/c1e/d-txn/")
+do ##class(Consolidated.Obs).Mod("Dtxn","dd-parent-txn") do ##class(Consolidated.Obs).Mod("Dtxn","dd-dep-txn")
+do ##class(Consolidated.Obs).Hist("Dtxn","dd-parent-txn") do ##class(Consolidated.Obs).Hist("Dtxn","dd-dep-txn")
+do ##class(Consolidated.Obs).Repos("Dtxn")
+do ##class(Consolidated.Obs).Run("Ddev","load /tmp/c1e/d-dev/ -dev")
+do ##class(Consolidated.Obs).Mod("Ddev","dd-parent-dev") do ##class(Consolidated.Obs).Mod("Ddev","dd-dep-dev")
+do ##class(Consolidated.Obs).Hist("Ddev","dd-parent-dev") do ##class(Consolidated.Obs).Hist("Ddev","dd-dep-dev")
+do ##class(Consolidated.Obs).Repos("Ddev")
+do ##class(Consolidated.Obs).Run("Dok","load /tmp/c1e/d-neighbor/")
+do ##class(Consolidated.Obs).Mod("Dok","dd-parent-ok") do ##class(Consolidated.Obs).Mod("Dok","dd-dep-ok")
+do ##class(Consolidated.Obs).Repos("Dok")
+write !,"NATIVE-END",!
+// Attribute evaluator corpus (no install). Each case on its own; an exception is recorded as error=<name>.
+write !,"OBS ENV mgrdir=",##class(%Library.File).ManagerDirectory(),!
+write "OBS ENV moduleroot=",##class(%IPM.Repo.UniversalSettings).GetModuleRoot(),!
+set m=##class(%IPM.Storage.Module).%New(), m.Name="evalmod", m.VersionString="1.2.3", m.Root="/tmp/evalroot"
+for pair="greeting|hello","a|${b}","b|${a}","c|${d}","d|${namespace}","version|9.9.9","a.b|DOT","e|{$f}x","f|${greeting}","win|C:\dir\sub" { set d=##class(%IPM.Storage.ModuleSetting.Default).%New(), d.Name=$piece(pair,"|"), d.Value=$piece(pair,"|",2) do m.Defaults.Insert(d) }
+set m2=##class(%IPM.Storage.Module).%New(), m2.Name="pricemod", m2.VersionString="1.0.0"
+set d=##class(%IPM.Storage.ModuleSetting.Default).%New(), d.Name="price", d.Value="$5" do m2.Defaults.Insert(d)
+set cases=$listbuild("E01|plain text","E02|{$namespace}","E03|${namespace}","E04|{$NAMESPACE}","E05|{$namespaceLower}","E06|${greeting} world","E08|{name}/{NAME}","E09|{$packagename}-{$version}","E10|#{1+2}","E11|#{ 1+2}","E12|#{$$$OK}","E13|#{1/0}","E14|#{undefinedvar}","E15|$$$OK no brace","E16|{$x} $$$OK","E17|$$$NoSuchMacroXyz {}","E18|${a}","E19|${c}","E20|{$version}","E21|{$axb}","E22|${e}","E23|{$mgrDir}","E25|${verbose}","E26|{$root}","E27|{$ipmDir}","E28|{$namespace}#{""-""}{$NAMESPACELOWER}","E34|${win}","E35|{$b}")
+for i=1:1:$listlength(cases) { set c=$list(cases,i) set id=$piece(c,"|"), s=$piece(c,"|",2,*) kill p try { set v=m.%Evaluate(s,.p) write "OBS ",id," value=",v,! } catch ex { write "OBS ",id," error=",ex.Name,! } }
+kill p set p("greeting")="hi", p("Verbose")=1
+write "OBS E07 value=",m.%Evaluate("${greeting}",.p),!
+write "OBS E24 value=",m.%Evaluate("${verbose}",.p),!
+kill p try { set v=m2.%Evaluate("{$price}",.p) write "OBS E32 value=",v,! } catch ex { write "OBS E32 error=",ex.Name,! }
+kill p try { set v=m2.%Evaluate("{$namespace}",.p) write "OBS E33 value=",v,! } catch ex { write "OBS E33 error=",ex.Name,! }
+write "OBS E29 macroclass=",##class(%Dictionary.ClassDefinition).%ExistsId("%IPM.Generated.MacroEval"),!
+kill cp set cp("a")="${b}", cp("b")="${a}"
+set ok=1 try { do ##class(%IPM.Storage.ModuleSetting.Default).ResolvePlaceholders(.cp) } catch ex { set ok=0 }
+write "OBS E30 resolve.raised=",'ok," a=",$get(cp("a"))," b=",$get(cp("b")),!
+kill cp set cp("x")="${y}", cp("y")="${z}", cp("z")="end"
+do ##class(%IPM.Storage.ModuleSetting.Default).ResolvePlaceholders(.cp)
+write "OBS E31 x=",cp("x")," y=",cp("y"),!
+kill cp set cp("p")="a", cp("q")="${p}${p}{$p}"
+do ##class(%IPM.Storage.ModuleSetting.Default).ResolvePlaceholders(.cp)
+write "OBS E36 q=",cp("q"),!
+write !,"NATIVE-END",!
+// Round 2: semantic version parsing, ordering, ranges and intersections. No install. Restores SemVerPostRelease.
+set saved=##class(%IPM.Repo.UniversalSettings).GetValue("SemVerPostRelease")
+write !,"OBS ENV postrelease.initial=",saved,!
+do ##class(%IPM.Repo.UniversalSettings).SetValue("SemVerPostRelease",0)
+set SV="%IPM.General.SemanticVersion", EX="%IPM.General.SemanticVersionExpression"
+// ---- V: parsing and validity
+set pl=$listbuild("1","1.2","1.2.3","1.2.3.4","1.2.3-beta","1.2.3-beta.1+b.2","1.2.3+snapshot","1.2.3+SNAPSHOT","1.2.3+build-x","1.2.3-beta-2","01.2.3","1.2.3-01","1.2.3-0a","v1.2.3","1.2.3-","","1..3")
+for i=1:1:$listlength(pl) { set s=$list(pl,i), v=$classmethod(SV,"FromString",s), sc=$classmethod(SV,"IsValid",s) write "OBS V",i," parse=",v.Major,"|",v.Minor,"|",v.Patch,"|",v.Prerelease,"|",v.Build," str=",v.ToString()," snap=",v.IsSnapshot()," valid=",$system.Status.IsOK(sc),! }
+// ---- F: Follows matrix (row a, column b: a.Follows(b)), post-release off then on
+set fl=$listbuild("1.0.0-alpha","1.0.0-alpha.1","1.0.0-alpha.beta","1.0.0-beta","1.0.0-beta.2","1.0.0-beta.11","1.0.0-rc.1","1.0.0","1.0.0+snapshot","1.0.1-alpha","1.0.1","2.0.0","1.0.0-Beta","1.0.0-10")
+for pr=0,1 { do ##class(%IPM.Repo.UniversalSettings).SetValue("SemVerPostRelease",pr) for i=1:1:$listlength(fl) { set a=$classmethod(SV,"FromString",$list(fl,i)), row="" for j=1:1:$listlength(fl) { set b=$classmethod(SV,"FromString",$list(fl,j)), row=row_a.Follows(b) } write "OBS F",pr,".",i," row=",row,! } }
+do ##class(%IPM.Repo.UniversalSettings).SetValue("SemVerPostRelease",0)
+// ---- X: expressions: resolved string, then satisfaction over the version list
+set vl=$listbuild("0.0.1","0.1.0","0.1.5","1.0.0-alpha","1.0.0-beta","1.0.0","1.0.0+snapshot","1.1.0-beta","1.2.0","1.2.3","1.3.0","2.0.0-beta.1","2.0.0","2.5.0","3.0.0","2024.1.0","2024.1.2","2024.12.0","1.2.3+build-x")
+set xl=$listbuild("","*","1.2.3","=1.2.3",">1.2.3",">=1.2.3","<1.2.3","<=1.2.3","1","1.2","1.x","1.2.x","1.X","~1.2.3","~1.2","~1","^1.2.3","^0.1.5","^0.0.1","^1.2","^0.1","^1.x","1.0.0 - 2.0.0","1 - 2","1.2 - 2.5",">=1.2","<2",">1.2","<=1",">=1.0.0 <2.0.0",">=1.0.0 <2.0.0 || >=3.0.0",">=1.0.0 && <2.0.0",">=2.0.0 && <1.0.0","1.0.0 && 2.0.0","2024.1","2024.12",">=1.0.0-beta","1.0.0-beta","1.0.0 || 2.0.0","(>=1.0.0) && (<1.3.0)","a.b.c",">=1.0.0 && <2.0.0 || 3.0.0","01.2.3","1.2.3-01","1.2.3+build-x")
+for i=1:1:$listlength(xl) { set s=$list(xl,i) try { set sc=$classmethod(EX,"FromString",s,.e) if $system.Status.IsError(sc) { write "OBS X",i," err=",$piece($system.Status.GetErrorText(sc),$char(13,10)),! continue } set bits="" for j=1:1:$listlength(vl) { set bits=bits_e.IsSatisfiedBy($classmethod(SV,"FromString",$list(vl,j))) } write "OBS X",i," res=",e.ToResolvedString()," sat=",bits,! } catch ex { write "OBS X",i," err=",$piece($system.Status.GetErrorText(ex.AsStatus()),$char(13,10)),! } }
+// ---- A: And(a, b)
+set al=$listbuild($lb("^1.0.0","<2.0.0"),$lb("<2.0.0","^1.0.0"),$lb(">=1.0.0-beta",">=1.0.0"),$lb(">=1.0.0",">=1.0.0-beta"),$lb("1.0.0","2.0.0"),$lb(">=2.0.0","<1.0.0"),$lb("1.2.3",">=1.0.0"),$lb("",">=1.0.0"),$lb(">=1.0.0",""),$lb("1.x || 3.x",">=1.5.0"),$lb(">1.0.0","<=1.0.0"),$lb(">=1.0.0","<=1.0.0"))
+for i=1:1:$listlength(al) { set p=$list(al,i) try { do $classmethod(EX,"FromString",$list(p,1),.a) do $classmethod(EX,"FromString",$list(p,2),.b) set r=a.And(b) set bits="" for j=1:1:$listlength(vl) { set bits=bits_r.IsSatisfiedBy($classmethod(SV,"FromString",$list(vl,j))) } write "OBS A",i," res=",r.ToResolvedString()," expr=",r.Expression," sat=",bits,! } catch ex { write "OBS A",i," err=",$piece($system.Status.GetErrorText(ex.AsStatus()),$char(13,10)),! } }
+// ---- C: comparator evaluation with post-release on (a subset)
+do ##class(%IPM.Repo.UniversalSettings).SetValue("SemVerPostRelease",1)
+set cl=$listbuild(">=1.0.0","<=1.0.0","=1.0.0",">1.0.0","<1.0.1","^1.0.0")
+for i=1:1:$listlength(cl) { do $classmethod(EX,"FromString",$list(cl,i),.e) set bits="" for j=1:1:$listlength(vl) { set bits=bits_e.IsSatisfiedBy($classmethod(SV,"FromString",$list(vl,j))) } write "OBS C",i," sat=",bits,! }
+do ##class(%IPM.Repo.UniversalSettings).SetValue("SemVerPostRelease",saved)
+// ---- B: version bumps used by the module-version command
+set bv=$classmethod(SV,"FromString","1.2.3-beta+b")
+write "OBS B1 major=",bv.WithBumpMajor().ToString()," minor=",bv.WithBumpMinor().ToString()," patch=",bv.WithBumpPatch().ToString()," pre=",bv.WithPrerelease("rc.1").ToString()," build=",bv.WithBuild("x").ToString()," nobuild=",bv.ToStringWithoutBuild(),!
+write "OBS ENV postrelease.restored=",##class(%IPM.Repo.UniversalSettings).GetValue("SemVerPostRelease"),!
+write !,"NATIVE-END",!
+set SV="%IPM.General.SemanticVersion", EX="%IPM.General.SemanticVersionExpression"
+do ##class(%IPM.Repo.UniversalSettings).SetValue("SemVerPostRelease",0)
+set vl=$listbuild("0.0.1","0.1.0","0.1.5","1.0.0-alpha","1.0.0-beta","1.0.0","1.0.0+snapshot","1.1.0-beta","1.2.0","1.2.3","1.3.0","2.0.0-beta.1","2.0.0","2.5.0","3.0.0","2024.1.0","2024.1.2","2024.12.0","1.2.3+build-x")
+set xl=$listbuild("<1.0.0",">1.0.0","<=1.0.0")
+for i=1:1:$listlength(xl) { set s=$list(xl,i) do $classmethod(EX,"FromString",s,.e) set bits="" for j=1:1:$listlength(vl) { set bits=bits_e.IsSatisfiedBy($classmethod(SV,"FromString",$list(vl,j))) } write "OBS Y",i," res=",e.ToResolvedString()," sat=",bits,! }
+set al=$listbuild($lb("1.0.0",">=2.0.0"),$lb(">=2.0.0","1.0.0"))
+for i=1:1:$listlength(al) { set p=$list(al,i) try { do $classmethod(EX,"FromString",$list(p,1),.a) do $classmethod(EX,"FromString",$list(p,2),.b) set r=a.And(b) write "OBS B",i+1," res=",r.ToResolvedString(),! } catch ex { write "OBS B",i+1," err=",$piece($system.Status.GetErrorText(ex.AsStatus()),$char(13,10)),! } }
+write !,"NATIVE-END",!
+set r=##class(%IPM.Repo.Filesystem.Definition).%New(), r.Name="reg2", r.Root="/tmp/c2/reg/", r.Snapshots=1, r.Prereleases=1
+write !,"OBS S.setup buildcache=",$system.Status.IsOK(r.BuildCache(1,0,0)),!
+do ##class(Consolidated.Obs).Run("S1","load /tmp/c2/lt/")
+do ##class(Consolidated.Obs).Mod("S1","sv-lt-dep")
+do ##class(Consolidated.Obs).Run("S2","load /tmp/c2/ge/")
+do ##class(Consolidated.Obs).Mod("S2","sv-ge-dep") do ##class(Consolidated.Obs).Mod("S2","sv-ge-main")
+do ##class(Consolidated.Obs).Run("S3","load /tmp/c2/ge2/")
+do ##class(Consolidated.Obs).Mod("S3","sv-ge2-dep")
+do ##class(Consolidated.Obs).Run("S4ab","load /tmp/c2/ab/")
+do ##class(Consolidated.Obs).Mod("S4ab","shared-ab")
+do ##class(Consolidated.Obs).Run("S4ba","load /tmp/c2/ba/")
+do ##class(Consolidated.Obs).Mod("S4ba","shared-ba")
+write !,"NATIVE-END",!
+set r=##class(%IPM.Repo.Filesystem.Definition).%New(), r.Name="reg2b", r.Root="/tmp/c2b/reg/", r.Snapshots=1, r.Prereleases=1
+write !,"OBS S5.setup buildcache=",$system.Status.IsOK(r.BuildCache(1,0,0)),!
+do ##class(Consolidated.Obs).Run("S5","load /tmp/c2b/zz/")
+do ##class(Consolidated.Obs).Mod("S5","shared-zz") do ##class(Consolidated.Obs).Mod("S5","root-zz")
+write !,"NATIVE-END",!
+// Filtered deletes: exact affected identities and an unaffected neighbor. Seeds three records per case.
+set ins="INSERT INTO %IPM_General.History (Action,Package,Version_Major,Version_Minor,Version_Patch,TimeStart,UserName,CommandString,Success,Committed,Finalized) VALUES (?,?,?,0,0,?,'x','seed',?,1,1)"
+set cases=$listbuild($lb("D1","history delete -DVersion_Major=99"),$lb("D2","history delete -DSucess=0"),$lb("D3","history delete -DPackage=del-b"),$lb("D4","history delete -DSuccess=0"))
+for i=1:1:$listlength(cases) { set c=$list(cases,i), id=$list(c,1) do ##class(%IPM.Main).Shell("history delete -confirm") kill ids for p="del-a|1|1","del-b|2|1","del-c|1|0" { set rs=##class(%SQL.Statement).%ExecDirect(,ins,"load",$piece(p,"|"),$piece(p,"|",2),$zdatetime($h,3),$piece(p,"|",3)) set ids($piece(p,"|"))=rs.%ROWID } do ##class(Consolidated.Obs).Run(id,$list(c,2)) set left="" for p="del-a","del-b","del-c" { set left=left_$select(##class(%IPM.General.History).%ExistsId(ids(p)):p_" ",1:"") } write "OBS ",id," left=",$zstrip(left,">W"),! }
+write !,"NATIVE-END",!
+// Once-a-day purge marker. The retention setting and the marker live in %SYS ^IPM.settings and are restored at the end.
+set retain0=##class(%IPM.Repo.UniversalSettings).GetHistoryRetain(), mark0=##class(%IPM.General.History).GetHistoryLastPurge()
+write !,"OBS ENV retain.initial=",retain0," marker.initial=",$select(mark0="":"none",mark0=+$h:"today",1:"other"),!
+set ins="INSERT INTO %IPM_General.History (Action,Package,Version_Major,Version_Minor,Version_Patch,TimeStart,UserName,CommandString,Success,Committed,Finalized) VALUES ('load',?,1,0,0,?,'x','old',1,1,1)"
+do ##class(%IPM.Repo.UniversalSettings).SetValue("history_retain",1)
+set $namespace="%SYS" set ^IPM.settings("history_retain","lastPurge")=+$h-1 set $namespace="USER"
+set rs=##class(%SQL.Statement).%ExecDirect(,ins,"h-old1","2000-01-01 00:00:00") set o1=rs.%ROWID write "OBS P1.setup sqlcode=",rs.%SQLCODE,!
+set rs=##class(%SQL.Statement).%ExecDirect(,ins,"h-new1",$zdatetime($h,3)) set n1=rs.%ROWID
+set sc=##class(%IPM.Main).Shell("list")
+write "OBS P1 old=",##class(%IPM.General.History).%ExistsId(o1)," recent=",##class(%IPM.General.History).%ExistsId(n1)," marker=",$select(##class(%IPM.General.History).GetHistoryLastPurge()=+$h:"today",1:"other"),!
+set rs=##class(%SQL.Statement).%ExecDirect(,ins,"h-old2","2000-01-01 00:00:00") set o2=rs.%ROWID
+set sc=##class(%IPM.Main).Shell("list")
+write "OBS P2 old=",##class(%IPM.General.History).%ExistsId(o2)," marker=",$select(##class(%IPM.General.History).GetHistoryLastPurge()=+$h:"today",1:"other"),!
+do ##class(%IPM.Repo.UniversalSettings).SetValue("history_retain",0)
+set $namespace="%SYS" set ^IPM.settings("history_retain","lastPurge")=+$h-1 set $namespace="USER"
+set sc=##class(%IPM.Main).Shell("list")
+write "OBS P3 old=",##class(%IPM.General.History).%ExistsId(o2)," marker=",$select(##class(%IPM.General.History).GetHistoryLastPurge()=+$h:"today",##class(%IPM.General.History).GetHistoryLastPurge()=(+$h-1):"yesterday",1:"other"),!
+do ##class(%IPM.Repo.UniversalSettings).SetValue("history_retain",1)
+set sc=##class(%IPM.Main).Shell("list")
+write "OBS P4 old=",##class(%IPM.General.History).%ExistsId(o2)," marker=",$select(##class(%IPM.General.History).GetHistoryLastPurge()=+$h:"today",1:"other"),!
+do ##class(%IPM.Repo.UniversalSettings).SetValue("history_retain",retain0)
+set $namespace="%SYS" if mark0="" { kill ^IPM.settings("history_retain","lastPurge") } else { set ^IPM.settings("history_retain","lastPurge")=mark0 } set $namespace="USER"
+write "OBS ENV retain.restored=",##class(%IPM.Repo.UniversalSettings).GetHistoryRetain()," marker.restored=",$select(##class(%IPM.General.History).GetHistoryLastPurge()="":"none",1:"set"),!
+write !,"NATIVE-END",!
+// ---------- MV: module-version
+do ##class(Consolidated.Obs).Run("MV0","load /tmp/c4/mv-a/")
+do ##class(Consolidated.Obs).ZpmVersion("MV0","mv-a")
+for c="MV1|module-version mv-a minor","MV2|module-version mv-a 1.0.0","MV3|module-version mv-a 1.0.0 -force","MV4|module-version mv-a patch -prerelease rc.1 -build b7","MV5|module-version mv-a","MV6|module-version mv-a 2.0.0-beta","MV7|module-version mv-a 01.0.0","MV8|module-version mv-a major","MV9|module-version no-such-module" { do ##class(Consolidated.Obs).Run($piece(c,"|"),$piece(c,"|",2)) do ##class(Consolidated.Obs).ZpmVersion($piece(c,"|"),"mv-a") }
+set f=##class(%Stream.FileCharacter).%New() set f.Filename="/tmp/c4/mv-a/module.xml" set t=f.Read(32000)
+write "OBS MV10 file=",$piece($piece(t,"<Version>",2),"</Version>"),!
+// ---------- LK: filesystem repository cache refresh under another process's lock
+set r=##class(%IPM.Repo.Filesystem.Definition).%New(), r.Name="reglock", r.Root="/tmp/c4/reglock/", r.Snapshots=1, r.Prereleases=1
+set sc=r.BuildCache(1,0,0) set id=r.%Id()
+set n=0 set rs=##class(%SQL.Statement).%ExecDirect(,"SELECT Name FROM %IPM_Repo_Filesystem.Cache WHERE Root = ? ORDER BY Name","/tmp/c4/reglock/") set names="" while rs.%Next() { set names=names_rs.Name_" " }
+write "OBS LK1 build=",$system.Status.IsOK(sc)," cached=",$zstrip(names,">W"),!
+kill ^Consolidated.Probe job ##class(Consolidated.Obs).HoldLock(id,25) for i=1:1:50 { quit:$get(^Consolidated.Probe("held"))=1  hang 0.2 }
+write "OBS LK2.setup held=",$get(^Consolidated.Probe("held")),!
+set t0=$zh set sc=r.BuildCache(1,0,0) set dt=$zh-t0
+write "OBS LK2 build=",$system.Status.IsOK(sc)," waited=",$select(dt>=5:"timeout",1:"short")," tlevel=",$tlevel,!
+write "OBS LK2 error=",$piece($system.Status.GetErrorText(sc),$char(13,10)),!
+for i=1:1:200 { quit:$get(^Consolidated.Probe("held"))=0  hang 0.2 }
+do ##class(%File).RemoveDirectoryTree("/tmp/c4/reglock/lk-b/")
+set sc=r.BuildCache(1,0,0)
+set rs=##class(%SQL.Statement).%ExecDirect(,"SELECT Name FROM %IPM_Repo_Filesystem.Cache WHERE Root = ? ORDER BY Name","/tmp/c4/reglock/") set names="" while rs.%Next() { set names=names_rs.Name_" " }
+write "OBS LK3 build=",$system.Status.IsOK(sc)," cached=",$zstrip(names,">W")," tlevel=",$tlevel,!
+kill ^Consolidated.Probe("probe") job ##class(Consolidated.Obs).ProbeLock(id) for i=1:1:50 { quit:$data(^Consolidated.Probe("probe"))  hang 0.2 }
+write "OBS LK4 lockable=",$get(^Consolidated.Probe("probe"),"none"),!
+tstart set sc=r.BuildCache(1,0,0)
+kill ^Consolidated.Probe("probe") job ##class(Consolidated.Obs).ProbeLock(id) for i=1:1:50 { quit:$data(^Consolidated.Probe("probe"))  hang 0.2 }
+write "OBS LK5 build=",$system.Status.IsOK(sc)," tlevel=",$tlevel," lockable=",$get(^Consolidated.Probe("probe"),"none"),!
+trollback
+// ---------- LE: language extensions keep user code outside the generated block
+do ##class(Consolidated.Obs).ZLang("LE0")
+set rt=##class(%Routine).%New("%ZLANGC00.MAC") set saved=0 while 'rt.AtEnd { set saved=saved+1, saved(saved)=rt.ReadLine() }
+do rt.MoveToEnd() do rt.WriteLine(" ; consolidated-user-line") do rt.Save() do rt.Compile()
+do ##class(Consolidated.Obs).ZLang("LE1.setup")
+set sc=##class(%IPM.Main).UpdateLanguageExtensions(0,0,.found) write "OBS LE1 sc=",$system.Status.IsOK(sc)," found=",found," tlevel=",$tlevel,!
+do ##class(Consolidated.Obs).ZLang("LE1")
+set sc=##class(%IPM.Main).UpdateLanguageExtensions(0,0,.found) do ##class(Consolidated.Obs).ZLang("LE2")
+set found=0 set sc=##class(%IPM.Main).UpdateLanguageExtensions(0,1,.found) write "OBS LE3 testonly.found=",found,!
+set rt=##class(%Routine).%New("%ZLANGC00.MAC") do rt.Clear() for i=1:1:saved { do rt.WriteLine(saved(i)) } do rt.Save() do rt.Compile()
+do ##class(Consolidated.Obs).ZLang("LE.restored")
+write !,"NATIVE-END",!
+set cfg=##class(%IPM.General.EnvironmentConfig).%Get()
+do ##class(Consolidated.Obs).EnvLoad("U1","/tmp/c5/a.json")
+do ##class(Consolidated.Obs).EnvLoad("U2","/tmp/c5/a.json;/tmp/c5/b.json")
+do ##class(Consolidated.Obs).EnvLoad("U2r"," /tmp/c5/b.json ; /tmp/c5/a.json ")
+do ##class(Consolidated.Obs).EnvLoad("U3","/tmp/c5/a.json;/tmp/c5/missing.json")
+do ##class(Consolidated.Obs).EnvLoad("U4","/tmp/c5/a.json;/tmp/c5/bad.json")
+do ##class(Consolidated.Obs).EnvLoad("U5","/tmp/c5/a.json;/tmp/c5/arr.json")
+do ##class(Consolidated.Obs).EnvLoad("U6","/tmp/c5/s1.json;/tmp/c5/s2.json")
+do ##class(Consolidated.Obs).EnvLoad("U6r","/tmp/c5/s2.json;/tmp/c5/s1.json")
+do ##class(Consolidated.Obs).EnvLoad("U7.setup","/tmp/c5/e.json")
+write "OBS U7 v=",cfg.GetArg("envmod","v")," u=[",cfg.GetArg("envmod","u"),"] list0=",cfg.GetArg("envmod","list").%Get(0)," d1=",cfg.GetArg("envmod","d1")," bs=",cfg.GetArg("envmod","bs"),!
+do ##class(Consolidated.Obs).EnvLoad("U8","/tmp/c5/e9.json")
+write "OBS U9 missing=[",cfg.GetArg("envmod","greeting","deeper"),"] none=[",cfg.GetArg("nope"),"]",!
+do ##class(Consolidated.Obs).EnvLoad("U10","/tmp/c5/a.json")
+set sc=##class(%IPM.Main).Shell("list")
+write "OBS U10 after.list=",cfg.GetArg("envmod","greeting"),!
+kill cfg
+write "OBS U11 fresh.empty=",##class(%IPM.General.EnvironmentConfig).%Get().IsEmpty(),!
+// ---------- S: one interactive shell session, three commands
+kill ^Consolidated.Env
+do ##class(%IPM.Main).Shell()
+load /tmp/c5/envmod/ -env /tmp/c5/a.json
+load /tmp/c5/envmod/ -env /tmp/c5/a.json;/tmp/c5/missing.json
+envmod configure
+load /tmp/c5/envmod/
+quit
+set s="" for i=1:1:$get(^Consolidated.Env) { set s=s_"["_^Consolidated.Env(i)_"]" }
+write !,"OBS S1 records=",s,!
+write "OBS S2 gen=[",##class(EnvMod.Gen).Val(),"]",!
+do ##class(Consolidated.Obs).Run("S3","load /tmp/c5/envmod/ -env /tmp/c5/b.json")
+write "OBS S3 gen=[",##class(EnvMod.Gen).Val(),"] last=[",^Consolidated.Env(^Consolidated.Env),"]",!
+do ##class(Consolidated.Obs).Run("S4","load /tmp/c5/envmod/ -env /tmp/c5/a.json;/tmp/c5/bad.json")
+do ##class(Consolidated.Obs).Mod("S4","envmod")
+write "OBS S4 gen=[",##class(EnvMod.Gen).Val(),"]",!
+write !,"NATIVE-END",!
+// Premise check: does a multi-process compile hide the in-process configuration from an objectgenerator?
+set cfg=##class(%IPM.General.EnvironmentConfig).%Get()
+do ##class(%IPM.Lifecycle.Base).LoadEnvironmentConfig("/tmp/c5/a.json")
+write !,"OBS M0 greeting=",cfg.GetArg("envmod","greeting"),!
+set sc=$system.OBJ.Compile("EnvMod.Gen","ck-d/multicompile=1") write "OBS M1 multi=",$system.Status.IsOK(sc)," gen=[",##class(EnvMod.Gen).Val(),"]",!
+set sc=$system.OBJ.Compile("EnvMod.Gen","ck-d/multicompile=0") write "OBS M2 single=",$system.Status.IsOK(sc)," gen=[",##class(EnvMod.Gen).Val(),"]",!
+kill items set items("EnvMod.Gen.CLS")=""
+set sc=##class(%IPM.Utils.LegacyCompat).UpdateSuperclassAndCompile(.items,"ck-d") write "OBS M3 ipm=",$system.Status.IsOK(sc)," gen=[",##class(EnvMod.Gen).Val(),"]",!
+do cfg.Clear() set sc=##class(%IPM.Utils.LegacyCompat).UpdateSuperclassAndCompile(.items,"ck-d") write "OBS M4 ipm.empty=",$system.Status.IsOK(sc)," gen=[",##class(EnvMod.Gen).Val(),"]",!
+write !,"NATIVE-END",!
+// Held-back case: a downgrade between prereleases of different versions; neighbors with releases.
+do ##class(Consolidated.Obs).Run("HB1","load /tmp/c5h/hb-2beta/") do ##class(Consolidated.Obs).Mod("HB1","hb-pre")
+do ##class(Consolidated.Obs).Run("HB2","load /tmp/c5h/hb-1rc/") do ##class(Consolidated.Obs).Mod("HB2","hb-pre")
+do ##class(Consolidated.Obs).Run("HR1","load /tmp/c5h/hr-2/") do ##class(Consolidated.Obs).Mod("HR1","hb-rel")
+do ##class(Consolidated.Obs).Run("HR2","load /tmp/c5h/hr-1/") do ##class(Consolidated.Obs).Mod("HR2","hb-rel")
+do ##class(Consolidated.Obs).Run("HM1","load /tmp/c5h/hm-2beta/") do ##class(Consolidated.Obs).Mod("HM1","hb-mix")
+do ##class(Consolidated.Obs).Run("HM2","load /tmp/c5h/hm-1/") do ##class(Consolidated.Obs).Mod("HM2","hb-mix")
+write !,"NATIVE-END",!
+write !,"AUDIT-END",!
+halt

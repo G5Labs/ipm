@@ -1,0 +1,15 @@
+# Iteration19 duplicate-source checkpoint
+
+[Ledger](working-ledger.json), [matrix](MATRIX.md), [bindings](bindings.json), [source roles](SOURCE-LINKS.md), [audit](binding-audit.json), [complete view](project-map.json), [census](census.json), [run](run.json), [review](model-review.md), [trust](../../../Verus_verification/consolidated/iter19/TRUST.md), [runbook](../../../Verus_verification/consolidated/iter19/RUNBOOK.md).
+
+Run full fresh native/proof/control/replay via python3 .g5/Verus_verification/consolidated/iter19/run.py; --no-native checks the sealed observations. The runbook gives exact binding/reverse lookup, validation and freshness commands. First three repo-status Booleans use true-opposite flips with passing neighbors. Exact final counts and hashes are in run.json; direct implementation proofs0.
+
+The model derives logical keys from valid physical entries, preserves first admission's manifest/directory pair, warns+OK on duplicates, and follows the retained directory into actual installed code/description/root. Indexed row consistency is proved. Constructor order is traced directly; repeated scan equality is a fixture qualification, not portable sorting. SingleA, AB[A,B], BA[B,A] give one row each, warnings only for duplicates, payload101/101/202 and coherent service/current/CLI readers. Opposite orders are conditional witnesses. Stable input/provider premises, other errors and mutable/concurrent cases remain explicit.
+
+Current source audit5/11 narrowly meaningful,6partial;369/1216 resolved locators,847 unlinked. Two new member locators are HandleSaveError and GetModuleManifest; no whole body/workflow or independent population score follows. The inherited boundary scope/provenance correction preserves ten already-mirrored links and known partial withdrawals, adding no raw reach. No new defect, simplification, question or owner decision.
+
+Not converged. CLS-only orphan inventory/ownership/visible-row subtraction remains a different ordinary reader gap, including a separate module-name-prefix convention. Cached metadata versus later physical source edits is a separate unassessed temporal boundary; the new stable-source guarantee does not settle it. Unknown provider/parser/transaction cases remain visible rather than silently trivialized. No arbitrary iteration/percentage/time stop is used.
+
+Archive-path behavior remains explicitly UNASSESSED/UNPURSUED, including investigation/reproduction/probing. Incidental adjacent source display was discarded, never followed or modeled/probed. Native scope is the supported directory branch. Product/index/prior models/receipts and sibling resources remain unchanged; immutable seal and clean replay receipts are external.
+
+Final integrated gate:67 units (52 inherited mathematical+15 new),21 scoped controls,5 focused positive witnesses,121 native qualifications/85 replay fields (36 qualification-only),3 true opposite-Boolean flips;50.831s. SourceSHA faf7721d59d669834da92c659fc162ddf3e64260d70da52b729e87a819a02ac9.

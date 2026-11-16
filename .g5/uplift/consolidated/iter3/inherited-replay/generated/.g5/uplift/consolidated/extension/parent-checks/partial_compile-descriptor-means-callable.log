@@ -1,0 +1,21 @@
+verification results:: 3 verified, 2 errors
+error: postcondition not satisfied
+  --> /var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-formal-f1g6yhho/model.rs:23:9
+   |
+20 | pub proof fn compiler_distinction_is_preserved(mode: Mode, results: Seq<CompilerOutcome>, entry: nat, i:int)
+   | ------------------------------------------------------------------------------------------------------------ at the end of the function body
+...
+23 |         !compile(mode,results,false,entry).resources[i].callable,
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: postcondition not satisfied
+  --> /var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-formal-f1g6yhho/model.rs:28:9
+   |
+26 | pub proof fn two_resource_witness()
+   | ----------------------------------- at the end of the function body
+27 |     ensures compile(Mode::NoTransaction,seq![CompilerOutcome{descriptor:true,callable:true},CompilerOutcome{descriptor:true,callable:false}],false,0).resources[0].callable,
+28 |         !compile(Mode::NoTransaction,seq![CompilerOutcome{descriptor:true,callable:true},CompilerOutcome{descriptor:true,callable:false}],false,0).resources[1].callable,
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: aborting due to 2 previous errors
+

@@ -1,0 +1,279 @@
+{
+  "models": {
+    "ownership.rs": {
+      "children-before-unique": [
+        "match find_unique(w,n,0){Some(i)=>Some(i),None=>find_child(w,n,0)}",
+        "match find_child(w,n,0){Some(i)=>Some(i),None=>find_unique(w,n,0)}"
+      ],
+      "null-owner-unique-row-filtered": [
+        "if lookup_key(w.refs[i as int].unique_name)==lookup_key(n)",
+        "if lookup_key(w.refs[i as int].unique_name)==lookup_key(n) && owner_object(w,i).is_some()"
+      ],
+      "reference-existence-creates-owner": [
+        "Some(n)=>if w.modules.contains(n){Some(n)}else{None},None=>None",
+        "Some(n)=>if w.modules.contains(n){Some(n)}else{None},None=>Some(exact_module())"
+      ],
+      "dangling-owner-treated-as-object": [
+        "if w.modules.contains(n){Some(n)}else{None}",
+        "Some(n)"
+      ],
+      "naming-fallback-disabled": [
+        "if first.module.is_some(){first}else{naming_pass(w,module_candidates(c),candidates(c,e),0,first.ref_id)}",
+        "first"
+      ],
+      "naming-precedes-explicit-reference": [
+        "if first.module.is_some(){first}else{naming_pass(w,module_candidates(c),candidates(c,e),0,first.ref_id)}",
+        "{let named=naming_pass(w,module_candidates(c),candidates(c,e),0,first.ref_id);if named.module.is_some(){named}else{first}}"
+      ],
+      "shortest-naming-prefix-first": [
+        "Class::Named=>seq![named_full_module(),naming_module()]",
+        "Class::Named=>seq![naming_module(),named_full_module()]"
+      ],
+      "package-before-exact-class": [
+        "seq![identifier(c,e),package(c)]",
+        "seq![package(c),identifier(c,e)]"
+      ],
+      "lower-extension-takes-CLS-package-branch": [
+        "if e==Extension::Upper{seq![identifier(c,e),package(c)]}",
+        "if true{seq![identifier(c,e),package(c)]}"
+      ],
+      "upper-extension-loses-package-branch": [
+        "if e==Extension::Upper{seq![identifier(c,e),package(c)]}",
+        "if false{seq![identifier(c,e),package(c)]}"
+      ],
+      "lower-identifier-silently-uppercased": [
+        "else{seq![identifier(c,e),identifier(c,e)]}",
+        "else{seq![identifier(c,Extension::Upper),identifier(c,Extension::Upper)]}"
+      ],
+      "lower-SQL-lookup-does-not-match-declaration": [
+        "if n==loose_lower(){loose_upper()}else if n==named_lower(){named_upper()}else{n}",
+        "n"
+      ],
+      "naming-clears-prior-reference": [
+        "naming_pass(w,module_candidates(c),candidates(c,e),0,first.ref_id)",
+        "naming_pass(w,module_candidates(c),candidates(c,e),0,None)"
+      ],
+      "missing-candidate-clears-prior-reference": [
+        "None=>ref_pass(w,cs,i+1,last)",
+        "None=>ref_pass(w,cs,i+1,None)"
+      ],
+      "imported-reference-has-wrong-owner": [
+        "owner:Some(m.name),children:seq![]",
+        "owner:Some(naming_module()),children:seq![]"
+      ],
+      "empty-module-invents-reference": [
+        "import_refs(World{modules:w.modules.insert(m.name),..w},m,0)",
+        "{let imported=import_refs(World{modules:w.modules.insert(m.name),..w},m,0);if m.resources.len()==0{World{refs:imported.refs+seq![Reference{unique_name:named_upper(),owner:Some(m.name),children:seq![]}],..imported}}else{imported}}"
+      ],
+      "children-appended-instead-of-replaced": [
+        "Reference{children:names,..w.refs[id as int]}",
+        "Reference{children:w.refs[id as int].children+names,..w.refs[id as int]}"
+      ],
+      "compiled-source-has-wrong-payload": [
+        "code:w.code.insert(s.class_id,s.returns)",
+        "code:w.code.insert(s.class_id,2)"
+      ],
+      "empty-module-removes-physical-code": [
+        "World{modules:w.modules.insert(m.name),..w}",
+        "World{modules:w.modules.insert(m.name),code:Map::empty(),..w}"
+      ],
+      "orphans-predicate-inverted": [
+        "if home(w,c,Extension::Lower).module.is_none()",
+        "if home(w,c,Extension::Lower).module.is_some()"
+      ],
+      "fetch-does-not-advance": [
+        "cursor:q.cursor+1,..q",
+        "cursor:q.cursor,..q"
+      ],
+      "fetch-does-not-report-end": [
+        "Fetch{row:None,next:q,at_end:true}",
+        "Fetch{row:None,next:q,at_end:false}"
+      ],
+      "close-keeps-query-rows": [
+        "Query{rows:seq![],cursor:0,closed:true}",
+        "Query{rows:q.rows,cursor:0,closed:true}"
+      ],
+      "consumer-reverses-row-order": [
+        "names:seq![n]+rest.names",
+        "names:rest.names+seq![n]"
+      ]
+    }
+  },
+  "dependency_controls": {},
+  "control_functions": {
+    "ownership.rs": {
+      "children-before-unique": "priority_neighbor",
+      "null-owner-unique-row-filtered": "nullable_neighbor",
+      "reference-existence-creates-owner": "nullable_neighbor",
+      "dangling-owner-treated-as-object": "nullable_neighbor",
+      "naming-fallback-disabled": "normal_neighbors",
+      "naming-precedes-explicit-reference": "priority_neighbor",
+      "shortest-naming-prefix-first": "priority_neighbor",
+      "package-before-exact-class": "priority_neighbor",
+      "lower-extension-takes-CLS-package-branch": "extension_neighbor",
+      "upper-extension-loses-package-branch": "extension_neighbor",
+      "lower-identifier-silently-uppercased": "extension_neighbor",
+      "lower-SQL-lookup-does-not-match-declaration": "normal_neighbors",
+      "naming-clears-prior-reference": "nullable_neighbor",
+      "missing-candidate-clears-prior-reference": "nullable_neighbor",
+      "imported-reference-has-wrong-owner": "normal_neighbors",
+      "empty-module-invents-reference": "normal_neighbors",
+      "children-appended-instead-of-replaced": "children_writer_neighbor",
+      "compiled-source-has-wrong-payload": "normal_neighbors",
+      "empty-module-removes-physical-code": "normal_neighbors",
+      "orphans-predicate-inverted": "normal_neighbors",
+      "fetch-does-not-advance": "fetch_neighbor",
+      "fetch-does-not-report-end": "fetch_neighbor",
+      "close-keeps-query-rows": "cursor_neighbor",
+      "consumer-reverses-row-order": "cursor_neighbor"
+    }
+  },
+  "control_options": [
+    "--multiple-errors",
+    "0"
+  ],
+  "replay_model": "ownership.rs",
+  "replay": {
+    "free-visible-loose": "b(visible(free(),Class::Loose))",
+    "claimed-visible-loose": "b(visible(claimed(),Class::Loose))",
+    "naming-visible-named": "b(visible(naming(),Class::Named))",
+    "free-inventory-loose": "b(inventory(free()).contains(Class::Loose))",
+    "free-loose-reference": "b(has_ref(free(),Class::Loose,Extension::Lower))",
+    "free-loose-home": "b(home(free(),Class::Loose,Extension::Lower).module.is_some())",
+    "free-loose-home-match": "b(home_name(free(),Class::Loose,Extension::Lower)==seq![])",
+    "free-loose-home-reference": "b(home(free(),Class::Loose,Extension::Lower).ref_id.is_some())",
+    "free-loose-lower-resource-full": "b(home(free(),Class::Loose,Extension::Lower).resource==identifier(Class::Loose,Extension::Lower))",
+    "free-loose-upper-home-match": "b(home_name(free(),Class::Loose,Extension::Upper)==seq![])",
+    "free-loose-upper-resource-package": "b(home(free(),Class::Loose,Extension::Upper).resource==package(Class::Loose))",
+    "free-loose-home-name-reader": "b(home_name(free(),Class::Loose,Extension::Lower)==seq![])",
+    "free-loose-code": "b(free().code.contains_key(Class::Loose))",
+    "free-loose-payload": "payload(free(),Class::Loose)",
+    "free-inventory-named": "b(inventory(free()).contains(Class::Named))",
+    "free-named-reference": "b(has_ref(free(),Class::Named,Extension::Lower))",
+    "free-named-home": "b(home(free(),Class::Named,Extension::Lower).module.is_some())",
+    "free-named-home-match": "b(home_name(free(),Class::Named,Extension::Lower)==seq![])",
+    "free-named-home-reference": "b(home(free(),Class::Named,Extension::Lower).ref_id.is_some())",
+    "free-named-lower-resource-full": "b(home(free(),Class::Named,Extension::Lower).resource==identifier(Class::Named,Extension::Lower))",
+    "free-named-upper-home-match": "b(home_name(free(),Class::Named,Extension::Upper)==seq![])",
+    "free-named-upper-resource-package": "b(home(free(),Class::Named,Extension::Upper).resource==package(Class::Named))",
+    "free-named-home-name-reader": "b(home_name(free(),Class::Named,Extension::Lower)==seq![])",
+    "free-named-code": "b(free().code.contains_key(Class::Named))",
+    "free-named-payload": "payload(free(),Class::Named)",
+    "free-visible-named": "b(visible(free(),Class::Named))",
+    "claimed-inventory-loose": "b(inventory(claimed()).contains(Class::Loose))",
+    "claimed-loose-reference": "b(has_ref(claimed(),Class::Loose,Extension::Lower))",
+    "claimed-loose-home": "b(home(claimed(),Class::Loose,Extension::Lower).module.is_some())",
+    "claimed-loose-home-match": "b(home_name(claimed(),Class::Loose,Extension::Lower)==claim_module())",
+    "claimed-loose-home-reference": "b(home(claimed(),Class::Loose,Extension::Lower).ref_id.is_some())",
+    "claimed-loose-lower-resource-full": "b(home(claimed(),Class::Loose,Extension::Lower).resource==identifier(Class::Loose,Extension::Lower))",
+    "claimed-loose-upper-home-match": "b(home_name(claimed(),Class::Loose,Extension::Upper)==claim_module())",
+    "claimed-loose-upper-resource-package": "b(home(claimed(),Class::Loose,Extension::Upper).resource==package(Class::Loose))",
+    "claimed-loose-home-name-reader": "b(home_name(claimed(),Class::Loose,Extension::Lower)==claim_module())",
+    "claimed-loose-code": "b(claimed().code.contains_key(Class::Loose))",
+    "claimed-loose-payload": "payload(claimed(),Class::Loose)",
+    "claimed-loose-reference-owner": "b(exact_ref_owner(claimed(),Class::Loose,Extension::Lower).is_some())",
+    "claimed-loose-reference-owner-match": "b(exact_ref_owner(claimed(),Class::Loose,Extension::Lower)==Some(claim_module()))",
+    "claimed-loose-child-match-count": "b(match lookup_ref(claimed(),identifier(Class::Loose,Extension::Lower)){Some(id)=>child_contains(claimed().refs[id as int].children,identifier(Class::Loose,Extension::Lower),0),None=>false})",
+    "claimed-inventory-named": "b(inventory(claimed()).contains(Class::Named))",
+    "claimed-named-reference": "b(has_ref(claimed(),Class::Named,Extension::Lower))",
+    "claimed-named-home": "b(home(claimed(),Class::Named,Extension::Lower).module.is_some())",
+    "claimed-named-home-match": "b(home_name(claimed(),Class::Named,Extension::Lower)==seq![])",
+    "claimed-named-home-reference": "b(home(claimed(),Class::Named,Extension::Lower).ref_id.is_some())",
+    "claimed-named-lower-resource-full": "b(home(claimed(),Class::Named,Extension::Lower).resource==identifier(Class::Named,Extension::Lower))",
+    "claimed-named-upper-home-match": "b(home_name(claimed(),Class::Named,Extension::Upper)==seq![])",
+    "claimed-named-upper-resource-package": "b(home(claimed(),Class::Named,Extension::Upper).resource==package(Class::Named))",
+    "claimed-named-home-name-reader": "b(home_name(claimed(),Class::Named,Extension::Lower)==seq![])",
+    "claimed-named-code": "b(claimed().code.contains_key(Class::Named))",
+    "claimed-named-payload": "payload(claimed(),Class::Named)",
+    "claimed-visible-named": "b(visible(claimed(),Class::Named))",
+    "naming-inventory-loose": "b(inventory(naming()).contains(Class::Loose))",
+    "naming-loose-reference": "b(has_ref(naming(),Class::Loose,Extension::Lower))",
+    "naming-loose-home": "b(home(naming(),Class::Loose,Extension::Lower).module.is_some())",
+    "naming-loose-home-match": "b(home_name(naming(),Class::Loose,Extension::Lower)==claim_module())",
+    "naming-loose-home-reference": "b(home(naming(),Class::Loose,Extension::Lower).ref_id.is_some())",
+    "naming-loose-lower-resource-full": "b(home(naming(),Class::Loose,Extension::Lower).resource==identifier(Class::Loose,Extension::Lower))",
+    "naming-loose-upper-home-match": "b(home_name(naming(),Class::Loose,Extension::Upper)==claim_module())",
+    "naming-loose-upper-resource-package": "b(home(naming(),Class::Loose,Extension::Upper).resource==package(Class::Loose))",
+    "naming-loose-home-name-reader": "b(home_name(naming(),Class::Loose,Extension::Lower)==claim_module())",
+    "naming-loose-code": "b(naming().code.contains_key(Class::Loose))",
+    "naming-loose-payload": "payload(naming(),Class::Loose)",
+    "naming-visible-loose": "b(visible(naming(),Class::Loose))",
+    "naming-loose-reference-owner": "b(exact_ref_owner(naming(),Class::Loose,Extension::Lower).is_some())",
+    "naming-loose-reference-owner-match": "b(exact_ref_owner(naming(),Class::Loose,Extension::Lower)==Some(claim_module()))",
+    "naming-loose-child-match-count": "b(match lookup_ref(naming(),identifier(Class::Loose,Extension::Lower)){Some(id)=>child_contains(naming().refs[id as int].children,identifier(Class::Loose,Extension::Lower),0),None=>false})",
+    "naming-inventory-named": "b(inventory(naming()).contains(Class::Named))",
+    "naming-named-reference": "b(has_ref(naming(),Class::Named,Extension::Lower))",
+    "naming-named-home": "b(home(naming(),Class::Named,Extension::Lower).module.is_some())",
+    "naming-named-home-match": "b(home_name(naming(),Class::Named,Extension::Lower)==naming_module())",
+    "naming-named-home-reference": "b(home(naming(),Class::Named,Extension::Lower).ref_id.is_some())",
+    "naming-named-lower-resource-full": "b(home(naming(),Class::Named,Extension::Lower).resource==identifier(Class::Named,Extension::Lower))",
+    "naming-named-upper-home-match": "b(home_name(naming(),Class::Named,Extension::Upper)==naming_module())",
+    "naming-named-upper-resource-package": "b(home(naming(),Class::Named,Extension::Upper).resource==package(Class::Named))",
+    "naming-named-home-name-reader": "b(home_name(naming(),Class::Named,Extension::Lower)==naming_module())",
+    "naming-named-code": "b(naming().code.contains_key(Class::Named))",
+    "naming-named-payload": "payload(naming(),Class::Named)",
+    "exact-inventory-loose": "b(inventory(exact()).contains(Class::Loose))",
+    "exact-loose-reference": "b(has_ref(exact(),Class::Loose,Extension::Lower))",
+    "exact-loose-home": "b(home(exact(),Class::Loose,Extension::Lower).module.is_some())",
+    "exact-loose-home-match": "b(home_name(exact(),Class::Loose,Extension::Lower)==claim_module())",
+    "exact-loose-home-reference": "b(home(exact(),Class::Loose,Extension::Lower).ref_id.is_some())",
+    "exact-loose-lower-resource-full": "b(home(exact(),Class::Loose,Extension::Lower).resource==identifier(Class::Loose,Extension::Lower))",
+    "exact-loose-upper-home-match": "b(home_name(exact(),Class::Loose,Extension::Upper)==claim_module())",
+    "exact-loose-upper-resource-package": "b(home(exact(),Class::Loose,Extension::Upper).resource==package(Class::Loose))",
+    "exact-loose-home-name-reader": "b(home_name(exact(),Class::Loose,Extension::Lower)==claim_module())",
+    "exact-loose-code": "b(exact().code.contains_key(Class::Loose))",
+    "exact-loose-payload": "payload(exact(),Class::Loose)",
+    "exact-visible-loose": "b(visible(exact(),Class::Loose))",
+    "exact-loose-reference-owner": "b(exact_ref_owner(exact(),Class::Loose,Extension::Lower).is_some())",
+    "exact-loose-reference-owner-match": "b(exact_ref_owner(exact(),Class::Loose,Extension::Lower)==Some(claim_module()))",
+    "exact-loose-child-match-count": "b(match lookup_ref(exact(),identifier(Class::Loose,Extension::Lower)){Some(id)=>child_contains(exact().refs[id as int].children,identifier(Class::Loose,Extension::Lower),0),None=>false})",
+    "exact-inventory-named": "b(inventory(exact()).contains(Class::Named))",
+    "exact-named-reference": "b(has_ref(exact(),Class::Named,Extension::Lower))",
+    "exact-named-home": "b(home(exact(),Class::Named,Extension::Lower).module.is_some())",
+    "exact-named-home-match": "b(home_name(exact(),Class::Named,Extension::Lower)==exact_module())",
+    "exact-named-home-reference": "b(home(exact(),Class::Named,Extension::Lower).ref_id.is_some())",
+    "exact-named-lower-resource-full": "b(home(exact(),Class::Named,Extension::Lower).resource==identifier(Class::Named,Extension::Lower))",
+    "exact-named-upper-home-match": "b(home_name(exact(),Class::Named,Extension::Upper)==exact_module())",
+    "exact-named-upper-resource-package": "b(home(exact(),Class::Named,Extension::Upper).resource==package(Class::Named))",
+    "exact-named-home-name-reader": "b(home_name(exact(),Class::Named,Extension::Lower)==exact_module())",
+    "exact-named-code": "b(exact().code.contains_key(Class::Named))",
+    "exact-named-payload": "payload(exact(),Class::Named)",
+    "exact-visible-named": "b(visible(exact(),Class::Named))",
+    "exact-named-reference-owner": "b(exact_ref_owner(exact(),Class::Named,Extension::Lower).is_some())",
+    "exact-named-reference-owner-match": "b(exact_ref_owner(exact(),Class::Named,Extension::Lower)==Some(exact_module()))",
+    "exact-named-child-match-count": "b(match lookup_ref(exact(),identifier(Class::Named,Extension::Lower)){Some(id)=>child_contains(exact().refs[id as int].children,identifier(Class::Named,Extension::Lower),0),None=>false})",
+    "naming-module": "b(naming().modules.contains(naming_module()))",
+    "naming-resource-count": "reference_count(naming(),naming_module(),0)"
+  },
+  "replay_prelude": "normal_neighbors();extension_neighbor();children_writer_neighbor();reveal_with_fuel(import_refs,3);reveal_with_fuel(find_unique,3);reveal_with_fuel(find_child,3);reveal_with_fuel(child_contains,3);reveal_with_fuel(ref_pass,3);reveal_with_fuel(naming_pass,3);reveal_with_fuel(filter,3);reveal_with_fuel(drain,3);reveal_with_fuel(reference_count,3);assert(loose_lower().len()>0) by (compute);assert(named_lower().len()>0) by (compute);assert(loose_upper().len()>0) by (compute);assert(named_upper().len()>0) by (compute);assert(loose_pkg().len()>0) by (compute);assert(named_pkg().len()>0) by (compute);assert(loose_upper()!=loose_pkg()) by (compute);assert(named_upper()!=named_pkg()) by (compute);assert(home(free(),Class::Loose,Extension::Lower).resource==seq![]);assert(home(free(),Class::Loose,Extension::Upper).resource==seq![]);assert(home(free(),Class::Named,Extension::Lower).resource==seq![]);assert(home(free(),Class::Named,Extension::Upper).resource==seq![]);assert(home(claimed(),Class::Named,Extension::Lower).resource==seq![]);assert(home(claimed(),Class::Named,Extension::Upper).resource==seq![]);",
+  "native_expected": {
+    "driver-compile": 1,
+    "free-loose-compile": 1,
+    "free-named-compile": 1,
+    "free-inventory-sql-ok": 1,
+    "orphans-free": 1,
+    "load-claim": 1,
+    "claimed-inventory-sql-ok": 1,
+    "orphans-claimed": 1,
+    "load-naming": 1,
+    "naming-inventory-sql-ok": 1,
+    "orphans-naming": 1,
+    "load-exact": 1,
+    "exact-inventory-sql-ok": 1,
+    "orphans-exact": 1,
+    "final-tlevel": 0
+  },
+  "scope_notes": [
+    "Two controlled ordinary nonstub/nonmapped two-component sourceclasses; lower.cls actual inventory/CLI input is distinct from uppercase.CLS stored declarations/direct API neighbors. No generic inventory, identifier parser, arbitrary collation or namespace-wide row count/order claim.",
+    "Reference lookup firstUniqueName thenChildren; existing reference is not an owner unless its Module is an object. Nullable/absent-owner pure neighbors retain reference-output state across naming fallback. Unambiguous index matches are provider premises; no arbitrary SQL ordering is modeled.",
+    "Parsed ordinary module import derives module and explicit owner relationship from resources. Successful document load supplies code and canonical child lookup membership; children replace prior names. Native verifies selected class membership, not raw returned-list byte equality.",
+    "No-resource naming module changes inferred home without claiming class, adding references or changing physical code. Later explicit exact-class declaration supersedes naming convention.",
+    "Naming module prefixes use selected literal case-normalization port. Lowercase extension deliberately bypasses uppercase CLS-specific ancestorPKG/stub branch; source-only package-neighbor distinction is not generalized to all package workflows.",
+    "Query is projected to controlled class membership. Normal fresh successful query is consumed to firstAtEnd and closed; overlapping/abandoned/stale cursor use, after-end restart and error paths are unassessed.",
+    "Logical reference ordinals0/1 never equal native compositeIRISIDs. Native rawID strings remain opaque.",
+    "Inherited untyped mapped/system noise remains P:F-UNIN-7; no newdefect or entire-inspection coverage/convergence claim.",
+    "Archive paths remain UNASSESSED/UNPURSUED with no investigation/probe/reproduction.",
+    "Fetch advancement controls use a separate definition-only selector with no drain call, so their nonadvancing mutant cannot rely on unverified recursive drain termination. Other selectors call no proof lemmas/broadcasts.",
+    "Replay literal nonempty/inequality computations cover byte literals only, plus explicit bounded empty-resource definition facts. No full Map/World compute or semantic rule change. Earlier failed replay retained."
+  ]
+}

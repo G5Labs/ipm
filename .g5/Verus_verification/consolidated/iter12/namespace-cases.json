@@ -1,0 +1,185 @@
+{
+  "models": {
+    "namespaces.rs": {
+      "preview-makes-changes": [
+        "if preview{s}else",
+        "if false{s}else"
+      ],
+      "repos-without-map-accepted": [
+        "if repos && !map",
+        "if false"
+      ],
+      "read-version-from-code-source": [
+        "match check_ipm_version(s,n)",
+        "match version_in_use(abs(s),n)"
+      ],
+      "empty-record-defaults-to-current": [
+        "Some(v)=>v,None=>0",
+        "Some(v)=>v,None=>10"
+      ],
+      "normal-refusal-keeps-new-row": [
+        "Load{ok,row:ok}",
+        "Load{ok,row:true}"
+      ],
+      "full-unmap-is-repos-only": [
+        "state:unmap(s,set![2int],repos_only)",
+        "state:unmap(s,set![2int],true)"
+      ],
+      "unmap-reports-error": [
+        "state:unmap(s,set![2int],repos_only),ok:true",
+        "state:unmap(s,set![2int],repos_only),ok:false"
+      ],
+      "repo-lookup-ignores-mapping": [
+        "pub open spec fn repo_visible(s:S,n:int)->bool {\n let db=glo_dest(s.ns[n].act,n);",
+        "pub open spec fn repo_visible(s:S,n:int)->bool {\n let db=n;"
+      ],
+      "repo-key-lost": [
+        "set![7int]",
+        "set![8int]"
+      ]
+    }
+  },
+  "dependency_controls": {
+    "namespaces.rs": {
+      "correct-routine-type": {
+        "path": "playbook-uplift/models/verus/ns_mapping.rs",
+        "old": "remove_rtn(Maps { pkg: None, ..c1 }, RtnType::Other)",
+        "new": "remove_rtn(Maps { pkg: None, ..c1 }, RtnType::All)"
+      },
+      "repo-lookup-bypasses-active-map": {
+        "path": "playbook-uplift/models/verus/ns_mapping.rs",
+        "old": "mapped_from(s1, t, src) && !rows_at(s1, glo_dest(s1.ns[t].act, t))",
+        "new": "has_ipm(s1,src) && !rows_at(s1, glo_dest(s1.ns[t].act, t))"
+      }
+    }
+  },
+  "session": [
+    "do $system.OBJ.Load(\"/tmp/iter12/Namespaces.cls\",\"ck\")",
+    "do ##class(Iter12.Namespaces).Run()"
+  ],
+  "replay_model": "all.rs",
+  "replay": {
+    "repos-without-map": "b(request(w4(),false,true,false).ok)",
+    "map-preview": "b(request(w4(),true,true,true).ok)",
+    "map-first": "b(request(w4(),true,true,false).ok)",
+    "map-second": "b(request(first(),true,true,false).ok)",
+    "repos-unmap": "b(unmap_request(second(),true).ok)",
+    "full-unmap": "b(unmap_request(third(),false).ok)",
+    "local-requirement": "b(requirement(first(),1,1))",
+    "local-load": "b(new_normal_load(first(),1,1).ok)",
+    "local-row": "b(new_normal_load(first(),1,1).row)",
+    "mapped-shell": "b(has_ipm(first(),2))",
+    "mapped-requirement": "b(requirement(first(),2,1))",
+    "mapped-load": "b(new_normal_load(first(),2,1).ok)",
+    "mapped-row": "b(new_normal_load(first(),2,1).row)",
+    "after-unmap-shell": "b(has_ipm(unmapped(),2))",
+    "after-unmap-requirement": "b(requirement(unmapped(),2,1))",
+    "after-unmap-load": "b(new_normal_load(unmapped(),2,1).ok)",
+    "after-unmap-row": "b(new_normal_load(unmapped(),2,1).row)",
+    "empty-pkg": "b(w4().ns[2].cfg.pkg.is_some())",
+    "empty-rtn": "b(w4().ns[2].cfg.rtn.is_some())",
+    "empty-repo": "b(w4().ns[2].cfg.repo.is_some())",
+    "empty-active-source": "b(pkg_dest(w4().ns[2].act)==1)",
+    "invalid-pkg": "b(request(w4(),false,true,false).state.ns[2].cfg.pkg.is_some())",
+    "invalid-rtn": "b(request(w4(),false,true,false).state.ns[2].cfg.rtn.is_some())",
+    "invalid-repo": "b(request(w4(),false,true,false).state.ns[2].cfg.repo.is_some())",
+    "invalid-active-source": "b(pkg_dest(request(w4(),false,true,false).state.ns[2].act)==1)",
+    "preview-pkg": "b(request(w4(),true,true,true).state.ns[2].cfg.pkg.is_some())",
+    "preview-rtn": "b(request(w4(),true,true,true).state.ns[2].cfg.rtn.is_some())",
+    "preview-repo": "b(request(w4(),true,true,true).state.ns[2].cfg.repo.is_some())",
+    "preview-active-source": "b(pkg_dest(request(w4(),true,true,true).state.ns[2].act)==1)",
+    "first-pkg": "b(first().ns[2].cfg.pkg.is_some())",
+    "first-rtn": "b(first().ns[2].cfg.rtn.is_some())",
+    "first-repo": "b(first().ns[2].cfg.repo.is_some())",
+    "first-active-source": "b(pkg_dest(first().ns[2].act)==1)",
+    "second-pkg": "b(second().ns[2].cfg.pkg.is_some())",
+    "second-rtn": "b(second().ns[2].cfg.rtn.is_some())",
+    "second-repo": "b(second().ns[2].cfg.repo.is_some())",
+    "second-active-source": "b(pkg_dest(second().ns[2].act)==1)",
+    "repos-only-pkg": "b(repos_only().ns[2].cfg.pkg.is_some())",
+    "repos-only-rtn": "b(repos_only().ns[2].cfg.rtn.is_some())",
+    "repos-only-repo": "b(repos_only().ns[2].cfg.repo.is_some())",
+    "repos-only-active-source": "b(pkg_dest(repos_only().ns[2].act)==1)",
+    "unmapped-pkg": "b(unmapped().ns[2].cfg.pkg.is_some())",
+    "unmapped-rtn": "b(unmapped().ns[2].cfg.rtn.is_some())",
+    "unmapped-repo": "b(unmapped().ns[2].cfg.repo.is_some())",
+    "unmapped-active-source": "b(pkg_dest(unmapped().ns[2].act)==1)",
+    "empty-repo-s": "b(w4().ns[2].cfg.repo.is_some())",
+    "empty-repo-i": "b(w4().ns[2].cfg.repo.is_some())",
+    "invalid-repo-s": "b(request(w4(),false,true,false).state.ns[2].cfg.repo.is_some())",
+    "invalid-repo-i": "b(request(w4(),false,true,false).state.ns[2].cfg.repo.is_some())",
+    "preview-repo-s": "b(request(w4(),true,true,true).state.ns[2].cfg.repo.is_some())",
+    "preview-repo-i": "b(request(w4(),true,true,true).state.ns[2].cfg.repo.is_some())",
+    "first-repo-s": "b(first().ns[2].cfg.repo.is_some())",
+    "first-repo-i": "b(first().ns[2].cfg.repo.is_some())",
+    "second-repo-s": "b(second().ns[2].cfg.repo.is_some())",
+    "second-repo-i": "b(second().ns[2].cfg.repo.is_some())",
+    "repos-only-repo-s": "b(repos_only().ns[2].cfg.repo.is_some())",
+    "repos-only-repo-i": "b(repos_only().ns[2].cfg.repo.is_some())",
+    "unmapped-repo-s": "b(unmapped().ns[2].cfg.repo.is_some())",
+    "unmapped-repo-i": "b(unmapped().ns[2].cfg.repo.is_some())",
+    "mapped-repo-visible": "b(repo_visible(first(),2))",
+    "shared-repo-visible": "b(repo_visible(second(),2))",
+    "shared-requirement": "b(requirement(second(),2,1))",
+    "shared-load": "b(new_normal_load(second(),2,1).ok)",
+    "shared-row": "b(new_normal_load(second(),2,1).row)",
+    "shared-shell": "b(has_ipm(second(),2))",
+    "repos-removed-repo-visible": "b(repo_visible(repos_only(),2))",
+    "repos-removed-requirement": "b(requirement(repos_only(),2,1))",
+    "repos-removed-load": "b(new_normal_load(repos_only(),2,1).ok)",
+    "repos-removed-row": "b(new_normal_load(repos_only(),2,1).row)",
+    "repos-removed-shell": "b(has_ipm(repos_only(),2))",
+    "after-unmap-repo-visible": "b(repo_visible(unmapped(),2))",
+    "own-created-repo-visible": "b(repo_visible(own_target(),2))",
+    "own-created-own-visible": "b(own_visible(own_target(),2))",
+    "own-created-requirement": "b(requirement(own_target(),2,1))",
+    "own-created-load": "b(new_normal_load(own_target(),2,1).ok)",
+    "own-created-row": "b(new_normal_load(own_target(),2,1).row)",
+    "own-created-shell": "b(has_ipm(own_target(),2))",
+    "own-skip-repo-visible": "b(repo_visible(own_skip(),2))",
+    "own-skip-own-visible": "b(own_visible(own_skip(),2))",
+    "own-skip-requirement": "b(requirement(own_skip(),2,1))",
+    "own-skip-load": "b(new_normal_load(own_skip(),2,1).ok)",
+    "own-skip-row": "b(new_normal_load(own_skip(),2,1).row)",
+    "own-skip-shell": "b(has_ipm(own_skip(),2))",
+    "own-cleared-repo-visible": "b(repo_visible(own_cleared(),2))",
+    "own-cleared-own-visible": "b(own_visible(own_cleared(),2))",
+    "own-cleared-requirement": "b(requirement(own_cleared(),2,1))",
+    "own-cleared-load": "b(new_normal_load(own_cleared(),2,1).ok)",
+    "own-cleared-row": "b(new_normal_load(own_cleared(),2,1).row)",
+    "own-cleared-shell": "b(has_ipm(own_cleared(),2))",
+    "mapped-own-visible": "b(own_visible(first(),2))",
+    "shared-own-visible": "b(own_visible(second(),2))",
+    "repos-removed-own-visible": "b(own_visible(repos_only(),2))",
+    "after-unmap-own-visible": "b(own_visible(unmapped(),2))",
+    "own-skip-pkg": "b(own_skip().ns[2].cfg.pkg.is_some())",
+    "own-skip-rtn": "b(own_skip().ns[2].cfg.rtn.is_some())",
+    "own-skip-repo": "b(own_skip().ns[2].cfg.repo.is_some())",
+    "own-skip-repo-s": "b(own_skip().ns[2].cfg.repo.is_some())",
+    "own-skip-repo-i": "b(own_skip().ns[2].cfg.repo.is_some())",
+    "own-skip-active-source": "b(pkg_dest(own_skip().ns[2].act)==1)"
+  },
+  "replay_prelude": "nsp_witness_repos_second_run();\n",
+  "native_expected": {
+    "local-uninstall": 1,
+    "map-third": 1,
+    "mapped-done": 1,
+    "mapped-exception": 0,
+    "after-unmap-done": 1,
+    "after-unmap-exception": 0,
+    "shared-done": 1,
+    "shared-exception": 0,
+    "repos-removed-done": 1,
+    "repos-removed-exception": 0,
+    "visible-repo": 1,
+    "own-created-done": 1,
+    "own-created-exception": 0,
+    "own-skip-done": 1,
+    "own-skip-exception": 0,
+    "own-cleared-done": 1,
+    "own-cleared-exception": 0,
+    "own-created-action": 1,
+    "own-cleared-action": 1,
+    "map-with-own": 1
+  }
+}

@@ -1,0 +1,45 @@
+error: postcondition not satisfied
+   --> .g5/Verus_verification/consolidated/iter16/model-lane/controls/wrong-code-payload.rs:158:3
+    |
+153 | pub proof fn successful_install_binds_receipt(w:World,r:Request)
+    | ---------------------------------------------------------------- at the end of the function body
+...
+158 |   payload(install(w,r).world)==select(w,r).unwrap().package.payload,
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+note: function body check: not all errors may have been reported; rerun with a higher value for --multiple-errors to find other potential errors in this function
+   --> .g5/Verus_verification/consolidated/iter16/model-lane/controls/wrong-code-payload.rs:169:1
+    |
+169 | pub proof fn ordinary_neighbors()
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: postcondition not satisfied
+   --> .g5/Verus_verification/consolidated/iter16/model-lane/controls/wrong-code-payload.rs:171:2
+    |
+169 | pub proof fn ordinary_neighbors()
+    | --------------------------------- at the end of the function body
+170 |  ensures install(initial(),request(alpha())).ok,install(initial(),request(beta())).ok,
+171 |  payload(after_a())==1,supplier(after_a())==alpha(),installed_root(after_a())==Some(Root::A),
+    |  ^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: postcondition not satisfied
+   --> .g5/Verus_verification/consolidated/iter16/model-lane/controls/wrong-code-payload.rs:177:54
+    |
+169 | pub proof fn ordinary_neighbors()
+    | --------------------------------- at the end of the function body
+...
+177 |  after_alpha_recreate().repos[alpha()].root==Root::C,payload(after_alpha_recreate())==1,
+    |                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: postcondition not satisfied
+   --> .g5/Verus_verification/consolidated/iter16/model-lane/controls/wrong-code-payload.rs:197:24
+    |
+189 | pub proof fn local_and_refusal_neighbors()
+    | ------------------------------------------ at the end of the function body
+...
+197 |  !missing_after_a().ok,payload(missing_after_a().world)==1,supplier(missing_after_a().world)==alpha()
+    |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+verification results:: 19 verified, 3 errors
+error: aborting due to 4 previous errors
+

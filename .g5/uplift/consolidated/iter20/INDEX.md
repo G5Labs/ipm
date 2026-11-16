@@ -1,0 +1,9 @@
+# iter20 scoped evidence index
+
+These are builder cases, not independent holdouts. Proofs verify hand-written specifications. ObjectScript implementation proofs: 0.
+
+| Case | Canonical owner | Contract | Source decisions → consuming readers |
+|---|---|---|---|
+| S20-01 | [inspect.orphans.ownership](../../../ontology/features/inspection.g5.md#inspect.orphans.ownership) | [ownership.rs](../../../Verus_verification/consolidated/iter20/ownership.rs) `load_source, import_refs, import_module, replace_children, document_loaded, children_writer_neighbor` | src/cls/IPM/Utils/Module.cls::LoadNewModule; src/cls/IPM/ResourceProcessor/Default/Document.cls::OnLoad; src/cls/IPM/Storage/ResourceReference.cls::UpdateChildrenFromString → src/cls/IPM/Storage/ResourceReference.cls::NonNullResourceNameExists |
+| S20-02 | [inspect.orphans.identifier-case](../../../ontology/features/inspection.g5.md#inspect.orphans.identifier-case) | [ownership.rs](../../../Verus_verification/consolidated/iter20/ownership.rs) `lookup_key, candidates, module_candidates, find_unique, find_child, lookup_ref, owner_object, ref_pass, naming_pass, home, home_name, normal_neighbors, extension_neighbor, priority_neighbor, nullable_neighbor` | src/cls/IPM/Storage/ResourceReference.cls::NonNullResourceNameExists; src/cls/IPM/ExtensionBase/Utils.cls::FindHomeModule → src/cls/IPM/ExtensionBase/Utils.cls::GetHomeModuleName; src/cls/IPM/Utils/Module.cls::OrphanedResourcesExecute |
+| S20-03 | [inspect.orphans.ownership](../../../ontology/features/inspection.g5.md#inspect.orphans.ownership) | [ownership.rs](../../../Verus_verification/consolidated/iter20/ownership.rs) `inventory, filter, execute, fetch, close, drain, printed, visible, cursor_neighbor, normal_neighbors, fetch_neighbor` | src/cls/IPM/Utils/Module.cls::OrphanedResourcesExecute; src/cls/IPM/Utils/Module.cls::OrphanedResourcesFetch; src/cls/IPM/Utils/Module.cls::OrphanedResourcesClose → src/cls/IPM/Main.cls::ListOrphans |

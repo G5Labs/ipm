@@ -1,0 +1,55 @@
+verification results:: 13 verified, 2 errors
+note: function body check: not all errors may have been reported; rerun with a higher value for --multiple-errors to find other potential errors in this function
+   --> /Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter12/proofs/controls/lockfile.rs/wrong-dependency-key.rs:101:1
+    |
+101 | pub proof fn installed_identity_drives_entry(d:Document,r:Reference,store:Map<int,Module>,rs:Map<int,Repo>)
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: postcondition not satisfied
+   --> /Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter12/proofs/controls/lockfile.rs/wrong-dependency-key.rs:103:10
+    |
+101 | pub proof fn installed_identity_drives_entry(d:Document,r:Reference,store:Map<int,Module>,rs:Map<int,Repo>)
+    | ----------------------------------------------------------------------------------------------------------- at the end of the function body
+102 |  requires d.ok,store.contains_key(r.name)
+103 |  ensures add_dependency(d,r,store,rs).dependencies.contains_key(r.name),add_dependency(d,r,store,rs).dependencies[r.name]==store[r....
+    |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+note: recommendation not met
+   --> /Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter12/proofs/controls/lockfile.rs/wrong-dependency-key.rs:103:73
+    |
+103 |  ensures add_dependency(d,r,store,rs).dependencies.contains_key(r.name),add_dependency(d,r,store,rs).dependencies[r.name]==store[r....
+    |                                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+   --> map.rs:87:12
+    |
+    = note: recommendation not met
+
+error: postcondition not satisfied
+   --> /Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter12/proofs/controls/lockfile.rs/wrong-dependency-key.rs:103:73
+    |
+101 | pub proof fn installed_identity_drives_entry(d:Document,r:Reference,store:Map<int,Module>,rs:Map<int,Repo>)
+    | ----------------------------------------------------------------------------------------------------------- at the end of the function body
+102 |  requires d.ok,store.contains_key(r.name)
+103 |  ensures add_dependency(d,r,store,rs).dependencies.contains_key(r.name),add_dependency(d,r,store,rs).dependencies[r.name]==store[r.name]
+    |                                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: assertion failed
+   --> /Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter12/proofs/controls/lockfile.rs/wrong-dependency-key.rs:126:9
+    |
+126 |  assert(k.dependencies.dom()==set![1int,2,3,5]);assert(l.dependencies.dom()==set![1int,2,3,4,5,6]);
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ assertion failed
+
+error: assertion failed
+   --> /Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter12/proofs/controls/lockfile.rs/wrong-dependency-key.rs:126:56
+    |
+126 |  assert(k.dependencies.dom()==set![1int,2,3,5]);assert(l.dependencies.dom()==set![1int,2,3,4,5,6]);
+    |                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ assertion failed
+
+note: function body check: not all errors may have been reported; rerun with a higher value for --multiple-errors to find other potential errors in this function
+   --> /Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter12/proofs/controls/lockfile.rs/wrong-dependency-key.rs:114:1
+    |
+114 | pub proof fn writer_neighbors()
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: aborting due to 4 previous errors
+

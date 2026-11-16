@@ -1,0 +1,396 @@
+{
+  "baseline": [
+    39,
+    0
+  ],
+  "controls": [
+    {
+      "name": "dev-no-setcommitted",
+      "description": "the developer-mode commit does not mark the log committed",
+      "status": "killed",
+      "errors_in": [
+        "inv_manifest"
+      ],
+      "expected_in": [
+        "inv_manifest"
+      ],
+      "counts": [
+        38,
+        1
+      ]
+    },
+    {
+      "name": "no-rollback-on-failure",
+      "description": "the failure path keeps the open level's writes",
+      "status": "killed",
+      "errors_in": [
+        "g_dependency_records_lost_unless_fixed",
+        "inv_activate",
+        "inv_dep"
+      ],
+      "expected_in": [
+        "inv_dep",
+        "inv_activate",
+        "inv_guard"
+      ],
+      "counts": [
+        36,
+        3
+      ]
+    },
+    {
+      "name": "finalize-overwrites-committed",
+      "description": "Finalize(error) clears Committed",
+      "status": "killed",
+      "errors_in": [
+        "inv_activate",
+        "inv_dep"
+      ],
+      "expected_in": [
+        "inv_dep",
+        "inv_activate"
+      ],
+      "counts": [
+        37,
+        2
+      ]
+    },
+    {
+      "name": "commit-before-activate",
+      "description": "a transactional load commits its level before Activate",
+      "status": "killed",
+      "errors_in": [
+        "inv_deps_done"
+      ],
+      "expected_in": [
+        "inv_deps_done"
+      ],
+      "counts": [
+        38,
+        1
+      ]
+    },
+    {
+      "name": "crash-commits",
+      "description": "a crash keeps the open level (P2 broken in the environment)",
+      "status": "killed",
+      "errors_in": [
+        "g_dev_crash_dishonest_unless_fixed",
+        "inv_crash",
+        "inv_dep",
+        "witness_two_deps_dev_crash_unfixed"
+      ],
+      "expected_in": [
+        "inv_crash"
+      ],
+      "counts": [
+        35,
+        4
+      ]
+    },
+    {
+      "name": "drop-p3",
+      "description": "drop premise P3",
+      "status": "killed",
+      "errors_in": [
+        "g_step_refines"
+      ],
+      "expected_in": [
+        "g_step_refines"
+      ],
+      "counts": [
+        38,
+        1
+      ]
+    },
+    {
+      "name": "drop-pc",
+      "description": "drop premise PC",
+      "status": "killed",
+      "errors_in": [
+        "g_step_refines"
+      ],
+      "expected_in": [
+        "g_step_refines"
+      ],
+      "counts": [
+        38,
+        1
+      ]
+    },
+    {
+      "name": "drop-pd",
+      "description": "drop premise PD for the strict contract",
+      "status": "killed",
+      "errors_in": [
+        "g_step_refines"
+      ],
+      "expected_in": [
+        "g_step_refines"
+      ],
+      "counts": [
+        38,
+        1
+      ]
+    },
+    {
+      "name": "drop-p1-crash",
+      "description": "allow a crash inside a caller transaction",
+      "status": "killed",
+      "errors_in": [
+        "g_step_refines"
+      ],
+      "expected_in": [
+        "g_step_refines"
+      ],
+      "counts": [
+        38,
+        1
+      ]
+    },
+    {
+      "name": "fix-without-dev-persist",
+      "description": "the fix does not persist the twin after the developer-mode commit",
+      "status": "killed",
+      "errors_in": [
+        "inv_manifest"
+      ],
+      "expected_in": [
+        "inv_manifest",
+        "inv_crash",
+        "g_dev_crash_honest_when_fixed"
+      ],
+      "counts": [
+        38,
+        1
+      ]
+    },
+    {
+      "name": "fix-without-repersist",
+      "description": "the fix does not re-persist dependency rows after the rollback",
+      "status": "killed",
+      "errors_in": [
+        "g_dependency_records_kept_when_fixed",
+        "g_step_refines"
+      ],
+      "expected_in": [
+        "g_dependency_records_kept_when_fixed"
+      ],
+      "counts": [
+        37,
+        2
+      ]
+    },
+    {
+      "name": "step-touches-other",
+      "description": "a step changes an unrelated module",
+      "status": "killed",
+      "errors_in": [
+        "inv_init"
+      ],
+      "expected_in": [
+        "inv_init"
+      ],
+      "counts": [
+        38,
+        1
+      ]
+    },
+    {
+      "name": "caller-rollback-keeps-db",
+      "description": "a caller rollback keeps the command's writes",
+      "status": "killed",
+      "errors_in": [
+        "g_caller_rollback_leaves_no_trace"
+      ],
+      "expected_in": [
+        "g_caller_rollback_leaves_no_trace"
+      ],
+      "counts": [
+        38,
+        1
+      ]
+    },
+    {
+      "name": "l1-without-commit-soundness",
+      "description": "vacuity: L1 without 'Committed = 0 means nothing kept'",
+      "status": "killed",
+      "errors_in": [
+        "g_dev_crash_dishonest_unless_fixed",
+        "g_instance_crash_dishonest_unless_fixed",
+        "witness_two_deps_dev_crash_unfixed"
+      ],
+      "expected_in": [
+        "g_dev_crash_dishonest_unless_fixed",
+        "g_window_crash_dishonest",
+        "g_operator_commit_dishonest"
+      ],
+      "counts": [
+        36,
+        3
+      ]
+    },
+    {
+      "name": "l1-strict-equals-weak",
+      "description": "vacuity: strict L1 without the dependency record rule",
+      "status": "killed",
+      "errors_in": [
+        "g_dependency_records_lost_unless_fixed",
+        "g_instance_crash_loses_pending"
+      ],
+      "expected_in": [
+        "g_dependency_records_lost_unless_fixed"
+      ],
+      "counts": [
+        37,
+        2
+      ]
+    },
+    {
+      "name": "fix-keeps-logged-committed",
+      "description": "the first version of the fix: re-persisted dependency rows keep the Committed value logged before the rollback",
+      "status": "killed",
+      "errors_in": [
+        "inv_activate",
+        "inv_dep",
+        "lemma_honest_merge"
+      ],
+      "expected_in": [
+        "inv_dep",
+        "inv_activate",
+        "inv_crash",
+        "lemma_honest_merge"
+      ],
+      "counts": [
+        36,
+        3
+      ]
+    },
+    {
+      "name": "instance-crash-runs-onclose",
+      "description": "environment: an instance crash closes objects like a process crash",
+      "status": "killed",
+      "errors_in": [
+        "g_instance_crash_dishonest_unless_fixed"
+      ],
+      "expected_in": [
+        "g_instance_crash_dishonest_unless_fixed"
+      ],
+      "counts": [
+        38,
+        1
+      ]
+    },
+    {
+      "name": "instance-crash-keeps-iristemp",
+      "description": "environment: an instance crash keeps IRISTEMP",
+      "status": "killed",
+      "errors_in": [
+        "g_instance_crash_loses_pending",
+        "inv_instance_crash"
+      ],
+      "expected_in": [
+        "g_instance_crash_loses_pending",
+        "inv_instance_crash"
+      ],
+      "counts": [
+        37,
+        2
+      ]
+    },
+    {
+      "name": "fix-without-notxn-persist",
+      "description": "the fix does not save the twin when a no-transaction load sets Committed",
+      "status": "killed",
+      "errors_in": [
+        "inv_guard"
+      ],
+      "expected_in": [
+        "inv_guard",
+        "g_instance_crash_honest_when_fixed"
+      ],
+      "counts": [
+        38,
+        1
+      ]
+    },
+    {
+      "name": "drop-pi",
+      "description": "drop premise PI",
+      "status": "killed",
+      "errors_in": [
+        "g_step_refines"
+      ],
+      "expected_in": [
+        "g_step_refines"
+      ],
+      "counts": [
+        38,
+        1
+      ]
+    },
+    {
+      "name": "drop-pi-dep",
+      "description": "drop premise PI-dep",
+      "status": "killed",
+      "errors_in": [
+        "g_step_refines"
+      ],
+      "expected_in": [
+        "g_step_refines"
+      ],
+      "counts": [
+        38,
+        1
+      ]
+    },
+    {
+      "name": "ok-recorded-as-failure",
+      "description": "reviewer mutant: a successful developer-mode or no-transaction load records failure",
+      "status": "killed",
+      "errors_in": [
+        "inv_activate"
+      ],
+      "expected_in": [
+        "inv_activate"
+      ],
+      "counts": [
+        38,
+        1
+      ]
+    },
+    {
+      "name": "crash-records-success",
+      "description": "reviewer mutant: a crash records Success = OK",
+      "status": "killed",
+      "errors_in": [
+        "inv_crash",
+        "inv_dep"
+      ],
+      "expected_in": [
+        "inv_crash",
+        "inv_instance_crash"
+      ],
+      "counts": [
+        37,
+        2
+      ]
+    },
+    {
+      "name": "dep-failure-recorded-as-success",
+      "description": "a failed dependency load records success",
+      "status": "killed",
+      "errors_in": [
+        "inv_dep"
+      ],
+      "expected_in": [
+        "inv_dep"
+      ],
+      "counts": [
+        38,
+        1
+      ]
+    }
+  ],
+  "all_killed_in_expected_place": true
+}

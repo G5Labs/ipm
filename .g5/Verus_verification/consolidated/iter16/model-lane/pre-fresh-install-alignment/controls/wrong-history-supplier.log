@@ -1,0 +1,68 @@
+error: postcondition not satisfied
+   --> .g5/Verus_verification/consolidated/iter16/model-lane/controls/wrong-history-supplier.rs:159:3
+    |
+153 | pub proof fn successful_install_binds_receipt(w:World,r:Request)
+    | ---------------------------------------------------------------- at the end of the function body
+...
+159 |   history_has_supplier(install(w,r).world,w.next_id,r.repository,select(w,r).unwrap().root),
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+note: function body check: not all errors may have been reported; rerun with a higher value for --multiple-errors to find other potential errors in this function
+   --> .g5/Verus_verification/consolidated/iter16/model-lane/controls/wrong-history-supplier.rs:169:1
+    |
+169 | pub proof fn ordinary_neighbors()
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: postcondition not satisfied
+   --> .g5/Verus_verification/consolidated/iter16/model-lane/controls/wrong-history-supplier.rs:173:2
+    |
+169 | pub proof fn ordinary_neighbors()
+    | --------------------------------- at the end of the function body
+...
+173 |  history_has_supplier(after_a(),0,alpha(),Root::A),
+    |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: postcondition not satisfied
+   --> .g5/Verus_verification/consolidated/iter16/model-lane/controls/wrong-history-supplier.rs:176:2
+    |
+169 | pub proof fn ordinary_neighbors()
+    | --------------------------------- at the end of the function body
+...
+176 |  history_has_supplier(after_alpha_delete(),0,alpha(),Root::A),
+    |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: postcondition not satisfied
+   --> .g5/Verus_verification/consolidated/iter16/model-lane/controls/wrong-history-supplier.rs:193:2
+    |
+189 | pub proof fn local_and_refusal_neighbors()
+    | ------------------------------------------ at the end of the function body
+...
+193 |  history_has_supplier(after_local(),1,alpha(),Root::C),history_has_supplier(after_local(),2,beta(),Root::B),
+    |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+note: function body check: not all errors may have been reported; rerun with a higher value for --multiple-errors to find other potential errors in this function
+   --> .g5/Verus_verification/consolidated/iter16/model-lane/controls/wrong-history-supplier.rs:199:1
+    |
+199 | pub proof fn reader_neighbors()
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: postcondition not satisfied
+   --> .g5/Verus_verification/consolidated/iter16/model-lane/controls/wrong-history-supplier.rs:200:55
+    |
+199 | pub proof fn reader_neighbors()
+    | ------------------------------- at the end of the function body
+200 |  ensures after_a().records[0].action==Action::Install,after_a().records[0].source==alpha(),
+    |                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: postcondition not satisfied
+   --> .g5/Verus_verification/consolidated/iter16/model-lane/controls/wrong-history-supplier.rs:203:47
+    |
+199 | pub proof fn reader_neighbors()
+    | ------------------------------- at the end of the function body
+...
+203 |  after_c().records[1].action==Action::Install,after_c().records[1].source==alpha(),
+    |                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+verification results:: 18 verified, 4 errors
+error: aborting due to 6 previous errors
+

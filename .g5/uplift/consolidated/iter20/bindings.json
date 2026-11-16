@@ -1,0 +1,127 @@
+{
+  "verus_dir": ".g5/Verus_verification/consolidated/iter20",
+  "changed_files": [
+    ".g5/ontology/features/inspection.g5.md",
+    ".g5/uplift/consolidated/BUGS.md",
+    ".g5/uplift/consolidated/QUESTIONS.md",
+    ".g5/uplift/consolidated/DESIGN-SIMPLIFICATIONS.md"
+  ],
+  "rows": [
+    {
+      "id": "S20-01",
+      "owner": ".g5/ontology/features/inspection.g5.md#inspect.orphans.ownership",
+      "model": "ownership.rs",
+      "symbols": [
+        "load_source",
+        "import_refs",
+        "import_module",
+        "replace_children",
+        "document_loaded",
+        "children_writer_neighbor"
+      ],
+      "direct": [
+        [
+          "src/cls/IPM/Utils/Module.cls",
+          "LoadNewModule"
+        ],
+        [
+          "src/cls/IPM/ResourceProcessor/Default/Document.cls",
+          "OnLoad"
+        ],
+        [
+          "src/cls/IPM/Storage/ResourceReference.cls",
+          "UpdateChildrenFromString"
+        ]
+      ],
+      "reader": [
+        [
+          "src/cls/IPM/Storage/ResourceReference.cls",
+          "NonNullResourceNameExists"
+        ]
+      ],
+      "scope": "Successful normal XML/resource relationship and document-load ports. Model separates declaration/module import, actual code effect and replacement of returned Children. Native normal fixtures have explicit rows with matching children; UniqueName lookup wins. XML parser, SQL generated indices, object persistence, generic compilation/failure and pure Children-only selection unqualified."
+    },
+    {
+      "id": "S20-02",
+      "owner": ".g5/ontology/features/inspection.g5.md#inspect.orphans.identifier-case",
+      "model": "ownership.rs",
+      "symbols": [
+        "lookup_key",
+        "candidates",
+        "module_candidates",
+        "find_unique",
+        "find_child",
+        "lookup_ref",
+        "owner_object",
+        "ref_pass",
+        "naming_pass",
+        "home",
+        "home_name",
+        "normal_neighbors",
+        "extension_neighbor",
+        "priority_neighbor",
+        "nullable_neighbor"
+      ],
+      "direct": [
+        [
+          "src/cls/IPM/Storage/ResourceReference.cls",
+          "NonNullResourceNameExists"
+        ],
+        [
+          "src/cls/IPM/ExtensionBase/Utils.cls",
+          "FindHomeModule"
+        ]
+      ],
+      "reader": [
+        [
+          "src/cls/IPM/ExtensionBase/Utils.cls",
+          "GetHomeModuleName"
+        ],
+        [
+          "src/cls/IPM/Utils/Module.cls",
+          "OrphanedResourcesExecute"
+        ]
+      ],
+      "scope": "Two-component ordinary nonstub identifiers. Exact/ancestor resource pass precedes longest-prefix module-name pass; a reference with null/missing owner is not a module object. Actual CLI identifiers end in lowercase.cls, preserving the case-sensitive CLS-specific branch; selected literal SQL key/name case-equivalence is qualified, not generic collation. Direct uppercase naming returns PKG resource; normal lowercase returns full.cls. Null/Children-only/package-precedence worlds are pure source-transcription witnesses, not native injections."
+    },
+    {
+      "id": "S20-03",
+      "owner": ".g5/ontology/features/inspection.g5.md#inspect.orphans.ownership",
+      "model": "ownership.rs",
+      "symbols": [
+        "inventory",
+        "filter",
+        "execute",
+        "fetch",
+        "close",
+        "drain",
+        "printed",
+        "visible",
+        "cursor_neighbor",
+        "normal_neighbors",
+        "fetch_neighbor"
+      ],
+      "direct": [
+        [
+          "src/cls/IPM/Utils/Module.cls",
+          "OrphanedResourcesExecute"
+        ],
+        [
+          "src/cls/IPM/Utils/Module.cls",
+          "OrphanedResourcesFetch"
+        ],
+        [
+          "src/cls/IPM/Utils/Module.cls",
+          "OrphanedResourcesClose"
+        ]
+      ],
+      "reader": [
+        [
+          "src/cls/IPM/Main.cls",
+          "ListOrphans"
+        ]
+      ],
+      "scope": "Projected inventory of two controlled ordinary current-USER/default-code-DB classes with explicit-type CLS. Filter checks actual home module object, not ref presence; normal fresh cursor drains then closes before next query and Main prints names. Native visible membership [1,1] -> [0,1] -> [0,0] -> [0,0], code callable throughout. Generic catalog breadth/order, other types/namespaces, overlapping/abandoned cursors, mapped/system/generated/stub inventory and failure paths unassessed; P:F-UNIN-7 inherited."
+    }
+  ]
+}

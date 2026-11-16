@@ -1,0 +1,83 @@
+# container: ipm-uplift-n2-a  image: containers.intersystems.com/intersystems/iris-community:2026.1  at: 2026-11-13T19:17:14Z
+# script: validation/iris/n2/14-p2.script
+
+Node: 804549afce9f, Instance: IRIS
+
+USER>
+
+LOAD 1 
+
+USER>
+
+SETUP hooks 1
+
+CMD> uninstall -all
+
+Uninstalling n2-tp
+[USER|n2-tp]	Clean START
+[USER|n2-tp]	Unconfigure START
+[USER|n2-tp]	Unconfigure SUCCESS
+[USER|n2-tp]	Clean SUCCESS
+Uninstalling n2-d1
+[USER|n2-d1]	Clean START
+[USER|n2-d1]	Unconfigure START
+[USER|n2-d1]	Unconfigure SUCCESS
+[USER|n2-d1]	Clean SUCCESS
+Uninstalling n2-d2
+[USER|n2-d2]	Clean START
+[USER|n2-d2]	Unconfigure START
+[USER|n2-d2]	Unconfigure SUCCESS
+[USER|n2-d2]	Clean SUCCESS
+CMD< OK
+
+CMD> repo -delete-all
+
+CMD< OK
+
+CMD> history delete -confirm
+
+Deleted 6 record(s).
+CMD< OK
+
+OBS|nc-gap-P2-txn-by-package-during|cls:N2Wait.Marker=compiled/V:1.0.0;cmdStatus=n/a;historyRows=1;historyTempLeft=1;invokesRan=none;mod:n2-wait=1.0.0;row1=id116/load//0.0.0/success:err/committed:0/ended:0/finalized:0/phases:;rowId=116;tlevel=0;waiting=1;
+
+CMD> history delete -DPackage=n2-wait
+
+Deleted 0 record(s).
+CMD< OK
+
+CMD> history delete -DID=116
+
+Deleted 1 record(s).
+CMD< OK
+
+OBS|nc-gap-P2-txn-by-package-after-release|cls:N2Wait.Marker=compiled/V:1.0.0;cmdStatus=n/a;deleteById=ok;deleteByPackage=ok;historyRows=0;historyTempData=11;historyTempLeft=0;invokesRan=none;jobGone=1;jobResult=ok;mod:n2-wait=1.0.0;rowExistsAfterDelete=0;rowExistsAfterPackageDelete=1;rowExistsAfterRelease=0;tlevel=0;
+
+CMD> uninstall -all
+
+Uninstalling n2-wait
+[USER|n2-wait]	Clean START
+[USER|n2-wait]	Unconfigure START
+[USER|n2-wait]	Unconfigure SUCCESS
+[USER|n2-wait]	Clean SUCCESS
+CMD< OK
+
+CMD> repo -delete-all
+
+CMD< OK
+
+CMD> history delete -confirm
+
+Deleted 1 record(s).
+CMD< OK
+
+OBS|nc-gap-P2-dev-confirm-during|cls:N2Wait.Marker=compiled/V:1.0.0;cmdStatus=n/a;historyRows=1;historyTempLeft=1;invokesRan=none;mod:n2-wait=1.0.0/dev;row1=id118/load//0.0.0/success:err/committed:0/ended:0/finalized:0/phases:;rowId=118;tlevel=0;waiting=1;
+
+CMD> history delete -confirm
+
+Deleted 1 record(s).
+CMD< OK
+
+OBS|nc-gap-P2-dev-confirm-after-release|cls:N2Wait.Marker=compiled/V:1.0.0;cmdStatus=n/a;deleteConfirm=ok;historyRows=0;historyTempData=11;historyTempLeft=0;invokesRan=none;jobGone=1;jobResult=ok;mod:n2-wait=1.0.0/dev;rowExistsAfterDelete=0;rowExistsAfterRelease=0;tlevel=0;
+
+USER>

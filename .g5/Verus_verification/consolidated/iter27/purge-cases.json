@@ -1,0 +1,278 @@
+{
+  "models": {
+    "purge.rs": {
+      "data-path-flattens-dots": [
+        "pub open spec fn data_path(s:Text)->Path {split_from(s,0,seq![])}",
+        "pub open spec fn data_path(s:Text)->Path {seq![s]}"
+      ],
+      "data-path-retains-empty-segment": [
+        "(if part.len()==0{seq![]}else{seq![part]})+split_from(s,i+1,seq![])",
+        "seq![part]+split_from(s,i+1,seq![])"
+      ],
+      "purge-alias-writes-nested": [
+        "Flag::Purge=>set_data(Map::empty(),top_name(),1)",
+        "Flag::Purge=>set_data(Map::empty(),dotted_name(),1)"
+      ],
+      "custom-config-writes-top": [
+        "Flag::Configure=>set_data(Map::empty(),dotted_name(),1)",
+        "Flag::Configure=>set_data(Map::empty(),top_name(),1)"
+      ],
+      "plain-invokes-installer": [
+        "if !has_installer(w.module.unwrap()){w}else{",
+        "if false{w}else{"
+      ],
+      "hook-never-invoked": [
+        "if !has_installer(w.module.unwrap()){w}else{",
+        "if true{w}else{"
+      ],
+      "purge-argument-reads-top": [
+        "let purge=get(p,nested_key());",
+        "let purge=get(p,top_key());"
+      ],
+      "callback-count-missing": [
+        "Callback{called:prior_called(w)+1,purge,",
+        "Callback{called:prior_called(w),purge,"
+      ],
+      "callback-argument-erased": [
+        "Callback{called:prior_called(w)+1,purge,",
+        "Callback{called:prior_called(w)+1,purge:0,"
+      ],
+      "vars-top-erased": [
+        "top:get(p,top_key()),",
+        "top:0,"
+      ],
+      "vars-nested-erased": [
+        "nested:get(p,nested_key()),",
+        "nested:0,"
+      ],
+      "after-hook-missing": [
+        "nested:get(p,nested_key()),after:prior_after(w)+1",
+        "nested:get(p,nested_key()),after:prior_after(w)"
+      ],
+      "callback-counter-resets": [
+        "called:prior_called(w)+1",
+        "called:1nat"
+      ],
+      "after-counter-resets": [
+        "after:prior_after(w)+1",
+        "after:1nat"
+      ],
+      "hook-deletes-unconditionally": [
+        "let changed=if purge!=0{delete_extent(w)}else{w};",
+        "let changed=if true{delete_extent(w)}else{w};"
+      ],
+      "hook-never-deletes": [
+        "let changed=if purge!=0{delete_extent(w)}else{w};",
+        "let changed=if false{delete_extent(w)}else{w};"
+      ],
+      "extent-provider-keeps-rows": [
+        "pub open spec fn delete_extent(w:World)->World {World{rows:Map::empty(),..w}}",
+        "pub open spec fn delete_extent(w:World)->World {w}"
+      ],
+      "extent-provider-removes-class": [
+        "pub open spec fn delete_extent(w:World)->World {World{rows:Map::empty(),..w}}",
+        "pub open spec fn delete_extent(w:World)->World {World{rows:Map::empty(),class:false,..w}}"
+      ],
+      "class-provider-removes-extent": [
+        "pub open spec fn delete_class(w:World)->World {World{class:false,..w}}",
+        "pub open spec fn delete_class(w:World)->World {World{class:false,rows:Map::empty(),..w}}"
+      ],
+      "class-provider-keeps-class": [
+        "pub open spec fn delete_class(w:World)->World {World{class:false,..w}}",
+        "pub open spec fn delete_class(w:World)->World {w}"
+      ],
+      "uninstall-keeps-module": [
+        "World{module:None,..after_class}",
+        "World{module:w.module,..after_class}"
+      ],
+      "reload-clears-data": [
+        "World{module:Some(c),class:true,..w}",
+        "World{module:Some(c),class:true,rows:Map::empty(),..w}"
+      ],
+      "reload-keeps-class-absent": [
+        "World{module:Some(c),class:true,..w}",
+        "World{module:Some(c),class:w.class,..w}"
+      ],
+      "sql-count-always-zero": [
+        "pub open spec fn row_count(rows:Rows)->int {if rows.contains_key(token()){1}else{0}}",
+        "pub open spec fn row_count(rows:Rows)->int {0}"
+      ],
+      "sql-value-always-zero": [
+        "pub open spec fn row_value(rows:Rows)->int {if rows.contains_key(token()){rows[token()]}else{0}}",
+        "pub open spec fn row_value(rows:Rows)->int {0}"
+      ],
+      "sql-available-without-schema": [
+        "if w.class{Some(Read{count:row_count(w.rows),value:row_value(w.rows)})}else{None}",
+        "if true{Some(Read{count:row_count(w.rows),value:row_value(w.rows)})}else{None}"
+      ]
+    }
+  },
+  "dependency_controls": {},
+  "control_functions": {
+    "purge.rs": {
+      "data-path-flattens-dots": "path_neighbor",
+      "data-path-retains-empty-segment": "path_neighbor",
+      "purge-alias-writes-nested": "command_neighbor",
+      "custom-config-writes-top": "command_neighbor",
+      "plain-invokes-installer": "plain_neighbor",
+      "hook-never-invoked": "hook_neighbor",
+      "purge-argument-reads-top": "hook_neighbor",
+      "callback-count-missing": "hook_neighbor",
+      "callback-argument-erased": "hook_neighbor",
+      "vars-top-erased": "hook_neighbor",
+      "vars-nested-erased": "hook_neighbor",
+      "after-hook-missing": "hook_neighbor",
+      "callback-counter-resets": "hook_neighbor",
+      "after-counter-resets": "hook_neighbor",
+      "hook-deletes-unconditionally": "hook_neighbor",
+      "hook-never-deletes": "hook_neighbor",
+      "extent-provider-keeps-rows": "sdk_neighbor",
+      "extent-provider-removes-class": "sdk_neighbor",
+      "class-provider-removes-extent": "delete_neighbor",
+      "class-provider-keeps-class": "delete_neighbor",
+      "uninstall-keeps-module": "lifecycle_frame",
+      "reload-clears-data": "reload_neighbor",
+      "reload-keeps-class-absent": "reload_neighbor",
+      "sql-count-always-zero": "reader_neighbor",
+      "sql-value-always-zero": "reader_neighbor",
+      "sql-available-without-schema": "delete_neighbor"
+    }
+  },
+  "control_options": [
+    "--multiple-errors",
+    "0"
+  ],
+  "control_isolation_helper": "model-lane/isolate_witness.py",
+  "control_isolation_function": "isolate",
+  "focused_replay_barrier": true,
+  "replay_model": "purge.rs",
+  "replay_grouped": true,
+  "replay": {
+    "hook-purge-hook-purge": "observed_callback(removed(Case::Hook,Flag::Purge)).purge as int",
+    "hook-config-hook-purge": "observed_callback(removed(Case::Hook,Flag::Configure)).purge as int",
+    "hook-purge-hook-top": "observed_callback(removed(Case::Hook,Flag::Purge)).top as int",
+    "plain-default-before-count": "count(seeded(Case::Plain))",
+    "plain-default-before-value": "value(seeded(Case::Plain))",
+    "plain-default-after-count": "count(after(Case::Plain,Flag::Default))",
+    "plain-default-after-value": "value(after(Case::Plain,Flag::Default))",
+    "plain-default-module-gone": "b((removed(Case::Plain,Flag::Default)).module.is_none())",
+    "plain-default-class-gone": "b(!(removed(Case::Plain,Flag::Default)).class)",
+    "plain-purge-before-count": "count(seeded(Case::Plain))",
+    "plain-purge-before-value": "value(seeded(Case::Plain))",
+    "plain-purge-after-count": "count(after(Case::Plain,Flag::Purge))",
+    "plain-purge-after-value": "value(after(Case::Plain,Flag::Purge))",
+    "plain-purge-module-gone": "b((removed(Case::Plain,Flag::Purge)).module.is_none())",
+    "plain-purge-class-gone": "b(!(removed(Case::Plain,Flag::Purge)).class)",
+    "plain-config-before-count": "count(seeded(Case::Plain))",
+    "plain-config-before-value": "value(seeded(Case::Plain))",
+    "plain-config-after-count": "count(after(Case::Plain,Flag::Configure))",
+    "plain-config-after-value": "value(after(Case::Plain,Flag::Configure))",
+    "plain-config-module-gone": "b((removed(Case::Plain,Flag::Configure)).module.is_none())",
+    "plain-config-class-gone": "b(!(removed(Case::Plain,Flag::Configure)).class)",
+    "hook-default-before-count": "count(seeded(Case::Hook))",
+    "hook-default-before-value": "value(seeded(Case::Hook))",
+    "hook-default-after-count": "count(after(Case::Hook,Flag::Default))",
+    "hook-default-after-value": "value(after(Case::Hook,Flag::Default))",
+    "hook-default-module-gone": "b((removed(Case::Hook,Flag::Default)).module.is_none())",
+    "hook-default-class-gone": "b(!(removed(Case::Hook,Flag::Default)).class)",
+    "hook-default-hook-called": "observed_callback(removed(Case::Hook,Flag::Default)).called as int",
+    "hook-default-hook-purge": "observed_callback(removed(Case::Hook,Flag::Default)).purge as int",
+    "hook-default-hook-top": "observed_callback(removed(Case::Hook,Flag::Default)).top as int",
+    "hook-default-hook-nested": "observed_callback(removed(Case::Hook,Flag::Default)).nested as int",
+    "hook-default-hook-after": "observed_callback(removed(Case::Hook,Flag::Default)).after as int",
+    "hook-purge-before-count": "count(seeded(Case::Hook))",
+    "hook-purge-before-value": "value(seeded(Case::Hook))",
+    "hook-purge-after-count": "count(after(Case::Hook,Flag::Purge))",
+    "hook-purge-after-value": "value(after(Case::Hook,Flag::Purge))",
+    "hook-purge-module-gone": "b((removed(Case::Hook,Flag::Purge)).module.is_none())",
+    "hook-purge-class-gone": "b(!(removed(Case::Hook,Flag::Purge)).class)",
+    "hook-purge-hook-called": "observed_callback(removed(Case::Hook,Flag::Purge)).called as int",
+    "hook-purge-hook-nested": "observed_callback(removed(Case::Hook,Flag::Purge)).nested as int",
+    "hook-purge-hook-after": "observed_callback(removed(Case::Hook,Flag::Purge)).after as int",
+    "hook-config-before-count": "count(seeded(Case::Hook))",
+    "hook-config-before-value": "value(seeded(Case::Hook))",
+    "hook-config-after-count": "count(after(Case::Hook,Flag::Configure))",
+    "hook-config-after-value": "value(after(Case::Hook,Flag::Configure))",
+    "hook-config-module-gone": "b((removed(Case::Hook,Flag::Configure)).module.is_none())",
+    "hook-config-class-gone": "b(!(removed(Case::Hook,Flag::Configure)).class)",
+    "hook-config-hook-called": "observed_callback(removed(Case::Hook,Flag::Configure)).called as int",
+    "hook-config-hook-top": "observed_callback(removed(Case::Hook,Flag::Configure)).top as int",
+    "hook-config-hook-nested": "observed_callback(removed(Case::Hook,Flag::Configure)).nested as int",
+    "hook-config-hook-after": "observed_callback(removed(Case::Hook,Flag::Configure)).after as int",
+    "calibration-before-count": "count(sdk_before())",
+    "calibration-before-value": "value(sdk_before())",
+    "calibration-after-count": "count(sdk_after())",
+    "calibration-after-value": "value(sdk_after())",
+    "calibration-class-present": "b(sdk_after().class)"
+  },
+  "replay_prelude": "assert(data_path(top_name())==top_key()) by(compute);assert(data_path(dotted_name())==nested_key()) by(compute);lifecycle_neighbors();",
+  "native_expected": {
+    "plain-default-load": 1,
+    "plain-default-reset": 1,
+    "plain-default-seed": 1,
+    "plain-default-before-sql-ok": 1,
+    "plain-default-uninstall": 1,
+    "plain-default-reload": 1,
+    "plain-default-after-sql-ok": 1,
+    "plain-default-marker": 27,
+    "plain-purge-load": 1,
+    "plain-purge-reset": 1,
+    "plain-purge-seed": 1,
+    "plain-purge-before-sql-ok": 1,
+    "plain-purge-uninstall": 1,
+    "plain-purge-reload": 1,
+    "plain-purge-after-sql-ok": 1,
+    "plain-purge-marker": 27,
+    "plain-config-load": 1,
+    "plain-config-reset": 1,
+    "plain-config-seed": 1,
+    "plain-config-before-sql-ok": 1,
+    "plain-config-uninstall": 1,
+    "plain-config-reload": 1,
+    "plain-config-after-sql-ok": 1,
+    "plain-config-marker": 27,
+    "hook-default-load": 1,
+    "hook-default-reset": 1,
+    "hook-default-seed": 1,
+    "hook-default-before-sql-ok": 1,
+    "hook-default-uninstall": 1,
+    "hook-default-reload": 1,
+    "hook-default-after-sql-ok": 1,
+    "hook-default-marker": 27,
+    "hook-purge-load": 1,
+    "hook-purge-reset": 1,
+    "hook-purge-seed": 1,
+    "hook-purge-before-sql-ok": 1,
+    "hook-purge-uninstall": 1,
+    "hook-purge-reload": 1,
+    "hook-purge-after-sql-ok": 1,
+    "hook-purge-marker": 27,
+    "hook-config-load": 1,
+    "hook-config-reset": 1,
+    "hook-config-seed": 1,
+    "hook-config-before-sql-ok": 1,
+    "hook-config-uninstall": 1,
+    "hook-config-reload": 1,
+    "hook-config-after-sql-ok": 1,
+    "hook-config-marker": 27,
+    "calibration-reset": 1,
+    "calibration-seed": 1,
+    "calibration-before-sql-ok": 1,
+    "calibration-delete": 1,
+    "calibration-after-sql-ok": 1,
+    "workflow-complete": 1,
+    "final-tlevel": 0
+  },
+  "native_receipt": ".g5/uplift/consolidated/iter27/native/20261116T012851413419Z/observations.json",
+  "scope_notes": [
+    "Builder-selected public inherited P:F-UNIN-2 repair; no new defect/discovery or implemented product repair.",
+    "One ordinary directory module/class, exact successful providers/no mapped resources/projections/locks/dependents; unchanged stable persistent schema.",
+    "CLI path segmentation and selected alias/custom literal inputs modeled; no entire command lexer/parser/value conversion or custom no-dot zpm-prefix branch.",
+    "Rows keyed by actual unique Token sentinel, Val271; no physical IRIS-ID or generic storage/SQL proof.",
+    "Fixture installer callback behavior is explicit fixture code, not a product-default table purge policy.",
+    "SDK class deletion/no-extent and extent deletion + compile/storage reattachment are qualified provider relations; provider controls do not establish owned-body proof.",
+    "Native load/reset/seed/uninstall/reload/SQL/status/Marker/tlevel gates remain independent qualification.",
+    "Deployed mapping lead stopped: no established XML-only SDK producer, no producer invoked; no deployed closure claim.",
+    "Archive/package/verify/product-export boundary unassessed/unpursued; no investigation/reproduction/probe; private evaluator inputs not accessed."
+  ]
+}

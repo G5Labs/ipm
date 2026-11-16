@@ -1,0 +1,90 @@
+{
+  "execution": "Five work packages at one unchanged product pin. Boundary and source review lanes ran concurrently; canonical reconciliation was integrated once before sealing. These are not five historical product revisions or five independently scored checkpoints.",
+  "passes": [
+    {
+      "pass": "I2-1",
+      "focus": "restart boundary",
+      "miss_repaired": "L8 canonical owner distinguishes temporary progress from durable initial twin after SIGKILL and restart",
+      "credited_claim_challenged": "process-loss survival is sufficient evidence for instance restart; not accepted",
+      "related_writers_readers": [
+        "General/HistoryTemp.cls::Init",
+        "General/HistoryTemp.cls::PersistToTwin",
+        "General/HistoryTemp.cls::%OnClose",
+        "Lifecycle/Module.cls::%Clean"
+      ],
+      "model": "boundaries/boundaries.rs::lose",
+      "native": "boundaries/native-replay-20261114T173805Z/{processloss,restart}.log",
+      "remaining": "power-loss durability, replication and concurrent self-uninstall"
+    },
+    {
+      "pass": "I2-2",
+      "focus": "delete/finalize boundary",
+      "miss_repaired": "L12 transaction-locked pair now has final ID/status/time readback; full lock-machine composition remains partial",
+      "credited_claim_challenged": "generalized no-resurrection withdrawn; accessible neighbor preserved",
+      "related_writers_readers": [
+        "General/History.cls::DeleteHistory",
+        "General/HistoryTemp.cls::PersistToTwin",
+        "General/HistoryTemp.cls::%OnClose",
+        "General/History.cls::AutoPurgeOldHistory"
+      ],
+      "model": "boundaries/boundaries.rs::{accessible_schedule,locked_schedule}",
+      "native": "boundaries/native/delete-final-reader.log",
+      "remaining": "all lock schedules, purge races and policy for active records"
+    },
+    {
+      "pass": "I2-3",
+      "focus": "constructor transaction boundary and CPF provider",
+      "miss_repaired": "Actual constructor at BuildCache plus valid/invalid CPF configuration read after rollback",
+      "credited_claim_challenged": "owners.rs::successful_refresh_holds_outer_lock correspondence withdrawn; child exit alone cannot establish CPF effect",
+      "related_writers_readers": [
+        "Utils/LockManager.cls::%OnNew",
+        "Utils/LockManager.cls::%OnClose",
+        "Repo/Filesystem/Definition.cls::BuildCache",
+        "ResourceProcessor/CPF.cls::GetSourceFile",
+        "ResourceProcessor/CPF.cls::DoMerge",
+        "ResourceProcessor/CPF.cls::MergeCPF"
+      ],
+      "model": "boundaries/boundaries.rs::{close_lock,cache_return,cpf_do_merge,rollback_cpf}",
+      "native": "boundaries/native-replay-20261114T173805Z/{paired,cpf}.log",
+      "remaining": "database cache isolation, partial CPF effects and other settings"
+    },
+    {
+      "pass": "I2-4",
+      "focus": "new registry retrieval/publication source paths",
+      "miss_repaired": "Provider tag order, first-tar integrity, cache divergence, independent provider write/status and completed tag prefix",
+      "credited_claim_challenged": "availability is not authentication/pull/publish proof; broad publish error means unchanged withdrawn as an interpretation, not a frozen full-case withdrawal",
+      "related_writers_readers": [
+        "Repo/Oras/PackageService.cls::GetLatestTag",
+        "Repo/Oras/PackageService.cls::GetAllTags",
+        "Repo/Oras/PackageService.cls::Pull",
+        "Repo/Oras/PackageService.cls::GetModule",
+        "Repo/Oras/PublishService.cls::PushOras",
+        "Repo/Oras/PublishService.cls::DeleteTags",
+        "Repo/Remote/PublishManager.cls::CheckServiceCache",
+        "Repo/Oras/PublishManager.cls::CheckServiceCache"
+      ],
+      "model": "registry.rs",
+      "native": "native/receipt.json",
+      "remaining": "real registry ordering/integrity/retries, multi-tag failure native replay, full credential exchange"
+    },
+    {
+      "pass": "I2-5",
+      "focus": "final readers, canonical repair and unmodeled uninstall/test paths",
+      "miss_repaired": "Canonical cycles/inspection/missing-source/CPF repaired; report nonassert failures, case-hook count and file/device shape, verify plan and forced uninstall traversal represented",
+      "credited_claim_challenged": "X-ATTR-CYCLE still gives no named error; HELD-REPORT-COMPOSE does not prove all formats/verify; raw helper stream is blocked by final GetModule status reader",
+      "related_writers_readers": [
+        "Test/Abstract.cls::BuildResultTree",
+        "Test/Abstract.cls::GetSummary",
+        "Test/JsonOutput.cls::WriteToFileStream",
+        "Test/JsonOutput.cls::OutputToDevice",
+        "Lifecycle/Base.cls::%Verify",
+        "Utils/Module.cls::UninstallAll",
+        "General/EnvironmentConfig.cls::GetArg",
+        "General/ModuleSummary.cls::Show"
+      ],
+      "model": "readers.rs and retained attr/env/thin contracts",
+      "native": "native/receipt.json",
+      "remaining": "complete serialization/verify cleanup, sorted/tree/Python inspection, actual forced partial uninstall"
+    }
+  ]
+}

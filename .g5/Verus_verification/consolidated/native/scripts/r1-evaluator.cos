@@ -1,0 +1,26 @@
+// Attribute evaluator corpus (no install). Each case on its own; an exception is recorded as error=<name>.
+write !,"OBS ENV mgrdir=",##class(%Library.File).ManagerDirectory(),!
+write "OBS ENV moduleroot=",##class(%IPM.Repo.UniversalSettings).GetModuleRoot(),!
+set m=##class(%IPM.Storage.Module).%New(), m.Name="evalmod", m.VersionString="1.2.3", m.Root="/tmp/evalroot"
+for pair="greeting|hello","a|${b}","b|${a}","c|${d}","d|${namespace}","version|9.9.9","a.b|DOT","e|{$f}x","f|${greeting}","win|C:\dir\sub" { set d=##class(%IPM.Storage.ModuleSetting.Default).%New(), d.Name=$piece(pair,"|"), d.Value=$piece(pair,"|",2) do m.Defaults.Insert(d) }
+set m2=##class(%IPM.Storage.Module).%New(), m2.Name="pricemod", m2.VersionString="1.0.0"
+set d=##class(%IPM.Storage.ModuleSetting.Default).%New(), d.Name="price", d.Value="$5" do m2.Defaults.Insert(d)
+set cases=$listbuild("E01|plain text","E02|{$namespace}","E03|${namespace}","E04|{$NAMESPACE}","E05|{$namespaceLower}","E06|${greeting} world","E08|{name}/{NAME}","E09|{$packagename}-{$version}","E10|#{1+2}","E11|#{ 1+2}","E12|#{$$$OK}","E13|#{1/0}","E14|#{undefinedvar}","E15|$$$OK no brace","E16|{$x} $$$OK","E17|$$$NoSuchMacroXyz {}","E18|${a}","E19|${c}","E20|{$version}","E21|{$axb}","E22|${e}","E23|{$mgrDir}","E25|${verbose}","E26|{$root}","E27|{$ipmDir}","E28|{$namespace}#{""-""}{$NAMESPACELOWER}","E34|${win}","E35|{$b}")
+for i=1:1:$listlength(cases) { set c=$list(cases,i) set id=$piece(c,"|"), s=$piece(c,"|",2,*) kill p try { set v=m.%Evaluate(s,.p) write "OBS ",id," value=",v,! } catch ex { write "OBS ",id," error=",ex.Name,! } }
+kill p set p("greeting")="hi", p("Verbose")=1
+write "OBS E07 value=",m.%Evaluate("${greeting}",.p),!
+write "OBS E24 value=",m.%Evaluate("${verbose}",.p),!
+kill p try { set v=m2.%Evaluate("{$price}",.p) write "OBS E32 value=",v,! } catch ex { write "OBS E32 error=",ex.Name,! }
+kill p try { set v=m2.%Evaluate("{$namespace}",.p) write "OBS E33 value=",v,! } catch ex { write "OBS E33 error=",ex.Name,! }
+write "OBS E29 macroclass=",##class(%Dictionary.ClassDefinition).%ExistsId("%IPM.Generated.MacroEval"),!
+kill cp set cp("a")="${b}", cp("b")="${a}"
+set ok=1 try { do ##class(%IPM.Storage.ModuleSetting.Default).ResolvePlaceholders(.cp) } catch ex { set ok=0 }
+write "OBS E30 resolve.raised=",'ok," a=",$get(cp("a"))," b=",$get(cp("b")),!
+kill cp set cp("x")="${y}", cp("y")="${z}", cp("z")="end"
+do ##class(%IPM.Storage.ModuleSetting.Default).ResolvePlaceholders(.cp)
+write "OBS E31 x=",cp("x")," y=",cp("y"),!
+kill cp set cp("p")="a", cp("q")="${p}${p}{$p}"
+do ##class(%IPM.Storage.ModuleSetting.Default).ResolvePlaceholders(.cp)
+write "OBS E36 q=",cp("q"),!
+write !,"NATIVE-END",!
+halt

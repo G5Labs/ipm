@@ -1,0 +1,64 @@
+# container: ipm-uplift-iris-repo  image: containers.intersystems.com/intersystems/iris-community:2026.1  at: 2026-11-13T20:39:31Z
+# script: validation/iris/repo/79-repo-fix-unin-all-order.script
+
+Node: 2e8609ed30a0, Instance: IRIS
+
+USER>
+
+LOAD 1 
+
+USER>
+
+>>> load /tmp/uplift/repo/fixtures/nc-ghost-a/
+
+Building dependency graph...Done.
+[USER|nc-ghost-a]	Initialize START
+[USER|nc-ghost-a]	Initialize SUCCESS
+[USER|nc-ghost-a]	Reload START (/tmp/uplift/repo/fixtures/nc-ghost-a/)
+[USER|nc-ghost-a]	Reload SUCCESS
+[nc-ghost-a]	Module object refreshed.
+[USER|nc-ghost-a]	Validate START
+[USER|nc-ghost-a]	Validate SUCCESS
+[USER|nc-ghost-a]	Compile START
+[USER|nc-ghost-a]	Compile SUCCESS
+[USER|nc-ghost-a]	Activate START
+[USER|nc-ghost-a]	Configure START
+[USER|nc-ghost-a]	Configure SUCCESS
+[USER|nc-ghost-a]	Activate SUCCESS
+<<< status=OK
+
+>>> load /tmp/uplift/repo/fixtures/nc-ghost-b/
+
+Building dependency graph...Done.
+[USER|nc-ghost-b]	Initialize START
+[USER|nc-ghost-b]	Initialize SUCCESS
+[USER|nc-ghost-b]	Reload START (/tmp/uplift/repo/fixtures/nc-ghost-b/)
+[USER|nc-ghost-b]	Reload SUCCESS
+[nc-ghost-b]	Module object refreshed.
+[USER|nc-ghost-b]	Validate START
+[USER|nc-ghost-b]	Validate SUCCESS
+[USER|nc-ghost-b]	Compile START
+[USER|nc-ghost-b]	Compile SUCCESS
+[USER|nc-ghost-b]	Activate START
+[USER|nc-ghost-b]	Configure START
+[USER|nc-ghost-b]	Configure SUCCESS
+[USER|nc-ghost-b]	Activate SUCCESS
+<<< status=OK
+
+>>> uninstall -all
+
+Uninstalling nc-ghost-b
+[USER|nc-ghost-b]	Clean START
+[USER|nc-ghost-b]	Unconfigure START
+[USER|nc-ghost-b]	Unconfigure SUCCESS
+[USER|nc-ghost-b]	Clean SUCCESS
+Uninstalling nc-ghost-a
+[USER|nc-ghost-a]	Clean START
+[USER|nc-ghost-a]	Unconfigure START
+[USER|nc-ghost-a]	Unconfigure SUCCESS
+[USER|nc-ghost-a]	Clean SUCCESS
+<<< status=OK
+
+OBS|nc-repo-fix-unin-all-order|aClass=absent;aInstalled=0;bClass=absent;bInstalled=0;historyRows=nc-ghost-b/uninstall/success,nc-ghost-a/uninstall/success;ipmInstalled=1;loadA=1;loadB=1;pre.aInstalled=1;pre.bInstalled=1;printedA=1;printedB=1;printedBBeforeA=1;printedSkipped=0;status=ok;
+
+USER>

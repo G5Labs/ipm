@@ -1,0 +1,159 @@
+// Focused witnesses call only definitions; no proof-lemma calls.
+pub proof fn text_preparation()
+ ensures prepare(fixture(Case::TxtValid)).commands==seq![first(),last()],prepare(fixture(Case::TxtValid)).error.is_none(),
+ prepare(fixture(Case::TxtUnknown)).commands==seq![first(),unknown(),last()],prepare(fixture(Case::TxtUnknown)).error.is_none(),
+ prepare(fixture(Case::TxtRuntime)).commands==seq![first(),fault(),last()],prepare(fixture(Case::TxtRuntime)).error.is_none()
+{
+ assert(prepare(fixture(Case::TxtValid)).commands==seq![first(),last()]) by(compute);
+ assert(prepare(fixture(Case::TxtValid)).error.is_none()) by(compute);
+ assert(prepare(fixture(Case::TxtUnknown)).commands==seq![first(),unknown(),last()]) by(compute);
+ assert(prepare(fixture(Case::TxtUnknown)).error.is_none()) by(compute);
+ assert(prepare(fixture(Case::TxtRuntime)).commands==seq![first(),fault(),last()]) by(compute);
+ assert(prepare(fixture(Case::TxtRuntime)).error.is_none()) by(compute);
+}
+pub proof fn json_preparation()
+ ensures prepare(fixture(Case::JsonValid)).commands==seq![first(),last()],prepare(fixture(Case::JsonValid)).error.is_none(),
+ prepare(fixture(Case::JsonUnknown)).commands==seq![],prepare(fixture(Case::JsonUnknown)).error==Some(Error::UnknownCommand),
+ prepare(fixture(Case::JsonRuntime)).commands==seq![first(),fault(),last()],prepare(fixture(Case::JsonRuntime)).error.is_none()
+{
+ assert(prepare(fixture(Case::JsonValid)).commands==seq![first(),last()]) by(compute);
+ assert(prepare(fixture(Case::JsonValid)).error.is_none()) by(compute);
+ assert(prepare(fixture(Case::JsonUnknown)).commands==seq![]) by(compute);
+ assert(prepare(fixture(Case::JsonUnknown)).error==Some(Error::UnknownCommand)) by(compute);
+ assert(prepare(fixture(Case::JsonRuntime)).commands==seq![first(),fault(),last()]) by(compute);
+ assert(prepare(fixture(Case::JsonRuntime)).error.is_none()) by(compute);
+}
+pub proof fn shape_neighbor()
+ ensures prepare(fixture(Case::JsonArray)).error==Some(Error::ExpectedObject),
+ prepare(fixture(Case::JsonWrong)).error==Some(Error::ExpectedCommandsArray),
+ prepare(fixture(Case::Missing)).error==Some(Error::MissingFile),
+ prepare(fixture(Case::Unsupported)).error==Some(Error::UnsupportedExtension)
+{
+ assert(prepare(fixture(Case::JsonArray)).error==Some(Error::ExpectedObject)) by(compute);
+ assert(prepare(fixture(Case::JsonWrong)).error==Some(Error::ExpectedCommandsArray)) by(compute);
+ assert(prepare(fixture(Case::Missing)).error==Some(Error::MissingFile)) by(compute);
+ assert(prepare(fixture(Case::Unsupported)).error==Some(Error::UnsupportedExtension)) by(compute);
+}
+pub proof fn translation_neighbor() {
+ assert(translate(JsonCommand{name:"config"@,params:seq![("action"@,"set"@),("key"@,setting_name()),("value"@,"101"@)]}).commands==seq![first()]) by(compute);
+ assert(translate(JsonCommand{name:"config"@,params:seq![("action"@,"set"@),("key"@,setting_name()),("value"@,"101"@)]}).error.is_none()) by(compute);
+ assert(translate(JsonCommand{name:unknown(),params:seq![]}).error==Some(Error::UnknownCommand)) by(compute);
+ assert(translate(JsonCommand{name:seq![],params:seq![]}).error==Some(Error::MissingCommand)) by(compute);
+ assert(translate(JsonCommand{name:"config"@,params:seq![("bad"@,"101"@)]}).error==Some(Error::InvalidParameter)) by(compute);
+ assert(translate(JsonCommand{name:"config"@,params:seq![("value"@,seq![])]}).error==Some(Error::InvalidParameter)) by(compute);
+ assert(translate(JsonCommand{name:"config"@,params:seq![("value"@,"101"@),("action"@,"set"@),("key"@,setting_name())]}).commands==seq!["config 101 set DefaultLogEntryLimit"@]) by(compute);
+}
+pub proof fn settings_neighbor() {
+ let a=set_selected(initial(),101);let z=set_selected(a,202);
+ assert(setting_value(a)==101);assert(raw_value(a)==101);
+ assert(setting_value(z)==202);assert(raw_value(z)==202);
+ assert(a.calls==0);assert(z.calls==0);
+}
+pub proof fn settings_default_frame(w:World,v:nat)
+ requires w.cfg.conf.contains(key()),v>0
+ ensures setting_value(set_selected(w,v))==v,raw_value(set_selected(w,v))==v,
+ w.cfg.nodes.contains_key(key()) && w.cfg.nodes[key()].dflt.is_some() ==> set_selected(w,v).cfg.nodes[key()].dflt==w.cfg.nodes[key()].dflt
+{}
+pub proof fn execution_neighbor()
+ ensures ok(execute(initial(),seq![first(),last()],0,false)),setting_value(execute(initial(),seq![first(),last()],0,false).world)==202,
+ !ok(execute(initial(),seq![first(),unknown(),last()],0,false)),setting_value(execute(initial(),seq![first(),unknown(),last()],0,false).world)==101,
+ !last_listed(execute(initial(),seq![first(),unknown(),last()],0,false)),
+ execute(initial(),seq![first(),unknown(),last()],0,false).listed==seq![first(),unknown()],
+ execute(initial(),seq![first(),unknown(),last()],0,false).attempted==seq![first(),unknown()]
+{
+ assert(first()!=last() && first()!=unknown() && last()!=unknown()) by(compute);
+ reveal_with_fuel(execute,4);
+}
+pub proof fn dry_execution_neighbor()
+ ensures ok(execute(initial(),seq![first(),unknown(),last()],0,true)),setting_value(execute(initial(),seq![first(),unknown(),last()],0,true).world)==7,
+ last_listed(execute(initial(),seq![first(),unknown(),last()],0,true)),execute(initial(),seq![first(),unknown(),last()],0,true).attempted==seq![],
+ execute(initial(),seq![first(),fault(),last()],0,true).world.calls==0
+{
+ assert(first()!=last() && first()!=unknown() && last()!=unknown()) by(compute);
+ reveal_with_fuel(execute,4);
+ assert(execute(initial(),seq![first(),unknown(),last()],0,true).listed[2]==last());
+}
+pub proof fn runtime_neighbor()
+ ensures !ok(execute(initial(),seq![first(),fault(),last()],0,false)),
+ setting_value(execute(initial(),seq![first(),fault(),last()],0,false).world)==101,
+ execute(initial(),seq![first(),fault(),last()],0,false).world.calls==1,
+ !last_listed(execute(initial(),seq![first(),fault(),last()],0,false))
+{
+ assert(fault()!=first() && fault()!=last() && first()!=last()) by(compute);
+ reveal_with_fuel(execute,4);
+ assert(shell(initial(),fault()).world.calls==1);assert(shell(initial(),fault()).error==Some(Error::Runtime));
+}
+pub proof fn dry_json_validation_neighbor() {
+ assert(planned(fixture(Case::JsonUnknown),true).error==Some(Error::UnknownCommand)) by(compute);
+}
+// Successful raw preparation facts are tied to the active execution function;
+// no finite observation or already-rendered answer is assumed.
+pub proof fn named_neighbors()
+ ensures
+ ok(named(Case::TxtValid,false)),setting_value(named(Case::TxtValid,false).world)==202,
+ !ok(named(Case::TxtUnknown,false)),setting_value(named(Case::TxtUnknown,false).world)==101,
+ ok(named(Case::TxtUnknown,true)),setting_value(named(Case::TxtUnknown,true).world)==7,
+ !ok(named(Case::TxtRuntime,false)),setting_value(named(Case::TxtRuntime,false).world)==101,
+ ok(named(Case::JsonValid,false)),setting_value(named(Case::JsonValid,false).world)==202,
+ !ok(named(Case::JsonUnknown,false)),setting_value(named(Case::JsonUnknown,false).world)==7,
+ !ok(named(Case::JsonRuntime,false)),setting_value(named(Case::JsonRuntime,false).world)==101,
+ ok(named(Case::JsonValid,true)),setting_value(named(Case::JsonValid,true).world)==7,
+ !ok(named(Case::JsonUnknown,true)),setting_value(named(Case::JsonUnknown,true).world)==7,
+ !ok(named(Case::JsonArray,false)),setting_value(named(Case::JsonArray,false).world)==7,
+ !ok(named(Case::JsonWrong,false)),setting_value(named(Case::JsonWrong,false).world)==7,
+ !ok(named(Case::Missing,false)),setting_value(named(Case::Missing,false).world)==7,
+ !ok(named(Case::Unsupported,false)),setting_value(named(Case::Unsupported,false).world)==7
+{
+ text_preparation();json_preparation();shape_neighbor();execution_neighbor();dry_execution_neighbor();runtime_neighbor();
+ reveal_with_fuel(execute,4);
+}
+// The native reset establishes only the selected current value, not absence or
+// contents of default nodes. This bisimulation proves observable independence; keys outside this view are not compared.
+pub open spec fn same_view(a:World,z:World)->bool {
+ a.cfg.conf.contains(key()) && z.cfg.conf.contains(key()) && setting_value(a)==setting_value(z) && a.calls==z.calls
+}
+pub open spec fn same_output(a:Out,z:Out)->bool {
+ same_view(a.world,z.world) && a.error==z.error && a.listed==z.listed && a.attempted==z.attempted
+}
+pub proof fn shell_same_view(a:World,z:World,c:Text)
+ requires same_view(a,z)
+ ensures same_view(shell(a,c).world,shell(z,c).world),shell(a,c).error==shell(z,c).error
+{}
+pub proof fn execute_same_view(a:World,z:World,cs:Seq<Text>,i:int,dry:bool)
+ requires same_view(a,z),0<=i<=cs.len()
+ ensures same_output(execute(a,cs,i,dry),execute(z,cs,i,dry))
+ decreases cs.len()-i
+{
+ if i<cs.len(){
+  if !dry{shell_same_view(a,z,cs[i]);}
+  let sa=if dry{Step{world:a,error:None}}else{shell(a,cs[i])};
+  let sz=if dry{Step{world:z,error:None}}else{shell(z,cs[i])};
+  if sa.error.is_none(){execute_same_view(sa.world,sz.world,cs,i+1,dry);}
+ }
+}
+pub proof fn arbitrary_default(d:Option<nat>,file:File,dry:bool)
+ ensures same_output(run(initial_with_default(d),file,dry),run(initial(),file,dry)),
+ raw_value(run(initial_with_default(d),file,dry).world)==raw_value(run(initial(),file,dry).world)
+{
+ let p=prepare(file);
+ if p.error.is_none(){execute_same_view(initial_with_default(d),initial(),p.commands,0,dry);}
+}
+pub proof fn raw_reader(w:World)
+ ensures raw_value(w)==setting_value(w)
+{}
+pub proof fn output_neighbors()
+ ensures
+ named(Case::TxtValid,false).world.calls==0,named(Case::TxtUnknown,false).world.calls==0,
+ named(Case::TxtUnknown,true).world.calls==0,named(Case::TxtRuntime,false).world.calls==1,
+ named(Case::JsonValid,false).world.calls==0,named(Case::JsonUnknown,false).world.calls==0,
+ named(Case::JsonRuntime,false).world.calls==1,named(Case::JsonValid,true).world.calls==0,
+ named(Case::JsonUnknown,true).world.calls==0,named(Case::JsonArray,false).world.calls==0,
+ named(Case::JsonWrong,false).world.calls==0,named(Case::Missing,false).world.calls==0,named(Case::Unsupported,false).world.calls==0,
+ !last_listed(named(Case::TxtUnknown,false)),last_listed(named(Case::TxtUnknown,true)),
+ !first_listed(named(Case::JsonUnknown,false)),!last_listed(named(Case::JsonRuntime,false)),last_listed(named(Case::JsonValid,true))
+{
+ assert(first()!=last() && first()!=unknown() && last()!=unknown() && fault()!=first() && fault()!=last() && fault()!=unknown()) by(compute);
+ text_preparation();json_preparation();shape_neighbor();execution_neighbor();dry_execution_neighbor();runtime_neighbor();
+ reveal_with_fuel(execute,4);
+ assert(named(Case::JsonValid,true).listed[1]==last());
+}

@@ -1,0 +1,485 @@
+# container: ipm-uplift-iris-nsp  image: containers.intersystems.com/intersystems/iris-community:2026.1  at: 2026-11-13T18:29:51Z
+# script: validation/iris/nsp/90-res-checks.script
+
+Node: 1176f046b99d, Instance: IRIS
+
+USER>
+
+Load of directory started on 11/13/2026 18:29:51
+Loading file /tmp/uplift/nsp/Uplift/Nsp/Util.cls as cls
+Imported class: Uplift.Nsp.Util
+Loading file /tmp/uplift/nsp/Uplift/Nsp/Fresh.cls as cls
+Imported class: Uplift.Nsp.Fresh
+Loading file /tmp/uplift/nsp/Uplift/Nsp/Res.cls as cls
+Imported class: Uplift.Nsp.Res
+Loading file /tmp/uplift/nsp/Uplift/Nsp/Ns.cls as cls
+Imported class: Uplift.Nsp.Ns
+Loading file /tmp/uplift/nsp/Uplift/Nsp/Cap.cls as cls
+Imported class: Uplift.Nsp.Cap
+Compiling 5 classes
+Compiling class Uplift.Nsp.Cap
+Compiling class Uplift.Nsp.Fresh
+Compiling class Uplift.Nsp.Res
+Compiling class Uplift.Nsp.Ns
+Compiling class Uplift.Nsp.Util
+Compiling routine Uplift.Nsp.Fresh.1
+Compiling routine Uplift.Nsp.Cap.1
+Compiling routine Uplift.Nsp.Ns.1
+Compiling routine Uplift.Nsp.Res.1
+ERROR: Uplift.Nsp.Res.cls(PyVersion+4) #1043: QUIT argument not allowed : 'md.version(pkg)' : Offset:28 [PyVersion+3^Uplift.Nsp.Res.1]
+ TEXT:         quit md.version(pkg)
+ERROR: Uplift.Nsp.Res.cls(PyVersion+6) #1043: QUIT argument not allowed : '"<not-importable>"' : Offset:31 [PyVersion+5^Uplift.Nsp.Res.1]
+ TEXT:         quit "<not-importable>"
+Compiling routine Uplift.Nsp.Util.1
+Detected 2 errors during load.
+
+LOADED 0
+
+USER>
+
+>>> zpm "cos set $namespace="%SYS" write "INSIDE:",$namespace"
+  | 
+  | 
+  | [31mERROR![0m ObjectScript error: <NOROUTINE>ExecuteCOS+3^%IPM.Main.1 *Uplift.Nsp.Cap.1
+<<< status ERROR ERROR #5002: ObjectScript error: <NOROUTINE>ExecuteCOS+3^%IPM.Main.1 *Uplift.Nsp.Cap.1
+
+OBS|nc-res-N16-exec-namespace|after=USER;before=USER;inside=;status=err:ERROR #5002: ObjectScript error: <NOROUTINE>ExecuteCOS+3^%IPM.Main.1 *Uplift.Nsp.Cap.1;
+
+USER>
+
+>>> zpm "run-from-file /tmp/uplift/nsp/fixtures/rff/cmds.text"
+  | 
+  | [31mERROR![0m Unsupported file extension: text
+<<< status ERROR ERROR #5001: Unsupported file extension: text
+
+>>> zpm "run-from-file /tmp/uplift/nsp/fixtures/rff/cmds-array.json"
+  | 
+  | [31mERROR![0m Unexpected format of file. Expected JSON object at root level but not found.
+<<< status ERROR ERROR #5001: Unexpected format of file. Expected JSON object at root level but not found.
+
+>>> zpm "run-from-file /tmp/uplift/nsp/fixtures/rff/cmds-object.json"
+  | 
+  | Running commands found in file:
+  | 
+  | zpm:USER[39m>[0mrepo -name nc-rff-o -filesystem -path /tmp/
+  | [31mERROR![0m Key not unique: %IPM.Repo.Filesystem.Definition:RootIndex:^IPM.Repo.DefinitionI("RootIndex"," /TMP/")
+  | [31mERROR![0m Key not unique: %IPM.Repo.Filesystem.Definition:RootIndex:^IPM.Repo.DefinitionI("RootIndex"," /TMP/")
+<<< status ERROR ERROR #5808: Key not unique: %IPM.Repo.Filesystem.Definition:RootIndex:^IPM.Repo.DefinitionI("RootIndex"," /TMP/")
+
+>>> zpm "run-from-file /tmp/uplift/nsp/fixtures/rff/cmds3.txt"
+  | 
+  | Running commands found in file:
+  | 
+  | zpm:USER[39m>[0mrepo -fs -n nc-rff-c1 -path /tmp/
+  | [31mERROR![0m Key not unique: %IPM.Repo.Filesystem.Definition:RootIndex:^IPM.Repo.DefinitionI("RootIndex"," /TMP/")
+  | [31mERROR![0m Key not unique: %IPM.Repo.Filesystem.Definition:RootIndex:^IPM.Repo.DefinitionI("RootIndex"," /TMP/")
+<<< status ERROR ERROR #5808: Key not unique: %IPM.Repo.Filesystem.Definition:RootIndex:^IPM.Repo.DefinitionI("RootIndex"," /TMP/")
+
+>>> zpm "run-from-file -dry-run /tmp/uplift/nsp/fixtures/rff/cmds3.txt"
+  | 
+  | The following commands will be run in the shell if the -dry-run flag is not used:
+  | 
+  | zpm:USER[39m>[0mrepo -fs -n nc-rff-c1 -path /tmp/
+  | 
+  | zpm:USER[39m>[0mload /tmp/nc-rff-does-not-exist/
+  | 
+  | zpm:USER[39m>[0mrepo -fs -n nc-rff-c3 -path /tmp/
+  | 
+<<< status OK
+
+OBS|nc-res-N17-run-from-file|a.repoMade=0;a.text=err:ERROR #5001: Unsupported file extension: text;b.array=err:ERROR #5001: Unexpected format of file. Expected JSON object at root level but not found.;b.repoMade=0;c.line1Ran=0;c.line3Ran=0;c.txt=err:ERROR #5808: Key not unique: %IPM.Repo.Filesystem.Definition:RootIndex:^IPM.Repo.DefinitionI("RootIndex"," /TMP/");dryRun=ok;dryRunShowsLine3=1;o.object=err:ERROR #5808: Key not unique: %IPM.Repo.Filesystem.Definition:RootIndex:^IPM.Repo.DefinitionI("RootIndex"," /TMP/");o.repoMade=0;
+
+USER>
+
+>>> zpm "load /home/irisowner/zpm/tests/integration_tests/Test/PM/Integration/_data/simplest-module/1.0.0/"
+  | 
+  | Building dependency graph...Done.
+  | [USER|simplest-module]	Initialize START
+  | [USER|simplest-module]	Initialize SUCCESS
+  | [USER|simplest-module]	Reload START (/home/irisowner/zpm/tests/integration_tests/Test/PM/Integration/_data/simplest-module/1.0.0/)
+  | [USER|simplest-module]	Reload SUCCESS
+  | [simplest-module]	Module object refreshed.
+  | [USER|simplest-module]	Validate START
+  | [USER|simplest-module]	Validate SUCCESS
+  | [USER|simplest-module]	Compile START
+  | [USER|simplest-module]	Compile SUCCESS
+  | [USER|simplest-module]	Activate START
+  | [USER|simplest-module]	Configure START
+  | [USER|simplest-module]	Configure SUCCESS
+  | [USER|simplest-module]	Activate SUCCESS
+<<< status OK
+
+>>> zpm "simplest-module register"
+  | 
+  | [USER|simplest-module]	Register START
+  | [simplest-module]	Register FAILURE
+  | [31mERROR![0m ObjectScript error: <METHOD DOES NOT EXIST>ExecutePhases+171^%IPM.Storage.Module.1 *%Register,%IPM.Lifecycle.Module
+<<< status ERROR ERROR #5002: ObjectScript error: <METHOD DOES NOT EXIST>ExecutePhases+171^%IPM.Storage.Module.1 *%Register,%IPM.Lifecycle.Module
+
+>>> zpm "simplest-module clean register"
+  | 
+  | [USER|simplest-module]	Clean START
+  | [USER|simplest-module]	Unconfigure START
+  | [USER|simplest-module]	Unconfigure SUCCESS
+  | [USER|simplest-module]	Clean SUCCESS
+  | [USER|simplest-module]	Initialize START
+  | [USER|simplest-module]	Initialize SUCCESS
+  | [USER|simplest-module]	Reload START (/home/irisowner/zpm/tests/integration_tests/Test/PM/Integration/_data/simplest-module/1.0.0/)
+  | [USER|simplest-module]	Reload SUCCESS
+  | [simplest-module]	Module object refreshed.
+  | [USER|simplest-module]	Validate START
+  | [USER|simplest-module]	Validate SUCCESS
+  | [USER|simplest-module]	Compile START
+  | [USER|simplest-module]	Compile SUCCESS
+  | [USER|simplest-module]	Activate START
+  | [USER|simplest-module]	Configure START
+  | [USER|simplest-module]	Configure SUCCESS
+  | [USER|simplest-module]	Activate SUCCESS
+  | [USER|simplest-module]	Package START
+  | [USER|simplest-module]	Package SUCCESS
+<<< status OK
+
+>>> zpm "simplest-module nosuchphase"
+  | 
+  | [USER|simplest-module]	Nosuchphase START
+  | [simplest-module]	Nosuchphase FAILURE
+  | [31mERROR![0m ObjectScript error: <METHOD DOES NOT EXIST>ExecutePhases+171^%IPM.Storage.Module.1 *%Nosuchphase,%IPM.Lifecycle.Module
+<<< status ERROR ERROR #5002: ObjectScript error: <METHOD DOES NOT EXIST>ExecutePhases+171^%IPM.Storage.Module.1 *%Nosuchphase,%IPM.Lifecycle.Module
+
+OBS|nc-res-N13-register|helpExample=ok;load=ok;register=err:ERROR #5002: ObjectScript error: <METHOD DOES NOT EXIST>ExecutePhases+171^%IPM.Storage.Module.1 *%Register,%IPM.Lifecycle.Module;registerErrLine=[31mERROR![0m ObjectScript error: <METHOD DOES NOT EXIST>ExecutePhases+171^%IPM.Storage.Module.1 *%Register,%IPM.Lifecycle.Module;unknownPhase=err:ERROR #5002: ObjectScript error: <METHOD DOES NOT EXIST>ExecutePhases+171^%IPM.Storage.Module.1 *%Nosuchphase,%IPM.Lifecycle.Module;
+
+>>> zpm "uninstall simplest-module"
+  | 
+  | [USER|simplest-module]	Clean START
+  | [USER|simplest-module]	Unconfigure START
+  | [USER|simplest-module]	Unconfigure SUCCESS
+  | [USER|simplest-module]	Clean SUCCESS
+<<< status OK
+
+USER>
+
+>>> zpm "load /tmp/uplift/nsp/fixtures/nc-invoke-throw/"
+  | 
+  | Building dependency graph...Done.
+  | [USER|nc-invoke-throw]	Initialize START
+  | [USER|nc-invoke-throw]	Initialize SUCCESS
+  | [USER|nc-invoke-throw]	Reload START (/tmp/uplift/nsp/fixtures/nc-invoke-throw/)
+  | [USER|nc-invoke-throw]	Reload SUCCESS
+  | [nc-invoke-throw]	Module object refreshed.
+  | [USER|nc-invoke-throw]	Validate START
+  | [USER|nc-invoke-throw]	Validate SUCCESS
+  | [USER|nc-invoke-throw]	Compile START
+  | [USER|nc-invoke-throw]	Compile SUCCESS
+  | [USER|nc-invoke-throw]	Activate START
+  | [USER|nc-invoke-throw]	Configure START
+  | [nc-invoke-throw]	Configure FAILURE
+  | [nc-invoke-throw]	Activate FAILURE
+  | [31mERROR![0m General exception Name 'NcHookThrow' Code '5001' Data 'nc-invoke-throw hook threw'
+<<< status ERROR ERROR #5035: General exception Name 'NcHookThrow' Code '5001' Data 'nc-invoke-throw hook threw'
+
+>>> zpm "uninstall nc-invoke-throw -force"
+  | 
+  | [31mERROR![0m Module 'nc-invoke-throw' not found.
+<<< status ERROR ERROR #5001: Module 'nc-invoke-throw' not found.
+
+>>> zpm "load /tmp/uplift/nsp/fixtures/nc-invoke-badname/"
+  | 
+  | Building dependency graph...Done.
+  | [USER|nc-invoke-badname]	Initialize START
+  | [USER|nc-invoke-badname]	Initialize SUCCESS
+  | [USER|nc-invoke-badname]	Reload START (/tmp/uplift/nsp/fixtures/nc-invoke-badname/)
+  | [USER|nc-invoke-badname]	Reload SUCCESS
+  | [nc-invoke-badname]	Module object refreshed.
+  | [USER|nc-invoke-badname]	Validate START
+  | [USER|nc-invoke-badname]	Validate SUCCESS
+  | [USER|nc-invoke-badname]	Compile START
+  | [USER|nc-invoke-badname]	Compile SUCCESS
+  | [USER|nc-invoke-badname]	Activate START
+  | [USER|nc-invoke-badname]	Configure START
+  | [USER|nc-invoke-badname]	Configure SUCCESS
+  | [USER|nc-invoke-badname]	Activate SUCCESS
+<<< status OK
+
+>>> zpm "nc-invoke-badname NcPhase"
+  | 
+  | [USER|nc-invoke-badname]	NcPhase START
+  | [nc-invoke-badname]	NcPhase FAILURE
+  | [31mERROR![0m ObjectScript error: <METHOD DOES NOT EXIST>doInvoke+10^%IPM.Storage.InvokeReference.1 *NoSuchMethod,UpliftNc.Named
+<<< status ERROR ERROR #5002: ObjectScript error: <METHOD DOES NOT EXIST>doInvoke+10^%IPM.Storage.InvokeReference.1 *NoSuchMethod,UpliftNc.Named
+
+>>> zpm "nc-invoke-badname ncphase"
+  | 
+  | [USER|nc-invoke-badname]	NcPhase START
+  | [nc-invoke-badname]	NcPhase FAILURE
+  | [31mERROR![0m ObjectScript error: <METHOD DOES NOT EXIST>doInvoke+10^%IPM.Storage.InvokeReference.1 *NoSuchMethod,UpliftNc.Named
+<<< status ERROR ERROR #5002: ObjectScript error: <METHOD DOES NOT EXIST>doInvoke+10^%IPM.Storage.InvokeReference.1 *NoSuchMethod,UpliftNc.Named
+
+>>> zpm "uninstall nc-invoke-badname"
+  | 
+  | [USER|nc-invoke-badname]	Clean START
+  | [USER|nc-invoke-badname]	Unconfigure START
+  | [USER|nc-invoke-badname]	Unconfigure SUCCESS
+  | [USER|nc-invoke-badname]	Clean SUCCESS
+<<< status OK
+
+OBS|nc-res-N15-hook-throw-and-badname|badnameLoad=ok;badnamePhase=err:ERROR #5002: ObjectScript error: <METHOD DOES NOT EXIST>doInvoke+10^%IPM.Storage.InvokeReference.1 *NoSuchMethod,UpliftNc.Named;badnamePhaseLowercase=err:ERROR #5002: ObjectScript error: <METHOD DOES NOT EXIST>doInvoke+10^%IPM.Storage.InvokeReference.1 *NoSuchMethod,UpliftNc.Named;badnameRecord=0.0.1;hookRan=1;throwLoad=err:ERROR #5035: General exception Name 'NcHookThrow' Code '5001' Data 'nc-invoke-throw hook threw';throwRecord=-;
+
+USER>
+
+>>> zpm "load -dev /tmp/nc-dm/"
+  | 
+  | Building dependency graph...Done.
+  | [USER|deployed-mappings]	Initialize START
+  | [USER|deployed-mappings]	Initialize SUCCESS
+  | [USER|deployed-mappings]	Reload START (/tmp/nc-dm/)
+  | [USER|deployed-mappings]	Reload SUCCESS
+  | [deployed-mappings]	Module object refreshed.
+  | [USER|deployed-mappings]	Validate START
+  | [USER|deployed-mappings]	Validate SUCCESS
+  | [USER|deployed-mappings]	Compile START
+  | [USER|deployed-mappings]	Compile SUCCESS
+  | [USER|deployed-mappings]	Activate START
+  | [USER|deployed-mappings]	Configure START
+  | [USER|deployed-mappings]	Configure SUCCESS
+  | [USER|deployed-mappings]	Activate SUCCESS
+<<< status OK
+
+>>> zpm "makedeployed deployed-mappings -v"
+  | 
+  | [USER|deployed-mappings]	MakeDeployed START
+  | Module is in developer mode; will only report what WOULD be deployed unless packaging, in which case items WILL be deployed.
+  | The following classes are flagged for deployment:
+  | 	DeployMapA.First
+  | 	DeployMapP.Inner.Thing
+  | The following routines are flagged for deployment:
+  | 	DeployMapR.Routine.MAC
+  | [USER|deployed-mappings]	MakeDeployed SUCCESS
+<<< status OK
+
+OBS|nc-res-N12a-makedeployed-dev|callAfter=first;deployedAfter=1;deployedBefore=0;devMessage=Module is in developer mode, will only report what WOULD be deployed unless packaging, in which case items WILL be deployed.;loadDev=ok;makedeployed=ok;moduleDeployedFlag=1;moduleRecord=0.0.1;sourceAfter=0;sourceBefore=1;
+
+>>> zpm "uninstall deployed-mappings -force"
+  | 
+  | [USER|deployed-mappings]	Clean START
+  | [USER|deployed-mappings]	Unconfigure START
+  | [USER|deployed-mappings]	Unconfigure SUCCESS
+  | [USER|deployed-mappings]	Clean SUCCESS
+<<< status OK
+
+>>> zpm "load -dev /tmp/nc-dm/"
+  | 
+  | Building dependency graph...Done.
+  | [USER|deployed-mappings]	Initialize START
+  | [USER|deployed-mappings]	Initialize SUCCESS
+  | [USER|deployed-mappings]	Reload START (/tmp/nc-dm/)
+  | [USER|deployed-mappings]	Reload SUCCESS
+  | [deployed-mappings]	Module object refreshed.
+  | [USER|deployed-mappings]	Validate START
+  | [USER|deployed-mappings]	Validate SUCCESS
+  | [USER|deployed-mappings]	Compile START
+  | [USER|deployed-mappings]	Compile SUCCESS
+  | [USER|deployed-mappings]	Activate START
+  | [USER|deployed-mappings]	Configure START
+  | [USER|deployed-mappings]	Configure SUCCESS
+  | [USER|deployed-mappings]	Activate SUCCESS
+<<< status OK
+
+>>> zpm "package deployed-mappings -path /tmp/nc-pkg/dm"
+  | 
+  | [USER|deployed-mappings]	Initialize START
+  | [USER|deployed-mappings]	Initialize SUCCESS
+  | [USER|deployed-mappings]	Reload START (/tmp/nc-dm/)
+  | [USER|deployed-mappings]	Reload SUCCESS
+  | [deployed-mappings]	Module object refreshed.
+  | [USER|deployed-mappings]	Validate START
+  | [USER|deployed-mappings]	Validate SUCCESS
+  | [USER|deployed-mappings]	Compile START
+  | [USER|deployed-mappings]	Compile SUCCESS
+  | [USER|deployed-mappings]	Activate START
+  | [USER|deployed-mappings]	Configure START
+  | [USER|deployed-mappings]	Configure SUCCESS
+  | [USER|deployed-mappings]	Activate SUCCESS
+  | [USER|deployed-mappings]	Package START
+  | [USER|deployed-mappings]	MakeDeployed START
+  | [USER|deployed-mappings]	MakeDeployed SUCCESS
+  | [USER|deployed-mappings]	Package SUCCESS
+<<< status OK
+
+OBS|nc-res-N12b-package-dev|classAfterUninstall=absent;deployedAfter=1;deployedBefore=0;generatedLineShown=0;loadDev=ok;moduleRecord=0.0.1;outputLines=18;package=ok;sourceAfter=0;tgzExists=1;uninstall=ok;
+
+>>> zpm "package deployed-mappings -v -path /tmp/nc-pkg/dmv"
+  | 
+  | [USER|deployed-mappings]	Initialize START
+  | Skipping preload - directory does not exist.
+  | [USER|deployed-mappings]	Initialize SUCCESS
+  | [USER|deployed-mappings]	Reload START (/tmp/nc-dm/)
+  | Load started on 11/13/2026 18:29:54
+  | Loading file /tmp/nc-dm/cls/DeployMapA/First.cls as udl
+  | Load finished successfully.
+  | 
+  | Load of directory started on 11/13/2026 18:29:54 '*'
+  | 
+  | Loading file /tmp/nc-dm/cls/DeployMapP/Inner/Thing.cls as udl
+  | Load finished successfully.
+  | 
+  | Load started on 11/13/2026 18:29:54
+  | Loading file /tmp/nc-dm/rtn/DeployMapR/Routine.mac as udl
+  | DeployMapR.Routine.MAC Loaded
+  | Load finished successfully.
+  | 
+  | [USER|deployed-mappings]	Reload SUCCESS
+  | [deployed-mappings]	Module object refreshed.
+  | [USER|deployed-mappings]	Validate START
+  | [USER|deployed-mappings]	Validate SUCCESS
+  | [USER|deployed-mappings]	Compile START
+  | Compilation started on 11/13/2026 18:29:54 with qualifiers 'd-lck'
+  | Compiling 2 classes
+  | Compiling class DeployMapA.First
+  | Compiling class DeployMapP.Inner.Thing
+  | Compiling routine DeployMapA.First.1
+  | Compiling routine DeployMapP.Inner.Thing.1
+  | Compiling routine : DeployMapR.Routine.mac
+  | Compilation finished successfully in 0.010s.
+  | 
+  | [USER|deployed-mappings]	Compile SUCCESS
+  | [USER|deployed-mappings]	Activate START
+  | [USER|deployed-mappings]	Configure START
+  | [USER|deployed-mappings]	Configure SUCCESS
+  | Studio project created/updated: deployed-mappings.PRJ
+  | [USER|deployed-mappings]	Activate SUCCESS
+  | [USER|deployed-mappings]	Package START
+  | [USER|deployed-mappings]	MakeDeployed START
+  | Module is in developer mode; will only report what WOULD be deployed unless packaging, in which case items WILL be deployed.
+  | The following classes are flagged for deployment:
+  | 	DeployMapA.First
+  | 	DeployMapP.Inner.Thing
+  | The following routines are flagged for deployment:
+  | 	DeployMapR.Routine.MAC
+  | [USER|deployed-mappings]	MakeDeployed SUCCESS
+  | Adding deployed item 'DeployMapA.First.CLS' to project 'deployed-mappings__deployed'
+  | Adding deployed item 'DeployMapP.Inner.Thing.cls' to project 'deployed-mappings__deployed'
+  | Adding deployed item 'DeployMapR.Routine.MAC' to project 'deployed-mappings__deployed'
+  | Exported to /tmp/nc-pkg/dmv/FcuYPgf5/module.xml                    DeployMapR.Routine.MAC                    DeployMapR.Routine.OBJ                    DeployMapA.First.cls                    DeployMapP.Inner.Thing.cls
+  | Exporting to XML started on 11/13/2026 18:29:54
+  | Exporting global: ^||%pkg
+  | Export finished successfully.
+  | 
+  | Module contents exported to temporary directory:
+  | 	/tmp/nc-pkg/dmv/FcuYPgf5/
+  | 
+  | Module package generated:
+  | 	/tmp/nc-pkg/dmv.tgz
+  | [USER|deployed-mappings]	Package SUCCESS
+<<< status OK
+
+OBS|nc-res-N12c-package-verbose|generatedLine=Module package generated:;package=ok;
+
+>>> zpm "uninstall deployed-mappings -force"
+  | 
+  | [USER|deployed-mappings]	Clean START
+  | [USER|deployed-mappings]	Unconfigure START
+  | [USER|deployed-mappings]	Unconfigure SUCCESS
+  | [USER|deployed-mappings]	Clean SUCCESS
+<<< status OK
+
+USER>
+
+>>> zpm "load -v /tmp/nc-lune/"Processing /tmp/nc-lune/lune-1.6.2-py3-none-any.whl
+Installing collected packages: lune
+Successfully installed lune-1.6.2
+WARNING: Target directory /usr/irissys/mgr/python/bin already exists. Specify --upgrade to force replacement.
+ERROR: Could not find a version that satisfies the requirement lune==1.6.4 (from versions: none)
+ERROR: No matching distribution found for lune==1.6.4
+
+  | 
+  | Load started on 11/13/2026 18:29:55
+  | Loading file /tmp/nc-lune/module.xml as xml
+  | Imported document: lune-wheel.ZPM
+  | Load finished successfully.
+  | 
+  | Building dependency graph...Done.
+  | Created inverted dependency graph from dependency graph
+  | Constructed flat dependency list from inverted dependency graph
+  | Starting installation of dependencies...
+  | 
+  | Load started on 11/13/2026 18:29:55
+  | Loading file /tmp/nc-lune/module.xml as xml
+  | Imported document: lune-wheel.ZPM
+  | Load finished successfully.
+  | 
+  | Loading lune-wheel in process 3298
+  | [USER|lune-wheel]	Initialize START
+  | Installing wheel package "/tmp/nc-lune/lune-1.6.2-py3-none-any.whl"...
+  | Detecting pip caller
+  | Attempting to find flexible python... 
+  | Attempting to find python3 or python...Success!
+  | Running command=$lb("python3","-m","pip","install","-t","/usr/irissys/mgr/python/","/tmp/nc-lune/lune-1.6.2-py3-none-any.whl")
+  | 
+  | Skipping preload - directory does not exist.
+  | [USER|lune-wheel]	Initialize SUCCESS
+  | [USER|lune-wheel]	Reload START (/tmp/nc-lune/)
+  | [USER|lune-wheel]	requirements.txt START
+  | 
+  | Detecting pip caller
+  | Attempting to find flexible python... 
+  | Attempting to find python3 or python...Success!
+  | Running command=$lb("python3","-m","pip","install","-t","/usr/irissys/mgr/python/","-r","requirements.txt","--python-version","3.12.3","--only-binary=:all:")
+  | 
+  | [USER|lune-wheel]	requirements.txt FAILURE
+  | [lune-wheel]	Reload FAILURE
+  | [31mERROR![0m Running os command 'python3 -m pip install -t /usr/irissys/mgr/python/ -r requirements.txt --python-version 3.12.3 --only-binary=:all:' failed with return code: 1
+<<< status ERROR ERROR #5001: Running os command 'python3 -m pip install -t /usr/irissys/mgr/python/ -r requirements.txt --python-version 3.12.3 --only-binary=:all:' failed with return code: 1
+
+>>> zpm "load -v -bypass-py-deps /tmp/nc-lune/"Processing /tmp/nc-lune/lune-1.6.2-py3-none-any.whl
+Installing collected packages: lune
+Successfully installed lune-1.6.2
+WARNING: Target directory /usr/irissys/mgr/python/lune already exists. Specify --upgrade to force replacement.
+WARNING: Target directory /usr/irissys/mgr/python/lune-1.6.2.dist-info already exists. Specify --upgrade to force replacement.
+WARNING: Target directory /usr/irissys/mgr/python/bin already exists. Specify --upgrade to force replacement.
+
+  | 
+  | Load started on 11/13/2026 18:29:56
+  | Loading file /tmp/nc-lune/module.xml as xml
+  | Imported document: lune-wheel.ZPM
+  | Load finished successfully.
+  | 
+  | Building dependency graph...Done.
+  | Created inverted dependency graph from dependency graph
+  | Constructed flat dependency list from inverted dependency graph
+  | Starting installation of dependencies...
+  | 
+  | Load started on 11/13/2026 18:29:56
+  | Loading file /tmp/nc-lune/module.xml as xml
+  | Imported document: lune-wheel.ZPM
+  | Load finished successfully.
+  | 
+  | Loading lune-wheel in process 3298
+  | [USER|lune-wheel]	Initialize START
+  | Installing wheel package "/tmp/nc-lune/lune-1.6.2-py3-none-any.whl"...
+  | Detecting pip caller
+  | Attempting to find flexible python... 
+  | Attempting to find python3 or python...Success!
+  | Running command=$lb("python3","-m","pip","install","-t","/usr/irissys/mgr/python/","/tmp/nc-lune/lune-1.6.2-py3-none-any.whl")
+  | 
+  | Skipping preload - directory does not exist.
+  | [USER|lune-wheel]	Initialize SUCCESS
+  | [USER|lune-wheel]	Reload START (/tmp/nc-lune/)
+  | Skipping installation of Python dependencies because -bypass-py-deps is set.
+  | [USER|lune-wheel]	Reload SUCCESS
+  | [lune-wheel]	Module object refreshed.
+  | [USER|lune-wheel]	Validate START
+  | [USER|lune-wheel]	Validate SUCCESS
+  | [USER|lune-wheel]	Compile START
+  | [USER|lune-wheel]	Compile SUCCESS
+  | [USER|lune-wheel]	Activate START
+  | [USER|lune-wheel]	Configure START
+  | [USER|lune-wheel]	Configure SUCCESS
+  | Seeding update steps for module = lune-wheel, for version = 1.6.2
+  | 
+  | [USER|lune-wheel]	Activate SUCCESS
+<<< status OK
+
+        quit "<not-importable>"
+        ^
+<COMMAND>PyVersion+5^Uplift.Nsp.Res.1
+USER 3e1>

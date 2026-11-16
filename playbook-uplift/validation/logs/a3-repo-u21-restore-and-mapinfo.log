@@ -1,0 +1,65 @@
+# container: ipm-uplift-iris-repo  image: containers.intersystems.com/intersystems/iris-community:2026.1  at: 2026-11-13T23:24:14Z
+# script: validation/iris/r4/repo/04-u21-restore-and-mapinfo.script
+
+Node: 2e8609ed30a0, Instance: IRIS
+
+USER>
+
+USER>
+
+OBS|r4-repo-u21-repair-user|before=0/10/1;
+>>> repo -fs -n nc-r4-fs -path /tmp/uplift/r4repo/fixtures/
+
+nc-sc-lib 1.0.0 @ /tmp/uplift/r4repo/fixtures/nc-sc-lib/
+nc-sc-plain 1.0.0 @ /tmp/uplift/r4repo/fixtures/nc-sc-plain/
+nc-sc-user 1.0.0 @ /tmp/uplift/r4repo/fixtures/nc-sc-user/
+nc-sc-vuser 1.0.0 @ /tmp/uplift/r4repo/fixtures/nc-sc-vuser/
+nc-r4-fs
+	Source: 		/tmp/uplift/r4repo/fixtures/*
+	Enabled?		Yes
+	Available?		Yes
+	Use for Snapshots?	Yes
+	Use for Prereleases?	Yes
+	Is Read-Only?		No
+
+nc-r4-fs
+	Source: 		/tmp/uplift/r4repo/fixtures/*
+	Enabled?		Yes
+	Available?		Yes
+	Use for Snapshots?	Yes
+	Use for Prereleases?	Yes
+	Is Read-Only?		No
+
+<<< status=OK
+
+>>> repo -n nc-r4-fs -delete
+
+<<< status=OK
+
+OBS|r4-repo-u21-repair-user|fsRepoAddOK=1;fsRepoDeleteOK=1;after=1/10/1;
+
+USER>
+
+NCMAP>
+
+OBS|r4-repo-u21-repair-ncmap|before=1/10/1;repoDefs=1;after=1/10/1;
+
+NCMAP>
+
+OBS|r4-repo-u21-mapinfo-from-ncmap|mappedFromNCMAP=USER-VERIFY;mappedTo=USER-VERIFY>NCMAP,;
+
+NCMAP>
+
+USER>
+
+OBS|r4-repo-u21-mapinfo-from-user|mappedFromNCMAP=USER-VERIFY;mappedTo=USER-VERIFY>NCMAP,;
+USER>
+zpmNamespaces=USER:^/usr/irissys/mgr/user/,USER-VERIFY:^/usr/irissys/mgr/user/,;
+
+USER>
+
+USER>
+
+OBS|r4-repo-u21-final|userMods=zpm ;userIpmMain=1;bak=0;
+
+USER>

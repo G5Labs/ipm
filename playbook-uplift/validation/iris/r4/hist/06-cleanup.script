@@ -1,0 +1,7 @@
+set sc=$system.OBJ.LoadDir("/tmp/uplift/r4/hist/Uplift/","ck-d",.err,1) write !,"LOAD ",$system.Status.IsOK(sc),!
+write !,"jobs r4: " set p="" for { set p=$order(^IRIS.Temp.R4H("job",p)) quit:p=""  write p,":",$data(^$JOB(p))," " } write !
+do ##class(Uplift.R4.Hist).Cleanup()
+do ##class(%IPM.Main).Shell("list")
+set rs=##class(%SQL.Statement).%ExecDirect(,"SELECT ID,Action,Package,CommandString FROM %IPM_General.History") while rs.%Next() { write !,rs.%Get("ID")," ",rs.%Get("Action")," ",rs.%Get("Package")," ",rs.%Get("CommandString") }
+write !,"tlevel ",$tlevel,!
+halt

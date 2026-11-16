@@ -1,0 +1,51 @@
+set o="Consolidated.Obs"
+// ---------- E: attribute evaluator, no install ----------
+write !,"OBS ENV mgrdir=",##class(%Library.File).ManagerDirectory(),!
+write "OBS ENV moduleroot=",##class(%IPM.Repo.UniversalSettings).GetModuleRoot(),!
+set m=##class(%IPM.Storage.Module).%New(), m.Name="evalmod", m.VersionString="1.2.3", m.Root="/tmp/evalroot"
+for pair="greeting|hello","a|${b}","b|${a}","c|${d}","d|${namespace}","version|9.9.9","a.b|DOT","e|{$f}x","f|${greeting}" { set d=##class(%IPM.Storage.ModuleSetting.Default).%New(), d.Name=$piece(pair,"|"), d.Value=$piece(pair,"|",2) do m.Defaults.Insert(d) }
+set cases=$listbuild("E01|plain text","E02|{$namespace}","E03|${namespace}","E04|{$NAMESPACE}","E05|{$namespaceLower}","E06|${greeting} world","E08|{name}/{NAME}","E09|{$packagename}-{$version}","E10|#{1+2}","E11|#{ 1+2}","E12|#{$$$OK}","E13|#{1/0}","E14|#{undefinedvar}","E15|$$$OK no brace","E16|{$x} $$$OK","E17|$$$NoSuchMacroXyz {}","E18|${a}","E19|${c}","E20|{$version}","E21|{$axb}","E22|${e}","E23|{$mgrDir}","E25|${verbose}","E26|{$root}","E27|{$ipmDir}","E28|{$namespace}#{""-""}{$NAMESPACELOWER}")
+for i=1:1:$listlength(cases) { set c=$list(cases,i) set id=$piece(c,"|"), s=$piece(c,"|",2,*) kill p set v=m.%Evaluate(s,.p) write "OBS ",id," value=",v,! }
+kill p set p("greeting")="hi", p("Verbose")=1
+write "OBS E07 value=",m.%Evaluate("${greeting}",.p),!
+write "OBS E24 value=",m.%Evaluate("${verbose}",.p),!
+write "OBS E29 macroclass=",##class(%Dictionary.ClassDefinition).%ExistsId("%IPM.Generated.MacroEval"),!
+// circular placeholders as the product resolves them, with no error raised
+kill cp set cp("a")="${b}", cp("b")="${a}"
+set ok=1 try { do ##class(%IPM.Storage.ModuleSetting.Default).ResolvePlaceholders(.cp) } catch ex { set ok=0 }
+write "OBS E30 resolve.raised=",'ok," a=",$get(cp("a"))," b=",$get(cp("b")),!
+kill cp set cp("x")="${y}", cp("y")="${z}", cp("z")="end"
+do ##class(%IPM.Storage.ModuleSetting.Default).ResolvePlaceholders(.cp)
+write "OBS E31 x=",cp("x")," y=",cp("y"),!
+// ---------- P: after-install message after the final commit ----------
+do ##class(Consolidated.Obs).Run("P1","load /tmp/c1e/p1/")
+do ##class(Consolidated.Obs).Mod("P1","pc-ok") do ##class(Consolidated.Obs).Hist("P1","pc-ok")
+do ##class(Consolidated.Obs).Run("P2txn","load /tmp/c1e/p2-txn/")
+do ##class(Consolidated.Obs).Mod("P2txn","pc-bad-txn") do ##class(Consolidated.Obs).Hist("P2txn","pc-bad-txn")
+write "OBS P2txn macroclass=",##class(%Dictionary.ClassDefinition).%ExistsId("%IPM.Generated.MacroEval"),!
+do $system.OBJ.Delete("%IPM.Generated.MacroEval","-d")
+do ##class(Consolidated.Obs).Run("P2notxn","load /tmp/c1e/p2-notxn/ -DNoTransaction=1")
+do ##class(Consolidated.Obs).Mod("P2notxn","pc-bad-notxn") do ##class(Consolidated.Obs).Hist("P2notxn","pc-bad-notxn")
+do $system.OBJ.Delete("%IPM.Generated.MacroEval","-d")
+do ##class(Consolidated.Obs).Run("P2dev","load /tmp/c1e/p2-dev/ -dev")
+do ##class(Consolidated.Obs).Mod("P2dev","pc-bad-dev") do ##class(Consolidated.Obs).Hist("P2dev","pc-bad-dev")
+do $system.OBJ.Delete("%IPM.Generated.MacroEval","-d")
+do ##class(Consolidated.Obs).Run("P3","load /tmp/c1e/p3/")
+do ##class(Consolidated.Obs).Mod("P3","pc-neighbor") do ##class(Consolidated.Obs).Hist("P3","pc-neighbor")
+do ##class(Consolidated.Obs).Run("P4","load /tmp/c1e/p4/")
+// ---------- D: dependency-level .modules failure inside the parent's load ----------
+set r=##class(%IPM.Repo.Filesystem.Definition).%New(), r.Name="regd", r.Root="/tmp/c1e/regd/", r.Depth=1, r.Snapshots=1, r.Prereleases=1
+write "OBS D.setup buildcache=",$system.Status.IsOK(r.BuildCache(1,0,0)),!
+do ##class(Consolidated.Obs).Run("Dtxn","load /tmp/c1e/d-txn/")
+do ##class(Consolidated.Obs).Mod("Dtxn","dd-parent-txn") do ##class(Consolidated.Obs).Mod("Dtxn","dd-dep-txn")
+do ##class(Consolidated.Obs).Hist("Dtxn","dd-parent-txn") do ##class(Consolidated.Obs).Hist("Dtxn","dd-dep-txn")
+do ##class(Consolidated.Obs).Repos("Dtxn")
+do ##class(Consolidated.Obs).Run("Ddev","load /tmp/c1e/d-dev/ -dev")
+do ##class(Consolidated.Obs).Mod("Ddev","dd-parent-dev") do ##class(Consolidated.Obs).Mod("Ddev","dd-dep-dev")
+do ##class(Consolidated.Obs).Hist("Ddev","dd-parent-dev") do ##class(Consolidated.Obs).Hist("Ddev","dd-dep-dev")
+do ##class(Consolidated.Obs).Repos("Ddev")
+do ##class(Consolidated.Obs).Run("Dok","load /tmp/c1e/d-neighbor/")
+do ##class(Consolidated.Obs).Mod("Dok","dd-parent-ok") do ##class(Consolidated.Obs).Mod("Dok","dd-dep-ok")
+do ##class(Consolidated.Obs).Repos("Dok")
+write !,"NATIVE-END",!
+halt

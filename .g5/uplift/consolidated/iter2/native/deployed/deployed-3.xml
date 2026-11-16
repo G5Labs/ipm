@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Export generator="IRIS" version="26" zv="IRIS for UNIX (Ubuntu Server LTS for ARM64 Containers) 2026.1 (Build 234U)" ts="2026-11-14 17:46:44">
+<Class name="%IPM.Repo.Oras.HttpException">
+<Description>
+A failed response from an ORAS registry, built from the helper's RegistryHttpError.
+Classify sets the message a user sees.</Description>
+<IncludeCode>%IPM.Common</IncludeCode>
+<Super>%Exception.AbstractException</Super>
+<TimeChanged>67888,9993.055671169</TimeChanged>
+<TimeCreated>67888,9993.055671169</TimeCreated>
+
+<Property name="StatusCode">
+<Type>%Integer</Type>
+</Property>
+
+<Property name="Reason">
+<Type>%String</Type>
+<Parameter name="MAXLEN"/>
+</Property>
+
+<Property name="URL">
+<Type>%String</Type>
+<Parameter name="MAXLEN"/>
+</Property>
+
+<Property name="RegistryMessage">
+<Description>
+The registry's own message from the response body, if any.</Description>
+<Type>%String</Type>
+<Parameter name="MAXLEN"/>
+</Property>
+
+<Property name="Text">
+<Description>
+Set by Classify.</Description>
+<Type>%String</Type>
+<Parameter name="MAXLEN"/>
+</Property>
+
+<Property name="CredentialsRejected">
+<Description>
+Set by Classify when the registry rejected the configured credentials.</Description>
+<Type>%Boolean</Type>
+<InitialExpression>0</InitialExpression>
+</Property>
+
+<Method name="FromException">
+<Description>
+Returns ex as an HttpException if it is one or is a RegistryHttpError raised by the oras helper, otherwise "".</Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>ex:%Exception.AbstractException</FormalSpec>
+<ReturnType>%IPM.Repo.Oras.HttpException</ReturnType>
+<Implementation><![CDATA[
+    if ex.%IsA($classname()) {
+        return ex
+    }
+    set marker = "RegistryHttpError'>: "
+    if 'ex.%IsA("%Exception.PythonException") || (ex.Data '[ marker) {
+        return ""
+    }
+    try {
+        set payload = {}.%FromJSON($piece(ex.Data, marker, 2, *))
+    } catch {
+        return ""
+    }
+    set failure = ..%New("RegistryHttpError", payload.status, , payload.url)
+    set failure.StatusCode = payload.status
+    set failure.Reason = payload.reason
+    set failure.URL = payload.url
+    set failure.RegistryMessage = payload.message
+    return failure
+]]></Implementation>
+</Method>
+
+<Method name="IsRegistryFailure">
+<Description>
+Returns whether ex is a failed registry response.</Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>ex:%Exception.AbstractException</FormalSpec>
+<ReturnType>%Boolean</ReturnType>
+<Implementation><![CDATA[    return $isobject(..FromException(ex))
+]]></Implementation>
+</Method>
+
+<Method name="Classify">
+<Description>
+Sets Text and CredentialsRejected for this failure on module moduleName in repo repoName at repoURL.
+probe is the result of %IPM.Repo.Oras.PackageService:ProbeCredentials, used for a 401 or 403 when hasCredentials is set.</Description>
+<FormalSpec>repoName:%String,repoURL:%String,moduleName:%String,hasCredentials:%Boolean,probe:%String</FormalSpec>
+<Implementation><![CDATA[
+    set repo = "Repo '" _ repoName _ "' (" _ repoURL _ ")"
+    set status = ..StatusCode _ " " _ ..Reason
+    set ..CredentialsRejected = 0
+    if (..StatusCode = 401) || (..StatusCode = 403) {
+        if 'hasCredentials {
+            set first = repo _ " requires authentication: " _ status
+            set second = "Configure credentials for repo '" _ repoName _ "'."
+        } elseif probe = $$$OrasCredentialsRejected {
+            set first = repo _ " rejected the credentials: " _ status
+            set second = "Update the credentials configured for repo '" _ repoName _ "'."
+            set ..CredentialsRejected = 1
+        } else {
+            set first = repo _ " denied access to '" _ moduleName _ "': " _ status
+            if probe = $$$OrasCredentialsAccepted {
+                set second = "The credentials were accepted but lack permission for this module."
+            } else {
+                set second = "The credentials could not be checked."
+            }
+        }
+        set first = first _ ..MessageSuffix()
+    } elseif ..StatusCode = 404 {
+        set first = repo _ " returned " _ status _ " for " _ ..Path()
+        set second = "Check the repo URL and namespace."
+    } else {
+        set first = repo _ " returned " _ status _ " for " _ ..Path() _ ..MessageSuffix()
+        if ..StatusCode >= 500 {
+            set second = "The registry failed to handle the request. Try again later, or contact the registry's administrator if it persists."
+        } else {
+            set second = "The registry rejected the request. Check the repo URL and namespace, and that the registry supports the OCI distribution API."
+        }
+    }
+    set ..Text = ..EndSentence(first) _ $char(13,10) _ second
+]]></Implementation>
+</Method>
+
+<Method name="MessageSuffix">
+<Private>1</Private>
+<ReturnType>%String</ReturnType>
+<Implementation><![CDATA[    return $select(..RegistryMessage = "": "", 1: " - " _ ..RegistryMessage)
+]]></Implementation>
+</Method>
+
+<Method name="Path">
+<Description>
+The URL's path, without query.</Description>
+<Private>1</Private>
+<ReturnType>%String</ReturnType>
+<Implementation><![CDATA[
+    do ##class(%Net.URLParser).Decompose(..URL, .components)
+    return $get(components("path"))
+]]></Implementation>
+</Method>
+
+<Method name="EndSentence">
+<ClassMethod>1</ClassMethod>
+<FormalSpec>text:%String</FormalSpec>
+<Private>1</Private>
+<ReturnType>%String</ReturnType>
+<Implementation><![CDATA[    return text _ $select($extract(text, *) = ".": "", 1: ".")
+]]></Implementation>
+</Method>
+
+<Method name="OnAsStatus">
+<Private>1</Private>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+    set text = ..Text
+    if text = "" {
+        set text = ..EndSentence("Registry returned " _ ..StatusCode _ " " _ ..Reason _ " for " _ ..URL _ ..MessageSuffix())
+    }
+    return $$$ERROR($$$GeneralError, text)
+]]></Implementation>
+</Method>
+</Class>
+</Export>

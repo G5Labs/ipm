@@ -1,0 +1,90 @@
+# container: ipm-uplift-iris-inst  image: containers.intersystems.com/intersystems/iris-community:2026.1  at: 2026-11-13T19:48:55Z
+# script: validation/iris/inst/65-inst-model-order.script
+
+Node: a535af16f53b, Instance: IRIS
+
+USER>
+
+LOAD inst 1 
+
+USER>
+CMD uninstall -all => OK
+CMD repo -delete-all => OK
+
+Building dependency graph...Done.
+[USER|nc-inst-ord]	Initialize START
+[USER|nc-inst-ord]	Initialize SUCCESS
+[USER|nc-inst-ord]	Reload START (/tmp/uplift/inst/fixtures/order/1.0.0/)
+[USER|nc-inst-ord]	Reload SUCCESS
+[nc-inst-ord]	Module object refreshed.
+[USER|nc-inst-ord]	Validate START
+[USER|nc-inst-ord]	Validate SUCCESS
+[USER|nc-inst-ord]	Compile START
+[USER|nc-inst-ord]	Compile SUCCESS
+[USER|nc-inst-ord]	Activate START
+[USER|nc-inst-ord]	Configure START
+[USER|nc-inst-ord]	Configure SUCCESS
+[USER|nc-inst-ord]	Activate SUCCESS
+CMD load /tmp/uplift/inst/fixtures/order/1.0.0/ => OK
+
+Building dependency graph...Done.
+[USER|nc-inst-ord]	Initialize START
+[USER|nc-inst-ord]	Initialize SUCCESS
+[USER|nc-inst-ord]	Reload START (/tmp/uplift/inst/fixtures/order/2.0.0/)
+[USER|nc-inst-ord]	Reload SUCCESS
+[nc-inst-ord]	Module object refreshed.
+[USER|nc-inst-ord]	Validate START
+[USER|nc-inst-ord]	Validate SUCCESS
+[USER|nc-inst-ord]	Compile START
+[USER|nc-inst-ord]	Compile SUCCESS
+[USER|nc-inst-ord]	Activate START
+[USER|nc-inst-ord]	Configure START
+[USER|nc-inst-ord]	Configure SUCCESS
+[USER|nc-inst-ord]	Activate SUCCESS
+[USER|nc-inst-ord]	ApplyUpdateSteps START
+[USER|nc-inst-ord]	ApplyUpdateSteps SUCCESS
+CMD update nc-inst-ord -path /tmp/uplift/inst/fixtures/order/2.0.0/ => OK
+OBS|nc-inst-model-class-order|any:V1.S=start:0/end:1/ok:1;any:V10.A=start:1/end:1/ok:1;any:V2.A=start:1/end:1/ok:1;any:V9.A=start:1/end:1/ok:1;load100=ok;order=V2.A,V9.A,V10.A,V10.B;orderAfterLoad=<none>;pri:V10.B=start:1/end:1/ok:1;stepRows=5;update200=ok;version=2.0.0;
+
+Building dependency graph...Done.
+[USER|nc-inst-ord]	Initialize START
+[USER|nc-inst-ord]	Initialize SUCCESS
+[USER|nc-inst-ord]	Reload START (/tmp/uplift/inst/fixtures/order/3.0.0/)
+[USER|nc-inst-ord]	Reload SUCCESS
+[nc-inst-ord]	Module object refreshed.
+[USER|nc-inst-ord]	Validate START
+[USER|nc-inst-ord]	Validate SUCCESS
+[USER|nc-inst-ord]	Compile START
+[USER|nc-inst-ord]	Compile SUCCESS
+[USER|nc-inst-ord]	Activate START
+[USER|nc-inst-ord]	Configure START
+[USER|nc-inst-ord]	Configure SUCCESS
+[USER|nc-inst-ord]	Activate SUCCESS
+[USER|nc-inst-ord]	ApplyUpdateSteps START
+[USER|nc-inst-ord]	ApplyUpdateSteps SUCCESS
+CMD update nc-inst-ord -path /tmp/uplift/inst/fixtures/order/3.0.0/ => OK
+OBS|nc-inst-model-class-number-collision|any:V1.S=start:0/end:1/ok:1;any:V10.A=start:1/end:1/ok:1;any:V2.A=start:1/end:1/ok:1;any:V9.A=start:1/end:1/ok:1;order=<none>;pri:V10.B=start:1/end:1/ok:1;stepRows=5;update300=ok;version=3.0.0;
+
+Building dependency graph...Done.
+[USER|nc-inst-ord]	Initialize START
+[USER|nc-inst-ord]	Initialize SUCCESS
+[USER|nc-inst-ord]	Reload START (/tmp/uplift/inst/fixtures/order/4.0.0/)
+[USER|nc-inst-ord]	Reload SUCCESS
+[nc-inst-ord]	Module object refreshed.
+[USER|nc-inst-ord]	Validate START
+[USER|nc-inst-ord]	Validate SUCCESS
+[USER|nc-inst-ord]	Compile START
+[USER|nc-inst-ord]	Compile SUCCESS
+[USER|nc-inst-ord]	Activate START
+[USER|nc-inst-ord]	Configure START
+[USER|nc-inst-ord]	Configure SUCCESS
+[USER|nc-inst-ord]	Activate SUCCESS
+[USER|nc-inst-ord]	ApplyUpdateSteps START
+[nc-inst-ord]	ApplyUpdateSteps FAILURE
+[31mERROR![0m ObjectScript error: <SUBSCRIPT>GetUpdatePackageClassList+15^%IPM.General.Update.VersionBase.1 *updatePackageClassList() Subscript 1 is ""
+CMD update nc-inst-ord -path /tmp/uplift/inst/fixtures/order/4.0.0/ => ERROR #5002: ObjectScript error: <SUBSCRIPT>GetUpdatePackageClassList+15^%IPM.General.Update.VersionBase.1 *updatePackageClassList() Subscript 1 is ""
+OBS|nc-inst-model-class-without-number|any:V1.S=start:0/end:1/ok:1;any:V10.A=start:1/end:1/ok:1;any:V2.A=start:1/end:1/ok:1;any:V9.A=start:1/end:1/ok:1;order=<none>;pri:V10.B=start:1/end:1/ok:1;stepRows=5;update400=err;update400Err=ERROR #5002: ObjectScript error: <SUBSCRIPT>GetUpdatePackageClassList+15^%IPM.General.Update.VersionBase.1 *updatePackageClassList() Subscript 1 is "";version=3.0.0;
+
+USER>
+
+USER>

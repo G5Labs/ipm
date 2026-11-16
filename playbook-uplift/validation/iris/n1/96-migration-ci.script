@@ -1,0 +1,18 @@
+write $zversion,!
+s version="0.7.4" s r=##class(%Net.HttpRequest).%New(),r.Server="pm.community.intersystems.com",r.SSLConfiguration="ISC.FeatureTracker.SSL.Config" d r.Get("/packages/zpm/"_version_"/installer"),$system.OBJ.LoadStream(r.HttpResponse.Data,"c")
+write !,"STEP legacy-version ",##class(%ZPM.PackageManager.Developer.Module).NameOpen("zpm").VersionString,!
+zpm "list"
+zpm "install dsw"
+zpm "repo -r -name registry -url ""http://registry:52773/registry/"" -username admin -password SYS"
+zpm "repo -list"
+zpm "search"
+zpm "install sslclient"
+write "Before migration",!
+zpm "list"
+zpm "install zpm -v"
+zpm "load -dev /tmp/test-package/"
+write "After migration",!
+zpm "list"
+zpm "test ipm-migration-v0.7-to-v0.9 -only -verbose"
+set sc=##class(%IPM.Main).Shell("test ipm-migration-v0.7-to-v0.9 -only") write !,"RESULT Test.PM.Migration (ipm-migration-v0.7-to-v0.9 test phase) ",$select($system.Status.IsOK(sc):"OK",1:$translate($system.Status.GetErrorText(sc),$c(13,10),"  ")),!
+halt

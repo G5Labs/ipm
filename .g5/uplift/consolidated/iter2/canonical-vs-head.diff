@@ -1,0 +1,1473 @@
+diff --git a/.g5/ontology/concepts/modules.g5.md b/.g5/ontology/concepts/modules.g5.md
+index b1d83399..343ae8d2 100644
+--- a/.g5/ontology/concepts/modules.g5.md
++++ b/.g5/ontology/concepts/modules.g5.md
+@@ -50,6 +50,35 @@ A `<ModuleReference>` names a dependency and the versions it accepts, either exa
+ - Placeholders in values are filled in, repeatedly if needed.
+ - Defaults can also set the [transaction flags](transactions-and-dev-mode.g5.md#transaction.flag-sources).
+ 
++<a id="module.parameter.expressions"></a>
++[I · module.parameter.expressions]
++
++Attribute values in a manifest, such as file targets, invoke arguments and the after-install message, can contain expressions that IPM fills in at install time. A value without a `{` is used as written.
++
++- `${name}` or `{$name}` takes a parameter's value. Names match regardless of case. The built-in `root`, `packagename`, `version`, `verbose` and `ipmDir` take precedence over module defaults with the same name.
++- The same forms also give instance values such as `namespace`, `namespaceLower` and `mgrDir`.
++- `$$$name` takes the value of an IRIS macro, or nothing if the macro is undefined.
++- `{name}` gives the module name, and `#{expression}` gives the value of an ObjectScript expression, or nothing if it fails.
++
++- As built, a value without `{` returns unchanged before parameter lookup, macro expansion or expression compilation. With `{`, lookup and nested placeholders run, followed by macro/expression evaluation.
++
++- A replacement containing `$` may raise; a dotted parameter name can match another name because it becomes regex syntax. A cyclic reference exhausts the loop before the declared cycle error can run (C:D3–D5).
++
++- These failures contradict literal-name/value intent. [C:Q2](#module.parameter.expressions.brace-policy) asks whether brace-free macros should expand; it does not leave the observed gate undecided.
++
++<a id="module.parameter.literal-values"></a>
++[I · module.parameter.literal-values]
++
++A parameter value is inserted exactly as written. Characters such as `$` and `\` in a value must not change the result or cause an error.
++
++<a id="module.parameter.cycles"></a>
++[I · module.parameter.cycles]
++
++If parameters refer to each other in a loop, IPM should report an error that names the circular reference instead of installing with an unfilled value.
++
++- This requirement is recovered from the named error and guard in the product, rather than an owner decision. As built, the guard is unreachable: `a=${b}`, `b=${a}` returns unresolved `${a}` without that error. A resolving neighbor, `a=${b}`, `b=ok`, returns `ok`.
++- Using an unresolved value later may raise a regular-expression error. This defect does not satisfy the circular-reference requirement. [Iter 2 native reader](../../uplift/consolidated/iter2/native/receipt.json) and [retained Verus counterexample](../../Verus_verification/consolidated/verus/attr_evaluator.rs) preserve both outcomes.
++
+ <a id="module.requirement"></a>
+ [I · module.requirement]
+ 
+@@ -87,6 +116,13 @@ Resource processors with special behavior include:
+ - It refuses to copy when the source and target are the same folder or one contains the other.
+ - `KeepOnUninstall` leaves the copied files in place on `uninstall` and `clean`, for files other modules may share.
+ 
++- Immediate copies run before Activate; `Defer` runs them after successful Activate. A failing hook between them leaves an immediate target but prevents the deferred copy.
++
++- Database rollback does not restore either filesystem state. With `KeepOnUninstall`, Clean preserves the target; otherwise Clean removes it.
++
++- Directory overlay rules protect system directories. These cases were checked through both the processor and an actual failing load; no general filesystem compensation is proved.
++- Direct `DoCopy` with a missing source returns an error and creates no copied target file. A successful copy remains after database rollback while a journaled database sentinel disappears; rollback does not turn a failed copy into a successful one. Creating the destination directory and partial operating-system copy errors are separate effects.
++
+ <a id="module.placement"></a>
+ [I · module.placement]
+ 
+@@ -117,6 +153,53 @@ A module can depend on Python packages.
+ 
+ `-env` takes `;`-separated JSON files of settings for the module, merges them and replaces `${VAR}` with environment values. The module reads them with `%IPM.General.EnvironmentConfig:GetArg`, and a missing file is an error.
+ 
++- Files merge in order. A later value replaces an earlier one, and nested objects merge key by key.
++- Every command that runs module phases starts from an empty configuration and loads only its own `-env` files. A later command in the same shell session does not see an earlier command's files.
++- While a configuration is loaded, IPM compiles the module's classes in one process, so code generated at compile time can read it.
++- What a failing file should leave behind, and how arrays merge, is [open](#module.env.failure).
++- An environment value is inserted literally. As built, a `$` or `\` in the value changes or breaks the result. This is a known defect.
++
++- Object elements in arrays merge recursively at the same array index: `[{"x":1}]` followed by `[{"y":2}]` keeps both keys. Primitive arrays merge by position: `[1,2]` then `[3]` yields `[3,2]`.
++
++- Both direct merge and the actual file loader have receipts. A missing or malformed later file clears earlier values and raises; each `LoadEnvironmentConfig` call clears first.
++
++- Process-local config reaches a same-process compile, while a fresh worker process starts empty. These are observed implementation rules; C:Q6 below keeps the desired failure/merge policy open.
++
++<a id="module.env.failure"></a>
++[Q · module.env.failure]
++
++When one of several `-env` files is missing, malformed or an array, what should the command keep, and how should two arrays merge?
++
++- Provisional answer: as built. The command fails and keeps nothing from any file, and a later array overwrites the earlier one position by position, so it cannot remove items.
++- Alternatives: keep the files loaded before the failing one, or check every file before changing anything; let a later array replace the earlier one.
++
++<a id="module.parameter.expressions.brace-policy"></a>
++[Q · module.parameter.expressions.brace-policy]
++
++Should a `$$$macro` expand when the attribute contains no opening brace?
++
++- Evidence: `%Evaluate` returns early on no `{`; native E15/P4 leave the macro literal. The expression documentation lists macros without this gate.
++- Working assumption: keep the observed brace gate until a maintainer chooses otherwise.
++- Alternative: expand macros with or without a brace.
++- Affected claims: parameter evaluation, after-install message, file-copy target and Invoke arguments. Alias C:Q2; parent [module.parameter.expressions](#module.parameter.expressions).
++
++<a id="module.processor.cpf-effects"></a>
++[D · module.processor.cpf-effects]
++
++A CPF processor runs a child command that changes instance configuration. Its exit status and the final configuration must be read separately from database rollback.
++
++- In the disposable IRIS provider, a valid role-creation merge returned success and the role survived rollback, while a journaled sentinel disappeared. An invalid-section neighbor returned error with child exit 7 and created no role.
++- These observations cover one configuration action and one refusal. Other actions, partial failures and settings that need restart remain external premises; exit zero alone does not prove their effect.
++
++<a id="module.processor.cpf-effects.policy"></a>
++[Q · module.processor.cpf-effects.policy]
++
++Must package failure undo instance configuration changes?
++
++- Owner: IPM maintainers and instance administrators; no owner decision was available.
++- Working assumption: database rollback alone gives no such promise. Alternatives are compensating selected changes or refusing them inside package transactions.
++- Depends on: [rollback policy](transactions-and-dev-mode.g5.md#transaction.rollback-scope.policy). A successful native role test settles observation, not this policy.
++
+ ## Metadata
+ 
+ Source locators follow the conventions on the [root page](../root.g5.md#how-to-read-this-ontology). Inventory IDs refer to [A1](../../uplift/ipm-verus-20261113/A/intent-inventory.md) and [A2](../../uplift/ipm-verus-20261113/A/operation-inventory.md). These blocks are outside the formal scope.
+@@ -169,7 +252,39 @@ Sources: `wiki/03` L243-250; CHANGELOG 0.10.7 (`#408`), 0.10.6 (`#1072`). Invent
+ - user-facing-behavior
+ - Expands: [Module](#module).
+ 
+-Sources: `wiki/03` L252-258; `wiki/00` L175-180; CHANGELOG 0.10.3 (`#779`), 0.10.7 (`#1013`). Inventory: CAT-04; OP-LOAD-05 (`Storage/Module.cls:799-831`).
++- Children: [expressions](#module.parameter.expressions), [literal values](#module.parameter.literal-values), [cycles](#module.parameter.cycles).
++
++Sources: `wiki/03` L252-258; `wiki/00` L175-180; CHANGELOG 0.10.3 (`#779`), 0.10.7 (`#1013`). Inventory: CAT-04; OP-LOAD-05 (`Storage/Module.cls:799-831`). Native: a `-D` value overrides a default (E07), and chains resolve through several levels (E22, E31, E36).
++
++### module.parameter.expressions
++
++- agent
++- user-facing-behavior
++- Expands: [Parameters](#module.parameter).
++
++Sources: doc comment `Utils/Module.cls:2678-2696` (system expressions and `$$$macros`); code `Storage/Module.cls:1833-1894` (order: macros, parameters, system values, `{name}`, `#{}`), `Storage/ModuleSetting/Default.cls:14-110`, `Utils/Module.cls:2697-2815`. Native corpus E01-E36 (`20261114T025636Z-r1-evaluator`, IRIS 2026.1 build 234U ARM64) and model `Verus_verification/consolidated/models/attr_evaluator.py`, which matches every observed value and rejects 23 wrong variants. Observed details a reader may need: `$$$OK no brace` stays unchanged (E15); a default named `version` does not override the module version (E20); a parameter name is used as a regular expression, so `a.b` also matches `{$axb}` (E21).
++
++Extension Verus: [attr_evaluator.rs::evaluate](../../Verus_verification/consolidated/verus/attr_evaluator.rs), [attr_evaluator.rs::evaluate_expression](../../Verus_verification/consolidated/verus/attr_evaluator.rs), [attr_evaluator.rs::macro_helper](../../Verus_verification/consolidated/verus/attr_evaluator.rs), [attr_evaluator.rs::macro_value](../../Verus_verification/consolidated/verus/attr_evaluator.rs), [attr_evaluator.rs::parameters](../../Verus_verification/consolidated/verus/attr_evaluator.rs), [attr_evaluator.rs::regex_replace_match](../../Verus_verification/consolidated/verus/attr_evaluator.rs), [attr_evaluator.rs::system_expression](../../Verus_verification/consolidated/verus/attr_evaluator.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
++
++### module.parameter.literal-values
++
++- agent
++- user-facing-behavior
++- Expands: [Parameters](#module.parameter).
++
++Sources: the product escapes backslashes in values for exactly this reason (`Utils/Module.cls:2811`, `:2813`). Native: a default `win=C:\dir\sub` is inserted unchanged (E34), but a default `price=$5` makes `{$price}` raise `<REGULAR EXPRESSION>` (E32), while `{$namespace}` in the same module still works (E33). Defect C:D4.
++
++Extension Verus: [attr_evaluator.rs::regex_replace_match](../../Verus_verification/consolidated/verus/attr_evaluator.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
++
++### module.parameter.cycles
++
++- agent
++- user-facing-behavior
++- Expands: [Parameters](#module.parameter).
++
++Sources: the product's own message "Circular reference or too many levels in placeholders" and its 20-level guard (`Storage/ModuleSetting/Default.cls:62-77`). The guard is unreachable: the loop condition already stops at zero. Native: `a=${b}`, `b=${a}` resolve without error to `${a}` (E30), and using `${a}` then raises `<REGULAR EXPRESSION>` (E18, E35) rather than the named error. Defect C:D3.
++
++Extension Verus: [attr_evaluator.rs::resolve_bounded](../../Verus_verification/consolidated/verus/attr_evaluator.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
+ 
+ ### module.requirement
+ 
+@@ -197,6 +312,8 @@ Sources: `wiki/03` L345-362; CHANGELOG 0.10.0 (`#530`), 0.10.5 (`#828`). Invento
+ 
+ Sources: `wiki/03` L581-785; CHANGELOG 0.9.0 (`#562`, `#593`), 0.10.0 (`#702`), 0.10.11 (`#1274`, `#1232`). Inventory: CAT-07; OP-LOAD-24. Observed: the Compile phase ignores a processor's compile status (OBS-L8). `wiki/06` describes a `<WSGIApplication>` element with no processor.
+ 
++Extension Verus: [thin_surfaces.rs::cpf_status](../../Verus_verification/consolidated/verus/thin_surfaces.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
++
+ ### module.processor.file-copy
+ 
+ - human-provided
+@@ -206,6 +323,8 @@ Sources: `wiki/03` L581-785; CHANGELOG 0.9.0 (`#562`, `#593`), 0.10.0 (`#702`),
+ 
+ Sources: CHANGELOG 0.10.11 (`#300`, `#934`, `#1135`); `ResourceProcessor/FileCopy.cls:32-36`, `:222-240`. Inventory: CAT-07, A1 seed 11. Tests: `FileCopy.cls` (`KeepOnUninstall` on uninstall), `CopyDirOverlap.cls`. `KeepOnUninstall` is not yet in the wiki.
+ 
++Extension Verus: [thin_surfaces.rs::clean_removes](../../Verus_verification/consolidated/verus/thin_surfaces.rs), [thin_surfaces.rs::copies_after](../../Verus_verification/consolidated/verus/thin_surfaces.rs), [thin_surfaces.rs::copies_before](../../Verus_verification/consolidated/verus/thin_surfaces.rs), [thin_surfaces.rs::file_copy_observation](../../Verus_verification/consolidated/verus/thin_surfaces.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
++
+ ### module.placement
+ 
+ - human-provided
+@@ -238,4 +357,43 @@ Sources: `wiki/03` L117-178; `wiki/07`; README L52-58; `Main.cls:310-311`; CHANG
+ - test-coverage
+ - Expands: [Module](#module).
+ 
+-Sources: `Main.cls:66`, `:73`, `:304`; CHANGELOG 0.10.0 (`#704`, `#743`), 0.10.10 (`#1260`). Inventory: CAT-37. Test: `EnvironmentConfig.cls`. The help points to a wiki page that does not exist.
++- Children: [failure](#module.env.failure).
++
++Sources: `Main.cls:66`, `:73`, `:304`; CHANGELOG 0.10.0 (`#704`, `#743`), 0.10.10 (`#1260`). Inventory: CAT-37. Test: `EnvironmentConfig.cls`. The help points to a wiki page that does not exist. Code: `General/EnvironmentConfig.cls:9-129`, `Lifecycle/Base.cls:2188-2200` (clear, then load in order; called in every Reload phase, `:631`, and by the phase commands, `Main.cls:2755`, `:2832`), `Utils/LegacyCompat.cls:36-41` (single-process compile). Consolidated round 5 native runs `20261114T033831Z-r5-env` and `20261114T033908Z-r5-env-b` (ARM64) and model `Verus_verification/consolidated/models/env_config.py`: deep merge and position-by-position arrays (U2, U2r); a missing, malformed or array file fails and empties the configuration (U3-U5); a later scalar replaces an object, a later object onto a scalar fails (U6, U6r); `${CONS_VAR}` fills from the OS environment, an unset one is empty (U7); `a$1b` becomes `aCONS_DOLLARb`, `a\b` becomes `ab`, `a$9b` raises `<REGULAR EXPRESSION>` (U7, U8; defect C:D14); in one interactive session the next commands read an empty configuration (S1); a compile-time generator sees the configuration only in a single-process compile (M1-M4), which IPM selects while a configuration is loaded (S3).
++
++Extension Verus: [env_config.rs::clear](../../Verus_verification/consolidated/verus/env_config.rs), [env_config.rs::command](../../Verus_verification/consolidated/verus/env_config.rs), [env_config.rs::evaluate_json](../../Verus_verification/consolidated/verus/env_config.rs), [env_config.rs::generator_visible](../../Verus_verification/consolidated/verus/env_config.rs), [env_config.rs::is_empty](../../Verus_verification/consolidated/verus/env_config.rs), [env_config.rs::load_file](../../Verus_verification/consolidated/verus/env_config.rs), [env_config.rs::lookup](../../Verus_verification/consolidated/verus/env_config.rs), [env_config.rs::merge_value](../../Verus_verification/consolidated/verus/env_config.rs), [env_config.rs::singleton_get](../../Verus_verification/consolidated/verus/env_config.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
++
++### module.env.failure
++
++- agent
++- uncertain
++- user-facing-behavior
++- Expands: [Environment files](#module.env).
++
++Sources: the plan's policy row "A failing environment file" (no source states the intent); `General/EnvironmentConfig.cls:27-30` (clear on any error), `:118-126` (arrays merged by index). Native U2, U2r, U3-U5. Question C:Q6.
++
++### module.parameter.expressions.brace-policy
++
++- uncertain
++- agent-provided
++- user-facing-behavior
++- Expands: [expressions](#module.parameter.expressions).
++
++Evidence: C:Q2; Storage/Module.cls:1833-1841; E15/P4; new attr_evaluator.rs.
++
++### module.processor.cpf-effects
++
++- agent
++- user-facing-behavior
++- Expands: [Processors](#module.processor).
++- Children: [compensation policy](#module.processor.cpf-effects.policy).
++
++Sources: `ResourceProcessor/CPF.cls::GetSourceFile`, `::DoMerge`, `::MergeCPF`; [exact bindings, premises and final readers](../../uplift/consolidated/iter2/boundaries/bindings.json); [native and Verus receipts](../../uplift/consolidated/iter2/boundaries/REPORT.md). Hand translation under explicit provider outcomes; no ObjectScript-body proof.
++
++### module.processor.cpf-effects.policy
++
++- agent
++- uncertain
++- Expands: [CPF effects](#module.processor.cpf-effects).
++
++Authority remains open; source observation and checked alternatives are in the parent. Arbitrary CPF compensation has not been designed or implemented.
+diff --git a/.g5/ontology/concepts/repositories.g5.md b/.g5/ontology/concepts/repositories.g5.md
+index dd5026ed..5d22a1ef 100644
+--- a/.g5/ontology/concepts/repositories.g5.md
++++ b/.g5/ontology/concepts/repositories.g5.md
+@@ -32,6 +32,9 @@ A repository is a place IPM finds modules, and each namespace has its own list o
+ 
+ IPM searches all enabled repositories for a module, in the order they were created. A `<repo>/<module>` prefix limits the search to one repository.
+ 
++- IPM takes the highest version that satisfies the request, whichever repository offers it.
++- When several repositories offer that version, the one created first wins. A repository's sort position does not change this.
++
+ <a id="repo.read-only"></a>
+ [I · repo.read-only]
+ 
+@@ -56,11 +59,65 @@ An ORAS registry can use a registry namespace, which is a path inside the regist
+ - IPM finds a module there by its name or its external name.
+ - Errors name the repository and show the registry's status and message.
+ 
++- The ORAS availability adapter accepts a successful HTTP 2xx reply or a 401 reply carrying `WWW-Authenticate`. A headerless 401 and a 403 are unavailable.
++
++- This is an availability probe, not proof that authentication, pulling or publishing will work. Native loopback HTTP cases distinguish all four replies.
++
+ <a id="repo.filesystem"></a>
+ [I · repo.filesystem]
+ 
+ A filesystem repository offers every module whose `module.xml` IPM finds under its folder, down to a set depth.
+ 
++- IPM reads the folder into a cache when the repository is created and when it is refreshed. A refresh replaces the whole cache, so a module whose folder is gone stops being offered.
++- A `module.xml` that is not a readable manifest is skipped. A readable manifest whose module name is invalid fails the whole refresh, which then changes nothing. Whether one bad module should block the rest is [open](#repo.filesystem.bad-module).
++- A refresh of an existing repository locks it. While another process holds that lock, the refresh fails after a timeout and changes nothing.
++- The earlier claim that this explicit lock lasts until a caller's transaction ends was incorrect for the actual constructor. The default lock manager releases it when the refresh method returns, even if an outer transaction remains open. Explicit `%New(0)` keeps it through close until commit; default `%New(1)` releases at close.
++- The cache still needs consistent replacement. How transaction isolation and other writers protect an uncommitted refresh remains [open](#repo.filesystem.concurrent-refresh); the observed release does not authorize a race.
++
++<a id="repo.filesystem.bad-module"></a>
++[Q · repo.filesystem.bad-module]
++
++Should a module with an invalid name in a filesystem repository's folder block the whole repository?
++
++- Provisional answer: no. Skip it with a warning, like an unreadable manifest, so the other modules stay available.
++- As built: yes. The same failure stops a load's temporary `.modules` repository from being created, which then fails the load after its commit.
++- Alternative: fail every bad manifest, including unreadable ones, so nothing is silently hidden.
++
++<a id="repo.oras.integrity"></a>
++[D · repo.oras.integrity]
++
++As built, an ORAS pull without a tag selects the last tag supplied by the registry. The helper does not sort that list, despite its comment promising the highest version.
++
++- A disposable provider returning `[2.0.0,1.0.0]` selects `1.0.0`; reversing the order selects `2.0.0`. The separate all-tags listing sorts versions, so it cannot justify the pull helper's ordering.
++- Archive validation skips non-tar layers and compares size and digest with the first tar layer. A later matching tar layer does not rescue an earlier mismatch. The pull path also chooses the first downloaded `*.tgz`; those two choices need not name the same artifact.
++- Failed validation returns an error even if the raw helper assigned a stream. The final `GetModule` reader throws that status instead of returning the stream to the loader. Multiple layers/files, provider order and digest integrity remain distinct premises.
++
++<a id="repo.oras.integrity.policy"></a>
++[Q · repo.oras.integrity.policy]
++
++Should an untagged pull always select the highest semantic version, and must a package have exactly one archive layer?
++
++- Owner: registry maintainers and IPM maintainers; no owner decision was available. The method comment supports highest-version intent, while source behavior depends on provider order.
++- Working assumption: expose the mismatch and retain size/digest checking. Alternatives are sorting before selection or requiring a registry ordering contract, plus rejecting ambiguous archives or selecting by declared digest.
++- Proposed repairs are not implemented or proved. Preserve deployed platform tags and compare both a valid single archive and ambiguous multi-layer input before a repair.
++
++<a id="repo.publish-cache"></a>
++[D · repo.publish-cache]
++
++As built, a retained Remote publishing manager reuses an available client without rechecking Enabled or availability; it also keeps unavailable names suppressed for that object's lifetime. The ORAS publishing manager rereads Enabled and probes on each call.
++
++- In paired native calls using the same retained managers, disabling a repository after success still yielded an available Remote client, while ORAS yielded unavailable. This does not promise a cache lifetime across separate shell commands.
++- An available service may report that deletion is disabled while the manager returns a successful status. Capability, availability and operation status are different results.
++
++<a id="repo.filesystem.concurrent-refresh"></a>
++[Q · repo.filesystem.concurrent-refresh]
++
++Does cache replacement need its explicit lock until the caller's transaction ends?
++
++- Owner: IPM maintainers. The default constructor releases at object close; the deferred constructor is a separate supported mechanism.
++- Working assumption: keep the intended consistent cache and investigate competing refreshes under actual database isolation. Alternatives are deferred release, refusing an outer transaction or demonstrating that existing database locks suffice.
++- No race corruption or repair is established by the observed lock release. [Withdrawal and paired evidence](../../uplift/consolidated/iter2/boundaries/withdrawals.json).
++
+ ## Metadata
+ 
+ Source locators follow the conventions on the [root page](../root.g5.md#how-to-read-this-ontology). Inventory IDs refer to [A1](../../uplift/ipm-verus-20261113/A/intent-inventory.md) and [A2](../../uplift/ipm-verus-20261113/A/operation-inventory.md). Repository search is used by the formal scope through [install](../features/install.g5.md#install) and [dependencies](../features/dependencies.g5.md#deps). The repository internals themselves are outside it.
+@@ -87,7 +144,9 @@ Sources: `Main.cls:222-266`; repository-type `XData Commands` in `Repo/*/Definit
+ - user-facing-behavior
+ - Expands: [Repositories](#repo).
+ 
+-Sources: CHANGELOG 0.9.0 (`#261`); `Main.cls:413-414` (`install registry/HS.JSON`). Inventory: CAT-18. Observed: a load's `.modules` folder is searched before all others ([local repository](../features/load.g5.md#load.dependencies.local-repo)).
++Sources: CHANGELOG 0.9.0 (`#261`); CHANGELOG 0.9.x "Repo check should happen in the order to repo creation, not by repo name" (HSIEO-9269, HSIEO-9404); `Main.cls:413-414` (`install registry/HS.JSON`). Inventory: CAT-18. Code: `Repo/Manager.cls:67-70` (SQL order by sort position), `:150` (results keyed by version, then repository ID), `:153-187` (highest version first). Consolidated round 1 native cases TR5, TR5b, TR5c (`20261114T025102Z-r1-temp-repo`) and model `Verus_verification/consolidated/models/temp_repo.py` (`search`; wrong variants `search-tie-by-sortorder`, `search-first-repo`, `search-lowest-version` rejected). The earlier observation that a load's `.modules` folder is searched before all others holds only for versions no older repository offers ([precedence](../features/load.g5.md#load.dependencies.local-repo.precedence)).
++
++Extension Verus: [temp_repo.rs::select](../../Verus_verification/consolidated/verus/temp_repo.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
+ 
+ ### repo.read-only
+ 
+@@ -122,10 +181,60 @@ Sources: README L23-30; `preload/cls/IPM/Installer.cls:114`. Inventory: CAT-21.
+ 
+ Sources: CHANGELOG 0.10.0 (`#541`, `#754`), 0.10.7 (`#1130`), 0.10.10 (`#1267`), 0.10.11 (`#1115`, `#1269`, `#1281`); `Repo/Oras/Definition.cls:27-28`. Inventory: CAT-22, A1 seed 8. Test: `Oras.cls`.
+ 
++Extension Verus: [thin_surfaces.rs::oras_available](../../Verus_verification/consolidated/verus/thin_surfaces.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
++
+ ### repo.filesystem
+ 
+ - human-provided
+ - user-facing-behavior
+ - Expands: [Repositories](#repo).
+ 
+-Sources: `Repo/Filesystem/Definition.cls`; `AGENTS.md` test guidance. Inventory: CAT-23. Observed: the folder scan is cached in `^IPM.Repo.Filesystem.CacheD`.
++- Children: [bad module](#repo.filesystem.bad-module).
++
++Sources: `Repo/Filesystem/Definition.cls`; `AGENTS.md` test guidance. Inventory: CAT-23. Observed: the folder scan is cached in `^IPM.Repo.Filesystem.CacheD`. Consolidated round 4 (`20261114T033125Z-r4-owners`, ARM64) and model `Verus_verification/consolidated/models/owners.py` (`BuildCache`, `AddCacheItem`, `ScanDirectory`, lock manager): an unreadable `module.xml` is not cached (LK1); a second process holding the repository's lock makes a refresh fail with ERROR #5803 after the timeout (LK2); a refresh drops a removed module (LK3); the lock is released afterwards at transaction level zero (LK4). The inherited LK5 result was interpreted as holding the default refresh lock through an outer transaction. Iter 2's actual constructor and successful refresh pairs contradict that interpretation; the old hand-model theorem remains true only of its incorrect abstraction. The first LK5 terminal `TSTART` attempt was already excluded. [Corrected binding and withdrawal](../../uplift/consolidated/iter2/boundaries/withdrawals.json). Hidden `.modules` folders are scanned: the same tree fails with `Depth=0` and builds with `Depth=1` (DC0, DC1). Round 1: an invalid name fails the cache build and its save is rolled back (TR7).
++
++Extension Verus: [owners.rs::build_cache](../../Verus_verification/consolidated/verus/owners.rs), [owners.rs::lock_class_id](../../Verus_verification/consolidated/verus/owners.rs), [owners.rs::scan](../../Verus_verification/consolidated/verus/owners.rs), [owners.rs::unlock_all](../../Verus_verification/consolidated/verus/owners.rs), [owners.rs::unlock_class_id](../../Verus_verification/consolidated/verus/owners.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
++
++### repo.filesystem.bad-module
++
++- agent
++- uncertain
++- user-facing-behavior
++- Expands: [Filesystem repository](#repo.filesystem).
++
++Sources: `Repo/Filesystem/Definition.cls:184-241` (unreadable manifests skipped at `:196-200`; a save error returned at `:234-237` and aggregated at `:170-176`). Native LK1 (skipped), TR7 and Dtxn (blocked). G's attempt 1 for case C29 also found that an unparseable manifest is skipped (`native/make_replay.py:248`). Question C:Q5.
++
++Extension Verus: [owners.rs::add_cache](../../Verus_verification/consolidated/verus/owners.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
++
++### repo.oras.integrity
++
++- agent
++- user-facing-behavior, security
++- Expands: [ORAS](#repo.oras).
++- Children: [selection and layer policy](#repo.oras.integrity.policy).
++
++Sources: `Repo/Oras/PackageService.cls::GetLatestTag`, `::GetAllTags`, `::Pull`, `::VerifyModuleHashAndSize`, `::GetModule`; comments and pinned history. [Scoped state/contract and assertions](../../Verus_verification/consolidated/iter2/registry.rs); [actual provider observations](../../uplift/consolidated/iter2/native/receipt.json). These are source-backed observations and a suspected provider-dependent defect, not a registry prevalence claim.
++
++### repo.oras.integrity.policy
++
++- agent
++- uncertain
++- Expands: [ORAS integrity](#repo.oras.integrity).
++
++No authorized policy decision. The parent states source authority, alternatives, preservation conditions and remaining premises.
++
++### repo.publish-cache
++
++- agent
++- user-facing-behavior
++- Expands: [Repository management](#repo.manage).
++
++Sources: `Repo/Remote/PublishManager.cls`, `Repo/Oras/PublishManager.cls`, `General/Singleton.cls`. [State and capability projections](../../Verus_verification/consolidated/iter2/registry.rs); [paired native manager observations](../../uplift/consolidated/iter2/native/receipt.json). Probe transport, manager lifetime and competing configuration writers remain explicit premises.
++
++### repo.filesystem.concurrent-refresh
++
++- agent
++- uncertain
++- Expands: [Filesystem cache](#repo.filesystem).
++
++Source owner and constructor binding: [boundary ledger](../../uplift/consolidated/iter2/boundaries/bindings.json). The prior lock correspondence is withdrawn; other cache properties retain their evidence.
+diff --git a/.g5/ontology/concepts/transactions-and-dev-mode.g5.md b/.g5/ontology/concepts/transactions-and-dev-mode.g5.md
+index 3180e6d2..2fdda363 100644
+--- a/.g5/ontology/concepts/transactions-and-dev-mode.g5.md
++++ b/.g5/ontology/concepts/transactions-and-dev-mode.g5.md
+@@ -21,13 +21,15 @@ By default, IPM runs each package change as one IRIS transaction, so a failure r
+ - What a rollback does not undo is open ([rollback scope](#transaction.rollback-scope)).
+ 
+ <a id="transaction.rollback-scope"></a>
+-[Q · transaction.rollback-scope]
++[D · transaction.rollback-scope]
+ 
+-Does a rollback promise more than undoing the database writes made inside the transaction?
++A database rollback undoes journaled writes in its transaction. It does not undo filesystem copies, lock files, CPF effects, pip installs or remote calls.
+ 
+-- Provisional answer: no. Files copied into the module root or by `FileCopy`, pip installs, CPF merges, the folder of a git clone, IRISTEMP data and calls to registries stay after a rollback.
+-- Reason: these changes are outside an IRIS transaction. The only cleanup IPM promises is removing the temporary folder used to unpack an archive.
+-- Alternative: restore the whole namespace, including files, as the wiki's wording "rolls the namespace back to its previous state" suggests.
++- The database-only interpretation of the history bit is source-backed (P DEC-HIST-5). New native FileCopy tests kept a copied file after a failing load rolled its module record back; a deferred-copy neighbor left no file.
++
++- A direct missing-source copy fails without a copied target file; the successful-copy neighbor leaves its file after database rollback. Directory creation and partial operating-system errors are separate effects.
++- [CPF observations](modules.g5.md#module.processor.cpf-effects) now include a real role-creation merge and an invalid-section neighbor on a disposable provider. Child exit and applied configuration are separate outputs; other CPF effects remain external premises.
++- The broader policy question remains [external effects](#transaction.rollback-scope.policy). These observed outcomes do not ratify compensation policy.
+ 
+ <a id="transaction.opt-out"></a>
+ [I · transaction.opt-out]
+@@ -46,6 +48,12 @@ These flags can come from the command line, from the namespace's [default modifi
+ 
+ - How a dependency's own `<Defaults>` interact with its parent's transaction is open for `NoJournal` ([dependency defaults](#transaction.flag-sources.dependency-defaults)) and for `NoTransaction` ([dependency NoTransaction](#transaction.flag-sources.dependency-no-transaction)).
+ 
++- The effective values are merged by key at each `LoadNewModule` activation. A parent parameter that exists, even zero, overrides the child's default.
++
++- If it is absent, the child's own value applies. Child `NoTransaction` does not cancel an already-open parent transaction; child `NoJournal` disables process journaling during that activation and can escape rollback.
++
++- These are settled source/native facts; the linked questions ask whether to preserve that policy.
++
+ <a id="transaction.flag-sources.dependency-defaults"></a>
+ [Q · transaction.flag-sources.dependency-defaults]
+ 
+@@ -55,6 +63,8 @@ Does a dependency's own `<Defaults>` `NoJournal` apply inside its parent's trans
+ - Reason: the wiki says flags embedded in `module.xml` are "applied whenever this module is installed", and that with `NoJournal` "changes cannot be rolled back". These statements are specific to the flags, while the whole-load rollback rule is general.
+ - Alternative: the parent's transaction governs every nested load, so a dependency's `<Defaults>` `NoJournal` is ignored, or the dependency is refused, while a parent transaction is open. This keeps [the whole-load rollback](../features/load.g5.md#load.outcome).
+ 
++Unresolved Q-25: [May an escaped NoJournal dependency remain without its own dependencies?](#transaction.flag-sources.dependency-closure)
++
+ <a id="transaction.flag-sources.dependency-no-transaction"></a>
+ [Q · transaction.flag-sources.dependency-no-transaction]
+ 
+@@ -103,6 +113,8 @@ A module installed in developer mode cannot be overwritten by a normal-mode inst
+ 
+ - Whether `-force` lifts this, and whether it covers `load`, is open ([force and load](#dev-mode.overwrite-guard.force)).
+ 
++Unresolved Q-24: [May a parent replace a dependency that is already in developer mode?](#dev-mode.overwrite-guard.dependency-policy)
++
+ <a id="dev-mode.overwrite-guard.force"></a>
+ [Q · dev-mode.overwrite-guard.force]
+ 
+@@ -121,6 +133,36 @@ When a module is already in developer mode, does a plain `load` with neither `-d
+ - Reason: the fix this follows stopped plain loads from turning developer mode on. It did not ask plain loads to turn it off, and `-nodev` exists for that.
+ - Alternative: a plain load always uses normal mode, following that fix's wording that a module "should only be DevMode if the -dev flag is included".
+ 
++<a id="transaction.rollback-scope.policy"></a>
++[Q · transaction.rollback-scope.policy]
++
++Should a failed package change compensate external effects that the database cannot roll back?
++
++- Evidence: copied files and `module-lock.json` survived native database rollback; arbitrary hooks and remote calls can have further effects.
++- Working assumption: database rollback is the existing boundary; external effects need separate receipts and must be reported.
++- Alternative: add explicit compensating actions for each external writer.
++- Affected claims: load failure atomicity, lock-file location and status, file copy, CPF and history `Committed`.
++
++<a id="dev-mode.overwrite-guard.dependency-policy"></a>
++[Q · dev-mode.overwrite-guard.dependency-policy]
++
++May a parent replace a dependency that is already in developer mode?
++
++- Evidence: Source guard checks only the top-level Install parameter; native N-R05-DEVUP replaces the dependency at another version and clears developer mode. Same-version DEVSAME skips it.
++- Working assumption: Preserve the stated install overwrite guard for dependencies; load scope follows the parent force/load question.
++- Alternative: Allow top-level guard only, with a warning when dependency developer mode is cleared.
++- Affected claims: install refusal, dependency replacement and developer working copy preservation. Alias Q-24.
++
++<a id="transaction.flag-sources.dependency-closure"></a>
++[Q · transaction.flag-sources.dependency-closure]
++
++May an escaped NoJournal dependency remain without its own dependencies?
++
++- Evidence: N-R05-NESTF leaves d1 installed and rolls d2 back because the flat closure loads d2 under parent parameters before d1.
++- Working assumption: Require closure consistency as intent; record the observed violating state rather than assuming a repair.
++- Alternative: Document temporary inconsistency after failure, or use one load-wide transaction mode.
++- Affected claims: dependency satisfaction, mixed-mode rollback and retry. Alias Q-25.
++
+ ## Metadata
+ 
+ Source locators follow the conventions on the [root page](../root.g5.md#how-to-read-this-ontology). Inventory IDs refer to [A1](../../uplift/ipm-verus-20261113/A/intent-inventory.md) (`CAT`, `INT`, `Q`), [A2](../../uplift/ipm-verus-20261113/A/operation-inventory.md) (`OP`, `OBS`, `P`) and the [coverage map](../../uplift/ipm-verus-20261113/A/coverage-map.md).
+@@ -152,6 +194,8 @@ Sources: A1 Q-04; `wiki/00` L126; CHANGELOG 0.10.11 (`#1183`, temp folder cleanu
+ 
+ Sources: `wiki/00` L139-155; `wiki/02` L447, L595, L907, L1367; `Main.cls:628-630` example. Inventory: INT-LOAD-08, CAT-28; OP-LOAD-05, OP-LOAD-07, OP-LOAD-26. Test: `History.cls` `TestNoTransactionFailure`. The help for `reinstall` and `update` lists these flags only through the wiki. Native evidence: with journaling turned off by the `NoJournal` path, a rollback does not revert writes, and the flag is restored afterwards (N-P07, `20261113T181129Z-premises`). B3 and B4 keep partial writes (`20261113T182820Z-cases-b`). Reconstruction check R5 added the crash trade-off from `wiki/00` L155. The wiki states it for `NoJournal`, and it holds for `NoTransaction` because there is no transaction to roll back (`wiki/00` L147). Observed: the journaling flag is restored when the load's journal manager object is released (`Utils/JournalManager.cls`, OP-LOAD-26).
+ 
++Extension Verus: [loadtx.rs::settle](../../Verus_verification/consolidated/verus/loadtx.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
++
+ ### transaction.flag-sources
+ 
+ - human-verified
+@@ -161,6 +205,8 @@ Sources: `wiki/00` L139-155; `wiki/02` L447, L595, L907, L1367; `Main.cls:628-63
+ 
+ Sources: `wiki/00` L161-180 (command line, `default-modifiers`, `<Defaults>`); `wiki/03` L252-258 (`-D` overrides `<Defaults>`); maintainer comment `Main.cls:1067-1070` ("so they can be overwritten by commands"). Inventory: INT-LOAD-08, CAT-04, CAT-27; OP-LOAD-05 (`Utils/Module.cls:1166-1169`). Observed: a module's own `<Defaults>` can turn transactions off for itself (`Utils/Module.cls:1033-1041`). Confirmed product defect D19: default modifiers are stored in `^%IPM.DefaultModifiers`, which maps to IRISSYS, so defaults set in one namespace apply in every namespace (stage C case X1, `20261113T204152Z-stagec`). A `-DNoTransaction=1` default set anywhere makes every load non-transactional. Reconstruction check R13: no human source sets precedence between default modifiers and `<Defaults>`. Observed: default modifiers enter the command data, which overrides the module's `<Defaults>`, so the order is command line, then default modifiers, then `<Defaults>` (`Main.cls:1067-1069`; `Utils/Module.cls:1166-1169`). Stage B carries this as a condition, not a rule.
+ 
++Extension Verus: [loadtx.rs::effective](../../Verus_verification/consolidated/verus/loadtx.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
++
+ ### transaction.flag-sources.dependency-defaults
+ 
+ - agent
+@@ -244,3 +290,30 @@ Sources: A1 Q-03; `wiki/00` L129 (maintainer-authored, isc-dchui, 2026-05-13); `
+ - Expands: [Developer mode](#dev-mode).
+ 
+ Sources: A1 Q-01; CHANGELOG 0.10.4 (`#892`: "no longer sets Developer Mode unless -dev flag is set"); issue #892; commit `f83b207e`. Observed: a load without `-dev` or `-nodev` keeps the stored mode and does not save `Root` or `Repository` (`Utils/Module.cls:1298-1307`, OBS-L3). Affects [load options](../features/load.g5.md#load.options). Native evidence: g8 (plain `load` of a developer-mode module) keeps developer mode, consistent with the provisional answer, and g9 (`-nodev`) turns it off (`20261113T182832Z-cases-dg`).
++
++### transaction.rollback-scope.policy
++
++- uncertain
++- agent-provided
++- user-facing-behavior
++- Expands: [transaction.rollback-scope](#transaction.rollback-scope).
++
++Evidence: Native held-out FileCopy/load receipts in ../../uplift/consolidated/extension/REPORT.md. No product repair applied.
++
++### dev-mode.overwrite-guard.dependency-policy
++
++- uncertain
++- agent-provided
++- user-facing-behavior
++- Expands: [dev-mode.overwrite-guard](#dev-mode.overwrite-guard).
++
++Sources: inherited `.g5/Verus_verification/open_questions.md` Q-24, source/native cases named in the block; [extension evidence](../../uplift/consolidated/extension/REPORT.md).
++
++### transaction.flag-sources.dependency-closure
++
++- uncertain
++- agent-provided
++- user-facing-behavior
++- Expands: [transaction.flag-sources.dependency-defaults](#transaction.flag-sources.dependency-defaults).
++
++Sources: inherited `.g5/Verus_verification/open_questions.md` Q-25, source/native cases named in the block; [extension evidence](../../uplift/consolidated/extension/REPORT.md).
+diff --git a/.g5/ontology/concepts/versions.g5.md b/.g5/ontology/concepts/versions.g5.md
+index 6d8737ab..b0acf49c 100644
+--- a/.g5/ontology/concepts/versions.g5.md
++++ b/.g5/ontology/concepts/versions.g5.md
+@@ -14,11 +14,44 @@ IPM compares module versions to pick what to install and to refuse downgrades.
+ 
+ Module versions are semantic versions: major, minor and patch numbers, with optional prerelease and build parts.
+ 
++<a id="version.order"></a>
++[I · version.order]
++
++A higher major, minor or patch number makes a later version. A prerelease comes before its release, and a `+snapshot` build comes before the same release. Prereleases of two different versions are not ordered against each other.
++
++- Prerelease parts compare one dot-separated identifier at a time. Numbers compare as numbers and come before words, and words compare by character code.
++- Build metadata may contain hyphens. It never turns a version into a prerelease.
++
+ <a id="version.range"></a>
+ [I · version.range]
+ 
+ Dependencies, `install` and `update` accept an exact version or a range, such as `1.x` or `>=1.2.0`. When IPM picks the highest version in a range, it skips prereleases and snapshots.
+ 
++<a id="version.range.partial"></a>
++[I · version.range.partial]
++
++A comparison with a partial version fills the missing parts with zero. So `>=1.2` allows `1.3.0` and `2.0.0`, and `<2` allows every `1.x` version.
++
++- A bare partial version, such as `1.2`, means every version that starts with it (`1.2.x`).
++- A caret keeps the leftmost nonzero part: `^1.2` allows `1.2.0` up to, but not including, `2.0.0`.
++- As built, an operator on a partial version is dropped, so `<2` means `2.x` and `>=1.2` means `1.2.x`, and `^1.2` means `1.2.x`. These are known defects.
++- Four-digit years with a one-digit minor, such as `2024.1`, are treated as full versions. Whether that should apply to all partial versions is [open](#version.range.year).
++
++<a id="version.range.year"></a>
++[Q · version.range.year]
++
++Should a partial version such as `2024.1` mean exactly `2024.1.0`, as built, while `2024.12` and `1.2` mean a whole minor series?
++
++- Provisional answer: keep the special case for IRIS-style versions, because IPM's tests require `2022.2` to match only `2022.2`.
++- Alternative: one rule for every partial version. Then `2022.2` would also accept `2022.2.1`.
++
++<a id="version.range.combine"></a>
++[I · version.range.combine]
++
++When several modules require the same dependency, IPM allows only the versions that every requirement allows. The result does not depend on the order in which the requirements are combined.
++
++- As built, two bounds that differ only by a prerelease part keep whichever came first, so the result depends on order. Because IPM visits dependencies by name, renaming a dependency can decide whether a solvable install succeeds. This is a known defect.
++
+ <a id="version.post-release"></a>
+ [I · version.post-release]
+ 
+@@ -26,23 +59,65 @@ When the `SemVerPostRelease` setting is on, IPM treats `x.y.z-w` as a release af
+ 
+ ## Metadata
+ 
+-Source locators follow the conventions on the [root page](../root.g5.md#how-to-read-this-ontology). Inventory IDs refer to [A1](../../uplift/ipm-verus-20261113/A/intent-inventory.md). Version comparison is used by the formal scope through the [downgrade refusal](../features/load.g5.md#load.refusal.downgrade). Version parsing itself is outside it.
++Source locators follow the conventions on the [root page](../root.g5.md#how-to-read-this-ontology). Inventory IDs refer to [A1](../../uplift/ipm-verus-20261113/A/intent-inventory.md). Version comparison is used by the formal scope through the [downgrade refusal](../features/load.g5.md#load.refusal.downgrade). Consolidated round 2 brought parsing, ordering, ranges and their combination into the modeled scope (`Verus_verification/consolidated/models/semver.py`, native runs `20261114T030608Z-r2-semver`, `20261114T031048Z-r2-resolve`, `20261114T031514Z-r2-resolve-order`).
+ 
+ ### version
+ 
+ - human-provided
+ - user-facing-behavior
+-- Children: [range](#version.range), [post-release](#version.post-release).
++- Children: [order](#version.order), [range](#version.range), [post-release](#version.post-release).
+ 
+ Sources: `Main.cls:260`; CHANGELOG 0.9.0 (`#544`, `#557`, `#559`). Inventory: CAT-19.
+ 
++### version.order
++
++- human-verified
++- user-facing-behavior
++- Expands: [Version](#version).
++
++Sources: doc comment `General/SemanticVersion.cls:116-122` (SemVer 2.0.0 item 11 and node-semver prerelease rule, written by the maintainers); SemVer 2.0.0 item 10 for build metadata. Native ordering matrix F0 and F1 (`20261114T030608Z-r2-semver`) and model `Verus_verification/consolidated/models/semver.py` (`follows`, `compare_dot`), 137 matched fields, 30 of 32 wrong variants rejected. Observed defect C:D9: `1.2.3+build-x` is parsed as prerelease `x` (V9).
++
++Extension Verus: [semver.rs::compare_dot](../../Verus_verification/consolidated/verus/semver.rs), [semver.rs::fields_string](../../Verus_verification/consolidated/verus/semver.rs), [semver.rs::follows](../../Verus_verification/consolidated/verus/semver.rs), [semver.rs::parse](../../Verus_verification/consolidated/verus/semver.rs), [semver.rs::snapshot](../../Verus_verification/consolidated/verus/semver.rs), [semver.rs::validate](../../Verus_verification/consolidated/verus/semver.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
++
+ ### version.range
+ 
+ - human-provided
+ - user-facing-behavior
+ - Expands: [Version](#version).
++- Children: [partial versions](#version.range.partial), [combining](#version.range.combine).
++
++Sources: `wiki/03` L243-250; `Main.cls:409-411`; CHANGELOG 0.9.0 (`#559`). Inventory: CAT-03, CAT-19. Consolidated round 2: a filesystem repository with prereleases enabled offers them, and the resolver then picked `2.0.0-beta.1` for `<2.0.0` (native S4). The skip in this block applies to repositories that do not offer prereleases ([prerelease setting](repositories.g5.md#repo.prereleases)).
++
++Extension Verus: [semver.rs::cmp_holds](../../Verus_verification/consolidated/verus/semver.rs), [semver.rs::cmp_text](../../Verus_verification/consolidated/verus/semver.rs), [semver.rs::expr_satisfied](../../Verus_verification/consolidated/verus/semver.rs), [semver.rs::expr_text](../../Verus_verification/consolidated/verus/semver.rs), [semver.rs::expression_set](../../Verus_verification/consolidated/verus/semver.rs), [semver.rs::operator](../../Verus_verification/consolidated/verus/semver.rs), [semver.rs::range_holds](../../Verus_verification/consolidated/verus/semver.rs), [semver.rs::range_text](../../Verus_verification/consolidated/verus/semver.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
++
++### version.range.partial
++
++- human-verified
++- user-facing-behavior
++- Expands: [Range](#version.range).
++
++Sources: IPM unit tests `Test/PM/Unit/SemVer/Expressions.cls:174-175` (`>=2022.1` is satisfied by `2022.2`) and `:154` (`^1.2.x` equals `>=1.2.0 <2.0.0-0`); the caret and tilde rules quoted from node-semver in `General/SemanticVersionExpression/Range.cls:110-124`, whose branch for `^1.2` (`:131-136`) is unreachable. P's ontology DEP-D2 uses `>=2.0` as an example range. Native: `<2` resolves to `>=2.0.0 <3.0.0-0` (X27), `>=1.2` to `1.2.x` (X26), `^1.2` to `1.2.x` (X20); at command level a dependency declared `<2` installed `2.5.0` (S1), `>=1.2` was refused with `1.3.0` offered (S2) and picked `1.2.0` over `1.5.0` (S3) (`20261114T030608Z-r2-semver`, `20261114T031048Z-r2-resolve`). Defects C:D6, C:D7.
++
++Extension Verus: [semver.rs::expand](../../Verus_verification/consolidated/verus/semver.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
++
++### version.range.year
++
++- agent
++- uncertain
++- user-facing-behavior
++- Expands: [Partial versions](#version.range.partial).
++
++Sources: `General/SemanticVersionExpression/Range.cls:88-91` (pattern `20NN.N`); tests `Expressions.cls:168-176` (`TestIRISVersions`). Native X35 (`2024.1` is `=2024.1.0`) and X36 (`2024.12` is `>=2024.12.0 <2024.13.0-0`). Question C:Q3.
++
++### version.range.combine
++
++- human-verified
++- user-facing-behavior
++- Expands: [Range](#version.range).
++
++Sources: doc comment `General/SemanticVersionExpression.cls:120-128` ("Combines two version expressions with AND"); [dependency conflicts](../features/dependencies.g5.md#deps.conflict). Native: `^1.0.0` AND `<2.0.0` gives `<2.0.0-0`, the reverse gives `<2.0.0` (A1, A2), and the same for `>=1.0.0-beta` and `>=1.0.0` (A3, A4); a diamond whose parents require `^1.0.0` and `<2.0.0` of one dependency is refused when the `^` parent sorts first by name (S4ab, S4ba) and installs `1.5.0` when it sorts second (S5, `20261114T031514Z-r2-resolve-order`). Code: `Range.cls:349-389` compares bounds without the prerelease and `:270-292` keeps the first of equal bounds; `Storage/Module.cls:1095-1106` combines the current requirement with those recorded earlier. Defect C:D8. This refutes premise D2 of P's resolver proof ("the expression algebra is exact", `playbook-uplift/models/verus/update_steps.TRUST.md` row D2).
+ 
+-Sources: `wiki/03` L243-250; `Main.cls:409-411`; CHANGELOG 0.9.0 (`#559`). Inventory: CAT-03, CAT-19.
++Extension Verus: [semver.rs::compare_versions](../../Verus_verification/consolidated/verus/semver.rs), [semver.rs::diamond](../../Verus_verification/consolidated/verus/semver.rs), [semver.rs::expr_and](../../Verus_verification/consolidated/verus/semver.rs), [semver.rs::group](../../Verus_verification/consolidated/verus/semver.rs), [semver.rs::intersect](../../Verus_verification/consolidated/verus/semver.rs), [semver.rs::valid_intersection](../../Verus_verification/consolidated/verus/semver.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
+ 
+ ### version.post-release
+ 
+diff --git a/.g5/ontology/features/build-and-publish.g5.md b/.g5/ontology/features/build-and-publish.g5.md
+index ae2ac895..10b948ec 100644
+--- a/.g5/ontology/features/build-and-publish.g5.md
++++ b/.g5/ontology/features/build-and-publish.g5.md
+@@ -28,6 +28,10 @@ IPM gives module authors commands to test, package, verify, publish and deploy a
+ - `-format json`, `yaml` or `toon`, or the `TestReportFormat` setting, picks the summary format.
+ - `-output-file` writes full results. The file extension picks the format: `.json`, `.yaml`, `.toon` or `.xml` for JUnit.
+ 
++- The output-file export happens before summary rendering. An unsupported summary format can therefore return an error after writing valid JSON results; the same passing tests with a supported summary format return success.
++
++- Command status and report-file existence are separate observations. Verification uses a different namespace lifecycle, so a test reporting check does not prove verify cleanup.
++
+ <a id="build.package"></a>
+ [I · build.package]
+ 
+@@ -56,9 +60,26 @@ IPM gives module authors commands to test, package, verify, publish and deploy a
+ 
+ `makedeployed <module>` turns resources marked `Deploy="true"` into compiled-only code. `-recurse` does the same for the module's dependencies.
+ 
++<a id="build.publish.partial-effects"></a>
++[D · build.publish.partial-effects]
++
++A failed publish or unpublish does not establish that the registry is unchanged. As built, ORAS writes or deletes tags one at a time; a later failure can follow completed earlier calls.
++
++- ORAS cleanup can fail after the push succeeds. The lifecycle can publish before its optional local version export fails; an in-memory version assignment is not proof that the stored row or manifest was updated.
++- Remote publishing and deletion require credentials and exactly HTTP 200 for success, while ORAS permission probing currently reports enabled before attempting the operation. An HTTP error or other returned error may follow external effects.
++- These source-backed contracts use explicit provider results. Actual multi-tag failure, cleanup errors and postpublication local export have not been exercised end to end in this iteration.
++
++<a id="build.test-output.counts"></a>
++[D · build.test-output.counts]
++
++As built, a failed test method counts as failed even if every assertion passed. A case's nonempty hook error adds one failed method to the summary.
++
++- A blank error category hides the aggregate error message; it does not change a failed status to passed. JSON files contain the full result tree; device JSON always has a summary and selects method details or failures from its detail and verbose settings.
++- `verify` creates its NoJournal load parameter when it creates a fresh VERIFY namespace. Reuse and SkipLoad take other setup paths; the plan does not establish namespace cleanup after errors or all serialized formats.
++
+ ## Metadata
+ 
+-Source locators follow the conventions on the [root page](../root.g5.md#how-to-read-this-ontology). Inventory IDs refer to [A1](../../uplift/ipm-verus-20261113/A/intent-inventory.md) and [A2](../../uplift/ipm-verus-20261113/A/operation-inventory.md). These blocks are outside the formal scope.
++Source locators follow the conventions on the [root page](../root.g5.md#how-to-read-this-ontology). Inventory IDs refer to [A1](../../uplift/ipm-verus-20261113/A/intent-inventory.md) and [A2](../../uplift/ipm-verus-20261113/A/operation-inventory.md). The inherited scope excluded these blocks; iteration 2 adds only the explicitly linked scoped contracts.
+ 
+ ### build
+ 
+@@ -86,6 +107,8 @@ Sources: `Main.cls:48`; `wiki/00` L36; CHANGELOG 0.10.11 (`#1023`, `#1005`). Inv
+ 
+ Sources: `Main.cls:76-79`; `wiki/02` L1194-1246; CHANGELOG 0.10.7 (`#971`). Inventory: CAT-39. Test: `TestOutputFormat.cls`. `wiki/02` L1207 and L1386 document `-output-format`, but the flag is `-format`, and the `.csv` example is rejected.
+ 
++Extension Verus: [thin_surfaces.rs::report_result](../../Verus_verification/consolidated/verus/thin_surfaces.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
++
+ ### build.package
+ 
+ - human-provided
+@@ -119,3 +142,19 @@ Sources: `Main.cls:153-162`, `:197-208`; CHANGELOG 0.10.0 (`#716`, `#769`), 0.10
+ - Expands: [Build](#build).
+ 
+ Sources: `Main.cls:189-195`; `wiki/05`; CHANGELOG 0.10.4 (`#815`). Inventory: CAT-34; A2 1.2 row 13.
++
++### build.publish.partial-effects
++
++- agent
++- user-facing-behavior
++- Expands: [Publishing](#build.publish).
++
++Sources: `Repo/Oras/PublishService.cls::PushOras`, `::DeleteTags`, `::PublishModule`; `Repo/Remote/PublishService.cls`; `Lifecycle/Base.cls::%Publish`. [Actual state and scoped assertions](../../Verus_verification/consolidated/iter2/registry.rs); [source review and withheld mappings](../../uplift/consolidated/iter2/inventory/new-binding-review.json). Remote effects are provider inputs, not implementation proofs. Simplification proposal: expose which external stages completed; no compensation design has been accepted.
++
++### build.test-output.counts
++
++- agent
++- user-facing-behavior
++- Expands: [Test output](#build.test-output).
++
++Sources: `Test/Abstract.cls::BuildResultTree`, `::GetSummary`; `Test/JsonOutput.cls`; `Lifecycle/Base.cls::%Verify`. [Verus state and reader projections](../../Verus_verification/consolidated/iter2/readers.rs); [actual seeded native readers](../../uplift/consolidated/iter2/native/receipt.json). Full serialization, namespace lifecycle and all format branches remain open.
+diff --git a/.g5/ontology/features/dependencies.g5.md b/.g5/ontology/features/dependencies.g5.md
+index 8592e9a9..14ca6dce 100644
+--- a/.g5/ontology/features/dependencies.g5.md
++++ b/.g5/ontology/features/dependencies.g5.md
+@@ -38,6 +38,12 @@ A dependency version must also satisfy the requirements of modules already insta
+ - Only the top-level module gets a lock file.
+ - Installing from a lock file is planned but not available.
+ 
++- As built, lock-file writing happens before later lifecycle phases. A later failed load can roll its module record back while the lock file remains.
++
++- A write error is logged and can be swallowed rather than failing the load. When the new stored module still has an empty Root, native `load -lock` wrote relative `module-lock.json` in the process working directory instead of the requested module root.
++
++- A direct helper with a populated Root is a distinct neighbor. The intended root-location rule above is preserved; this observation is a defect, not an exception authorizing another location.
++
+ ## Metadata
+ 
+ Source locators follow the conventions on the [root page](../root.g5.md#how-to-read-this-ontology). Inventory IDs refer to [A1](../../uplift/ipm-verus-20261113/A/intent-inventory.md) and [A2](../../uplift/ipm-verus-20261113/A/operation-inventory.md). Resolution is used by the formal scope through [load](load.g5.md#load.dependencies). The graph algorithm itself is outside it.
+@@ -77,3 +83,5 @@ Sources: message `Utils/Module.cls:116-126`. Inventory: INT-LOAD-14; OP-LOAD-18
+ - Expands: [Dependency resolution](#deps).
+ 
+ Sources: CHANGELOG 0.10.5 (`#961`); issue #962 (open, install from a lock file); `Main.cls:314`, `:442`, `:185`; maintainer comment `Utils/Module.cls:1324-1325`. Inventory: CAT-35, INT-LOAD-15, A1 seed 6; OP-LOAD-13 (`LockFile:CreateLockFileForModule`). Tests: `LockFile.cls` `Test01Module0Dependencies` to `Test06ModuleMultipleVersions`. Observed: a lock-file error is only printed and does not fail the load. The file is written before the load commits, so it stays after a rollback (OBS-L11). Suspected gap, not run natively by B2: a first plain `load -lock` writes the file relative to the process folder, because the module root is not yet saved (OBS-L3). `General/LockFile.cls:2` mentions installing from a lock file, which does not exist yet.
++
++Extension Verus: [thin_surfaces.rs::dependency_status](../../Verus_verification/consolidated/verus/thin_surfaces.rs), [thin_surfaces.rs::write_file](../../Verus_verification/consolidated/verus/thin_surfaces.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
+diff --git a/.g5/ontology/features/developer-tools.g5.md b/.g5/ontology/features/developer-tools.g5.md
+index 0b01ab6d..bad7b5fe 100644
+--- a/.g5/ontology/features/developer-tools.g5.md
++++ b/.g5/ontology/features/developer-tools.g5.md
+@@ -22,10 +22,18 @@ IPM includes tools to keep developer-mode modules in step with files on disk, to
+ - `-delete` also removes items whose files were deleted, and `-test` runs test classes that changed.
+ - `load -skip-sync` leaves recording the hashes to the next `sync`.
+ 
++- A failed sync with an existing baseline keeps its retry mark. The next sync retries that file even if its bytes equal the stored baseline.
++
++- A failed compile, load or reload outside sync can change server code without setting that mark. Reverting to exact baseline bytes can then make sync report nothing to do while the server keeps the edited code; this is the separate outside-sync premise and P:F-SYNC-1.
++
++- A test failure after successful sync activation happens after hash commit and does not undo it.
++
+ <a id="devtools.sync.retry"></a>
+ [I · devtools.sync.retry]
+ 
+-If a file fails to sync, the next `sync` tries it again.
++If a file fails to sync, the next `sync` tries it again. With an existing baseline, `SyncFailed` keeps it selected even after an exact-byte revert.
++
++A compile, load or reload outside sync follows the distinct [outside-sync condition](#devtools.sync); it may not set a retry mark.
+ 
+ <a id="devtools.authoring"></a>
+ [I · devtools.authoring]
+@@ -38,6 +46,23 @@ Commands for writing modules:
+ - `dependency-analyzer` finds references to items outside the module and its dependencies.
+ - `module-version` sets or bumps a module's version, and refuses a downgrade unless `-force` is given.
+ 
++<a id="devtools.authoring.module-version"></a>
++[I · devtools.authoring.module-version]
++
++`module-version` changes the version in the module's stored manifest and its installed record together, or changes neither.
++
++- `major`, `minor` and `patch` bump that part and reset the parts after it. `-prerelease` and `-build` then set those parts.
++- A version that is not higher than the current one is refused unless `-force` is given. A request for the current version should report it unchanged; as built, it is refused. This is a known defect.
++- The `module.xml` file the module was loaded from is not changed. Whether it should be is [open](#devtools.authoring.module-version.file).
++
++<a id="devtools.authoring.module-version.file"></a>
++[Q · devtools.authoring.module-version.file]
++
++Should `module-version` also update the `module.xml` file a module was loaded from?
++
++- Provisional answer: no, as built. The command edits the namespace's copy, and source control hooks, when present, take it from there.
++- Alternative: yes for a module loaded in developer mode, whose folder is its working copy.
++
+ <a id="devtools.scripting"></a>
+ [I · devtools.scripting]
+ 
+@@ -83,9 +108,33 @@ Sources: issue #1224; `General/Sync/Pipeline.cls:146-153`, `:201-222`. Inventory
+ - user-facing-behavior
+ - test-coverage
+ - Expands: [Developer tools](#devtools).
++- Children: [module-version](#devtools.authoring.module-version).
+ 
+ Sources: `Main.cls:85-99`, `:639-705`, `:781-805`; CHANGELOG 0.10.11 (`#150`, `#806`, `#503`), 0.10.0 (`#710`). Inventory: CAT-36; A2 1.2 rows 4, 29, 30, 32, 37. Tests: `Generate.cls`, `ModuleVersion.cls`.
+ 
++### devtools.authoring.module-version
++
++- agent
++- user-facing-behavior
++- test-coverage
++- Expands: [Authoring](#devtools.authoring).
++- Children: [file](#devtools.authoring.module-version.file).
++
++Sources: `Main.cls:781-795` (help), `:4011-4099` (one transaction around the record save and `StudioDocument/Module.cls:UpdateVersion`, rolled back on any error), `:4060-4067` (the "unchanged" branch after the higher-version check); CHANGELOG 0.10.0 (`#710`); test `ModuleVersion.cls`. Native MV0-MV10 (`20261114T033125Z-r4-owners`, ARM64) and model `Verus_verification/consolidated/models/owners.py`: `minor` 1.2.3 -> 1.3.0; `1.0.0` refused, then accepted with `-force`; `patch -prerelease rc.1 -build b7` -> 1.0.1-rc.1+b7; no version (MV5) refused as "not strictly higher" (defect C:D13); a prerelease of another version refused (MV6); `01.0.0` invalid (MV7); `major` -> 2.0.0; the record and the stored manifest always agree, and the file stayed 1.2.3 (MV10). The rollback path was not exercised natively.
++
++Extension Verus: [owners.rs::bump](../../Verus_verification/consolidated/verus/owners.rs), [owners.rs::module_version](../../Verus_verification/consolidated/verus/owners.rs), [owners.rs::with_build](../../Verus_verification/consolidated/verus/owners.rs), [owners.rs::with_pre](../../Verus_verification/consolidated/verus/owners.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
++
++### devtools.authoring.module-version.file
++
++- agent
++- uncertain
++- user-facing-behavior
++- Expands: [module-version](#devtools.authoring.module-version).
++
++Sources: native MV10; `StudioDocument/Module.cls:403-420` rewrites the stored `.ZPM` document only. Question C:Q4.
++
++Extension Verus: [owners.rs::update_version](../../Verus_verification/consolidated/verus/owners.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
++
+ ### devtools.scripting
+ 
+ - human-provided
+diff --git a/.g5/ontology/features/history.g5.md b/.g5/ontology/features/history.g5.md
+index d56aaf9e..fd10b76c 100644
+--- a/.g5/ontology/features/history.g5.md
++++ b/.g5/ontology/features/history.g5.md
+@@ -70,11 +70,20 @@ A record survives any rollback that undoes its action, so failures stay visible
+ 
+ - Whether a record survives a rollback by the caller's own transaction is open ([nested](#history.committed.nested)).
+ 
++- As built, a dependency's permanent record inserted inside its parent's transaction can disappear with the parent's rollback (G:D1 = P:F-HIST-1). Its successful result in IRISTEMP, installed data, and permanent row are three separate observations.
++
++- This contradicts the survival requirement; it does not redefine success.
++
++- Unresolved Q-30: [Which repair should preserve child history without lying about Committed?](#history.survives-rollback.repair-policy)
++
+ <a id="history.survives-rollback.temp-copy"></a>
+ [D · history.survives-rollback.temp-copy]
+ 
+ IPM writes the permanent record when the action starts and keeps the in-progress record in IRISTEMP, which a rollback does not undo. When the action ends, IPM copies the result to the permanent record. For a top-level action started outside any transaction, both writes happen outside the action's transaction, so its rollback cannot undo them.
+ 
++- Process loss and instance restart differ. In a checked SIGKILL schedule, temporary progress and the initial permanent row remained. After a whole-instance restart, the temporary row was gone and the durable initial permanent row remained unfinished.
++- These observations require the checked IRISTEMP mapping and durable database. They do not establish power-loss durability, replication or every caller-transaction schedule. [Paired native and formal evidence](../../uplift/consolidated/iter2/boundaries/REPORT.md).
++
+ <a id="history.fields"></a>
+ [I · history.fields]
+ 
+@@ -132,11 +141,19 @@ For `load`, `install` and `update`, `Committed` shows whether the action kept an
+ - A failure with `-DNoTransaction=1` or `-DNoJournal=1` is committed once the action has started writing.
+ - A refusal before anything is written is not committed, in any mode.
+ 
++- `Committed` describes database writes; it does not promise to undo copied files, lock files, pip effects or CPF changes. The property comment and maintainer history design review settle this field meaning (P DEC-HIST-5).
++
++- Inherited [side-effects question](#history.committed.side-effects) is retained as an alias for that resolved interpretation. After a post-commit error the record can be committed and unsuccessful.
++
++- Unresolved Q-26: [Should a parent record count writes kept only by its NoJournal dependency?](#history.committed.escaped-dependency)
++
+ <a id="history.committed.marking"></a>
+ [D · history.committed.marking]
+ 
+ IPM sets `Committed` at each commit, or just before the first write when there is no transaction. It does not work it out afterwards from developer mode and the final status.
+ 
++Unresolved Q-31: [Should the no-transaction marker run only after every refusal?](#history.committed.marking.refusal-policy)
++
+ <a id="history.committed.uninstall"></a>
+ [I · history.committed.uninstall]
+ 
+@@ -157,13 +174,14 @@ When a caller wraps an IPM command in its own transaction, must the record survi
+ - Alternative: compare the transaction level at the end with the level at the start, so any commit nested in a caller transaction reads uncommitted.
+ - Alternative: treat caller-held transactions as unsupported, so the record may be lost with them.
+ 
++- Settled observation: the command may return success before the caller later rolls back its module data and permanent history row. The imported model proves this no-trace result under its stated domain. Published caller-transaction use does not decide the independent audit retention policy; the working assumption and alternatives above remain policy proposals.
++
+ <a id="history.committed.side-effects"></a>
+-[Q · history.committed.side-effects]
++[D · history.committed.side-effects]
+ 
+-Does `Committed` cover changes outside the database, such as copied files or pip installs?
++This question is resolved for the field's meaning: `Committed` covers database changes. It makes no filesystem rollback promise.
+ 
+-- Provisional answer: no. It is defined by database commits and by writes outside a transaction.
+-- Alternative: also count file and operating-system changes.
++- The property comment and maintainer explanation recorded in P DEC-HIST-5 support this reading; the wiki's “written to disk” wording is broader and needs correction. Filesystem effects remain observable even when this bit is false.
+ 
+ ## Dependencies and namespaces
+ 
+@@ -173,12 +191,15 @@ Does `Committed` cover changes outside the database, such as copied files or pip
+ Installs that IPM starts for dependencies are recorded as their own records, with their own phases.
+ 
+ <a id="history.dependencies.parent-rollback"></a>
+-[Q · history.dependencies.parent-rollback]
++[D · history.dependencies.parent-rollback]
+ 
+-What should a dependency's record say when its parent's rollback undoes it? It [survives](#history.survives-rollback) and reads [uncommitted](#history.committed), so the open part is `Success`.
++A dependency's `Success` records its own returned status, even if its parent's later rollback undoes its data. `Committed` describes kept database writes.
+ 
+-- Provisional answer: it keeps the dependency's own `Success`, because `Success` is the status that action returned.
+-- Alternative: record the parent's failure on it, so a reader sees that the successful load was undone.
++- The surviving-record requirement remains in [history.survives-rollback](#history.survives-rollback).
++
++- As built, the child can finish successfully and then lose its permanent row with the parent's rollback (G:D1 = P:F-HIST-1). These facts are supported by the property comments, native receipts, and the history design discussion recorded in P DEC-HIST-1.
++
++- Q-06 remains an alias of this resolved meaning; audit retention under a caller's transaction stays [open](#history.committed.nested).
+ 
+ <a id="history.namespace"></a>
+ [I · history.namespace]
+@@ -210,6 +231,12 @@ The `history` command (alias `log`) reads and manages the log with the actions `
+ - Versions are filtered by part, such as `Version_Major`.
+ - Filters work the same way for `find` and `delete`.
+ 
++- As built, `ConstructSQLWhere` walks keys in IRIS collation order and stops at the first absent value or name outside `[A-Za-z][A-Za-z0-9]*`. It keeps earlier predicates and ignores that key and every later one.
++
++- An underscore column such as `Version_Major` can therefore leave no predicate: an unmatched `Version_Major=99` deleted all three seeded identities. A valid `Package=del-b` or `Success=0` deleted only its matches.
++
++- An unknown alphanumeric column raises SQL error; `find` can hide that error behind an empty successful listing while delete throws. These are failures of the rule, not permitted filtering behavior (G:D2).
++
+ <a id="history.read.filter.invalid-column"></a>
+ [Q · history.read.filter.invalid-column]
+ 
+@@ -233,6 +260,13 @@ Should the namespace's [default modifiers](../concepts/settings.g5.md#settings.d
+ 
+ `history details <id>` shows every field of one record in the current namespace, including full repository details and the raw status. `-phases` adds each phase's timing and status. An unknown ID is an error.
+ 
++<a id="history.read.unfinished"></a>
++[I · history.read.unfinished]
++
++A record of an action that has not ended shows its start time without a duration. Its result must read as not finished, not as an error.
++
++- As built, `history find` shows such a record's result as `ERROR #00: (no error description)`. This is a known defect.
++
+ <a id="history.read.global"></a>
+ [I · history.read.global]
+ 
+@@ -247,6 +281,12 @@ Should the namespace's [default modifiers](../concepts/settings.g5.md#settings.d
+ 
+ Programs can read the log through the SQL table `%IPM_General.History` and the class queries `Records` (current namespace) and `GlobalRecords` (all namespaces).
+ 
++- The two global readers differ as built. CLI `find -globally` fetches each result in its own namespace, labels that namespace and applies the limit per namespace.
++
++- `GlobalRecordsFetch` fetches each handle in the caller's namespace, so it repeats the caller's rows; its row schema includes neither namespace nor ID. Correct CLI output does not establish programmatic query correctness (G:D20).
++
++- Unresolved Q-28: [Must programmatic global history rows carry their namespace and ID?](#history.read.global-shape)
++
+ ## Deleting and keeping records
+ 
+ <a id="history.delete"></a>
+@@ -258,6 +298,12 @@ Programs can read the log through the SQL table `%IPM_General.History` and the c
+ - With `-globally`, it deletes the matching records in every namespace ([no confirmation](#history.delete.global-unfiltered)).
+ - `-verbose` shows how many records each namespace lost and which namespaces were skipped for lack of permission.
+ 
++- The intended exact-selection rule above is violated by the filter parser's stop rule ([filter conditions](#history.read.filter)). Neither the presence of a syntactic filter nor `-confirm` ensures an effective predicate.
++
++- Global delete ignores namespace exceptions in the as-built loop. A valid filter's exact deleted identities remain part of the guarantee.
++
++- Unresolved Q-27: [Must global delete report namespace errors other than missing permission?](#history.delete.global-errors)
++
+ <a id="history.delete.confirm-with-filter"></a>
+ [Q · history.delete.confirm-with-filter]
+ 
+@@ -281,6 +327,10 @@ May `history delete` or the daily [purge](#history.retention) remove the record
+ - Reason: no source covers this case. Deleting is an explicit user choice, and the log must not make a package change fail.
+ - Alternative: skip records of running actions, or always write the final result back.
+ 
++- As built, deleting an accessible active twin before final persistence leaves the row absent even when Finalize and PersistToTwin return success.
++- A transaction-locked twin has a different checked schedule: delete waits, final persistence runs, the transaction releases its lock, delete completes, then temporary-object close recreates the same ID with its finalized successful result. A successful delete is not cancellation of the remaining writer.
++- The [paired final-reader receipts and Verus schedule contract](../../uplift/consolidated/iter2/boundaries/REPORT.md) refute a general no-resurrection claim. They cover two schedules, not all lock timeouts, interleavings or cross-namespace behavior. The alternatives above remain an owner policy question.
++
+ <a id="history.locked"></a>
+ [I · history.locked]
+ 
+@@ -303,6 +353,12 @@ May IPM finalize, and so lock, the record of an action that never ended?
+ - The purge runs on any IPM command, at most once per calendar day.
+ - It applies to every namespace, not just the current one.
+ 
++- As built, the quoted cutoff can keep an expired row while `SetHistoryLastPurge` advances the daily marker (P:F-HIST-6; native P1–P4). The marker proves an attempt, not successful deletion.
++
++- Preserve record identities when checking retention.
++
++- Unresolved Q-29: [May automatic retention remove an action that has not ended?](#history.retention.running-policy)
++
+ <a id="history.retention.effect"></a>
+ [Q · history.retention.effect]
+ 
+@@ -325,6 +381,67 @@ May uninstalling IPM in one namespace delete the in-progress records of other na
+ - Provisional answer: no. History belongs to each namespace.
+ - Alternative: accept it, because removing IPM is rare.
+ 
++<a id="history.committed.escaped-dependency"></a>
++[Q · history.committed.escaped-dependency]
++
++Should a parent record count writes kept only by its NoJournal dependency?
++
++- Evidence: The property says any action changes kept. N-R05-M5 leaves child data while top-level marker can remain false and the child row can be lost.
++- Working assumption: Count surviving child writes in the parent outcome; retain the distinction between parent and child records.
++- Alternative: Keep per-activation marker only and rely on independent child records after a repair.
++- Affected claims: Committed truth, record existence and aggregate load outcome. Alias Q-26.
++
++<a id="history.delete.global-errors"></a>
++[Q · history.delete.global-errors]
++
++Must global delete report namespace errors other than missing permission?
++
++- Evidence: DeleteHistoryGlobally catches all exceptions; a native unknown-column comparison distinguishes local failure from global success.
++- Working assumption: Report errors that mean requested deletion was not performed.
++- Alternative: Keep best-effort behavior and explicitly list skipped namespaces and errors.
++- Affected claims: global delete status and namespace scope. Alias Q-27.
++
++<a id="history.read.global-shape"></a>
++[Q · history.read.global-shape]
++
++Must programmatic global history rows carry their namespace and ID?
++
++- Evidence: CLI output carries namespace; GlobalRecords ROWSPEC omits namespace and ID, and native H10 repeats caller rows.
++- Working assumption: Return identities sufficient for a caller to distinguish colliding namespace-local IDs.
++- Alternative: Keep the legacy row shape and document a separate namespace-aware API.
++- Affected claims: global query scope, identity and details lookup. Alias Q-28.
++
++<a id="history.retention.running-policy"></a>
++[Q · history.retention.running-policy]
++
++May automatic retention remove an action that has not ended?
++
++- Evidence: The as-built quoted cutoff deletes nothing. With that defect repaired the filter uses TimeStart only; the Python reader model can then remove active rows.
++- Working assumption: Retain the documented age rule while keeping deletion/finalization races explicit; no repair outcome is claimed.
++- Alternative: Skip active rows and define how killed actions eventually expire.
++- Affected claims: retention fix, active writers and abnormal process ends. Alias Q-29.
++
++<a id="history.survives-rollback.repair-policy"></a>
++[Q · history.survives-rollback.repair-policy]
++
++Which repair should preserve child history without lying about Committed?
++
++- Evidence: Naive durable rows can mark rolled-back writes committed. The inherited bounded variants distinguish guarded close, before-image ordering, per-activation NoJournal and SIGKILL residuals; mirroring is untested.
++- Working assumption: Keep current survival requirement and report the repair as undecided; no product repair applied.
++- Alternative: Use one load-wide mode plus guarded close and mark ordering, or extend the repair to durably mark escaped child writes.
++- Affected claims: D1 and aliases, caller rollback, crash cuts and mirrored history. Alias Q-30.
++
++<a id="history.committed.marking.refusal-policy"></a>
++[Q · history.committed.marking.refusal-policy]
++
++Should the no-transaction marker run only after every refusal?
++
++- Evidence: LoadNewModule marks before manifest validation; a later refusal can keep no data yet read Committed=1 (G:D12). The property says noncommitted means nothing kept or rolled back.
++- Working assumption: Keep the intent that a no-write refusal is uncommitted; classify the early marker as a defect.
++- Alternative: Declare every no-transaction attempt committed from its start and change the owning I rule explicitly.
++- Affected claims: validation timing, no-transaction history, D12 and requirement refusals. Alias Q-31.
++
++
+ ## Metadata
+ 
+ Source locators follow the conventions on the [root page](../root.g5.md#how-to-read-this-ontology). Inventory IDs refer to [A1](../../uplift/ipm-verus-20261113/A/intent-inventory.md) (`CAT`, `INT`, `Q`), [A2](../../uplift/ipm-verus-20261113/A/operation-inventory.md) (`OP`, `OBS`, `P`) and the [coverage map](../../uplift/ipm-verus-20261113/A/coverage-map.md). Every block on this page is in the formal scope. Native results of stage B2 phase 1 are cited per block by run, as `<time>-<name>`. The full run ID is `20261113T<time>-<name>` under `.g5/Verus_verification/results/native/`, and the [B2 report](../../uplift/ipm-verus-20261113/B/native-report.md) explains each phase-1 case and defect. Formal (B1) and native evidence per block, with reliance status, is in the [verification coverage map](../../Verus_verification/coverage-map.md). B2 phase 2 and stage C runs are listed in [B/native-replay.md](../../uplift/ipm-verus-20261113/B/native-replay.md) sections 3-7, and defects `D10`-`D20`, `I1` and `I2` in [VV/bugs_issues.md](../../Verus_verification/bugs_issues.md). History classes: `General/AbstractHistory.cls`, `General/HistoryTemp.cls`, `General/History.cls`, `General/HistoryPhase.cls`; tests in `tests/integration_tests/Test/PM/Integration/History.cls`.
+@@ -416,6 +533,8 @@ Native evidence: the premises behind the decision hold for an ordinary error. IR
+ 
+ Sources: `General/AbstractHistory.cls:11-49` (`:17` placeholder `0.0.0-0`, `:20-27` source empty for load and uninstall); `wiki/09` L63-78 (L70 `<unset>`, L76 source `n/a` for anything other than install), L112 (version parts); issue #366 field list ("for install only"). Reconstruction check R9, R14. Inventory: INT-HIST-04, A1 3.2; OP-HIST-01, OP-HIST-03 to OP-HIST-07, OP-HIST-25. Tests: `TestSimpleHistory`, `TestDevMode`. Observed: `Version` is set from the repository before an install starts. Dependency records carry the parent's command string. Actions started outside the shell record `<unset>` as the command, and namespace default modifiers are not shown in it. A record also has a `Finalized` column that the wiki does not describe. A top-level `update` from a registry stores its source, and listings show `n/a` for it (`Main.cls:2631`, `General/History.cls:461-463`). Round 1 R1-ONT-03 made the `Package` bullet say when it may be empty, a necessary implication of `wiki/09` L69. Confirmed deviation D9: refused loads whose manifest was read (g3, g6, g7) record `Package=""` and version `<unset>`, so `history find -DPackage=update-simple` shows 14 of the 20 rows that name it (R4) (`182832Z-cases-dg`, `184444Z-cases-hr`). Observed cause: the name is set only after the version checks (`Main.cls:2420`, `Utils/Module.cls:1293`).
+ 
++Extension Verus: [history.rs::set_source](../../Verus_verification/consolidated/verus/history.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
++
+ ### history.fields.dependency-source
+ 
+ - agent
+@@ -533,7 +652,7 @@ Sources: class doc `General/History.cls:3`; `wiki/09` L20, L169; PR #578 comment
+ - user-facing-behavior
+ - test-coverage
+ - Expands: [History](#history).
+-- Children: [find](#history.read.find), [filter](#history.read.filter), [details](#history.read.details), [global](#history.read.global), [API](#history.read.api).
++- Children: [find](#history.read.find), [filter](#history.read.filter), [details](#history.read.details), [unfinished records](#history.read.unfinished), [global](#history.read.global), [API](#history.read.api).
+ 
+ Sources: `Main.cls:818-843`; `wiki/02` L306-349; `wiki/09` L24-50. Inventory: INT-HIST-10; OP-HIST-13 to OP-HIST-16. Test: `TestInvalidHistoryCommands`.
+ 
+@@ -546,6 +665,8 @@ Sources: `Main.cls:818-843`; `wiki/02` L306-349; `wiki/09` L24-50. Inventory: IN
+ 
+ Sources: `Main.cls:822-823`; `wiki/09` L34-38. Inventory: INT-HIST-10; OP-HIST-13, OP-HIST-22. Test, partial: `TestHistoryModifiers` calls `GetHistory` directly, so `-sort` and the default limit are untested. Observed: any `-sort` value other than `asc` sorts newest first.
+ 
++Extension Verus: [history.rs::selection](../../Verus_verification/consolidated/verus/history.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
++
+ ### history.read.filter
+ 
+ - human-provided
+@@ -556,6 +677,8 @@ Sources: `Main.cls:822-823`; `wiki/09` L34-38. Inventory: INT-HIST-10; OP-HIST-1
+ 
+ Sources: `Main.cls:829-837` (examples); `wiki/09` L88-112. Inventory: INT-HIST-10; OP-HIST-13, OP-HIST-16, OP-HIST-17. Test, partial: `TestHistoryModifiers` filters by action and package through `GetHistory` directly, without `-D` parsing. Native evidence: E0, E5 and E6 conform, while E1, E2, E4 and E8 deviate (B2 D2). `find` and `delete` differ for an unknown column (E3, E7) ([invalid column](#history.read.filter.invalid-column); `182845Z-cases-ef`). The help example `-DSucess="0*"` (`Main.cls:832`) is misspelled.
+ 
++Extension Verus: [history.rs::where_prefix](../../Verus_verification/consolidated/verus/history.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
++
+ ### history.read.filter.invalid-column
+ 
+ - agent
+@@ -563,7 +686,7 @@ Sources: `Main.cls:829-837` (examples); `wiki/09` L88-112. Inventory: INT-HIST-1
+ - user-facing-behavior, security
+ - Expands: [Filter](#history.read.filter).
+ 
+-Sources: A1 Q-10; `wiki/09` L112. Round 1 R1-ONT-10 added query errors in `find`. Confirmed product defect B2 D2: a column name containing `_` is dropped together with every later filter, so `find` widens (E1, E2, E8), and `history delete -DVersion_Major=99` without `-confirm` deleted every record (E4) (`182845Z-cases-ef`, `184230Z-replay-fast`, `184621Z-repro-history-filter-widened`, `184623Z-repro-history-delete-underscore`). An unknown column gives `find` an empty listing with a success status (E3), but makes `delete` fail with SQLCODE -29 (E7). Observed: `GetHistory` does not check `%SQLCODE` (`General/History.cls:132-150`).
++Sources: A1 Q-10; `wiki/09` L112. Round 1 R1-ONT-10 added query errors in `find`. Confirmed product defect B2 D2: a column name containing `_` is dropped together with every later filter, so `find` widens (E1, E2, E8), and `history delete -DVersion_Major=99` without `-confirm` deleted every record (E4) (`182845Z-cases-ef`, `184230Z-replay-fast`, `184621Z-repro-history-filter-widened`, `184623Z-repro-history-delete-underscore`). An unknown column gives `find` an empty listing with a success status (E3), but makes `delete` fail with SQLCODE -29 (E7). Observed: `GetHistory` does not check `%SQLCODE` (`General/History.cls:132-150`). Consolidated round 3 (`20261114T032747Z-r3-delete`, ARM64), three seeded records each: `history delete -DVersion_Major=99` deleted all three though none has major 99 (G D2, now on ARM64 with exact identities); `-DSucess=0`, the misspelling used in the command's own help example (`Main.cls:832`), failed with SQLCODE -29 and deleted nothing; `-DPackage=del-b` and `-DSuccess=0` deleted exactly the matching record.
+ 
+ ### history.read.filter.default-modifiers
+ 
+@@ -581,7 +704,19 @@ Sources: new question from A2 OBS-H2; `Main.cls:820` ("By default, all entries w
+ - test-coverage
+ - Expands: [Reading](#history.read).
+ 
+-Sources: `Main.cls:824`, `:839`; `wiki/09` L114-161. Inventory: INT-HIST-10; OP-HIST-15. Test: `TestInvalidHistoryCommands` (`details 0` and `details blah` fail). Native evidence: cases R1 and R2 conform (`184444Z-cases-hr`). The raw status follows `wiki/09` L133, so round 1 withdrew B2 D7 (R1-ONT-13).
++Sources: `Main.cls:824`, `:839`; `wiki/09` L114-161. Inventory: INT-HIST-10; OP-HIST-15. Test: `TestInvalidHistoryCommands` (`details 0` and `details blah` fail). Native evidence: cases R1 and R2 conform (`184444Z-cases-hr`). The raw status follows `wiki/09` L133, so round 1 withdrew B2 D7 (R1-ONT-13). Consolidated round 3 (`20261114T032054Z-r3-history.partial-purge-failed`, ARM64): for a failed action the raw status is printed as the stored bytes, which include the internal call stack (H3d); repository details read `reg3 (filesystem): /tmp/c3/reg/*` (H1d); `-phases` lists name, time and result per phase (HB1d, `20261114T032620Z-r3-history-b`); a missing ID reports "No record found with ID 999999" (H5). Model `Verus_verification/consolidated/models/history_display.py`.
++
++Extension Verus: [history.rs::source_shown](../../Verus_verification/consolidated/verus/history.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
++
++### history.read.unfinished
++
++- agent
++- user-facing-behavior
++- Expands: [Reading](#history.read).
++
++Sources: `wiki/09` L72 ("An entry with no elapsed time either is still running or ended abnormally"); `General/History.cls:439-455` (no duration without an end time), `:474-483` (`$$$ISOK(0)` is false, so the error text of status 0 is shown). Native H4d and H4f: a record started by `LoadInit` and never finalized shows `<T>` without duration, `ERROR #00: (no error description)` and `Uncommitted`. Defect C:D12; related to G I1 (phase display) and G D26 (an unfinished record reads uncommitted).
++
++Extension Verus: [history.rs::success_to_string](../../Verus_verification/consolidated/verus/history.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
+ 
+ ### history.read.global
+ 
+@@ -592,6 +727,8 @@ Sources: `Main.cls:824`, `:839`; `wiki/09` L114-161. Inventory: INT-HIST-10; OP-
+ 
+ Sources: `Main.cls:821`; `wiki/09` L163-171. Inventory: INT-HIST-11; OP-HIST-14. Test: `TestMultipleNamespaces`. Native evidence: `history find -globally` lists a row written in USER-VERIFY under its namespace (stage C case H10, `20261113T204152Z-stagec`).
+ 
++Extension Verus: [history.rs::cli_global](../../Verus_verification/consolidated/verus/history.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
++
+ ### history.read.api
+ 
+ - human-provided
+@@ -600,6 +737,8 @@ Sources: `Main.cls:821`; `wiki/09` L163-171. Inventory: INT-HIST-11; OP-HIST-14.
+ 
+ Sources: issue #366 ("documented API ... cross-namespace class query wrapper"); `wiki/09` L199-211; `General/History.cls:24-30`, `:232-237`. Inventory: INT-HIST-11; OP-HIST-19, OP-HIST-20. Confirmed product defect D20: the `GlobalRecords` query fetches other namespaces' result sets without switching namespace, so it returns the current namespace's rows once per namespace. It returned 458 rows, twice USER's 229, and none of USER-VERIFY's 173 (stage C case H10, `20261113T204152Z-stagec`). Not run: `Records` declares an ID column it does not return first (OBS-H11). No test.
+ 
++Extension Verus: [history.rs::programmatic_global](../../Verus_verification/consolidated/verus/history.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
++
+ ### history.delete
+ 
+ - human-provided
+@@ -610,6 +749,8 @@ Sources: issue #366 ("documented API ... cross-namespace class query wrapper");
+ 
+ Sources: `Main.cls:825`, `:838`; `wiki/09` L187-195. Inventory: INT-HIST-12; OP-HIST-17, OP-HIST-18. Test, partial: `TestMultipleNamespaces` deletes with `-confirm` and `-globally`, never with a filter. Native evidence: E5 (unfiltered, refused) and E6 (filtered, exactly one row deleted) conform. E4 deleted everything (B2 D2) (`182845Z-cases-ef`, `184230Z-replay-fast`). Observed: delete also removes unfinalized records of actions still running ([running records](#history.delete.running-records)). PR #578 review r1816818561 by isc-kiyer asked for deletes scoped by filter.
+ 
++Extension Verus: [history.rs::delete](../../Verus_verification/consolidated/verus/history.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
++
+ ### history.delete.confirm-with-filter
+ 
+ - agent
+@@ -662,10 +803,12 @@ Sources: new question from round 1 R1-ONT-02; this page's definition of Finalize
+ - Expands: [History](#history).
+ - Children: [effect](#history.retention.effect).
+ 
+-Sources: `Main.cls:840-842`; `wiki/02` L113; `wiki/09` L173-185; CHANGELOG 0.10.7 (`#992`); issue #977. Inventory: INT-HIST-13; OP-HIST-21, OP-HIST-22. Test: `Unit/CLI.cls` `TestAutoPurgeOldHistory` runs the purge but does not check that anything was deleted, so no coverage tag. Observed: the purge runs only through `%IPM.Main:Shell`, and the retention setting and last-purge date are shared by the whole instance. The opt-in default answers the audit-trail concern raised on PR #578 by isc-dchui, 2025-12-02.
++Sources: `Main.cls:840-842`; `wiki/02` L113; `wiki/09` L173-185; CHANGELOG 0.10.7 (`#992`); issue #977. Inventory: INT-HIST-13; OP-HIST-21, OP-HIST-22. Test: `Unit/CLI.cls` `TestAutoPurgeOldHistory` runs the purge but does not check that anything was deleted, so no coverage tag. Observed: the purge runs only through `%IPM.Main:Shell`, and the retention setting and last-purge date are shared by the whole instance. The opt-in default answers the audit-trail concern raised on PR #578 by isc-dchui, 2025-12-02. Consolidated round 3 (`20261114T032524Z-r3-purge`, ARM64): the first command of the day purges and writes the marker (P1); a later command the same day does not purge (P2); with retention `0` the marker is left as it was (P3). The 2000-01-01 record survived every purge, reproducing P F-HIST-6. Note the stored key is `history_retain` (`Repo/UniversalSettings.cls:46`); `config set HistoryRetain` maps to it.
+ 
+ Confirmed product defect B2 D3: the purge deletes nothing and still records that it ran, so no purge happens that day (case F1; `182845Z-cases-ef`, `184230Z-replay-fast`, `184626Z-repro-autopurge-noop`). In a control, the same cutoff without its embedded quote marks deleted exactly the two old rows (`General/History.cls:172-173`).
+ 
++Extension Verus: [history.rs::purge](../../Verus_verification/consolidated/verus/history.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
++
+ ### history.retention.effect
+ 
+ - agent
+@@ -692,3 +835,57 @@ Sources: prompt `Main.cls:2735` ("fully remove all modules and IPM metadata (exc
+ - Expands: [IPM uninstall](#history.keep-on-ipm-uninstall).
+ 
+ Sources: A1 Q-16. Observed: full cleanup kills `^IRIS.Temp.HistoryTempD`, which every namespace shares (`Lifecycle/Module.cls:51`, OBS-H13, P-1). Native evidence: history IRISTEMP rows form one instance-wide store, readable from another namespace (N-P06, N-P17, `181129Z-premises`). A self-uninstall during another namespace's load was not run.
++
++### history.committed.escaped-dependency
++
++- uncertain
++- agent-provided
++- user-facing-behavior
++- Expands: [history.committed](#history.committed).
++
++Sources: inherited `.g5/Verus_verification/open_questions.md` Q-26, source/native cases named in the block; [extension evidence](../../uplift/consolidated/extension/REPORT.md).
++
++### history.delete.global-errors
++
++- uncertain
++- agent-provided
++- user-facing-behavior
++- Expands: [history.delete](#history.delete).
++
++Sources: inherited `.g5/Verus_verification/open_questions.md` Q-27, source/native cases named in the block; [extension evidence](../../uplift/consolidated/extension/REPORT.md).
++
++### history.read.global-shape
++
++- uncertain
++- agent-provided
++- user-facing-behavior
++- Expands: [history.read.api](#history.read.api).
++
++Sources: inherited `.g5/Verus_verification/open_questions.md` Q-28, source/native cases named in the block; [extension evidence](../../uplift/consolidated/extension/REPORT.md).
++
++### history.retention.running-policy
++
++- uncertain
++- agent-provided
++- user-facing-behavior
++- Expands: [history.retention](#history.retention).
++
++Sources: inherited `.g5/Verus_verification/open_questions.md` Q-29, source/native cases named in the block; [extension evidence](../../uplift/consolidated/extension/REPORT.md).
++
++### history.survives-rollback.repair-policy
++
++- uncertain
++- agent-provided
++- user-facing-behavior
++- Expands: [history.survives-rollback](#history.survives-rollback).
++
++Sources: inherited `.g5/Verus_verification/open_questions.md` Q-30, source/native cases named in the block; [extension evidence](../../uplift/consolidated/extension/REPORT.md).
++
++### history.committed.marking.refusal-policy
++
++- uncertain
++- agent-provided
++- user-facing-behavior
++- Expands: [history.committed.marking](#history.committed.marking).
++
++Sources: inherited `.g5/Verus_verification/open_questions.md` Q-31, source/native cases named in the block; [extension evidence](../../uplift/consolidated/extension/REPORT.md).
+diff --git a/.g5/ontology/features/inspection.g5.md b/.g5/ontology/features/inspection.g5.md
+index 3c5d2453..48182847 100644
+--- a/.g5/ontology/features/inspection.g5.md
++++ b/.g5/ontology/features/inspection.g5.md
+@@ -12,15 +12,24 @@ These commands show information without changing installed modules:
+ - `search` lists modules in all registries, filtered to this platform. `-versions` shows every version.
+ - `list-installed` lists installed modules, optionally as a tree, with Python packages or sorted.
+ - `list-dependents` lists modules that depend on a given module.
+-- `show` shows one installed module's details, resources, dependencies and the modules that require it.
++- `show` shows one installed module's details, resources, dependencies and the modules that require it. It looks up stored `Name` first, then `ExternalName`; if both could match, `Name` wins. Neither match produces an error naming the missing module and namespace.
++- Name and alias lookup use the module datatype's case-insensitive normalization. Native stored-name, alias, uppercase-alias and missing-name neighbors preserve the selected record and version.
+ - `info` and `version` show the IPM environment and version.
+ - `namespace` (`zn`) lists modules by namespace and switches to a namespace.
+ - `orphans` lists items in the namespace's code database that belong to no module.
+ - `help` shows help for the shell or for one command.
+ 
++<a id="inspect.dependents"></a>
++[D · inspect.dependents]
++
++As built, `show` lists only direct, unscoped dependents and hides scoped dependencies from its dependency list. This display is not the complete dependency graph used for removal decisions.
++
++- A missing installed dependency version reads `not installed`; a present version that fails the requested range reads `unsatisfied`.
++- Requirements-file display skips blank lines and lines starting with `#` after trimming. Inline comments remain in the displayed line.
++
+ ## Metadata
+ 
+-Source locators follow the conventions on the [root page](../root.g5.md#how-to-read-this-ontology). Inventory IDs refer to [A1](../../uplift/ipm-verus-20261113/A/intent-inventory.md) and [A2](../../uplift/ipm-verus-20261113/A/operation-inventory.md). This block is outside the formal scope.
++Source locators follow the conventions on the [root page](../root.g5.md#how-to-read-this-ontology). Inventory IDs refer to [A1](../../uplift/ipm-verus-20261113/A/intent-inventory.md) and [A2](../../uplift/ipm-verus-20261113/A/operation-inventory.md). The inherited scope excluded this page; iteration 2 adds only the explicitly linked scoped reader contracts.
+ 
+ ### inspect
+ 
+@@ -29,3 +38,13 @@ Source locators follow the conventions on the [root page](../root.g5.md#how-to-r
+ - test-coverage
+ 
+ Sources: `Main.cls:17-27`, `:524-616`, `:683-724`, `:807-816`; CHANGELOG 0.10.11 (`#1019`), 0.10.7 (`#1079`), 0.10.5 (`#950`), 0.10.10 (`#1158`). Inventory: CAT-17, CAT-25; A2 1.2 rows 1, 24-27, 31, 33, 34, 38. Tests: `Show.cls`, `Unit/CLI.cls` `TestSortList`, `ListInstPythonLibrariesTest.cls`. No wiki page covers `show` or `info`.
++
++Extension Verus: [thin_surfaces.rs::inspection_choice](../../Verus_verification/consolidated/verus/thin_surfaces.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
++
++### inspect.dependents
++
++- agent
++- user-facing-behavior
++- Expands: [Inspection](#inspect).
++
++Authority: product method comments and `General/ModuleSummary.cls::GetDirectDependents`, `::GetLines`, `::GetInstalledStatus`, `::ParseRequirements`. [Scoped Verus reader contracts](../../Verus_verification/consolidated/iter2/readers.rs) and [native reader observations](../../uplift/consolidated/iter2/native/receipt.json) distinguish selection and output; SQL ordering, arbitrary formatting and the whole graph remain outside these proofs.
+diff --git a/.g5/ontology/features/ipm-setup.g5.md b/.g5/ontology/features/ipm-setup.g5.md
+index 297592a1..02f79700 100644
+--- a/.g5/ontology/features/ipm-setup.g5.md
++++ b/.g5/ontology/features/ipm-setup.g5.md
+@@ -9,6 +9,11 @@ How IPM itself gets into an IRIS instance. IPM installs itself with its own [loa
+ 
+ IPM is installed with a one-line installer downloaded from the registry, or offline from a `zpm.xml` file. A user with the `%ALL` role runs it.
+ 
++<a id="setup.language-extension"></a>
++[I · setup.language-extension]
++
++IPM adds the `zpm` command to the instance's language-extension routines. It rewrites only the block it generated and keeps every other line, so a user's own extensions survive repeated installs.
++
+ <a id="setup.installer"></a>
+ [I · setup.installer]
+ 
+@@ -29,10 +34,20 @@ Source locators follow the conventions on the [root page](../root.g5.md#how-to-r
+ 
+ - human-provided
+ - user-facing-behavior
+-- Children: [installer](#setup.installer).
++- Children: [language extension](#setup.language-extension), [installer](#setup.installer).
+ 
+ Sources: README L13-42. Inventory: CAT-38; A2 1.3 installer bootstrap (`IPM.Installer:setup`, `preload/cls/IPM/Installer.cls:69`).
+ 
++### setup.language-extension
++
++- agent
++- user-facing-behavior
++- Expands: [Setup](#setup).
++
++Sources: `Main.cls:3420-3462` (block between the `;Generated by ... Start/End` tags replaced, other lines copied), `:3464-3502` (both `%ZLANGC00` and `%ZLANGF00`, in one transaction), `:1819-1830` (callers), `src/inc/IPM/Common.inc:65-66`. Native LE0-LE3 (`20261114T033125Z-r4-owners`): a user line added after the block survives, a second run leaves one block, and a test-only run finds the block without writing. The routines were restored afterwards.
++
++Extension Verus: [owners.rs::zlang_one](../../Verus_verification/consolidated/verus/owners.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
++
+ ### setup.installer
+ 
+ - human-verified
+diff --git a/.g5/ontology/features/load.g5.md b/.g5/ontology/features/load.g5.md
+index b7b08410..14ca44f3 100644
+--- a/.g5/ontology/features/load.g5.md
++++ b/.g5/ontology/features/load.g5.md
+@@ -105,6 +105,8 @@ IPM refuses a module whose manifest is missing or invalid, for example malformed
+ 
+ IPM never replaces an installed module with an older version. It refuses with "Cannot downgrade" and tells the user to uninstall first, then install or load the older version. Neither `-force` nor `-dev` lifts this.
+ 
++- As built, the check uses [version order](../concepts/versions.g5.md#version.order), which does not order prereleases of two different versions. So `1.0.0-rc` replaces an installed `2.0.0-beta` without a refusal. This is a known defect.
++
+ <a id="load.refusal.update-required"></a>
+ [I · load.refusal.update-required]
+ 
+@@ -158,6 +160,12 @@ What a failed load keeps depends on how it ran.
+ - Files and other changes outside the database follow the [rollback scope](../concepts/transactions-and-dev-mode.g5.md#transaction.rollback-scope).
+ - The [history record](history.g5.md#history.committed) shows whether anything was kept. After a dying process, see [record](history.g5.md#history.record).
+ 
++- This rollback rule applies to database writes made before the final commit, with journaling enabled. A failed after-install message or cleanup after that commit returns an error with the module kept ([late errors](#load.status.after-commit)).
++- Child flags are resolved separately on each activation. An absent parent key permits the child's own default; a defined parent value, including zero, wins.
++- Child `NoTransaction` skips its own `TSTART` and leaves an existing parent transaction open. Child `NoJournal` can make its writes survive parent rollback. Their intended policy stays in the linked child questions.
++- Class descriptors and usable code are separate outcomes. After two-resource compile failure, ordinary rollback removes both classes.
++- Without transactions, or after the developer commit, both descriptors may remain while only the first class runs. This relies on the observed IRIS compiler behavior, not on a proof of the compiler.
++
+ <a id="load.outcome.dev"></a>
+ [I · load.outcome.dev]
+ 
+@@ -188,13 +196,54 @@ IPM loads a module's dependencies before running the module's own phases.
+ <a id="load.dependencies.local-repo"></a>
+ [I · load.dependencies.local-repo]
+ 
+-A `.modules` folder in the module root serves as a temporary repository that IPM searches first for dependencies. IPM removes this temporary repository when loading finishes, even after an error.
++A `.modules` folder in the module root serves as a temporary repository for that load's dependencies. IPM removes this temporary repository when loading finishes, even after an error.
++
++- IPM creates none when the folder is missing or another repository already uses that folder. That other repository stays.
++- The temporary repository takes the first unused name `ipm-temp-modules-N`.
++- A dependency's own `.modules` folder gets the same treatment while that dependency loads.
++- Which copy of a dependency wins is owned by [search order](../concepts/repositories.g5.md#repo.search-order). Whether the `.modules` copy should win a tie is [open](#load.dependencies.local-repo.precedence).
++
++- Cache creation failure can leave no row but retain its allocated id in the manager. Cleanup may warn about that missing row (C:D2). At the top-level cleanup call the module can already be committed; at a dependency call the parent rolls back, retaining its first manifest commit only in developer mode.
++- A higher candidate version wins before repository order. Equal versions choose the older repository id in the native observations; temporary sort position does not force local priority (C:Q1).
++
++<a id="load.dependencies.local-repo.precedence"></a>
++[Q · load.dependencies.local-repo.precedence]
++
++When another repository offers the same version of a dependency as the `.modules` folder, which copy should IPM install?
++
++- Provisional answer: the copy in the older repository, as built. The changelog says ties go to the repository created first.
++- Alternative: the `.modules` copy, because the code that creates the temporary repository says it should be found first and gives it the first sort position.
++- Either way, a higher version wins, wherever it is.
++
++<a id="load.status"></a>
++[I · load.status]
++
++A load's result tells the caller whether the load took effect. Success means the module and its dependencies are installed and every phase finished.
++
++- An error means the module data was not kept, as described in [what a failed load keeps](#load.outcome).
++
++- As built, an error can also follow the final commit. The caller must read the stored module and committed history result separately from status ([late errors](#load.status.after-commit)); a successful message and a brace-free macro are distinct valid neighbors.
++
++<a id="load.status.after-commit"></a>
++[I · load.status.after-commit]
++
++Some work runs after the final commit, so it cannot undo the load. A failure there must not report the kept load as failed.
++
++- This work is: removing the temporary repository, printing the [after-install message](#load.after-install-message), and finishing the history record.
++- As built, a failure in this work returns an error although the module stays installed and its history record reads committed. This is a known defect.
++- Inside a parent's load, the same failure in a dependency fails the dependency. The parent then rolls back as [a failed load](#load.outcome): fully in normal mode, and back to its first commit in developer mode.
++
++<a id="load.after-install-message"></a>
++[I · load.after-install-message]
++
++After a module loads, IPM prints the module's after-install message with its [expressions](../concepts/modules.g5.md#module.parameter.expressions) filled in. A message without a `{` is printed as written.
+ 
+ <a id="load.write-check"></a>
+ [I · load.write-check]
+ 
+ Before installing files, `install` and `load` check that IPM can write to the target folder.
+ 
++
+ ## Metadata
+ 
+ Source locators follow the conventions on the [root page](../root.g5.md#how-to-read-this-ontology). Inventory IDs refer to [A1](../../uplift/ipm-verus-20261113/A/intent-inventory.md) (`CAT`, `INT`, `Q`), [A2](../../uplift/ipm-verus-20261113/A/operation-inventory.md) (`OP`, `OBS`, `P`) and the [coverage map](../../uplift/ipm-verus-20261113/A/coverage-map.md). Every block on this page is in the formal scope. Native results of stage B2 phase 1 are cited per block by run, as `<time>-<name>`. The full run ID is `20261113T<time>-<name>` under `.g5/Verus_verification/results/native/`, and the [B2 report](../../uplift/ipm-verus-20261113/B/native-report.md) explains each case and defect. Formal (B1) and native evidence per block, with reliance status, is in the [verification coverage map](../../Verus_verification/coverage-map.md). B2 phase 2 and stage C runs are listed in [B/native-replay.md](../../uplift/ipm-verus-20261113/B/native-replay.md) sections 3-7, and defects `D10`-`D20`, `I1` and `I2` in [VV/bugs_issues.md](../../Verus_verification/bugs_issues.md).
+@@ -276,7 +325,9 @@ Sources: `wiki/09` L114-133 (malformed manifest "rejected before any resource wa
+ - test-coverage
+ - Expands: [Refusals](#load.refusal).
+ 
+-Sources: message `Utils/Module.cls:1214-1217`; `-force` help `Main.cls:313`, `:441` ("newer version"); PR #887 review r2392741268 by isc-jili ("check for newVer<currVer has always been present"). Inventory: INT-LOAD-09; OP-LOAD-06. Tests: `InstallModule.cls` `TestInstallForceFlag`, `TestDevMode`; `History.cls` `TestDevModeRollbackNotCommitted`. Observed: `-DPermitDowngrade=1` does not lift this refusal, though dependency resolution honors it (OBS-L14). No human source defines `PermitDowngrade` beyond `update` refusing it. Native evidence: g6 (`-force`) and g7 (`-dev`) are refused and leave 3.5.0 installed, with `Committed=0` (`182832Z-cases-dg`, `184230Z-replay-fast`). Suite InstallModule passes (`182208Z-suite-verify-InstallModule`).
++Sources: message `Utils/Module.cls:1214-1217`; `-force` help `Main.cls:313`, `:441` ("newer version"); PR #887 review r2392741268 by isc-jili ("check for newVer<currVer has always been present"). Inventory: INT-LOAD-09; OP-LOAD-06. Tests: `InstallModule.cls` `TestInstallForceFlag`, `TestDevMode`; `History.cls` `TestDevModeRollbackNotCommitted`. Observed: `-DPermitDowngrade=1` does not lift this refusal, though dependency resolution honors it (OBS-L14). No human source defines `PermitDowngrade` beyond `update` refusing it. Native evidence: g6 (`-force`) and g7 (`-dev`) are refused and leave 3.5.0 installed, with `Committed=0` (`182832Z-cases-dg`, `184230Z-replay-fast`). Suite InstallModule passes (`182208Z-suite-verify-InstallModule`). Consolidated round 5 held-back case (`20261114T034428Z-r5-heldback`, ARM64): `2.0.0-beta` then `1.0.0-rc` installs `1.0.0-rc` (HB2), while `2.0.0` then `1.0.0` (HR2) and `2.0.0-beta` then `1.0.0` (HM2) are refused. Both inherited models encode versions as totally ordered values (G's `ver` field, P's integers per trust item D10), so both predict the refusal for HB2. Model `Verus_verification/consolidated/models/semver.py` (`_heldback`). Defect C:D15.
++
++Extension Verus: [semver.rs::load_refused](../../Verus_verification/consolidated/verus/semver.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
+ 
+ ### load.refusal.update-required
+ 
+@@ -334,6 +385,8 @@ Sources: PR #887 review r2388507362 by isc-tleavitt, 2025-09-29 ("someone's auto
+ 
+ Sources: `wiki/00` L125-126, L145-155; CHANGELOG 0.10.11 (`#1237`). Inventory: INT-LOAD-08, A1 2.2 and 2.3; commit-point matrix in A2 2.3; OP-LOAD-05, -07, -11, -14, -15, -16. Tests: `History.cls` `TestFailingPhases` (normal mode), `TestNoTransactionFailure`. The tests check status and history only. Observed: a load nested inside a caller's transaction cannot make its own commits final (P-4, OBS-H16, see [nested commits](history.g5.md#history.committed.nested)). Reconstruction check R5 added the dying-process rule from `wiki/00` L147 ("a failure mid-way through is fully rolled back") and L155 (with `NoJournal`, "if the process crashes mid-install, changes cannot be rolled back and the namespace may be left in an inconsistent state"). That IRIS rolls back a dead process's open transaction is premise P-6. Observed: the `.modules` temporary repository and unpacked files stay after a killed load. Native evidence: A1 (normal mode, parent fails after its dependency loaded) leaves the modules and classes absent. C1 and C3 (terminated or killed in Activate) are rolled back. B3 and B4 keep partial writes (`182759Z-cases-a`, `182903Z-cases-c-terminate`, `182927Z-cases-c-sigkill`, `182820Z-cases-b`). Premise P-6 is confirmed and refined (round 1 R1-ONT-14, N-P12, N-P18). After a SIGKILL, IRIS rolls back only when it cleans up the dead process's slot, which took 105 s, 226 s and about 10 minutes in three runs, and other processes can read the uncommitted writes until then (`181724Z-premise-p18-sigkill-r3`, `182927Z-cases-c-sigkill`, `183827Z-cases-c4r`). Compiled classes of a rolled-back normal-mode load were absent afterwards (A1, C1). Round 2 R2-03 and round 3 R3-03: whether a dependency's own `<Defaults>` `NoJournal` escapes the normal-mode rollback is Q-22, and whether its `NoTransaction` suppresses the parent's transaction is Q-23 ([dependency defaults](../concepts/transactions-and-dev-mode.g5.md#transaction.flag-sources.dependency-defaults)). Stage C M5 kept a `NoJournal` dependency installed after the parent's rollback (D14, `20261113T204405Z-stagec2`). D13 reports failure after a committed load ([local repository](#load.dependencies.local-repo)).
+ 
++Extension Verus: [partial_compile.rs::compile](../../Verus_verification/consolidated/verus/partial_compile.rs), [temp_repo.rs::postcommit_cleanup](../../Verus_verification/consolidated/verus/temp_repo.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
++
+ ### load.outcome.dev
+ 
+ - human-verified
+@@ -363,13 +416,54 @@ Sources: CHANGELOG 0.10.11 (`#1237`: "A -dev action rolled back before its first
+ 
+ Sources: `Main.cls:270-271`, `:312`; CHANGELOG 0.10.5 (`#885`); `wiki/00` L126. Inventory: INT-LOAD-14; OP-LOAD-13, OP-LOAD-18, OP-LOAD-20. Tests: `LoadModuleWithDeps.cls` `TestLoadModuleWithDependencies`; `History.cls` `TestWithDependencies`. Native evidence: A0 and A4 conform. A3 (a dependency's Activate fails) fails the parent (`182759Z-cases-a`). Suite LoadModuleWithDeps passes (`182313Z-suite-verify-LoadModuleWithDeps`).
+ 
++Extension Verus: [loadtx.rs::survived](../../Verus_verification/consolidated/verus/loadtx.rs), [temp_repo.rs::dependency_result](../../Verus_verification/consolidated/verus/temp_repo.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
++
+ ### load.dependencies.local-repo
+ 
+ - human-provided
+ - user-facing-behavior
+ - Expands: [Dependencies](#load.dependencies).
+ 
+-Sources: PR #726 body by isc-shuliu; CHANGELOG 0.10.0 (`#726`, `#729`); comment `Main.cls:2523-2524`. Inventory: INT-LOAD-14; OP-LOAD-04. Confirmed product defect D13 (model case B1-C29, `20261113T193952Z-replay-return-b`): a load that committed reports `<INVALID OREF>` when the temporary repository could not be created. Earlier code reading: if the `.modules` folder cannot be cached, the temporary repository is never created and the final cleanup fails after the load has committed (OBS-L12). Issue I2: a load ended by Terminate or SIGKILL leaves its temporary repository registered at first priority, so later installs resolve dependencies from that folder first (six leftovers after the B2 replays, `20261113T210229Z-temp-repos-leftover`). No source covers a process end.
++- Children: [precedence](#load.dependencies.local-repo.precedence).
++
++Consolidated round 1 (native run `20261114T025102Z-r1-temp-repo`, model `Verus_verification/consolidated/models/temp_repo.py`): TR1 no folder, no repository; TR2 removed after use; TR3 a leftover `ipm-temp-modules-1` makes the new one `-2` and the leftover stays; TR4 an existing repository at the same root is used and kept; TR7 a failed creation leaves no row but prints "Failed to clean up repository" for it (C:D2). The earlier text said the folder is searched first; TR5 shows an equal version in an older repository wins, so that clause moved to the precedence question. Issue I2's "resolve dependencies from that folder first" holds only for versions no older repository offers. Sources: PR #726 body by isc-shuliu; CHANGELOG 0.10.0 (`#726`, `#729`); comment `Main.cls:2523-2524`. Inventory: INT-LOAD-14; OP-LOAD-04. Confirmed product defect D13 (model case B1-C29, `20261113T193952Z-replay-return-b`): a load that committed reports `<INVALID OREF>` when the temporary repository could not be created. Earlier code reading: if the `.modules` folder cannot be cached, the temporary repository is never created and the final cleanup fails after the load has committed (OBS-L12). Issue I2: a load ended by Terminate or SIGKILL leaves its temporary repository registered at first priority, so later installs resolve dependencies from that folder first (six leftovers after the B2 replays, `20261113T210229Z-temp-repos-leftover`). No source covers a process end.
++
++Extension Verus: [temp_repo.rs::cleanup](../../Verus_verification/consolidated/verus/temp_repo.rs), [temp_repo.rs::on_new](../../Verus_verification/consolidated/verus/temp_repo.rs), [temp_repo.rs::skip_create](../../Verus_verification/consolidated/verus/temp_repo.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
++
++### load.dependencies.local-repo.precedence
++
++- human-verified
++- uncertain
++- user-facing-behavior
++- Expands: [Local repository](#load.dependencies.local-repo).
++
++Sources: CHANGELOG 0.9.x "Repo check should happen in the order to repo creation, not by repo name" (HSIEO-9269, HSIEO-9404); comment `General/TempLocalRepoManager.cls:27` and commit `2dc933dd` (temporary repository "first/last repo to be found"); `Repo/Manager.cls:150` (ties keyed by repository ID). Consolidated round 1 case TR5: an older filesystem repository and `.modules` both offer `tr5-dep` 1.0.0, and the older repository's copy is installed. TR5b and TR5c: the higher version wins from either side. The temporary repository's sort position never changed a result in these runs (surviving control `create-sort-last`). Native run `20261114T025102Z-r1-temp-repo`; model `Verus_verification/consolidated/models/temp_repo.py`. Question C:Q1 in [consolidated QUESTIONS](../../uplift/consolidated/QUESTIONS.md).
++
++### load.status
++
++- agent
++- user-facing-behavior
++- Children: [after the commit](#load.status.after-commit).
++
++Sources: the policy row "Error reported after the final commit" in the [consolidation plan](../../uplift/consolidated/PLAN.md#policy-assumptions-the-plan-carries) carries both arms' working assumption (G D13 supported; P F-LOAD-4). `wiki/00` L147 (a failure is fully rolled back) implies an error means nothing was kept. No maintainer statement on errors after the commit was found.
++
++### load.status.after-commit
++
++- agent
++- user-facing-behavior
++- Expands: [Load status](#load.status).
++
++Sources: `Main.cls:2528-2531`, `Utils/Module.cls:138-140`, `:1348-1354`, `:257-259`, `Main.cls:2430`. Native, consolidated round 1 (IRIS 2026.1 build 234U, ARM64): TR7 (top level, temporary repository cannot be created) reports `<INVALID OREF>` with the module installed and its record `success:0 committed:1`; P2 in transaction, no-transaction and developer mode (after-install message does not compile) report the same split; Dtxn and Ddev (a dependency's `.modules` cannot be cached) fail the dependency inside the parent: normal mode removes both, developer mode keeps the parent at its first commit. Runs `20261114T025102Z-r1-temp-repo`, `20261114T025551Z-r1-eval-postcommit`. Earlier: G D13 (x86-64), P F-LOAD-4 (ARM64). Not observed: a failing cleanup of an existing temporary repository, the archive path, analytics.
++
++Extension Verus: [attr_evaluator.rs::after_message](../../Verus_verification/consolidated/verus/attr_evaluator.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
++
++### load.after-install-message
++
++- agent
++- user-facing-behavior
++- Expands: [Load](#load).
++
++Sources: `Storage/Module.cls:84`, `:356-361`; `Utils/Module.cls:1354`. Native P1, P3, P4 (`20261114T025551Z-r1-eval-postcommit`): `Done {$namespace} {name}` prints `Done USER pc-ok`; `Done $$$OK` without a brace prints unchanged.
+ 
+ ### load.write-check
+ 
+diff --git a/.g5/ontology/features/uninstall.g5.md b/.g5/ontology/features/uninstall.g5.md
+index 42d9fa52..e9a70f10 100644
+--- a/.g5/ontology/features/uninstall.g5.md
++++ b/.g5/ontology/features/uninstall.g5.md
+@@ -31,6 +31,9 @@ IPM prevents uninstalling a module that other installed modules depend on, unles
+ 
+ `-all` uninstalls every module in the namespace except IPM itself.
+ 
++- As built, without force, a failed module blocks later attempts on dependencies that still need it. With force, IPM removes that failed module from its traversal graph and continues, while retaining the error in its final status.
++- Traversal progress is not proof of removal from the installed-module store. A failed provider can leave resources or its row behind; those final effects must be read separately. [Scoped traversal state and valid neighbor](../../Verus_verification/consolidated/iter2/readers.rs).
++
+ <a id="uninstall.global"></a>
+ [I · uninstall.global]
+ 
+@@ -48,7 +51,7 @@ IPM skips modules with global scope unless `-global` is given.
+ 
+ ## Metadata
+ 
+-Source locators follow the conventions on the [root page](../root.g5.md#how-to-read-this-ontology). Inventory IDs refer to [A1](../../uplift/ipm-verus-20261113/A/intent-inventory.md) and [A2](../../uplift/ipm-verus-20261113/A/operation-inventory.md). Uninstall is in the formal scope only through its history records.
++Source locators follow the conventions on the [root page](../root.g5.md#how-to-read-this-ontology). Inventory IDs refer to [A1](../../uplift/ipm-verus-20261113/A/intent-inventory.md) and [A2](../../uplift/ipm-verus-20261113/A/operation-inventory.md). The inherited uninstall scope covered history records; iteration 2 also models one eligible UninstallAll traversal step.
+ 
+ ### uninstall
+ 
+diff --git a/.g5/ontology/root.g5.md b/.g5/ontology/root.g5.md
+index ab50fa77..d18d5122 100644
+--- a/.g5/ontology/root.g5.md
++++ b/.g5/ontology/root.g5.md
+@@ -30,7 +30,7 @@ This ontology states what IPM is meant to do. It was recovered from the README,
+                └─► history log of the namespace (survives rollback)
+ ```
+ 
+-A package change runs in one IRIS transaction, so a failure is rolled back. Developer mode (`-dev`) and the `-DNoTransaction` and `-DNoJournal` flags change what a failure keeps, and the history log's `Committed` column reports it.
++A normal package change is intended to roll back its database writes when it fails inside its transaction. Earlier commits and external effects have separate outcomes, described by [load outcomes](features/load.g5.md#load.outcome) and [rollback scope](concepts/transactions-and-dev-mode.g5.md#transaction.rollback-scope). Developer mode (`-dev`) and the `-DNoTransaction` and `-DNoJournal` flags change what a failure keeps, and the history log's `Committed` column reports it.
+ 
+ ## Pages
+ 

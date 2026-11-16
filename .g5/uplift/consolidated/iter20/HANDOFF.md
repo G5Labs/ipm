@@ -1,0 +1,19 @@
+# Iteration20 ordinary orphan reader checkpoint
+
+[Ledger](working-ledger.json), [matrix](MATRIX.md), [bindings](bindings.json), [source roles](SOURCE-LINKS.md), [audit](binding-audit.json), [complete map](project-map.json), [census](census.json), [run](run.json), [model review](model-review.md), [trust](../../../Verus_verification/consolidated/iter20/TRUST.md), [runbook](../../../Verus_verification/consolidated/iter20/RUNBOOK.md).
+
+Both free ordinary classes appear under `orphans -type CLS`. A normal explicit resource claim hides one; an empty module with a matching name hides the other even with zero resources. A later explicit claim takes precedence over that naming match. Both physical classes remain callable throughout. The new model represents code/module/declaration writers separately, reference lookup before naming fallback, inventory subtraction, cursor consumption and the final printed names.
+
+Actual catalog/CLI identifiers use lowercase `.cls`, while direct uppercase `.CLS` activates the case-sensitive class/package candidate branch. Both select the same normal owners here, but the naming resource label differs. First observer expectations used uppercase, incorrectly rejecting three visible-presence bits; original raw session/config are preserved, corrected and re-executed. This is an observer miss, not a product defect. SQL literal-case equivalence is a qualified provider boundary. Native composite reference IDs are opaque; model IDs are logical. Null-owner, package precedence and Children-only lookup are source-transcription/model neighbors without new native qualification.
+
+Current source audit5/10 narrowly meaningful,5partial. Locator totals and exact proof/control/replay counts follow from census/run receipts, not whole-method, full-workflow or population coverage. No new defect, simplification, question or owner decision. Untyped inventory noise remains inherited P:F-UNIN-7. Initial proof attempts and retained unproved facts earn no credit until final gates pass.
+
+Not converged. Cached repository metadata versus later ordinary physical source edits remains the strongest temporal gap left by19's stable-source premise. This20 reader was independently selected from normal docs/entrypoint evidence, with predictions frozen before its source/native checks. The remaining unlinked production inventory stays visible; no iteration, percentage or time threshold supplies a stop.
+
+Archive-path behavior remains explicitly UNASSESSED/UNPURSUED, including investigation, reproduction and probing. Product/index/prior artifacts and sibling resources are preserved. Immutable candidate/clean extraction verification receipts are external.
+
+Frozen model lane:16 new proof units,0 inherited,7 focused positive witnesses,24 semantic wrong-rule controls;110 native replay fields plus15 qualification-only fields. SourceSHA1220936bf5bc70914bbb589706084715506dff7a6fdbb04875dbed7a74dd9860. Parent run.json records the final integrated gate.
+
+The first parent per-field110-function replay exceeded180s and earns no credit; exact harness/config/generated source and preceding positive/control receipt are retained in diagnostics/parent-per-field-timeout. Captured partial solver stdout was not persisted by the timeout wrapper. Final replay groups the identical110 assertions with one common prelude, as the already-successful model-lane replay; no source/model/native/expected rule changed. Focused opposite-field controls remain separate.
+
+Final integrated gate:16 units,24 controls,7 focused positive selectors,125 native fields/110 grouped replay assertions and3 true opposite visibility flips,84.967s. Exact declaration/source/model/canonical-map validation passed;378locators,838unlinked. All10 current source members resolve;5narrowly meaningful/5partial. No whole-method, general workflow or independent population claim.

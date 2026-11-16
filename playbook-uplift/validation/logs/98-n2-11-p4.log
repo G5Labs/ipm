@@ -1,0 +1,139 @@
+# container: ipm-uplift-n2-a  image: containers.intersystems.com/intersystems/iris-community:2026.1  at: 2026-11-13T19:16:31Z
+# script: validation/iris/n2/11-p4.script
+
+Node: 804549afce9f, Instance: IRIS
+
+USER>
+
+LOAD 1 
+
+USER>
+
+SETUP hooks 1
+
+CMD> uninstall -all
+
+CMD< OK
+
+CMD> repo -delete-all
+
+CMD< OK
+
+CMD> history delete -confirm
+
+Deleted 2 record(s).
+CMD< OK
+
+OS> rm -rf /tmp/n2arc/ && mkdir -p /tmp/n2arc/good /tmp/n2arc/bad && tar czf /tmp/n2arc/good/n2-arc-1.0.0.tgz -C /tmp/uplift/n2/fixtures/p4/good n2-arc && tar czf /tmp/n2arc/bad/n2-arc-1.0.0.tgz -C /tmp/uplift/n2/fixtures/p4/bad n2-arc && tar tzf /tmp/n2arc/bad/n2-arc-1.0.0.tgz rc=0
+OS< n2-arc/ n2-arc/module.xml n2-arc/payload.txt n2-arc/src/ n2-arc/src/N2Arc/ n2-arc/src/N2Arc/Marker.cls 
+
+CMD> load /tmp/n2arc/good/n2-arc-1.0.0.tgz
+
+Building dependency graph...Done.
+[USER|n2-arc]	Initialize START
+[USER|n2-arc]	Initialize SUCCESS
+[USER|n2-arc]	Reload START (/usr/irissys/ipm/n2-arc/1.0.0/)
+[USER|n2-arc]	Reload SUCCESS
+[n2-arc]	Module object refreshed.
+[USER|n2-arc]	Validate START
+[USER|n2-arc]	Validate SUCCESS
+[USER|n2-arc]	Compile START
+[USER|n2-arc]	Compile SUCCESS
+[USER|n2-arc]	Activate START
+[USER|n2-arc]	Configure START
+[USER|n2-arc]	Configure SUCCESS
+[USER|n2-arc]	Activate SUCCESS
+CMD< OK
+
+OBS|nc-gap-P4-txn-good-archive|cls:N2Arc.Marker=compiled/V:1.0.0;cmdStatus=ok;historyRows=1;historyTempLeft=0;invokesRan=n2-arc:1;mod:n2-arc=1.0.0;moduleRoot=/usr/irissys/ipm/;payloadAfterGood=payload-good;recordRoot=/usr/irissys/ipm/n2-arc/1.0.0/;row1=id13/load/n2-arc/1.0.0/success:ok/committed:1/ended:1/finalized:1/phases:Initialize:ok Reload:ok Validate:ok Compile:ok Activate:ok;tlevel=0;
+
+CMD> load /tmp/n2arc/bad/n2-arc-1.0.0.tgz
+
+Building dependency graph...Done.
+[USER|n2-arc]	Initialize START
+[USER|n2-arc]	Initialize SUCCESS
+[USER|n2-arc]	Reload START (/usr/irissys/ipm/n2-arc/1.0.0/)
+[USER|n2-arc]	Reload SUCCESS
+[n2-arc]	Module object refreshed.
+[USER|n2-arc]	Validate START
+[USER|n2-arc]	Validate SUCCESS
+[USER|n2-arc]	Compile START
+[USER|n2-arc]	Compile SUCCESS
+[USER|n2-arc]	Activate START
+[USER|n2-arc]	Configure START
+[n2-arc]	Configure FAILURE
+[n2-arc]	Activate FAILURE
+[31mERROR![0m n2: phase-level Invoke failure injected
+CMD< ERROR #5001: n2: phase-level Invoke failure injected
+
+OS> ls /usr/irissys/mgr/Temp rc=0
+OS< 
+
+OBS|nc-gap-P4-txn-bad-archive-same-version|cls:N2Arc.Marker=compiled/V:1.0.0;cmdError=ERROR #5001: n2: phase-level Invoke failure injected;cmdStatus=err;historyRows=2;historyTempLeft=0;invokesRan=n2-arc:1;localEditAfterBad=0;localEditBefore=1;markerSourceInFolder=bad;mod:n2-arc=1.0.0;payloadAfterBad=payload-bad;recordRoot=/usr/irissys/ipm/n2-arc/1.0.0/;row1=id13/load/n2-arc/1.0.0/success:ok/committed:1/ended:1/finalized:1/phases:Initialize:ok Reload:ok Validate:ok Compile:ok Activate:ok;row2=id14/load/n2-arc/1.0.0/success:err/committed:0/ended:1/finalized:1/phases:Initialize:ok Reload:ok Validate:ok Compile:ok Activate:err;tlevel=0;
+
+CMD> uninstall -all
+
+Uninstalling n2-arc
+[USER|n2-arc]	Clean START
+[USER|n2-arc]	Unconfigure START
+[USER|n2-arc]	Unconfigure SUCCESS
+[USER|n2-arc]	Clean SUCCESS
+CMD< OK
+
+CMD> repo -delete-all
+
+CMD< OK
+
+CMD> history delete -confirm
+
+Deleted 3 record(s).
+CMD< OK
+
+OS> rm -rf /tmp/n2arc/ && mkdir -p /tmp/n2arc/good /tmp/n2arc/bad && tar czf /tmp/n2arc/good/n2-arc-1.0.0.tgz -C /tmp/uplift/n2/fixtures/p4/good n2-arc && tar czf /tmp/n2arc/bad/n2-arc-1.0.0.tgz -C /tmp/uplift/n2/fixtures/p4/bad n2-arc && tar tzf /tmp/n2arc/bad/n2-arc-1.0.0.tgz rc=0
+OS< n2-arc/ n2-arc/module.xml n2-arc/payload.txt n2-arc/src/ n2-arc/src/N2Arc/ n2-arc/src/N2Arc/Marker.cls 
+
+CMD> load /tmp/n2arc/good/n2-arc-1.0.0.tgz
+
+Building dependency graph...Done.
+[USER|n2-arc]	Initialize START
+[USER|n2-arc]	Initialize SUCCESS
+[USER|n2-arc]	Reload START (/usr/irissys/ipm/n2-arc/1.0.0/)
+[USER|n2-arc]	Reload SUCCESS
+[n2-arc]	Module object refreshed.
+[USER|n2-arc]	Validate START
+[USER|n2-arc]	Validate SUCCESS
+[USER|n2-arc]	Compile START
+[USER|n2-arc]	Compile SUCCESS
+[USER|n2-arc]	Activate START
+[USER|n2-arc]	Configure START
+[USER|n2-arc]	Configure SUCCESS
+[USER|n2-arc]	Activate SUCCESS
+CMD< OK
+
+OBS|nc-gap-P4-dev-good-archive|cls:N2Arc.Marker=compiled/V:1.0.0;cmdStatus=ok;historyRows=1;historyTempLeft=0;invokesRan=n2-arc:1;mod:n2-arc=1.0.0;moduleRoot=/usr/irissys/ipm/;payloadAfterGood=payload-good;recordRoot=/usr/irissys/ipm/n2-arc/1.0.0/;row1=id16/load/n2-arc/1.0.0/success:ok/committed:1/ended:1/finalized:1/phases:Initialize:ok Reload:ok Validate:ok Compile:ok Activate:ok;tlevel=0;
+
+CMD> load /tmp/n2arc/bad/n2-arc-1.0.0.tgz -dev
+
+Building dependency graph...Done.
+[USER|n2-arc]	Initialize START
+[USER|n2-arc]	Initialize SUCCESS
+[USER|n2-arc]	Reload START (/usr/irissys/ipm/n2-arc/1.0.0/)
+[USER|n2-arc]	Reload SUCCESS
+[n2-arc]	Module object refreshed.
+[USER|n2-arc]	Validate START
+[USER|n2-arc]	Validate SUCCESS
+[USER|n2-arc]	Compile START
+[USER|n2-arc]	Compile SUCCESS
+[USER|n2-arc]	Activate START
+[USER|n2-arc]	Configure START
+[n2-arc]	Configure FAILURE
+[n2-arc]	Activate FAILURE
+[31mERROR![0m n2: phase-level Invoke failure injected
+CMD< ERROR #5001: n2: phase-level Invoke failure injected
+
+OS> ls /usr/irissys/mgr/Temp rc=0
+OS< 
+
+OBS|nc-gap-P4-dev-bad-archive-same-version|cls:N2Arc.Marker=compiled/V:1.0.0-bad;cmdError=ERROR #5001: n2: phase-level Invoke failure injected;cmdStatus=err;historyRows=2;historyTempLeft=0;invokesRan=n2-arc:1;localEditAfterBad=0;localEditBefore=1;markerSourceInFolder=bad;mod:n2-arc=1.0.0/dev;payloadAfterBad=payload-bad;recordRoot=/usr/irissys/ipm/n2-arc/1.0.0/;row1=id16/load/n2-arc/1.0.0/success:ok/committed:1/ended:1/finalized:1/phases:Initialize:ok Reload:ok Validate:ok Compile:ok Activate:ok;row2=id17/load/n2-arc/1.0.0/success:err/committed:1/ended:1/finalized:1/phases:Initialize:ok Reload:ok Validate:ok Compile:ok Activate:err;tlevel=0;
+
+USER>

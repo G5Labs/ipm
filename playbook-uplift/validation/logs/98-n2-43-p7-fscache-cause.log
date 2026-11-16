@@ -1,0 +1,128 @@
+# container: ipm-uplift-n2-c3  image: containers.intersystems.com/intersystems/iris-community:2026.1  at: 2026-11-13T19:25:38Z
+# script: validation/iris/n2/43-p7-fscache-cause.script
+
+Node: 68dc24f5df29, Instance: IRIS
+
+USER>
+
+LOAD 1 
+
+USER>
+
+SETUP hooks 1
+
+CMD> repo -delete-all
+
+CMD< OK
+
+CMD> repo -n n2 -fs -path /tmp/uplift/n2/fixtures/p9/repo/
+
+n2-cb 1.0.0 @ /tmp/uplift/n2/fixtures/p9/repo/n2-cb/
+n2-cc 1.0.0 @ /tmp/uplift/n2/fixtures/p9/repo/n2-cc/
+n2-d1 1.0.0 @ /tmp/uplift/n2/fixtures/p9/repo/n2-d1/
+n2-d2 1.0.0 @ /tmp/uplift/n2/fixtures/p9/repo/n2-d2/
+n2-pd 1.0.0 @ /tmp/uplift/n2/fixtures/p9/repo/n2-pd-1.0.0/
+n2-pd 1.1.0 @ /tmp/uplift/n2/fixtures/p9/repo/n2-pd-1.1.0/
+[31mERROR![0m Object to Load not found, class '%IPM.Repo.Filesystem.Cache', ID '7'
+Object to Load not found, class '%IPM.Repo.Filesystem.Cache', ID '8'
+Object to Load not found, class '%IPM.Repo.Filesystem.Cache', ID '9'
+Object to Load not found, class '%IPM.Repo.Filesystem.Cache', ID '10'
+Object to Load not found, class '%IPM.Repo.Filesystem.Cache', ID '11'
+Object to Load not found, class '%IPM.Repo.Filesystem.Cache', ID '12'
+CMD< ERROR #5809: Object to Load not found, class '%IPM.Repo.Filesystem.Cache', ID '7' ERROR #5809: Object to Load not found, class '%IPM.Repo.Filesystem.Cache', ID '8' ERROR #5809: Object to Load not found, class '%IPM.Repo.Filesystem.Cache', ID '9' ERROR #5809: Object to Load not found, class '%IPM.
+
+CMD> install n2-cb
+
+[31mERROR![0m No repositories are configured and enabled in this namespace.
+CMD< ERROR #5001: No repositories are configured and enabled in this namespace.
+
+CMD> uninstall -all
+
+Uninstalling n2-upd
+[USER|n2-upd]	Clean START
+[USER|n2-upd]	Unconfigure START
+[USER|n2-upd]	Unconfigure SUCCESS
+[USER|n2-upd]	Clean SUCCESS
+CMD< OK
+
+OBS|nc-gap-P7-fscache-stale|cacheD=0;cacheI=10;cacheRows=6;installN2cb=ERROR #5001: No repositories are configured and enabled in this namespace.;
+
+CMD> repo -delete-all
+
+CMD< OK
+
+CMD> repo -n n2 -fs -path /tmp/uplift/n2/fixtures/p9/repo/
+
+n2-cb 1.0.0 @ /tmp/uplift/n2/fixtures/p9/repo/n2-cb/
+n2-cc 1.0.0 @ /tmp/uplift/n2/fixtures/p9/repo/n2-cc/
+n2-d1 1.0.0 @ /tmp/uplift/n2/fixtures/p9/repo/n2-d1/
+n2-d2 1.0.0 @ /tmp/uplift/n2/fixtures/p9/repo/n2-d2/
+n2-pd 1.0.0 @ /tmp/uplift/n2/fixtures/p9/repo/n2-pd-1.0.0/
+n2-pd 1.1.0 @ /tmp/uplift/n2/fixtures/p9/repo/n2-pd-1.1.0/
+n2
+	Source: 		/tmp/uplift/n2/fixtures/p9/repo/*
+	Enabled?		Yes
+	Available?		Yes
+	Use for Snapshots?	Yes
+	Use for Prereleases?	Yes
+	Is Read-Only?		No
+
+n2
+	Source: 		/tmp/uplift/n2/fixtures/p9/repo/*
+	Enabled?		Yes
+	Available?		Yes
+	Use for Snapshots?	Yes
+	Use for Prereleases?	Yes
+	Is Read-Only?		No
+
+CMD< OK
+
+CMD> install n2-cb
+
+Building dependency graph...Done.
+Building dependency graph...Done.
+[USER|n2-cc]	Initialize START
+[USER|n2-cc]	Initialize SUCCESS
+[USER|n2-cc]	Reload START (/tmp/uplift/n2/fixtures/p9/repo/n2-cc/)
+[USER|n2-cc]	Reload SUCCESS
+[n2-cc]	Module object refreshed.
+[USER|n2-cc]	Validate START
+[USER|n2-cc]	Validate SUCCESS
+[USER|n2-cc]	Compile START
+[USER|n2-cc]	Compile SUCCESS
+[USER|n2-cc]	Activate START
+[USER|n2-cc]	Configure START
+[USER|n2-cc]	Configure SUCCESS
+[USER|n2-cc]	Activate SUCCESS
+[USER|n2-cb]	Initialize START
+[USER|n2-cb]	Initialize SUCCESS
+[USER|n2-cb]	Reload START (/tmp/uplift/n2/fixtures/p9/repo/n2-cb/)
+[USER|n2-cb]	Reload SUCCESS
+[n2-cb]	Module object refreshed.
+[USER|n2-cb]	Validate START
+[USER|n2-cb]	Validate SUCCESS
+[USER|n2-cb]	Compile START
+[USER|n2-cb]	Compile SUCCESS
+[USER|n2-cb]	Activate START
+[USER|n2-cb]	Configure START
+[USER|n2-cb]	Configure SUCCESS
+[USER|n2-cb]	Activate SUCCESS
+CMD< OK
+
+CMD> uninstall -all
+
+Uninstalling n2-cb
+[USER|n2-cb]	Clean START
+[USER|n2-cb]	Unconfigure START
+[USER|n2-cb]	Unconfigure SUCCESS
+[USER|n2-cb]	Clean SUCCESS
+Uninstalling n2-cc
+[USER|n2-cc]	Clean START
+[USER|n2-cc]	Unconfigure START
+[USER|n2-cc]	Unconfigure SUCCESS
+[USER|n2-cc]	Clean SUCCESS
+CMD< OK
+
+OBS|nc-gap-P7-fscache-repaired|cacheD=11;cacheI=10;cacheRows=6;installN2cb=ok;
+
+USER>

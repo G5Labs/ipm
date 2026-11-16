@@ -1,0 +1,7 @@
+# Iteration 10 checkpoint
+
+[Ledger](working-ledger.json), [index](INDEX.md), [source roles](SOURCE-LINKS.md), [binding audit](binding-audit.json), [census/complement](census.json), [matrix](MATRIX.md), [run](run.json), [freshness worlds](freshness-selftest.json), [scope review](packaging-review.md) and [trust](../../../Verus_verification/consolidated/iter10/TRUST.md).
+
+Run from product root: `python3 .g5/Verus_verification/consolidated/iter10/run.py`; validate with `python3 .g5/uplift/consolidated/iter10/validate.py`; inspect reuse with `python3 .g5/Verus_verification/consolidated/iter10/freshness.py check`. Preserve native misses and proof attempts. Current narrow source candidates resolve to 331/1,216; newly audited bindings 13/15 meaningful, with two archive provider roles conditional. No direct body proof or whole-product completeness.
+
+New reachable defect C:D27; proposed single-resource status repair C:S20, abstractly compared, not applied. New policy question C:Q20 on omission retention; C:Q19 remains open. Literal tar-name oracle and fresh-default-aftertrue prediction were corrected with retained counterevidence. Read-only reviewers audited scope and premise limits, but did not rerun checks. Current solver/native/replay results are fresh; earlier tests/proofs are inherited carry-forwards. The foundation has not converged. Next: two-process shared-step writers and failed class deletion; namespace-unmap canonical reconciliation remains a separate underserved known miss.

@@ -1,0 +1,18 @@
+verification results:: 7 verified, 2 errors
+error: postcondition not satisfied
+   --> .g5/Verus_verification/consolidated/iter10/native/packaging/proof-attempts/directory-prefix-not-normalized-sticky-final.rs:102:54
+    |
+100 | pub proof fn copied_file_requires_path(r:Resource,phases:Seq<Phase>,s:Map<Text,Text>,f:Text)
+    | -------------------------------------------------------------------------------------------- at the end of the function body
+101 |  requires copied(r,phases,s).contains_key(f)
+102 |  ensures references(r,phases).paths.contains(r.name),prefix(directory_prefix(r.name),f),s.contains_key(f)
+    |                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: assertion failed
+   --> .g5/Verus_verification/consolidated/iter10/native/packaging/proof-attempts/directory-prefix-not-normalized-sticky-final.rs:175:9
+    |
+175 |  assert(!copied(r,seq![Phase::Test],s).contains_key(f));
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ assertion failed
+
+error: aborting due to 2 previous errors
+

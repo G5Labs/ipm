@@ -1,0 +1,12 @@
+set sc=$system.OBJ.LoadDir("/tmp/uplift/r4/hist/Uplift/","ck-d",.err,1) write !,"LOAD ",$system.Status.IsOK(sc),!
+do ##class(Uplift.R4.Hist).Cleanup()
+&sql(DELETE FROM %IPM_General.History WHERE Package = 'rest-demo' OR (ID >= 155 AND Package = '' AND CommandString LIKE '%/tmp/uplift/r4/%'))
+write !,"rest-demo/unnamed rows deleted SQLCODE=",SQLCODE," rows=",%ROWCOUNT,!
+kill ^R4HU19
+do $system.OBJ.Delete("Uplift.R4.Hooks,Uplift.R4.Hist","-d")
+if $$$defClassDefined("%IPM.Generated.MacroEval") { do $system.OBJ.Delete("%IPM.Generated.MacroEval","-d") }
+do ##class(%IPM.Main).Shell("list")
+do ##class(%IPM.Main).Shell("repo -list")
+set rs=##class(%SQL.Statement).%ExecDirect(,"SELECT COUNT(*) c FROM %IPM_General.History") do rs.%Next() write !,"history rows left ",rs.%Get("c"),!
+write "R4 classes: ",##class(%Dictionary.ClassDefinition).%ExistsId("Uplift.R4.Hist"),##class(%Dictionary.ClassDefinition).%ExistsId("Uplift.R4.Hooks"),!
+halt

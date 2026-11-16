@@ -1,0 +1,122 @@
+{
+  "product_revision": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+  "created_utc": "2026-11-14T15:18:39.058088+00:00",
+  "method": "Predictions derived from product source before inspecting any consolidated Python or new Verus predictions. New hypotheses deliberately separated.",
+  "source_sha256": {
+    "src/cls/IPM/General/History.cls": "78f0731d4fe5a0d7ed2643f1fb4787110673689646b04ab7ddcb6577af5f097c",
+    "src/cls/IPM/General/HistoryTemp.cls": "673079aab23dff1e658499e5369282b069adbbd60ca33af1cf4530c110c27d08",
+    "src/cls/IPM/General/AbstractHistory.cls": "fad1187087fbb8a8fe00a51958af65b6d0d47f731e8b692bdc2353ad9d00f46c",
+    "src/cls/IPM/ResourceProcessor/FileCopy.cls": "190b79f9285aba66a13969f510caf95e7feaaf65b493329dfbf408f076a393a0",
+    "src/cls/IPM/ResourceProcessor/CPF.cls": "efc14b7b6824ade85f8c0e0a1ee7f1d159c29b30b9c11110db6bc29fa5d4faf5",
+    "src/cls/IPM/General/LockFile.cls": "6852bddff4fc258c096a36b1d5b433f716d1aa2f21bc7397384eff58fea81d8e",
+    "src/cls/IPM/Utils/Module.cls": "7d48b4876dab2365179bc6127f923d4e81fd4c4950d08fca4de707002bb4059f",
+    "src/cls/IPM/General/Sync/Pipeline.cls": "dd01a6382d6f16e3ec9ba775bf44b70b7c4933db8287681ce571883099472d1e",
+    "src/cls/IPM/General/ModuleSummary.cls": "63fe18c1b5ea8f9026e88ae19413aff6d4bec006f64284449a8f59b4ee57ccc8"
+  },
+  "cases": [
+    {
+      "id": "HELD-FILE-ORDER",
+      "inputs": [
+        "Activate before hook, Defer=0",
+        "Activate before hook, Defer=1 then after hook"
+      ],
+      "prediction": "Immediate copy exists before core Activate; deferred copy appears only after core Activate. A later failure before the after hook prevents deferred copy.",
+      "source": "FileCopy.OnBeforePhase/OnAfterPhase",
+      "status": "source-prediction"
+    },
+    {
+      "id": "HELD-FILE-ROLLBACK",
+      "inputs": [
+        "successful DoCopy inside TSTART then TROLLBACK",
+        "missing source DoCopy inside TSTART then TROLLBACK"
+      ],
+      "prediction": "Successful filesystem copy survives database rollback; missing source returns error and leaves no copied target.",
+      "source": "FileCopy.DoCopy",
+      "status": "source-prediction",
+      "environment": "IRIS %File writes are outside database transaction; must validate natively"
+    },
+    {
+      "id": "HELD-FILE-CLEAN",
+      "inputs": [
+        "Clean with KeepOnUninstall=1",
+        "Clean with KeepOnUninstall=0 on unprotected directory"
+      ],
+      "prediction": "Keep flag preserves target and marks handled; absent flag removes target. Protected directory always retained.",
+      "source": "FileCopy.OnPhase",
+      "status": "source-prediction"
+    },
+    {
+      "id": "HELD-LOCKFILE-ROLLBACK",
+      "inputs": [
+        "CreateLockFile=1, valid graph, later compile failure",
+        "CreateLockFile=0 with same compile failure"
+      ],
+      "prediction": "First can leave module-lock.json although parent DB record rolls back; second never creates lockfile. Lockfile is generated after dependencies and before parent ExecutePhases.",
+      "source": "Utils.Module.LoadNewModule/LoadDependencies + LockFile.CreateLockFileForModule",
+      "status": "source-prediction",
+      "environment": "filesystem durability outside DB transaction"
+    },
+    {
+      "id": "HELD-LOCKFILE-WRITE-FAIL",
+      "inputs": [
+        "valid dependency load, writable root",
+        "valid dependency load, lockfile target nonwritable"
+      ],
+      "prediction": "Lockfile failure is printed and swallowed by LoadDependencies; it alone does not fail parent load. Writable root creates file.",
+      "source": "Utils.Module.LoadDependencies:1416-1422",
+      "status": "source-prediction"
+    },
+    {
+      "id": "HELD-CPF-ROLLBACK",
+      "inputs": [
+        "MergeCPF child exits 0, later database rollback",
+        "MergeCPF child exits nonzero"
+      ],
+      "prediction": "Success does not imply rollback reverses external configuration; nonzero child exit is converted to failure with output detail. No product compensation path exists in CPF.OnPhase Clean.",
+      "source": "CPF.MergeCPF/OnPhase",
+      "status": "source-prediction",
+      "environment": "child iris merge behavior not validated here; do not mutate running system config"
+    },
+    {
+      "id": "HELD-HISTORY-DELETE-FINALIZE",
+      "inputs": [
+        "Init temp/twin; finalize and persist without delete",
+        "Init temp/twin; delete persistent twin; finalize and persist stale twin"
+      ],
+      "prediction": "Both histories share the same temp object before persistence. No explicit deletion generation or tombstone prevents stale persistence. The final existence/status after delete is an OPEN environment/concurrency question to test, not an asserted defect. Reader before deletion sees unfinished row.",
+      "source": "HistoryTemp.Init/PersistToTwin + History.DeleteHistory",
+      "status": "new-hypothesis"
+    },
+    {
+      "id": "HELD-HISTORY-RESTART",
+      "inputs": [
+        "process ends after Init with IRISTEMP state",
+        "instance restarts after Init with IRISTEMP state"
+      ],
+      "prediction": "Instance restart clears IRISTEMP unlike mere process end; persistent unfinished twin can remain. Whether %OnClose finalizes on process death is distinct and must be observed for the termination mechanism.",
+      "source": "HistoryTemp storage ^IRIS.Temp.HistoryTempD + %OnClose",
+      "status": "new-hypothesis"
+    },
+    {
+      "id": "HELD-SYNC-TEST-FAIL",
+      "inputs": [
+        "sync writes/hashes committed then tests fail",
+        "sync compilation fails before CommitChanges"
+      ],
+      "prediction": "Test failure preserves synced hashes and does not mark those paths for retry. Compilation failure leaves uncommitted changes eligible for retry.",
+      "source": "Sync.Pipeline.Run",
+      "status": "source-prediction"
+    },
+    {
+      "id": "HELD-INSPECTION-NAME",
+      "inputs": [
+        "Show with existing Name",
+        "Show with same existing ExternalName and different case",
+        "Show with missing name"
+      ],
+      "prediction": "Show tries Name then ExternalName; only missing record throws installed-module error. Output target is the selected stored module, not arbitrary repository metadata. Case handling relies on datatype collation.",
+      "source": "ModuleSummary.Show",
+      "status": "source-prediction"
+    }
+  ]
+}

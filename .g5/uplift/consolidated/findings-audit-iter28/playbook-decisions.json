@@ -1,0 +1,478 @@
+[
+  {
+    "id": "DEC-SYS-1",
+    "source": "playbook-uplift/decisions/00-02.md",
+    "row": "| DEC-SYS-1 | 00 | The playbook says a term may be used if an ancestor or an earlier same-level statement defines it. Should a definition by an earlier sibling of an ancestor (lexical scope) count? The index script assumes yes, so SYS-D* definitions reach every module. | (A) lexical scope, as implemented; (B) strict reading: repeat or chain shared definitions under each module root. | Human | resolved (assumption) |",
+    "question": "The playbook says a term may be used if an ancestor or an earlier same-level statement defines it. Should a definition by an earlier sibling of an ancestor (lexical scope) count? The index script assumes yes, so SYS-D* definitions reach every module.",
+    "options": "(A) lexical scope, as implemented; (B) strict reading: repeat or chain shared definitions under each module root.",
+    "old_status": "resolved (assumption)",
+    "audit_status": "method/verification observation; not an unresolved IPM policy decision"
+  },
+  {
+    "id": "DEC-HIST-1",
+    "source": "playbook-uplift/decisions/00-02.md",
+    "row": "| DEC-HIST-1 | 02 | When a parent load rolls back, should the history records of the dependency loads it ran survive? Today they vanish with the rollback (F-HIST-1), although the class comment says history is kept apart from rollbacks. | (A) keep them: write dependency records outside the parent's transaction (for example from IRISTEMP after the parent's outcome is known); (B) accept: a dependency record exists only when the dependency's changes were kept, and say so in the docs. Recommendation: A, because the top-level record already follows A. Proved design (models/verus/load_general.rs, `fix`): re-persist pending dependency rows after the parent's rollback and at the next command after a crash, with Committed taken from the dependency's installed state (keeping the logged Committed was shown dishonest by the explorer). Sub-question: a dependency that loaded and was then undone by the parent then reads Success = 1, Committed = 0; is that the wanted reading, or should Success also be cleared? | Human | resolved (evidence) |",
+    "question": "When a parent load rolls back, should the history records of the dependency loads it ran survive? Today they vanish with the rollback (F-HIST-1), although the class comment says history is kept apart from rollbacks.",
+    "options": "(A) keep them: write dependency records outside the parent's transaction (for example from IRISTEMP after the parent's outcome is known); (B) accept: a dependency record exists only when the dependency's changes were kept, and say so in the docs. Recommendation: A, because the top-level record already follows A. Proved design (models/verus/load_general.rs, `fix`): re-persist pending dependency rows after the parent's rollback and at the next command after a crash, with Committed taken from the dependency's installed state (keeping the logged Committed was shown dishonest by the explorer). Sub-question: a dependency that loaded and was then undone by the parent then reads Success = 1, Committed = 0; is that the wanted reading, or should Success also be cleared?",
+    "old_status": "resolved (evidence)",
+    "audit_status": "inherited source-supported interpretation; not new owner approval"
+  },
+  {
+    "id": "DEC-HIST-2",
+    "source": "playbook-uplift/decisions/00-02.md",
+    "row": "| DEC-HIST-2 | 02 | How should the Committed flag survive a crash after a developer-mode load has committed its manifest (F-HIST-2)? | (A) persist the twin row right after the first TCOMMIT (Utils/Module.cls#L1311-L1313, before the next TSTART) so the durable row says Committed = 1; (B) keep the IRISTEMP record when %OnClose runs at $TLEVEL > 0 and reconcile it at the next command; (C) accept and document. Recommendation: A, a two-line change at a point with no transaction open. | Human | resolved (evidence) |",
+    "question": "How should the Committed flag survive a crash after a developer-mode load has committed its manifest (F-HIST-2)?",
+    "options": "(A) persist the twin row right after the first TCOMMIT (Utils/Module.cls#L1311-L1313, before the next TSTART) so the durable row says Committed = 1; (B) keep the IRISTEMP record when %OnClose runs at $TLEVEL > 0 and reconcile it at the next command; (C) accept and document. Recommendation: A, a two-line change at a point with no transaction open.",
+    "old_status": "resolved (evidence)",
+    "audit_status": "inherited source-supported interpretation; not new owner approval"
+  },
+  {
+    "id": "DEC-HIST-3",
+    "source": "playbook-uplift/decisions/00-02.md",
+    "row": "| DEC-HIST-3 | 02 | Must a record name the module whenever IPM has read its manifest (refusals, crashes before SetName)? Today such records have an empty package and version 0.0.0 (F-HIST-5). The property comment only promises a name is \"not necessarily required, e.g. when loading a nonexistent directory\". | (A) yes: set the name from the manifest read in LoadNewModule before the guards; (B) no: the name is best effort. | Human | resolved (evidence) |",
+    "question": "Must a record name the module whenever IPM has read its manifest (refusals, crashes before SetName)? Today such records have an empty package and version 0.0.0 (F-HIST-5). The property comment only promises a name is \"not necessarily required, e.g. when loading a nonexistent directory\".",
+    "options": "(A) yes: set the name from the manifest read in LoadNewModule before the guards; (B) no: the name is best effort.",
+    "old_status": "resolved (evidence)",
+    "audit_status": "inherited source-supported interpretation; not new owner approval"
+  },
+  {
+    "id": "DEC-HIST-4",
+    "source": "playbook-uplift/decisions/00-02.md",
+    "row": "| DEC-HIST-4 | 01, 02 | What should IPM do when a command starts inside a caller transaction (F-HIST-3)? The load and its history then share the caller's fate. | (A) refuse with an error when $TLEVEL > 0; (B) allow, and document that history is not kept if the caller rolls back; (C) write the record outside the caller's transaction. | Human | resolved (assumption) |",
+    "question": "What should IPM do when a command starts inside a caller transaction (F-HIST-3)? The load and its history then share the caller's fate.",
+    "options": "(A) refuse with an error when $TLEVEL > 0; (B) allow, and document that history is not kept if the caller rolls back; (C) write the record outside the caller's transaction.",
+    "old_status": "resolved (assumption)",
+    "canonical_owner": {
+      "path": ".g5/ontology/features/history.g5.md",
+      "id": "history.committed.nested"
+    },
+    "audit_status": "open; working assumption"
+  },
+  {
+    "id": "DEC-HIST-5",
+    "source": "playbook-uplift/decisions/00-02.md",
+    "row": "| DEC-HIST-5 | 01, 02 | Does Committed describe only database changes? File-system effects are never rolled back: an archive load deletes and recreates `<ModuleRoot>/<name>/<version>/` before any check (Main.cls#L2507-L2513), and FileCopy writes files. | (A) Committed covers database writes only; document it; (B) Committed should also turn on when files change. | Human | resolved (evidence) |",
+    "question": "Does Committed describe only database changes? File-system effects are never rolled back: an archive load deletes and recreates `<ModuleRoot>/<name>/<version>/` before any check (Main.cls#L2507-L2513), and FileCopy writes files.",
+    "options": "(A) Committed covers database writes only; document it; (B) Committed should also turn on when files change.",
+    "old_status": "resolved (evidence)",
+    "audit_status": "inherited source-supported interpretation; not new owner approval"
+  },
+  {
+    "id": "DEC-HIST-6",
+    "source": "playbook-uplift/decisions/00-02.md",
+    "row": "| DEC-HIST-6 | 02 | What should happen when `history delete` removes the record of a command that is still running? By the IRIS contract (re-saving an object re-creates its row, O:env-resave-after-rollback) the closing %OnClose would write it back. Not observed on IRIS for IPM. | (A) the delete wins; (B) a running record cannot be deleted; (C) accept that it reappears. | Human | resolved (assumption) |",
+    "question": "What should happen when `history delete` removes the record of a command that is still running? By the IRIS contract (re-saving an object re-creates its row, O:env-resave-after-rollback) the closing %OnClose would write it back. Not observed on IRIS for IPM.",
+    "options": "(A) the delete wins; (B) a running record cannot be deleted; (C) accept that it reappears.",
+    "old_status": "resolved (assumption)",
+    "canonical_owner": {
+      "path": ".g5/ontology/features/history.g5.md",
+      "id": "history.delete.running-records"
+    },
+    "audit_status": "open; working assumption"
+  },
+  {
+    "id": "DEC-LOAD-1",
+    "source": "playbook-uplift/decisions/00-02.md",
+    "row": "| DEC-LOAD-1 | 01 | A crash at an interactive terminal asks the operator to commit or roll back the open transaction. Committing keeps a half-done load that history marks Committed = 0 (F-HIST-4). Is that an operator error to document, or should IPM guard against it? | (A) document; (B) mark the log committed before each region a terminal halt could commit; (C) run loads in a job. | Human | resolved (assumption) |",
+    "question": "A crash at an interactive terminal asks the operator to commit or roll back the open transaction. Committing keeps a half-done load that history marks Committed = 0 (F-HIST-4). Is that an operator error to document, or should IPM guard against it?",
+    "options": "(A) document; (B) mark the log committed before each region a terminal halt could commit; (C) run loads in a job.",
+    "old_status": "resolved (assumption)",
+    "canonical_owner": {
+      "path": ".g5/ontology/features/history.g5.md",
+      "id": "history.committed.terminal-choice-policy"
+    },
+    "audit_status": "open; working assumption"
+  },
+  {
+    "id": "DEC-LOAD-2",
+    "source": "playbook-uplift/decisions/00-02.md",
+    "row": "| DEC-LOAD-2 | 01 | Should a plain `load` (no `-dev`, no `-nodev`) over a module installed in developer mode keep developer mode? It does today (O:ipm-dev-then-plain-load); the help text only says `-nodev` disables it. | (A) keep, as now, and document; (B) a plain load should switch to normal mode. | Human | resolved (evidence) |",
+    "question": "Should a plain `load` (no `-dev`, no `-nodev`) over a module installed in developer mode keep developer mode? It does today (O:ipm-dev-then-plain-load); the help text only says `-nodev` disables it.",
+    "options": "(A) keep, as now, and document; (B) a plain load should switch to normal mode.",
+    "old_status": "resolved (evidence)",
+    "canonical_owner": {
+      "path": ".g5/ontology/concepts/transactions-and-dev-mode.g5.md",
+      "id": "dev-mode.sticky"
+    },
+    "audit_status": "open; conflicting canonical question takes precedence over the resolved label"
+  },
+  {
+    "id": "DEC-SEM-1",
+    "source": "playbook-uplift/decisions/00-02.md",
+    "row": "| DEC-SEM-1 | 3.3a | `^IRIS.Temp.IPM.LoadedResourceD` (IPM working data in IRISTEMP) is still set after commands end (O:ws-residue-after-commands). Is it a deliberate per-instance cache, or should each command clear it? | (A) deliberate cache: document its lifetime (until IRIS restarts); (B) clear it at the end of each command. | Human | resolved (assumption) |",
+    "question": "`^IRIS.Temp.IPM.LoadedResourceD` (IPM working data in IRISTEMP) is still set after commands end (O:ws-residue-after-commands). Is it a deliberate per-instance cache, or should each command clear it?",
+    "options": "(A) deliberate cache: document its lifetime (until IRIS restarts); (B) clear it at the end of each command.",
+    "old_status": "resolved (assumption)",
+    "audit_status": "method/verification observation; not an unresolved IPM policy decision"
+  },
+  {
+    "id": "DEC-SEM-2",
+    "source": "playbook-uplift/decisions/00-02.md",
+    "row": "| DEC-SEM-2 | 3.3a | Uninstalling a module that has a web application writes compiled-code globals in IRISSYS (`^oddDEF`, `^oddCOM`, `^rOBJ`; O:ws-uninstall-webapp). Is a system-database code change an accepted side effect of removing the web application, or a frame violation to investigate? | (A) accept: IRIS regenerates system class metadata when a security application is deleted; document it; (B) investigate which classes change and why. | Human | resolved (assumption) |",
+    "question": "Uninstalling a module that has a web application writes compiled-code globals in IRISSYS (`^oddDEF`, `^oddCOM`, `^rOBJ`; O:ws-uninstall-webapp). Is a system-database code change an accepted side effect of removing the web application, or a frame violation to investigate?",
+    "options": "(A) accept: IRIS regenerates system class metadata when a security application is deleted; document it; (B) investigate which classes change and why.",
+    "old_status": "resolved (assumption)",
+    "audit_status": "method/verification observation; not an unresolved IPM policy decision"
+  },
+  {
+    "id": "DEC-INST-1",
+    "source": "playbook-uplift/decisions/03-04.md",
+    "row": "| DEC-INST-1 | 03-install-update | Is the developer-mode bypass of the update-package guard (install -dev moves to a newer version without running or seeding update steps) part of the public contract? README L62 names only -force; test TestDevMode (InstallModule.cls L178) asserts the bypass; issue #550 mentions dev environments. Observed on IRIS: `install -dev update-simple 3.5.0` over 2.1.1 succeeds and leaves the V3 step with no record at all (nc-inst-2-dev-install-then-update). Review round: the bypass needs a typed -dev; a module merely stored in developer mode does not bypass it (after `load -dev` 1.0.0, a plain `load` of 2.0.0 with an update package is refused with the \"use update\" message: nc-inst-fix-stored-dev-load-newer), because the guard reads only the DeveloperMode parameter (Utils/Module.cls#L1219). Cell INST-C33 now names this decision. | A) Keep it and document it in README and the -dev help. B) Remove it so only -force bypasses the guard. | human | resolved (evidence) |",
+    "question": "Is the developer-mode bypass of the update-package guard (install -dev moves to a newer version without running or seeding update steps) part of the public contract? README L62 names only -force; test TestDevMode (InstallModule.cls L178) asserts the bypass; issue #550 mentions dev environments. Observed on IRIS: `install -dev update-simple 3.5.0` over 2.1.1 succeeds and leaves the V3 step with no record at all (nc-inst-2-dev-install-then-update). Review round: the bypass needs a typed -dev; a module merely stored in developer mode does not bypass it (after `load -dev` 1.0.0, a plain `load` of 2.0.0 with an update package is refused with the \"use update\" message: nc-inst-fix-stored-dev-load-newer), because the guard reads only the DeveloperMode parameter (Utils/Module.cls#L1219). Cell INST-C33 now names this decision.",
+    "options": "A) Keep it and document it in README and the -dev help. B) Remove it so only -force bypasses the guard.",
+    "old_status": "resolved (evidence)",
+    "canonical_owner": {
+      "path": ".g5/ontology/features/load.g5.md",
+      "id": "load.refusal.update-required.dev-bypass"
+    },
+    "audit_status": "open; conflicting canonical question takes precedence over the resolved label"
+  },
+  {
+    "id": "DEC-INST-2",
+    "source": "playbook-uplift/decisions/03-04.md",
+    "row": "| DEC-INST-2 | 03-install-update | Should an install in developer mode seed update steps? Today it does not (Lifecycle/Module.cls L122), so a later update runs every step from V1, including steps older than the installed version. Observed on IRIS: a dev install creates no step records (nc-inst-2b-dev-fresh-then-update, 0 rows); the next update ran every V1 and V2 step (nc-inst-2b) and, after a dev install of 3.5.0 over 2.1.1, ran the new V3 step plus V1 steps whose records did not exist, rerunning a seeded V1 step after them (nc-inst-2-dev-install-then-update). That update also cleared developer mode. Proved in models/verus/update_steps.rs: an OK install in developer mode leaves the step records unchanged (inst_refines), so the next update schedules the steps of every class, older ones included, while a non-developer install leaves none due (inst_witness_dev_install_leaves_steps_due). Review round: seeding tests the module's stored DeveloperMode (Lifecycle/Module.cls#L122), so a plain `load` of a module stored in developer mode seeds nothing either (nc-inst-fix-stored-dev-plain-load: 0 step rows; modelled in update_steps.rs). Cell INST-C15 now names this decision. | A) Seed on dev installs too, like non-dev installs. B) Keep as is and document that dev installs leave all steps due. C) Seed only steps of versions at or below the installed one. | human | resolved (assumption) |",
+    "question": "Should an install in developer mode seed update steps? Today it does not (Lifecycle/Module.cls L122), so a later update runs every step from V1, including steps older than the installed version. Observed on IRIS: a dev install creates no step records (nc-inst-2b-dev-fresh-then-update, 0 rows); the next update ran every V1 and V2 step (nc-inst-2b) and, after a dev install of 3.5.0 over 2.1.1, ran the new V3 step plus V1 steps whose records did not exist, rerunning a seeded V1 step after them (nc-inst-2-dev-install-then-update). That update also cleared developer mode. Proved in models/verus/update_steps.rs: an OK install in developer mode leaves the step records unchanged (inst_refines), so the next update schedules the steps of every class, older ones included, while a non-developer install leaves none due (inst_witness_dev_install_leaves_steps_due). Review round: seeding tests the module's stored DeveloperMode (Lifecycle/Module.cls#L122), so a plain `load` of a module stored in developer mode seeds nothing either (nc-inst-fix-stored-dev-plain-load: 0 step rows; modelled in update_steps.rs). Cell INST-C15 now names this decision.",
+    "options": "A) Seed on dev installs too, like non-dev installs. B) Keep as is and document that dev installs leave all steps due. C) Seed only steps of versions at or below the installed one.",
+    "old_status": "resolved (assumption)",
+    "canonical_owner": {
+      "path": ".g5/ontology/features/update.g5.md",
+      "id": "update.steps.dev-seeding-policy"
+    },
+    "audit_status": "open; working assumption"
+  },
+  {
+    "id": "DEC-INST-3",
+    "source": "playbook-uplift/decisions/03-04.md",
+    "row": "| DEC-INST-3 | 03-install-update | Should install refuse to replace a needed module that is in developer mode, as it does for the named module? Today the dependency is silently replaced and loses developer mode (Utils/Module.cls L109, L308). Observed on IRIS: with complex-c 2.0.0 loaded -dev, `install complex-b 2.0.0` succeeds and leaves complex-c at 3.0.0 without developer mode, with no message (nc-inst-8-dev-dependency-replaced). | A) Refuse, naming the dev-mode dependency. B) Allow but warn. C) Keep silent replacement. | human | resolved (assumption) |",
+    "question": "Should install refuse to replace a needed module that is in developer mode, as it does for the named module? Today the dependency is silently replaced and loses developer mode (Utils/Module.cls L109, L308). Observed on IRIS: with complex-c 2.0.0 loaded -dev, `install complex-b 2.0.0` succeeds and leaves complex-c at 3.0.0 without developer mode, with no message (nc-inst-8-dev-dependency-replaced).",
+    "options": "A) Refuse, naming the dev-mode dependency. B) Allow but warn. C) Keep silent replacement.",
+    "old_status": "resolved (assumption)",
+    "canonical_owner": {
+      "path": ".g5/ontology/concepts/transactions-and-dev-mode.g5.md",
+      "id": "dev-mode.overwrite-guard.dependency-policy"
+    },
+    "audit_status": "open; working assumption"
+  },
+  {
+    "id": "DEC-INST-4",
+    "source": "playbook-uplift/decisions/03-04.md",
+    "row": "| DEC-INST-4 | 03-install-update | What does reinstall fetch? Summary (Main.cls L448) and code: the installed version. Description (L450): \"from the latest version available in a configured repository\". Observed on IRIS: with complex-c 2.0.0 installed and 3.0.0 in the registry, `reinstall complex-c` prints \"Reinstalling complex-c 2.0.0\" and keeps 2.0.0 (nc-inst-9-reinstall-version). | A) Installed version (fix the description). B) Latest available version (change the code). | human | resolved (evidence) |",
+    "question": "What does reinstall fetch? Summary (Main.cls L448) and code: the installed version. Description (L450): \"from the latest version available in a configured repository\". Observed on IRIS: with complex-c 2.0.0 installed and 3.0.0 in the registry, `reinstall complex-c` prints \"Reinstalling complex-c 2.0.0\" and keeps 2.0.0 (nc-inst-9-reinstall-version).",
+    "options": "A) Installed version (fix the description). B) Latest available version (change the code).",
+    "old_status": "resolved (evidence)",
+    "canonical_owner": {
+      "path": ".g5/ontology/features/install.g5.md",
+      "id": "reinstall.version"
+    },
+    "audit_status": "open; conflicting canonical question takes precedence over the resolved label"
+  },
+  {
+    "id": "DEC-INST-5",
+    "source": "playbook-uplift/decisions/03-04.md",
+    "row": "| DEC-INST-5 | 03-install-update | What delivery promise do update steps have? Rollback undoes step records, so steps that worked in a failed run rerun; effects outside the database (files, $INCREMENT, other systems) can repeat; a kill between the step and its record save reruns that step. Observed on IRIS (nc-inst-4-nondev-failed-update, nc-inst-4b-nondev-retry): after a failed non-dev update the ordinary global set by the step that worked is rolled back, but its $INCREMENT counter and file line stay; the retry runs that step again (counter 2, two file lines). In developer mode (nc-inst-4c, nc-inst-4d) the worked step's record is kept and the retry skips it. Proved: a transactional update whose second step fails rolls the records back while the first step's effects outside the database stay, and the retry schedules that step again (inst_witness_failed_update_repeats_effects). Review round: INST-B67 now states the intent the seed asks about (a step's effects happen once) with this decision open and `O!:nc-inst-4b-nondev-retry`; the witness is cited in Notes, not as P. | A) At-least-once; require idempotent steps and document it in VersionBase. B) Exactly-once for database effects only (document the boundary). C) Add a stronger mechanism (per-step commit or idempotency key). | human | resolved (evidence) |",
+    "question": "What delivery promise do update steps have? Rollback undoes step records, so steps that worked in a failed run rerun; effects outside the database (files, $INCREMENT, other systems) can repeat; a kill between the step and its record save reruns that step. Observed on IRIS (nc-inst-4-nondev-failed-update, nc-inst-4b-nondev-retry): after a failed non-dev update the ordinary global set by the step that worked is rolled back, but its $INCREMENT counter and file line stay; the retry runs that step again (counter 2, two file lines). In developer mode (nc-inst-4c, nc-inst-4d) the worked step's record is kept and the retry skips it. Proved: a transactional update whose second step fails rolls the records back while the first step's effects outside the database stay, and the retry schedules that step again (inst_witness_failed_update_repeats_effects). Review round: INST-B67 now states the intent the seed asks about (a step's effects happen once) with this decision open and `O!:nc-inst-4b-nondev-retry`; the witness is cited in Notes, not as P.",
+    "options": "A) At-least-once; require idempotent steps and document it in VersionBase. B) Exactly-once for database effects only (document the boundary). C) Add a stronger mechanism (per-step commit or idempotency key).",
+    "old_status": "resolved (evidence)",
+    "audit_status": "inherited source-supported interpretation; not new owner approval"
+  },
+  {
+    "id": "DEC-INST-6",
+    "source": "playbook-uplift/decisions/03-04.md",
+    "row": "| DEC-INST-6 | 03-install-update | What should update do when the update lock is busy? Today it reports success and runs no step (finding F-INST-1). PR #887 put preventing concurrent updates out of scope. Observed on IRIS: with the lock held by another process, update returned OK after 3.3 s, printed nothing, moved the module to 2.1.1 and ran no step (nc-inst-3-update-lock-busy); a later update to the same version ran them (nc-inst-3b-update-after-lock-free). Proved: with the lock timing out, update ends OK with the new version and no step run (inst_witness_busy_lock_reports_success, F-INST-1). | A) Fail with a clear error. B) Wait longer, then fail. C) Keep skipping but print a warning and leave the command status not OK. | human | resolved (assumption) |",
+    "question": "What should update do when the update lock is busy? Today it reports success and runs no step (finding F-INST-1). PR #887 put preventing concurrent updates out of scope. Observed on IRIS: with the lock held by another process, update returned OK after 3.3 s, printed nothing, moved the module to 2.1.1 and ran no step (nc-inst-3-update-lock-busy); a later update to the same version ran them (nc-inst-3b-update-after-lock-free). Proved: with the lock timing out, update ends OK with the new version and no step run (inst_witness_busy_lock_reports_success, F-INST-1).",
+    "options": "A) Fail with a clear error. B) Wait longer, then fail. C) Keep skipping but print a warning and leave the command status not OK.",
+    "old_status": "resolved (assumption)",
+    "canonical_owner": {
+      "path": ".g5/ontology/features/update.g5.md",
+      "id": "update.steps.busy-policy"
+    },
+    "audit_status": "open; working assumption"
+  },
+  {
+    "id": "DEC-INST-7",
+    "source": "playbook-uplift/decisions/03-04.md",
+    "row": "| DEC-INST-7 | 03-install-update | Are primary-only update steps promised to run when a mirror member becomes primary at this revision? VersionBase.cls L18 says so; no code does it; PR #887 lists mirrored updates as out of scope and the wiki update guide (not read here) is reported by the seed to call mirroring future work. Native check #20 not run: the IRIS container is not a mirror member (nc-inst-20-no-mirror). | A) Not promised at this revision; fix the VersionBase comment. B) Promised; implement a become-primary hook and mirror tests. | human | resolved (evidence) |",
+    "question": "Are primary-only update steps promised to run when a mirror member becomes primary at this revision? VersionBase.cls L18 says so; no code does it; PR #887 lists mirrored updates as out of scope and the wiki update guide (not read here) is reported by the seed to call mirroring future work. Native check #20 not run: the IRIS container is not a mirror member (nc-inst-20-no-mirror).",
+    "options": "A) Not promised at this revision; fix the VersionBase comment. B) Promised; implement a become-primary hook and mirror tests.",
+    "old_status": "resolved (evidence)",
+    "audit_status": "inherited source-supported interpretation; not new owner approval"
+  },
+  {
+    "id": "DEC-INST-8",
+    "source": "playbook-uplift/decisions/03-04.md",
+    "row": "| DEC-INST-8 | 03-install-update | When an update brings in a module that was not installed before, should its update steps run (today, all of them) or be seeded like a fresh install? Observed on IRIS: `update update-deps-added 2.1.1` brought in update-simple 1.2.1 and ran its V1 step (start time set); a plain install of update-simple 1.2.1 seeds it instead (nc-inst-6-dep-added-by-update, nc-inst-6b-fresh-install-control). Proved: with no step records, an update that ends OK runs every step this server may run (inst_fresh_update_runs_all). | A) Seed them, as a fresh install would. B) Run them all (current behaviour), and document it. | human | resolved (assumption) |",
+    "question": "When an update brings in a module that was not installed before, should its update steps run (today, all of them) or be seeded like a fresh install? Observed on IRIS: `update update-deps-added 2.1.1` brought in update-simple 1.2.1 and ran its V1 step (start time set); a plain install of update-simple 1.2.1 seeds it instead (nc-inst-6-dep-added-by-update, nc-inst-6b-fresh-install-control). Proved: with no step records, an update that ends OK runs every step this server may run (inst_fresh_update_runs_all).",
+    "options": "A) Seed them, as a fresh install would. B) Run them all (current behaviour), and document it.",
+    "old_status": "resolved (assumption)",
+    "canonical_owner": {
+      "path": ".g5/ontology/features/update.g5.md",
+      "id": "update.steps.fresh-seeding-policy"
+    },
+    "audit_status": "open; working assumption"
+  },
+  {
+    "id": "DEC-DEP-1",
+    "source": "playbook-uplift/decisions/03-04.md",
+    "row": "| DEC-DEP-1 | 04-dependencies | Must dependency resolution find a solution whenever one exists? The resolver is greedy (newest first, one-level check, no backtracking past one level), so it can fail on solvable inputs; the method comment says \"with backtracking\". Observed on IRIS: `install nc-dep-root` (A ^1, B ^1; A 1.1.0 needs C ^2, A 1.0.0 and B need C ^1) fails with a clash on nc-dep-c naming nc-dep-a 1.1.0; installing nc-dep-a 1.0.0 first makes the same install succeed (nc-dep-11-greedy-resolution, nc-dep-11b-solvable-with-pin). Proved in models/verus/dep_resolve.rs: on the nc-dep-11 instance a sound choice exists and the (deterministic) resolver fails (dep_witness_greedy_rejects_solvable, dep_deterministic). Explored (models/explorer/inst/check.py, dep-explore-completeness): 2,040 of 70,656 small instances are solvable but fail; some fail because the quick check ignores the installed-version floor. A resolution that ends Done is always sound (dep_refines; 0 of 59,776 explored). Review round: DEP-B13 now states the intent (\"if some choice of versions meets every requirement, IPM finds one\") with this decision open and `O!:nc-dep-11-greedy-resolution`; the witness is cited in Notes, not as P. A failure is now proved to name a reason (a loop of recorded requirements, or a requirement with no version allowed by it and the requirements already recorded; DEP-B54); those recorded requirements include earlier greedy choices, which is why option B is not met. | A) Greedy is the contract; fix the comment and document that pins may be needed. B) Complete resolution is the contract; add real backtracking. | human | resolved (evidence) |",
+    "question": "Must dependency resolution find a solution whenever one exists? The resolver is greedy (newest first, one-level check, no backtracking past one level), so it can fail on solvable inputs; the method comment says \"with backtracking\". Observed on IRIS: `install nc-dep-root` (A ^1, B ^1; A 1.1.0 needs C ^2, A 1.0.0 and B need C ^1) fails with a clash on nc-dep-c naming nc-dep-a 1.1.0; installing nc-dep-a 1.0.0 first makes the same install succeed (nc-dep-11-greedy-resolution, nc-dep-11b-solvable-with-pin). Proved in models/verus/dep_resolve.rs: on the nc-dep-11 instance a sound choice exists and the (deterministic) resolver fails (dep_witness_greedy_rejects_solvable, dep_deterministic). Explored (models/explorer/inst/check.py, dep-explore-completeness): 2,040 of 70,656 small instances are solvable but fail; some fail because the quick check ignores the installed-version floor. A resolution that ends Done is always sound (dep_refines; 0 of 59,776 explored). Review round: DEP-B13 now states the intent (\"if some choice of versions meets every requirement, IPM finds one\") with this decision open and `O!:nc-dep-11-greedy-resolution`; the witness is cited in Notes, not as P. A failure is now proved to name a reason (a loop of recorded requirements, or a requirement with no version allowed by it and the requirements already recorded; DEP-B54); those recorded requirements include earlier greedy choices, which is why option B is not met.",
+    "options": "A) Greedy is the contract; fix the comment and document that pins may be needed. B) Complete resolution is the contract; add real backtracking.",
+    "old_status": "resolved (evidence)",
+    "audit_status": "inherited source-supported interpretation; not new owner approval"
+  },
+  {
+    "id": "DEC-DEP-2",
+    "source": "playbook-uplift/decisions/03-04.md",
+    "row": "| DEC-DEP-2 | 04-dependencies | Should a failed install leave a lock file behind? The file is written after dependencies load but before the module's own Activate, outside the transaction. Observed on IRIS: `install -create-lockfile nc-dep-lf-fail` whose Activate fails returns an error, rolls back both modules, and leaves module-lock.json (listing nc-dep-lf-base) in the module folder (nc-dep-15-lockfile-failed-install). | A) Write it only after the whole install succeeds. B) Remove it on failure. C) Keep as is and document. | human | resolved (evidence) |",
+    "question": "Should a failed install leave a lock file behind? The file is written after dependencies load but before the module's own Activate, outside the transaction. Observed on IRIS: `install -create-lockfile nc-dep-lf-fail` whose Activate fails returns an error, rolls back both modules, and leaves module-lock.json (listing nc-dep-lf-base) in the module folder (nc-dep-15-lockfile-failed-install).",
+    "options": "A) Write it only after the whole install succeeds. B) Remove it on failure. C) Keep as is and document.",
+    "old_status": "resolved (evidence)",
+    "audit_status": "inherited source-supported interpretation; not new owner approval"
+  },
+  {
+    "id": "DEC-DEP-3",
+    "source": "playbook-uplift/decisions/03-04.md",
+    "row": "| DEC-DEP-3 | 04-dependencies | What should -create-lockfile do when a needed module has no registry (it was added with load from a folder)? Today no file is written and an error is printed; the install succeeds. Observed on IRIS: with lock-mod-a loaded from a folder, `install -create-lockfile lock-mod-e-1-dep-0-transient` succeeds, prints \"Error creating lock file ... Tried getting repo \"\" but none found\", and leaves the existing module-lock.json untouched (nc-dep-14-lockfile-folder-dependency). | A) Write the entry with an empty registry. B) Fail the command. C) Keep as is. | human | resolved (assumption) |",
+    "question": "What should -create-lockfile do when a needed module has no registry (it was added with load from a folder)? Today no file is written and an error is printed; the install succeeds. Observed on IRIS: with lock-mod-a loaded from a folder, `install -create-lockfile lock-mod-e-1-dep-0-transient` succeeds, prints \"Error creating lock file ... Tried getting repo \"\" but none found\", and leaves the existing module-lock.json untouched (nc-dep-14-lockfile-folder-dependency).",
+    "options": "A) Write the entry with an empty registry. B) Fail the command. C) Keep as is.",
+    "old_status": "resolved (assumption)",
+    "canonical_owner": {
+      "path": ".g5/ontology/features/dependencies.g5.md",
+      "id": "deps.lockfile.local-supplier-policy"
+    },
+    "audit_status": "open; working assumption"
+  },
+  {
+    "id": "DEC-UNIN-1",
+    "source": "playbook-uplift/decisions/05-06.md",
+    "row": "| DEC-UNIN-1 | 05 | When `uninstall M` is blocked because a dependent is installed (no `-force`), should the command report failure? Help (Main.cls#L486-L487) says uninstall \"will be prevented\"; the code comment (Lifecycle/Base.cls#L276) says \"return an error status\"; the code returns OK, prints `Clean SUCCESS` and logs a successful uninstall; PublishModuleWithDeps.cls#L25-L26 asserts that success. See F-UNIN-6. | (a) Fail with an error that names the dependents, and log the uninstall as failed. (b) Keep success, but log it as skipped. (c) Keep current behaviour and document it. | human | resolved (evidence) |",
+    "question": "When `uninstall M` is blocked because a dependent is installed (no `-force`), should the command report failure? Help (Main.cls#L486-L487) says uninstall \"will be prevented\"; the code comment (Lifecycle/Base.cls#L276) says \"return an error status\"; the code returns OK, prints `Clean SUCCESS` and logs a successful uninstall; PublishModuleWithDeps.cls#L25-L26 asserts that success. See F-UNIN-6.",
+    "options": "(a) Fail with an error that names the dependents, and log the uninstall as failed. (b) Keep success, but log it as skipped. (c) Keep current behaviour and document it.",
+    "old_status": "resolved (evidence)",
+    "audit_status": "inherited source-supported interpretation; not new owner approval"
+  },
+  {
+    "id": "DEC-UNIN-2",
+    "source": "playbook-uplift/decisions/05-06.md",
+    "row": "| DEC-UNIN-2 | 05 | What should the Clean phase do when run on IPM itself (`zpm clean`)? Code runs the IPM-only block at every level and prints \"WARNING: N module(s) orphaned\" while removing nothing (Lifecycle/Module.cls#L27-L81); ExecutePhases also treats it as a self-uninstall (Storage/Module.cls#L631). | (a) Refuse Clean on IPM. (b) Run it, but only warn when IPM is really removed (Clean.Level>0). (c) Treat it as uninstall of IPM. | human | resolved (evidence) |",
+    "question": "What should the Clean phase do when run on IPM itself (`zpm clean`)? Code runs the IPM-only block at every level and prints \"WARNING: N module(s) orphaned\" while removing nothing (Lifecycle/Module.cls#L27-L81); ExecutePhases also treats it as a self-uninstall (Storage/Module.cls#L631).",
+    "options": "(a) Refuse Clean on IPM. (b) Run it, but only warn when IPM is really removed (Clean.Level>0). (c) Treat it as uninstall of IPM.",
+    "old_status": "resolved (evidence)",
+    "audit_status": "inherited source-supported interpretation; not new owner approval"
+  },
+  {
+    "id": "DEC-UNIN-3",
+    "source": "playbook-uplift/decisions/05-06.md",
+    "row": "| DEC-UNIN-3 | 05 | Should phase-scoped needs (for example a test-only dependency) block uninstall? Uninstall counts every module whose full graph contains M, in any phase (Utils/Module.cls#L615); `show` lists only unscoped direct dependents (ModuleSummary.cls#L37). The two read-backs disagree. | (a) Count scoped needs (current uninstall). (b) Ignore scoped needs. (c) Count them but say so in `show`. | human | resolved (assumption) |",
+    "question": "Should phase-scoped needs (for example a test-only dependency) block uninstall? Uninstall counts every module whose full graph contains M, in any phase (Utils/Module.cls#L615); `show` lists only unscoped direct dependents (ModuleSummary.cls#L37). The two read-backs disagree.",
+    "options": "(a) Count scoped needs (current uninstall). (b) Ignore scoped needs. (c) Count them but say so in `show`.",
+    "old_status": "resolved (assumption)",
+    "canonical_owner": {
+      "path": ".g5/ontology/features/uninstall.g5.md",
+      "id": "uninstall.dependents.scoped-policy"
+    },
+    "audit_status": "open; working assumption"
+  },
+  {
+    "id": "DEC-REPO-1",
+    "source": "playbook-uplift/decisions/05-06.md",
+    "row": "| DEC-REPO-1 | 06 | When `publish` (or `unpublish` without a prefix) names no registry and no registry holds the publish flag, which registry is used? Help (Main.cls#L56-L57): \"saves that artifact to the repository for which deployment is enabled\". Code (Remote/Definition.cls#L117-L129, Oras/Definition.cls#L143-L155) falls back to a registry with a token, then one with user and password, then any enabled remote or ORAS registry, which can be the public community registry. See F-REPO-3. | (a) Fail when no registry has the publish flag. (b) Keep the fallback order and document it. (c) Fall back only to registries with credentials. | human | resolved (evidence) |",
+    "question": "When `publish` (or `unpublish` without a prefix) names no registry and no registry holds the publish flag, which registry is used? Help (Main.cls#L56-L57): \"saves that artifact to the repository for which deployment is enabled\". Code (Remote/Definition.cls#L117-L129, Oras/Definition.cls#L143-L155) falls back to a registry with a token, then one with user and password, then any enabled remote or ORAS registry, which can be the public community registry. See F-REPO-3.",
+    "options": "(a) Fail when no registry has the publish flag. (b) Keep the fallback order and document it. (c) Fall back only to registries with credentials.",
+    "old_status": "resolved (evidence)",
+    "audit_status": "inherited source-supported interpretation; not new owner approval"
+  },
+  {
+    "id": "DEC-REPO-2",
+    "source": "playbook-uplift/decisions/05-06.md",
+    "row": "| DEC-REPO-2 | 06 | What may IPM still do with a registry that is not enabled? Help: \"-disable: specifies that it can not be used.\" Install lookups (Manager.cls#L69) and unpublish (PublishManager classes) refuse it; `search` lists it (Main.cls#L2047, Utils/Module.cls#L916) and `publish -r R` sends to it (Lifecycle/Base.cls#L1598). See F-REPO-7. | (a) Refuse it everywhere. (b) Allow read-only listing (search) but refuse publish. (c) Allow anything that names it explicitly. | human | resolved (evidence) |",
+    "question": "What may IPM still do with a registry that is not enabled? Help: \"-disable: specifies that it can not be used.\" Install lookups (Manager.cls#L69) and unpublish (PublishManager classes) refuse it; `search` lists it (Main.cls#L2047, Utils/Module.cls#L916) and `publish -r R` sends to it (Lifecycle/Base.cls#L1598). See F-REPO-7.",
+    "options": "(a) Refuse it everywhere. (b) Allow read-only listing (search) but refuse publish. (c) Allow anything that names it explicitly.",
+    "old_status": "resolved (evidence)",
+    "audit_status": "inherited source-supported interpretation; not new owner approval"
+  },
+  {
+    "id": "DEC-REPO-3",
+    "source": "playbook-uplift/decisions/05-06.md",
+    "row": "| DEC-REPO-3 | 06 | Should changing the address of an ORAS registry clear its stored credentials, as a remote registry does (Remote/Definition.cls#L81-L86)? ORAS OnConfigure (Oras/Definition.cls#L87-L141) keeps them, so they are sent to the new host. | (a) Clear them, as for remote. (b) Keep them, and warn. (c) Keep them silently (current). | human | resolved (assumption) |",
+    "question": "Should changing the address of an ORAS registry clear its stored credentials, as a remote registry does (Remote/Definition.cls#L81-L86)? ORAS OnConfigure (Oras/Definition.cls#L87-L141) keeps them, so they are sent to the new host.",
+    "options": "(a) Clear them, as for remote. (b) Keep them, and warn. (c) Keep them silently (current).",
+    "old_status": "resolved (assumption)",
+    "canonical_owner": {
+      "path": ".g5/ontology/concepts/repositories.g5.md",
+      "id": "repo.oras.credentials-change-policy"
+    },
+    "audit_status": "open; working assumption"
+  },
+  {
+    "id": "DEC-REPO-4",
+    "source": "playbook-uplift/decisions/05-06.md",
+    "row": "| DEC-REPO-4 | 06 | Should `config set` or `config get` with an unknown key, or `config set` with an invalid value (for example a bad TestReportFormat), make the command fail? Code prints \"Config key ... not found\" or the error text and returns OK (Main.cls#L2063-L2093 ignores the status of `UpdateOne`). Changelog #1115 treated \"printing the error and reporting success\" as a bug for unpublish. See F-REPO-8. | (a) Return an error status. (b) Keep printing only. | human | resolved (evidence) |",
+    "question": "Should `config set` or `config get` with an unknown key, or `config set` with an invalid value (for example a bad TestReportFormat), make the command fail? Code prints \"Config key ... not found\" or the error text and returns OK (Main.cls#L2063-L2093 ignores the status of `UpdateOne`). Changelog #1115 treated \"printing the error and reporting success\" as a bug for unpublish. See F-REPO-8.",
+    "options": "(a) Return an error status. (b) Keep printing only.",
+    "old_status": "resolved (evidence)",
+    "audit_status": "inherited source-supported interpretation; not new owner approval"
+  },
+  {
+    "id": "DEC-REPO-5",
+    "source": "playbook-uplift/decisions/05-06.md",
+    "row": "| DEC-REPO-5 | 06 | Should `unpublish R/M V` in an ORAS registry also delete the platform-specific copies of a deployed module (tags `<version><sep><platform>`)? Code deletes only the plain version tag (Oras/PublishService.cls#L72-L81); deployed copies are pushed with a platform suffix (#L43-L48). | (a) Delete every tag of that version. (b) Require the platform to be named. (c) Keep current behaviour and document it. | human | resolved (assumption) |",
+    "question": "Should `unpublish R/M V` in an ORAS registry also delete the platform-specific copies of a deployed module (tags `<version><sep><platform>`)? Code deletes only the plain version tag (Oras/PublishService.cls#L72-L81); deployed copies are pushed with a platform suffix (#L43-L48).",
+    "options": "(a) Delete every tag of that version. (b) Require the platform to be named. (c) Keep current behaviour and document it.",
+    "old_status": "resolved (assumption)",
+    "canonical_owner": {
+      "path": ".g5/ontology/concepts/repositories.g5.md",
+      "id": "repo.oras.unpublish-platform-policy"
+    },
+    "audit_status": "open; working assumption"
+  },
+  {
+    "id": "DEC-REPO-6",
+    "source": "playbook-uplift/decisions/05-06.md",
+    "row": "| DEC-REPO-6 | 06 | Is storing registry passwords and tokens as plain text in the namespace (`^IPM.Repo.DefinitionD`, Http/Definition.cls#L17-L21) acceptable? `-password-env` and `-token-env` (changelog #1178) protect only the command line; the value is still stored. | (a) Accept and document. (b) Store a reference to the environment variable instead of the value. (c) Encrypt at rest or use IRIS credential storage. | human | resolved (evidence) |",
+    "question": "Is storing registry passwords and tokens as plain text in the namespace (`^IPM.Repo.DefinitionD`, Http/Definition.cls#L17-L21) acceptable? `-password-env` and `-token-env` (changelog #1178) protect only the command line; the value is still stored.",
+    "options": "(a) Accept and document. (b) Store a reference to the environment variable instead of the value. (c) Encrypt at rest or use IRIS credential storage.",
+    "old_status": "resolved (evidence)",
+    "audit_status": "inherited source-supported interpretation; not new owner approval"
+  },
+  {
+    "id": "DEC-NSP-1",
+    "source": "playbook-uplift/decisions/07-09.md",
+    "row": "| DEC-NSP-1 | 07-namespace | A namespace gets IPM code and repo settings by mapping, then gets its own IPM (installer or `load`). What should happen to the repo settings mapping? | (a) Remove it with the code mapping, since README#L77 says repos are only mapped together with code from the same namespace. (b) Keep it (current code: installer touches only `%IPM` package/routine mapping, Installer.cls#L25-29). Note that afterwards `unmap -ns X` reports \"No mapping found\" (Main.cls#L3968) so the repo mapping can no longer be removed by `unmap`. Native (N7): after the installer ran in NCD (code and repos mapped from USER), NCD kept its repo mapping and also its code mapping, and `unmap -ns NCD` then said \"No mapping found for NCD\" and removed nothing (O:nc-nsp-N7-installer-in-mapped, O:nc-nsp-N7-unmap-after-local-install; F-NSP-5). | human (IPM maintainers) | resolved (evidence) |",
+    "question": "A namespace gets IPM code and repo settings by mapping, then gets its own IPM (installer or `load`). What should happen to the repo settings mapping?",
+    "options": "(a) Remove it with the code mapping, since README#L77 says repos are only mapped together with code from the same namespace. (b) Keep it (current code: installer touches only `%IPM` package/routine mapping, Installer.cls#L25-29). Note that afterwards `unmap -ns X` reports \"No mapping found\" (Main.cls#L3968) so the repo mapping can no longer be removed by `unmap`. Native (N7): after the installer ran in NCD (code and repos mapped from USER), NCD kept its repo mapping and also its code mapping, and `unmap -ns NCD` then said \"No mapping found for NCD\" and removed nothing (O:nc-nsp-N7-installer-in-mapped, O:nc-nsp-N7-unmap-after-local-install; F-NSP-5).",
+    "old_status": "resolved (evidence)",
+    "audit_status": "inherited source-supported interpretation; not new owner approval"
+  },
+  {
+    "id": "DEC-NSP-2",
+    "source": "playbook-uplift/decisions/07-09.md",
+    "row": "| DEC-NSP-2 | 07-namespace | May IPM be installed locally in a namespace that currently gets IPM by mapping? | (a) Yes: help for `enable -map -globally` says \"Namespace-specific installation will override this\" (Main.cls#L743) and the installer / `load` have no guard. (b) No: `install`, `reinstall` and `uninstall` of `zpm` refuse with \"Cannot install 'zpm' in namespace X because it is mapped from namespace Y\" (Main.cls#L2534-2539). The two paths disagree. Native (N7): `install zpm` in NCD was refused with the mapped-from error; the installer run returned OK but did not give NCD its own code: the mappings to USER stayed, so the install compiles through them into USER's database (re-point probe), while NCD gained a `zpm` record (O:nc-nsp-N7-install-zpm-mapped, O:nc-nsp-N7-installer-in-mapped, O:nc-nsp-installer-repoint; F-NSP-5). | human (IPM maintainers) | resolved (evidence) |",
+    "question": "May IPM be installed locally in a namespace that currently gets IPM by mapping?",
+    "options": "(a) Yes: help for `enable -map -globally` says \"Namespace-specific installation will override this\" (Main.cls#L743) and the installer / `load` have no guard. (b) No: `install`, `reinstall` and `uninstall` of `zpm` refuse with \"Cannot install 'zpm' in namespace X because it is mapped from namespace Y\" (Main.cls#L2534-2539). The two paths disagree. Native (N7): `install zpm` in NCD was refused with the mapped-from error; the installer run returned OK but did not give NCD its own code: the mappings to USER stayed, so the install compiles through them into USER's database (re-point probe), while NCD gained a `zpm` record (O:nc-nsp-N7-install-zpm-mapped, O:nc-nsp-N7-installer-in-mapped, O:nc-nsp-installer-repoint; F-NSP-5).",
+    "old_status": "resolved (evidence)",
+    "audit_status": "inherited source-supported interpretation; not new owner approval"
+  },
+  {
+    "id": "DEC-NSP-3",
+    "source": "playbook-uplift/decisions/07-09.md",
+    "row": "| DEC-NSP-3 | 07-namespace | When `enable -map` (or `-community`) reaches a namespace that still holds legacy ZPM module records, should those records be migrated? | (a) Yes, run the same `MigrateZPMToIPM` that an IPM load runs (Migration.cls#L6-35). (b) No (current code: EnableIPM never calls RunAll, Main.cls#L3611-3708); the operator must re-load IPM. No doc covers this case. Native: not run (no legacy ZPM in these containers). Side fact: `MigrateRepoDefinitions` returns OK when there is nothing to copy (O:nc-nsp-migrate-repo-defs-success). | human (IPM maintainers) | resolved (evidence) |",
+    "question": "When `enable -map` (or `-community`) reaches a namespace that still holds legacy ZPM module records, should those records be migrated?",
+    "options": "(a) Yes, run the same `MigrateZPMToIPM` that an IPM load runs (Migration.cls#L6-35). (b) No (current code: EnableIPM never calls RunAll, Main.cls#L3611-3708); the operator must re-load IPM. No doc covers this case. Native: not run (no legacy ZPM in these containers). Side fact: `MigrateRepoDefinitions` returns OK when there is nothing to copy (O:nc-nsp-migrate-repo-defs-success).",
+    "old_status": "resolved (evidence)",
+    "audit_status": "inherited source-supported interpretation; not new owner approval"
+  },
+  {
+    "id": "DEC-NSP-4",
+    "source": "playbook-uplift/decisions/07-09.md",
+    "row": "| DEC-NSP-4 | 07-namespace | If one of the three steps of `enable -community` fails, should the command fail? | (a) Fail with an error status so scripts (`zpm \"...\":1`) stop. (b) Keep current behaviour: print the error in red and continue, returning success (Main.cls#L3565-3574). Help and README are silent. Native (N4, repo extent lock held by another job): each of the three steps printed a red error, the next step still ran, and the command returned OK (O:nc-nsp-N4-community-step-fails). | human (IPM maintainers) | resolved (assumption) |",
+    "question": "If one of the three steps of `enable -community` fails, should the command fail?",
+    "options": "(a) Fail with an error status so scripts (`zpm \"...\":1`) stop. (b) Keep current behaviour: print the error in red and continue, returning success (Main.cls#L3565-3574). Help and README are silent. Native (N4, repo extent lock held by another job): each of the three steps printed a red error, the next step still ran, and the command returned OK (O:nc-nsp-N4-community-step-fails).",
+    "old_status": "resolved (assumption)",
+    "canonical_owner": {
+      "path": ".g5/ontology/concepts/namespaces.g5.md",
+      "id": "namespace.enable.community-failure-policy"
+    },
+    "audit_status": "open; working assumption"
+  },
+  {
+    "id": "DEC-NSP-5",
+    "source": "playbook-uplift/decisions/07-09.md",
+    "row": "| DEC-NSP-5 | 07-namespace | In developer mode, a load refused by a system need (e.g. `SYSNamespace`) leaves the module's manifest record committed. Is that intended? | (a) Yes: `-dev` deliberately keeps the manifest so it can be fixed (Utils/Module.cls#L1309-1314, help Main.cls#L306 \"transactions will not be rolled back\"). (b) No: changelog #106 says the rule \"prevents installation in non-%SYS namespaces\"; move `CheckSystemRequirements` (L1321) before the dev-mode commit (L1311). Native (N8): plain `load` refused and left no record; `load -dev` refused with the same error but `sys-ns-module` 1.0.0 stayed, listed, with developer mode on (O:nc-nsp-N8-sysns-dev). | human (IPM maintainers) | resolved (assumption) |",
+    "question": "In developer mode, a load refused by a system need (e.g. `SYSNamespace`) leaves the module's manifest record committed. Is that intended?",
+    "options": "(a) Yes: `-dev` deliberately keeps the manifest so it can be fixed (Utils/Module.cls#L1309-1314, help Main.cls#L306 \"transactions will not be rolled back\"). (b) No: changelog #106 says the rule \"prevents installation in non-%SYS namespaces\"; move `CheckSystemRequirements` (L1321) before the dev-mode commit (L1311). Native (N8): plain `load` refused and left no record; `load -dev` refused with the same error but `sys-ns-module` 1.0.0 stayed, listed, with developer mode on (O:nc-nsp-N8-sysns-dev).",
+    "old_status": "resolved (assumption)",
+    "canonical_owner": {
+      "path": ".g5/ontology/features/load.g5.md",
+      "id": "load.refusal.requirements.timing"
+    },
+    "audit_status": "open; working assumption"
+  },
+  {
+    "id": "DEC-NSP-6",
+    "source": "playbook-uplift/decisions/07-09.md",
+    "row": "| DEC-NSP-6 | 07-namespace | Two namespaces with a zpm record share one IPM database (IPM's verify-phase namespace USER-VERIFY, or an installer run in a mapped namespace). Which one is the source of the namespaces mapped to that database? | (a) The namespace whose own routine database it is (USER for USER's database); a namespace whose code comes from another namespace's database is never a source. (b) Current code: the last one by name (Main.cls#L1628-L1654), so `enable -map -repos` from USER skips every target and `version` names USER-VERIFY (F-NSP-7). Native: O:nc-nsp-model-mapinfo, O:nc-nsp-model-repos-premapped. | human (IPM maintainers) | resolved (assumption) |",
+    "question": "Two namespaces with a zpm record share one IPM database (IPM's verify-phase namespace USER-VERIFY, or an installer run in a mapped namespace). Which one is the source of the namespaces mapped to that database?",
+    "options": "(a) The namespace whose own routine database it is (USER for USER's database); a namespace whose code comes from another namespace's database is never a source. (b) Current code: the last one by name (Main.cls#L1628-L1654), so `enable -map -repos` from USER skips every target and `version` names USER-VERIFY (F-NSP-7). Native: O:nc-nsp-model-mapinfo, O:nc-nsp-model-repos-premapped.",
+    "old_status": "resolved (assumption)",
+    "canonical_owner": {
+      "path": ".g5/ontology/concepts/namespaces.g5.md",
+      "id": "namespace.enable.source-ambiguity-policy"
+    },
+    "audit_status": "open; working assumption"
+  },
+  {
+    "id": "DEC-RES-1",
+    "source": "playbook-uplift/decisions/07-09.md",
+    "row": "| DEC-RES-1 | 08-resources | Should a namespace switch done inside `exec` persist after the command? | (a) No, isolate (PR #996, changelog 0.10.6 at CHANGELOG.md#L142, code `new $namespace` Main.cls#L2435); then the help example \"set the namespace to MYAPP\" (Main.cls#L515-516) is stale. (b) Yes, as the help example shows. Native (N16): the switch holds inside the command (INSIDE:%SYS) and ends with it; the caller stays in USER (O:nc-res-N16-exec-namespace-v2). | human (IPM maintainers) | resolved (evidence) |",
+    "question": "Should a namespace switch done inside `exec` persist after the command?",
+    "options": "(a) No, isolate (PR #996, changelog 0.10.6 at CHANGELOG.md#L142, code `new $namespace` Main.cls#L2435); then the help example \"set the namespace to MYAPP\" (Main.cls#L515-516) is stale. (b) Yes, as the help example shows. Native (N16): the switch holds inside the command (INSIDE:%SYS) and ends with it; the caller stays in USER (O:nc-res-N16-exec-namespace-v2).",
+    "old_status": "resolved (evidence)",
+    "audit_status": "inherited source-supported interpretation; not new owner approval"
+  },
+  {
+    "id": "DEC-RES-2",
+    "source": "playbook-uplift/decisions/07-09.md",
+    "row": "| DEC-RES-2 | 08-resources | What is the JSON format of a `run-from-file` command file? | (a) A root object with a `commands` array (help example Main.cls#L364-404, code Main.cls#L2003-2009). (b) A single root array, as the help description says (Main.cls#L352). The code rejects (b). Native (N17): a root array is refused (\"Expected JSON object at root level\"); a `commands` object runs (O:nc-res-N17-run-from-file-v2). | human (IPM maintainers) | resolved (evidence) |",
+    "question": "What is the JSON format of a `run-from-file` command file?",
+    "options": "(a) A root object with a `commands` array (help example Main.cls#L364-404, code Main.cls#L2003-2009). (b) A single root array, as the help description says (Main.cls#L352). The code rejects (b). Native (N17): a root array is refused (\"Expected JSON object at root level\"); a `commands` object runs (O:nc-res-N17-run-from-file-v2).",
+    "old_status": "resolved (evidence)",
+    "audit_status": "inherited source-supported interpretation; not new owner approval"
+  },
+  {
+    "id": "DEC-RES-3",
+    "source": "playbook-uplift/decisions/07-09.md",
+    "row": "| DEC-RES-3 | 08-resources | Packaging a module that has `Deploy=\"true\"` classes runs MakeDeployed in the current namespace, which removes those classes' source even in developer mode. Is that intended? | (a) Yes: the verbose message says \"unless packaging, in which case items WILL be deployed\" (Base.cls#L1837). (b) No: packaging should deploy into the artifact only and leave the developer's namespace editable. Native (N12): `package` of a `-dev` module made DeployMapA.First Deployed=1 in the namespace and its method source unreadable (O:nc-res-N12b-package-dev). | human (IPM maintainers) | resolved (evidence) |",
+    "question": "Packaging a module that has `Deploy=\"true\"` classes runs MakeDeployed in the current namespace, which removes those classes' source even in developer mode. Is that intended?",
+    "options": "(a) Yes: the verbose message says \"unless packaging, in which case items WILL be deployed\" (Base.cls#L1837). (b) No: packaging should deploy into the artifact only and leave the developer's namespace editable. Native (N12): `package` of a `-dev` module made DeployMapA.First Deployed=1 in the namespace and its method source unreadable (O:nc-res-N12b-package-dev).",
+    "old_status": "resolved (evidence)",
+    "audit_status": "inherited source-supported interpretation; not new owner approval"
+  },
+  {
+    "id": "DEC-SYNC-1",
+    "source": "playbook-uplift/decisions/07-09.md",
+    "row": "| DEC-SYNC-1 | 09-sync | Should a failed load or compile outside `sync` (`compile`, `load -dev`, `reload`) flag the files it put on the server, as a failed sync does? | (a) Yes: sync help promises changes \"since the last load/sync\" (Main.cls#L111), and issue #1224's expected behaviour is that a reverted file is reloaded. (b) No: retry marks are a sync-only mechanism (Pipeline.cls#L210-223); the operator should run `compile` again. Native (N18): a failed `compile` left SyncFailed=0 and the old hash; after an exact-byte revert `sync` said \"Nothing to sync\" and the broken class stayed (O:nc-sync-N18-compile-fail-revert). | human (IPM maintainers) | resolved (assumption) |",
+    "question": "Should a failed load or compile outside `sync` (`compile`, `load -dev`, `reload`) flag the files it put on the server, as a failed sync does?",
+    "options": "(a) Yes: sync help promises changes \"since the last load/sync\" (Main.cls#L111), and issue #1224's expected behaviour is that a reverted file is reloaded. (b) No: retry marks are a sync-only mechanism (Pipeline.cls#L210-223); the operator should run `compile` again. Native (N18): a failed `compile` left SyncFailed=0 and the old hash; after an exact-byte revert `sync` said \"Nothing to sync\" and the broken class stayed (O:nc-sync-N18-compile-fail-revert).",
+    "old_status": "resolved (assumption)",
+    "canonical_owner": {
+      "path": ".g5/ontology/features/developer-tools.g5.md",
+      "id": "devtools.sync.failed-import-policy"
+    },
+    "audit_status": "open; working assumption"
+  },
+  {
+    "id": "DEC-SYNC-2",
+    "source": "playbook-uplift/decisions/07-09.md",
+    "row": "| DEC-SYNC-2 | 09-sync | When a module has no baseline (after `load -dev -skip-sync`, or from before sync existed), should the first `sync` load files edited since the load? | (a) Yes: help for `-skip-sync` says \"The next sync of the module records them instead\" (Main.cls#L315), and sync help promises changes since the last load. (b) No (current, and asserted by Sync.cls#L126-133 for the pre-feature case): the first sync only stamps; edits made before it are absorbed. Native (N19): after `load -dev -skip-sync` and an edit, the first sync only set the baseline, the second said \"Nothing to sync\", and the server kept the old code (O:nc-sync-N19-skip-sync-first-sync). | human (IPM maintainers) | resolved (evidence) |",
+    "question": "When a module has no baseline (after `load -dev -skip-sync`, or from before sync existed), should the first `sync` load files edited since the load?",
+    "options": "(a) Yes: help for `-skip-sync` says \"The next sync of the module records them instead\" (Main.cls#L315), and sync help promises changes since the last load. (b) No (current, and asserted by Sync.cls#L126-133 for the pre-feature case): the first sync only stamps; edits made before it are absorbed. Native (N19): after `load -dev -skip-sync` and an edit, the first sync only set the baseline, the second said \"Nothing to sync\", and the server kept the old code (O:nc-sync-N19-skip-sync-first-sync).",
+    "old_status": "resolved (evidence)",
+    "audit_status": "inherited source-supported interpretation; not new owner approval"
+  },
+  {
+    "id": "DEC-SYNC-3",
+    "source": "playbook-uplift/decisions/07-09.md",
+    "row": "| DEC-SYNC-3 | 09-sync | Should `sync` with no module name return an error status when any module fails? | (a) Yes, like `sync <module>` (Main.cls#L2381). (b) No (current): print each error and a summary, return success (Main.cls#L2396-2410). Help is silent. Native (N20): `sync` with one broken module printed the error and a summary naming it, synced the other module, and returned OK; `sync sync-test` returned the error (O:nc-sync-N20-sync-all-one-fails). | human (IPM maintainers) | resolved (assumption) |",
+    "question": "Should `sync` with no module name return an error status when any module fails?",
+    "options": "(a) Yes, like `sync <module>` (Main.cls#L2381). (b) No (current): print each error and a summary, return success (Main.cls#L2396-2410). Help is silent. Native (N20): `sync` with one broken module printed the error and a summary naming it, synced the other module, and returned OK; `sync sync-test` returned the error (O:nc-sync-N20-sync-all-one-fails).",
+    "old_status": "resolved (assumption)",
+    "canonical_owner": {
+      "path": ".g5/ontology/features/developer-tools.g5.md",
+      "id": "devtools.sync.aggregate-status-policy"
+    },
+    "audit_status": "open; working assumption"
+  },
+  {
+    "id": "DEC-SYNC-4",
+    "source": "playbook-uplift/decisions/07-09.md",
+    "row": "| DEC-SYNC-4 | 09-sync | What should `reload` do for a module that is not in developer mode (no root directory)? | (a) Fail or warn, since help says it \"pulls module source code into the namespace from disk\" (Main.cls#L42). (b) Keep the silent no-op marked \"For now\" (Base.cls#L633-634). Native (N21): `reload` of a non-dev module printed \"Reload START ... SUCCESS\", returned OK, and did not load the edited file (O:nc-sync-N21-reload-non-dev). | human (IPM maintainers) | resolved (assumption) |",
+    "question": "What should `reload` do for a module that is not in developer mode (no root directory)?",
+    "options": "(a) Fail or warn, since help says it \"pulls module source code into the namespace from disk\" (Main.cls#L42). (b) Keep the silent no-op marked \"For now\" (Base.cls#L633-634). Native (N21): `reload` of a non-dev module printed \"Reload START ... SUCCESS\", returned OK, and did not load the edited file (O:nc-sync-N21-reload-non-dev).",
+    "old_status": "resolved (assumption)",
+    "canonical_owner": {
+      "path": ".g5/ontology/concepts/lifecycle.g5.md",
+      "id": "lifecycle.empty-reload-policy"
+    },
+    "audit_status": "open; working assumption"
+  }
+]

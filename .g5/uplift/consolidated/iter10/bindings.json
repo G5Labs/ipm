@@ -1,0 +1,144 @@
+{
+  "verus_dir": ".g5/Verus_verification/consolidated/iter10",
+  "changed_files": [
+    ".g5/ontology/root.g5.md",
+    ".g5/ontology/features/uninstall.g5.md",
+    ".g5/ontology/features/build-and-publish.g5.md",
+    ".g5/uplift/consolidated/BUGS.md",
+    ".g5/uplift/consolidated/QUESTIONS.md",
+    ".g5/uplift/consolidated/DESIGN-SIMPLIFICATIONS.md"
+  ],
+  "rows": [
+    {
+      "id": "S10-01",
+      "owner": ".g5/ontology/features/uninstall.g5.md#uninstall.child-error",
+      "model": "errors.rs",
+      "symbols": [
+        "resolve",
+        "package",
+        "uninstall",
+        "repaired_uninstall",
+        "returned_error_neighbors"
+      ],
+      "direct": [
+        [
+          "src/cls/IPM/Storage/ResourceReference.cls",
+          "ResolveChildren"
+        ],
+        [
+          "src/cls/IPM/Lifecycle/Base.cls",
+          "%Clean"
+        ],
+        [
+          "src/cls/IPM/Storage/Module.cls",
+          "GetResolvedReferences"
+        ]
+      ],
+      "reader": [
+        [
+          "src/cls/IPM/Lifecycle/Base.cls",
+          "%Export"
+        ],
+        [
+          "src/cls/IPM/StudioDocument/Module.cls",
+          "Delete"
+        ],
+        [
+          "src/cls/IPM/Storage/Module.cls",
+          "Uninstall"
+        ]
+      ],
+      "scope": "Non-mutating code/metadata hook returns error after successful enumeration; callers disagree. Metadata delete and ordinary valid-neighbor cleanup succeed."
+    },
+    {
+      "id": "S10-02",
+      "owner": ".g5/ontology/features/build-and-publish.g5.md#build.package.test-path",
+      "model": "scope.rs",
+      "symbols": [
+        "unit_children",
+        "has_scope",
+        "references",
+        "export_phases",
+        "directory_prefix",
+        "copied",
+        "archive",
+        "package",
+        "packaging_neighbors"
+      ],
+      "direct": [
+        [
+          "src/cls/IPM/ResourceProcessor/Test.cls",
+          "OnResolveChildren"
+        ],
+        [
+          "src/cls/IPM/Storage/Module.cls",
+          "HasScope"
+        ],
+        [
+          "src/cls/IPM/Storage/Module.cls",
+          "GetResolvedReferences"
+        ],
+        [
+          "src/cls/IPM/Lifecycle/Base.cls",
+          "%Export"
+        ],
+        [
+          "src/cls/IPM/Lifecycle/Base.cls",
+          "ExportSingleModule"
+        ]
+      ],
+      "reader": [
+        [
+          "src/cls/IPM/Lifecycle/Module.cls",
+          "%Package"
+        ],
+        [
+          "src/cls/IPM/General/Archive.cls",
+          "Create"
+        ],
+        [
+          "src/cls/IPM/General/Archive.cls",
+          "Extract"
+        ],
+        [
+          "src/cls/IPM/ResourceProcessor/Test.cls",
+          "OnExportItem"
+        ]
+      ],
+      "scope": "Successful Package-only path/content through real extractor. Last OnExportItem binding is separate defensive path API; actual readded path carries no processor. Archive Create/Extract are conditional provider roles, not modeled parser bodies."
+    },
+    {
+      "id": "S10-03",
+      "owner": ".g5/ontology/features/build-and-publish.g5.md#build.package.include-refresh",
+      "model": "scope.rs",
+      "symbols": [
+        "refresh_include",
+        "refresh_and_package",
+        "matrix",
+        "matrix_prior",
+        "refresh_neighbors"
+      ],
+      "direct": [
+        [
+          "src/cls/IPM/StudioDocument/Module.cls",
+          "UpdatePersistentFromStream"
+        ],
+        [
+          "src/cls/IPM/Storage/Module.cls",
+          "XMLNew"
+        ]
+      ],
+      "reader": [
+        [
+          "src/cls/IPM/Lifecycle/Base.cls",
+          "%Export"
+        ],
+        [
+          "src/cls/IPM/Lifecycle/Base.cls",
+          "ExportSingleModule"
+        ]
+      ],
+      "scope": "Existing object retains omitted IncludeTests; parsed optional false/true differs; command-only override leaves stored value. Narrow scalar/selection claim; general XML interpreter not modeled."
+    }
+  ]
+}

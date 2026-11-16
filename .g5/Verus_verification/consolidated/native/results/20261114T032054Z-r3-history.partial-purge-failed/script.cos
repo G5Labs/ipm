@@ -1,0 +1,43 @@
+set r=##class(%IPM.Repo.Filesystem.Definition).%New(), r.Name="reg3", r.Root="/tmp/c3/reg/", r.Snapshots=1, r.Prereleases=1
+write !,"OBS H.setup buildcache=",$system.Status.IsOK(r.BuildCache(1,0,0))," moniker=",$parameter("%IPM.Repo.Filesystem.Definition","MONIKER")," details=",r.Details,!
+// H1 install from a registry, H2 uninstall, H3 a refused downgrade
+do ##class(Consolidated.Obs).Run("H1","install h-inst")
+set h1=$order(^IPM.General.HistoryD(""),-1) write "OBS H1 id=",h1,!
+do ##class(Consolidated.Obs).Run("H1d","history details "_h1)
+do ##class(Consolidated.Obs).Run("H2","uninstall h-inst")
+set h2=$order(^IPM.General.HistoryD(""),-1) write "OBS H2 id=",h2,!
+do ##class(Consolidated.Obs).Run("H2d","history details "_h2)
+do ##class(Consolidated.Obs).Run("H3a","load /tmp/c3/h-load-2/")
+do ##class(Consolidated.Obs).Run("H3","load /tmp/c3/h-load-1/")
+set h3=$order(^IPM.General.HistoryD(""),-1) write "OBS H3 id=",h3,!
+do ##class(Consolidated.Obs).Run("H3d","history details "_h3_" -phases")
+// H4 an unfinished record (started, never finalized)
+set log=##class(%IPM.General.History).LoadInit("h-running") set h4=log.%Id() write "OBS H4 id=",h4,!
+do ##class(Consolidated.Obs).Run("H4d","history details "_h4)
+do ##class(Consolidated.Obs).Run("H4f","history find -limit 4")
+// H5 details of a missing record
+do ##class(Consolidated.Obs).Run("H5","history details 999999")
+// H6 globally
+do ##class(Consolidated.Obs).Run("H6","history find -globally -limit 1")
+// P: once-a-day purge marker (setting and marker in %SYS ^IPM.settings)
+set retain0=##class(%IPM.Repo.UniversalSettings).GetHistoryRetain(), mark0=##class(%IPM.General.History).GetHistoryLastPurge()
+write "OBS ENV retain.initial=",retain0," marker.initial=",$select(mark0="":"none",mark0=+$h:"today",1:"other"),!
+do ##class(%IPM.Repo.UniversalSettings).SetValue("HistoryRetain",1)
+new $namespace set $namespace="%SYS" set ^IPM.settings("HistoryRetain","lastPurge")=$h-1 set $namespace="USER"
+&sql(INSERT INTO %IPM_General.History (Action,Package,TimeStart,UserName,CommandString,Success,Committed,Finalized) VALUES ('load','h-old1','2000-01-01 00:00:00','x','old',1,1,1))
+set o1=%ROWID write "OBS P1.setup sqlcode=",SQLCODE,!
+set sc=##class(%IPM.Main).Shell("help -h")
+write "OBS P1 old1=",##class(%IPM.General.History).%ExistsId(o1)," marker=",$select(##class(%IPM.General.History).GetHistoryLastPurge()=+$h:"today",1:"other"),!
+&sql(INSERT INTO %IPM_General.History (Action,Package,TimeStart,UserName,CommandString,Success,Committed,Finalized) VALUES ('load','h-old2','2000-01-01 00:00:00','x','old',1,1,1))
+set o2=%ROWID
+set sc=##class(%IPM.Main).Shell("help -h")
+write "OBS P2 old2=",##class(%IPM.General.History).%ExistsId(o2)," marker=",$select(##class(%IPM.General.History).GetHistoryLastPurge()=+$h:"today",1:"other"),!
+do ##class(%IPM.Repo.UniversalSettings).SetValue("HistoryRetain",0)
+new $namespace set $namespace="%SYS" set ^IPM.settings("HistoryRetain","lastPurge")=$h-1 set $namespace="USER"
+set sc=##class(%IPM.Main).Shell("help -h")
+write "OBS P3 old2=",##class(%IPM.General.History).%ExistsId(o2)," marker=",$select(##class(%IPM.General.History).GetHistoryLastPurge()=+$h:"today",1:"other"),!
+do ##class(%IPM.Repo.UniversalSettings).SetValue("HistoryRetain",retain0)
+new $namespace set $namespace="%SYS" if mark0="" { kill ^IPM.settings("HistoryRetain","lastPurge") } else { set ^IPM.settings("HistoryRetain","lastPurge")=mark0 } set $namespace="USER"
+write "OBS ENV retain.restored=",##class(%IPM.Repo.UniversalSettings).GetHistoryRetain(),!
+write !,"NATIVE-END",!
+halt

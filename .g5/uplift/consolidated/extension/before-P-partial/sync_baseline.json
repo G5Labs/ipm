@@ -1,0 +1,402 @@
+{
+  "baseline": [
+    17,
+    0
+  ],
+  "controls": [
+    {
+      "name": "sync-no-markfailed",
+      "description": "a failed sync sets no retry mark (MarkFailed dropped)",
+      "status": "killed",
+      "errors_in": [
+        "sync_lemma_failed_sync_effects",
+        "sync_lemma_sync"
+      ],
+      "expected_in": [
+        "sync_lemma_sync"
+      ],
+      "counts": [
+        15,
+        2
+      ]
+    },
+    {
+      "name": "sync-ignores-retry-marks",
+      "description": "ComputeChanges pass 3 dropped: a file with a retry mark is not forced through",
+      "status": "killed",
+      "errors_in": [
+        "sync_lemma_success_effects",
+        "sync_lemma_sync",
+        "sync_witness_failed_sync_is_retried"
+      ],
+      "expected_in": [
+        "sync_lemma_sync"
+      ],
+      "counts": [
+        14,
+        3
+      ]
+    },
+    {
+      "name": "sync-commit-without-load",
+      "description": "a successful sync commits the new hash without loading the file",
+      "status": "killed",
+      "errors_in": [
+        "sync_lemma_success_effects",
+        "sync_lemma_sync"
+      ],
+      "expected_in": [
+        "sync_lemma_sync"
+      ],
+      "counts": [
+        15,
+        2
+      ]
+    },
+    {
+      "name": "compile-stamps-on-failure",
+      "description": "the dev-mode compile records baselines even when it fails",
+      "status": "killed",
+      "errors_in": [
+        "sync_lemma_compile",
+        "sync_lemma_compile_effects",
+        "sync_witness_failed_compile_then_revert"
+      ],
+      "expected_in": [
+        "sync_lemma_compile"
+      ],
+      "counts": [
+        14,
+        3
+      ]
+    },
+    {
+      "name": "reload-drops-server-copy",
+      "description": "reload removes the server copy instead of loading the disk bytes",
+      "status": "killed",
+      "errors_in": [
+        "sync_lemma_reload",
+        "sync_witness_reload_then_revert"
+      ],
+      "expected_in": [
+        "sync_lemma_reload"
+      ],
+      "counts": [
+        15,
+        2
+      ]
+    },
+    {
+      "name": "edit-updates-baseline",
+      "description": "an edit on disk also rewrites the stored baseline",
+      "status": "killed",
+      "errors_in": [
+        "sync_lemma_edit",
+        "sync_witness_reload_then_revert",
+        "sync_witness_skip_sync_load_then_revert"
+      ],
+      "expected_in": [
+        "sync_lemma_edit"
+      ],
+      "counts": [
+        14,
+        3
+      ]
+    },
+    {
+      "name": "no-premise-out",
+      "description": "drop defect premise OUT (F-SYNC-1) for compile and load",
+      "status": "killed",
+      "errors_in": [
+        "sync_lemma_compile",
+        "sync_witness_failed_compile_then_revert",
+        "sync_witness_skip_sync_load_then_revert"
+      ],
+      "expected_in": [
+        "sync_lemma_compile"
+      ],
+      "counts": [
+        14,
+        3
+      ]
+    },
+    {
+      "name": "no-premise-out-reload",
+      "description": "drop defect premise OUT (F-SYNC-1) for reload",
+      "status": "killed",
+      "errors_in": [
+        "sync_lemma_reload",
+        "sync_witness_reload_then_revert"
+      ],
+      "expected_in": [
+        "sync_lemma_reload"
+      ],
+      "counts": [
+        15,
+        2
+      ]
+    },
+    {
+      "name": "no-premise-base",
+      "description": "drop defect premise BASE (F-SYNC-2)",
+      "status": "killed",
+      "errors_in": [
+        "sync_lemma_sync",
+        "sync_witness_first_sync_absorbs_edit"
+      ],
+      "expected_in": [
+        "sync_lemma_sync"
+      ],
+      "counts": [
+        15,
+        2
+      ]
+    },
+    {
+      "name": "l1-sync-no-success-rule",
+      "description": "vacuity: L1 sync without 'success leaves server = disk' must lose the F-SYNC-1 witness",
+      "status": "killed",
+      "errors_in": [
+        "sync_witness_failed_compile_then_revert",
+        "sync_witness_first_sync_absorbs_edit",
+        "sync_witness_reload_then_revert",
+        "sync_witness_skip_sync_load_then_revert"
+      ],
+      "expected_in": [
+        "sync_witness_failed_compile_then_revert"
+      ],
+      "counts": [
+        13,
+        4
+      ]
+    },
+    {
+      "name": "l1-sync-server-present",
+      "description": "vacuity: L1 sync that only asks for a server copy must lose the F-SYNC-2 witness",
+      "status": "killed",
+      "errors_in": [
+        "sync_witness_failed_compile_then_revert",
+        "sync_witness_first_sync_absorbs_edit",
+        "sync_witness_reload_then_revert",
+        "sync_witness_skip_sync_load_then_revert"
+      ],
+      "expected_in": [
+        "sync_witness_first_sync_absorbs_edit"
+      ],
+      "counts": [
+        13,
+        4
+      ]
+    },
+    {
+      "name": "l1-sync-success-on-loaded-only",
+      "description": "vacuity: L1 sync that checks only files whose baseline changed must lose the reload witness",
+      "status": "killed",
+      "errors_in": [
+        "sync_witness_failed_compile_then_revert",
+        "sync_witness_first_sync_absorbs_edit",
+        "sync_witness_reload_then_revert",
+        "sync_witness_skip_sync_load_then_revert"
+      ],
+      "expected_in": [
+        "sync_witness_reload_then_revert"
+      ],
+      "counts": [
+        13,
+        4
+      ]
+    },
+    {
+      "name": "l1-sync-success-allows-old-copy",
+      "description": "vacuity: L1 sync success that also allows the old server copy must lose the -skip-sync witness",
+      "status": "killed",
+      "errors_in": [
+        "sync_witness_failed_compile_then_revert",
+        "sync_witness_first_sync_absorbs_edit",
+        "sync_witness_reload_then_revert",
+        "sync_witness_skip_sync_load_then_revert"
+      ],
+      "expected_in": [
+        "sync_witness_skip_sync_load_then_revert"
+      ],
+      "counts": [
+        13,
+        4
+      ]
+    },
+    {
+      "name": "commit-keeps-retry-mark",
+      "description": "CommitChanges leaves SyncFailed set",
+      "status": "killed",
+      "errors_in": [
+        "sync_lemma_success_effects",
+        "sync_witness_failed_sync_is_retried"
+      ],
+      "expected_in": [
+        "sync_lemma_success_effects"
+      ],
+      "counts": [
+        15,
+        2
+      ]
+    },
+    {
+      "name": "failed-sync-rewrites-baseline",
+      "description": "a failed sync writes the new hash",
+      "status": "killed",
+      "errors_in": [
+        "sync_lemma_failed_sync_effects",
+        "sync_lemma_sync",
+        "sync_witness_failed_sync_is_retried"
+      ],
+      "expected_in": [
+        "sync_lemma_failed_sync_effects"
+      ],
+      "counts": [
+        14,
+        3
+      ]
+    },
+    {
+      "name": "stamp-clears-marks",
+      "description": "StampModule clears retry marks",
+      "status": "killed",
+      "errors_in": [
+        "sync_lemma_stamp_frame"
+      ],
+      "expected_in": [
+        "sync_lemma_stamp_frame"
+      ],
+      "counts": [
+        16,
+        1
+      ]
+    },
+    {
+      "name": "first-sync-loads",
+      "description": "a sync with no baseline loads the files instead of only stamping",
+      "status": "killed",
+      "errors_in": [
+        "sync_lemma_first_sync",
+        "sync_witness_first_sync_absorbs_edit"
+      ],
+      "expected_in": [
+        "sync_lemma_first_sync"
+      ],
+      "counts": [
+        15,
+        2
+      ]
+    },
+    {
+      "name": "reload-stamps",
+      "description": "reload records baselines",
+      "status": "killed",
+      "errors_in": [
+        "sync_lemma_reload_effects",
+        "sync_witness_reload_then_revert"
+      ],
+      "expected_in": [
+        "sync_lemma_reload_effects"
+      ],
+      "counts": [
+        15,
+        2
+      ]
+    },
+    {
+      "name": "no-mark-test-pending",
+      "description": "MarkTestPending dropped",
+      "status": "killed",
+      "errors_in": [
+        "sync_lemma_test_marks"
+      ],
+      "expected_in": [
+        "sync_lemma_test_marks"
+      ],
+      "counts": [
+        16,
+        1
+      ]
+    },
+    {
+      "name": "sync-worked-reports-failure",
+      "description": "finding 1: a sync whose loads, compile and tests worked reports failure",
+      "status": "killed",
+      "errors_in": [
+        "sync_lemma_sync"
+      ],
+      "expected_in": [
+        "sync_lemma_sync"
+      ],
+      "counts": [
+        16,
+        1
+      ]
+    },
+    {
+      "name": "sync-test-failure-reports-success",
+      "description": "finding 1: a failing test no longer fails the sync command (SYNC-B31)",
+      "status": "killed",
+      "errors_in": [
+        "sync_lemma_sync"
+      ],
+      "expected_in": [
+        "sync_lemma_sync"
+      ],
+      "counts": [
+        16,
+        1
+      ]
+    },
+    {
+      "name": "sync-compile-failure-reports-success",
+      "description": "finding 1: a failed load or compile reports success",
+      "status": "killed",
+      "errors_in": [
+        "sync_lemma_sync"
+      ],
+      "expected_in": [
+        "sync_lemma_sync"
+      ],
+      "counts": [
+        16,
+        1
+      ]
+    },
+    {
+      "name": "sync-nothing-to-sync-reports-failure",
+      "description": "finding 1: a sync with nothing to apply reports failure",
+      "status": "killed",
+      "errors_in": [
+        "sync_lemma_sync",
+        "sync_witness_failed_compile_then_revert",
+        "sync_witness_reload_then_revert",
+        "sync_witness_skip_sync_load_then_revert"
+      ],
+      "expected_in": [
+        "sync_lemma_sync"
+      ],
+      "counts": [
+        13,
+        4
+      ]
+    },
+    {
+      "name": "sync-not-dev-reports-success",
+      "description": "finding 1: a sync refused for a module not in developer mode reports success (SYNC-B1)",
+      "status": "killed",
+      "errors_in": [
+        "sync_lemma_sync"
+      ],
+      "expected_in": [
+        "sync_lemma_sync"
+      ],
+      "counts": [
+        16,
+        1
+      ]
+    }
+  ],
+  "all_killed_in_expected_place": true
+}

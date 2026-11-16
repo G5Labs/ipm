@@ -1,0 +1,36 @@
+error: postcondition not satisfied
+   --> .g5/Verus_verification/consolidated/iter16/model-lane/controls/not-found-returns-success.rs:156:32
+    |
+154 | pub proof fn missing_preserves_installed_state(w:World,r:Request)
+    | ----------------------------------------------------------------- at the end of the function body
+155 |  requires fresh_install(w),!w.repos.contains_key(r.repository)
+156 |  ensures install(w,r).assessed,!install(w,r).ok,install(w,r).world.module==w.module,install(w,r).world.code==w.code,
+    |                                ^^^^^^^^^^^^^^^^ failed this postcondition
+
+note: function body check: not all errors may have been reported; rerun with a higher value for --multiple-errors to find other potential errors in this function
+   --> .g5/Verus_verification/consolidated/iter16/model-lane/controls/not-found-returns-success.rs:200:1
+    |
+200 | pub proof fn local_and_refusal_neighbors()
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: postcondition not satisfied
+   --> .g5/Verus_verification/consolidated/iter16/model-lane/controls/not-found-returns-success.rs:206:2
+    |
+200 | pub proof fn local_and_refusal_neighbors()
+    | ------------------------------------------ at the end of the function body
+...
+206 |  !missing().ok,missing().world.module==None,payload(missing().world)==0,
+    |  ^^^^^^^^^^^^^ failed this postcondition
+
+error: postcondition not satisfied
+   --> .g5/Verus_verification/consolidated/iter16/model-lane/controls/not-found-returns-success.rs:207:2
+    |
+200 | pub proof fn local_and_refusal_neighbors()
+    | ------------------------------------------ at the end of the function body
+...
+207 |  !disabled().ok,disabled().world.module==None,payload(disabled().world)==0,
+    |  ^^^^^^^^^^^^^^ failed this postcondition
+
+verification results:: 21 verified, 2 errors
+error: aborting due to 3 previous errors
+

@@ -1,0 +1,43 @@
+verification results:: 5 verified, 2 errors
+note: function body check: not all errors may have been reported; rerun with a higher value for --multiple-errors to find other potential errors in this function
+   --> /Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter4/proofs/controls/test_outcome/nested-clears-parent.rs:110:1
+    |
+110 | pub proof fn lemma_nested_keeps_parent(slots: Slots, start: nat)
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: postcondition not satisfied
+   --> /Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter4/proofs/controls/test_outcome/nested-clears-parent.rs:112:13
+    |
+110 | pub proof fn lemma_nested_keeps_parent(slots: Slots, start: nat)
+    | ---------------------------------------------------------------- at the end of the function body
+111 |     requires 0 < start <= slots.len()
+112 |     ensures get_all_status(slots, start).after == Some(slots.take(start as int)),
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+note: recommendation not met
+   --> /Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter4/proofs/controls/test_outcome/nested-clears-parent.rs:113:13
+    |
+113 |             get_all_status(slots, start).after.unwrap().len() == start,
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+   --> std_specs/option.rs:154:8
+    |
+    = note: recommendation not met
+
+error: postcondition not satisfied
+   --> /Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter4/proofs/controls/test_outcome/nested-clears-parent.rs:113:13
+    |
+110 | pub proof fn lemma_nested_keeps_parent(slots: Slots, start: nat)
+    | ---------------------------------------------------------------- at the end of the function body
+...
+113 |             get_all_status(slots, start).after.unwrap().len() == start,
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: assertion failed
+   --> /Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter4/proofs/controls/test_outcome/nested-clears-parent.rs:176:12
+    |
+176 |     assert(nested.after == Some(seq![p])) by { assert(seq![p, f].take(1) =~= seq![p]); }
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ assertion failed
+
+error: aborting due to 3 previous errors
+

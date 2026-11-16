@@ -1,0 +1,1657 @@
+
+General/ModuleSummary.cls::GetAttribute src/cls/IPM/General/ModuleSummary.cls:274-285
+ClassMethod GetAttribute(
+	resource As %IPM.Storage.ResourceReference,
+	names... As %String) As %String [ Private ]
+{
+    for i = 1:1:$get(names) {
+        set value = resource.Attributes.GetAt(names(i))
+        if (value '= "") {
+            return value
+        }
+    }
+    return ""
+}
+
+General/ModuleSummary.cls::GetDirectDependents src/cls/IPM/General/ModuleSummary.cls:34-46
+ClassMethod GetDirectDependents(moduleName As %String) As %DynamicArray [ Private ]
+{
+    set dependents = []
+    set query = "SELECT ModuleItem->Name AS Name, ModuleItem->VersionString AS VersionString FROM %IPM_Storage.ModuleItem_Dependencies WHERE Dependencies_Name = ? AND (Dependencies_Scope IS NULL OR Dependencies_Scope = '') ORDER BY ModuleItem->Name"
+    set rs = ##class(%SQL.Statement).%ExecDirect(, query, moduleName)
+    $$$ThrowSQLIfError(rs.%SQLCODE, rs.%Message)
+    while rs.%Next(.sc) {
+        $$$ThrowOnError(sc)
+        do dependents.%Push({"name": (rs.%Get("Name")), "version": (rs.%Get("VersionString"))})
+    }
+    $$$ThrowOnError(sc)
+    return dependents
+}
+
+General/ModuleSummary.cls::GetInstalledStatus src/cls/IPM/General/ModuleSummary.cls:175-186
+ClassMethod GetInstalledStatus(
+	dependency As %IPM.Storage.ModuleReference,
+	installedVersion As %String) As %String [ Private ]
+{
+    if (installedVersion = "") {
+        return "not installed"
+    }
+    if '##class(%IPM.General.SemanticVersion).FromString(installedVersion).Satisfies(dependency.Version) {
+        return "installed " _ installedVersion _ ", unsatisfied"
+    }
+    return "installed " _ installedVersion
+}
+
+General/ModuleSummary.cls::GetRequirements src/cls/IPM/General/ModuleSummary.cls:288-301
+ClassMethod GetRequirements(root As %String) As %DynamicArray [ Private ]
+{
+    if (root = "") {
+        return []
+    }
+    // The two-argument NormalizeFilename returns "" when root does not exist.
+    set fileName = ##class(%File).NormalizeFilename("requirements.txt", root)
+    if (fileName = "") || '##class(%File).Exists(fileName) {
+        return []
+    }
+    set stream = ##class(%Stream.FileCharacter).%New()
+    $$$ThrowOnError(stream.LinkToFile(fileName))
+    return ..ParseRequirements(stream)
+}
+
+General/ModuleSummary.cls::GetSection src/cls/IPM/General/ModuleSummary.cls:219-242
+ClassMethod GetSection(resource As %IPM.Storage.ResourceReference) As %String [ Private ]
+{
+    // Scoped resources are development only.
+    if (resource.Scope '= "") {
+        return ""
+    }
+    set shortName = ..GetShortName(resource.ResolvedProcessorClass())
+    if (shortName = "UnitTest") || (shortName = "Test") {
+        return ""
+    }
+    if (shortName = "Default.Global") {
+        return "globals"
+    }
+    if ($piece(shortName, ".") = "Default") {
+        return "code"
+    }
+    return $case(shortName,
+        "WebApplication": "webapps",
+        "CSPApplication": "webapps",
+        "FileCopy": "files",
+        "SystemSetting": "settings",
+        "PythonWheel": "python",
+        : "other")
+}
+
+General/ModuleSummary.cls::GetShortName src/cls/IPM/General/ModuleSummary.cls:245-252
+ClassMethod GetShortName(processorClass As %String) As %String [ Private ]
+{
+    set prefix = $$$DefaultProcessorPackageDot
+    if ($extract(processorClass, 1, $length(prefix)) = prefix) {
+        return $extract(processorClass, $length(prefix) + 1, *)
+    }
+    return processorClass
+}
+
+General/ModuleSummary.cls::GetSystemRequirements src/cls/IPM/General/ModuleSummary.cls:313-338
+ClassMethod GetSystemRequirements(requirements As %IPM.Storage.SystemRequirements) As %DynamicArray [ Private ]
+{
+    set entries = []
+    if '$isobject(requirements) {
+        return entries
+    }
+    if (requirements.VersionString '= "") {
+        do entries.%Push("IRIS " _ requirements.VersionString)
+    }
+    if (requirements.Interoperability '= "") {
+        do entries.%Push("Interoperability " _ requirements.Interoperability)
+    }
+    if requirements.Health {
+        do entries.%Push("Health Connect, HealthShare, or IRIS for Health required")
+    }
+    if (requirements.IPMVersion '= "") {
+        do entries.%Push("IPM " _ requirements.IPMVersion)
+    }
+    if (requirements.PythonVersion '= "") {
+        do entries.%Push("Python " _ requirements.PythonVersion)
+    }
+    if requirements.SYSNamespace {
+        do entries.%Push("%SYS namespace required")
+    }
+    return entries
+}
+
+General/ModuleSummary.cls::GetWebApplicationDetail src/cls/IPM/General/ModuleSummary.cls:255-271
+ClassMethod GetWebApplicationDetail(resource As %IPM.Storage.ResourceReference) As %String [ Private ]
+{
+    set dispatchClass = ..GetAttribute(resource, "DispatchClass")
+    if (dispatchClass '= "") {
+        return "dispatch " _ dispatchClass
+    }
+    set wsgiLocation = ..GetAttribute(resource, "WSGIAppLocation")
+    if (wsgiLocation '= "") {
+        return "wsgi " _ wsgiLocation
+    }
+    // Loading module.xml renames CSPApplication's DeployPath to Directory.
+    set directory = ..GetAttribute(resource, "Path", "Directory")
+    if (directory '= "") {
+        return "files at " _ directory
+    }
+    return ""
+}
+
+General/ModuleSummary.cls::Join src/cls/IPM/General/ModuleSummary.cls:303-311
+ClassMethod Join(values As %DynamicArray) As %String [ Private ]
+{
+    set joined = ""
+    set iterator = values.%GetIterator()
+    while iterator.%GetNext(, .value) {
+        set joined = joined _ $select(joined = "": "", 1: ", ") _ value
+    }
+    return joined
+}
+
+General/ModuleSummary.cls::ParseRequirements src/cls/IPM/General/ModuleSummary.cls:190-201
+ClassMethod ParseRequirements(stream As %Stream.FileCharacter) As %DynamicArray
+{
+    set requirements = []
+    do stream.Rewind()
+    while 'stream.AtEnd {
+        set line = $zstrip(stream.ReadLine(), "<>W")
+        if (line '= "") && ($extract(line) '= "#") {
+            do requirements.%Push(line)
+        }
+    }
+    return requirements
+}
+
+General/ModuleSummary.cls::SplitLines src/cls/IPM/General/ModuleSummary.cls:204-215
+ClassMethod SplitLines(text As %String) As %DynamicArray [ Private ]
+{
+    set lines = []
+    for i = 1:1:$length(text, $char(10)) {
+        // "C" also strips the CR of a CRLF line ending.
+        set line = $zstrip($piece(text, $char(10), i), "<>WC")
+        if (line '= "") {
+            do lines.%Push(line)
+        }
+    }
+    return lines
+}
+
+Lifecycle/Base.cls::%Publish src/cls/IPM/Lifecycle/Base.cls:1580-1680
+Method %Publish(ByRef pParams) As %Status
+{
+    set tSC = $$$OK
+    try {
+        // Perform the "Package" phase to prepare the module for publishing
+        // ..Payload is populated by %Package. So need to make sure it's using the same lifecycle object.
+        set pParams("LifecycleObject") = $this
+        // The call to `..Package` will be routed to %IPM.Lifecycle.Base:%DispatchMethod() since `Package` is not a known method of this class.
+        $$$ThrowOnError(..Package(.pParams, 0))
+
+        set tVerbose = $get(pParams("Verbose"))
+        set tRelease = $get(pParams("Release"),$get(pParams("zpm","Release"),0))
+        set tPublishTo = $get(pParams("PublishTo"),$get(pParams("zpm","PublishTo"),""))
+        set tNewVersion = $get(pParams("NewVersion"),$get(pParams("zpm","NewVersion"),""))
+        set tUseExternalName = $get(pParams("UseExternalName"),$get(pParams("zpm","UseExternalName"),0))
+
+        // Determine which server/registry to publish to
+        set tServer =  ""
+        if tPublishTo '= "" {
+            set tServer = ##class(%IPM.Repo.Definition).ServerDefinitionKeyOpen(tPublishTo,,.tSC)
+        }
+
+        if '$isobject(tServer) {
+            set tRS = ##class(%IPM.Repo.Http.Definition).PublishingServerFunc()
+            if (tRS.%SQLCODE = 0) && tRS.%Next() {
+                set tServer = $classmethod(tRS.Class,"%OpenId", tRS.ID)
+            }
+        }
+
+        if $$$ISERR(tSC)||'$isobject(tServer) {
+            $$$ThrowStatus($$$ERROR($$$GeneralError, "No server found to publish to."))
+        }
+        if tVerbose {
+            write !,"Publish to: ", tServer.URL
+        }
+        if tNewVersion '= "" {
+            set tNewVersion = ##class(%IPM.General.SemanticVersion).FromString(tNewVersion)
+        }
+
+        set tPublishClient = tServer.GetPublishService()
+        if '$isobject(tPublishClient) {
+            set tSC = $$$ERROR($$$GeneralError,$$$FormatText("Repository '%1' does not support publishing modules.",tServer.Name))
+            $$$ThrowStatus(tSC)
+        }
+        set tModule = ##class(%IPM.Repo.Remote.ModuleInfo).%New()
+        set tModule.Name = $select(tUseExternalName: ..Module.ExternalName, 1: ..Module.Name)
+        // Apparently, an empty name can pass the %IPM.DataType.ModuleName:IsValid check
+        if tModule.Name = "" {
+            $$$ThrowStatus($$$ERROR($$$GeneralError, "Cannot publish module with empty name."))
+        }
+        if '##class(%IPM.DataType.ModuleName).IsValid(tModule.Name) {
+            $$$ThrowStatus($$$ERROR($$$GeneralError,$$$FormatText("Module name '%1' is invalid for publishing",tModule.Name)))
+        }
+        if tRelease && ('..Module.IsLocked()) {
+            set tSC = ..Module.Lock()
+            if $$$ISERR(tSC) {
+                quit
+            }
+        }
+        set tSC = ..%Installer(.pParams)
+        if $$$ISERR(tSC) {
+            quit
+        }
+        set tModule.VersionString = ..Module.VersionString
+        if (..Module.Deployed) {
+            set tModule.Deployed = 1
+            if $isobject(..Module.SystemRequirements) {
+                set tModule.PlatformVersion = ..Module.SystemRequirements.VersionString
+            }
+        }
+        set tSC = ..Module.XMLExportToStream(tModule.Manifest)
+        if $$$ISERR(tSC) {
+            quit
+        }
+        set tSC = tModule.Payload.CopyFrom(..Payload)
+        if $$$ISERR(tSC) {
+            quit
+        }
+        set tSC = tModule.Installer.CopyFrom(..Installer)
+        if $$$ISERR(tSC) {
+            quit
+        }
+
+        $$$ThrowOnError(tPublishClient.PublishModule(tModule))
+
+        // May need to update the version of the currently-installed module.
+        if $data(tNewVersion),$isobject(tNewVersion) {
+            write:tVerbose !,"Version: ", tNewVersion.ToString()
+            set ..Module.Version = tNewVersion
+            set tSC = ##class(%IPM.Utils.Module).ExportDocumentForObject(..Module)
+            $$$ThrowOnError(tSC)
+        }
+    } catch e {
+        if (e.Name["ZSOAP") {
+            set tSC = $get(%objlasterror,e.AsStatus())
+        } else {
+            set tSC = e.AsStatus()
+        }
+    }
+    quit tSC
+}
+
+Lifecycle/Base.cls::%Verify src/cls/IPM/Lifecycle/Base.cls:1461-1578
+Method %Verify(ByRef pParams) As %Status
+{
+    set tSC = $$$OK
+    try {
+        new $namespace
+        set tInitNS = $select($namespace="%SYS": "USER", 1: $namespace)
+        set tVerbose = $get(pParams("Verbose"))
+        set explicitQuiet = ($data(pParams("Verbose")) && (pParams("Verbose") = 0))
+
+        // Suppress module install/load noise in quiet mode; ended before resource processors
+        // run so each processor can manage its own output (Test.cls still shows summary + failures).
+        // Null device is process-scoped, so suppression survives the namespace switch below.
+        if explicitQuiet {
+            set suppressor = ##class(%IPM.Utils.OutputSuppressor).%New()
+        }
+
+        if '$get(pParams("Verify","InCurrentNamespace"),0) {
+            set tMustCreate = 1
+            set tMustLoad = 1
+            set tNewNamespace = tInitNS _ "-VERIFY"
+            set pParams("verifyNamespace") = tNewNamespace
+            if $get(pParams("Verify", "PreDeleteNamespace")) {
+                do ##class(%IPM.Utils.Build).DeleteNamespace(tNewNamespace)
+            }
+
+            if $get(pParams("Verify","Reuse"),0) || $get(pParams("Verify","SkipLoad"),0) {
+                set tModuleExists = ##class(%IPM.Utils.Module).NamespaceHasModule(tNewNamespace,..Module.Name)
+                if (tModuleExists) {
+                    // Permit the VERIFY namespace to be reused.
+                    set tMustCreate = 0
+                    if $get(pParams("Verify","SkipLoad"),0) {
+                        // Also, do not bother updating the module installed in the VERIFY namespace.
+                        set tMustLoad = 0
+                    }
+                }
+            }
+
+            if tMustCreate {
+                // Create a new namespace and load the module in it.
+                #dim tNSConfig As %IPM.Storage.ModuleSetting.NamespaceConfig
+                set tNSConfig = ..Module.GetNamespaceConfig()
+                set tSysReqs = ..Module.SystemRequirements
+                if $isobject(tSysReqs) && (tSysReqs.Interoperability = "enabled") {
+                    set tNSConfig.EnableEnsemble = 1
+                }
+
+                // Create namespace in which to run tests and switch to it.
+                $$$ThrowOnError(##class(%IPM.Utils.Build).InitializeNamespace("VERIFY",tVerbose,.tNewNamespace,tNSConfig))
+
+                // Map ^UnitTest* from its home in the original namespace to the VERIFY namespace.
+                $$$ThrowOnError(##class(%IPM.Utils.Build).MapGlobalEquivalently("UnitTest*",tInitNS,tNewNamespace))
+
+                // Map the package manager itself equivalently in the VERIFY namespace.
+                $$$ThrowOnError(##class(%IPM.Utils.Build).MapRoutineEquivalently("%IPM.*",tInitNS,,tNewNamespace))
+                $$$ThrowOnError(##class(%IPM.Utils.Build).MapPackageEquivalently("%IPM",tInitNS,tNewNamespace))
+
+                // Map globals for %IPM.Repo.Definition and %IPM.Repo.Filesystem.Cache
+                // from the original namespace to the VERIFY namespace
+                for tClass = "%IPM.Repo.Definition","%IPM.Repo.Filesystem.Cache" {
+                    $$$ThrowOnError(##class(%IPM.Utils.Build).MapClassDataEquivalently(tClass,tInitNS,tNewNamespace))
+                }
+
+                // Install this module artifact in the VERIFY namespace.
+                write:tVerbose !,"Installing ",..Module.Name," ",..Module.VersionString," in namespace ",tNewNamespace
+                merge tParams = pParams
+                set tParams("Reload","ForceLocalScope") = 1
+                set tParams("NoJournal") = 1 // Disable journaling (and therefore also transactions); the VERIFY namespace is a throwaway.
+                // If we will enable Ensemble or HealthShare, default to single-threaded module load to avoid issues with mapping changes in parallel load.
+                if tNSConfig.EnableEnsemble || tNSConfig.EnableHealthShare {
+                    set tParams("Threads") = 1
+                } else {
+                    merge tParams("Threads") = pParams("Verify","Threads")
+                }
+            }
+
+            set $namespace = tNewNamespace
+
+            if (tMustLoad) {
+                set tSC = ..OnBeforeVerifyLoad(.tParams)
+                $$$ThrowOnError(tSC)
+                if (..Payload.Size > 0) {
+                    // If we have a payload from the package phase, always use it.
+                    $$$ThrowOnError(..OnInstallFromPayload(.tParams))
+                } else {
+                    // Otherwise, try to install from the module root.
+                    set tRoot = $get(pParams("Verify","SourceDirectory"),..Module.Root)
+                    if (tRoot = "") {
+                        set tSC = $$$ERROR($$$GeneralError,$$$FormatText("No module root defined for module '%1'",..Module.Name))
+                        $$$ThrowStatus(tSC)
+                    }
+                    $$$ThrowOnError(##class(%IPM.Utils.Module).LoadModuleFromDirectory(tRoot,.tParams))
+                }
+            }
+        }
+
+        // Load dependencies scoped to the "Verify" phase that are not yet installed.
+        do ##class(%IPM.Utils.Module).LoadDependencies(..Module, ..PhaseList, .pParams)
+
+        // End suppression before resource processors run — each handles its own output.
+        set suppressor = ""
+
+        set orderedResourceList = ..Module.GetOrderedResourceList()
+        set tKey = ""
+        for {
+            #dim tResource As %IPM.Storage.ResourceReference
+            set tResource = orderedResourceList.GetNext(.tKey)
+            quit:tKey=""
+
+            set tHandled = 0
+            if $isobject(tResource.Processor) && tResource.IsInScope("Verify") {
+                set tSC = $$$ADDSC(tSC,tResource.Processor.OnPhase("Verify",.pParams,.tHandled))
+            }
+        }
+    } catch e {
+        set tSC = e.AsStatus()
+    }
+    quit tSC
+}
+
+Repo/Filesystem/PackageService.cls::GetModule src/cls/IPM/Repo/Filesystem/PackageService.cls:32-46
+Method GetModule(
+	pModuleReference As %IPM.Storage.ModuleInfo,
+	Output AsArchive As %Boolean = 1) As %Stream.Object
+{
+    set AsArchive = 1
+    // ... and tgz it!
+    set tTempFileName = ##class(%File).TempFilename("tgz")
+    set tSrcPath = ..GetModuleDirectory(pModuleReference)
+    $$$ThrowOnError(##class(%IPM.General.Archive).Create(tSrcPath,tTempFileName))
+
+    set tFileBinStream = ##class(%Stream.FileBinary).%New()
+    $$$ThrowOnError(tFileBinStream.LinkToFile(tTempFileName))
+
+    quit tFileBinStream
+}
+
+Repo/Filesystem/PackageService.cls::GetModuleDirectory src/cls/IPM/Repo/Filesystem/PackageService.cls:48-55
+Method GetModuleDirectory(pModuleReference As %IPM.Storage.ModuleInfo) As %String
+{
+    // Get the module ...
+    set tModule = ##class(%IPM.Repo.Filesystem.Cache).RootNameVersionOpen(..Root,pModuleReference.Name,pModuleReference.VersionString,,.tStatus)
+    $$$ThrowOnError(tStatus)
+
+    quit ##class(%File).NormalizeDirectory(tModule.Root_tModule.SubDirectory)
+}
+
+Repo/Filesystem/PackageService.cls::GetModuleManifest src/cls/IPM/Repo/Filesystem/PackageService.cls:25-30
+Method GetModuleManifest(pModuleReference As %IPM.Storage.ModuleInfo) As %Stream.Object
+{
+    set tModule = ##class(%IPM.Repo.Filesystem.Cache).RootNameVersionOpen(..Root,pModuleReference.Name,pModuleReference.VersionString,,.tStatus)
+    $$$ThrowOnError(tStatus)
+    quit tModule.Manifest
+}
+
+Repo/Filesystem/PackageService.cls::HasModule src/cls/IPM/Repo/Filesystem/PackageService.cls:20-23
+Method HasModule(pModuleReference As %IPM.Storage.ModuleInfo) As %Boolean
+{
+    quit ##class(%IPM.Repo.Filesystem.Cache).RootNameVersionExists(..Root,pModuleReference.Name,pModuleReference.VersionString)
+}
+
+Repo/Filesystem/PackageService.cls::IsAvailable src/cls/IPM/Repo/Filesystem/PackageService.cls:65-68
+Method IsAvailable() As %Boolean
+{
+    quit ##class(%File).DirectoryExists(..Root)
+}
+
+Repo/Filesystem/PackageService.cls::ListModules src/cls/IPM/Repo/Filesystem/PackageService.cls:12-18
+Method ListModules(pSearchCriteria As %IPM.Repo.SearchCriteria) As %ListOfObjects(ELEMENTTYPE="%IPM.Storage.ModuleInfo")
+{
+    set tList = ##class(%Library.ListOfObjects).%New()
+    set tQuery = "select Name,VersionString from %IPM_Repo_Filesystem.Cache_OrderedMatches(?,?,?,?) m"
+    set tArgs($increment(tArgs)) = ..Root
+    quit ##class(%IPM.Repo.Utils).moduleSqlToList(tQuery,.pSearchCriteria,.tArgs)
+}
+
+Repo/Filesystem/PackageService.cls::Supports src/cls/IPM/Repo/Filesystem/PackageService.cls:58-62
+ClassMethod Supports(pMethod As %String) As %Boolean
+{
+    // Returns 1 as no need to check for application stuff
+    quit 1
+}
+
+Repo/IPublishService.cls::CheckUnpublishEnabled src/cls/IPM/Repo/IPublishService.cls:20-25
+Method CheckUnpublishEnabled(
+	packageName As %String,
+	packageVersion As %String) As %Boolean
+{
+    return 0
+}
+
+Repo/IPublishService.cls::IsAvailable src/cls/IPM/Repo/IPublishService.cls:9-12
+Method IsAvailable() As %Boolean
+{
+    quit 1
+}
+
+Repo/Oras/PackageService.cls::AppendURIs src/cls/IPM/Repo/Oras/PackageService.cls:978-992
+ClassMethod AppendURIs(
+	uri1 As %String,
+	uri2 As %String) As %String
+{
+    if ($extract(uri1, *) '= "/" ) && ($extract(uri2, 1) '= "/") {
+        set uri1 = uri1 _ "/"
+    }
+    if ($extract(uri1, *) = "/" ) && ($extract(uri2, 1) = "/") {
+        set uri1 = $extract(uri1, 1, *-1)
+    }
+    if ($extract(uri2, *) = "/" ) {
+        set uri2 = $extract(uri2, 1, *-1)
+    }
+    return uri1 _ uri2
+}
+
+Repo/Oras/PackageService.cls::GetAPITarget src/cls/IPM/Repo/Oras/PackageService.cls:964-974
+ClassMethod GetAPITarget(
+	registry As %String,
+	packageAndOptionalTag As %String,
+	namespace As %String = "") As %String
+{
+    if (namespace '= "") {
+        set packageAndOptionalTag = ..AppendURIs(namespace, packageAndOptionalTag)
+    }
+    set target = ..AppendURIs(registry, packageAndOptionalTag)
+    return $replace($replace(target, "http://", ""), "https://", "")
+}
+
+Repo/Oras/PackageService.cls::GetAllTags src/cls/IPM/Repo/Oras/PackageService.cls:927-943
+ClassMethod GetAllTags(
+	registry As %String,
+	package As %String,
+	namespace As %String,
+	client As %SYS.Python) As %String [ Language = python ]
+{
+    import iris
+    target = iris.cls("%IPM.Repo.Oras.PackageService").GetAPITarget(registry, package, namespace)
+    # a missing package has no tags
+    tags = client.call("get_tags", target, if_missing=[])
+
+    # flip list so higher versions are first
+    tags = iris.cls("%IPM.Utils.EmbeddedPython").SortOCITags(tags, 1)
+
+    # convert from list to comma separated string
+    return ", ".join(str(x) for x in tags)
+}
+
+Repo/Oras/PackageService.cls::GetLatestTag src/cls/IPM/Repo/Oras/PackageService.cls:908-924
+ClassMethod GetLatestTag(
+	registry As %String,
+	package As %String,
+	namespace As %String,
+	username As %String,
+	password As %String,
+	token As %String,
+	tokenAuthMethod As %String) As %String [ Language = python ]
+{
+    import iris
+    target = iris.cls("%IPM.Repo.Oras.PackageService").GetAPITarget(registry, package, namespace)
+    client = iris.cls("%IPM.Repo.Oras.PackageService").GetClient(registry, username, password, token, tokenAuthMethod)
+    tags = client.call("get_tags", target)
+    # Return most recent version
+    # If no tags exist, then module has been deleted
+    return tags[-1] if tags else ""
+}
+
+Repo/Oras/PackageService.cls::GetModuleXML src/cls/IPM/Repo/Oras/PackageService.cls:868-887
+ClassMethod GetModuleXML(
+	registry As %String,
+	packageAndTag As %String,
+	namespace As %String,
+	username As %String,
+	password As %String,
+	token As %String,
+	tokenAuthMethod As %String) As %String [ Language = python ]
+{
+    import iris
+
+    target = iris.cls("%IPM.Repo.Oras.PackageService").GetAPITarget(registry, packageAndTag, namespace)
+    client = iris.cls("%IPM.Repo.Oras.PackageService").GetClient(registry, username, password, token, tokenAuthMethod)
+
+    manifest = client.call("get_manifest", target, if_missing={})
+    # the module.xml text is in the annotations
+    module_xml = manifest.get('annotations', {}).get('com.intersystems.ipm.module.v1+xml')
+    # remove extraneous whitespace
+    return module_xml.strip() if module_xml else ""
+}
+
+Repo/Oras/PackageService.cls::GetPackageMetadata src/cls/IPM/Repo/Oras/PackageService.cls:889-903
+ClassMethod GetPackageMetadata(
+	registry As %String,
+	package As %String,
+	tag As %String,
+	namespace As %String,
+	client As %String) As %String [ Language = python ]
+{
+    import iris
+    import json
+
+    target = iris.cls("%IPM.Repo.Oras.PackageService").GetAPITarget(registry, package, namespace) + ":" + tag
+
+    manifest = client.call("get_manifest", target)
+    return json.dumps(manifest.get('annotations', {}))
+}
+
+Repo/Oras/PackageService.cls::HasModuleHelper src/cls/IPM/Repo/Oras/PackageService.cls:946-959
+ClassMethod HasModuleHelper(
+	registry As %String,
+	packageAndTag As %String,
+	namespace As %String,
+	client As %SYS.Python) As %Boolean [ Language = python ]
+{
+    import iris
+    # Attempt to get the tags of the specified package
+    # If tags are not found, then the package does not exist
+    target = iris.cls("%IPM.Repo.Oras.PackageService").GetAPITarget(registry, packageAndTag, namespace)
+
+    # check if tags is [] through boolean coercion
+    return bool(client.call("get_tags", target, 1, if_missing=[]))
+}
+
+Repo/Oras/PackageService.cls::PreferCompatibleVersions src/cls/IPM/Repo/Oras/PackageService.cls:331-348
+ClassMethod PreferCompatibleVersions(
+	versionsList As %List,
+	ByRef aggregatedPlatformVersion,
+	currentPlatform As %String) As %List
+{
+    set compatible = "", incompatible = ""
+    set ptr = 0
+    while $listnext(versionsList, ptr, version) {
+        set platformVersions = $get(aggregatedPlatformVersion(version))
+        // An empty platform means the version is not platform-specific, so anything can use it.
+        if ($listfind(platformVersions, "") > 0) || ($listfind(platformVersions, currentPlatform) > 0) {
+            set compatible = compatible _ $listbuild(version)
+        } else {
+            set incompatible = incompatible _ $listbuild(version)
+        }
+    }
+    return compatible _ incompatible
+}
+
+Repo/Oras/PackageService.cls::Pull src/cls/IPM/Repo/Oras/PackageService.cls:772-843
+ClassMethod Pull(
+	registry As %String,
+	package As %String,
+	tag As %String,
+	namespace As %String,
+	username As %String,
+	password As %String,
+	token As %String,
+	tokenAuthMethod As %String,
+	Output stream As %Stream.FileBinary) As %Status
+{
+    set stream = ""
+    set tSC = $$$OK
+
+    if tag = "" {
+        set tag = ..GetLatestTag(registry, package, namespace, username, password, token, tokenAuthMethod)
+    }
+
+    try {
+        #; Pull into temp directory
+        set tempFile = ""
+        set tempDirectory = ##class(%File).NormalizeDirectory(##class(%IPM.Utils.File).CreateTempDirectory() _ package _ "/" _ tag)
+
+        #; Empty temp directory first
+        if ##class(%File).DirectoryExists(tempDirectory) {
+            set tSC = ##class(%IPM.Utils.File).RemoveDirectoryTree(tempDirectory)
+            $$$ThrowOnError(tSC)
+        }
+
+        #; Pull the module using ORAS
+        do ..PullOras(registry, package, tag, namespace, username, password, token, tokenAuthMethod, tempDirectory)
+
+        #; Find only the tgz file
+        set result=##class(%ResultSet).%New("%File:FileSet")
+        do result.Execute(tempDirectory,"*.tgz")
+        while result.Next() {
+            set tempFile = result.GetDataByName("Name")
+            quit
+        }
+        if (tempFile = "") {
+            $$$ThrowStatus($$$ERROR($$$GeneralError, "tgz file not found"))
+        }
+
+        #; Convert into stream
+        set tFileBinStream = ##class(%Stream.FileBinary).%New()
+        set tSC = tFileBinStream.LinkToFile(tempFile)
+        if $$$ISOK(tSC) {
+            set stream = tFileBinStream
+        }
+
+        #; Check hash and size against the manifest
+        set hash = ##class(%SYSTEM.Encryption).SHAHashStream(256, stream, .sc)
+        set hash = ##class(%xsd.hexBinary).LogicalToXSD(hash)
+
+        set verified = ..VerifyModuleHashAndSize(registry, package _ ":" _ tag, namespace, username, password, token, tokenAuthMethod, hash, ##class(%Library.File).GetFileSize(tempFile))
+        if 'verified {
+            $$$ThrowStatus($$$ERROR($$$GeneralError, "Module size and/or hash failed validation!"))
+        }
+    } catch e {
+        if e.Name = "<OBJECT DISPATCH>" {
+            set eStatus = e.AsStatus()
+            set usrStatus = $$$ERROR($$$GeneralError,$$$OrasRequiresFlexiblePython)
+            set tSC = $$$EMBEDSC(usrStatus,eStatus)
+        } elseif ##class(%IPM.Repo.Oras.HttpException).IsRegistryFailure(e) {
+            // A status would lose what GetModule needs to classify the failure
+            throw e
+        } else {
+            set tSC = e.AsStatus()
+        }
+    }
+    quit tSC
+}
+
+Repo/Oras/PackageService.cls::VerifyModuleHashAndSize src/cls/IPM/Repo/Oras/PackageService.cls:995-1022
+ClassMethod VerifyModuleHashAndSize(
+	registry As %String,
+	packageAndTag As %String,
+	namespace As %String,
+	username As %String,
+	password As %String,
+	token As %String,
+	tokenAuthMethod As %String,
+	hash As %String,
+	size As %String) As %Boolean [ Language = python ]
+{
+    import iris
+
+    target = iris.cls("%IPM.Repo.Oras.PackageService").GetAPITarget(registry, packageAndTag, namespace)
+    client = iris.cls("%IPM.Repo.Oras.PackageService").GetClient(registry, username, password, token, tokenAuthMethod)
+
+    manifest = client.call("get_manifest", target)
+    # parse the manifest
+    for layer in manifest['layers']:
+        if layer["mediaType"] != "application/vnd.oci.image.layer.v1.tar":
+            continue
+        # check size and hash
+        manifest_size = layer["size"]
+        manifest_hash = layer["digest"]
+        expected_hash = f"sha256:{hash}".lower()
+        return manifest_size == size and manifest_hash == expected_hash
+    return False
+}
+
+Repo/Oras/PublishManager.cls::CheckServiceCache src/cls/IPM/Repo/Oras/PublishManager.cls:4-20
+Method CheckServiceCache(
+	pRepositoryName As %String,
+	Output pAvailable As %Boolean) As %IPM.Repo.IPublishService
+{
+	// TODO actually implement cache
+	Set pAvailable = 0
+	Set tClient = ""
+
+	Set tRepository = ##class(%IPM.Repo.Definition).ServerDefinitionKeyOpen(pRepositoryName,,.tSC)
+	$$$ThrowOnError(tSC)
+
+	If tRepository.Enabled {
+		Set tClient = tRepository.GetPublishService()
+		Set pAvailable = tClient.IsAvailable()
+	}
+	Return tClient
+}
+
+Repo/Oras/PublishManager.cls::CheckUnpublishEnabled src/cls/IPM/Repo/Oras/PublishManager.cls:22-41
+Method CheckUnpublishEnabled(
+	Output isEnabled As %Boolean,
+	pRepositoryName As %String,
+	pPackageName As %String,
+	pPackageVersion As %String) As %Status
+{
+    Set tSC = $$$OK
+	Set isEnabled = 0
+	Try {
+		Set tClient = ..CheckServiceCache(pRepositoryName, .tAvailable)
+		If 'tAvailable {
+			Set tSC = $$$ERROR($$$GeneralError, $$$FormatText("Repository '%1' is unavailable.", pRepositoryName))
+			Quit
+		}
+		Set isEnabled = tClient.CheckUnpublishEnabled(pPackageName, pPackageVersion)
+	} Catch e {
+		Set tSC = e.AsStatus()
+	}
+	Return tSC
+}
+
+Repo/Oras/PublishManager.cls::Unpublish src/cls/IPM/Repo/Oras/PublishManager.cls:43-58
+Method Unpublish(
+	pRepositoryName As %String,
+	pPackageName As %String,
+	pPackageVersion As %String) As %Status
+{
+	Set tSC = $$$OK
+
+	Set tClient = ..CheckServiceCache(pRepositoryName, .tAvailable)
+	If 'tAvailable {
+		Set tSC = $$$ERROR($$$GeneralError, $$$FormatText("Repository '%1' is unavailable.", pRepositoryName))
+		Quit
+	}
+	$$$ThrowOnError(tClient.Unpublish(pPackageName, pPackageVersion))
+
+	Return tSC
+}
+
+Repo/Oras/PublishService.cls::CheckUnpublishEnabled src/cls/IPM/Repo/Oras/PublishService.cls:64-70
+Method CheckUnpublishEnabled(
+	packageName As %String,
+	packageVersion As %String) As %Boolean
+{
+    // TODO improve
+    return 1
+}
+
+Repo/Oras/PublishService.cls::DeleteModule src/cls/IPM/Repo/Oras/PublishService.cls:202-222
+ClassMethod DeleteModule(
+	registry As %String,
+	package As %String,
+	namespace As %String,
+	username As %String,
+	password As %String,
+	token As %String,
+	tokenAuthMethod As %String)
+{
+    set target = ##class(%IPM.Repo.Oras.PackageService).GetAPITarget(registry, package, namespace)
+    set client = ##class(%IPM.Repo.Oras.PackageService).GetClient(registry, username, password, token, tokenAuthMethod)
+    try {
+        set tags = client.call("get_tags", target)
+        do ..DeleteTags(registry, package, tags, namespace, username, password, token, tokenAuthMethod)
+    } catch sc {
+        if ##class(%IPM.Repo.Oras.HttpException).IsRegistryFailure(sc) {
+            throw sc
+        }
+        $$$ThrowStatus($$$ERROR($$$GeneralError,"Failed to delete: " _ sc.DisplayString()))
+    }
+}
+
+Repo/Oras/PublishService.cls::DeleteTags src/cls/IPM/Repo/Oras/PublishService.cls:179-199
+ClassMethod DeleteTags(
+	registry As %String,
+	package As %String,
+	tags As %String,
+	namespace As %String,
+	username As %String,
+	password As %String,
+	token As %String,
+	tokenAuthMethod As %String) [ Language = python ]
+{
+    import iris
+
+    target = iris.cls("%IPM.Repo.Oras.PackageService").GetAPITarget(registry, package, namespace)
+    client = iris.cls("%IPM.Repo.Oras.PackageService").GetClient(registry, username, password, token, tokenAuthMethod)
+
+    # remove whitespace and convert to a list
+    if isinstance(tags, str):
+        tags = tags.replace(" ","").split(",")
+    for tag in tags:
+        client.call("delete_tag", target, tag)
+}
+
+Repo/Oras/PublishService.cls::PublishModule src/cls/IPM/Repo/Oras/PublishService.cls:6-62
+Method PublishModule(pModule As %IPM.Repo.Remote.ModuleInfo) As %Status
+{
+    set status = $$$OK
+    try {
+        set repo = pModule.Name
+        set tag = $$$Semver2Tag(pModule.VersionString)
+
+        set tempDirectory = ##class(%File).NormalizeDirectory(##class(%IPM.Utils.File).CreateTempDirectory() _ repo _ "/" _ tag _ "/")
+
+        #; Create temp directory
+        $$$ThrowOnError(##class(%IPM.Utils.File).CreateDirectoryChain(tempDirectory))
+
+        #; Create tgz file in temp directory
+        set tFileBinStream = ##class(%Stream.FileBinary).%New()
+        set tFileBinStream.Filename = ##class(%File).TempFilename("tgz", tempDirectory, .return)
+        do tFileBinStream.CopyFromAndSave(pModule.Payload)
+
+        #; Convert module.xml into string
+        set moduleXML = ""
+        while (pModule.Manifest.AtEnd = 0) {
+            set moduleXML = moduleXML _ pModule.Manifest.ReadLine(, .status)
+            $$$ThrowOnError(status)
+        }
+
+        #; Set metadata
+        set metadata = ##class(%IPM.Repo.Oras.ArtifactMetadata).%New()
+        set metadata.ImageTitle = pModule.Name
+        set metadata.ImageDescription = pModule.Description
+        set metadata.ImageVersion = pModule.VersionString
+        set metadata.ImageSource = pModule.Repository
+        set metadata.ImageCreated = $zdatetime($now(),3,2)
+        set metadata.IPMAllVersions = pModule.AllVersions
+        set metadata.IPMOrigin = pModule.Origin
+        set metadata.IPMDeployed = pModule.Deployed
+        set metadata.IPMPlatformVersion = pModule.PlatformVersion
+        set metadata.IPMModuleV1XML = moduleXML
+        do metadata.%JSONExportToString(.metaDataString)
+        if (pModule.Deployed) {
+            if (pModule.PlatformVersion = "") {
+                $$$ThrowStatus($$$ERROR($$$GeneralError, "Cannot publish deployed module '" _ pModule.Name _ "' without a platform version."))
+            }
+            set tag = tag _ $$$OrasTagPlatformSeparator _ pModule.PlatformVersion
+        }
+
+        #; Push file
+        $$$ThrowOnError(..Push(..Location, repo, tag, ..Namespace, tempDirectory, metaDataString, ..Username, ..Password, ..Token, ..TokenAuthMethod))
+    } catch ex {
+        set status = ..ClassifyException(ex, pModule.Name).AsStatus()
+    }
+    // Clean up temp directory whether successful or not
+    if ($data(tempDirectory) # 2) && ##class(%File).DirectoryExists(tempDirectory) {
+        set tSC = ##class(%IPM.Utils.File).RemoveDirectoryTree(tempDirectory)
+        set status = $$$ADDSC(status, tSC)
+    }
+
+    return status
+}
+
+Repo/Oras/PublishService.cls::Push src/cls/IPM/Repo/Oras/PublishService.cls:98-137
+ClassMethod Push(
+	registry As %String,
+	package As %String,
+	tags As %String,
+	namespace As %String,
+	path As %String,
+	metadata As %String,
+	username As %String,
+	password As %String,
+	token As %String,
+	tokenAuthMethod As %String)
+{
+    #; Remove the tag from the package name if it exists and add it to tags
+    set repo = $piece(package, ":", 1)
+    set tag = $$$Semver2Tag($piece(package, ":", 2))
+    if (tag '= "") {
+        set tags = tags _ "," _ tag
+    }
+    if (tags = "") {
+        $$$ThrowStatus($$$ERROR($$$GeneralError,"Must specify version."))
+    }
+
+    #; Remove whitespace from tags
+    set tags = $zstrip(tags,"*W")
+
+    try {
+        do ..PushOras(registry, repo, tags, namespace, path, metadata, username, password, token, tokenAuthMethod)
+    } catch e {
+        if e.Name = "<OBJECT DISPATCH>" {
+            set eStatus = e.AsStatus()
+            set usrStatus = $$$ERROR($$$GeneralError,$$$OrasRequiresFlexiblePython)
+            $$$ThrowStatus($$$EMBEDSC(usrStatus,eStatus))
+        } elseif ##class(%IPM.Repo.Oras.HttpException).IsRegistryFailure(e) {
+            throw e
+        } else {
+            $$$ThrowStatus($$$ERROR($$$GeneralError,"Unable to push: " _ e.DisplayString()))
+        }
+    }
+    return $$$OK
+}
+
+Repo/Oras/PublishService.cls::PushOras src/cls/IPM/Repo/Oras/PublishService.cls:140-176
+ClassMethod PushOras(
+	registry As %String,
+	package As %String,
+	tags As %String,
+	namespace As %String,
+	directoryPath As %String,
+	metadata As %String,
+	username As %String,
+	password As %String,
+	token As %String,
+	tokenAuthMethod As %String) [ Language = python ]
+{
+    import iris
+    import os
+    import json
+    import re
+    import contextlib
+
+    # Get all files in the directory and fully specify path
+    with os.scandir(directoryPath) as it:
+        file_paths = [os.path.join(directoryPath, entry.name) for entry in it if entry.is_file()]
+    client = iris.cls("%IPM.Repo.Oras.PackageService").GetClient(registry, username, password, token, tokenAuthMethod)
+    regex = re.compile(r"^[a-zA-Z0-9_][a-zA-Z0-9._-]{0,127}$")
+
+    # Annotations are manifest.xml and other metadata
+    manifest_annotations = json.loads(metadata) if metadata else {}
+
+    # Push once for each tag
+    for tag in tags.split(","):
+        if not regex.search(tag):
+            raise ValueError(f"Invalid OCI tag: {tag}")
+
+        # Suppress console output using a context manager
+        with open(os.devnull, "w") as devnull, contextlib.redirect_stdout(devnull):
+            target = iris.cls("%IPM.Repo.Oras.PackageService").GetAPITarget(registry, package, namespace) + ":" + tag
+            res = client.call("push", files=file_paths, target=target, disable_path_validation=True, manifest_annotations=manifest_annotations)
+}
+
+Repo/Oras/PublishService.cls::Unpublish src/cls/IPM/Repo/Oras/PublishService.cls:72-91
+Method Unpublish(
+	packageName As %String,
+	packageVersion As %String) As %Status
+{
+    try {
+        if (packageVersion = "all") {
+            do ..DeleteModule(..Location, packageName, ..Namespace, ..Username, ..Password, ..Token, ..TokenAuthMethod)
+        } else {
+            do ..DeleteTags(..Location, packageName, $$$Semver2Tag(packageVersion), ..Namespace, ..Username, ..Password, ..Token, ..TokenAuthMethod)
+        }
+    } catch e {
+        set failure = ##class(%IPM.Repo.Oras.HttpException).FromException(e)
+        if $isobject(failure) && (failure.StatusCode = 404) {
+            set version = $select(packageVersion = "all": "", 1: " " _ packageVersion)
+            return $$$ERROR($$$GeneralError, "'" _ packageName _ "'" _ version _ " not found in repo '" _ ..RepoName _ "'.")
+        }
+        return ..ClassifyException(e, packageName).AsStatus()
+    }
+    return $$$OK
+}
+
+Repo/Remote/PublishManager.cls::CheckServiceCache src/cls/IPM/Repo/Remote/PublishManager.cls:12-43
+Method CheckServiceCache(
+	pRepositoryName As %String,
+	Output pAvailable As %Boolean) As %IPM.Repo.IPublishService
+{
+    set pAvailable = 0
+    if ..UnavailableNames.IsDefined(pRepositoryName) {
+        quit $$$NULLOREF
+    }
+
+    set tClient = ..ServiceCache.GetAt(pRepositoryName)
+    if '$isobject(tClient) {
+        set tRepository = ##class(%IPM.Repo.Definition).ServerDefinitionKeyOpen(pRepositoryName,,.tSC)
+        $$$ThrowOnError(tSC)
+
+        if tRepository.Enabled {
+            // Don't cache Enabled status; no reason to prohibit it from changing.
+            set tClient = tRepository.GetPublishService()
+            if $isobject(tClient) {
+                set pAvailable = tClient.IsAvailable()
+                if pAvailable {
+                    do ..ServiceCache.SetAt(tClient,tRepository.Name)
+                } else {
+                    do ..UnavailableNames.SetAt("",tRepository.Name)
+                }
+            }
+        }
+    } else {
+        // If the client is available in the cache for this object, it is assumed to be available.
+        set pAvailable = 1
+    }
+    quit tClient
+}
+
+Repo/Remote/PublishManager.cls::CheckUnpublishEnabled src/cls/IPM/Repo/Remote/PublishManager.cls:45-64
+Method CheckUnpublishEnabled(
+	Output isEnabled As %Boolean,
+	pRepositoryName As %String,
+	pPackageName As %String,
+	pPackageVersion As %String) As %Status
+{
+    set tSC = $$$OK
+    set isEnabled = 0
+    try {
+        set tClient = ..CheckServiceCache(pRepositoryName,.tAvailable)
+        if 'tAvailable {
+            set tSC = $$$ERROR($$$GeneralError,$$$FormatText("Repository '%1' is unavailable.",pRepositoryName))
+            quit
+        }
+        set isEnabled = tClient.CheckUnpublishEnabled(pPackageName, pPackageVersion)
+    } catch e {
+        set tSC = e.AsStatus()
+    }
+    return tSC
+}
+
+Repo/Remote/PublishManager.cls::Unpublish src/cls/IPM/Repo/Remote/PublishManager.cls:66-81
+Method Unpublish(
+	pRepositoryName As %String,
+	pPackageName As %String,
+	pPackageVersion As %String) As %Status
+{
+    set tSC = $$$OK
+
+    set tClient = ..CheckServiceCache(pRepositoryName,.tAvailable)
+    if 'tAvailable {
+        set tSC = $$$ERROR($$$GeneralError,$$$FormatText("Repository '%1' is unavailable.",pRepositoryName))
+        quit
+    }
+    $$$ThrowOnError(tClient.Unpublish(pPackageName, pPackageVersion))
+
+    return tSC
+}
+
+Repo/Remote/PublishService.cls::CheckUnpublishEnabled src/cls/IPM/Repo/Remote/PublishService.cls:38-54
+Method CheckUnpublishEnabled(
+	packageName As %String,
+	packageVersion As %String) As %Boolean
+{
+    if ((..Username="") || (..Password="")) && (..Token="") {
+        $$$ThrowStatus($$$ERROR($$$GeneralError, "Unpublishing module, authorization required."))
+    }
+    set tRequest = ..GetHttpRequest()
+    $$$ThrowOnError(tRequest.Send("OPTIONS",tRequest.Location_"packages/"_packageName_"/"_packageVersion))
+    if (tRequest.HttpResponse.StatusCode = 200) {
+        set allow = $$$ucase(tRequest.HttpResponse.GetHeader("allow"))
+        if ( allow["DELETE" ) {
+            return 1
+        }
+    }
+    return 0
+}
+
+Repo/Remote/PublishService.cls::Publish src/cls/IPM/Repo/Remote/PublishService.cls:14-36
+Method Publish(pModule As %IPM.Repo.Remote.ModuleInfo)
+{
+    if ((..Username="") || (..Password="")) && (..Token="") {
+        $$$ThrowStatus($$$ERROR($$$GeneralError, "Publishing module, authorization required."))
+    }
+
+    set tRequest = ..GetHttpRequest()
+    set tRequest.ContentType = "application/json"
+    set publishTimeout =  ##class(%IPM.Repo.UniversalSettings).GetValue("publish_timeout")
+    set:publishTimeout'="" tRequest.Timeout = publishTimeout
+
+    $$$ThrowOnError(pModule.%JSONExportToStream(tRequest.EntityBody))
+    $$$ThrowOnError(tRequest.Post(tRequest.Location_"packages"))
+
+    if (tRequest.HttpResponse.StatusCode '= 200) {
+        if tRequest.HttpResponse.StatusCode = 401 {
+            $$$ThrowStatus($$$ERROR($$$GeneralError, "Publishing module, authorization required."))
+        } else {
+            set tMessage = "Publishing module, server responded with status code "_tRequest.HttpResponse.StatusCode_"."
+            $$$ThrowStatus($$$ERROR($$$GeneralError, tMessage))
+        }
+    }
+}
+
+Repo/Remote/PublishService.cls::PublishModule src/cls/IPM/Repo/Remote/PublishService.cls:4-12
+Method PublishModule(pModule As %IPM.Repo.Remote.ModuleInfo) As %Status
+{
+    try {
+        do ..Publish(pModule)
+    } catch Ex {
+        return Ex.AsStatus()
+    }
+    return $$$OK
+}
+
+Repo/Remote/PublishService.cls::Unpublish src/cls/IPM/Repo/Remote/PublishService.cls:56-74
+Method Unpublish(
+	packageName As %String,
+	packageVersion As %String) As %Status
+{
+    if ((..Username="") || (..Password="")) && (..Token="") {
+        $$$ThrowStatus($$$ERROR($$$GeneralError, "Unpublishing module, authorization required."))
+    }
+    set tRequest = ..GetHttpRequest()
+    $$$ThrowOnError(tRequest.Send("DELETE",tRequest.Location_"packages/"_packageName_"/"_packageVersion))
+    if (tRequest.HttpResponse.StatusCode '= 200) {
+        set errMsg = ""
+        try {
+            set errMsg = $piece({}.%FromJSON(tRequest.HttpResponse.Data).summary,":",2,*)
+            if (errMsg'="") {set errMsg = ";"_errMsg}
+        } catch { }
+        $$$ThrowStatus($$$ERROR($$$GeneralError, "Unpublishing module, something went wrong (HTTP response status code: "_tRequest.HttpResponse.StatusCode_errMsg_")."))
+    }
+    return $$$OK
+}
+
+Repo/UniversalSettings.cls::EnsureWritableDirectory src/cls/IPM/Repo/UniversalSettings.cls:256-264
+ClassMethod EnsureWritableDirectory(directory As %String)
+{
+    if '##class(%File).DirectoryExists(directory) {
+        $$$ThrowOnError(##class(%IPM.Utils.File).CreateDirectoryChain(directory))
+    }
+    if '##class(%File).Writeable(directory) {
+        $$$ThrowOnError($$$ERROR($$$GeneralError,"No write permission on directory "_directory))
+    }
+}
+
+Repo/UniversalSettings.cls::GetAll src/cls/IPM/Repo/UniversalSettings.cls:56-63
+ClassMethod GetAll(Output configArray) As %Status
+{
+    set configArray = ""
+    for i=1:1:$length(..#CONFIGURABLE, ",") {
+        set configArray($piece(..#CONFIGURABLE, ",",i)) = ..GetValue($parameter(..%ClassName(1),$piece(..#CONFIGURABLE, ",",i)))
+    }
+    return $$$OK
+}
+
+Repo/UniversalSettings.cls::GetHistoryRetain src/cls/IPM/Repo/UniversalSettings.cls:220-223
+ClassMethod GetHistoryRetain() As %Integer
+{
+    return ..GetValue(..#HistoryRetain)
+}
+
+Repo/UniversalSettings.cls::GetModuleRoot src/cls/IPM/Repo/UniversalSettings.cls:245-252
+ClassMethod GetModuleRoot() As %String
+{
+    set value = ..GetValue(..#ModuleRoot)
+    if value = "" {
+        return ##class(%File).NormalizeDirectory(##class(%SYSTEM.Util).DataDirectory() _ "ipm/")
+    }
+    return value
+}
+
+Repo/UniversalSettings.cls::GetTestReportFormat src/cls/IPM/Repo/UniversalSettings.cls:235-238
+ClassMethod GetTestReportFormat() As %String
+{
+    return ..GetValue(..#TestReportFormat)
+}
+
+ResourceProcessor/Test.cls::%OnValidateObject src/cls/IPM/ResourceProcessor/Test.cls:615-621
+Method %OnValidateObject() As %Status [ Private, ServerOnly = 1 ]
+{
+    if ((..Package = "") && (..Class = "")) || ((..Package '= "") && (..Class '= "")) {
+        return $$$ERROR($$$GeneralError, "EXACTLY ONE of 'Package' or 'Class' attributes must be specified")
+    }
+    quit $$$OK
+}
+
+ResourceProcessor/Test.cls::ExtensionGet src/cls/IPM/ResourceProcessor/Test.cls:24-27
+Method ExtensionGet() As %String [ CodeMode = expression ]
+{
+$case(..Package '= "", 1: ".PKG", : ".CLS")
+}
+
+ResourceProcessor/Test.cls::GetSourceControlInfo src/cls/IPM/ResourceProcessor/Test.cls:336-344
+Method GetSourceControlInfo(Output pInfo As %IPM.ExtensionBase.SourceControl.ResourceInfo) As %Status
+{
+    set pInfo = ##class(%IPM.ExtensionBase.SourceControl.ResourceInfo).%New()
+    set pInfo.SourceControlAware = 1
+    set pInfo.Prefix = $case(..Package '= "", 1: ..Package_".", : ..Class)
+    set pInfo.RelativePath = ..ResourceReference.Name
+    set pInfo.ResourceType = "cls"
+    quit $$$OK
+}
+
+ResourceProcessor/Test.cls::GetSyncDirectory src/cls/IPM/ResourceProcessor/Test.cls:392-395
+Method GetSyncDirectory() As %String
+{
+    quit ##class(%IPM.Storage.FileHash).NormalizePath(..ResourceReference.Name)
+}
+
+ResourceProcessor/Test.cls::OnExportItem src/cls/IPM/ResourceProcessor/Test.cls:363-377
+Method OnExportItem(
+	pFullExportPath As %String,
+	pItemName As %String,
+	ByRef pItemParams,
+	ByRef pParams,
+	Output pItemHandled As %Boolean = 0) As %Status
+{
+    // Path resources (Name="/tests/...") are handled by directory-copy in ExportSingleModule,
+    // not by ExportUDL. Returning here with pItemHandled=0 lets ExportSingleModule fall through
+    // to that branch. Delegating to EmbeddedProcessor would attempt ExportUDL("/tests/"), which fails.
+    if ($extract(pItemName) = "/") {
+        quit $$$OK
+    }
+    quit ..EmbeddedProcessor.OnExportItem(pFullExportPath, pItemName, .pItemParams, .pParams, .pItemHandled)
+}
+
+ResourceProcessor/Test.cls::OnGetUniqueName src/cls/IPM/ResourceProcessor/Test.cls:331-334
+Method OnGetUniqueName(Output pUniqueName)
+{
+    set pUniqueName = $case(..Package '= "", 1: ..Package, : ..Class)_..Extension
+}
+
+ResourceProcessor/Test.cls::OnItemRelativePath src/cls/IPM/ResourceProcessor/Test.cls:380-383
+Method OnItemRelativePath(pItemName As %String) As %String
+{
+    quit ..EmbeddedProcessor.OnItemRelativePath(pItemName)
+}
+
+ResourceProcessor/Test.cls::OnResolveChildren src/cls/IPM/ResourceProcessor/Test.cls:300-326
+Method OnResolveChildren(ByRef pResourceArray) As %Status
+{
+    set tSC = $$$OK
+    try {
+        set tModuleName = ..ResourceReference.Module.Name
+        set tResourceInfo = tModuleName
+        set tResourceInfo("Generated") = 0
+        set tResourceInfo("Preload") = 0
+        set tResourceInfo("Scope") = ..Phase
+        set tResourceInfo("Deploy") = 0
+        set tResourceInfo("Processor") = $this
+        set tResourceInfo("UnitTest") = 1
+        set tResource = $case(..Package '= "", 1: ..Package, : ..Class)_..Extension
+        // GetChildren has Output semantics — it kills its output array before populating it.
+        // Use tClassArray as the intermediate to avoid killing any existing entries in pResourceArray.
+        kill tClassArray
+        $$$ThrowOnError(##class(%IPM.Storage.ResourceReference).GetChildren(tResource,tModuleName,1,.tResourceInfo,.tClassArray))
+        $$$ThrowOnError(..EmbeddedProcessor.OnResolveChildren(.tClassArray))
+        merge pResourceArray = tClassArray
+        // pResourceArray("Scope") is read by GetResolvedReferences for the HasScope check.
+        // tResourceInfo("Scope") above stamps each child class node — different consumers.
+        set pResourceArray("Scope") = ..Phase
+    } catch e {
+        set tSC = e.AsStatus()
+    }
+    quit tSC
+}
+
+ResourceProcessor/Test.cls::OwnsClassName src/cls/IPM/ResourceProcessor/Test.cls:401-413
+Method OwnsClassName(className As %String) As %Boolean
+{
+    if className = "" {
+        quit 0
+    }
+    if ..Class '= "" {
+        quit (className = ..Class)
+    }
+    if ..Package = "" {
+        quit 0
+    }
+    quit (className = ..Package) || ($extract(className, 1, $length(..Package) + 1) = (..Package _ "."))
+}
+
+ResourceProcessor/Test.cls::RelPathToClassName src/cls/IPM/ResourceProcessor/Test.cls:596-613
+ClassMethod RelPathToClassName(relPath As %String, resourceDir As %String) As %String [ Private ]
+{
+    set packageRelPath = relPath
+    if $extract(packageRelPath, 1, $length(resourceDir)) = resourceDir {
+        set packageRelPath = $extract(packageRelPath, $length(resourceDir) + 1, *)
+    }
+    // Strip leading slash left after prefix removal (e.g. "/SyncTest/...")
+    if $extract(packageRelPath) = "/" {
+        set packageRelPath = $extract(packageRelPath, 2, *)
+    }
+    set fileName = $piece(packageRelPath, "/", *)
+    if $zconvert($piece(fileName, ".", *), "U") '= "CLS" {
+        quit ""
+    }
+    set baseName = $piece(fileName, ".", 1, *-1)
+    set dirPart = $piece(packageRelPath, "/", 1, *-1)
+    quit $select(dirPart '= "": $translate(dirPart, "/", ".") _ "." _ baseName, 1: baseName)
+}
+
+ResourceProcessor/Test.cls::SupportsSync src/cls/IPM/ResourceProcessor/Test.cls:385-388
+Method SupportsSync() As %Boolean
+{
+    quit 1
+}
+
+ResourceProcessor/Test.cls::SyncSummaryTallyTests src/cls/IPM/ResourceProcessor/Test.cls:558-591
+ClassMethod SyncSummaryTallyTests(
+    moduleName As %String,
+    phaseStartIndex As %Integer) [ Private ]
+{
+    set passed = 0, failed = 0
+    set testCount = $get(^||%UnitTest.Manager.AllResultsCount, 0)
+    for i = (phaseStartIndex + 1):1:testCount {
+        set logIndex = $get(^||%UnitTest.Manager.AllResults(i))
+        continue:logIndex=""
+        set tree = ##class(%IPM.Test.Abstract).BuildResultTree(logIndex)
+        set suiteIter = tree.suites.%GetIterator()
+        while suiteIter.%GetNext(, .suiteObj) {
+            set caseIter = suiteObj.cases.%GetIterator()
+            while caseIter.%GetNext(, .caseObj) {
+                set methodIter = caseObj.methods.%GetIterator()
+                while methodIter.%GetNext(, .methodObj) {
+                    set methodFailed = (methodObj.error '= "")
+                    set assertIter = methodObj.asserts.%GetIterator()
+                    while assertIter.%GetNext(, .assertObj) {
+                        if assertObj.status = "failed" {
+                            set methodFailed = 1
+                        }
+                    }
+                    if methodFailed {
+                        set failed = failed + 1
+                    } else {
+                        set passed = passed + 1
+                    }
+                }
+            }
+        }
+    }
+    do ##class(%IPM.General.Sync.Summary).AddTests(moduleName, passed, failed)
+}
+
+ResourceProcessor/Test.cls::TestsShouldRun src/cls/IPM/ResourceProcessor/Test.cls:65-91
+Method TestsShouldRun(
+	pPhase As %String,
+	ByRef pParams) As %Boolean
+{
+    set tPathMatch = 1
+    set tTestPath = ""
+    if (..Package '= "") {
+        if $data(pParams("UnitTest","Suite"),tTestSuite)#2 {
+            set tTestPath = $translate(tTestSuite,"/\","..")
+        } elseif $data(pParams("UnitTest","Case"),tTestCase)#2 {
+            set tTestPath = tTestCase
+        }
+    }
+    if (tTestPath '= "") {
+        if (..Package '= "") {
+            if $length(tTestPath) > $length(..Package) {
+                set tPathMatch = ($extract(tTestPath,1,$length(..Package)) = ..Package)
+            } else {
+                set tPathMatch = ($extract(..Package,1,$length(tTestPath)) = tTestPath)
+            }
+        } elseif (..Class '= "") {
+            // No action needed, the pParams are ignored for this case so tPatchMatch
+            // always equals 1
+        }
+    }
+    quit tPathMatch && ($listfind(..Phase,$zconvert(pPhase,"L")) > 0)
+}
+
+Utils/File.cls::CreateTempDirectory src/cls/IPM/Utils/File.cls:369-376
+ClassMethod CreateTempDirectory(baseDirectory As %String = "") As %String
+{
+    set dir = $select(baseDirectory = "": $zutil(140,17), 1: $zutil(140,17,baseDirectory))
+    if dir = ("-" _ -dir) {
+        $$$ThrowStatus($$$ERROR($$$GeneralError, "Failed to create temporary directory: " _ $zutil(209,-dir)))
+    }
+    return ##class(%File).NormalizeDirectory(dir)
+}
+
+Utils/File.cls::DatabaseDirectories src/cls/IPM/Utils/File.cls:60-75
+ClassMethod DatabaseDirectories() As %List [ Internal ]
+{
+    new $namespace
+    set $namespace = "%SYS"
+    set statement = ##class(%SQL.Statement).%New()
+    $$$ThrowOnError(statement.%PrepareClassQuery("Config.Databases", "List"))
+    set rs = statement.%Execute("*")
+    $$$ThrowSQLIfError(rs.%SQLCODE, rs.%Message)
+    set dirs = ""
+    while rs.%Next(.sc) {
+        $$$ThrowOnError(sc)
+        set dirs = dirs _ $listbuild(rs.%Get("Directory"))
+    }
+    $$$ThrowOnError(sc)
+    return dirs
+}
+
+Utils/File.cls::Exists src/cls/IPM/Utils/File.cls:334-364
+ClassMethod Exists(
+	ByRef pFilename,
+	Output pReturn) As %Boolean
+{
+    if ##class(%File).Exists(pFilename) {
+        return 1
+    }
+    set tDirectory = ##class(%File).ParentDirectoryName(pFilename)
+    if '##class(%File).DirectoryExists(tDirectory) {
+        return 0
+    }
+    set tName = $piece(pFilename, tDirectory, 2, *)
+    set tFileName = $piece(tName, ".", 1, * - 1)
+    set tFileExt = $piece(tName, ".", *)
+    for tExt = $$$LOWER(tFileExt), $$$UPPER(tFileExt) {
+        if ##class(%File).Exists(tDirectory _ tFileName _ "." _ tExt) {
+            set pFilename = tDirectory _ tFileName _ "." _ tExt
+            return 1
+        }
+    }
+    set tNameLower = $$$LOWER(tName)
+    set rs = ##class(%File).FileSetFunc(tDirectory, "*", , 0)
+    while rs.%Next() {
+        set tItemNameLower = $$$LOWER(rs.ItemName)
+        if tItemNameLower = tNameLower {
+            set pFilename = tDirectory _ rs.ItemName
+            return 1
+        }
+    }
+    return 0
+}
+
+Utils/File.cls::IsInInstallDirectoryOnly src/cls/IPM/Utils/File.cls:388-397
+ClassMethod IsInInstallDirectoryOnly(
+	path As %String,
+	installDir As %String = {$system.Util.InstallDirectory()},
+	dataDir As %String = {$system.Util.DataDirectory()}) As %Boolean
+{
+    set path = ..NormalizeForComparison(path)
+    set dataDir = ..NormalizeForComparison(dataDir)
+    set installDir = ..NormalizeForComparison(installDir)
+    return ($extract(path, 1, $length(installDir)) = installDir) && ($extract(path, 1, $length(dataDir)) '= dataDir)
+}
+
+Utils/File.cls::IsProtectedDirectory src/cls/IPM/Utils/File.cls:24-57
+ClassMethod IsProtectedDirectory(dir As %String) As %Boolean
+{
+    if ##class(%Library.File).Exists(##class(%Library.File).Construct(dir, "IRIS.DAT")) {
+        return 1
+    }
+    set installDir = $system.Util.InstallDirectory()
+    set mgrDir = ##class(%Library.File).ManagerDirectory()
+    set cspDir = ##class(%Library.File).Construct(installDir, "csp")
+    set libDir = ##class(%Library.File).Construct(installDir, "lib")
+    set protectedDirs = $listbuild(
+        installDir,
+        $system.Util.DataDirectory(),
+        mgrDir,
+        $system.Util.BinaryDirectory(),
+        libDir,
+        cspDir,
+        // The Management Portal and Interoperability UI
+        ##class(%Library.File).Construct(cspDir, "sys"),
+        ##class(%Library.File).Construct(cspDir, "broker"),
+        ##class(%Library.File).Construct(cspDir, "enslib"),
+        // Installed Python packages and the IRIS iris module
+        ##class(%Library.File).Construct(mgrDir, "python"),
+        ##class(%Library.File).Construct(libDir, "python"),
+        // Holds IPM's own files
+        ##class(%IPM.Repo.UniversalSettings).GetModuleRoot()) _ ..DatabaseDirectories()
+    set dir = ..NormalizeForComparison(dir)
+    set pointer = 0
+    while $listnext(protectedDirs, pointer, protectedDir) {
+        if $extract(..NormalizeForComparison(protectedDir), 1, $length(dir)) = dir {
+            return 1
+        }
+    }
+    return 0
+}
+
+Utils/File.cls::NormalizeForComparison src/cls/IPM/Utils/File.cls:81-84
+ClassMethod NormalizeForComparison(path As %String) As %String [ Private ]
+{
+    return $zconvert(##class(%Library.File).NormalizeDirectory(path), "L")
+}
+
+Utils/File.cls::WarnIfInInstallDirectory src/cls/IPM/Utils/File.cls:401-410
+ClassMethod WarnIfInInstallDirectory(
+	target As %String,
+	resource As %IPM.Storage.ResourceReference)
+{
+    if '..IsInInstallDirectoryOnly(target) {
+        return
+    }
+    set message = "WARNING: "_resource.Module.Name_" resource "_resource.Name_" copies to "_target_", which is in the install directory and can be read-only."
+    write !, $$$FormattedLine($$$Yellow, message)
+}
+
+Utils/Module.cls::GetInstalledModuleListSQL src/cls/IPM/Utils/Module.cls:832-844
+ClassMethod GetInstalledModuleListSQL(
+	Output pSQL As %String,
+	pSnapshots As %Boolean = "") As %Status
+{
+    set pSQL = "select Name from %IPM_Storage.ModuleItem"
+    if (pSnapshots = 0) {
+        set pSQL = pSQL_" where Version_Build <> 'snapshot'"
+    } elseif (pSnapshots = 1) {
+        set pSQL = pSQL_" where Version_Build = 'snapshot'"
+    }
+    set pSQL = pSQL_" order by Name"
+    quit $$$OK
+}
+
+Utils/Module.cls::UninstallAll src/cls/IPM/Utils/Module.cls:709-828
+ClassMethod UninstallAll(
+	pForce As %Boolean,
+	ByRef pParams) As %Status
+{
+    set tSC = $$$OK
+    try {
+        // Build simple dependency graph for all installed modules based on
+        //  1) the list of all installed modules
+        //  2) dependencies as listed in %IPM.Storage.Module.Dependencies
+        // tModuleNames(moduleName) = "" for all modules
+        // tModuleNames(dependency,moduleName) = "" if moduleName depends on dependency
+        // tDependsOn(moduleName,dependency) = "" if moduleName depends on dependency
+        // this is not recursive, so if A depends on B and B depends on C, neither tModulesNames(C,A) nor tDependsOn(A,C) are set
+
+        set depRes = ##class(%SQL.Statement).%ExecDirect(,
+            "select ModuleItem->Name ModName,Dependencies_Name DepName "_
+            "from %IPM_Storage.ModuleItem_Dependencies")
+        $$$ThrowSQLIfError(depRes.%SQLCODE, depRes.%Message)
+        while depRes.%Next(.sc) {
+            $$$ThrowOnError(sc)
+            set modName = depRes.%Get("ModName")
+            set depName = depRes.%Get("DepName")
+            set tModuleNames(depName, modName) = ""
+            set tDependsOn(modName, depName) = ""
+        }
+        $$$ThrowOnError(sc)
+
+        // Get list of all installed modules
+        do ##class(%IPM.Main).GetListModules(,,.modList)
+        for i = 1:1:modList {
+            set name = $listget(modList(i),1)
+            set simpleModList(name) = ""
+            // list of modules must be from here because modules without dependencies won't appear in %IPM_Storage.ModuleItem_Dependencies
+            set tModuleNames(name) = ""
+        }
+
+        // Iterate through list of modules to uninstall, removing any that are missing
+        set module = ""
+        for {
+            set module = $order(tModuleNames(module))
+            if (module = "") {
+                quit
+            }
+            if '$data(simpleModList(module)) {
+                if $get(pParams("Verbose")) {
+                    write !,"WARNING: module ",module," is missing, skipping uninstall",!
+                }
+                kill tModuleNames(module)
+            }
+        }
+
+        set tProgressMade = 1
+        for {
+            if '$data(tModuleNames) {
+                quit
+            }
+            if 'tProgressMade {
+                set tFirstSC = $$$ERROR($$$GeneralError,"Unable to uninstall all modules.")
+                set tSC = $system.Status.AppendStatus(tFirstSC,tSC) // Append any previous errors (which may be causes or unrelated)
+                $$$ThrowStatus(tSC)
+            }
+            set tProgressMade = 0
+
+            // Loop over "dependents" array to delete each module that has nothing left that depends on it.
+            // If a module fails to uninstall, modules that it depends on will not be uninstalled, unless
+            // pForce is true.
+            set tModuleName = ""
+            for {
+                set tModuleName = $order(tModuleNames(tModuleName))
+                if (tModuleName = "") {
+                    quit
+                }
+
+                if tModuleName = $$$IPMModuleName {
+                    // don't uninstall IPM itself
+                    kill tModuleNames(tModuleName)
+                    continue
+                }
+
+                if ($data(tModuleNames(tModuleName)) > 1) {
+                    // If there are dependencies left that have not been uninstalled yet, skip this module.
+                    continue
+                }
+
+                if $data(tFailedModules(tModuleName)) {
+                    // If we have already tried unsuccessfully to uninstall a given module, don't try again.
+                    continue
+                }
+
+                kill tParams
+                merge tParams = pParams
+                write !,"Uninstalling ",tModuleName
+                set tOneSC = ##class(%IPM.Storage.Module).Uninstall(tModuleName,pForce,,.tParams)
+                if $$$ISOK(tOneSC) || pForce {
+                    // If we are forcing uninstallation of everything that can be uninstalled,
+                    // treat the module in question as uninstalled even if something went fatally wrong.
+                    set tDependentModule = ""
+                    for {
+                        set tDependentModule = $order(tDependsOn(tModuleName,tDependentModule))
+                        if (tDependentModule = "") {
+                            quit
+                        }
+                        kill tModuleNames(tDependentModule,tModuleName)
+                    }
+                    kill tDependsOn(tModuleName)
+                    kill tModuleNames(tModuleName)
+                    set tProgressMade = 1
+                }
+                if $$$ISERR(tOneSC) {
+                    write !,"Error uninstalling ",tModuleName,": ",$system.Status.GetErrorText(tOneSC)
+                    set tSC = $system.Status.AppendStatus(tSC,tOneSC)
+                    set tFailedModules(tModuleName) = ""
+                }
+            }
+        }
+    } catch e {
+        set tSC = e.AsStatus()
+    }
+    quit tSC
+}

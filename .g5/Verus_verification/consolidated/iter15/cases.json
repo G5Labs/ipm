@@ -1,0 +1,261 @@
+{
+  "models": {
+    "oras.rs": {
+      "codec-plus-not-encoded": [
+        "replace(v,'+','_')",
+        "replace(v,'+','-')"
+      ],
+      "codec-underscore-not-decoded": [
+        "replace(v,'_','+')",
+        "replace(v,'_','-')"
+      ],
+      "parse-single-underscore": [
+        "t[i as int]=='_' && t[(i+1) as int]=='_'",
+        "t[i as int]=='_'"
+      ],
+      "drop-platform-from-pull-tag": [
+        "joined(encode(version),platform)",
+        "encode(version)"
+      ],
+      "reverse-raw-version-sort": [
+        "tag_rank(t)>=tag_rank(sorted[0])",
+        "tag_rank(t)<=tag_rank(sorted[0])"
+      ],
+      "keep-duplicate-raw-tags": [
+        "else if has_text(seen,xs[0])",
+        "else if false"
+      ],
+      "prepend-platform-on-aggregate": [
+        "gs[0].platforms.push(p.platform)",
+        "seq![p.platform]+gs[0].platforms"
+      ],
+      "first-metadata-uses-last-platform": [
+        "g.platforms[0]}else",
+        "g.platforms[g.platforms.len()-1]}else"
+      ],
+      "ignore-compatible-preference": [
+        "partition(gs,c,true)+partition(gs,c,false)",
+        "gs"
+      ],
+      "stop-dependency-enumeration": [
+        "if mode!=Mode::Dependencies{Rows{ok:true,rows:seq![row]}}",
+        "if true{Rows{ok:true,rows:seq![row]}}"
+      ],
+      "all-tags-populates-platforms": [
+        "e.meta.deployed && mode!=Mode::AllTags",
+        "e.meta.deployed"
+      ],
+      "manager-admits-incompatible": [
+        "!row.deployed || has_text(row.platforms,c)",
+        "true"
+      ],
+      "manager-omits-selected-platform": [
+        "if rows[0].deployed && has_text(rows[0].platforms,c){c}else{seq![]}",
+        "seq![]"
+      ],
+      "display-showall-filters-platform": [
+        "show_all || compatible(rows[0],c)",
+        "compatible(rows[0],c)"
+      ],
+      "ignore-pinned-major-range": [
+        "Range::MajorTwo=>rank(v)==2",
+        "Range::MajorTwo=>true"
+      ],
+      "wrong-installed-payload": [
+        "description:26},payload:1",
+        "description:26},payload:2"
+      ],
+      "decode-aggregate-build-keys": [
+        "pair_order(deep_natural()[0],deep_natural()[1],false)",
+        "pair_order(deep_natural()[0],deep_natural()[1],true)"
+      ],
+      "fallback-retains-full-build-label": [
+        "else{dot_piece(v,3)}",
+        "else{tail(v,'_')}"
+      ],
+      "ignore-explicit-plus-build": [
+        "build:if has_char(v,'+')",
+        "build:if false"
+      ],
+      "manager-same-base-keeps-first": [
+        "same_base_insert(rows.skip(1),Some(rows[0]))",
+        "same_base_insert(rows.skip(1),match selected{Some(x)=>Some(x),None=>Some(rows[0])})"
+      ],
+      "reverse-equal-build-tie": [
+        "if !lex_less(a.build,b.build){seq![left,right]}",
+        "if !lex_less(a.build,b.build){seq![right,left]}"
+      ]
+    }
+  },
+  "session": [
+    "do $system.OBJ.Load(\"/tmp/iter15/Oras.cls\",\"ck\")",
+    "do ##class(Iter15.Oras).Run()"
+  ],
+  "replay": {
+    "codec-encode": "b(encode(build_version())==seq!['1','.','2','.','3','-','a','l','p','h','a','_','b','u','i','l','d','.','7'])",
+    "codec-roundtrip": "b(decode(parse(joined(encode(build_version()),current())).encoded)==build_version())",
+    "codec-platform": "b(parse(joined(encode(build_version()),current())).platform==current())",
+    "normal-service-count": "normal().rows.len() as int",
+    "normal-first": "rank(normal().rows[0].version)",
+    "normal-current": "b(has_text(normal().rows[0].platforms,current()))",
+    "normal-bad": "b(has_text(normal().rows[0].platforms,bad()))",
+    "normal-all-has-v2": "b(has_text(normal().rows[0].all_tags,t2()))",
+    "normal-manager-count": "manager(normal().rows,current()).len() as int",
+    "normal-manager-first": "rank(manager(normal().rows,current())[0].version)",
+    "all-service-count": "all().rows.len() as int",
+    "all-first": "rank(all().rows[0].version)",
+    "all-current": "b(has_text(all().rows[0].platforms,current()))",
+    "all-bad": "b(has_text(all().rows[0].platforms,bad()))",
+    "all-all-has-v2": "b(has_text(all().rows[0].all_tags,t2()))",
+    "all-manager-count": "manager(all().rows,current()).len() as int",
+    "deps-service-count": "dependencies().rows.len() as int",
+    "deps-first": "rank(dependencies().rows[0].version)",
+    "deps-current": "b(has_text(dependencies().rows[0].platforms,current()))",
+    "deps-bad": "b(has_text(dependencies().rows[0].platforms,bad()))",
+    "deps-all-has-v2": "b(has_text(dependencies().rows[0].all_tags,t2()))",
+    "deps-manager-count": "manager(dependencies().rows,current()).len() as int",
+    "deps-manager-first": "rank(manager(dependencies().rows,current())[0].version)",
+    "same-version-service-count": "multi().rows.len() as int",
+    "same-version-first": "rank(multi().rows[0].version)",
+    "same-version-current": "b(has_text(multi().rows[0].platforms,current()))",
+    "same-version-bad": "b(has_text(multi().rows[0].platforms,bad()))",
+    "same-version-all-has-v2": "b(has_text(multi().rows[0].all_tags,t2()))",
+    "same-version-manager-count": "manager(multi().rows,current()).len() as int",
+    "same-version-manager-first": "rank(manager(multi().rows,current())[0].version)",
+    "display-normal-row": "b(display(normal().rows,false,current()).len()>0)",
+    "display-normal-version": "rank(display(normal().rows,false,current())[0].version)",
+    "display-normal-current": "b(display(normal().rows,false,current())[0].platforms==seq![current()])",
+    "display-normal-all-v2": "b(has_text(display(normal().rows,false,current())[0].all_tags,t2()))",
+    "display-all-row": "b(display(all().rows,true,current()).len()>0)",
+    "display-all-version": "rank(display(all().rows,true,current())[0].version)",
+    "display-all-current": "b(display(all().rows,true,current())[0].platforms==seq![current()])",
+    "display-all-all-v2": "b(has_text(display(all().rows,true,current())[0].all_tags,t2()))",
+    "mixed-v1-current": "b(has_text(get_all(mixed()),t1()))",
+    "mixed-v2-bad": "b(has_text(get_all(mixed()),t2()))",
+    "mixed-sorted-v2-first": "b(aggregate(get_all(mixed()))[0].encoded==v2())",
+    "mixed-v1-has-current": "b(has_text(aggregate(get_all(mixed()))[1].platforms,current()))",
+    "mixed-v1-has-bad": "b(has_text(aggregate(get_all(mixed()))[1].platforms,bad()))",
+    "same-version-v1-current": "b(has_text(get_all(triple()),t1()))",
+    "same-version-v2-bad": "b(has_text(get_all(triple()),t2()))",
+    "same-version-sorted-v2-first": "b(aggregate(get_all(triple()))[0].encoded==v2())",
+    "same-version-v1-has-current": "b(has_text(aggregate(get_all(triple()))[1].platforms,current()))",
+    "same-version-v1-has-bad": "b(has_text(aggregate(get_all(triple()))[1].platforms,bad()))",
+    "installed-version": "rank(manager(dependencies().rows,current())[0].version)",
+    "installed-payload": "payload_value(standalone())",
+    "range-dependency": "rank(manager(dependencies().rows,current())[0].version)",
+    "range-payload": "payload_value(ranged())",
+    "range-row": "b(ranged().consumer)",
+    "range-load": "b(ranged().ok)",
+    "pinned-load": "b(pinned().ok)",
+    "pinned-dependency": "b(pinned().dependency)",
+    "pinned-payload": "payload_value(pinned())",
+    "pinned-row": "b(pinned().consumer)",
+    "same-version-record": "rank(manager(multi().rows,current())[0].version)",
+    "same-version-payload": "payload_value(normal_consumer(triple(),Range::Any,current(),entries()))",
+    "deep-build-encoded-fields-equal": "b(deep_fields(deep_a()).major==deep_fields(deep_z()).major && deep_fields(deep_a()).minor==deep_fields(deep_z()).minor && deep_fields(deep_a()).patch==deep_fields(deep_z()).patch && deep_fields(deep_a()).build==deep_fields(deep_z()).build)",
+    "deep-build-tags-z-first": "b(deep_oci().keys[0]==joined(deep_z(),current()))",
+    "deep-build-aggregate-z-first": "b(deep_aggregate().keys[0]==deep_z())",
+    "deep-build-aggregate-a-first": "b(deep_aggregate().keys[0]==deep_a())",
+    "build-service-normal-a": "b(deep_service_first_version()==deep_decoded_a())",
+    "build-service-deps-count": "deep_dependency_versions().len() as int",
+    "build-service-deps-a-first": "b(deep_dependency_versions()[0]==deep_decoded_a())",
+    "build-service-deps-z-last": "b(deep_dependency_versions()[deep_dependency_versions().len()-1]==deep_decoded_z())",
+    "build-manager-count": "if deep_manager_version().is_some(){1int}else{0int}",
+    "build-manager-z": "b(deep_manager_version()==Some(deep_decoded_z()))",
+    "build-display-a": "b(deep_service_first_version()==deep_decoded_a())",
+    "build-display-z": "b(deep_service_first_version()==deep_decoded_z())",
+    "build-installed-z": "b(deep_manager_version()==Some(deep_decoded_z()))",
+    "build-installed-a": "b(deep_manager_version()==Some(deep_decoded_a()))"
+  },
+  "native_expected": {
+    "codec-encode": 1,
+    "codec-roundtrip": 1,
+    "codec-platform": 1,
+    "final-tlevel": 0,
+    "pinned-error-satisfactory": 1,
+    "pinned-error-name": 1,
+    "repo-clear": 1,
+    "repo-create": 1,
+    "load-v1": 1,
+    "package-v1": 1,
+    "publish-v1": 1,
+    "remove-v1": 1,
+    "load-v2": 1,
+    "package-v2": 1,
+    "publish-v2-bad": 1,
+    "remove-v2": 1,
+    "install-mixed": 1,
+    "remove-installed": 1,
+    "range-load": 1,
+    "range-remove": 1,
+    "range-remove-dependency": 1,
+    "publish-v1-bad": 1,
+    "remove-second-v1": 1,
+    "install-same-version": 1,
+    "pinned-load": 0,
+    "load-v1-second": 1,
+    "package-v1-second": 1,
+    "build-package-z": 1,
+    "build-publish-z": 1,
+    "build-remove-z": 1,
+    "build-package-a": 1,
+    "build-publish-a": 1,
+    "build-remove-a": 1,
+    "build-remove-base": 1,
+    "build-clear-registry": 1,
+    "build-load-z": 1,
+    "build-load-a": 1,
+    "build-source-z": 1,
+    "build-source-a": 1,
+    "build-packaged-version-z": 1,
+    "build-packaged-version-a": 1,
+    "build-published-z": 1,
+    "build-published-a": 1,
+    "normal-manager-ok": 1,
+    "all-manager-ok": 1,
+    "deps-manager-ok": 1,
+    "same-version-manager-ok": 1,
+    "deep-build-keys-exception": 0,
+    "build-keys-exception": 0,
+    "build-tags-z-first": 1,
+    "build-aggregate-z-first": 1,
+    "build-aggregate-a-first": 0,
+    "build-encoded-fields-equal": 0,
+    "build-manager-ok": 1,
+    "build-display-row": 1,
+    "build-install": 1,
+    "build-record-present": 1,
+    "build-payload": 1
+  },
+  "replay_model": "oras.rs",
+  "replay_prelude": "raw_neighbors();selected_neighbors();deep_build_neighbors();\n",
+  "replay_preludes": {
+    "normal-bad": "raw_neighbors();selected_neighbors();deep_build_neighbors();\nassert((b(has_text(normal().rows[0].platforms,bad()))) == 0) by (compute);\n",
+    "normal-all-has-v2": "raw_neighbors();selected_neighbors();deep_build_neighbors();\nassert((b(has_text(normal().rows[0].all_tags,t2()))) == 0) by (compute);\n",
+    "normal-manager-count": "raw_neighbors();selected_neighbors();deep_build_neighbors();\nassert((manager(normal().rows,current()).len() as int) == 1) by (compute);\n",
+    "deps-current": "raw_neighbors();selected_neighbors();deep_build_neighbors();\nassert((b(has_text(dependencies().rows[0].platforms,current()))) == 0) by (compute);\n",
+    "deps-bad": "raw_neighbors();selected_neighbors();deep_build_neighbors();\nassert((b(has_text(dependencies().rows[0].platforms,bad()))) == 1) by (compute);\n",
+    "deps-all-has-v2": "raw_neighbors();selected_neighbors();deep_build_neighbors();\nassert((b(has_text(dependencies().rows[0].all_tags,t2()))) == 0) by (compute);\n",
+    "deps-manager-first": "raw_neighbors();selected_neighbors();deep_build_neighbors();\nassert((rank(manager(dependencies().rows,current())[0].version)) == 1) by (compute);\n",
+    "same-version-first": "raw_neighbors();selected_neighbors();deep_build_neighbors();\nassert((rank(multi().rows[0].version)) == 1) by (compute);\n",
+    "same-version-bad": "raw_neighbors();selected_neighbors();deep_build_neighbors();\nassert((b(has_text(multi().rows[0].platforms,bad()))) == 1) by (compute);\n",
+    "same-version-all-has-v2": "raw_neighbors();selected_neighbors();deep_build_neighbors();\nassert((b(has_text(multi().rows[0].all_tags,t2()))) == 0) by (compute);\n",
+    "same-version-manager-count": "raw_neighbors();selected_neighbors();deep_build_neighbors();\nassert((manager(multi().rows,current()).len() as int) == 1) by (compute);\n",
+    "same-version-manager-first": "raw_neighbors();selected_neighbors();deep_build_neighbors();\nassert((rank(manager(multi().rows,current())[0].version)) == 1) by (compute);\n",
+    "display-normal-all-v2": "raw_neighbors();selected_neighbors();deep_build_neighbors();\nassert((b(has_text(display(normal().rows,false,current())[0].all_tags,t2()))) == 0) by (compute);\n",
+    "mixed-v1-current": "raw_neighbors();selected_neighbors();deep_build_neighbors();\nassert((b(has_text(get_all(mixed()),t1()))) == 1) by (compute);\n",
+    "mixed-sorted-v2-first": "raw_neighbors();selected_neighbors();deep_build_neighbors();\nassert((b(aggregate(get_all(mixed()))[0].encoded==v2())) == 1) by (compute);\n",
+    "mixed-v1-has-current": "raw_neighbors();selected_neighbors();deep_build_neighbors();\nassert((b(has_text(aggregate(get_all(mixed()))[1].platforms,current()))) == 1) by (compute);\n",
+    "mixed-v1-has-bad": "raw_neighbors();selected_neighbors();deep_build_neighbors();\nassert((b(has_text(aggregate(get_all(mixed()))[1].platforms,bad()))) == 0) by (compute);\n",
+    "same-version-v1-current": "raw_neighbors();selected_neighbors();deep_build_neighbors();\nassert((b(has_text(get_all(triple()),t1()))) == 1) by (compute);\n",
+    "same-version-v2-bad": "raw_neighbors();selected_neighbors();deep_build_neighbors();\nassert((b(has_text(get_all(triple()),t2()))) == 1) by (compute);\n",
+    "same-version-sorted-v2-first": "raw_neighbors();selected_neighbors();deep_build_neighbors();\nassert((b(aggregate(get_all(triple()))[0].encoded==v2())) == 1) by (compute);\n",
+    "same-version-v1-has-current": "raw_neighbors();selected_neighbors();deep_build_neighbors();\nassert((b(has_text(aggregate(get_all(triple()))[1].platforms,current()))) == 1) by (compute);\n",
+    "same-version-v1-has-bad": "raw_neighbors();selected_neighbors();deep_build_neighbors();\nassert((b(has_text(aggregate(get_all(triple()))[1].platforms,bad()))) == 1) by (compute);\n",
+    "installed-version": "raw_neighbors();selected_neighbors();deep_build_neighbors();\nassert((rank(manager(dependencies().rows,current())[0].version)) == 1) by (compute);\n",
+    "installed-payload": "raw_neighbors();selected_neighbors();deep_build_neighbors();\nassert((payload_value(standalone())) == 1) by (compute);\n",
+    "range-dependency": "raw_neighbors();selected_neighbors();deep_build_neighbors();\nassert((rank(manager(dependencies().rows,current())[0].version)) == 1) by (compute);\n",
+    "same-version-record": "raw_neighbors();selected_neighbors();deep_build_neighbors();\nassert((rank(manager(multi().rows,current())[0].version)) == 1) by (compute);\n",
+    "same-version-payload": "raw_neighbors();selected_neighbors();deep_build_neighbors();\nassert((payload_value(normal_consumer(triple(),Range::Any,current(),entries()))) == 1) by (compute);\n"
+  }
+}

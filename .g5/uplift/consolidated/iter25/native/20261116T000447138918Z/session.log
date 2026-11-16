@@ -1,0 +1,171 @@
+
+Node: 4f0c18b74c5d, Instance: IRIS
+
+USER>
+
+Load started on 11/16/2026 00:04:49
+Loading file /tmp/iter25/Discovery.cls as udl
+Compiling class Iter25.Discovery
+Compiling routine Iter25.Discovery.1
+Load finished successfully.
+
+USER>
+
+SDK-ORIGIN|ExtName|%Studio.SourceControl.ISC|Return filename of this item
+
+SDK-BODY-BEGIN|ExtName
+	Set name=..Name(InternalName)
+	Quit $select(name="":"",1:$$$FileNormalizeFilename(^Sources_name))
+
+SDK-BODY-END|ExtName
+
+SDK-ORIGIN|ExternalName|%Studio.SourceControl.ISC|
+
+SDK-BODY-BEGIN|ExternalName
+..ExtName(InternalName)
+
+SDK-BODY-END|ExternalName
+
+SDK-ORIGIN|Name|%Studio.SourceControl.ISC|Return the name of this item without the prefix to be added by ExtName
+
+SDK-BODY-BEGIN|Name
+	If ($data(^Sources)'=11) && '$get(%inBaseline) Write !,"^Sources is not set up so hooks will not work; namespace: "_$namespace Quit ""
+	Set InternalName=##class(%Studio.SourceControl.Interface).normalizeName(InternalName)
+	#; Disconnected items do not have an external name
+	If InternalName'="",$get(^Sources(0,"Disconnected",InternalName)) Quit ""
+	Set usertype=$system.CLS.IsMthd("%Library.RoutineMgr","UserType")
+		
+	// For an abstract document, use the GetOther() method to try to determine its "real" class
+	If usertype,##class(%RoutineMgr).UserType(InternalName,.docclass,.doctype) {
+		// Check for a real abstract document subclass (or GetOther() may not work)
+		If $classmethod(docclass,"%IsA","%Studio.AbstractDocument") {
+			// Grab the actual name
+			Set actualName = $classmethod(docclass,"GetOther",InternalName)
+			// The actualName is only valid if we get a single .cls as a result
+			If actualName'[",",$ZCVT($P(actualName,".",$L(actualName,".")),"U")="CLS" {
+				// We use what GetOther() gives us, thus Demo.Loan.FindRateProcess.bpl becomes Demo.Loan.FindRateProcess.cls
+				Set InternalName = actualName
+			}
+		}
+	}	
+	
+	If $$CheckProtect^%qccServer(InternalName) Quit ""
+	If ..IsExcluded(InternalName) Quit ""
+	Set nam=$p(InternalName,".",1,*-1),ext=$p(InternalName,".",*),ext=$zcvt(ext,"u")
+	If nam=""||(ext="") Quit ""
+	
+	// If a name is found, exit Do block and perform post-processing
+	Do {
+		// Any CSP items should be matched against the "/CSP/" mapping in ^Sources
+		If InternalName["/" {
+			Set filename=$$GetFilename^%apiCSP(InternalName)
+			//Find if this csp file is located within the ^Sources tree, and return appropriate value
+			If $$$isWINDOWS {
+				If $zcvt($extract(filename,1,$length(^Sources)),"l")=$zcvt(^Sources,"l") {
+					Set name = $extract(filename,$length(^Sources)+1,*)
+					Continue
+				}
+			} Else {
+				If $extract(filename,1,$length(^Sources))=^Sources {
+					Set name = $extract(filename,$length(^Sources)+1,*)
+					Continue
+				}
+			}
+			//Do not support manipulating files in the /itemsetsourcelink* csp app which are not inside of the namespace's ^Sources tree
+			If InternalName["itemsetsourcelink" {
+				Write !,"To control files in the /itemsetsourcelink* web app, they must be in this tree: "_^Sources_" ("_InternalName_" is located at "_filename_")"
+				Return ""
+			}
+			// Any CSP items should be matched against the "/CSP/" mapping if the file is not stored in the ^Sources tree
+			Set ext="/CSP/"	
+		}
+		If ext="PRJ",nam["Default_" Return ""
+		If (ext="CLS") && ($$$defClassKeyGet(nam,$$$cCLASSgeneratedby)'="") Return ""
+		
+		// Returned name cannot contain '#'. All returned values replace '#' with '~23~'
+		Set default=0
+		Set p=$order(^Sources(ext,nam)) For  s p=$order(^Sources(ext,p),-1) Quit:p=""  If $extract(nam,1,$length(p))=p,($data(^Sources(ext,p),found)#2) Quit
+		If $data(found)=0,$data(^Sources(ext,"*"),found),'$get(^Sources(ext,"*","NoFolders")) Set default=1
+		If $data(found)=0 Return ""
+		If InternalName["/" {
+			// If no specific mapping was specified (p=""), then return the whole csp filename; otherwise return the name without the mapped piece
+			Set InternalName=$extract(InternalName,$length(p)+2,*)
+			Set name = $translate(found_$translate(InternalName,"%","_"),"\","/")
+			Continue
+		}
+		If (ext="DFI") {
+			// expected format is <folderName>-<itemName>.<itemType>.DFI; will map to an external file named <folderName>/<itemName>.<itemType>.xml 
+			// replace the first '-' with '/' to translate Item Folder into subfolder on disk and leave the other dashes as dashes; converts spaces to '_'
+			Set name = $translate(found_$replace($translate(nam,"% ","__"),"-","/",1,1)_".xml","\","/")
+			Continue
+		}
+		If ext="CLS"||(ext="PRJ")||(ext="PTD")||(usertype&&(##class(%RoutineMgr).UserType(InternalName))) {
+			Set nam=$translate(nam,"%")
+			Set noFolders = $get(^Sources(ext,"*","NoFolders"))
+			If 'noFolders Set nam = $translate(nam,".","/")
+			// If using sharded Production Exports, export code to /ptd subdirectory and use PTD naming conventions
+			If ext = "PTD" {
+				Do ##class(%Studio.SourceControl.Production).ParseInternalName(InternalName,noFolders,.filename)
+				Set name = $translate(found_filename,"\","/")
+				Continue
+			}
+			#; If match ends in '`' character use UDL/CLS format rather than XML format
+			If $extract(found,*)="`" {
+				Set name = $translate($e(found,1,*-1)_nam_".cls","\","/")
+			} Else {
+				Set name = $translate(found_nam_".xml","\","/")
+			}
+			Continue
+		}
+		If found["`" {
+			Set found=$piece(found,"`")
+			Set name = $translate($g(found)_$zconvert($tr(nam,"%","_"),"l")_"."_$zconvert(ext,"l"),"\","/")
+			Continue
+		}
+		If default {
+			Set name = $translate($g(found)_$tr(nam,"%.","_/")_"."_$s(ext="INC":"inc",ext="INT":"int",1:"rtn"),"\","/")
+			Continue
+		}
+		Set name = $translate($g(found)_$tr(nam,"%","_")_"."_$s(ext="INC":"inc",ext="INT":"int",1:"rtn"),"\","/")
+	} While 0
+	// Replace characters reserved in Perforce filenames
+	Set name = ..EncodeP4Filename($get(name))
+	Return name
+
+SDK-BODY-END|Name
+
+SDK-CANDIDATE|%Studio.Extension.Base|ExternalName|InternalName:%String
+
+SDK-CANDIDATE|%Studio.SourceControl.Base|ExternalName|InternalName:%String
+
+SDK-CANDIDATE|%Studio.SourceControl.Change|ExternalNameCompute|
+
+SDK-CANDIDATE|%Studio.SourceControl.Change|ExternalNameDisplayToLogical|
+
+SDK-CANDIDATE|%Studio.SourceControl.Change|ExternalNameGet|
+
+SDK-CANDIDATE|%Studio.SourceControl.Change|ExternalNameIsValid|
+
+SDK-CANDIDATE|%Studio.SourceControl.Change|ExternalNameLogicalToDisplay|
+
+SDK-CANDIDATE|%Studio.SourceControl.Change|ExternalNameLogicalToOdbc|
+
+SDK-CANDIDATE|%Studio.SourceControl.Change|ExternalNameNormalize|
+
+SDK-CANDIDATE|%Studio.SourceControl.Change|ExternalNameSQLCompute|
+
+SDK-CANDIDATE|%Studio.SourceControl.File|ExternalName|InternalName:%String
+
+SDK-CANDIDATE|%Studio.SourceControl.ISC|ExternalName|InternalName:%String
+
+SDK-CANDIDATE|%Studio.SourceControl.Interface|ExternalName|InternalName:%String
+
+SDK-CANDIDATE|%Studio.SourceControl.ItemSet|AddExternalItemsToUncommittedQueue|pCCR:%String,&skipped,path:%String=""
+
+SDK-CANDIDATE|%Studio.SourceControl.Production|ParseExternalName|externalName:%String,*internalName="",*productionName=""
+
+SDK-CANDIDATE|%Studio.SourceControl.Production|RemoveItemByExternalName|externalName:%String,nameMethod:%String
+
+OBS|discovery-complete|1
+
+USER>

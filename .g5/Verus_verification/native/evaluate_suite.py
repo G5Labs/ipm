@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 """Verdict for one product %UnitTest suite run. Usage: python3 -I evaluate_suite.py RUN_DIR TESTCASE [--index CONCERN]
 PASS needs process COMPLETED, no environment flag, at least one method of TESTCASE in the extractor output,
-no failed method, and IPM's own summary line agreeing. A zero-test result is INCOMPLETE; all methods skipped is NO-EFFECTIVE-TESTS."""
+no failed method, and IPM's own summary line present and agreeing. A zero-test result is INCOMPLETE; all methods skipped is NO-EFFECTIVE-TESTS.
+Without IPM's "Methods:" line, or when its total differs from the extracted methods (a run covers only TESTCASE;
+IPM counts skipped methods as passed and the extractor lists them with status 2), the extractor may have read
+another TestInstance: INCOMPLETE."""
 import json, os, re, sys
 from datetime import datetime, timezone
 
@@ -28,6 +31,8 @@ def main(a):
         verdict = "FAIL"
     elif ipm and int(ipm[-1][2]) != 0:
         verdict = "FAIL"
+    elif not ipm or int(ipm[-1][0]) != len(methods):
+        verdict = "INCOMPLETE"
     elif n_pass == 0:
         verdict = "NO-EFFECTIVE-TESTS"  # every method skipped: no evidence either way
     else:

@@ -1,0 +1,109 @@
+{
+  "verus_dir": ".g5/Verus_verification/consolidated/iter19",
+  "changed_files": [
+    ".g5/ontology/concepts/repositories.g5.md",
+    ".g5/uplift/consolidated/BUGS.md",
+    ".g5/uplift/consolidated/QUESTIONS.md",
+    ".g5/uplift/consolidated/DESIGN-SIMPLIFICATIONS.md"
+  ],
+  "rows": [
+    {
+      "id": "S19-01",
+      "owner": ".g5/ontology/concepts/repositories.g5.md#repo.filesystem.duplicates",
+      "model": "duplicates.rs",
+      "symbols": [
+        "key",
+        "materialize",
+        "add_valid",
+        "fold",
+        "build",
+        "same_key_preserves_pair",
+        "distinct_key_inserts_pair",
+        "first_row_survives",
+        "admission_neighbor",
+        "warning_neighbor",
+        "logical_key_neighbor"
+      ],
+      "direct": [
+        [
+          "src/cls/IPM/Repo/Filesystem/Definition.cls",
+          "ScanDirectory"
+        ],
+        [
+          "src/cls/IPM/Repo/Filesystem/Definition.cls",
+          "BuildCache"
+        ],
+        [
+          "src/cls/IPM/Repo/Filesystem/Definition.cls",
+          "AddCacheItem"
+        ],
+        [
+          "src/cls/IPM/Repo/Filesystem/Cache.cls",
+          "HandleSaveError"
+        ]
+      ],
+      "reader": [
+        [
+          "src/cls/IPM/Repo/Filesystem/PackageService.cls",
+          "GetModuleManifest"
+        ],
+        [
+          "src/cls/IPM/Repo/Filesystem/PackageService.cls",
+          "GetModuleDirectory"
+        ]
+      ],
+      "scope": "Valid parsed entries, normalized roots/subdirectories, fresh purged build. Constructor per-entry output qualifies exact fixture provider order; generic filesystem enumeration/XML/status/unique-index machinery conditional. Same logical Root/Name/fullVersion retains first complete manifest/directory pair and warns+OK. Other save errors and concurrent/refresh cases outside."
+    },
+    {
+      "id": "S19-02",
+      "owner": ".g5/ontology/concepts/repositories.g5.md#repo.filesystem.duplicates",
+      "model": "duplicates.rs",
+      "symbols": [
+        "lookup",
+        "service_manifest",
+        "service_directory",
+        "stable_selected_source",
+        "install_directory",
+        "loaded",
+        "shown_supplier",
+        "listed_for_repository",
+        "two_readers_open_same_row",
+        "service_neighbor",
+        "installation_neighbor",
+        "description",
+        "installed_root",
+        "supplier",
+        "installed_version"
+      ],
+      "direct": [
+        [
+          "src/cls/IPM/Repo/Filesystem/PackageService.cls",
+          "GetModuleDirectory"
+        ],
+        [
+          "src/cls/IPM/Utils/Module.cls",
+          "LoadQualifiedReference"
+        ],
+        [
+          "src/cls/IPM/Utils/Module.cls",
+          "LoadModuleReference"
+        ],
+        [
+          "src/cls/IPM/Utils/Module.cls",
+          "LoadNewModule"
+        ]
+      ],
+      "reader": [
+        [
+          "src/cls/IPM/General/ModuleSummary.cls",
+          "GetLines"
+        ],
+        [
+          "src/cls/IPM/Main.cls",
+          "GetListModules"
+        ]
+      ],
+      "scope": "Indexed constructor-produced cache rows, stable physical manifest/code and successful supported DIRECTORY loading. Current code/description derive from retained physical directory, not a final outcome flag. Full native cache/service XML equality remains qualification only; generic XML/compile/save and other delivery branches unassessed."
+    }
+  ]
+}

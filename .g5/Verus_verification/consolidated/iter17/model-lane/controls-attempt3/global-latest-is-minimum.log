@@ -1,0 +1,36 @@
+error: postcondition not satisfied
+   --> .g5/Verus_verification/consolidated/iter17/model-lane/controls/global-latest-is-minimum.rs:175:10
+    |
+175 |    ensures latest(old+db)==Some(selected)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+...
+178 | /  if old.len()>0 {
+179 | |   latest_older_frame(old.skip(1),db,selected);
+180 | |   assert((old+db).skip(1)==old.skip(1)+db);
+181 | |  }else{assert(old+db==db);}
+    | |___________________________- at the end of the function body
+
+error: postcondition not satisfied
+   --> .g5/Verus_verification/consolidated/iter17/model-lane/controls/global-latest-is-minimum.rs:186:2
+    |
+183 | pub proof fn symbolic_order_neighbors(a:int,b:int)
+    | -------------------------------------------------- at the end of the function body
+...
+186 |  file_index(nested_state(a,b),None)==Some(if a>b{a}else{b}),
+    |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: assertion failed
+   --> .g5/Verus_verification/consolidated/iter17/model-lane/controls/global-latest-is-minimum.rs:230:9
+    |
+230 |  assert(file_id(fail())==2);
+    |         ^^^^^^^^^^^^^^^^^^ assertion failed
+
+error: assertion failed
+   --> .g5/Verus_verification/consolidated/iter17/model-lane/controls/global-latest-is-minimum.rs:252:9
+    |
+252 |  assert(nested().file==Some(Snapshot{id:4,tree:decode(pass_run(true))}));
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ assertion failed
+
+verification results:: 32 verified, 4 errors
+error: aborting due to 4 previous errors
+

@@ -1,7 +1,7 @@
 {
  "group": "cases a-g",
  "written_utc": "2026-11-13T18:27:23Z",
- "note": "Expected values come from A1 intent-inventory commitments (INT-*) and provisional options of open questions (Q-*). predicted_as_built carries the code-read prediction from A1 (d) notes or A2 observations, compared separately. A null expect is an observation without a claim; a harness field failing makes the case INCOMPLETE. F0 added before any case run. Vacuous-pass guards added 2026-11-13 after the runs (orchestrator request): E0, E1, E2, E3, E4, E5, E7, E8, R4, D1. 2026-11-13T20:45:54Z: process-end cases C1-C4, C4R gained Phases and Package expectations (R1-MOD-03) and the R1-ONT-02 rereading of Version, Finalized and Committed; added after their runs, evaluated with --use-current.",
+ "note": "Expected values come from A1 intent-inventory commitments (INT-*) and provisional options of open questions (Q-*). predicted_as_built carries the code-read prediction from A1 (d) notes or A2 observations, compared separately. A null expect is an observation without a claim; a harness field failing makes the case INCOMPLETE. F0 added before any case run. Vacuous-pass guards added 2026-11-13 after the runs (orchestrator request): E0, E1, E2, E3, E4, E5, E7, E8, R4, D1. 2026-11-13T20:45:54Z: process-end cases C1-C4, C4R gained Phases and Package expectations (R1-MOD-03) and the R1-ONT-02 rereading of Version, Finalized and Committed; added after their runs, evaluated with --use-current. 2026-11-14T03:43Z, after the runs: A0-A5 gained harness guards par.hist.row1.Package and dep.hist.row1.Package (the dependency's guarded like its other row fields), set to the fixture names each case loads, so a row read into one module's slot must be that module's row (.g5/uplift/consolidated/round1/checker-repairs.md).",
  "cases": {
   "A0": {
    "kind": "case",
@@ -40,9 +40,19 @@
      "expect": "1",
      "source": "INT-LOAD-17"
     },
+    "par.hist.row1.Package": {
+     "expect": "b2-par-ok",
+     "source": "harness: the parent the case loads (CaseA0 in native/scripts/B2Native/Cases.cls, fixture native/make_fixtures.py:84); HistFor selects this slot's rows by Package",
+     "harness": true
+    },
     "dep.hist.rows": {
      "expect": "1",
      "source": "INT-HIST-08"
+    },
+    "dep.hist.row1.Package": {
+     "expect": "b2-dep-a0",
+     "source": "harness: the dependency the case loads (CaseA0 in native/scripts/B2Native/Cases.cls, fixture native/make_fixtures.py:84); HistFor selects this slot's rows by Package",
+     "harness": true
     },
     "par.hist.row1.SuccessKind": {
      "expect": "OK",
@@ -125,6 +135,11 @@
      "expect": "1",
      "source": "INT-LOAD-17, INT-HIST-02"
     },
+    "par.hist.row1.Package": {
+     "expect": "b2-par-actfail",
+     "source": "harness: the parent the case loads (CaseA1 in native/scripts/B2Native/Cases.cls, fixture native/make_fixtures.py:85); HistFor selects this slot's rows by Package",
+     "harness": true
+    },
     "par.hist.row1.SuccessKind": {
      "expect": "ERR",
      "source": "INT-HIST-02/05"
@@ -146,6 +161,15 @@
      "source": "INT-HIST-02 'record survives the action's rollback', INT-HIST-08, Q-06 provisional (must survive)",
      "predicted_as_built": "0",
      "prediction_source": "A2 OBS-L1 / OBS-H5 (dependency twin insert and persist run inside the parent's transaction)"
+    },
+    "dep.hist.row1.Package": {
+     "expect": "b2-dep-a1",
+     "source": "harness: the dependency the case loads (CaseA1 in native/scripts/B2Native/Cases.cls, fixture native/make_fixtures.py:85); HistFor selects this slot's rows by Package",
+     "harness": true,
+     "when": {
+      "field": "dep.hist.rows",
+      "expect": "1"
+     }
     },
     "dep.hist.row1.Committed": {
      "expect": "0",
@@ -196,6 +220,11 @@
      "expect": "1",
      "source": "INT-LOAD-17"
     },
+    "par.hist.row1.Package": {
+     "expect": "b2-par-depfail",
+     "source": "harness: the parent the case loads (CaseA3 in native/scripts/B2Native/Cases.cls, fixture native/make_fixtures.py:86); HistFor selects this slot's rows by Package",
+     "harness": true
+    },
     "par.hist.row1.SuccessKind": {
      "expect": "ERR",
      "source": "INT-HIST-02/05"
@@ -213,6 +242,15 @@
      "source": "INT-HIST-02 'Failed actions are logged too', INT-HIST-08, Q-06 provisional",
      "predicted_as_built": "0",
      "prediction_source": "A2 OBS-L1 / OBS-H5 (dependency twin insert and persist run inside the parent's transaction)"
+    },
+    "dep.hist.row1.Package": {
+     "expect": "b2-dep-fail",
+     "source": "harness: the dependency the case loads (CaseA3 in native/scripts/B2Native/Cases.cls, fixture native/make_fixtures.py:86); HistFor selects this slot's rows by Package",
+     "harness": true,
+     "when": {
+      "field": "dep.hist.rows",
+      "expect": "1"
+     }
     },
     "dep.hist.row1.SuccessKind": {
      "expect": "ERR",
@@ -275,6 +313,11 @@
      "expect": "1",
      "source": "INT-LOAD-17"
     },
+    "par.hist.row1.Package": {
+     "expect": "b2-par-depfail",
+     "source": "harness: the parent the case loads (CaseA2 in native/scripts/B2Native/Cases.cls, fixture native/make_fixtures.py:86); HistFor selects this slot's rows by Package",
+     "harness": true
+    },
     "par.hist.row1.SuccessKind": {
      "expect": "ERR",
      "source": "INT-HIST-05, CHANGELOG #1237 (dev failure after the first commit reads committed)"
@@ -292,6 +335,15 @@
      "source": "INT-HIST-02, INT-HIST-08, Q-06 provisional",
      "predicted_as_built": "0",
      "prediction_source": "A2 OBS-L1 / OBS-H5 (dependency twin insert and persist run inside the parent's transaction)"
+    },
+    "dep.hist.row1.Package": {
+     "expect": "b2-dep-fail",
+     "source": "harness: the dependency the case loads (CaseA2 in native/scripts/B2Native/Cases.cls, fixture native/make_fixtures.py:86); HistFor selects this slot's rows by Package",
+     "harness": true,
+     "when": {
+      "field": "dep.hist.rows",
+      "expect": "1"
+     }
     },
     "dep.hist.row1.SuccessKind": {
      "expect": "ERR",
@@ -356,6 +408,11 @@
      "expect": "1",
      "source": "INT-LOAD-17"
     },
+    "par.hist.row1.Package": {
+     "expect": "b2-par-dev-ok",
+     "source": "harness: the parent the case loads (CaseA4 in native/scripts/B2Native/Cases.cls, fixture native/make_fixtures.py:87); HistFor selects this slot's rows by Package",
+     "harness": true
+    },
     "par.hist.row1.SuccessKind": {
      "expect": "OK",
      "source": "INT-HIST-05"
@@ -371,6 +428,11 @@
     "dep.hist.rows": {
      "expect": "1",
      "source": "INT-HIST-08"
+    },
+    "dep.hist.row1.Package": {
+     "expect": "b2-dep-a2",
+     "source": "harness: the dependency the case loads (CaseA4 in native/scripts/B2Native/Cases.cls, fixture native/make_fixtures.py:87); HistFor selects this slot's rows by Package",
+     "harness": true
     },
     "dep.hist.row1.SuccessKind": {
      "expect": "OK",
@@ -429,6 +491,11 @@
      "expect": "1",
      "source": "INT-LOAD-17"
     },
+    "par.hist.row1.Package": {
+     "expect": "b2-par-actfail",
+     "source": "harness: the parent the case loads (CaseA5 in native/scripts/B2Native/Cases.cls, fixture native/make_fixtures.py:85); HistFor selects this slot's rows by Package",
+     "harness": true
+    },
     "par.hist.row1.SuccessKind": {
      "expect": "ERR",
      "source": "INT-HIST-05, -07"
@@ -444,6 +511,11 @@
     "dep.hist.rows": {
      "expect": "1",
      "source": "INT-HIST-08"
+    },
+    "dep.hist.row1.Package": {
+     "expect": "b2-dep-a1",
+     "source": "harness: the dependency the case loads (CaseA5 in native/scripts/B2Native/Cases.cls, fixture native/make_fixtures.py:85); HistFor selects this slot's rows by Package",
+     "harness": true
     },
     "dep.hist.row1.SuccessKind": {
      "expect": "OK",

@@ -1,0 +1,153 @@
+{
+  "models": {
+    "shared_steps.rs": {
+      "lock-key-shared": [
+        "if shared{0}else{module}",
+        "0"
+      ],
+      "busy-is-error": [
+        "started:false,ok:true",
+        "started:false,ok:false"
+      ],
+      "register-keeps-old-home": [
+        "let row=Row{home:module,..prior}",
+        "let row=Row{home:prior.home,..prior}"
+      ],
+      "all-complete-due": [
+        "due:!row.complete || !row.ok",
+        "due:true"
+      ],
+      "failed-complete-not-due": [
+        "due:!row.complete || !row.ok",
+        "due:!row.complete"
+      ],
+      "ignore-held-lock": [
+        "if s.locks.contains(lock){Attempt",
+        "if false{Attempt"
+      ],
+      "skip-entry-effect": [
+        "count:s.count+1,value:1",
+        "count:s.count,value:1"
+      ],
+      "skip-idempotent-payload": [
+        "count:s.count+1,value:1",
+        "count:s.count+1,value:s.value"
+      ],
+      "late-save-preserves-current-home": [
+        "Save::Snapshot=>r.snapshot.home",
+        "Save::Snapshot=>match s.row{Some(x)=>x.home,None=>r.module}"
+      ],
+      "finish-does-not-complete": [
+        "complete:true,ok:true})",
+        "complete:false,ok:true})"
+      ],
+      "finished-reports-error": [
+        "results:s.results.insert(job,true)}",
+        "results:s.results.insert(job,false)}"
+      ]
+    },
+    "deletion.rs": {
+      "editing-lock-ignored": [
+        "if s.editing_lock {Delete",
+        "if false {Delete"
+      ],
+      "error-assumes-delete": [
+        "Delete{ok:false,class:s.class}",
+        "Delete{ok:false,class:false}"
+      ],
+      "cleanup-propagates-error": [
+        "Out{ok:true,warning:!d.ok",
+        "Out{ok:d.ok,warning:!d.ok"
+      ],
+      "cleanup-retains-metadata": [
+        "module:false,manifest:false",
+        "module:s.module,manifest:s.manifest"
+      ],
+      "warning-omitted": [
+        "warning:!d.ok",
+        "warning:false"
+      ],
+      "repair-still-succeeds": [
+        "Out{ok:false,warning:true,state:s}",
+        "Out{ok:true,warning:true,state:s}"
+      ]
+    }
+  },
+  "session": [
+    "do $system.OBJ.Load(\"/tmp/iter11/Concurrent.cls\",\"ck\")",
+    "do $system.OBJ.Load(\"/tmp/iter11/DeleteProbe.cls\",\"ck\")",
+    "do ##class(Iter11.Concurrent).Run()",
+    "do ##class(Iter11.DeleteProbe).Run()"
+  ],
+  "replay_model": "all.rs",
+  "replay": {
+    "a-lock-free": "b(!a().locks.contains(1))",
+    "b-lock-free-before": "b(!a().locks.contains(2))",
+    "b-lock-free-during": "b(!both().locks.contains(2))",
+    "both-count": "both().count as int",
+    "final-count": "after_a().count as int",
+    "final-value": "after_a().value",
+    "same-b-entered": "b(same_attempt().started)",
+    "same-count": "same_attempt().state.count as int",
+    "same-b-status": "b(same_attempt().ok)",
+    "serial-b-entered": "b(serial().count>1)",
+    "serial-count": "serial().count as int",
+    "serial-value": "serial().value",
+    "before-b-home-a": "b(a().row.unwrap().home==1)",
+    "before-b-home-b": "b(a().row.unwrap().home==2)",
+    "before-b-complete": "b(a().row.unwrap().complete)",
+    "before-b-ok": "b(a().row.unwrap().ok)",
+    "after-b-home-a": "b(after_b().row.unwrap().home==1)",
+    "after-b-home-b": "b(after_b().row.unwrap().home==2)",
+    "after-b-complete": "b(after_b().row.unwrap().complete)",
+    "after-b-ok": "b(after_b().row.unwrap().ok)",
+    "after-a-home-a": "b(after_a().row.unwrap().home==1)",
+    "after-a-home-b": "b(after_a().row.unwrap().home==2)",
+    "after-a-complete": "b(after_a().row.unwrap().complete)",
+    "after-a-ok": "b(after_a().row.unwrap().ok)",
+    "serial-final-home-a": "b(serial().row.unwrap().home==1)",
+    "serial-final-home-b": "b(serial().row.unwrap().home==2)",
+    "serial-final-complete": "b(serial().row.unwrap().complete)",
+    "serial-final-ok": "b(serial().row.unwrap().ok)",
+    "delete-direct-status": "del::b(del::delete_class(del::before(true)).ok)",
+    "delete-direct-retained": "del::b(del::delete_class(del::before(true)).class)",
+    "delete-locked-uninstall": "del::b(del::uninstall(del::before(true)).ok)",
+    "delete-locked-module": "del::b(del::uninstall(del::before(true)).state.module)",
+    "delete-locked-manifest": "del::b(del::uninstall(del::before(true)).state.manifest)",
+    "delete-locked-code": "del::b(del::uninstall(del::before(true)).state.class)",
+    "delete-unlocked-uninstall": "del::b(del::uninstall(del::before(false)).ok)",
+    "delete-unlocked-code": "del::b(del::uninstall(del::before(false)).state.class)",
+    "a-status": "b(after_a().results[10])",
+    "b-status": "b(after_a().results[20])",
+    "serial-a-status": "b(serial().results[10])",
+    "serial-b-status": "b(serial().results[20])",
+    "same-a-status": "b(finish(same_attempt().state,10,Save::Snapshot).results[10])"
+  },
+  "native_expected": {
+    "concurrent-load-a": 1,
+    "concurrent-load-b": 1,
+    "a-entered": 1,
+    "b-entered": 1,
+    "a-done": 1,
+    "b-done": 1,
+    "a-status": 1,
+    "b-status": 1,
+    "same-a-entered": 1,
+    "same-b-done": 1,
+    "same-a-done": 1,
+    "same-a-status": 1,
+    "serial-a-entered": 1,
+    "serial-a-status": 1,
+    "serial-b-status": 1,
+    "delete-load": 1,
+    "delete-lock-acquired": 1,
+    "delete-holder-done": 1,
+    "delete-call": 1,
+    "delete-unlocked-reload": 1,
+    "a-tlevel": 0,
+    "b-tlevel": 0,
+    "barrier-timeouts": 0,
+    "same-timeout": 0,
+    "delete-holder-deadline": 0
+  }
+}

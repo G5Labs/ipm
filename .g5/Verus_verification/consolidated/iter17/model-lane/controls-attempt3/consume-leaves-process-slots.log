@@ -1,0 +1,36 @@
+error: postcondition not satisfied
+   --> .g5/Verus_verification/consolidated/iter17/model-lane/controls/consume-leaves-process-slots.rs:188:32
+    |
+183 | pub proof fn symbolic_order_neighbors(a:int,b:int)
+    | -------------------------------------------------- at the end of the function body
+...
+188 |  nested_state(a,b).db.len()==2,nested_state(a,b).tracked_ids==seq![a]
+    |                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+note: function body check: not all errors may have been reported; rerun with a higher value for --multiple-errors to find other potential errors in this function
+   --> .g5/Verus_verification/consolidated/iter17/model-lane/controls/consume-leaves-process-slots.rs:204:1
+    |
+204 | pub proof fn named_state_frames()
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: postcondition not satisfied
+   --> .g5/Verus_verification/consolidated/iter17/model-lane/controls/consume-leaves-process-slots.rs:206:91
+    |
+204 | pub proof fn named_state_frames()
+    | --------------------------------- at the end of the function body
+205 |  ensures pass_state().db==seq![Stored{id:1,run:pass_run(false)}],pass_state().tracked_ids==seq![1int],
+206 |  fail_state().db==seq![Stored{id:1,run:pass_run(false)},Stored{id:2,run:fail_run(false)}],fail_state().tracked_ids==seq![2int],
+    |                                                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: postcondition not satisfied
+   --> .g5/Verus_verification/consolidated/iter17/model-lane/controls/consume-leaves-process-slots.rs:207:124
+    |
+204 | pub proof fn named_state_frames()
+    | --------------------------------- at the end of the function body
+...
+207 |  child_state().db==seq![Stored{id:1,run:pass_run(false)},Stored{id:2,run:fail_run(false)},Stored{id:4,run:pass_run(true)}],child_state().tracked_ids==seq![4int],
+    |                                                                                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+verification results:: 34 verified, 2 errors
+error: aborting due to 3 previous errors
+

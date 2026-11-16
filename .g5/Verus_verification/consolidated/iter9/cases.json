@@ -1,0 +1,91 @@
+{
+  "models": {
+    "ownership.rs": {
+      "ignore-exact-claim": [
+        "r.name==doc ||",
+        "false ||"
+      ],
+      "ignore-nested-package": [
+        "r.name.kind==Kind::Package &&",
+        "false &&"
+      ],
+      "disable-ownership": [
+        "(!check || !claimed",
+        "(true || !claimed"
+      ],
+      "delete-protected-child": [
+        "if todo[0].module==module",
+        "if true"
+      ],
+      "keep-module-row": [
+        "modules:s.modules.remove(module)",
+        "modules:s.modules"
+      ],
+      "wrong-home": [
+        "Step{home,completed:prior.completed",
+        "Step{home:prior.home,completed:prior.completed"
+      ],
+      "no-cascade": [
+        "s.steps[k].home!=home",
+        "true"
+      ],
+      "overbroad-cascade": [
+        "s.steps[k].home!=home",
+        "false"
+      ],
+      "seed-does-not-complete": [
+        "Step{home:row.home,completed:true,ok:true}",
+        "Step{home:row.home,completed:false,ok:true}"
+      ]
+    }
+  },
+  "session": [
+    "do $system.OBJ.Load(\"/tmp/iter9/Probe.cls\",\"ck\")",
+    "do $system.OBJ.Load(\"/tmp/iter9/Steps.cls\",\"ck\")",
+    "do ##class(Iter9.Probe).Packages()",
+    "do ##class(Iter9.Probe).Steps()"
+  ],
+  "replay_model": "ownership.rs",
+  "replay": {
+    "unchecked-extra": "b(children(world().files,refs(),root(),false).contains(extra()))",
+    "checked-extra": "b(children(world().files,refs(),root(),true).contains(extra()))",
+    "checked-inner": "b(children(world().files,refs(),root(),true).contains(inner()))",
+    "pkg-row": "b(clean(world(),refs(),1).modules.contains(1))",
+    "own-class": "b(clean(world(),refs(),1).files.contains(own()))",
+    "extra-class": "b(clean(world(),refs(),1).files.contains(extra()))",
+    "inner-class": "b(clean(world(),refs(),1).files.contains(inner()))",
+    "seed-any": "b(seeded().steps[key(StepKind::Any)].completed)",
+    "seed-primary": "b(seeded().steps[key(StepKind::Primary)].completed)",
+    "seed-home-a": "b(seeded().steps[key(StepKind::Any)].home==1)",
+    "home-moved": "b(both_moved().steps[key(StepKind::Any)].home==2)",
+    "moved-completed": "b(both_moved().steps[key(StepKind::Any)].completed)",
+    "any-after-a": "b(delete_module(both_moved(),1,true).steps.contains_key(key(StepKind::Any)))",
+    "primary-after-a": "b(delete_module(both_moved(),1,true).steps.contains_key(key(StepKind::Primary)))",
+    "b-after-a": "b(delete_module(both_moved(),1,true).modules.contains(2))",
+    "any-after-b": "b(delete_module(delete_module(both_moved(),1,true),2,true).steps.contains_key(key(StepKind::Any)))",
+    "any-first-delete": "b(delete_module(seeded(),1,true).steps.contains_key(key(StepKind::Any)))",
+    "primary-first-delete": "b(delete_module(seeded(),1,true).steps.contains_key(key(StepKind::Primary)))",
+    "primary-after-b": "b(delete_module(delete_module(both_moved(),1,true),2,true).steps.contains_key(key(StepKind::Primary)))",
+    "same-parent-child": "b(children(world().files,seq![Ref{name:root(),module:1},Ref{name:own(),module:1}],root(),true).contains(own()))",
+    "same-class": "b(clean(world(),seq![Ref{name:root(),module:1},Ref{name:own(),module:1}],1).files.contains(own()))"
+  },
+  "replay_prelude": "reveal_with_fuel(claimed,5);reveal_with_fuel(module_children,6);\n",
+  "native_expected": {
+    "pkg-load": 1,
+    "extra-load": 1,
+    "nested-load": 1,
+    "pkg-uninstall": 1,
+    "extra-uninstall": 1,
+    "inner-call": 1,
+    "extra-removed": 1,
+    "step-a-load": 1,
+    "step-b-load": 1,
+    "step-a-uninstall": 1,
+    "step-b-uninstall": 1,
+    "step-not-run": 0,
+    "step-a-first-uninstall": 1,
+    "step-a-reload": 1,
+    "same-load": 1,
+    "same-uninstall": 1
+  }
+}

@@ -1,0 +1,158 @@
+{
+  "models": {
+    "inputs.rs": {
+      "parameter-no-expansion": [
+        "if k==key { value }",
+        "if false { value }"
+      ],
+      "parameter-reverse-order": [
+        "keys[0],values[keys[0]]",
+        "keys.last(),values[keys.last()]"
+      ],
+      "delimiter-always-comma": [
+        "Some(c)=>c",
+        "Some(c)=>44"
+      ],
+      "csp-dispatch-directory": [
+        "Some(_)=>-1",
+        "Some(_)=>root_plus_resource"
+      ],
+      "csp-sentinel-stays": [
+        "if inferred == -1 { None }",
+        "if false { None }"
+      ],
+      "web-detail-wrong-priority": [
+        "match dispatch {Some(d)=>Detail::Dispatch(d)",
+        "match dispatch {Some(d)=>Detail::Wsgi(d)"
+      ],
+      "web-detail-directory-before-path": [
+        "match path {Some(p)=>Detail::Files(p)",
+        "match directory {Some(p)=>Detail::Files(p)"
+      ],
+      "modify-swallow-failure": [
+        "if differs(old,declared) { modify_ok }",
+        "if differs(old,declared) { true }"
+      ],
+      "modify-always-call": [
+        "if differs(old,declared) { modify_ok }",
+        "if true { modify_ok }"
+      ],
+      "missing-empty-is-change": [
+        "declared[k] != (if old.contains_key(k) {old[k]} else {0})",
+        "(!old.contains_key(k) || declared[k] != old[k])"
+      ],
+      "cors-continues-after-error": [
+        "else if !provider(origins[0])",
+        "else if false"
+      ],
+      "cors-swallows-error": [
+        "provider(origins[0]) && cors_ok",
+        "true && cors_ok"
+      ],
+      "hash-empty-saved": [
+        "if hash.len()==0 {",
+        "if false {"
+      ],
+      "hash-empty-resets": [
+        "if hash.len()==0 { Stamp{saved:false,value:old,ok:false} }",
+        "if hash.len()==0 { Stamp{saved:false,value:0,ok:false} }"
+      ],
+      "reload-root-without-dev": [
+        "explicit==0 && developer",
+        "explicit==0"
+      ],
+      "reload-no-env": [
+        "env_called:true",
+        "env_called:false"
+      ],
+      "reload-explicit-ignored": [
+        "if explicit==0 && developer",
+        "if developer"
+      ],
+      "config-lookup-unknown": [
+        "configurable.contains(key)",
+        "true"
+      ],
+      "raw-dollar-accepted": [
+        "raw.len()>=2 && raw[1]==48",
+        "raw.len()>=2"
+      ],
+      "system-clean-removes": [
+        "if system_target(raw,phase).is_some() {value} else {old}",
+        "if system_target(raw,phase).is_some() || phase==1 {value} else {old}"
+      ],
+      "system-does-not-overwrite": [
+        "if system_target(raw,phase).is_some() {value} else {old}",
+        "old"
+      ],
+      "csp-drop-root": [
+        "Some(root+resource)",
+        "Some(resource)"
+      ],
+      "reload-ignores-read-error": [
+        "!reload(explicit,developer,stored_root,env_ok).reads_manifest || manifest_ok",
+        "true"
+      ],
+      "config-prints-unknown-value": [
+        "else {ConfigLine::NotFound(key)}",
+        "else {ConfigLine::Value(key,effective)}"
+      ]
+    }
+  },
+  "replay_model": "inputs.rs",
+  "session": [
+    "do $system.OBJ.Load(\"/tmp/iter7/Options.cls\",\"ck\")",
+    "do $system.OBJ.Load(\"/tmp/iter7/Summary.cls\",\"ck\")",
+    "do $system.OBJ.Load(\"/tmp/iter7/Settings.cls\",\"ck\")",
+    "do $system.OBJ.Load(\"/tmp/iter7/Lifecycle.cls\",\"ck\")",
+    "do $system.OBJ.Load(\"/tmp/iter7/CSP.cls\",\"ck\")",
+    "do $system.OBJ.Load(\"/tmp/iter7/Probe.cls\",\"ck\")",
+    "do ##class(Iter7.Probe).Run()"
+  ],
+  "replay": {
+    "comma-count": "split(seq![97int,44,98,124,99],delimiter(None)).len() as int",
+    "comma-first-length": "split(seq![97int,44,98,124,99],delimiter(None))[0].len() as int",
+    "pipe-count": "split(seq![97int,44,98,124,99],delimiter(Some(124))).len() as int",
+    "pipe-first-length": "split(seq![97int,44,98,124,99],delimiter(Some(124)))[0].len() as int",
+    "csp-default": "b(csp_path(None,false,seq![1int,2],seq![3int]).unwrap()==seq![1int,2,3])",
+    "csp-sentinel": "b(csp_directory(None,Some(1),10)==-1)",
+    "csp-final-empty": "b(csp_after_before(csp_directory(None,Some(1),10))==None)",
+    "detail-dispatch": "b(detail(Some(1),Some(2),Some(3),Some(4))==Detail::Dispatch(1))",
+    "detail-wsgi": "b(detail(None,Some(2),Some(3),Some(4))==Detail::Wsgi(2))",
+    "detail-path": "b(detail(None,None,Some(3),Some(4))==Detail::Files(3))",
+    "detail-directory": "b(detail(None,None,None,Some(4))==Detail::Files(4))",
+    "app-equal-ok": "b(app_status(map![1int=>10int],map![1int=>10int],false))",
+    "app-changed-fails": "b(!app_status(map![1int=>10int],map![1int=>20int],false))",
+    "cors-valid": "b(cors_ok(split(seq![1int,44,2],44),|o:Seq<int>| true))",
+    "cors-invalid": "b(cors_ok(split(seq![1int,44,2,44,3],44),|o:Seq<int>| o.len()!=1 || o[0]!=2))",
+    "hash-empty-fails": "b(!stamp(42,seq![],true,true).ok)",
+    "hash-old-kept": "b(stamp(42,seq![],true,true).value==42)",
+    "hash-new": "b(stamp(42,seq![99int],true,true).value==99)",
+    "reload-nondev-env": "b(reload(0,false,10,true).env_called)",
+    "reload-nondev-ok": "b(reload_status(0,false,10,true,false))",
+    "reload-dev-fails": "b(!reload_status(0,true,10,true,false))",
+    "config-known-reads": "b(config_get_called(set![1int],1))",
+    "config-unknown-extra-reads": "b(config_get_called(set![1int],2))",
+    "param-forward-fails": "b(replacement(seq![123int,36,66,125],seq![123int,36,65,125])==None)",
+    "param-backward-fails": "b(replacement(seq![123int,36,65,125],seq![123int,36,66,125])==None)",
+    "param-ordinary": "b(sweep(seq![Token::Parameter(1),Token::Literal(47),Token::Parameter(2)],seq![1int,2],map![1int=>seq![Token::Literal(120)],2int=>seq![Token::Literal(121)]]).len()==3)",
+    "system-value": "system_value(9,seq![67int,83,80,46,84],0,123)",
+    "system-value-after": "system_value(system_value(9,seq![67int,83,80,46,84],0,123),seq![67int,83,80,46,84],1,0)"
+  },
+  "replay_prelude": "",
+  "replay_preludes": {
+    "system-value": "reveal_with_fuel(split,6);\nlet parts=split(seq![67int,83,80,46,84],46);\nassert(parts.len()==2);\nassert(parts[0] =~= seq![67int,83,80]);\nassert(parts[1] =~= seq![84int]);\n",
+    "system-value-after": "reveal_with_fuel(split,6);\nlet parts=split(seq![67int,83,80,46,84],46);\nassert(parts.len()==2);\nassert(parts[0] =~= seq![67int,83,80]);\nassert(parts[1] =~= seq![84int]);\n",
+    "comma-count": "reveal_with_fuel(split,6);\n",
+    "comma-first-length": "reveal_with_fuel(split,6);\n",
+    "pipe-count": "reveal_with_fuel(split,6);\n",
+    "pipe-first-length": "reveal_with_fuel(split,6);\n",
+    "cors-valid": "reveal_with_fuel(split,6);reveal_with_fuel(cors_calls,6);reveal_with_fuel(cors_ok,6);\n",
+    "cors-invalid": "reveal_with_fuel(split,6);reveal_with_fuel(cors_calls,6);reveal_with_fuel(cors_ok,6);\n",
+    "param-forward-fails": "reveal_with_fuel(replacement,8);reveal_with_fuel(replace,8);reveal_with_fuel(sweep,8);\n",
+    "param-backward-fails": "reveal_with_fuel(replacement,8);reveal_with_fuel(replace,8);reveal_with_fuel(sweep,8);\n",
+    "param-ordinary": "reveal_with_fuel(replacement,8);reveal_with_fuel(replace,8);reveal_with_fuel(sweep,8);\n",
+    "csp-default": "assert(csp_path(None,false,seq![1int,2],seq![3int]).unwrap() =~= seq![1int,2,3]);\n",
+    "app-changed-fails": "change_witness(map![1int=>10int],map![1int=>20int],1);\n"
+  }
+}

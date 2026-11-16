@@ -1,0 +1,230 @@
+{
+  "verus_dir": ".g5/Verus_verification/consolidated/iter8",
+  "changed_files": [
+    ".g5/ontology/root.g5.md",
+    ".g5/ontology/features/developer-tools.g5.md",
+    ".g5/ontology/concepts/modules.g5.md",
+    ".g5/ontology/concepts/repositories.g5.md",
+    ".g5/ontology/features/build-and-publish.g5.md",
+    ".g5/uplift/consolidated/BUGS.md",
+    ".g5/uplift/consolidated/QUESTIONS.md",
+    ".g5/uplift/consolidated/DESIGN-SIMPLIFICATIONS.md"
+  ],
+  "rows": [
+    {
+      "id": "S8-01",
+      "owner": ".g5/ontology/features/developer-tools.g5.md#devtools.generate.webapps",
+      "model": "webapps.rs",
+      "symbols": [
+        "jwt_prompt",
+        "generated_props",
+        "manifest_path",
+        "generated_path",
+        "filecopy_target",
+        "copy_one"
+      ],
+      "direct": [
+        [
+          "src/cls/IPM/Storage/ModuleTemplate.cls",
+          "SetJWTProps"
+        ],
+        [
+          "src/cls/IPM/Storage/ModuleTemplate.cls",
+          "AddWebApps"
+        ],
+        [
+          "src/cls/IPM/Storage/ModuleTemplate.cls",
+          "SetSourcePathForCSPApp"
+        ],
+        [
+          "src/cls/IPM/Storage/ModuleTemplate.cls",
+          "ProcessResources"
+        ],
+        [
+          "src/cls/IPM/Storage/ModuleTemplate.cls",
+          "SaveFile"
+        ]
+      ],
+      "reader": [
+        [
+          "src/cls/IPM/Main.cls",
+          "GenerateModuleXML"
+        ],
+        [
+          "src/cls/IPM/ResourceProcessor/WebApplication.cls",
+          "CreateOrUpdateWebApp"
+        ],
+        [
+          "src/cls/IPM/ResourceProcessor/FileCopy.cls",
+          "OnPhase"
+        ]
+      ]
+    },
+    {
+      "id": "S8-02",
+      "owner": ".g5/ontology/concepts/modules.g5.md#module.webapp.package",
+      "model": "webapps.rs",
+      "symbols": [
+        "webapp_export_handled",
+        "package_app",
+        "evaluate_path",
+        "uninstall",
+        "reinstall",
+        "package_webapp",
+        "publish_archive",
+        "install_registry",
+        "package_roundtrip"
+      ],
+      "direct": [
+        [
+          "src/cls/IPM/ResourceProcessor/WebApplication.cls",
+          "OnExportItem"
+        ]
+      ],
+      "reader": [
+        [
+          "src/cls/IPM/Lifecycle/Base.cls",
+          "ExportSingleModule"
+        ],
+        [
+          "src/cls/IPM/Lifecycle/Module.cls",
+          "%Package"
+        ],
+        [
+          "src/cls/IPM/Lifecycle/Base.cls",
+          "%Publish"
+        ],
+        [
+          "src/cls/IPM/ResourceProcessor/WebApplication.cls",
+          "CreateOrUpdateWebApp"
+        ]
+      ]
+    },
+    {
+      "id": "S8-03",
+      "owner": ".g5/ontology/concepts/repositories.g5.md#repo.search.version-list",
+      "model": "catalog.rs",
+      "symbols": [
+        "eligible",
+        "ordered",
+        "grouped"
+      ],
+      "direct": [
+        [
+          "src/cls/IPM/Repo/Utils.cls",
+          "moduleSqlToList"
+        ],
+        [
+          "src/cls/IPM/Repo/Filesystem/PackageService.cls",
+          "ListModules"
+        ]
+      ],
+      "reader": [
+        [
+          "src/cls/IPM/Repo/Manager.cls",
+          "SearchRepositoriesForModule"
+        ],
+        [
+          "src/cls/IPM/Repo/Utils.cls",
+          "SearchRepositoriesForModule"
+        ]
+      ]
+    },
+    {
+      "id": "S8-04",
+      "owner": ".g5/ontology/concepts/repositories.g5.md#repo.oras.platform-selection",
+      "model": "catalog.rs",
+      "symbols": [
+        "compatible",
+        "catalog_visible",
+        "install_candidate",
+        "reported_platform",
+        "tag_for"
+      ],
+      "direct": [
+        [
+          "src/cls/IPM/Storage/ModuleInfo.cls",
+          "IsCompatibleWithPlatform"
+        ],
+        [
+          "src/cls/IPM/Repo/Oras/PackageService.cls",
+          "AggregatePlatformVersions"
+        ]
+      ],
+      "reader": [
+        [
+          "src/cls/IPM/Repo/Manager.cls",
+          "SearchRepositoriesForModule"
+        ],
+        [
+          "src/cls/IPM/Utils/Module.cls",
+          "GetModuleListExecute"
+        ],
+        [
+          "src/cls/IPM/Repo/Oras/PackageService.cls",
+          "TagForReference"
+        ],
+        [
+          "src/cls/IPM/Storage/ModuleInfo.cls",
+          "FormatPlatformVersions"
+        ]
+      ]
+    },
+    {
+      "id": "S8-05",
+      "owner": ".g5/ontology/concepts/modules.g5.md#module.python.explicit-wheel",
+      "model": "python.rs",
+      "symbols": [
+        "wheel_path",
+        "requirements_called",
+        "wheel",
+        "without_empty"
+      ],
+      "direct": [
+        [
+          "src/cls/IPM/ResourceProcessor/PythonWheel.cls",
+          "OnPhase"
+        ]
+      ],
+      "reader": [
+        [
+          "src/cls/IPM/ResourceProcessor/PythonWheel.cls",
+          "OnResolveChildren"
+        ],
+        [
+          "src/cls/IPM/Lifecycle/Base.cls",
+          "InstallOrDownloadPythonRequirements"
+        ],
+        [
+          "src/cls/IPM/Utils/Module.cls",
+          "PipInstall"
+        ]
+      ]
+    },
+    {
+      "id": "S8-06",
+      "owner": ".g5/ontology/features/build-and-publish.g5.md#build.publish.external-identity",
+      "model": "webapps.rs",
+      "symbols": [
+        "published_key",
+        "archive_manifest_name"
+      ],
+      "direct": [
+        [
+          "src/cls/IPM/Lifecycle/Base.cls",
+          "%Publish"
+        ]
+      ],
+      "reader": [
+        [
+          "src/cls/IPM/Repo/Oras/PublishService.cls",
+          "PublishModule"
+        ],
+        [
+          "src/cls/IPM/Utils/Module.cls",
+          "LoadModuleReference"
+        ]
+      ]
+    }
+  ]
+}

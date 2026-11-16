@@ -1,0 +1,36 @@
+error: postcondition not satisfied
+   --> .g5/Verus_verification/consolidated/iter16/model-lane/controls/wrong-installed-root.rs:157:3
+    |
+153 | pub proof fn successful_install_binds_receipt(w:World,r:Request)
+    | ---------------------------------------------------------------- at the end of the function body
+...
+157 |   installed_root(install(w,r).world)==Some(select(w,r).unwrap().root),
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+note: function body check: not all errors may have been reported; rerun with a higher value for --multiple-errors to find other potential errors in this function
+   --> .g5/Verus_verification/consolidated/iter16/model-lane/controls/wrong-installed-root.rs:169:1
+    |
+169 | pub proof fn ordinary_neighbors()
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: postcondition not satisfied
+   --> .g5/Verus_verification/consolidated/iter16/model-lane/controls/wrong-installed-root.rs:171:53
+    |
+169 | pub proof fn ordinary_neighbors()
+    | --------------------------------- at the end of the function body
+170 |  ensures install(initial(),request(alpha())).ok,install(initial(),request(beta())).ok,
+171 |  payload(after_a())==1,supplier(after_a())==alpha(),installed_root(after_a())==Some(Root::A),
+    |                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: postcondition not satisfied
+   --> .g5/Verus_verification/consolidated/iter16/model-lane/controls/wrong-installed-root.rs:179:53
+    |
+169 | pub proof fn ordinary_neighbors()
+    | --------------------------------- at the end of the function body
+...
+179 |  payload(after_c())==3,supplier(after_c())==alpha(),installed_root(after_c())==Some(Root::C),
+    |                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+verification results:: 20 verified, 2 errors
+error: aborting due to 3 previous errors
+

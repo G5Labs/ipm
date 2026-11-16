@@ -1,0 +1,150 @@
+{
+  "models": {
+    "oras.rs": {
+      "codec-plus-not-encoded": [
+        "replace(v,'+','_')",
+        "replace(v,'+','-')"
+      ],
+      "codec-underscore-not-decoded": [
+        "replace(v,'_','+')",
+        "replace(v,'_','-')"
+      ],
+      "parse-single-underscore": [
+        "t[i as int]=='_' && t[(i+1) as int]=='_'",
+        "t[i as int]=='_'"
+      ],
+      "drop-platform-from-pull-tag": [
+        "joined(encode(version),platform)",
+        "encode(version)"
+      ],
+      "reverse-raw-version-sort": [
+        "tag_rank(t)>=tag_rank(sorted[0])",
+        "tag_rank(t)<=tag_rank(sorted[0])"
+      ],
+      "keep-duplicate-raw-tags": [
+        "else if has_text(seen,xs[0])",
+        "else if false"
+      ],
+      "prepend-platform-on-aggregate": [
+        "gs[0].platforms.push(p.platform)",
+        "seq![p.platform]+gs[0].platforms"
+      ],
+      "first-metadata-uses-last-platform": [
+        "g.platforms[0]}else",
+        "g.platforms[g.platforms.len()-1]}else"
+      ],
+      "ignore-compatible-preference": [
+        "partition(gs,c,true)+partition(gs,c,false)",
+        "gs"
+      ],
+      "stop-dependency-enumeration": [
+        "if mode!=Mode::Dependencies{Rows{ok:true,rows:seq![row]}}",
+        "if true{Rows{ok:true,rows:seq![row]}}"
+      ],
+      "all-tags-populates-platforms": [
+        "e.meta.deployed && mode!=Mode::AllTags",
+        "e.meta.deployed"
+      ],
+      "manager-admits-incompatible": [
+        "!row.deployed || has_text(row.platforms,c)",
+        "true"
+      ],
+      "manager-omits-selected-platform": [
+        "if rows[0].deployed && has_text(rows[0].platforms,c){c}else{seq![]}",
+        "seq![]"
+      ],
+      "display-showall-filters-platform": [
+        "show_all || compatible(rows[0],c)",
+        "compatible(rows[0],c)"
+      ],
+      "ignore-pinned-major-range": [
+        "Range::MajorTwo=>rank(v)==2",
+        "Range::MajorTwo=>true"
+      ],
+      "wrong-installed-payload": [
+        "description:26},payload:1",
+        "description:26},payload:2"
+      ]
+    }
+  },
+  "replay_model": "oras.rs",
+  "replay": {
+    "codec-encode": "b(encode(build_version())==seq!['1','.','2','.','3','-','a','l','p','h','a','_','b','u','i','l','d','.','7'])",
+    "codec-roundtrip": "b(decode(parse(joined(encode(build_version()),current())).encoded)==build_version())",
+    "codec-platform": "b(parse(joined(encode(build_version()),current())).platform==current())",
+    "normal-service-count": "normal().rows.len() as int",
+    "normal-first": "rank(normal().rows[0].version)",
+    "normal-current": "b(has_text(normal().rows[0].platforms,current()))",
+    "normal-bad": "b(has_text(normal().rows[0].platforms,bad()))",
+    "normal-all-has-v2": "b(has_text(normal().rows[0].all_tags,t2()))",
+    "normal-manager-count": "manager(normal().rows,current()).len() as int",
+    "normal-manager-first": "rank(manager(normal().rows,current())[0].version)",
+    "all-service-count": "all().rows.len() as int",
+    "all-first": "rank(all().rows[0].version)",
+    "all-current": "b(has_text(all().rows[0].platforms,current()))",
+    "all-bad": "b(has_text(all().rows[0].platforms,bad()))",
+    "all-all-has-v2": "b(has_text(all().rows[0].all_tags,t2()))",
+    "all-manager-count": "manager(all().rows,current()).len() as int",
+    "deps-service-count": "dependencies().rows.len() as int",
+    "deps-first": "rank(dependencies().rows[0].version)",
+    "deps-current": "b(has_text(dependencies().rows[0].platforms,current()))",
+    "deps-bad": "b(has_text(dependencies().rows[0].platforms,bad()))",
+    "deps-all-has-v2": "b(has_text(dependencies().rows[0].all_tags,t2()))",
+    "deps-manager-count": "manager(dependencies().rows,current()).len() as int",
+    "deps-manager-first": "rank(manager(dependencies().rows,current())[0].version)",
+    "same-version-service-count": "multi().rows.len() as int",
+    "same-version-first": "rank(multi().rows[0].version)",
+    "same-version-current": "b(has_text(multi().rows[0].platforms,current()))",
+    "same-version-bad": "b(has_text(multi().rows[0].platforms,bad()))",
+    "same-version-all-has-v2": "b(has_text(multi().rows[0].all_tags,t2()))",
+    "same-version-manager-count": "manager(multi().rows,current()).len() as int",
+    "same-version-manager-first": "rank(manager(multi().rows,current())[0].version)",
+    "display-normal-row": "b(display(normal().rows,false,current()).len()>0)",
+    "display-normal-version": "rank(display(normal().rows,false,current())[0].version)",
+    "display-normal-current": "b(display(normal().rows,false,current())[0].platforms==seq![current()])",
+    "display-normal-all-v2": "b(has_text(display(normal().rows,false,current())[0].all_tags,t2()))",
+    "display-all-row": "b(display(all().rows,true,current()).len()>0)",
+    "display-all-version": "rank(display(all().rows,true,current())[0].version)",
+    "display-all-current": "b(display(all().rows,true,current())[0].platforms==seq![current()])",
+    "display-all-all-v2": "b(has_text(display(all().rows,true,current())[0].all_tags,t2()))",
+    "mixed-v1-current": "b(has_text(get_all(mixed()),t1()))",
+    "mixed-v2-bad": "b(has_text(get_all(mixed()),t2()))",
+    "mixed-sorted-v2-first": "b(aggregate(get_all(mixed()))[0].encoded==v2())",
+    "mixed-v1-has-current": "b(has_text(aggregate(get_all(mixed()))[1].platforms,current()))",
+    "mixed-v1-has-bad": "b(has_text(aggregate(get_all(mixed()))[1].platforms,bad()))",
+    "same-version-v1-current": "b(has_text(get_all(triple()),t1()))",
+    "same-version-v2-bad": "b(has_text(get_all(triple()),t2()))",
+    "same-version-sorted-v2-first": "b(aggregate(get_all(triple()))[0].encoded==v2())",
+    "same-version-v1-has-current": "b(has_text(aggregate(get_all(triple()))[1].platforms,current()))",
+    "same-version-v1-has-bad": "b(has_text(aggregate(get_all(triple()))[1].platforms,bad()))",
+    "installed-version": "payload_value(standalone())",
+    "installed-payload": "payload_value(standalone())",
+    "range-dependency": "payload_value(ranged())",
+    "range-payload": "payload_value(ranged())",
+    "range-row": "b(ranged().consumer)",
+    "range-load": "b(ranged().ok)",
+    "pinned-load": "b(pinned().ok)",
+    "pinned-dependency": "payload_value(pinned())",
+    "pinned-payload": "payload_value(pinned())",
+    "pinned-row": "b(pinned().consumer)",
+    "same-version-record": "payload_value(normal_consumer(triple(),Range::Any,current(),entries()))",
+    "same-version-payload": "payload_value(normal_consumer(triple(),Range::Any,current(),entries()))"
+  },
+  "replay_prelude": "raw_neighbors();selected_neighbors();\n",
+  "native_expected": {
+    "normal-manager-ok": 1,
+    "all-manager-ok": 1,
+    "deps-manager-ok": 1,
+    "same-version-manager-ok": 1,
+    "pinned-error-satisfactory": 1,
+    "pinned-error-name": 1,
+    "final-tlevel": 0
+  },
+  "scope_notes": [
+    "Codec roundtrip is separate from encoded build-key Aggregate sort; arbitrary build aggregation remains open.",
+    "Literal release1/2 comparator ranks are provider-correspondence scope, not a generic SemVer parser.",
+    "Current2026.1 and incompatible9999.1 are the pinned native pair; no platform string parser theorem.",
+    "Manager AllTags result0 is observed API behavior, not a new defect policy claim.",
+    "Normal new consumer composition assumes no preexisting modules and successful pull/compile; direct implementation proofs=0."
+  ]
+}

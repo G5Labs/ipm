@@ -1,0 +1,106 @@
+# container: ipm-uplift-iris-inst  image: containers.intersystems.com/intersystems/iris-community:2026.1  at: 2026-11-13T20:50:43Z
+# script: validation/iris/inst/66-inst-fix-stored-dev.script
+
+Node: a535af16f53b, Instance: IRIS
+
+USER>
+
+LOAD probe 1 
+
+USER>
+
+LOAD inst 1 
+
+USER>
+
+IPMVER=0.10.11-SNAPSHOT
+
+USER>
+
+===== FIX CHECK stored developer mode =====
+
+Uninstalling nc-inst-ord
+[USER|nc-inst-ord]	Clean START
+[USER|nc-inst-ord]	Unconfigure START
+[USER|nc-inst-ord]	Unconfigure SUCCESS
+[USER|nc-inst-ord]	Clean SUCCESS
+CMD uninstall -all => OK
+CMD repo -delete-all => OK
+
+Building dependency graph...Done.
+[USER|nc-inst-m]	Initialize START
+[USER|nc-inst-m]	Initialize SUCCESS
+[USER|nc-inst-m]	Reload START (/tmp/uplift/inst/fixtures/m/1.0.0/)
+[USER|nc-inst-m]	Reload SUCCESS
+[nc-inst-m]	Module object refreshed.
+[USER|nc-inst-m]	Validate START
+[USER|nc-inst-m]	Validate SUCCESS
+[USER|nc-inst-m]	Compile START
+[USER|nc-inst-m]	Compile SUCCESS
+[USER|nc-inst-m]	Activate START
+[USER|nc-inst-m]	Configure START
+[USER|nc-inst-m]	Configure SUCCESS
+[USER|nc-inst-m]	Activate SUCCESS
+CMD load -dev /tmp/uplift/inst/fixtures/m/1.0.0/ => OK
+
+Building dependency graph...Done.
+[USER|nc-inst-m]	Initialize START
+[USER|nc-inst-m]	Initialize SUCCESS
+[USER|nc-inst-m]	Reload START (/tmp/uplift/inst/fixtures/m/1.0.0/)
+[USER|nc-inst-m]	Reload SUCCESS
+[nc-inst-m]	Module object refreshed.
+[USER|nc-inst-m]	Validate START
+[USER|nc-inst-m]	Validate SUCCESS
+[USER|nc-inst-m]	Compile START
+[USER|nc-inst-m]	Compile SUCCESS
+[USER|nc-inst-m]	Activate START
+[USER|nc-inst-m]	Configure START
+[USER|nc-inst-m]	Configure SUCCESS
+[USER|nc-inst-m]	Activate SUCCESS
+CMD load /tmp/uplift/inst/fixtures/m/1.0.0/ => OK
+OBS|nc-inst-fix-stored-dev-plain-load|devLoad100=ok;plainLoad100=ok;stepRows=0;version=1.0.0/dev;
+
+[31mERROR![0m Cannot perform an update of nc-inst-m from version 1.0.0 to 2.0.0 using the 'install' or 'load' commands. Please use the 'update' command instead. If you are intentionally trying to bypass running update steps, please use the -force flag for 'install' or 'load'.
+CMD load /tmp/uplift/inst/fixtures/m/2.0.0-good/ => ERROR #5001: Cannot perform an update of nc-inst-m from version 1.0.0 to 2.0.0 using the 'install' or 'load' commands. Please use the 'update' command instead. If you are intentionally trying to bypass running update steps, please use the -force flag for 'install' or 'load'.
+OBS|nc-inst-fix-stored-dev-load-newer|plainLoad200=err;plainLoad200Err=ERROR #5001: Cannot perform an update of nc-inst-m from version 1.0.0 to 2.0.0 using the 'install' or 'load' commands. Please use the 'update' command instead. If you are intentionally trying to bypass running update ste;stepRows=0;version=1.0.0/dev;
+
+Building dependency graph...Done.
+[USER|nc-inst-m]	Initialize START
+[USER|nc-inst-m]	Initialize SUCCESS
+[USER|nc-inst-m]	Reload START (/tmp/uplift/inst/fixtures/m/2.0.0-bad/)
+[USER|nc-inst-m]	Reload SUCCESS
+[nc-inst-m]	Module object refreshed.
+[USER|nc-inst-m]	Validate START
+[USER|nc-inst-m]	Validate SUCCESS
+[USER|nc-inst-m]	Compile START
+[USER|nc-inst-m]	Compile SUCCESS
+[USER|nc-inst-m]	Activate START
+[USER|nc-inst-m]	Configure START
+[USER|nc-inst-m]	Configure SUCCESS
+[USER|nc-inst-m]	Activate SUCCESS
+[USER|nc-inst-m]	ApplyUpdateSteps START
+[nc-inst-m]	ApplyUpdateSteps FAILURE
+[31mERROR![0m nc-inst-4 step B fails on purpose
+CMD update nc-inst-m -path /tmp/uplift/inst/fixtures/m/2.0.0-bad/ => ERROR #5001: nc-inst-4 step B fails on purpose
+OBS|nc-inst-fix-stored-dev-update-path-fails|Mx=1;My=1;V1.S1=start:1/end:1/ok:1;V1.S1runs=1;V2.A=start:1/end:1/ok:1;V2.B=start:1/end:1/ok:0;any:V1.S1=start:1/end:1/ok:1;any:V2.A=start:1/end:1/ok:1;any:V2.B=start:1/end:1/ok:0;fileLines=1;stepRows=3;updateBad=err;updateBadErr=ERROR #5001: nc-inst-4 step B fails on purpose;version=2.0.0/dev;
+
+Building dependency graph...Done.
+[USER|nc-inst-m]	Initialize START
+[USER|nc-inst-m]	Initialize SUCCESS
+[USER|nc-inst-m]	Reload START (/tmp/uplift/inst/fixtures/m/2.0.0-good/)
+[USER|nc-inst-m]	Reload SUCCESS
+[nc-inst-m]	Module object refreshed.
+[USER|nc-inst-m]	Validate START
+[USER|nc-inst-m]	Validate SUCCESS
+[USER|nc-inst-m]	Compile START
+[USER|nc-inst-m]	Compile SUCCESS
+[USER|nc-inst-m]	Activate START
+[USER|nc-inst-m]	Configure START
+[USER|nc-inst-m]	Configure SUCCESS
+[USER|nc-inst-m]	Activate SUCCESS
+[USER|nc-inst-m]	ApplyUpdateSteps START
+[USER|nc-inst-m]	ApplyUpdateSteps SUCCESS
+CMD update nc-inst-m -path /tmp/uplift/inst/fixtures/m/2.0.0-good/ => OK
+OBS|nc-inst-fix-stored-dev-update-path-retry|Mx=1;My=1;V1.S1=start:1/end:1/ok:1;V1.S1runs=1;V2.A=start:1/end:1/ok:1;V2.B=start:1/end:1/ok:1;any:V1.S1=start:1/end:1/ok:1;any:V2.A=start:1/end:1/ok:1;any:V2.B=start:1/end:1/ok:1;fileLines=1;stepRows=3;updateGood=ok;version=2.0.0/dev;
+
+USER>

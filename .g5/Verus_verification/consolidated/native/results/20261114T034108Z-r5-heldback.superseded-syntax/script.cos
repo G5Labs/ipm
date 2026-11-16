@@ -1,0 +1,4 @@
+// Held-back case: a downgrade between prereleases of different versions.
+for c="HB1|load /tmp/c5h/hb-2beta/","HB2|load /tmp/c5h/hb-1rc/","HR1|load /tmp/c5h/hr-2/","HR2|load /tmp/c5h/hr-1/","HM1|load /tmp/c5h/hm-2beta/","HM2|load /tmp/c5h/hm-1/" { set id=$piece(c,"|") do ##class(Consolidated.Obs).Run(id,$piece(c,"|",2)) do ##class(Consolidated.Obs).Mod(id,$select(id["HB":"hb-pre",id["HR":"hb-rel",1:"hb-mix"])) }
+write !,"NATIVE-END",!
+halt

@@ -1,0 +1,88 @@
+{
+  "verus_dir": ".g5/Verus_verification/consolidated/iter11",
+  "changed_files": [
+    ".g5/ontology/features/uninstall.g5.md",
+    ".g5/ontology/features/update.g5.md",
+    ".g5/uplift/consolidated/BUGS.md",
+    ".g5/uplift/consolidated/QUESTIONS.md",
+    ".g5/uplift/consolidated/DESIGN-SIMPLIFICATIONS.md"
+  ],
+  "rows": [
+    {
+      "id": "S11-01",
+      "owner": ".g5/ontology/features/update.g5.md#update.steps.shared-execution",
+      "model": "shared_steps.rs",
+      "symbols": [
+        "lock_key",
+        "begin",
+        "enter",
+        "finish",
+        "same_attempt",
+        "serial",
+        "shared_key_neighbors"
+      ],
+      "direct": [
+        [
+          "src/cls/IPM/Storage/Module.cls",
+          "HandleAllUpdateSteps"
+        ],
+        [
+          "src/cls/IPM/Storage/Module.cls",
+          "HandleUpdateStepsFromList"
+        ],
+        [
+          "src/cls/IPM/Storage/Module.cls",
+          "GetAddUpdateStep"
+        ],
+        [
+          "src/cls/IPM/Storage/Module.cls",
+          "ExecuteUpdateStep"
+        ]
+      ],
+      "reader": [
+        [
+          "src/cls/IPM/Lifecycle/Base.cls",
+          "%ApplyUpdateSteps"
+        ],
+        [
+          "src/cls/IPM/Main.cls",
+          "ModuleAction"
+        ],
+        [
+          "src/cls/IPM/Storage/UpdateStep/AnyMember.cls",
+          "GetUpdateStep"
+        ]
+      ],
+      "scope": "One newly registered AnyMember key, two existing modules and live jobs. B begins after A enters; B finishes first. Includes same-module and serial neighbors, successful callback and stale HomeModule save port. No arbitrary interleaving or initial insert race claim."
+    },
+    {
+      "id": "S11-02",
+      "owner": ".g5/ontology/features/uninstall.g5.md#uninstall.class-delete-error",
+      "model": "deletion.rs",
+      "symbols": [
+        "delete_class",
+        "uninstall",
+        "refuse_on_error",
+        "deletion_neighbors",
+        "locked_retains_class"
+      ],
+      "direct": [
+        [
+          "src/cls/IPM/Lifecycle/Base.cls",
+          "%Clean"
+        ]
+      ],
+      "reader": [
+        [
+          "src/cls/IPM/StudioDocument/Module.cls",
+          "Delete"
+        ],
+        [
+          "src/cls/IPM/Storage/Module.cls",
+          "Uninstall"
+        ]
+      ],
+      "scope": "One class whose supported editing lock is natively calibrated to refuse deletion and retain code. Warning/status and metadata deletion follow; other provider errors can differ."
+    }
+  ]
+}

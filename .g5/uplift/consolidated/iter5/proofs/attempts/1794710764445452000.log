@@ -1,0 +1,26 @@
+verification results:: 1 verified, 2 errors
+error: postcondition not satisfied
+  --> /Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter5/proofs/controls/redirect/s14b-checks-first-hop.rs:31:13
+   |
+30 |   pub proof fn lemma_s14_insufficient()
+   |   ------------------------------------- at the end of the function body
+31 |       ensures ({
+   |  _____________^
+32 | |         let local = Origin { host: 1, port: 18501 };
+33 | |         let other = Origin { host: 2, port: 18502 };
+34 | |         let hops = seq![local, other];
+...  |
+37 | |             && s14b_sends(local, hops, 0)
+38 | |     })
+   | |______^ failed this postcondition
+
+error: postcondition not satisfied
+  --> /Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter5/proofs/controls/redirect/s14b-checks-first-hop.rs:48:13
+   |
+47 | pub proof fn lemma_s14b_never_leaks(config: Origin, hops: Seq<Origin>)
+   | ---------------------------------------------------------------------- at the end of the function body
+48 |     ensures !leaks(|i: int| s14b_sends(config, hops, i), config, hops)
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: aborting due to 2 previous errors
+

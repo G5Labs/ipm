@@ -105,6 +105,8 @@ IPM refuses a module whose manifest is missing or invalid, for example malformed
 
 IPM never replaces an installed module with an older version. It refuses with "Cannot downgrade" and tells the user to uninstall first, then install or load the older version. Neither `-force` nor `-dev` lifts this.
 
+- As built, the check uses [version order](../concepts/versions.g5.md#version.order), which does not order prereleases of two different versions. So `1.0.0-rc` replaces an installed `2.0.0-beta` without a refusal. This is a known defect.
+
 <a id="load.refusal.update-required"></a>
 [I · load.refusal.update-required]
 
@@ -139,6 +141,8 @@ Must IPM check system requirements before it writes anything, even in developer 
 
 Loading or installing the version that is already installed succeeds without `-force` or `-dev`, and loads that version again. Automation often reinstalls the same version and expects success.
 
+- A different qualified filesystem supplier can change the loaded files at the same version; [current and historical source readers](../concepts/repositories.g5.md#repo.origin.same-version) distinguish those actions.
+
 ## What a failed load keeps
 
 <a id="load.outcome"></a>
@@ -157,6 +161,12 @@ What a failed load keeps depends on how it ran.
 - Whether a dependency's own `<Defaults>` transaction flags change this is open: `NoJournal` ([dependency defaults](../concepts/transactions-and-dev-mode.g5.md#transaction.flag-sources.dependency-defaults)) and `NoTransaction` ([dependency NoTransaction](../concepts/transactions-and-dev-mode.g5.md#transaction.flag-sources.dependency-no-transaction)).
 - Files and other changes outside the database follow the [rollback scope](../concepts/transactions-and-dev-mode.g5.md#transaction.rollback-scope).
 - The [history record](history.g5.md#history.committed) shows whether anything was kept. After a dying process, see [record](history.g5.md#history.record).
+
+- This rollback rule applies to database writes made before the final commit, with journaling enabled. A failed after-install message or cleanup after that commit returns an error with the module kept ([late errors](#load.status.after-commit)).
+- Child flags are resolved separately on each activation. An absent parent key permits the child's own default; a defined parent value, including zero, wins.
+- Child `NoTransaction` skips its own `TSTART` and leaves an existing parent transaction open. Child `NoJournal` can make its writes survive parent rollback. Their intended policy stays in the linked child questions.
+- Class descriptors and usable code are separate outcomes. After two-resource compile failure, ordinary rollback removes both classes.
+- Without transactions, or after the developer commit, both descriptors may remain while only the first class runs. This relies on the observed IRIS compiler behavior, not on a proof of the compiler.
 
 <a id="load.outcome.dev"></a>
 [I · load.outcome.dev]
@@ -188,14 +198,66 @@ IPM loads a module's dependencies before running the module's own phases.
 <a id="load.dependencies.local-repo"></a>
 [I · load.dependencies.local-repo]
 
-A `.modules` folder in the module root serves as a temporary repository that IPM searches first for dependencies. IPM removes this temporary repository when loading finishes, even after an error.
+A `.modules` folder in the module root serves as a temporary repository for that load's dependencies. IPM removes this temporary repository when loading finishes, even after an error.
+
+- IPM creates none when the folder is missing or another repository already uses that folder. That other repository stays.
+- The temporary repository takes the first unused name `ipm-temp-modules-N`.
+- A dependency's own `.modules` folder gets the same treatment while that dependency loads.
+- Which copy of a dependency wins is owned by [search order](../concepts/repositories.g5.md#repo.search-order). Whether the `.modules` copy should win a tie is [open](#load.dependencies.local-repo.precedence).
+
+- Cache creation failure can leave no row but retain its allocated id in the manager. Cleanup may warn about that missing row (C:D2). At the top-level cleanup call the module can already be committed; at a dependency call the parent rolls back, retaining its first manifest commit only in developer mode.
+- A higher candidate version wins before repository order. Equal versions choose the older repository id in the native observations; temporary sort position does not force local priority (C:Q1).
+
+<a id="load.dependencies.local-repo.precedence"></a>
+[Q · load.dependencies.local-repo.precedence]
+
+When another repository offers the same version of a dependency as the `.modules` folder, which copy should IPM install?
+
+- Provisional answer: the copy in the older repository, as built. The changelog says ties go to the repository created first.
+- Alternative: the `.modules` copy, because the code that creates the temporary repository says it should be found first and gives it the first sort position.
+- Either way, a higher version wins, wherever it is.
+
+<a id="load.status"></a>
+[I · load.status]
+
+A load's result tells the caller whether the load took effect. Success means the module and its dependencies are installed and every phase finished.
+
+- An error means the module data was not kept, as described in [what a failed load keeps](#load.outcome).
+
+- As built, an error can also follow the final commit. The caller must read the stored module and committed history result separately from status ([late errors](#load.status.after-commit)); a successful message and a brace-free macro are distinct valid neighbors.
+
+<a id="load.status.after-commit"></a>
+[I · load.status.after-commit]
+
+Some work runs after the final commit, so it cannot undo the load. A failure there must not report the kept load as failed.
+
+- This work is: removing the temporary repository, printing the [after-install message](#load.after-install-message), and finishing the history record.
+- As built, a failure in this work returns an error although the module stays installed and its history record reads committed. This is a known defect.
+- Inside a parent's load, the same failure in a dependency fails the dependency. The parent then rolls back as [a failed load](#load.outcome): fully in normal mode, and back to its first commit in developer mode.
+
+<a id="load.after-install-message"></a>
+[I · load.after-install-message]
+
+After a module loads, IPM prints the module's after-install message with its [expressions](../concepts/modules.g5.md#module.parameter.expressions) filled in. A message without a `{` is printed as written.
 
 <a id="load.write-check"></a>
 [I · load.write-check]
 
 Before installing files, `install` and `load` check that IPM can write to the target folder.
 
+
+<a id="load.reload.root"></a>
+[D · load.reload.root]
+
+Reload uses an explicit root when present. Without one, it falls back to the module's stored root only in developer mode.
+
+It loads environment configuration before checking whether a root remains empty. With no root it then succeeds without reading module.xml; configuration errors can still fail it first. With a root it attempts to read that manifest and reports a read error if it is missing.
+
 ## Metadata
+
+
+
+
 
 Source locators follow the conventions on the [root page](../root.g5.md#how-to-read-this-ontology). Inventory IDs refer to [A1](../../uplift/ipm-verus-20261113/A/intent-inventory.md) (`CAT`, `INT`, `Q`), [A2](../../uplift/ipm-verus-20261113/A/operation-inventory.md) (`OP`, `OBS`, `P`) and the [coverage map](../../uplift/ipm-verus-20261113/A/coverage-map.md). Every block on this page is in the formal scope. Native results of stage B2 phase 1 are cited per block by run, as `<time>-<name>`. The full run ID is `20261113T<time>-<name>` under `.g5/Verus_verification/results/native/`, and the [B2 report](../../uplift/ipm-verus-20261113/B/native-report.md) explains each case and defect. Formal (B1) and native evidence per block, with reliance status, is in the [verification coverage map](../../Verus_verification/coverage-map.md). B2 phase 2 and stage C runs are listed in [B/native-replay.md](../../uplift/ipm-verus-20261113/B/native-replay.md) sections 3-7, and defects `D10`-`D20`, `I1` and `I2` in [VV/bugs_issues.md](../../Verus_verification/bugs_issues.md).
 
@@ -207,6 +269,8 @@ Source locators follow the conventions on the [root page](../root.g5.md#how-to-r
 - Children: [path](#load.path), [shared core](#load.core), [options](#load.options), [refusals](#load.refusal), [same version](#load.same-version), [outcome](#load.outcome), [dependencies](#load.dependencies), [write check](#load.write-check).
 
 Sources: `Main.cls:268-276` (summary and description); `wiki/02` L564-568; vendor manual AIPM. Inventory: CAT-12, INT-LOAD-01; OP-LOAD-01, OP-LOAD-02. Tests: `History.cls` `TestSimpleHistory`; `LoadModuleWithDeps.cls` `TestLoadModuleWithDependencies`. Native evidence: valid completions conform in cases A0, B0, C0 and g1 (`182759Z-cases-a`, `182820Z-cases-b`, `182903Z-cases-c-terminate`, `182832Z-cases-dg`). Suites pass: History 13 of 13 (`175623Z-smoke-history-suite-oras`) and LoadModuleWithDeps 2 of 2 (`182313Z-suite-verify-LoadModuleWithDeps`).
+
+Findings: [P:F-LOAD-4 — e2e reproduced](../../../playbook-uplift/BUGS.md#p-f-load-4). The linked entry qualifies the caller, reader and providers.
 
 ### load.path
 
@@ -276,7 +340,11 @@ Sources: `wiki/09` L114-133 (malformed manifest "rejected before any resource wa
 - test-coverage
 - Expands: [Refusals](#load.refusal).
 
-Sources: message `Utils/Module.cls:1214-1217`; `-force` help `Main.cls:313`, `:441` ("newer version"); PR #887 review r2392741268 by isc-jili ("check for newVer<currVer has always been present"). Inventory: INT-LOAD-09; OP-LOAD-06. Tests: `InstallModule.cls` `TestInstallForceFlag`, `TestDevMode`; `History.cls` `TestDevModeRollbackNotCommitted`. Observed: `-DPermitDowngrade=1` does not lift this refusal, though dependency resolution honors it (OBS-L14). No human source defines `PermitDowngrade` beyond `update` refusing it. Native evidence: g6 (`-force`) and g7 (`-dev`) are refused and leave 3.5.0 installed, with `Committed=0` (`182832Z-cases-dg`, `184230Z-replay-fast`). Suite InstallModule passes (`182208Z-suite-verify-InstallModule`).
+Sources: message `Utils/Module.cls:1214-1217`; `-force` help `Main.cls:313`, `:441` ("newer version"); PR #887 review r2392741268 by isc-jili ("check for newVer<currVer has always been present"). Inventory: INT-LOAD-09; OP-LOAD-06. Tests: `InstallModule.cls` `TestInstallForceFlag`, `TestDevMode`; `History.cls` `TestDevModeRollbackNotCommitted`. Observed: `-DPermitDowngrade=1` does not lift this refusal, though dependency resolution honors it (OBS-L14). No human source defines `PermitDowngrade` beyond `update` refusing it. Native evidence: g6 (`-force`) and g7 (`-dev`) are refused and leave 3.5.0 installed, with `Committed=0` (`182832Z-cases-dg`, `184230Z-replay-fast`). Suite InstallModule passes (`182208Z-suite-verify-InstallModule`). Consolidated round 5 held-back case (`20261114T034428Z-r5-heldback`, ARM64): `2.0.0-beta` then `1.0.0-rc` installs `1.0.0-rc` (HB2), while `2.0.0` then `1.0.0` (HR2) and `2.0.0-beta` then `1.0.0` (HM2) are refused. Both inherited models encode versions as totally ordered values (G's `ver` field, P's integers per trust item D10), so both predict the refusal for HB2. Model `Verus_verification/consolidated/models/semver.py` (`_heldback`). Defect C:D15.
+
+Extension Verus: [semver.rs::load_refused](../../Verus_verification/consolidated/verus/semver.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
+
+Findings: [C:D15 — e2e reproduced](../../uplift/consolidated/BUGS.md#c-d15). The linked entry qualifies the caller, reader and providers.
 
 ### load.refusal.update-required
 
@@ -297,6 +365,8 @@ Sources: README L62; `-force` help `Main.cls:313`, `:441`; message `Utils/Module
 
 Sources: A1 Q-02; test `InstallModule.cls` `TestDevMode` ("succeeds in dev mode and fails otherwise"); issue #903 by isc-eneil; README L62. Observed: the check skips `-dev` (`Utils/Module.cls:1219`), and a `-dev` install leaves the update steps pending for a later `update`. A read-only repository forces normal mode only after this check (`Utils/Module.cls:1277-1288`). Native evidence: g5 (`load -dev` of 3.x over 2.1.1) loads, consistent with the provisional answer (`182832Z-cases-dg`).
 
+Findings audit: [sources, alternatives, implications and settlement gate](../../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#load.refusal.update-required.dev-bypass). The recorded assumption is provisional; no new maintainer approval was found.
+
 ### load.refusal.requirements
 
 - human-provided
@@ -316,13 +386,17 @@ Sources: `wiki/03` L260-269; CHANGELOG 0.10.10 (`#106`), 0.10.0 (`#469`), 0.9.0 
 
 Sources: A1 Q-17; `wiki/03` L260-261; issue #363 comment by isc-tleavitt. Confirmed as B2 D4, pending this question: refused `-dev`, `-DNoTransaction=1` and `-DNoJournal=1` loads keep the module record, with no classes, and read `Committed=1`. `list-installed` shows the module (cases B2, B3, B4; `182820Z-cases-b`, `184230Z-replay-fast`, `184630Z-repro-sysreq-dev-manifest-left`). B0 and B1 conform. Observed cause: the check runs after the manifest is saved and after the developer-mode first commit (`Utils/Module.cls:1251-1321`, OBS-L10).
 
+Findings audit: [sources, alternatives, implications and settlement gate](../../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#load.refusal.requirements.timing). The recorded assumption is provisional; no new maintainer approval was found.
+
+Findings: [G:D4 — e2e reproduced](../../Verus_verification/bugs_issues.md#g-d4). The linked entry qualifies the caller, reader and providers.
+
 ### load.same-version
 
 - human-provided
 - architecture-decision
 - Expands: [Load](#load).
 
-Sources: PR #887 review r2388507362 by isc-tleavitt, 2025-09-29 ("someone's automation ... does an 'install' of the same version every time and makes sure that it succeeds"); r2392741268 by isc-jili ("removed check for newVer==currVer"). Inventory: INT-LOAD-18; OP-LOAD-06. This supersedes issue #903 and the CHANGELOG 0.10.4 `#903` entry, which said a same-version install should fail. No test covers a same-version install. Native evidence: g2 reloads 1.2.1 successfully (`182832Z-cases-dg`).
+Sources: PR #887 review r2388507362 by isc-tleavitt, 2025-09-29 ("someone's automation ... does an 'install' of the same version every time and makes sure that it succeeds"); r2392741268 by isc-jili ("removed check for newVer==currVer"). Inventory: INT-LOAD-18; OP-LOAD-06. This supersedes issue #903 and the CHANGELOG 0.10.4 `#903` entry, which said a same-version install should fail. No product-authored test covers a same-version install. Earlier native g2 reloads 1.2.1 successfully (`182832Z-cases-dg`); [iteration18](../../uplift/consolidated/iter18/HANDOFF.md) now checks actual qualified repository installs at1.0.0 across two suppliers without uninstall, plus missing-qualifier refusal. [Verus](../../Verus_verification/consolidated/iter18/reloading.rs) retains the declared successful-provider domain and bounds the new version relation to the checked plain release.
 
 ### load.outcome
 
@@ -333,6 +407,8 @@ Sources: PR #887 review r2388507362 by isc-tleavitt, 2025-09-29 ("someone's auto
 - Children: [developer-mode commits](#load.outcome.dev).
 
 Sources: `wiki/00` L125-126, L145-155; CHANGELOG 0.10.11 (`#1237`). Inventory: INT-LOAD-08, A1 2.2 and 2.3; commit-point matrix in A2 2.3; OP-LOAD-05, -07, -11, -14, -15, -16. Tests: `History.cls` `TestFailingPhases` (normal mode), `TestNoTransactionFailure`. The tests check status and history only. Observed: a load nested inside a caller's transaction cannot make its own commits final (P-4, OBS-H16, see [nested commits](history.g5.md#history.committed.nested)). Reconstruction check R5 added the dying-process rule from `wiki/00` L147 ("a failure mid-way through is fully rolled back") and L155 (with `NoJournal`, "if the process crashes mid-install, changes cannot be rolled back and the namespace may be left in an inconsistent state"). That IRIS rolls back a dead process's open transaction is premise P-6. Observed: the `.modules` temporary repository and unpacked files stay after a killed load. Native evidence: A1 (normal mode, parent fails after its dependency loaded) leaves the modules and classes absent. C1 and C3 (terminated or killed in Activate) are rolled back. B3 and B4 keep partial writes (`182759Z-cases-a`, `182903Z-cases-c-terminate`, `182927Z-cases-c-sigkill`, `182820Z-cases-b`). Premise P-6 is confirmed and refined (round 1 R1-ONT-14, N-P12, N-P18). After a SIGKILL, IRIS rolls back only when it cleans up the dead process's slot, which took 105 s, 226 s and about 10 minutes in three runs, and other processes can read the uncommitted writes until then (`181724Z-premise-p18-sigkill-r3`, `182927Z-cases-c-sigkill`, `183827Z-cases-c4r`). Compiled classes of a rolled-back normal-mode load were absent afterwards (A1, C1). Round 2 R2-03 and round 3 R3-03: whether a dependency's own `<Defaults>` `NoJournal` escapes the normal-mode rollback is Q-22, and whether its `NoTransaction` suppresses the parent's transaction is Q-23 ([dependency defaults](../concepts/transactions-and-dev-mode.g5.md#transaction.flag-sources.dependency-defaults)). Stage C M5 kept a `NoJournal` dependency installed after the parent's rollback (D14, `20261113T204405Z-stagec2`). D13 reports failure after a committed load ([local repository](#load.dependencies.local-repo)).
+
+Extension Verus: [partial_compile.rs::compile](../../Verus_verification/consolidated/verus/partial_compile.rs), [temp_repo.rs::postcommit_cleanup](../../Verus_verification/consolidated/verus/temp_repo.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
 
 ### load.outcome.dev
 
@@ -363,13 +439,58 @@ Sources: CHANGELOG 0.10.11 (`#1237`: "A -dev action rolled back before its first
 
 Sources: `Main.cls:270-271`, `:312`; CHANGELOG 0.10.5 (`#885`); `wiki/00` L126. Inventory: INT-LOAD-14; OP-LOAD-13, OP-LOAD-18, OP-LOAD-20. Tests: `LoadModuleWithDeps.cls` `TestLoadModuleWithDependencies`; `History.cls` `TestWithDependencies`. Native evidence: A0 and A4 conform. A3 (a dependency's Activate fails) fails the parent (`182759Z-cases-a`). Suite LoadModuleWithDeps passes (`182313Z-suite-verify-LoadModuleWithDeps`).
 
+Extension Verus: [loadtx.rs::survived](../../Verus_verification/consolidated/verus/loadtx.rs), [temp_repo.rs::dependency_result](../../Verus_verification/consolidated/verus/temp_repo.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
+
 ### load.dependencies.local-repo
 
 - human-provided
 - user-facing-behavior
 - Expands: [Dependencies](#load.dependencies).
 
-Sources: PR #726 body by isc-shuliu; CHANGELOG 0.10.0 (`#726`, `#729`); comment `Main.cls:2523-2524`. Inventory: INT-LOAD-14; OP-LOAD-04. Confirmed product defect D13 (model case B1-C29, `20261113T193952Z-replay-return-b`): a load that committed reports `<INVALID OREF>` when the temporary repository could not be created. Earlier code reading: if the `.modules` folder cannot be cached, the temporary repository is never created and the final cleanup fails after the load has committed (OBS-L12). Issue I2: a load ended by Terminate or SIGKILL leaves its temporary repository registered at first priority, so later installs resolve dependencies from that folder first (six leftovers after the B2 replays, `20261113T210229Z-temp-repos-leftover`). No source covers a process end.
+- Children: [precedence](#load.dependencies.local-repo.precedence).
+
+Consolidated round 1 (native run `20261114T025102Z-r1-temp-repo`, model `Verus_verification/consolidated/models/temp_repo.py`): TR1 no folder, no repository; TR2 removed after use; TR3 a leftover `ipm-temp-modules-1` makes the new one `-2` and the leftover stays; TR4 an existing repository at the same root is used and kept; TR7 a failed creation leaves no row but prints "Failed to clean up repository" for it (C:D2). The earlier text said the folder is searched first; TR5 shows an equal version in an older repository wins, so that clause moved to the precedence question. Issue I2's "resolve dependencies from that folder first" holds only for versions no older repository offers. Sources: PR #726 body by isc-shuliu; CHANGELOG 0.10.0 (`#726`, `#729`); comment `Main.cls:2523-2524`. Inventory: INT-LOAD-14; OP-LOAD-04. Confirmed product defect D13 (model case B1-C29, `20261113T193952Z-replay-return-b`): a load that committed reports `<INVALID OREF>` when the temporary repository could not be created. Earlier code reading: if the `.modules` folder cannot be cached, the temporary repository is never created and the final cleanup fails after the load has committed (OBS-L12). Issue I2: a load ended by Terminate or SIGKILL leaves its temporary repository registered at first priority, so later installs resolve dependencies from that folder first (six leftovers after the B2 replays, `20261113T210229Z-temp-repos-leftover`). No source covers a process end.
+
+Extension Verus: [temp_repo.rs::cleanup](../../Verus_verification/consolidated/verus/temp_repo.rs), [temp_repo.rs::on_new](../../Verus_verification/consolidated/verus/temp_repo.rs), [temp_repo.rs::skip_create](../../Verus_verification/consolidated/verus/temp_repo.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
+
+Findings: [C:D2 — e2e reproduced](../../uplift/consolidated/BUGS.md#c-d2). The linked entry qualifies the caller, reader and providers.
+
+### load.dependencies.local-repo.precedence
+
+- human-verified
+- uncertain
+- user-facing-behavior
+- Expands: [Local repository](#load.dependencies.local-repo).
+
+Sources: CHANGELOG 0.9.x "Repo check should happen in the order to repo creation, not by repo name" (HSIEO-9269, HSIEO-9404); comment `General/TempLocalRepoManager.cls:27` and commit `2dc933dd` (temporary repository "first/last repo to be found"); `Repo/Manager.cls:150` (ties keyed by repository ID). Consolidated round 1 case TR5: an older filesystem repository and `.modules` both offer `tr5-dep` 1.0.0, and the older repository's copy is installed. TR5b and TR5c: the higher version wins from either side. The temporary repository's sort position never changed a result in these runs (surviving control `create-sort-last`). Native run `20261114T025102Z-r1-temp-repo`; model `Verus_verification/consolidated/models/temp_repo.py`. Question C:Q1 in [consolidated QUESTIONS](../../uplift/consolidated/QUESTIONS.md).
+
+Findings audit: [sources, alternatives, implications and settlement gate](../../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#load.dependencies.local-repo.precedence). The recorded assumption is provisional; no new maintainer approval was found.
+
+### load.status
+
+- agent
+- user-facing-behavior
+- Children: [after the commit](#load.status.after-commit).
+
+Sources: the policy row "Error reported after the final commit" in the [consolidation plan](../../uplift/consolidated/PLAN.md#policy-assumptions-the-plan-carries) carries both arms' working assumption (G D13 supported; P F-LOAD-4). `wiki/00` L147 (a failure is fully rolled back) implies an error means nothing was kept. No maintainer statement on errors after the commit was found.
+
+### load.status.after-commit
+
+- agent
+- user-facing-behavior
+- Expands: [Load status](#load.status).
+
+Sources: `Main.cls:2528-2531`, `Utils/Module.cls:138-140`, `:1348-1354`, `:257-259`, `Main.cls:2430`. Native, consolidated round 1 (IRIS 2026.1 build 234U, ARM64): TR7 (top level, temporary repository cannot be created) reports `<INVALID OREF>` with the module installed and its record `success:0 committed:1`; P2 in transaction, no-transaction and developer mode (after-install message does not compile) report the same split; Dtxn and Ddev (a dependency's `.modules` cannot be cached) fail the dependency inside the parent: normal mode removes both, developer mode keeps the parent at its first commit. Runs `20261114T025102Z-r1-temp-repo`, `20261114T025551Z-r1-eval-postcommit`. Earlier: G D13 (x86-64), P F-LOAD-4 (ARM64). Not observed: a failing cleanup of an existing temporary repository, the archive path, analytics.
+
+Extension Verus: [attr_evaluator.rs::after_message](../../Verus_verification/consolidated/verus/attr_evaluator.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
+
+### load.after-install-message
+
+- agent
+- user-facing-behavior
+- Expands: [Load](#load).
+
+Sources: `Storage/Module.cls:84`, `:356-361`; `Utils/Module.cls:1354`. Native P1, P3, P4 (`20261114T025551Z-r1-eval-postcommit`): `Done {$namespace} {name}` prints `Done USER pc-ok`; `Done $$$OK` without a brace prints unchanged.
 
 ### load.write-check
 
@@ -378,3 +499,10 @@ Sources: PR #726 body by isc-shuliu; CHANGELOG 0.10.0 (`#726`, `#729`); comment 
 - Expands: [Load](#load).
 
 Sources: CHANGELOG 0.10.7 (`#1053`); issue #1053. Inventory: INT-LOAD-16; OP-LOAD-19. Observed: an explicit check exists only for repository archives (`Utils/Module.cls:228-233`). An archive `load` relies on folder-creation errors (`Main.cls:2510`). Not run by B2.
+
+### load.reload.root
+
+- agent; user-facing-behavior; source-inspected; Verus-scoped
+- Expands: [load.core](#load.core).
+
+Sources and readers: `Lifecycle/Base.cls::%Reload` → `LoadEnvironmentConfig`, `$system.OBJ.Load` and `Storage/Module.cls::ExecutePhases`. [Iteration 7 index](../../uplift/consolidated/iter7/INDEX.md). [Contract](../../Verus_verification/consolidated/iter7/inputs.rs): `reload`. These are specification proofs; native observations and remaining provider boundaries are in the index and trust inventory.

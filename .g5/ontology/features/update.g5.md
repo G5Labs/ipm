@@ -47,9 +47,75 @@ A module that declares `<UpdatePackage>` provides update steps.
 - Steps must be safe to run again, and they report errors by throwing.
 - `update` runs the steps needed to move from the current version to the new one.
 
+<a id="update.steps.records"></a>
+[D · update.steps.records]
+
+A saved update-step record is unique by class and method within each step kind, rather than by module. Registering that key for another module moves its home to that module and keeps its completion and status; seeding a successful completed record does not run it again.
+
+- The two kinds, any-member and primary-only, use separate stores. Deleting a module removes the records whose current home is that module; records moved to another module survive until that home is deleted.
+- This describes successful registration, seeding and deletion in one namespace. [Shared execution](#update.steps.shared-execution) covers selected concurrent callers; general concurrency safety and mirror delivery remain open.
+
+<a id="update.steps.shared-ownership"></a>
+[Q · update.steps.shared-ownership]
+
+Should two modules be allowed to share an update-step class and method, or should the second registration fail?
+
+- The checked implementation moves the single record's home and retains its completion. One module's uninstall can therefore remove a shared completion record still relevant to another installed module.
+- Working assumption: authors use distinct update packages. Alternatives are to refuse a conflicting home, key records by module, or retain explicit shared owners. Each changes registration and deletion behavior; concurrent writers need a separate check.
+- Evidence: ordinary activation, both step stores and deletion readers in iteration 9. No owner decision is inferred. Register: C:Q19.
+
+<a id="update.steps.shared-execution"></a>
+[D · update.steps.shared-execution]
+
+The update-step lock belongs to the module, while a step record belongs to its class and method. Two modules sharing a due step can therefore enter it at the same time and both report success; serial calls enter once and then reuse its completion.
+
+- In the checked two-process schedule, B saves its completion and home first. A's later save restores A as the home. This is observed for the AnyMember store and this save order, not a general rule for every field or storage class.
+- Two calls for the same module share a lock. The second can wait out its timeout and return success without entering the step.
+- Steps must remain safe to repeat. The probe counts entries separately from an idempotent payload; two entries do not establish business corruption or violate a promised at-most-once policy.
+- [Shared ownership policy](#update.steps.shared-ownership) remains open. Initial row-insertion races, callback failure, mirrors and concurrent deletion are separate boundaries.
+
+
+
+
+
+
+
+
+
+<a id="update.steps.dev-seeding-policy"></a>
+[Q · update.steps.dev-seeding-policy]
+
+Should a developer-mode install seed update-step records?
+
+- Working assumption: A developer-mode install or load seeds update steps like any install; a later update runs only newer steps.
+- Alternative and implications: Keep "a dev install leaves all steps due" (so `load -dev` + update exercises every step): F-INST-8 withdrawn.
+- This assumption guides review; it is not a maintainer decision. An explicit owner policy or an attributable source addressing this exact case would settle it.
+
+<a id="update.steps.fresh-seeding-policy"></a>
+[Q · update.steps.fresh-seeding-policy]
+
+Should a dependency first installed by update run its old steps or seed them?
+
+- Working assumption: A module that `update` installs for the first time has its steps seeded, as on a fresh install.
+- Alternative and implications: Run them all (if the new module adopts data an older parent created): F-INST-10 withdrawn.
+- This assumption guides review; it is not a maintainer decision. An explicit owner policy or an attributable source addressing this exact case would settle it.
+
+<a id="update.steps.busy-policy"></a>
+[Q · update.steps.busy-policy]
+
+Should an update whose step lock is busy fail or report success?
+
+- Working assumption: If the update lock is busy, `update` fails with an error that says so; it never reports success.
+- Alternative and implications: Wait longer, then fail: same contract. Only "keep success" is ruled out. If it were chosen, F-INST-1 (High) would become a documentation defect.
+- This assumption guides review; it is not a maintainer decision. An explicit owner policy or an attributable source addressing this exact case would settle it.
+
 ## Metadata
 
-Source locators follow the conventions on the [root page](../root.g5.md#how-to-read-this-ontology). Inventory IDs refer to [A1](../../uplift/ipm-verus-20261113/A/intent-inventory.md) and [A2](../../uplift/ipm-verus-20261113/A/operation-inventory.md). `update` is in the formal scope where it uses the shared loading path and the history log. Update steps themselves are outside it.
+
+
+
+
+Source locators follow the conventions on the [root page](../root.g5.md#how-to-read-this-ontology). Inventory IDs refer to [A1](../../uplift/ipm-verus-20261113/A/intent-inventory.md) and [A2](../../uplift/ipm-verus-20261113/A/operation-inventory.md). `update` is in the formal scope where it uses the shared loading path and the history log. Update-step scheduling has inherited playbook contracts; the record ownership and deletion boundary is scoped below.
 
 ### update
 
@@ -78,6 +144,8 @@ Sources: messages `Main.cls:4415-4423`, `Utils/Module.cls:1269-1275`. Inventory:
 
 Sources: CHANGELOG 0.10.5 (`#1036`). Inventory: CAT-15, INT-LOAD-07; OP-LOAD-20. Test: `Update.cls` `TestDevModePropagation`. Suspected gap, not run natively by B2: `update <m> -dev` from a registry leaves the module itself in normal mode (OBS-L4).
 
+Findings: [P:F-INST-5 — e2e reproduced](../../../playbook-uplift/BUGS.md#p-f-inst-5). The linked entry qualifies the caller, reader and providers.
+
 ### update.requirements
 
 - human-provided
@@ -95,3 +163,74 @@ Sources: CHANGELOG 0.10.7 (`#1119`, `#430`); issue #430; PR #1136. Inventory: CA
 - Expands: [Update](#update).
 
 Sources: `wiki/03` L365-380; `wiki/08` L14-61; `Main.cls:166-167` ("runs all of the update steps from the current version to the newer version"); `General/Update/VersionBase.cls:1-24`. Inventory: CAT-09, A1 seed 3; A2 1.3 update steps (`Storage.Module:HandleAllUpdateSteps`, `ExecuteUpdateStep`). Tests: `Update.cls` `TestAllNoErrorModulesNoMirror`, `TestUpdateAfterInterruptedUpdate`; `InstallModule.cls` `TestUpdateStepsSeededOnInstall`. Observed: steps run from a record of completed steps, not a version range. A normal install marks all current steps as done, and `update` runs from the first step not yet done. Suspected gaps, not run natively by B2: if the update lock is busy for 3 seconds, steps are skipped and the update still succeeds (OBS-L9). A dependency newly installed during `update` runs all its steps instead of marking them done (OBS-L5). Mirrored instances are future work (`wiki/08` L5). Primary-only steps are skipped on other mirror members, and nothing runs them later despite `General/Update/VersionBase.cls:18`.
+
+Findings: [P:F-INST-6 — e2e reproduced](../../../playbook-uplift/BUGS.md#p-f-inst-6). The linked entry qualifies the caller, reader and providers.
+
+Findings: [P:F-INST-7 — e2e reproduced](../../../playbook-uplift/BUGS.md#p-f-inst-7). The linked entry qualifies the caller, reader and providers.
+
+### update.steps.records
+
+- agent; user-facing-behavior; source-inspected; native-tested; Verus-scoped
+- Expands: [Update steps](#update.steps).
+- Children: [Shared ownership question](#update.steps.shared-ownership).
+
+[Formal contract](../../Verus_verification/consolidated/iter9/ownership.rs): `get_add`, `seed`, `delete_module`, `cascade_preserves_other_home`, `both_moved`, `cascade_neighbors`. The home must exist and persistence must succeed. Generated uniqueness/FK cascade is an IRIS boundary validated against both native stores; class-list parsing and mirrors are outside this contract. [Bindings and observations](../../uplift/consolidated/iter9/INDEX.md).
+
+### update.steps.shared-ownership
+
+- agent
+- Expands: [Step records](#update.steps.records).
+
+Observed sequential sharing is not owner approval. Proposed repairs and cross-module concurrency remain unchecked. [Record contract](../../Verus_verification/consolidated/iter9/ownership.rs).
+
+Findings audit: [sources, alternatives, implications and settlement gate](../../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#update.steps.shared-ownership). The recorded assumption is provisional; no new maintainer approval was found.
+
+- uncertain
+
+### update.steps.shared-execution
+
+- agent; user-facing-behavior; source-inspected; native-tested; Verus-scoped
+- Expands: [Step records](#update.steps.records).
+
+[Formal contract](../../Verus_verification/consolidated/iter11/shared_steps.rs): `lock_key`, `begin`, `enter`, `finish`, `same_attempt`, `serial`, `shared_key_neighbors`. A native schedule starts B after A enters, then finishes B before A, and compares module locks, persisted rows, command status and an idempotent payload. The model folds each read/register/due decision before body entry, not arbitrary interleavings; its Snapshot option transcribes the measured stale HomeModule write. [Index](../../uplift/consolidated/iter11/INDEX.md).
+
+### update.steps.dev-seeding-policy
+
+- agent
+- uncertain
+- user-facing-behavior
+- Expands: [update.steps](#update.steps)
+
+Sources: [DEC-INST-2](../../../playbook-uplift/decisions/03-04.md); Update help: steps run "from the current version to the newer version"; `Update.cls#L467` asserts seeded steps do not rerun.
+
+Findings audit: [sources, alternatives, implications and settlement gate](../../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#update.steps.dev-seeding-policy). The recorded assumption is provisional; no new maintainer approval was found.
+
+Findings: [P:F-INST-8 — e2e reproduced](../../../playbook-uplift/BUGS.md#p-f-inst-8). The linked entry qualifies the caller, reader and providers.
+
+### update.steps.fresh-seeding-policy
+
+- agent
+- uncertain
+- user-facing-behavior
+- Expands: [update.steps](#update.steps)
+
+Sources: [DEC-INST-8](../../../playbook-uplift/decisions/03-04.md); Update help's "from the current version"; issue #550 separates updates from fresh installs.
+
+Findings audit: [sources, alternatives, implications and settlement gate](../../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#update.steps.fresh-seeding-policy). The recorded assumption is provisional; no new maintainer approval was found.
+
+Findings: [P:F-INST-10 — e2e reproduced](../../../playbook-uplift/BUGS.md#p-f-inst-10). The linked entry qualifies the caller, reader and providers.
+
+Supporting context: CHANGELOG #1128 motivates the alternative, without deciding this fresh-install policy.
+
+### update.steps.busy-policy
+
+- agent
+- uncertain
+- user-facing-behavior
+- Expands: [update.steps](#update.steps)
+
+Sources: [DEC-INST-6](../../../playbook-uplift/decisions/03-04.md); The PR #887 authors wrote `TestSimultaneousUpdateFails` asserting exactly this (commit `d6d346728`), removed it four days later (`e232e5056`) and put concurrency out of scope; the update help promises the steps run.
+
+Findings audit: [sources, alternatives, implications and settlement gate](../../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#update.steps.busy-policy). The recorded assumption is provisional; no new maintainer approval was found.
+
+Findings: [P:F-INST-1 — e2e reproduced](../../../playbook-uplift/BUGS.md#p-f-inst-1). The linked entry qualifies the caller, reader and providers.

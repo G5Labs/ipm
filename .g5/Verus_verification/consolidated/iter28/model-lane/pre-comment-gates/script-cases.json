@@ -1,0 +1,272 @@
+{
+  "models": {
+    "script.rs": {
+      "missing-file-ignored": [
+        "if !file.exists{Prepared",
+        "if false{Prepared"
+      ],
+      "unsupported-extension-treated-as-txt": [
+        "}else{Prepared{commands:seq![],error:Some(Error::UnsupportedExtension)}}",
+        "}else{Prepared{commands:lines(file.raw,0),error:None}}"
+      ],
+      "root-array-accepted": [
+        "Some(JsonDoc::Array(_))=>Prepared{commands:seq![],error:Some(Error::ExpectedObject)},",
+        "Some(JsonDoc::Array(cs))=>translate_all(cs,0),"
+      ],
+      "commands-object-accepted": [
+        "Some(JsonDoc::Object(CommandField::WrongType))=>Prepared{commands:seq![],error:Some(Error::ExpectedCommandsArray)},",
+        "Some(JsonDoc::Object(CommandField::WrongType))=>Prepared{commands:seq![],error:None},"
+      ],
+      "json-skips-preflight": [
+        "let error=validate_all(cs,i);",
+        "let error=None;"
+      ],
+      "json-ignores-later-unknown": [
+        "if head.error.is_some(){head.error}else{validate_all(cs,i+1)}",
+        "if false{head.error}else{validate_all(cs,i+1)}"
+      ],
+      "txt-prevalidates-known-unknown": [
+        "Prepared{commands:lines(file.raw,0),error:None}",
+        "Prepared{commands:lines(file.raw,0),error:if file.raw==raw_txtunknown(){Some(Error::UnknownCommand)}else{None}}"
+      ],
+      "txt-does-not-trim": [
+        "let t=trim(s);",
+        "let t=s;"
+      ],
+      "txt-keeps-blank-line": [
+        "if t.len()==0{seq![]}else{seq![t]}",
+        "seq![t]"
+      ],
+      "txt-reverses-line-order": [
+        "line_item(s.subrange(start,end))+lines(s,end+1)",
+        "lines(s,end+1)+line_item(s.subrange(start,end))"
+      ],
+      "json-reverses-parameter-values": [
+        "ps[i].1+(if i+1<ps.len(){seq![' ']+values(ps,i+1)}else{seq![]})",
+        "(if i+1<ps.len(){values(ps,i+1)+seq![' ']}else{seq![]})+ps[i].1"
+      ],
+      "json-accepts-unknown-command": [
+        "else if c.name!=seq!['c','o','n','f','i','g'] && c.name!=seq!['e','x','e','c']",
+        "else if false"
+      ],
+      "json-missing-command-accepted": [
+        "if c.name.len()==0{Prepared",
+        "if false{Prepared"
+      ],
+      "json-accepts-invalid-parameter": [
+        "else if !params_ok(c.name,c.params,0){Prepared",
+        "else if false{Prepared"
+      ],
+      "continue-after-shell-error": [
+        "if step.error.is_some(){Out{world:step.world",
+        "if false{Out{world:step.world"
+      ],
+      "rollback-earlier-success": [
+        "Out{world:step.world,error:step.error,listed:seq![command],attempted}",
+        "Out{world:initial(),error:step.error,listed:seq![command],attempted}"
+      ],
+      "dry-run-executes-shell": [
+        "let step=if dry{Step{world:w,error:None}}else{shell(w,command)};",
+        "let step=if false{Step{world:w,error:None}}else{shell(w,command)};"
+      ],
+      "dry-run-skips-json-validation": [
+        "pub open spec fn planned(file:File,dry:bool)->Prepared {prepare(file)}",
+        "pub open spec fn planned(file:File,dry:bool)->Prepared {if dry{Prepared{commands:seq![],error:None}}else{prepare(file)}}"
+      ],
+      "failed-command-not-listed": [
+        "listed:seq![command],attempted}",
+        "listed:seq![],attempted}"
+      ],
+      "dry-run-hides-command-list": [
+        "Out{listed:seq![command]+rest.listed,attempted:",
+        "Out{listed:if dry{rest.listed}else{seq![command]+rest.listed},attempted:"
+      ],
+      "dry-run-attempts-command": [
+        "let attempted=if dry{seq![]}else{seq![command]};",
+        "let attempted=seq![command];"
+      ],
+      "runtime-fault-loses-side-effect": [
+        "Step{world:World{calls:w.calls+1,..w},error:Some(Error::Runtime)}",
+        "Step{world:w,error:Some(Error::Runtime)}"
+      ],
+      "runtime-fault-reports-success": [
+        "Step{world:World{calls:w.calls+1,..w},error:Some(Error::Runtime)}",
+        "Step{world:World{calls:w.calls+1,..w},error:None}"
+      ],
+      "settings-write-dropped": [
+        "World{cfg:settings_projection::config_set(w.cfg,1,key(),v).0,..w}",
+        "w"
+      ],
+      "settings-write-uses-first-value": [
+        "config_set(w.cfg,1,key(),v).0",
+        "config_set(w.cfg,1,key(),101).0"
+      ],
+      "raw-reader-returns-reset-value": [
+        "pub open spec fn raw_value(w:World)->nat {if w.cfg.nodes.contains_key(key()) && w.cfg.nodes[key()].val.is_some(){w.cfg.nodes[key()].val.unwrap()}else{0}}",
+        "pub open spec fn raw_value(w:World)->nat {7}"
+      ]
+    }
+  },
+  "dependency_controls": {},
+  "control_functions": {
+    "script.rs": {
+      "missing-file-ignored": "shape_neighbor",
+      "unsupported-extension-treated-as-txt": "shape_neighbor",
+      "root-array-accepted": "shape_neighbor",
+      "commands-object-accepted": "shape_neighbor",
+      "json-skips-preflight": "json_preparation",
+      "json-ignores-later-unknown": "json_preparation",
+      "txt-prevalidates-known-unknown": "text_preparation",
+      "txt-does-not-trim": "text_preparation",
+      "txt-keeps-blank-line": "text_preparation",
+      "txt-reverses-line-order": "text_preparation",
+      "json-reverses-parameter-values": "translation_neighbor",
+      "json-accepts-unknown-command": "translation_neighbor",
+      "json-missing-command-accepted": "translation_neighbor",
+      "json-accepts-invalid-parameter": "translation_neighbor",
+      "continue-after-shell-error": "execution_neighbor",
+      "rollback-earlier-success": "execution_neighbor",
+      "dry-run-executes-shell": "dry_execution_neighbor",
+      "dry-run-skips-json-validation": "dry_json_validation_neighbor",
+      "failed-command-not-listed": "execution_neighbor",
+      "dry-run-hides-command-list": "dry_execution_neighbor",
+      "dry-run-attempts-command": "dry_execution_neighbor",
+      "runtime-fault-loses-side-effect": "runtime_neighbor",
+      "runtime-fault-reports-success": "runtime_neighbor",
+      "settings-write-dropped": "settings_neighbor",
+      "settings-write-uses-first-value": "settings_neighbor",
+      "raw-reader-returns-reset-value": "settings_neighbor"
+    }
+  },
+  "control_options": [
+    "--multiple-errors",
+    "0"
+  ],
+  "control_isolation_helper": "model-lane/isolate_witness.py",
+  "control_isolation_function": "isolate",
+  "focused_replay_barrier": true,
+  "projection_check": "model-lane/check-settings-projection.py",
+  "reuse_source_paths": [
+    "playbook-uplift/models/verus/settings.rs"
+  ],
+  "replay_model": "script.rs",
+  "replay_grouped": true,
+  "replay": {
+    "txt-valid-ok": "b(ok(named(Case::TxtValid,false)))",
+    "txt-unknown-ok": "b(ok(named(Case::TxtUnknown,false)))",
+    "txt-dry-unknown-ok": "b(ok(named(Case::TxtUnknown,true)))",
+    "txt-valid-value": "setting_value((named(Case::TxtValid,false)).world) as int",
+    "txt-valid-raw-value": "raw_value((named(Case::TxtValid,false)).world) as int",
+    "txt-valid-runtime-calls": "(named(Case::TxtValid,false)).world.calls as int",
+    "txt-unknown-value": "setting_value((named(Case::TxtUnknown,false)).world) as int",
+    "txt-unknown-raw-value": "raw_value((named(Case::TxtUnknown,false)).world) as int",
+    "txt-unknown-runtime-calls": "(named(Case::TxtUnknown,false)).world.calls as int",
+    "txt-dry-unknown-value": "setting_value((named(Case::TxtUnknown,true)).world) as int",
+    "txt-dry-unknown-raw-value": "raw_value((named(Case::TxtUnknown,true)).world) as int",
+    "txt-dry-unknown-runtime-calls": "(named(Case::TxtUnknown,true)).world.calls as int",
+    "txt-runtime-ok": "b(ok(named(Case::TxtRuntime,false)))",
+    "txt-runtime-value": "setting_value((named(Case::TxtRuntime,false)).world) as int",
+    "txt-runtime-raw-value": "raw_value((named(Case::TxtRuntime,false)).world) as int",
+    "txt-runtime-runtime-calls": "(named(Case::TxtRuntime,false)).world.calls as int",
+    "json-valid-ok": "b(ok(named(Case::JsonValid,false)))",
+    "json-valid-value": "setting_value((named(Case::JsonValid,false)).world) as int",
+    "json-valid-raw-value": "raw_value((named(Case::JsonValid,false)).world) as int",
+    "json-valid-runtime-calls": "(named(Case::JsonValid,false)).world.calls as int",
+    "json-unknown-ok": "b(ok(named(Case::JsonUnknown,false)))",
+    "json-unknown-value": "setting_value((named(Case::JsonUnknown,false)).world) as int",
+    "json-unknown-raw-value": "raw_value((named(Case::JsonUnknown,false)).world) as int",
+    "json-unknown-runtime-calls": "(named(Case::JsonUnknown,false)).world.calls as int",
+    "json-runtime-ok": "b(ok(named(Case::JsonRuntime,false)))",
+    "json-runtime-value": "setting_value((named(Case::JsonRuntime,false)).world) as int",
+    "json-runtime-raw-value": "raw_value((named(Case::JsonRuntime,false)).world) as int",
+    "json-runtime-runtime-calls": "(named(Case::JsonRuntime,false)).world.calls as int",
+    "json-dry-valid-ok": "b(ok(named(Case::JsonValid,true)))",
+    "json-dry-valid-value": "setting_value((named(Case::JsonValid,true)).world) as int",
+    "json-dry-valid-raw-value": "raw_value((named(Case::JsonValid,true)).world) as int",
+    "json-dry-valid-runtime-calls": "(named(Case::JsonValid,true)).world.calls as int",
+    "json-dry-unknown-ok": "b(ok(named(Case::JsonUnknown,true)))",
+    "json-dry-unknown-value": "setting_value((named(Case::JsonUnknown,true)).world) as int",
+    "json-dry-unknown-raw-value": "raw_value((named(Case::JsonUnknown,true)).world) as int",
+    "json-dry-unknown-runtime-calls": "(named(Case::JsonUnknown,true)).world.calls as int",
+    "json-array-ok": "b(ok(named(Case::JsonArray,false)))",
+    "json-array-value": "setting_value((named(Case::JsonArray,false)).world) as int",
+    "json-array-raw-value": "raw_value((named(Case::JsonArray,false)).world) as int",
+    "json-array-runtime-calls": "(named(Case::JsonArray,false)).world.calls as int",
+    "json-wrongcommands-ok": "b(ok(named(Case::JsonWrong,false)))",
+    "json-wrongcommands-value": "setting_value((named(Case::JsonWrong,false)).world) as int",
+    "json-wrongcommands-raw-value": "raw_value((named(Case::JsonWrong,false)).world) as int",
+    "json-wrongcommands-runtime-calls": "(named(Case::JsonWrong,false)).world.calls as int",
+    "missing-file-ok": "b(ok(named(Case::Missing,false)))",
+    "missing-file-value": "setting_value((named(Case::Missing,false)).world) as int",
+    "missing-file-raw-value": "raw_value((named(Case::Missing,false)).world) as int",
+    "missing-file-runtime-calls": "(named(Case::Missing,false)).world.calls as int",
+    "unsupported-extension-ok": "b(ok(named(Case::Unsupported,false)))",
+    "unsupported-extension-value": "setting_value((named(Case::Unsupported,false)).world) as int",
+    "unsupported-extension-raw-value": "raw_value((named(Case::Unsupported,false)).world) as int",
+    "unsupported-extension-runtime-calls": "(named(Case::Unsupported,false)).world.calls as int",
+    "txt-unknown-last-listed": "b(last_listed(named(Case::TxtUnknown,false)))",
+    "txt-dry-unknown-last-listed": "b(last_listed(named(Case::TxtUnknown,true)))",
+    "json-unknown-first-listed": "b(first_listed(named(Case::JsonUnknown,false)))",
+    "json-runtime-last-listed": "b(last_listed(named(Case::JsonRuntime,false)))",
+    "json-dry-valid-last-listed": "b(last_listed(named(Case::JsonValid,true)))"
+  },
+  "replay_prelude": "assert(first()!=last() && first()!=unknown() && last()!=unknown() && fault()!=first() && fault()!=last() && fault()!=unknown()) by(compute);text_preparation();json_preparation();shape_neighbor();execution_neighbor();dry_execution_neighbor();runtime_neighbor();named_neighbors();reveal_with_fuel(execute,4);output_neighbors();",
+  "native_expected": {
+    "txt-valid-reset": 1,
+    "txt-valid-namespace": 1,
+    "txt-unknown-reset": 1,
+    "txt-unknown-namespace": 1,
+    "txt-dry-unknown-reset": 1,
+    "txt-dry-unknown-namespace": 1,
+    "txt-runtime-reset": 1,
+    "txt-runtime-namespace": 1,
+    "json-valid-reset": 1,
+    "json-valid-namespace": 1,
+    "json-unknown-reset": 1,
+    "json-unknown-namespace": 1,
+    "json-runtime-reset": 1,
+    "json-runtime-namespace": 1,
+    "json-dry-valid-reset": 1,
+    "json-dry-valid-namespace": 1,
+    "json-dry-unknown-reset": 1,
+    "json-dry-unknown-namespace": 1,
+    "json-array-reset": 1,
+    "json-array-namespace": 1,
+    "json-wrongcommands-reset": 1,
+    "json-wrongcommands-namespace": 1,
+    "missing-file-reset": 1,
+    "missing-file-namespace": 1,
+    "unsupported-extension-reset": 1,
+    "unsupported-extension-namespace": 1,
+    "workflow-complete": 1,
+    "final-tlevel": 0,
+    "txt-dry-unknown-preview-header": 1
+  },
+  "native_receipt": ".g5/uplift/consolidated/iter28/native/20261116T014415191568Z/observations.json",
+  "scope_notes": [
+    "Canonical-only valid TXT and object-form predictions independent; error/preflight/source guidance disclosed before model-lane on-disk ledger; do not claim those independent discoveries.",
+    "Existing P:F-RES-5/DEC-RES-2 owns help/root-array documentation mismatch; no new bug or policy decision.",
+    "Exact frozen ASCII file bytes to explicit JSON tree adapter; generic %FromJSON/UTF8/parser/iteration/lexer and selected runtime fault semantics provider-qualified.",
+    "Literal JSON object parameter sequence preserved; no generic parameter-order intent or JSON key-order guarantee.",
+    "Unchanged type/spec projection from inherited settings.rs checked read-only before use; no inherited proof-unit credit, unrelated algorithms omitted.",
+    "DefaultLogEntryLimit uses explicit abstract key3 and selected numeric-string ranks7/101/202, not physical IDs; other settings/default nodes not exact native full-store state.",
+    "arbitrary_default proves all outcome observables independent of the unknown prior default node; initialNone is representative only.",
+    "Header/ANSI/error-message rendering, reset/status/namespace/tlevel and generic file I/O remain qualifications; listed command content projection modeled.",
+    "No process-termination/history-count/ShellScript/full-interpreter proof; no archive/package/verify/export work or private evaluator access."
+  ],
+  "replay_preludes": {
+    "txt-valid-raw-value": "raw_reader(named(Case::TxtValid,false).world);",
+    "txt-unknown-raw-value": "raw_reader(named(Case::TxtUnknown,false).world);",
+    "txt-dry-unknown-raw-value": "raw_reader(named(Case::TxtUnknown,true).world);",
+    "txt-runtime-raw-value": "raw_reader(named(Case::TxtRuntime,false).world);",
+    "json-valid-raw-value": "raw_reader(named(Case::JsonValid,false).world);",
+    "json-unknown-raw-value": "raw_reader(named(Case::JsonUnknown,false).world);",
+    "json-runtime-raw-value": "raw_reader(named(Case::JsonRuntime,false).world);",
+    "json-dry-valid-raw-value": "raw_reader(named(Case::JsonValid,true).world);",
+    "json-dry-unknown-raw-value": "raw_reader(named(Case::JsonUnknown,true).world);",
+    "json-array-raw-value": "raw_reader(named(Case::JsonArray,false).world);",
+    "json-wrongcommands-raw-value": "raw_reader(named(Case::JsonWrong,false).world);",
+    "missing-file-raw-value": "raw_reader(named(Case::Missing,false).world);",
+    "unsupported-extension-raw-value": "raw_reader(named(Case::Unsupported,false).world);"
+  }
+}

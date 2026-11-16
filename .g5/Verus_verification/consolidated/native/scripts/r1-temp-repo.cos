@@ -1,0 +1,48 @@
+set ^||c="r1"
+do ##class(Consolidated.Obs).Repos("init")
+// TR1: no .modules directory
+do ##class(Consolidated.Obs).Run("TR1","load /tmp/c1/tr1/")
+do ##class(Consolidated.Obs).Mod("TR1","tr1-main")
+do ##class(Consolidated.Obs).Repos("TR1")
+// TR2: .modules supplies the dependency
+do ##class(Consolidated.Obs).Run("TR2","load /tmp/c1/tr2/")
+do ##class(Consolidated.Obs).Mod("TR2","tr2-dep")
+do ##class(Consolidated.Obs).Repos("TR2")
+// TR3: a leftover registration already holds the first temporary name
+do ##class(Consolidated.Obs).Run("TR3.setup","repo -fs -name ipm-temp-modules-1 -path /tmp/c1/elsewhere/")
+do ##class(Consolidated.Obs).Run("TR3","load /tmp/c1/tr3/")
+do ##class(Consolidated.Obs).Mod("TR3","tr3-dep")
+do ##class(Consolidated.Obs).Repos("TR3")
+do ##class(Consolidated.Obs).Run("TR3.teardown","repo -delete -n ipm-temp-modules-1")
+// TR4: an existing repository already has the .modules folder as its root
+do ##class(Consolidated.Obs).Run("TR4.setup","repo -fs -name keepme -path /tmp/c1/tr4/.modules/")
+do ##class(Consolidated.Obs).Run("TR4","load /tmp/c1/tr4/")
+do ##class(Consolidated.Obs).Mod("TR4","tr4-dep")
+do ##class(Consolidated.Obs).Repos("TR4")
+do ##class(Consolidated.Obs).Run("TR4.teardown","repo -delete -n keepme")
+// TR5: an older registry holds the same version as .modules
+do ##class(Consolidated.Obs).Run("TR5.setup","repo -fs -name reg5 -path /tmp/c1/reg5/")
+do ##class(Consolidated.Obs).Run("TR5","load /tmp/c1/tr5/")
+do ##class(Consolidated.Obs).Mod("TR5","tr5-dep")
+do ##class(Consolidated.Obs).Repos("TR5")
+// TR5b: .modules holds a higher version
+do ##class(Consolidated.Obs).Run("TR5b","load /tmp/c1/tr5b/")
+do ##class(Consolidated.Obs).Mod("TR5b","tr5b-dep")
+// TR5c: the registry holds a higher version
+do ##class(Consolidated.Obs).Run("TR5c","load /tmp/c1/tr5c/")
+do ##class(Consolidated.Obs).Mod("TR5c","tr5c-dep")
+do ##class(Consolidated.Obs).Repos("TR5c")
+do ##class(Consolidated.Obs).Run("TR5.teardown","repo -delete -n reg5")
+// TR7: creating the temporary repository fails (invalid module name in .modules)
+do ##class(Consolidated.Obs).Run("TR7","load /tmp/c1/tr7/")
+do ##class(Consolidated.Obs).Mod("TR7","tr7-main")
+do ##class(Consolidated.Obs).Hist("TR7","tr7-main")
+do ##class(Consolidated.Obs).Repos("TR7")
+// TR7b: neighbor with a valid unused module in .modules
+do ##class(Consolidated.Obs).Run("TR7b","load /tmp/c1/tr7b/")
+do ##class(Consolidated.Obs).Mod("TR7b","tr7b-main")
+do ##class(Consolidated.Obs).Mod("TR7b","tr7b-unused")
+do ##class(Consolidated.Obs).Hist("TR7b","tr7b-main")
+do ##class(Consolidated.Obs).Repos("TR7b")
+write !,"NATIVE-END",!
+halt

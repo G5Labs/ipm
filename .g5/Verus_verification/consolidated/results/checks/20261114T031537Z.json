@@ -1,0 +1,1052 @@
+{
+ "when": "20261114T031537Z",
+ "families": [
+  {
+   "family": "semantic-versions",
+   "runs": [
+    "20261114T030608Z-r2-semver",
+    "20261114T031048Z-r2-resolve",
+    "20261114T031514Z-r2-resolve-order"
+   ],
+   "fields_compared": 137,
+   "as_built_matches": true,
+   "mismatches": [],
+   "variants": {
+    "parse-build-hyphen-correct": {
+     "member": "General/SemanticVersion.cls::FromString",
+     "wrong": "a hyphen inside build metadata stays in the build",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "V9",
+       "field": "parse",
+       "wrong": "1|2|3||build-x str=1.2.3+build-x snap=0 valid=1",
+       "observed": [
+        "1|2|3|x|build-x str=1.2.3-x+build-x snap=0 valid=1"
+       ]
+      },
+      {
+       "case": "X3",
+       "field": "res",
+       "wrong": "=1.2.3 sat=0000000001000000001",
+       "observed": [
+        "=1.2.3 sat=0000000001000000000"
+       ]
+      },
+      {
+       "case": "X4",
+       "field": "res",
+       "wrong": "=1.2.3 sat=0000000001000000001",
+       "observed": [
+        "=1.2.3 sat=0000000001000000000"
+       ]
+      }
+     ]
+    },
+    "parse-four-parts-patch": {
+     "member": "General/SemanticVersion.cls::FromString",
+     "wrong": "a fourth dotted part is dropped instead of becoming build",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "V4",
+       "field": "parse",
+       "wrong": "1|2|3|| str=1.2.3 snap=0 valid=1",
+       "observed": [
+        "1|2|3||4 str=1.2.3+4 snap=0 valid=1"
+       ]
+      }
+     ]
+    },
+    "validate-allow-leading-zero": {
+     "member": "General/SemanticVersion.cls::%OnValidateObject",
+     "wrong": "leading zeros accepted",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "V11",
+       "field": "parse",
+       "wrong": "01|2|3|| str=01.2.3 snap=0 valid=1",
+       "observed": [
+        "01|2|3|| str=01.2.3 snap=0 valid=0"
+       ]
+      },
+      {
+       "case": "V12",
+       "field": "parse",
+       "wrong": "1|2|3|01| str=1.2.3-01 snap=0 valid=1",
+       "observed": [
+        "1|2|3|01| str=1.2.3-01 snap=0 valid=0"
+       ]
+      }
+     ]
+    },
+    "snapshot-case-sensitive": {
+     "member": "General/SemanticVersion.cls::IsSnapshot",
+     "wrong": "only lower-case snapshot",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "V8",
+       "field": "parse",
+       "wrong": "1|2|3||SNAPSHOT str=1.2.3+SNAPSHOT snap=0 valid=1",
+       "observed": [
+        "1|2|3||SNAPSHOT str=1.2.3+SNAPSHOT snap=1 valid=1"
+       ]
+      }
+     ]
+    },
+    "follows-prerelease-total": {
+     "member": "General/SemanticVersion.cls::Follows",
+     "wrong": "prereleases of different versions compare by version (total order)",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "F0.10",
+       "field": "row",
+       "wrong": "11111111100011",
+       "observed": [
+        "00000001100000"
+       ]
+      },
+      {
+       "case": "X9",
+       "field": "res",
+       "wrong": ">=1.0.0 <2.0.0-0 sat=0000011111100000001",
+       "observed": [
+        ">=1.0.0 <2.0.0-0 sat=0000011011100000000"
+       ]
+      },
+      {
+       "case": "X10",
+       "field": "res",
+       "wrong": ">=1.2.0 <1.3.0-0 sat=0000000011000000001",
+       "observed": [
+        ">=1.2.0 <1.3.0-0 sat=0000000011000000000"
+       ]
+      }
+     ]
+    },
+    "follows-snapshot-equal": {
+     "member": "General/SemanticVersion.cls::Follows",
+     "wrong": "a +snapshot build is equal to its release",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "F0.8",
+       "field": "row",
+       "wrong": "11111110000011",
+       "observed": [
+        "11111110100011"
+       ]
+      }
+     ]
+    },
+    "follows-postrelease-ignored": {
+     "member": "General/SemanticVersion.cls::Follows",
+     "wrong": "the SemVerPostRelease setting is ignored",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "F1.1",
+       "field": "row",
+       "wrong": "00000000000011",
+       "observed": [
+        "00000001100011"
+       ]
+      },
+      {
+       "case": "F1.2",
+       "field": "row",
+       "wrong": "10000000000011",
+       "observed": [
+        "10000001100011"
+       ]
+      },
+      {
+       "case": "F1.3",
+       "field": "row",
+       "wrong": "11000000000011",
+       "observed": [
+        "11000001100011"
+       ]
+      }
+     ]
+    },
+    "dot-string-compare": {
+     "member": "General/SemanticVersion.cls::CompareDotSeparatedStrings",
+     "wrong": "identifiers compared as plain strings",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "F0.5",
+       "field": "row",
+       "wrong": "11110100000011",
+       "observed": [
+        "11110000000011"
+       ]
+      },
+      {
+       "case": "F0.6",
+       "field": "row",
+       "wrong": "11110000000011",
+       "observed": [
+        "11111000000011"
+       ]
+      },
+      {
+       "case": "F1.5",
+       "field": "row",
+       "wrong": "11110101100011",
+       "observed": [
+        "11110001100011"
+       ]
+      }
+     ]
+    },
+    "dot-longer-is-lower": {
+     "member": "General/SemanticVersion.cls::CompareDotSeparatedStrings",
+     "wrong": "a longer identifier list ranks lower",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "F0.1",
+       "field": "row",
+       "wrong": "01100000000011",
+       "observed": [
+        "00000000000011"
+       ]
+      },
+      {
+       "case": "F0.2",
+       "field": "row",
+       "wrong": "00000000000011",
+       "observed": [
+        "10000000000011"
+       ]
+      },
+      {
+       "case": "F0.3",
+       "field": "row",
+       "wrong": "01000000000011",
+       "observed": [
+        "11000000000011"
+       ]
+      }
+     ]
+    },
+    "tostring-no-build": {
+     "member": "General/SemanticVersion.cls::ToString",
+     "wrong": "build metadata omitted",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "V4",
+       "field": "parse",
+       "wrong": "1|2|3||4 str=1.2.3 snap=0 valid=1",
+       "observed": [
+        "1|2|3||4 str=1.2.3+4 snap=0 valid=1"
+       ]
+      },
+      {
+       "case": "V6",
+       "field": "parse",
+       "wrong": "1|2|3|beta.1|b.2 str=1.2.3-beta.1 snap=0 valid=1",
+       "observed": [
+        "1|2|3|beta.1|b.2 str=1.2.3-beta.1+b.2 snap=0 valid=1"
+       ]
+      },
+      {
+       "case": "V7",
+       "field": "parse",
+       "wrong": "1|2|3||snapshot str=1.2.3 snap=1 valid=1",
+       "observed": [
+        "1|2|3||snapshot str=1.2.3+snapshot snap=1 valid=1"
+       ]
+      }
+     ]
+    },
+    "cmp-single-char-op": {
+     "member": "General/SemanticVersionExpression/Comparator.cls::FromString",
+     "wrong": "only the first operator character is read",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "X6",
+       "field": "res",
+       "wrong": ">1.2.3 sat=0000000000111111110",
+       "observed": [
+        ">=1.2.3 sat=0000000001111111110"
+       ]
+      },
+      {
+       "case": "X8",
+       "field": "res",
+       "wrong": "<1.2.3 sat=1111111110000000001",
+       "observed": [
+        "<=1.2.3 sat=1111111111000000001"
+       ]
+      },
+      {
+       "case": "X9",
+       "field": "res",
+       "wrong": ">1.0.0 <2.0.0-0 sat=0000000011100000000",
+       "observed": [
+        ">=1.0.0 <2.0.0-0 sat=0000011011100000000"
+       ]
+      }
+     ]
+    },
+    "cmp-exact-ignores-prerelease": {
+     "member": "General/SemanticVersionExpression/Comparator.cls::Evaluate",
+     "wrong": "=1.0.0-beta matches any 1.0.0",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "X3",
+       "field": "res",
+       "wrong": "=1.2.3 sat=0000000001000000001",
+       "observed": [
+        "=1.2.3 sat=0000000001000000000"
+       ]
+      },
+      {
+       "case": "X4",
+       "field": "res",
+       "wrong": "=1.2.3 sat=0000000001000000001",
+       "observed": [
+        "=1.2.3 sat=0000000001000000000"
+       ]
+      },
+      {
+       "case": "X6",
+       "field": "res",
+       "wrong": ">=1.2.3 sat=0000000001111111111",
+       "observed": [
+        ">=1.2.3 sat=0000000001111111110"
+       ]
+      }
+     ]
+    },
+    "cmp-build-kept": {
+     "member": "General/SemanticVersionExpression/Comparator.cls::Evaluate",
+     "wrong": "build metadata kept when comparing, so <1.0.1 rejects 1.0.0+snapshot... ordering by snapshot",
+     "rejected": false,
+     "rejected_by": []
+    },
+    "cmp-postrelease-not-equal": {
+     "member": "General/SemanticVersionExpression/Comparator.cls::Evaluate",
+     "wrong": "with SemVerPostRelease, >=1.0.0 rejects 1.0.0-alpha",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "C2",
+       "field": "sat",
+       "wrong": "1110011000000000000",
+       "observed": [
+        "1111111000000000000"
+       ]
+      }
+     ]
+    },
+    "cmp-resolved-no-eq": {
+     "member": "General/SemanticVersionExpression/Comparator.cls::ToResolvedString",
+     "wrong": "the = operator is not printed",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "X3",
+       "field": "res",
+       "wrong": "1.2.3 sat=0000000001000000000",
+       "observed": [
+        "=1.2.3 sat=0000000001000000000"
+       ]
+      },
+      {
+       "case": "X4",
+       "field": "res",
+       "wrong": "1.2.3 sat=0000000001000000000",
+       "observed": [
+        "=1.2.3 sat=0000000001000000000"
+       ]
+      },
+      {
+       "case": "X34",
+       "field": "err",
+       "wrong": "ERROR #5001: Exact version matches do not agree: 1.0.0 and 2.0.0",
+       "observed": [
+        "ERROR #5001: Exact version matches do not agree: =1.0.0 and =2.0.0"
+       ]
+      }
+     ]
+    },
+    "range-partial-keeps-operator": {
+     "member": "General/SemanticVersionExpression/Range.cls::FromString",
+     "wrong": "node-semver: >=1.2 means >=1.2.0 and <2 means <2.0.0-0 (intended reading)",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "X26",
+       "field": "res",
+       "wrong": ">=1.2.0 sat=0000000011111111111",
+       "observed": [
+        ">=1.2.0 <1.3.0-0 sat=0000000011000000000"
+       ]
+      },
+      {
+       "case": "X27",
+       "field": "res",
+       "wrong": "<2.0.0-0 sat=1110011011100000000",
+       "observed": [
+        ">=2.0.0 <3.0.0-0 sat=0000000000001100000"
+       ]
+      },
+      {
+       "case": "X28",
+       "field": "res",
+       "wrong": ">=1.3.0 sat=0000000000111111110",
+       "observed": [
+        ">=1.2.0 <1.3.0-0 sat=0000000011000000000"
+       ]
+      }
+     ]
+    },
+    "range-caret-major": {
+     "member": "General/SemanticVersionExpression/Range.cls::FromString",
+     "wrong": "node-semver caret: ^1.2 means >=1.2.0 <2.0.0-0 (intended reading)",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "X20",
+       "field": "res",
+       "wrong": ">=1.2.0 <2.0.0-0 sat=0000000011100000000",
+       "observed": [
+        ">=1.2.0 <1.3.0-0 sat=0000000011000000000"
+       ]
+      }
+     ]
+    },
+    "range-year-as-x": {
+     "member": "General/SemanticVersionExpression/Range.cls::FromString",
+     "wrong": "2024.1 is an x-range like 2024.12",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "X35",
+       "field": "res",
+       "wrong": ">=2024.1.0 <2024.2.0-0 sat=0000000000000001100",
+       "observed": [
+        "=2024.1.0 sat=0000000000000001000"
+       ]
+      }
+     ]
+    },
+    "range-hyphen-max-inclusive-partial": {
+     "member": "General/SemanticVersionExpression/Range.cls::FromString",
+     "wrong": "a partial upper bound in a hyphen range is inclusive",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "X24",
+       "field": "res",
+       "wrong": ">=1.0.0 <=2.0.0 sat=0000011111111000001",
+       "observed": [
+        ">=1.0.0 <3.0.0 sat=0000011111111100001"
+       ]
+      },
+      {
+       "case": "X25",
+       "field": "res",
+       "wrong": ">=1.2.0 <=2.5.0 sat=0000000011111100001",
+       "observed": [
+        ">=1.2.0 <2.6.0 sat=0000000011111100001"
+       ]
+      }
+     ]
+    },
+    "range-any-comparator": {
+     "member": "General/SemanticVersionExpression/Range.cls::InRange",
+     "wrong": "one comparator suffices",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "X9",
+       "field": "res",
+       "wrong": ">=1.0.0 <2.0.0-0 sat=1110011111111111111",
+       "observed": [
+        ">=1.0.0 <2.0.0-0 sat=0000011011100000000"
+       ]
+      },
+      {
+       "case": "X10",
+       "field": "res",
+       "wrong": ">=1.2.0 <1.3.0-0 sat=1110011011111111111",
+       "observed": [
+        ">=1.2.0 <1.3.0-0 sat=0000000011000000000"
+       ]
+      },
+      {
+       "case": "X11",
+       "field": "res",
+       "wrong": ">=1.0.0 <2.0.0-0 sat=1110011111111111111",
+       "observed": [
+        ">=1.0.0 <2.0.0-0 sat=0000011011100000000"
+       ]
+      }
+     ]
+    },
+    "intersect-exact-ignores-bounds": {
+     "member": "General/SemanticVersionExpression/Range.cls::Intersect",
+     "wrong": "an exact version is returned without checking the bounds",
+     "rejected": false,
+     "rejected_by": []
+    },
+    "intersect-last-wins-tie": {
+     "member": "General/SemanticVersionExpression/Range.cls::Intersect",
+     "wrong": "on equal bounds the later one is kept",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "A1",
+       "field": "res",
+       "wrong": ">=1.0.0 <2.0.0 expr=>=1.0.0 <2.0.0 sat=0000011111110000001",
+       "observed": [
+        ">=1.0.0 <2.0.0-0 expr=>=1.0.0 <2.0.0-0 sat=0000011011100000000"
+       ]
+      },
+      {
+       "case": "A2",
+       "field": "res",
+       "wrong": ">=1.0.0 <2.0.0-0 expr=>=1.0.0 <2.0.0-0 sat=0000011011100000000",
+       "observed": [
+        ">=1.0.0 <2.0.0 expr=>=1.0.0 <2.0.0 sat=0000011111110000001"
+       ]
+      },
+      {
+       "case": "A3",
+       "field": "res",
+       "wrong": ">=1.0.0 expr=>=1.0.0 sat=0000011111111111111",
+       "observed": [
+        ">=1.0.0-beta expr=>=1.0.0-beta sat=0000111011101111110"
+       ]
+      }
+     ]
+    },
+    "group-eq-as-lower": {
+     "member": "General/SemanticVersionExpression/Range.cls::GroupComparators",
+     "wrong": "= treated as a lower bound",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "X34",
+       "field": "err",
+       "wrong": "<not produced>",
+       "observed": [
+        "ERROR #5001: Exact version matches do not agree: =1.0.0 and =2.0.0"
+       ]
+      },
+      {
+       "case": "A5",
+       "field": "err",
+       "wrong": "<not produced>",
+       "observed": [
+        "ERROR #5001: Exact version matches do not agree: =1.0.0 and =2.0.0"
+       ]
+      }
+     ]
+    },
+    "compare-prerelease-aware": {
+     "member": "General/SemanticVersionExpression/Range.cls::CompareVersions",
+     "wrong": "bounds compared with prerelease precedence (commutative intersection)",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "A2",
+       "field": "res",
+       "wrong": ">=1.0.0 <2.0.0-0 expr=>=1.0.0 <2.0.0-0 sat=0000011011100000000",
+       "observed": [
+        ">=1.0.0 <2.0.0 expr=>=1.0.0 <2.0.0 sat=0000011111110000001"
+       ]
+      },
+      {
+       "case": "A3",
+       "field": "res",
+       "wrong": ">=1.0.0 expr=>=1.0.0 sat=0000011111111111111",
+       "observed": [
+        ">=1.0.0-beta expr=>=1.0.0-beta sat=0000111011101111110"
+       ]
+      },
+      {
+       "case": "S4ab",
+       "field": "status",
+       "wrong": "OK",
+       "observed": [
+        "ERR"
+       ]
+      }
+     ]
+    },
+    "valid-strict-equal-ok": {
+     "member": "General/SemanticVersionExpression/Range.cls::IsIntersectionValid",
+     "wrong": ">X with <=X is accepted",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "A11",
+       "field": "err",
+       "wrong": "<not produced>",
+       "observed": [
+        "ERROR #5001: No overlapping versions in AND operation for >1.0.0 and <=1.0.0"
+       ]
+      }
+     ]
+    },
+    "range-resolved-comma": {
+     "member": "General/SemanticVersionExpression/Range.cls::ToResolvedString",
+     "wrong": "comparators joined by a comma",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "X9",
+       "field": "res",
+       "wrong": ">=1.0.0,<2.0.0-0 sat=0000011011100000000",
+       "observed": [
+        ">=1.0.0 <2.0.0-0 sat=0000011011100000000"
+       ]
+      },
+      {
+       "case": "X10",
+       "field": "res",
+       "wrong": ">=1.2.0,<1.3.0-0 sat=0000000011000000000",
+       "observed": [
+        ">=1.2.0 <1.3.0-0 sat=0000000011000000000"
+       ]
+      },
+      {
+       "case": "X11",
+       "field": "res",
+       "wrong": ">=1.0.0,<2.0.0-0 sat=0000011011100000000",
+       "observed": [
+        ">=1.0.0 <2.0.0-0 sat=0000011011100000000"
+       ]
+      }
+     ]
+    },
+    "expr-and-as-or": {
+     "member": "General/SemanticVersionExpression.cls::ExpressionSet",
+     "wrong": "&& treated as ||",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "X32",
+       "field": "res",
+       "wrong": "(>=1.0.0) || (<2.0.0) sat=1111111111111111111",
+       "observed": [
+        ">=1.0.0 <2.0.0 sat=0000011111110000001"
+       ]
+      },
+      {
+       "case": "X33",
+       "field": "err",
+       "wrong": "<not produced>",
+       "observed": [
+        "ERROR #5001: No overlapping versions in && operation for %1 and %2"
+       ]
+      },
+      {
+       "case": "X34",
+       "field": "err",
+       "wrong": "<not produced>",
+       "observed": [
+        "ERROR #5001: Exact version matches do not agree: =1.0.0 and =2.0.0"
+       ]
+      }
+     ]
+    },
+    "expr-conflict-message-filled": {
+     "member": "General/SemanticVersionExpression.cls::ExpressionSet",
+     "wrong": "the && conflict message names the two ranges",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "X33",
+       "field": "err",
+       "wrong": "ERROR #5001: No overlapping versions in && operation for >=2.0.0 and <1.0.0",
+       "observed": [
+        "ERROR #5001: No overlapping versions in && operation for %1 and %2"
+       ]
+      }
+     ]
+    },
+    "expr-empty-none": {
+     "member": "General/SemanticVersionExpression.cls::IsSatisfiedBy",
+     "wrong": "an empty expression accepts nothing",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "X1",
+       "field": "res",
+       "wrong": " sat=0000000000000000000",
+       "observed": [
+        " sat=1111111111111111111"
+       ]
+      },
+      {
+       "case": "X2",
+       "field": "res",
+       "wrong": " sat=0000000000000000000",
+       "observed": [
+        " sat=1111111111111111111"
+       ]
+      }
+     ]
+    },
+    "and-intersect-error-wrapped": {
+     "member": "General/SemanticVersionExpression.cls::And",
+     "wrong": "disagreeing exact versions report the AND conflict message",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "A5",
+       "field": "err",
+       "wrong": "ERROR #5001: No overlapping versions in AND operation for =1.0.0 and =2.0.0",
+       "observed": [
+        "ERROR #5001: Exact version matches do not agree: =1.0.0 and =2.0.0"
+       ]
+      }
+     ]
+    },
+    "and-empty-left-keeps-empty": {
+     "member": "General/SemanticVersionExpression.cls::And",
+     "wrong": "an empty left side stays empty",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "A8",
+       "field": "res",
+       "wrong": " expr= sat=1111111111111111111",
+       "observed": [
+        ">=1.0.0 expr=>=1.0.0 sat=0000011111111111111"
+       ]
+      }
+     ]
+    },
+    "expr-resolved-no-parens": {
+     "member": "General/SemanticVersionExpression.cls::ToResolvedString",
+     "wrong": "options not parenthesized",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "X31",
+       "field": "res",
+       "wrong": ">=1.0.0 <2.0.0 || >=3.0.0 sat=0000011111110011111",
+       "observed": [
+        "(>=1.0.0 <2.0.0) || (>=3.0.0) sat=0000011111110011111"
+       ]
+      },
+      {
+       "case": "X39",
+       "field": "res",
+       "wrong": "=1.0.0 || =2.0.0 sat=0000011000001000000",
+       "observed": [
+        "(=1.0.0) || (=2.0.0) sat=0000011000001000000"
+       ]
+      },
+      {
+       "case": "A10",
+       "field": "res",
+       "wrong": ">=1.5.0 <2.0.0-0 || >=3.0.0 <4.0.0-0 expr=>=1.5.0 <2.0.0-0 || >=3.0.0 <4.0.0-0 sat=0000000000000010000",
+       "observed": [
+        "(>=1.5.0 <2.0.0-0) || (>=3.0.0 <4.0.0-0) expr=(>=1.5.0 <2.0.0-0) || (>=3.0.0 <4.0.0-0) sat=0000000000000010000"
+       ]
+      }
+     ]
+    }
+   },
+   "contract": [
+    {
+     "name": "<2 accepts versions below 2.0.0 (node-semver, which the range code cites)",
+     "holds": false,
+     "expected": false,
+     "as_expected": true,
+     "ids": [
+      "C:D6"
+     ],
+     "detail": ">=2.0.0 <3.0.0-0 sat=0000000000001100000"
+    },
+    {
+     "name": "^1.2 accepts 1.x from 1.2.0 (node-semver caret text quoted in the code)",
+     "holds": false,
+     "expected": false,
+     "as_expected": true,
+     "ids": [
+      "C:D7"
+     ],
+     "detail": ">=1.2.0 <1.3.0-0 sat=0000000011000000000"
+    },
+    {
+     "name": "combining two requirements does not depend on their order",
+     "holds": false,
+     "expected": false,
+     "as_expected": true,
+     "ids": [
+      "C:D8"
+     ],
+     "detail": [
+      [
+       1,
+       2
+      ],
+      [
+       3,
+       4
+      ]
+     ]
+    },
+    {
+     "name": "build metadata containing a hyphen stays build metadata (SemVer 2.0.0 item 10)",
+     "holds": false,
+     "expected": false,
+     "as_expected": true,
+     "ids": [
+      "C:D9"
+     ],
+     "detail": "1|2|3|x|build-x str=1.2.3-x+build-x snap=0 valid=1"
+    },
+    {
+     "name": "a dependency declared <2 is installed below 2.0.0",
+     "holds": false,
+     "expected": false,
+     "as_expected": true,
+     "ids": [
+      "C:D6"
+     ],
+     "detail": "present version=2.5.0 repo=reg2 desc=2.5.0 dev=0"
+    },
+    {
+     "name": "whether a satisfiable diamond installs does not depend on dependency names",
+     "holds": false,
+     "expected": false,
+     "as_expected": true,
+     "ids": [
+      "C:D8"
+     ],
+     "detail": "S4ab=ERR S5=OK"
+    }
+   ],
+   "members": {
+    "General/SemanticVersion.cls::FromString": {
+     "slice": "General/SemanticVersion.cls:33-54",
+     "fn": "sv_from_string",
+     "behavior": "parts from a version string; a hyphen inside build metadata becomes a prerelease (V9)",
+     "fn_present": true,
+     "variants_rejected": [
+      "parse-build-hyphen-correct",
+      "parse-four-parts-patch"
+     ],
+     "credited": true
+    },
+    "General/SemanticVersion.cls::%OnValidateObject": {
+     "slice": "General/SemanticVersion.cls:75-96",
+     "fn": "sv_validate",
+     "behavior": "leading zeros rejected in numbers and numeric prerelease identifiers (V11, V12)",
+     "fn_present": true,
+     "variants_rejected": [
+      "validate-allow-leading-zero"
+     ],
+     "credited": true
+    },
+    "General/SemanticVersion.cls::IsSnapshot": {
+     "slice": "General/SemanticVersion.cls:98-101",
+     "fn": "is_snapshot",
+     "behavior": "build \"snapshot\" in any case (V7, V8)",
+     "fn_present": true,
+     "variants_rejected": [
+      "snapshot-case-sensitive"
+     ],
+     "credited": true
+    },
+    "General/SemanticVersion.cls::Follows": {
+     "slice": "General/SemanticVersion.cls:123-172",
+     "fn": "follows",
+     "behavior": "ordering incl. prerelease incomparability across versions, snapshot earlier, post-release mode (F)",
+     "fn_present": true,
+     "variants_rejected": [
+      "follows-prerelease-total",
+      "follows-snapshot-equal",
+      "follows-postrelease-ignored"
+     ],
+     "credited": true
+    },
+    "General/SemanticVersion.cls::CompareDotSeparatedStrings": {
+     "slice": "General/SemanticVersion.cls:175-205",
+     "fn": "compare_dot",
+     "behavior": "identifier precedence: numbers numerically and before words (F rows 5, 6, 13, 14)",
+     "fn_present": true,
+     "variants_rejected": [
+      "dot-string-compare",
+      "dot-longer-is-lower"
+     ],
+     "credited": true
+    },
+    "General/SemanticVersion.cls::ToString": {
+     "slice": "General/SemanticVersion.cls:16-23",
+     "fn": "sv_to_string",
+     "behavior": "canonical text incl. prerelease and build (V)",
+     "fn_present": true,
+     "variants_rejected": [
+      "tostring-no-build"
+     ],
+     "credited": true
+    },
+    "General/SemanticVersionExpression/Comparator.cls::FromString": {
+     "slice": "General/SemanticVersionExpression/Comparator.cls:31-75",
+     "fn": "cmp_from_string",
+     "behavior": "one- and two-character operators; error names the remaining text (X41)",
+     "fn_present": true,
+     "variants_rejected": [
+      "cmp-single-char-op"
+     ],
+     "credited": true
+    },
+    "General/SemanticVersionExpression/Comparator.cls::Evaluate": {
+     "slice": "General/SemanticVersionExpression/Comparator.cls:77-121",
+     "fn": "cmp_evaluate",
+     "behavior": "exact match incl. prerelease; build ignored for < >; post-release equality (X, C)",
+     "fn_present": true,
+     "variants_rejected": [
+      "cmp-exact-ignores-prerelease",
+      "cmp-postrelease-not-equal"
+     ],
+     "credited": true
+    },
+    "General/SemanticVersionExpression/Comparator.cls::ToResolvedString": {
+     "slice": "General/SemanticVersionExpression/Comparator.cls:21-29",
+     "fn": "cmp_resolved",
+     "behavior": "operator always printed (=1.2.3)",
+     "fn_present": true,
+     "variants_rejected": [
+      "cmp-resolved-no-eq"
+     ],
+     "credited": true
+    },
+    "General/SemanticVersionExpression/Range.cls::FromString": {
+     "slice": "General/SemanticVersionExpression/Range.cls:31-205",
+     "fn": "range_from_string",
+     "behavior": "hyphen, x, tilde, caret ranges; an operator on a partial version is dropped (X26-X29); 20NN.N exact (X35)",
+     "fn_present": true,
+     "variants_rejected": [
+      "range-partial-keeps-operator",
+      "range-caret-major",
+      "range-year-as-x",
+      "range-hyphen-max-inclusive-partial"
+     ],
+     "credited": true
+    },
+    "General/SemanticVersionExpression/Range.cls::InRange": {
+     "slice": "General/SemanticVersionExpression/Range.cls:207-217",
+     "fn": "range_in",
+     "behavior": "every comparator must hold (X30)",
+     "fn_present": true,
+     "variants_rejected": [
+      "range-any-comparator"
+     ],
+     "credited": true
+    },
+    "General/SemanticVersionExpression/Range.cls::Intersect": {
+     "slice": "General/SemanticVersionExpression/Range.cls:228-326",
+     "fn": "range_intersect",
+     "behavior": "exact versions must agree; tightest bounds kept, first wins a prerelease-only tie (A1-A4)",
+     "fn_present": true,
+     "variants_rejected": [
+      "intersect-last-wins-tie"
+     ],
+     "credited": true
+    },
+    "General/SemanticVersionExpression/Range.cls::GroupComparators": {
+     "slice": "General/SemanticVersionExpression/Range.cls:329-345",
+     "fn": "group_comparators",
+     "behavior": "= kept apart from bounds (A7)",
+     "fn_present": true,
+     "variants_rejected": [
+      "group-eq-as-lower"
+     ],
+     "credited": true
+    },
+    "General/SemanticVersionExpression/Range.cls::CompareVersions": {
+     "slice": "General/SemanticVersionExpression/Range.cls:349-389",
+     "fn": "compare_versions",
+     "behavior": "bounds compared ignoring prerelease (A3/A4 order dependence)",
+     "fn_present": true,
+     "variants_rejected": [
+      "compare-prerelease-aware"
+     ],
+     "credited": true
+    },
+    "General/SemanticVersionExpression/Range.cls::IsIntersectionValid": {
+     "slice": "General/SemanticVersionExpression/Range.cls:392-415",
+     "fn": "intersection_valid",
+     "behavior": ">X with <=X empty; >=X with <=X allowed (A11, A12)",
+     "fn_present": true,
+     "variants_rejected": [
+      "valid-strict-equal-ok"
+     ],
+     "credited": true
+    },
+    "General/SemanticVersionExpression/Range.cls::ToResolvedString": {
+     "slice": "General/SemanticVersionExpression/Range.cls:21-29",
+     "fn": "range_resolved",
+     "behavior": "comparators joined by a space",
+     "fn_present": true,
+     "variants_rejected": [
+      "range-resolved-comma"
+     ],
+     "credited": true
+    },
+    "General/SemanticVersionExpression.cls::ExpressionSet": {
+     "slice": "General/SemanticVersionExpression.cls:19-68",
+     "fn": "expression_set",
+     "behavior": "&& intersects, || unions, mixing refused; && conflict message keeps literal %1 %2 (X31-X34, X42)",
+     "fn_present": true,
+     "variants_rejected": [
+      "expr-and-as-or",
+      "expr-conflict-message-filled"
+     ],
+     "credited": true
+    },
+    "General/SemanticVersionExpression.cls::IsSatisfiedBy": {
+     "slice": "General/SemanticVersionExpression.cls:106-117",
+     "fn": "expr_satisfied",
+     "behavior": "empty expression accepts every version (X1, X2)",
+     "fn_present": true,
+     "variants_rejected": [
+      "expr-empty-none"
+     ],
+     "credited": true
+    },
+    "General/SemanticVersionExpression.cls::And": {
+     "slice": "General/SemanticVersionExpression.cls:129-166",
+     "fn": "expr_and",
+     "behavior": "pairwise intersection of options; conflict message (A5-A12)",
+     "fn_present": true,
+     "variants_rejected": [
+      "and-intersect-error-wrapped",
+      "and-empty-left-keeps-empty"
+     ],
+     "credited": true
+    },
+    "General/SemanticVersionExpression.cls::ToResolvedString": {
+     "slice": "General/SemanticVersionExpression.cls:75-91",
+     "fn": "expr_resolved",
+     "behavior": "options in parentheses joined by ||",
+     "fn_present": true,
+     "variants_rejected": [
+      "expr-resolved-no-parens"
+     ],
+     "credited": true
+    }
+   },
+   "source_sha256": "c8b7649b3af799fe48c60d3d17219b55dddfe2dbfdf1a66e1b5cc0a1095563ab"
+  }
+ ]
+}

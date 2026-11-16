@@ -1,0 +1,25 @@
+// Once-a-day purge marker. The retention setting and the marker live in %SYS ^IPM.settings and are restored at the end.
+set retain0=##class(%IPM.Repo.UniversalSettings).GetHistoryRetain(), mark0=##class(%IPM.General.History).GetHistoryLastPurge()
+write !,"OBS ENV retain.initial=",retain0," marker.initial=",$select(mark0="":"none",mark0=+$h:"today",1:"other"),!
+set ins="INSERT INTO %IPM_General.History (Action,Package,Version_Major,Version_Minor,Version_Patch,TimeStart,UserName,CommandString,Success,Committed,Finalized) VALUES ('load',?,1,0,0,?,'x','old',1,1,1)"
+do ##class(%IPM.Repo.UniversalSettings).SetValue("history_retain",1)
+set $namespace="%SYS" set ^IPM.settings("history_retain","lastPurge")=+$h-1 set $namespace="USER"
+set rs=##class(%SQL.Statement).%ExecDirect(,ins,"h-old1","2000-01-01 00:00:00") set o1=rs.%ROWID write "OBS P1.setup sqlcode=",rs.%SQLCODE,!
+set rs=##class(%SQL.Statement).%ExecDirect(,ins,"h-new1",$zdatetime($h,3)) set n1=rs.%ROWID
+set sc=##class(%IPM.Main).Shell("list")
+write "OBS P1 old=",##class(%IPM.General.History).%ExistsId(o1)," recent=",##class(%IPM.General.History).%ExistsId(n1)," marker=",$select(##class(%IPM.General.History).GetHistoryLastPurge()=+$h:"today",1:"other"),!
+set rs=##class(%SQL.Statement).%ExecDirect(,ins,"h-old2","2000-01-01 00:00:00") set o2=rs.%ROWID
+set sc=##class(%IPM.Main).Shell("list")
+write "OBS P2 old=",##class(%IPM.General.History).%ExistsId(o2)," marker=",$select(##class(%IPM.General.History).GetHistoryLastPurge()=+$h:"today",1:"other"),!
+do ##class(%IPM.Repo.UniversalSettings).SetValue("history_retain",0)
+set $namespace="%SYS" set ^IPM.settings("history_retain","lastPurge")=+$h-1 set $namespace="USER"
+set sc=##class(%IPM.Main).Shell("list")
+write "OBS P3 old=",##class(%IPM.General.History).%ExistsId(o2)," marker=",$select(##class(%IPM.General.History).GetHistoryLastPurge()=+$h:"today",##class(%IPM.General.History).GetHistoryLastPurge()=(+$h-1):"yesterday",1:"other"),!
+do ##class(%IPM.Repo.UniversalSettings).SetValue("history_retain",1)
+set sc=##class(%IPM.Main).Shell("list")
+write "OBS P4 old=",##class(%IPM.General.History).%ExistsId(o2)," marker=",$select(##class(%IPM.General.History).GetHistoryLastPurge()=+$h:"today",1:"other"),!
+do ##class(%IPM.Repo.UniversalSettings).SetValue("history_retain",retain0)
+set $namespace="%SYS" if mark0="" { kill ^IPM.settings("history_retain","lastPurge") } else { set ^IPM.settings("history_retain","lastPurge")=mark0 } set $namespace="USER"
+write "OBS ENV retain.restored=",##class(%IPM.Repo.UniversalSettings).GetHistoryRetain()," marker.restored=",$select(##class(%IPM.General.History).GetHistoryLastPurge()="":"none",1:"set"),!
+write !,"NATIVE-END",!
+halt

@@ -1,0 +1,130 @@
+{
+  "models": {
+    "scope.rs": {
+      "ignore-resource-scope": [
+        "if !has_scope(phases,r.declared)",
+        "if false"
+      ],
+      "ignore-returned-scope": [
+        "if !has_scope(phases,children.returned_scope)",
+        "if false"
+      ],
+      "lose-phase-producer": [
+        "returned_scope:r.phase",
+        "returned_scope:seq![Phase::Test]"
+      ],
+      "leak-scope-metadata": [
+        "else {base},metadata:false",
+        "else {base},metadata:children.metadata"
+      ],
+      "omit-path-readdition": [
+        "base.insert(r.name)",
+        "base"
+      ],
+      "defensive-path-handled": [
+        "pub open spec fn test_path_export_handled()->bool {false}",
+        "pub open spec fn test_path_export_handled()->bool {true}"
+      ],
+      "path-copy-handled": [
+        "path_has_processor() && test_path_export_handled()",
+        "true"
+      ],
+      "ignore-include-flag": [
+        "Some(b)=>b,None=>manifest",
+        "Some(b)=>manifest,None=>manifest"
+      ],
+      "ignore-explicit-zero": [
+        "Some(b)=>b,None=>manifest",
+        "Some(b)=>b || manifest,None=>manifest"
+      ],
+      "lose-file-payload": [
+        "|p:Text|source[p]",
+        "|p:Text|seq![]"
+      ],
+      "directory-prefix-not-normalized": [
+        "prefix(directory_prefix(r.name),p)",
+        "prefix(r.name,p)"
+      ],
+      "omitted-clears-stored-include": [
+        "Some(value)=>value,None=>old",
+        "Some(value)=>value,None=>false"
+      ],
+      "explicit-false-does-not-reset": [
+        "Some(value)=>value,None=>old",
+        "Some(value)=>value || old,None=>old"
+      ],
+      "command-writes-stored-include": [
+        "PackageState{stored,contents:",
+        "PackageState{stored:match command {Some(value)=>value,None=>stored},contents:"
+      ]
+    }
+  },
+  "session": [
+    "do $system.OBJ.Load(\"/tmp/iter10/Packaging.cls\",\"ck\")",
+    "do ##class(Iter10.Packaging).Run()"
+  ],
+  "replay_model": "scope.rs",
+  "replay": {
+    "ut-direct-path": "b(unit_children(fixture(Phase::Test)).paths.contains(fixture(Phase::Test).name))",
+    "ut-direct-scope": "b(unit_children(fixture(Phase::Test)).metadata)",
+    "ut-filter-resource": "b(references(split_scope(),seq![Phase::Test]).paths.contains(split_scope().name))",
+    "ut-filter-returned": "b(references(split_scope(),seq![Phase::Verify]).paths.contains(split_scope().name))",
+    "ut-filter-both": "b(references(split_scope(),seq![Phase::Test,Phase::Verify]).paths.contains(split_scope().name))",
+    "ut-meta-leak": "b(references(split_scope(),seq![Phase::Test,Phase::Verify]).metadata)",
+    "ut-path-processor": "b(path_has_processor())",
+    "ut-path-handled": "b(test_path_export_handled())",
+    "pkg-default-stored": "b(matrix(0).stored)",
+    "pkg-default-test": "b(matrix(0).contents.contains_key(filename()))",
+    "pkg-default-bytes": "b(matrix(0).contents.contains_key(filename()) && matrix(0).contents[filename()]==source()[filename()])",
+    "pkg-default-manifest": "b(matrix(0).contents.contains_key(manifest_path()))",
+    "pkg-flag-stored": "b(matrix(1).stored)",
+    "pkg-flag-test": "b(matrix(1).contents.contains_key(filename()))",
+    "pkg-flag-bytes": "b(matrix(1).contents.contains_key(filename()) && matrix(1).contents[filename()]==source()[filename()])",
+    "pkg-flag-manifest": "b(matrix(1).contents.contains_key(manifest_path()))",
+    "pkg-manifest-stored": "b(matrix(2).stored)",
+    "pkg-manifest-test": "b(matrix(2).contents.contains_key(filename()))",
+    "pkg-manifest-bytes": "b(matrix(2).contents.contains_key(filename()) && matrix(2).contents[filename()]==source()[filename()])",
+    "pkg-manifest-manifest": "b(matrix(2).contents.contains_key(manifest_path()))",
+    "pkg-zero-stored": "b(matrix(3).stored)",
+    "pkg-zero-test": "b(matrix(3).contents.contains_key(filename()))",
+    "pkg-zero-bytes": "b(matrix(3).contents.contains_key(filename()) && matrix(3).contents[filename()]==source()[filename()])",
+    "pkg-zero-manifest": "b(matrix(3).contents.contains_key(manifest_path()))",
+    "pkg-sticky-stored": "b(matrix(4).stored)",
+    "pkg-sticky-test": "b(matrix(4).contents.contains_key(filename()))",
+    "pkg-sticky-bytes": "b(matrix(4).contents.contains_key(filename()) && matrix(4).contents[filename()]==source()[filename()])",
+    "pkg-sticky-manifest": "b(matrix(4).contents.contains_key(manifest_path()))",
+    "pkg-verify-flag-stored": "b(matrix(5).stored)",
+    "pkg-verify-flag-test": "b(matrix(5).contents.contains_key(filename()))",
+    "pkg-verify-flag-bytes": "b(matrix(5).contents.contains_key(filename()) && matrix(5).contents[filename()]==source()[filename()])",
+    "pkg-verify-flag-manifest": "b(matrix(5).contents.contains_key(manifest_path()))",
+    "pkg-verify-default-stored": "b(matrix(6).stored)",
+    "pkg-verify-default-test": "b(matrix(6).contents.contains_key(filename()))",
+    "pkg-verify-default-bytes": "b(matrix(6).contents.contains_key(filename()) && matrix(6).contents[filename()]==source()[filename()])",
+    "pkg-verify-default-manifest": "b(matrix(6).contents.contains_key(manifest_path()))"
+  },
+  "replay_prelude": "assert(filename()!=manifest_path()) by (compute);\nassert(!has_scope(seq![Phase::Package],seq![Phase::Test]));\nassert(!has_scope(seq![Phase::Package],seq![Phase::Verify]));\nassert(references(fixture(Phase::Test),seq![Phase::Package]).paths==Set::<Text>::empty());\nassert(references(fixture(Phase::Verify),seq![Phase::Package]).paths==Set::<Text>::empty());\nassert(copied(fixture(Phase::Test),seq![Phase::Package],source())==Map::<Text,Text>::empty());\nassert(copied(fixture(Phase::Verify),seq![Phase::Package],source())==Map::<Text,Text>::empty());\nreveal_with_fuel(matrix_prior,10);\nlet p=export_phases(seq![Phase::Package],Some(true),false);\nassert(p[1]==Phase::Test);assert(p[2]==Phase::Verify);\nfixture_selected(Phase::Test,p);fixture_selected(Phase::Verify,p);\nlet q=export_phases(seq![Phase::Package],None,true);\nassert(q[1]==Phase::Test);assert(q[2]==Phase::Verify);\nfixture_selected(Phase::Test,q);fixture_selected(Phase::Verify,q);\n",
+  "native_expected": {
+    "ut-path-export-ok": 1,
+    "pkg-default-load": 1,
+    "pkg-default-ok": 1,
+    "pkg-flag-load": 1,
+    "pkg-flag-ok": 1,
+    "pkg-manifest-load": 1,
+    "pkg-manifest-ok": 1,
+    "pkg-zero-load": 1,
+    "pkg-zero-ok": 1,
+    "pkg-verify-flag-load": 1,
+    "pkg-verify-flag-ok": 1,
+    "pkg-verify-default-load": 1,
+    "pkg-verify-default-ok": 1,
+    "pkg-default-extract": 1,
+    "pkg-flag-extract": 1,
+    "pkg-manifest-extract": 1,
+    "pkg-zero-extract": 1,
+    "pkg-sticky-load": 1,
+    "pkg-sticky-ok": 1,
+    "pkg-sticky-extract": 1,
+    "pkg-verify-flag-extract": 1,
+    "pkg-verify-default-extract": 1
+  }
+}

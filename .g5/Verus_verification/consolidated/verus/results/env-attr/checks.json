@@ -1,0 +1,1467 @@
+{
+  "generated": "2026-11-14T15:37:56.468414+00:00",
+  "product_pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+  "python_runtime": "3.14.5 (main, May 10 2026, 10:21:34) [Clang 21.0.0 (clang-2100.0.123.102)]",
+  "formal": [
+    {
+      "model": "env_config.rs",
+      "command": [
+        "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus",
+        "/Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/Verus_verification/consolidated/verus/env_config.rs"
+      ],
+      "returncode": 0,
+      "stdout": "verification results:: 22 verified, 0 errors\n",
+      "stderr": ""
+    },
+    {
+      "model": "attr_evaluator.rs",
+      "command": [
+        "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus",
+        "/Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/Verus_verification/consolidated/verus/attr_evaluator.rs"
+      ],
+      "returncode": 0,
+      "stdout": "verification results:: 50 verified, 0 errors\n",
+      "stderr": ""
+    }
+  ],
+  "controls": [
+    {
+      "control": "env-array-object-replace",
+      "model": "env_config.rs",
+      "rejected_at_property": true,
+      "command": [
+        "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus",
+        "/var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-env-attr-controls-3p9xyeje/env_config.rs"
+      ],
+      "returncode": 1,
+      "stdout": "verification results:: 21 verified, 1 errors\n",
+      "stderr": "error: postcondition not satisfied\n   --> /var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-env-attr-controls-3p9xyeje/env_config.rs:185:13\n    |\n184 | pub proof fn object_in_array_keeps_both_keys()\n    | ---------------------------------------------- at the end of the function body\n185 |     ensures at(at(merge_value(Some(object_array(x_obj())), object_array(y_obj()), 4).unwrap(), 0).unwrap(), 1) == Some(Json::Atom(1)),\n    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition\n\nerror: aborting due to 1 previous error\n\n"
+    },
+    {
+      "control": "env-later-file-keeps-old",
+      "model": "env_config.rs",
+      "rejected_at_property": true,
+      "command": [
+        "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus",
+        "/var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-env-attr-controls-3p9xyeje/env_config.rs"
+      ],
+      "returncode": 1,
+      "stdout": "verification results:: 19 verified, 3 errors\n",
+      "stderr": "error: postcondition not satisfied\n   --> /var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-env-attr-controls-3p9xyeje/env_config.rs:123:45\n    |\n121 | pub proof fn any_file_error_clears(old: Json, file: FileInput, fuel: nat)\n    | ------------------------------------------------------------------------- at the end of the function body\n122 |     requires !file.read_parse_ok || array_tag(file.parsed) != Some(false)\n123 |     ensures !load_file(old, file, fuel).ok, load_file(old, file, fuel).config == empty(false) {}\n    |                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition\n\nerror: postcondition not satisfied\n   --> /var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-env-attr-controls-3p9xyeje/env_config.rs:128:50\n    |\n126 | pub proof fn later_failure_erases_earlier(first: FileInput, bad: FileInput, fuel: nat)\n    | -------------------------------------------------------------------------------------- at the end of the function body\n127 |     requires !bad.read_parse_ok\n128 |     ensures !command(seq![first, bad], fuel).ok, command(seq![first, bad], fuel).config == empty(false)\n    |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition\n\nerror: postcondition not satisfied\n   --> /var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-env-attr-controls-3p9xyeje/env_config.rs:134:13\n    |\n134 |       ensures load_files(old, files, fuel).config == empty(false)\n    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition\n...\n137 | /     if files.len() > 0 {\n138 | |         let first = load_file(old, files[0], fuel);\n139 | |         if first.ok { every_failed_file_sequence_is_empty(first.config, files.subrange(1, files.len() as int), fuel); }\n140 | |     }\n    | |_____- at the end of the function body\n\nerror: aborting due to 3 previous errors\n\n"
+    },
+    {
+      "control": "env-array-tail-dropped",
+      "model": "env_config.rs",
+      "rejected_at_property": true,
+      "command": [
+        "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus",
+        "/var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-env-attr-controls-3p9xyeje/env_config.rs"
+      ],
+      "returncode": 1,
+      "stdout": "verification results:: 19 verified, 3 errors\n",
+      "stderr": "error: postcondition not satisfied\n  --> /var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-env-attr-controls-3p9xyeje/env_config.rs:47:13\n   |\n43 | pub proof fn recursive_frame(old: Json, new: Json, fuel: nat, k: int)\n   | --------------------------------------------------------------------- at the end of the function body\n...\n47 |     ensures at(merge_value(Some(old), new, fuel).unwrap(), k) == at(old, k)\n   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition\n\nerror: postcondition not satisfied\n   --> /var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-env-attr-controls-3p9xyeje/env_config.rs:185:13\n    |\n184 | pub proof fn object_in_array_keeps_both_keys()\n    | ---------------------------------------------- at the end of the function body\n185 |     ensures at(at(merge_value(Some(object_array(x_obj())), object_array(y_obj()), 4).unwrap(), 0).unwrap(), 1) == Some(Json::Atom(1)),\n    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition\n\nerror: postcondition not satisfied\n   --> /var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-env-attr-controls-3p9xyeje/env_config.rs:191:9\n    |\n188 |   pub proof fn primitive_array_keeps_tail()\n    |   ----------------------------------------- at the end of the function body\n...\n191 | /         at(merge_value(Some(Json::Container { array: true, entries: map![0int => Json::Atom(1), 1int => Json::Atom(2)] }),\n192 | |         Json::Container { array: true, entries: map![0int => Json::Atom(3)] }, 3).unwrap(), 1) == Some(Json::Atom(2))\n    | |_____________________________________________________________________________________________________________________^ failed this postcondition\n\nerror: aborting due to 3 previous errors\n\n"
+    },
+    {
+      "control": "env-always-worker-compile",
+      "model": "env_config.rs",
+      "rejected_at_property": true,
+      "command": [
+        "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus",
+        "/var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-env-attr-controls-3p9xyeje/env_config.rs"
+      ],
+      "returncode": 1,
+      "stdout": "verification results:: 21 verified, 1 errors\n",
+      "stderr": "error: postcondition not satisfied\n   --> /var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-env-attr-controls-3p9xyeje/env_config.rs:152:13\n    |\n151 | pub proof fn loaded_configuration_is_visible(v: int)\n    | ---------------------------------------------------- at the end of the function body\n152 |     ensures generator_visible(compile_single(false), Some(v)) == Some(v),\n    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition\n\nerror: aborting due to 1 previous error\n\n"
+    },
+    {
+      "control": "env-literal-dollar",
+      "model": "env_config.rs",
+      "rejected_at_property": true,
+      "command": [
+        "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus",
+        "/var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-env-attr-controls-3p9xyeje/env_config.rs"
+      ],
+      "returncode": 1,
+      "stdout": "verification results:: 21 verified, 1 errors\n",
+      "stderr": "note: function body check: not all errors may have been reported; rerun with a higher value for --multiple-errors to find other potential errors in this function\n   --> /var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-env-attr-controls-3p9xyeje/env_config.rs:174:1\n    |\n174 | pub proof fn dollar_is_not_literal(whole: Seq<char>, group: Seq<char>)\n    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\nerror: postcondition not satisfied\n   --> /var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-env-attr-controls-3p9xyeje/env_config.rs:176:13\n    |\n174 | pub proof fn dollar_is_not_literal(whole: Seq<char>, group: Seq<char>)\n    | ---------------------------------------------------------------------- at the end of the function body\n175 |     requires group != seq!['$', '1']\n176 |     ensures replacement(seq!['$', '1'], whole, group) == Some(group),\n    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition\n\nerror: postcondition not satisfied\n   --> /var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-env-attr-controls-3p9xyeje/env_config.rs:177:9\n    |\n174 | pub proof fn dollar_is_not_literal(whole: Seq<char>, group: Seq<char>)\n    | ---------------------------------------------------------------------- at the end of the function body\n...\n177 |         replacement(seq!['$', '9'], whole, group).is_none(),\n    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition\n\nerror: aborting due to 2 previous errors\n\n"
+    },
+    {
+      "control": "attr-gate-removed",
+      "model": "attr_evaluator.rs",
+      "rejected_at_property": true,
+      "command": [
+        "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus",
+        "/var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-env-attr-controls-3p9xyeje/attr_evaluator.rs"
+      ],
+      "returncode": 1,
+      "stdout": "verification results:: 48 verified, 2 errors\n",
+      "stderr": "note: function body check: not all errors may have been reported; rerun with a higher value for --multiple-errors to find other potential errors in this function\n   --> /var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-env-attr-controls-3p9xyeje/attr_evaluator.rs:240:1\n    |\n240 | pub proof fn brace_free_macro_is_unchanged(raw: Seq<char>, later: EvalResult)\n    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\nerror: postcondition not satisfied\n   --> /var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-env-attr-controls-3p9xyeje/attr_evaluator.rs:242:13\n    |\n240 | pub proof fn brace_free_macro_is_unchanged(raw: Seq<char>, later: EvalResult)\n    | ----------------------------------------------------------------------------- at the end of the function body\n241 |     requires !raw.contains('{')\n242 |     ensures evaluate(raw, later).value == raw, !evaluate(raw, later).error,\n    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition\n\nerror: postcondition not satisfied\n   --> /var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-env-attr-controls-3p9xyeje/attr_evaluator.rs:242:48\n    |\n240 | pub proof fn brace_free_macro_is_unchanged(raw: Seq<char>, later: EvalResult)\n    | ----------------------------------------------------------------------------- at the end of the function body\n241 |     requires !raw.contains('{')\n242 |     ensures evaluate(raw, later).value == raw, !evaluate(raw, later).error,\n    |                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition\n\nerror: postcondition not satisfied\n   --> /var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-env-attr-controls-3p9xyeje/attr_evaluator.rs:267:9\n    |\n263 | pub proof fn late_error_witness()\n    | --------------------------------- at the end of the function body\n...\n267 |         after_message(evaluate(seq!['$','$','$','O','K'], macro_helper(None))).status_ok {}\n    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition\n\nerror: aborting due to 3 previous errors\n\n"
+    },
+    {
+      "control": "attr-cycle-raises",
+      "model": "attr_evaluator.rs",
+      "rejected_at_property": true,
+      "command": [
+        "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus",
+        "/var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-env-attr-controls-3p9xyeje/attr_evaluator.rs"
+      ],
+      "returncode": 1,
+      "stdout": "verification results:: 49 verified, 1 errors\n",
+      "stderr": "error: postcondition not satisfied\n   --> /var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-env-attr-controls-3p9xyeje/attr_evaluator.rs:186:13\n    |\n186 |     ensures !resolve_bounded(cp, system, order, levels).circular_error\n    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition\n...\n189 |     if levels > 0 { declared_cycle_error_is_unreachable(resolve_pass(cp, system, order), system, order, (levels-1) as nat); }\n    |     ------------------------------------------------------------------------------------------------------------------------- at the end of the function body\n\nerror: aborting due to 1 previous error\n\n"
+    },
+    {
+      "control": "attr-command-ignored",
+      "model": "attr_evaluator.rs",
+      "rejected_at_property": true,
+      "command": [
+        "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus",
+        "/var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-env-attr-controls-3p9xyeje/attr_evaluator.rs"
+      ],
+      "returncode": 1,
+      "stdout": "verification results:: 49 verified, 1 errors\n",
+      "stderr": "note: function body check: not all errors may have been reported; rerun with a higher value for --multiple-errors to find other potential errors in this function\n   --> /var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-env-attr-controls-3p9xyeje/attr_evaluator.rs:146:1\n    |\n146 | pub proof fn parameter_precedence(defaults: Map<int, Seq<char>>, command: Map<int, Seq<char>>, builtin: Map<int, Seq<char>>, k: int)\n    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\nerror: postcondition not satisfied\n   --> /var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-env-attr-controls-3p9xyeje/attr_evaluator.rs:148:13\n    |\n146 | pub proof fn parameter_precedence(defaults: Map<int, Seq<char>>, command: Map<int, Seq<char>>, builtin: Map<int, Seq<char>>, k: int)\n    | ------------------------------------------------------------------------------------------------------------------------------------ at the end of the function body\n147 |     requires defaults.dom().contains(k), command.dom().contains(k)\n148 |     ensures parameters(defaults, command)[k] == command[k],\n    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition\n\nerror: postcondition not satisfied\n   --> /var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-env-attr-controls-3p9xyeje/attr_evaluator.rs:150:9\n    |\n146 | pub proof fn parameter_precedence(defaults: Map<int, Seq<char>>, command: Map<int, Seq<char>>, builtin: Map<int, Seq<char>>, k: int)\n    | ------------------------------------------------------------------------------------------------------------------------------------ at the end of the function body\n...\n150 |         !builtin.dom().contains(k) ==> with_builtins(parameters(defaults, command), builtin)[k] == command[k] {}\n    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition\n\nerror: aborting due to 2 previous errors\n\n"
+    },
+    {
+      "control": "attr-late-error-rolls-back",
+      "model": "attr_evaluator.rs",
+      "rejected_at_property": true,
+      "command": [
+        "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus",
+        "/var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-env-attr-controls-3p9xyeje/attr_evaluator.rs"
+      ],
+      "returncode": 1,
+      "stdout": "verification results:: 48 verified, 2 errors\n",
+      "stderr": "error: postcondition not satisfied\n   --> /var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-env-attr-controls-3p9xyeje/attr_evaluator.rs:256:13\n    |\n254 | pub proof fn failed_message_is_not_rollback(message: EvalResult)\n    | ---------------------------------------------------------------- at the end of the function body\n255 |     requires message.error\n256 |     ensures after_message(message).module, after_message(message).committed,\n    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition\n\nerror: postcondition not satisfied\n   --> /var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-env-attr-controls-3p9xyeje/attr_evaluator.rs:264:13\n    |\n263 | pub proof fn late_error_witness()\n    | --------------------------------- at the end of the function body\n264 |     ensures after_message(evaluate(seq!['{','x','}'], macro_helper(None))).module,\n    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition\n\nerror: aborting due to 2 previous errors\n\n"
+    },
+    {
+      "control": "attr-dot-literal",
+      "model": "attr_evaluator.rs",
+      "rejected_at_property": true,
+      "command": [
+        "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus",
+        "/var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-env-attr-controls-3p9xyeje/attr_evaluator.rs"
+      ],
+      "returncode": 1,
+      "stdout": "verification results:: 49 verified, 1 errors\n",
+      "stderr": "error: postcondition not satisfied\n  --> /var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-env-attr-controls-3p9xyeje/attr_evaluator.rs:66:13\n   |\n65 | pub proof fn dotted_name_is_not_literal()\n   | ----------------------------------------- at the end of the function body\n66 |     ensures name_matches(seq!['a','.','b'], seq!['a','x','b']),\n   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition\n\nerror: aborting due to 1 previous error\n\n"
+    }
+  ],
+  "native_bridge": {
+    "command": [
+      "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus",
+      "/Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/Verus_verification/consolidated/verus/env_native_bridge.rs"
+    ],
+    "returncode": 0,
+    "stdout": "verification results:: 24 verified, 0 errors\n",
+    "stderr": ""
+  },
+  "attr_native_bridge": {
+    "command": [
+      "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus",
+      "/Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/Verus_verification/consolidated/verus/attr_native_bridge.rs"
+    ],
+    "returncode": 0,
+    "stdout": "verification results:: 61 verified, 0 errors\n",
+    "stderr": ""
+  },
+  "native_comparisons": [
+    {
+      "case": "EP1",
+      "match": true,
+      "observed": {
+        "x": 1,
+        "y": 2
+      }
+    },
+    {
+      "case": "EP2",
+      "match": true,
+      "observed": [
+        3,
+        2
+      ]
+    }
+  ],
+  "before_env_EP1": [
+    {
+      "y": 2
+    }
+  ],
+  "after_env_EP1": [
+    {
+      "x": 1,
+      "y": 2
+    }
+  ],
+  "family_checks": [
+    {
+      "family": "environment-config",
+      "runs": [
+        "20261114T033831Z-r5-env",
+        "20261114T033908Z-r5-env-b",
+        "20261114T-env-ported-probes"
+      ],
+      "fields_compared": 42,
+      "as_built_matches": true,
+      "mismatches": [],
+      "variants": {
+        "load-keeps-on-error": {
+          "member": "General/EnvironmentConfig.cls::Load",
+          "wrong": "a failing file keeps what earlier files loaded",
+          "rejected": true,
+          "rejected_by": [
+            {
+              "case": "U3",
+              "field": "ok",
+              "wrong": "0 empty=0 greeting=first x=1 y= list=1,2,3, k=",
+              "observed": [
+                "0 empty=1 greeting= x= y= list= k="
+              ]
+            },
+            {
+              "case": "U4",
+              "field": "ok",
+              "wrong": "0 empty=0 greeting=first x=1 y= list=1,2,3, k=",
+              "observed": [
+                "0 empty=1 greeting= x= y= list= k="
+              ]
+            },
+            {
+              "case": "U5",
+              "field": "ok",
+              "wrong": "0 empty=0 greeting=first x=1 y= list=1,2,3, k=",
+              "observed": [
+                "0 empty=1 greeting= x= y= list= k="
+              ]
+            }
+          ]
+        },
+        "load-array-accepted": {
+          "member": "General/EnvironmentConfig.cls::Load",
+          "wrong": "a JSON array is merged",
+          "rejected": true,
+          "rejected_by": [
+            {
+              "case": "U5",
+              "field": "ok",
+              "wrong": "1 empty=0 greeting=first x=1 y= list=1,2,3, k=",
+              "observed": [
+                "0 empty=1 greeting= x= y= list= k="
+              ]
+            },
+            {
+              "case": "U5",
+              "field": "error",
+              "wrong": "<not produced>",
+              "observed": [
+                "ERROR #5001: Invalid configuration file. Expected a JSON object, not a JSON array"
+              ]
+            }
+          ]
+        },
+        "getarg-error-on-scalar": {
+          "member": "General/EnvironmentConfig.cls::GetArg",
+          "wrong": "a scalar on the path is returned",
+          "rejected": true,
+          "rejected_by": [
+            {
+              "case": "EP4",
+              "field": "scalar-path",
+              "wrong": "[1]",
+              "observed": [
+                "[]"
+              ]
+            }
+          ]
+        },
+        "evaluate-literal-value": {
+          "member": "General/EnvironmentConfig.cls::%EvaluateHelper",
+          "wrong": "the variable value is inserted literally (intended reading)",
+          "rejected": true,
+          "rejected_by": [
+            {
+              "case": "U7",
+              "field": "v",
+              "wrong": "hello u=[] list0=hello d1=a$1b bs=a\\b",
+              "observed": [
+                "hello u=[] list0=hello d1=aCONS_DOLLARb bs=ab"
+              ]
+            },
+            {
+              "case": "U8",
+              "field": "ok",
+              "wrong": "1 empty=0 greeting= x= y= list= k=",
+              "observed": [
+                "0 empty=1 greeting= x= y= list= k="
+              ]
+            },
+            {
+              "case": "U8",
+              "field": "error",
+              "wrong": "<not produced>",
+              "observed": [
+                "ERROR #5002: ObjectScript error: <REGULAR EXPRESSION>ReplaceFirst+3^%Regex.Matcher.1"
+              ]
+            }
+          ]
+        },
+        "evaluate-no-recursion": {
+          "member": "General/EnvironmentConfig.cls::%EvaluateHelper",
+          "wrong": "values inside arrays are not filled",
+          "rejected": true,
+          "rejected_by": [
+            {
+              "case": "U7.setup",
+              "field": "ok",
+              "wrong": "1 empty=0 greeting= x= y= list=${CONS_VAR}, k=",
+              "observed": [
+                "1 empty=0 greeting= x= y= list=hello, k="
+              ]
+            },
+            {
+              "case": "U7",
+              "field": "v",
+              "wrong": "hello u=[] list0=${CONS_VAR} d1=aCONS_DOLLARb bs=ab",
+              "observed": [
+                "hello u=[] list0=hello d1=aCONS_DOLLARb bs=ab"
+              ]
+            }
+          ]
+        },
+        "clear-noop": {
+          "member": "General/EnvironmentConfig.cls::Clear",
+          "wrong": "clear keeps the values",
+          "rejected": true,
+          "rejected_by": [
+            {
+              "case": "U3",
+              "field": "ok",
+              "wrong": "0 empty=0 greeting=first x=1 y=2 list=1,2,3, k=",
+              "observed": [
+                "0 empty=1 greeting= x= y= list= k="
+              ]
+            },
+            {
+              "case": "U4",
+              "field": "ok",
+              "wrong": "0 empty=0 greeting=first x=1 y=2 list=1,2,3, k=",
+              "observed": [
+                "0 empty=1 greeting= x= y= list= k="
+              ]
+            },
+            {
+              "case": "U5",
+              "field": "ok",
+              "wrong": "0 empty=0 greeting=first x=1 y=2 list=1,2,3, k=",
+              "observed": [
+                "0 empty=1 greeting= x= y= list= k="
+              ]
+            }
+          ]
+        },
+        "isempty-always-true": {
+          "member": "General/EnvironmentConfig.cls::IsEmpty",
+          "wrong": "always reports empty",
+          "rejected": true,
+          "rejected_by": [
+            {
+              "case": "U1",
+              "field": "ok",
+              "wrong": "1 empty=1 greeting=first x=1 y= list=1,2,3, k=",
+              "observed": [
+                "1 empty=0 greeting=first x=1 y= list=1,2,3, k="
+              ]
+            },
+            {
+              "case": "U2",
+              "field": "ok",
+              "wrong": "1 empty=1 greeting=second x=1 y=2 list=9,2,3, k=",
+              "observed": [
+                "1 empty=0 greeting=second x=1 y=2 list=9,2,3, k="
+              ]
+            },
+            {
+              "case": "U2r",
+              "field": "ok",
+              "wrong": "1 empty=1 greeting=first x=1 y=2 list=1,2,3, k=",
+              "observed": [
+                "1 empty=0 greeting=first x=1 y=2 list=1,2,3, k="
+              ]
+            }
+          ]
+        },
+        "merge-array-object-replace": {
+          "member": "General/EnvironmentConfig.cls::MergeDynamicObjects",
+          "wrong": "an object at an array position replaces the old object instead of merging recursively",
+          "rejected": true,
+          "rejected_by": [
+            {
+              "case": "EP1",
+              "field": "json",
+              "wrong": "{\"y\":2}",
+              "observed": [
+                "{\"x\":1,\"y\":2}"
+              ]
+            }
+          ]
+        },
+        "merge-arrays-replace": {
+          "member": "General/EnvironmentConfig.cls::MergeDynamicObjects",
+          "wrong": "a later array replaces the earlier one",
+          "rejected": true,
+          "rejected_by": [
+            {
+              "case": "U2",
+              "field": "ok",
+              "wrong": "1 empty=0 greeting=second x=1 y=2 list=9, k=",
+              "observed": [
+                "1 empty=0 greeting=second x=1 y=2 list=9,2,3, k="
+              ]
+            },
+            {
+              "case": "EP1",
+              "field": "json",
+              "wrong": "{\"y\":2}",
+              "observed": [
+                "{\"x\":1,\"y\":2}"
+              ]
+            },
+            {
+              "case": "EP2",
+              "field": "json",
+              "wrong": "[3]",
+              "observed": [
+                "[3,2]"
+              ]
+            }
+          ]
+        },
+        "merge-objects-replace": {
+          "member": "General/EnvironmentConfig.cls::MergeDynamicObjects",
+          "wrong": "a later object replaces the earlier one",
+          "rejected": true,
+          "rejected_by": [
+            {
+              "case": "U2",
+              "field": "ok",
+              "wrong": "1 empty=0 greeting=second x= y=2 list=9, k=",
+              "observed": [
+                "1 empty=0 greeting=second x=1 y=2 list=9,2,3, k="
+              ]
+            },
+            {
+              "case": "U2r",
+              "field": "ok",
+              "wrong": "1 empty=0 greeting=first x=1 y= list=1,2,3, k=",
+              "observed": [
+                "1 empty=0 greeting=first x=1 y=2 list=1,2,3, k="
+              ]
+            },
+            {
+              "case": "U6",
+              "field": "ok",
+              "wrong": "1 empty=0 greeting= x= y= list= k=object",
+              "observed": [
+                "0 empty=1 greeting= x= y= list= k="
+              ]
+            }
+          ]
+        },
+        "merge-object-onto-scalar-ok": {
+          "member": "General/EnvironmentConfig.cls::MergeDynamicObjects",
+          "wrong": "an object replaces an earlier scalar",
+          "rejected": true,
+          "rejected_by": [
+            {
+              "case": "U6",
+              "field": "ok",
+              "wrong": "1 empty=0 greeting= x= y= list= k=object",
+              "observed": [
+                "0 empty=1 greeting= x= y= list= k="
+              ]
+            },
+            {
+              "case": "U6",
+              "field": "error",
+              "wrong": "<not produced>",
+              "observed": [
+                "ERROR #5001: Invalid arguments. Expected two dynamic objects. Got 5 and 9@%Library.DynamicObject"
+              ]
+            }
+          ]
+        },
+        "lec-no-clear": {
+          "member": "Lifecycle/Base.cls::LoadEnvironmentConfig",
+          "wrong": "files are merged onto what the previous call loaded",
+          "rejected": true,
+          "rejected_by": [
+            {
+              "case": "U7.setup",
+              "field": "ok",
+              "wrong": "1 empty=0 greeting= x= y= list=hello, k=5",
+              "observed": [
+                "1 empty=0 greeting= x= y= list=hello, k="
+              ]
+            },
+            {
+              "case": "EP5",
+              "field": "reset.empty",
+              "wrong": "0",
+              "observed": [
+                "1"
+              ]
+            }
+          ]
+        },
+        "lec-no-trim": {
+          "member": "Lifecycle/Base.cls::LoadEnvironmentConfig",
+          "wrong": "paths are not trimmed",
+          "rejected": true,
+          "rejected_by": [
+            {
+              "case": "U2r",
+              "field": "ok",
+              "wrong": "0 empty=1 greeting= x= y= list= k=",
+              "observed": [
+                "1 empty=0 greeting=first x=1 y=2 list=1,2,3, k="
+              ]
+            }
+          ]
+        },
+        "compile-always-multi": {
+          "member": "Utils/LegacyCompat.cls::UpdateSuperclassAndCompile",
+          "wrong": "always compiles in several processes",
+          "rejected": true,
+          "rejected_by": [
+            {
+              "case": "S3",
+              "field": "gen",
+              "wrong": "[] last=[second]",
+              "observed": [
+                "[second] last=[second]"
+              ]
+            },
+            {
+              "case": "S4",
+              "field": "gen",
+              "wrong": "[]",
+              "observed": [
+                "[second]"
+              ]
+            },
+            {
+              "case": "M3",
+              "field": "ipm",
+              "wrong": "1 gen=[]",
+              "observed": [
+                "1 gen=[first]"
+              ]
+            }
+          ]
+        },
+        "singleton-new-each-get": {
+          "member": "General/Singleton.cls::%Get",
+          "wrong": "every %Get returns a new instance",
+          "rejected": true,
+          "rejected_by": [
+            {
+              "case": "S1",
+              "field": "records",
+              "wrong": "[][][]",
+              "observed": [
+                "[first][][]"
+              ]
+            },
+            {
+              "case": "S3",
+              "field": "gen",
+              "wrong": "[second] last=[]",
+              "observed": [
+                "[second] last=[second]"
+              ]
+            }
+          ]
+        }
+      },
+      "contract": [
+        {
+          "name": "an OS variable value is inserted literally",
+          "holds": false,
+          "expected": false,
+          "as_expected": true,
+          "ids": [
+            "C:D14"
+          ],
+          "detail": "hello u=[] list0=hello d1=aCONS_DOLLARb bs=ab"
+        },
+        {
+          "name": "a failing second file keeps the first file's values (one of the plan's policy alternatives)",
+          "holds": false,
+          "expected": false,
+          "as_expected": true,
+          "ids": [
+            "C:Q6"
+          ],
+          "detail": "0 empty=1 greeting= x= y= list= k="
+        },
+        {
+          "name": "a later command in the same shell session sees the earlier -env values",
+          "holds": false,
+          "expected": false,
+          "as_expected": true,
+          "ids": [
+            "plan: environment row"
+          ],
+          "detail": "[first][][]"
+        }
+      ],
+      "members": {
+        "General/EnvironmentConfig.cls::Load": {
+          "slice": "General/EnvironmentConfig.cls:9-32",
+          "fn": "load",
+          "behavior": "missing, malformed or array file raises and clears everything loaded before (U3-U5)",
+          "fn_present": true,
+          "variants_rejected": [
+            "load-keeps-on-error",
+            "load-array-accepted"
+          ],
+          "credited": true
+        },
+        "General/EnvironmentConfig.cls::GetArg": {
+          "slice": "General/EnvironmentConfig.cls:35-48",
+          "fn": "get_arg",
+          "behavior": "nested lookup; a non-object on the path gives empty (U9)",
+          "fn_present": true,
+          "variants_rejected": [
+            "getarg-error-on-scalar"
+          ],
+          "credited": true
+        },
+        "General/EnvironmentConfig.cls::%EvaluateHelper": {
+          "slice": "General/EnvironmentConfig.cls:59-90",
+          "fn": "evaluate_helper",
+          "behavior": "${VAR} from the OS environment, recursively; value inserted as ICU replacement text (U7, U8)",
+          "fn_present": true,
+          "variants_rejected": [
+            "evaluate-literal-value",
+            "evaluate-no-recursion"
+          ],
+          "credited": true
+        },
+        "General/EnvironmentConfig.cls::Clear": {
+          "slice": "General/EnvironmentConfig.cls:92-96",
+          "fn": "clear",
+          "behavior": "resets to empty (U2r, U3)",
+          "fn_present": true,
+          "variants_rejected": [
+            "clear-noop"
+          ],
+          "credited": true
+        },
+        "General/EnvironmentConfig.cls::IsEmpty": {
+          "slice": "General/EnvironmentConfig.cls:98-101",
+          "fn": "is_empty",
+          "behavior": "decides the single-process compile (M3, M4)",
+          "fn_present": true,
+          "variants_rejected": [
+            "isempty-always-true"
+          ],
+          "credited": true
+        },
+        "General/EnvironmentConfig.cls::MergeDynamicObjects": {
+          "slice": "General/EnvironmentConfig.cls:105-129",
+          "fn": "merge",
+          "behavior": "deep merge, arrays by index, scalar replaces object, object onto scalar fails (U2, U6)",
+          "fn_present": true,
+          "variants_rejected": [
+            "merge-array-object-replace",
+            "merge-arrays-replace",
+            "merge-objects-replace",
+            "merge-object-onto-scalar-ok"
+          ],
+          "credited": true
+        },
+        "Lifecycle/Base.cls::LoadEnvironmentConfig": {
+          "slice": "Lifecycle/Base.cls:2188-2200",
+          "fn": "load_environment_config",
+          "behavior": "clears, then loads each ;-separated file in order, trimmed (U2r, S1)",
+          "fn_present": true,
+          "variants_rejected": [
+            "lec-no-clear",
+            "lec-no-trim"
+          ],
+          "credited": true
+        },
+        "Utils/LegacyCompat.cls::UpdateSuperclassAndCompile": {
+          "slice": "Utils/LegacyCompat.cls:36-41",
+          "fn": "compile_list",
+          "behavior": "compiles in one process while a configuration is loaded, so generators see it (M3, M4, S3)",
+          "fn_present": true,
+          "variants_rejected": [
+            "compile-always-multi"
+          ],
+          "credited": true
+        },
+        "General/Singleton.cls::%Get": {
+          "slice": "General/Singleton.cls:36-127",
+          "fn": "singleton_get",
+          "behavior": "the same in-process instance while referenced, so Configure reads what Reload loaded (S1, U10, U11)",
+          "fn_present": true,
+          "variants_rejected": [
+            "singleton-new-each-get"
+          ],
+          "credited": true
+        }
+      },
+      "source_sha256": "bd77b7ecc9204cf1c23814d644540af656d6a8c17cae4ef8fb71fff20a902585"
+    },
+    {
+      "family": "attribute-evaluator",
+      "runs": [
+        "20261114T025636Z-r1-evaluator",
+        "20261114T025551Z-r1-eval-postcommit"
+      ],
+      "fields_compared": 74,
+      "as_built_matches": true,
+      "mismatches": [],
+      "variants": {
+        "regex-escape-dollar": {
+          "member": "Utils/Module.cls::%RegExReplace",
+          "wrong": "escapes $ in the value, so a value with $ is substituted literally",
+          "rejected": true,
+          "rejected_by": [
+            {
+              "case": "E18",
+              "field": "error",
+              "wrong": "<not produced>",
+              "observed": [
+                "<REGULAR EXPRESSION>"
+              ]
+            },
+            {
+              "case": "E35",
+              "field": "error",
+              "wrong": "<not produced>",
+              "observed": [
+                "<REGULAR EXPRESSION>"
+              ]
+            },
+            {
+              "case": "E32",
+              "field": "error",
+              "wrong": "<not produced>",
+              "observed": [
+                "<REGULAR EXPRESSION>"
+              ]
+            }
+          ]
+        },
+        "regex-case-sensitive": {
+          "member": "Utils/Module.cls::%RegExReplace",
+          "wrong": "matches names case-sensitively",
+          "rejected": true,
+          "rejected_by": [
+            {
+              "case": "E04",
+              "field": "value",
+              "wrong": "{$NAMESPACE}",
+              "observed": [
+                "USER"
+              ]
+            },
+            {
+              "case": "E28",
+              "field": "value",
+              "wrong": "USER-{$NAMESPACELOWER}",
+              "observed": [
+                "USER-user"
+              ]
+            }
+          ]
+        },
+        "regex-literal-name": {
+          "member": "Utils/Module.cls::%RegExReplace",
+          "wrong": "treats the parameter name literally (no regex)",
+          "rejected": true,
+          "rejected_by": [
+            {
+              "case": "E21",
+              "field": "value",
+              "wrong": "{$axb}",
+              "observed": [
+                "DOT"
+              ]
+            }
+          ]
+        },
+        "regex-dollar-brace-only": {
+          "member": "Utils/Module.cls::%RegExReplace",
+          "wrong": "supports only ${name}",
+          "rejected": true,
+          "rejected_by": [
+            {
+              "case": "E02",
+              "field": "value",
+              "wrong": "{$namespace}",
+              "observed": [
+                "USER"
+              ]
+            },
+            {
+              "case": "E04",
+              "field": "value",
+              "wrong": "{$NAMESPACE}",
+              "observed": [
+                "USER"
+              ]
+            },
+            {
+              "case": "E05",
+              "field": "value",
+              "wrong": "{$namespaceLower}",
+              "observed": [
+                "user"
+              ]
+            }
+          ]
+        },
+        "sysexpr-no-lower": {
+          "member": "Utils/Module.cls::%EvaluateSystemExpression",
+          "wrong": "has no namespaceLower",
+          "rejected": true,
+          "rejected_by": [
+            {
+              "case": "E05",
+              "field": "value",
+              "wrong": "{$namespaceLower}",
+              "observed": [
+                "user"
+              ]
+            },
+            {
+              "case": "E28",
+              "field": "value",
+              "wrong": "USER-{$NAMESPACELOWER}",
+              "observed": [
+                "USER-user"
+              ]
+            }
+          ]
+        },
+        "sysexpr-mgr-is-install": {
+          "member": "Utils/Module.cls::%EvaluateSystemExpression",
+          "wrong": "mgrDir resolves to the install directory",
+          "rejected": true,
+          "rejected_by": [
+            {
+              "case": "E23",
+              "field": "value",
+              "wrong": "/usr/irissys/",
+              "observed": [
+                "/usr/irissys/mgr/"
+              ]
+            }
+          ]
+        },
+        "macro-skip": {
+          "member": "Utils/Module.cls::%EvaluateMacro",
+          "wrong": "does not expand $$$ macros",
+          "rejected": true,
+          "rejected_by": [
+            {
+              "case": "E12",
+              "field": "value",
+              "wrong": "",
+              "observed": [
+                "1"
+              ]
+            },
+            {
+              "case": "E16",
+              "field": "value",
+              "wrong": "{$x} $$$OK",
+              "observed": [
+                "{$x} 1"
+              ]
+            },
+            {
+              "case": "E17",
+              "field": "value",
+              "wrong": "$$$NoSuchMacroXyz {}",
+              "observed": [
+                " {}"
+              ]
+            }
+          ]
+        },
+        "macro-undefined-kept": {
+          "member": "Utils/Module.cls::%EvaluateMacro",
+          "wrong": "keeps an undefined macro as text",
+          "rejected": true,
+          "rejected_by": [
+            {
+              "case": "E17",
+              "field": "value",
+              "wrong": "$$$NoSuchMacroXyz {}",
+              "observed": [
+                " {}"
+              ]
+            }
+          ]
+        },
+        "macrohelper-swallow": {
+          "member": "Utils/Module.cls::EvaluateMacroHelper",
+          "wrong": "a macro that does not compile yields empty, no error",
+          "rejected": true,
+          "rejected_by": [
+            {
+              "case": "P2txn",
+              "field": "status",
+              "wrong": "OK",
+              "observed": [
+                "ERR"
+              ]
+            },
+            {
+              "case": "P2txn",
+              "field": "error",
+              "wrong": "<not produced>",
+              "observed": [
+                "ERROR #5475: Error compiling routine: %IPM.Generated.MacroEval.  Errors:  %IPM.Generated.MacroEval.cls"
+              ]
+            },
+            {
+              "case": "P2txn",
+              "field": "log.aftermsg",
+              "wrong": "Done {x} ",
+              "observed": [
+                "none"
+              ]
+            }
+          ]
+        },
+        "macrohelper-delete-on-error": {
+          "member": "Utils/Module.cls::EvaluateMacroHelper",
+          "wrong": "removes the generated class even when compilation fails",
+          "rejected": true,
+          "rejected_by": [
+            {
+              "case": "P2txn",
+              "field": "macroclass",
+              "wrong": "0",
+              "observed": [
+                "1"
+              ]
+            }
+          ]
+        },
+        "params-no-override": {
+          "member": "Storage/ModuleSetting/Default.cls::GetCustomParameters",
+          "wrong": "command parameters do not override defaults",
+          "rejected": true,
+          "rejected_by": [
+            {
+              "case": "E07",
+              "field": "value",
+              "wrong": "hello",
+              "observed": [
+                "hi"
+              ]
+            }
+          ]
+        },
+        "evalattr-skip": {
+          "member": "Storage/ModuleSetting/Default.cls::EvaluateAttribute",
+          "wrong": "does not substitute custom parameters",
+          "rejected": true,
+          "rejected_by": [
+            {
+              "case": "E06",
+              "field": "value",
+              "wrong": "${greeting} world",
+              "observed": [
+                "hello world"
+              ]
+            },
+            {
+              "case": "E09",
+              "field": "value",
+              "wrong": "{$packagename}-{$version}",
+              "observed": [
+                "evalmod-1.2.3"
+              ]
+            },
+            {
+              "case": "E18",
+              "field": "error",
+              "wrong": "<not produced>",
+              "observed": [
+                "<REGULAR EXPRESSION>"
+              ]
+            }
+          ]
+        },
+        "resolve-single-pass": {
+          "member": "Storage/ModuleSetting/Default.cls::ResolvePlaceholders",
+          "wrong": "one substitution pass only",
+          "rejected": true,
+          "rejected_by": [
+            {
+              "case": "E19",
+              "field": "value",
+              "wrong": "<not produced>",
+              "observed": [
+                "USER"
+              ]
+            },
+            {
+              "case": "E22",
+              "field": "value",
+              "wrong": "<not produced>",
+              "observed": [
+                "hellox"
+              ]
+            },
+            {
+              "case": "E31",
+              "field": "x",
+              "wrong": "${z} y=end",
+              "observed": [
+                "end y=end"
+              ]
+            }
+          ]
+        },
+        "resolve-raises-on-cycle": {
+          "member": "Storage/ModuleSetting/Default.cls::ResolvePlaceholders",
+          "wrong": "raises the circular-reference error its code names (intended reading)",
+          "rejected": true,
+          "rejected_by": [
+            {
+              "case": "E02",
+              "field": "value",
+              "wrong": "<not produced>",
+              "observed": [
+                "USER"
+              ]
+            },
+            {
+              "case": "E03",
+              "field": "value",
+              "wrong": "<not produced>",
+              "observed": [
+                "USER"
+              ]
+            },
+            {
+              "case": "E04",
+              "field": "value",
+              "wrong": "<not produced>",
+              "observed": [
+                "USER"
+              ]
+            }
+          ]
+        },
+        "resolve-no-system-fallback": {
+          "member": "Storage/ModuleSetting/Default.cls::ResolvePlaceholders",
+          "wrong": "does not resolve system expressions inside parameter values",
+          "rejected": true,
+          "rejected_by": [
+            {
+              "case": "E19",
+              "field": "value",
+              "wrong": "<not produced>",
+              "observed": [
+                "USER"
+              ]
+            }
+          ]
+        },
+        "evaluate-no-early-return": {
+          "member": "Storage/Module.cls::%Evaluate",
+          "wrong": "expands macros even without \"{\"",
+          "rejected": true,
+          "rejected_by": [
+            {
+              "case": "E15",
+              "field": "value",
+              "wrong": "1 no brace",
+              "observed": [
+                "$$$OK no brace"
+              ]
+            },
+            {
+              "case": "P4",
+              "field": "log.aftermsg",
+              "wrong": "Done 1",
+              "observed": [
+                "Done $$$OK"
+              ]
+            }
+          ]
+        },
+        "evaluate-defaults-override-builtins": {
+          "member": "Storage/Module.cls::%Evaluate",
+          "wrong": "a default named version overrides the module version",
+          "rejected": true,
+          "rejected_by": [
+            {
+              "case": "E09",
+              "field": "value",
+              "wrong": "evalmod-9.9.9",
+              "observed": [
+                "evalmod-1.2.3"
+              ]
+            },
+            {
+              "case": "E20",
+              "field": "value",
+              "wrong": "9.9.9",
+              "observed": [
+                "1.2.3"
+              ]
+            }
+          ]
+        },
+        "evaluate-no-name": {
+          "member": "Storage/Module.cls::%Evaluate",
+          "wrong": "does not replace {name}",
+          "rejected": true,
+          "rejected_by": [
+            {
+              "case": "E08",
+              "field": "value",
+              "wrong": "{name}/{NAME}",
+              "observed": [
+                "evalmod/evalmod"
+              ]
+            },
+            {
+              "case": "P1",
+              "field": "log.aftermsg",
+              "wrong": "Done USER {name}",
+              "observed": [
+                "Done USER pc-ok"
+              ]
+            }
+          ]
+        },
+        "expr-error-propagates": {
+          "member": "Storage/Module.cls::%EvaluateExpression",
+          "wrong": "an expression error propagates",
+          "rejected": true,
+          "rejected_by": [
+            {
+              "case": "E13",
+              "field": "value",
+              "wrong": "<not produced>",
+              "observed": [
+                ""
+              ]
+            },
+            {
+              "case": "E14",
+              "field": "value",
+              "wrong": "<not produced>",
+              "observed": [
+                ""
+              ]
+            }
+          ]
+        },
+        "expr-no-strip": {
+          "member": "Storage/Module.cls::%EvaluateExpression",
+          "wrong": "does not strip leading blanks",
+          "rejected": true,
+          "rejected_by": [
+            {
+              "case": "E11",
+              "field": "value",
+              "wrong": "",
+              "observed": [
+                "3"
+              ]
+            }
+          ]
+        },
+        "aftermsg-raw": {
+          "member": null,
+          "wrong": "prints the message unevaluated",
+          "rejected": true,
+          "rejected_by": [
+            {
+              "case": "P1",
+              "field": "log.aftermsg",
+              "wrong": "Done {$namespace} {name}",
+              "observed": [
+                "Done USER pc-ok"
+              ]
+            },
+            {
+              "case": "P2txn",
+              "field": "status",
+              "wrong": "OK",
+              "observed": [
+                "ERR"
+              ]
+            },
+            {
+              "case": "P2txn",
+              "field": "error",
+              "wrong": "<not produced>",
+              "observed": [
+                "ERROR #5475: Error compiling routine: %IPM.Generated.MacroEval.  Errors:  %IPM.Generated.MacroEval.cls"
+              ]
+            }
+          ]
+        },
+        "aftermsg-guarded": {
+          "member": null,
+          "wrong": "an evaluation error is caught and the load succeeds",
+          "rejected": true,
+          "rejected_by": [
+            {
+              "case": "P2txn",
+              "field": "status",
+              "wrong": "OK",
+              "observed": [
+                "ERR"
+              ]
+            },
+            {
+              "case": "P2txn",
+              "field": "error",
+              "wrong": "<not produced>",
+              "observed": [
+                "ERROR #5475: Error compiling routine: %IPM.Generated.MacroEval.  Errors:  %IPM.Generated.MacroEval.cls"
+              ]
+            },
+            {
+              "case": "P2txn",
+              "field": "hist.pc-bad-txn",
+              "wrong": "action:load success:1 committed:1 finalized:1",
+              "observed": [
+                "action:load success:0 committed:1 finalized:1"
+              ]
+            }
+          ]
+        },
+        "aftermsg-before-commit": {
+          "member": null,
+          "wrong": "the message is evaluated before the final commit, so its failure removes the module",
+          "rejected": true,
+          "rejected_by": [
+            {
+              "case": "P2txn",
+              "field": "mod.pc-bad-txn",
+              "wrong": "absent",
+              "observed": [
+                "present version=1.0.0 repo= desc= dev=0"
+              ]
+            },
+            {
+              "case": "P2txn",
+              "field": "hist.pc-bad-txn",
+              "wrong": "action:load success:0 committed:0 finalized:1",
+              "observed": [
+                "action:load success:0 committed:1 finalized:1"
+              ]
+            },
+            {
+              "case": "P2notxn",
+              "field": "mod.pc-bad-notxn",
+              "wrong": "absent",
+              "observed": [
+                "present version=1.0.0 repo= desc= dev=0"
+              ]
+            }
+          ]
+        }
+      },
+      "contract": [
+        {
+          "name": "a circular placeholder reference raises the error the code names",
+          "holds": false,
+          "expected": false,
+          "as_expected": true,
+          "ids": [
+            "C:D3"
+          ],
+          "detail": "0 a=${a} b=${a}"
+        },
+        {
+          "name": "a parameter value containing $ is substituted literally",
+          "holds": false,
+          "expected": false,
+          "as_expected": true,
+          "ids": [
+            "C:D4"
+          ],
+          "detail": "<REGULAR EXPRESSION>"
+        },
+        {
+          "name": "a failed after-install message does not report a committed load as failed",
+          "holds": false,
+          "expected": false,
+          "as_expected": true,
+          "ids": [
+            "P:F-LOAD-4",
+            "G:D13 family"
+          ],
+          "detail": ""
+        }
+      ],
+      "members": {
+        "Utils/Module.cls::%RegExReplace": {
+          "slice": "Utils/Module.cls:2804-2815",
+          "fn": "regex_replace",
+          "behavior": "case-insensitive {$n}/${n} replacement; name is a regex; only backslash escaped in the value (E04, E21, E18, E32)",
+          "fn_present": true,
+          "variants_rejected": [
+            "regex-escape-dollar",
+            "regex-case-sensitive",
+            "regex-literal-name",
+            "regex-dollar-brace-only"
+          ],
+          "credited": true
+        },
+        "Utils/Module.cls::%EvaluateSystemExpression": {
+          "slice": "Utils/Module.cls:2697-2744",
+          "fn": "system_expression",
+          "behavior": "namespace, namespaceLower, mgrDir, ... substitution (E02-E05, E23)",
+          "fn_present": true,
+          "variants_rejected": [
+            "sysexpr-no-lower",
+            "sysexpr-mgr-is-install"
+          ],
+          "credited": true
+        },
+        "Utils/Module.cls::%EvaluateMacro": {
+          "slice": "Utils/Module.cls:2746-2759",
+          "fn": "evaluate_macro",
+          "behavior": "$$$name replaced by its value, undefined -> empty (E12, E16, E17)",
+          "fn_present": true,
+          "variants_rejected": [
+            "macro-skip",
+            "macro-undefined-kept"
+          ],
+          "credited": true
+        },
+        "Utils/Module.cls::EvaluateMacroHelper": {
+          "slice": "Utils/Module.cls:2763-2785",
+          "fn": "macro_helper",
+          "behavior": "compiles %IPM.Generated.MacroEval; a compile error throws and leaves the class (P2)",
+          "fn_present": true,
+          "variants_rejected": [
+            "macrohelper-swallow",
+            "macrohelper-delete-on-error"
+          ],
+          "credited": true
+        },
+        "Storage/ModuleSetting/Default.cls::GetCustomParameters": {
+          "slice": "Storage/ModuleSetting/Default.cls:14-31",
+          "fn": "custom_parameters",
+          "behavior": "module defaults, overridden by command parameters of the same name (E06, E07)",
+          "fn_present": true,
+          "variants_rejected": [
+            "params-no-override"
+          ],
+          "credited": true
+        },
+        "Storage/ModuleSetting/Default.cls::EvaluateAttribute": {
+          "slice": "Storage/ModuleSetting/Default.cls:47-58",
+          "fn": "evaluate_attribute",
+          "behavior": "applies every custom parameter to the attribute (E06, E22)",
+          "fn_present": true,
+          "variants_rejected": [
+            "evalattr-skip"
+          ],
+          "credited": true
+        },
+        "Storage/ModuleSetting/Default.cls::ResolvePlaceholders": {
+          "slice": "Storage/ModuleSetting/Default.cls:63-117",
+          "fn": "resolve_placeholders",
+          "behavior": "fixed point over parameters, local first then system expression; never raises on a cycle (E19, E22, E30, E31, E36)",
+          "fn_present": true,
+          "variants_rejected": [
+            "resolve-single-pass",
+            "resolve-raises-on-cycle",
+            "resolve-no-system-fallback"
+          ],
+          "credited": true
+        },
+        "Storage/Module.cls::%Evaluate": {
+          "slice": "Storage/Module.cls:1833-1870",
+          "fn": "evaluate",
+          "behavior": "returns the value unchanged without \"{\"; built-ins override defaults; {name}; #{expr} (E15, E20, E08, E10)",
+          "fn_present": true,
+          "variants_rejected": [
+            "evaluate-no-early-return",
+            "evaluate-defaults-override-builtins",
+            "evaluate-no-name"
+          ],
+          "credited": true
+        },
+        "Storage/Module.cls::%EvaluateExpression": {
+          "slice": "Storage/Module.cls:1885-1894",
+          "fn": "evaluate_expression",
+          "behavior": "strips leading blanks; an error yields empty (E11, E13, E14)",
+          "fn_present": true,
+          "variants_rejected": [
+            "expr-error-propagates",
+            "expr-no-strip"
+          ],
+          "credited": true
+        }
+      },
+      "source_sha256": "97c7711de1df97a108bfbc3f159bc0fbeb24cf5bfccc19d44ec6ad1c2a448227"
+    }
+  ],
+  "inputs": {
+    ".g5/Verus_verification/consolidated/verus/env_config.rs": "2b54463f30078203d4d6354e42616bac3d80af4493218e5d9d9d89a83b8f882d",
+    ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs": "2fea039cfaf0ac4d1c6d9a0955c81dd80417ce2ae65919899590255756193f53",
+    ".g5/Verus_verification/consolidated/verus/env_native_bridge.rs": "34547e6602120f66f37abb9e8cecd6f5ee2208442cec6930c7482d4946ae05e1",
+    ".g5/Verus_verification/consolidated/verus/attr_native_bridge.rs": "1a8faa6c0076c1b32a3025aad4823425ec6d5d655294b361666696c05d09436c",
+    ".g5/Verus_verification/consolidated/verus/check_env_attr.py": "acc7f1fb7b1f64e78c6c3de0b3f69065ba4972bb344f0782017f33f020a517b9",
+    ".g5/Verus_verification/consolidated/checks/framework.py": "ca399c6ef08e5689fca5ef286538807926e8dd584e2d8b6c2f5346d8df8b9a5c",
+    "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus": "fc13e79bb3c13d93bc05b37e9b1b6518fde7f4687b3d442ce5c6318c5737c668",
+    ".g5/Verus_verification/consolidated/models/env_config.py": "bd77b7ecc9204cf1c23814d644540af656d6a8c17cae4ef8fb71fff20a902585",
+    ".g5/Verus_verification/consolidated/models/attr_evaluator.py": "97c7711de1df97a108bfbc3f159bc0fbeb24cf5bfccc19d44ec6ad1c2a448227",
+    ".g5/Verus_verification/consolidated/native/results/20261114T-env-ported-probes/script.cos": "e2842b2b4495ce46a8f23605db0468f9cedcadb32eb853e81cf8f207e2ede589",
+    ".g5/Verus_verification/consolidated/native/results/20261114T-env-ported-probes/raw.log": "48c37f58c87fd28cd1687a90dff76e561dc926bd0fb13bc7ae8baae33e7cd809",
+    ".g5/Verus_verification/consolidated/native/results/20261114T-env-ported-probes/receipt.json": "8ec18fcac566366cbe979275b134aa31dce1e4ed502f370b9ab4153548263b1c",
+    ".g5/Verus_verification/consolidated/extension/before-models/env_config.py": "e10fcf0ca31ad1d3e507ee0e7fd436d6dd5deed67c7df38cd0d2f29c48986c8c",
+    "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/version.json": "f0a81404365498a667e56090c963b20005f6e8b8d4afd7f2b62222f4027c94ed",
+    "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/vstd.vir": "fb3edb12cec844ce7ac35d4ae34b527fab5168a6335e48bd4c490941a654f040",
+    "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/libvstd.rlib": "f6ac62ee7bfbf7a11343ffacaabae6ec78f93deaa64b49d143bb52c8ac406b61",
+    "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/z3": "edae32f9e37ea4b5bb35310d72f0e352d0dc07626cac4e9e30bc1ea9a5bc8efb",
+    "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/rust_verify": "c528113f59bfdf0fb4d605ad223e038b685e6d611a7e43073482dd59217877d9",
+    ".g5/Verus_verification/consolidated/native/fixtures/c5/a.json": "b0053c2973b00abc933210fbc6eac936bb4131818bfcaefd8f7b51f9752820f9",
+    ".g5/Verus_verification/consolidated/native/fixtures/c5/arr.json": "b998deaa50ab9d0b3c20e0bb99753d542be4b5f05da9c1c2606886e96c814d34",
+    ".g5/Verus_verification/consolidated/native/fixtures/c5/b.json": "f20f8fb9d00b0a317e90ccb4f7ec4c165a6e0f58dd71b75839551d6af19d8589",
+    ".g5/Verus_verification/consolidated/native/fixtures/c5/bad.json": "6f5d7055113b2658b34b29662b248f87c02d66a68778df92feaab76c045bb292",
+    ".g5/Verus_verification/consolidated/native/fixtures/c5/e.json": "e422246fbbdccd2735c8065afa6e3c3e927cf48bac162fc620a7e49f23f1ff67",
+    ".g5/Verus_verification/consolidated/native/fixtures/c5/e9.json": "92380679e21313ea41eec6225dd5ec77142c9e619a91ee6e81b28bf1c6fa3e3d",
+    ".g5/Verus_verification/consolidated/native/fixtures/c5/envmod/module.xml": "59680acee9165e1ef834f5aa1a26196bea64ce5df3680d08fe2a9ee7f3810893",
+    ".g5/Verus_verification/consolidated/native/fixtures/c5/envmod/src/EnvMod/Gen.cls": "d5faf21d274ecda6cb701644299b18d054f1d4d4066be343a10d3a92aab1bfb8",
+    ".g5/Verus_verification/consolidated/native/fixtures/c5/s1.json": "015b0bc3936d1698524205519874a38df2ed3a45840082712b7ef492c6af73b7",
+    ".g5/Verus_verification/consolidated/native/fixtures/c5/s2.json": "982cc4a4255bb8795354bb5b50d29bb65833bf66d00e17e9321944c084f2cb77",
+    ".g5/Verus_verification/consolidated/native/fixtures/env-ported/a.json": "f03b4a8b4bd89949745cd3c93953f4b9599ef1a0b5745e08b03300f849ec9a97",
+    ".g5/Verus_verification/consolidated/native/fixtures/env-ported/b.json": "0e19c1aa50915462bdd73549b1013594e3d61f894087ac29d8f36b392abf5253",
+    ".g5/Verus_verification/consolidated/native/fixtures/env-ported/c.json": "7ec17a5cbc3e0fb31332d658d55bebfcbd4b53d285a62cccee89954e2a19a2e5",
+    ".g5/Verus_verification/consolidated/native/fixtures/env-ported/d.json": "d60e19f40b0a7b89568cefeb5ed1511626f45dcbc33ad8937b5f516feaaafae8",
+    ".g5/Verus_verification/consolidated/native/results/20261114T033831Z-r5-env/script.cos": "15034982cddaf27e1a5ec7455e91aa8462cd74c4b965b7e19958bba49ba87842",
+    ".g5/Verus_verification/consolidated/native/results/20261114T033831Z-r5-env/raw.log": "761bbd6dcb0a3b83916bf5717c4a21d0af462fcca7fb57ba0abb6eaaab4b1f2b",
+    ".g5/Verus_verification/consolidated/native/results/20261114T033831Z-r5-env/receipt.json": "576b3a444faaf1e6576b3f55e215ff4c0a438f89e60d0e88d710240def389ef6",
+    ".g5/Verus_verification/consolidated/native/results/20261114T033908Z-r5-env-b/script.cos": "ba29fb2114f3cd843a9f185bf03809d6033dc723aa0135c32463e582f1b3753c",
+    ".g5/Verus_verification/consolidated/native/results/20261114T033908Z-r5-env-b/raw.log": "fe89a99fc57561ddef6c95a6bbcc77fa2ecb75744445ae2e58e36b1252b2db59",
+    ".g5/Verus_verification/consolidated/native/results/20261114T033908Z-r5-env-b/receipt.json": "49ea0c3e7138940c1743c3def6152a7d84444160c6165da1b9b9bb8c2c717195",
+    ".g5/Verus_verification/consolidated/native/results/20261114T025636Z-r1-evaluator/script.cos": "b91b98f0a358d53d395da3e7cf415b8aa90b2ea2efa76c459d5a07ba7652f075",
+    ".g5/Verus_verification/consolidated/native/results/20261114T025636Z-r1-evaluator/raw.log": "241ab4a742a0289d6066567965fd3522d9361bfa07f1710935291883f22aecb5",
+    ".g5/Verus_verification/consolidated/native/results/20261114T025636Z-r1-evaluator/receipt.json": "c51d6cbe2b270039e7f584b39e8db8541ea3d3c5dc01074ca56f8088325f220c",
+    ".g5/Verus_verification/consolidated/native/results/20261114T025551Z-r1-eval-postcommit/script.cos": "b01271361f07d639a6960643fddbe177765db099410f32f675836095f5a4ed41",
+    ".g5/Verus_verification/consolidated/native/results/20261114T025551Z-r1-eval-postcommit/raw.log": "95d5db9c95880179e321237571a87402155c12dc21035f75320df170148acd9a",
+    ".g5/Verus_verification/consolidated/native/results/20261114T025551Z-r1-eval-postcommit/receipt.json": "142026836bad962959a0a2a2067292799923dc2fcd0126779d3a54dba8db60cd"
+  }
+}

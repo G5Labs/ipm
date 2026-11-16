@@ -1,0 +1,60 @@
+# container: ipm-uplift-iris  image: containers.intersystems.com/intersystems/iris-community:2026.1  at: 2026-11-13T23:42:48Z
+# script: validation/iris/r4/hist/13-final-cleanup.script
+
+Node: 37eecb272560, Instance: IRIS
+
+USER>
+
+LOAD 1
+
+USER>
+
+CMD> repo -n r4hist -delete
+
+CMD< OK
+
+CLEANUP history SQLCODE=0 rows=21
+
+USER>
+
+&sql(DELETE FROM %IPM_General.History WHERE Package = 'rest-demo' OR (ID >= 155 
+^
+AND Package = '' AND CommandString LIKE '%/tmp/uplift/r4/%'))
+<SYNTAX>
+USER>
+
+rest-demo/unnamed rows deleted SQLCODE=
+WRITE !,"rest-demo/unnamed rows deleted SQLCODE=",SQLCODE," rows=",%ROWCOUNT,!
+                                                  ^
+<UNDEFINED> *SQLCODE
+USER>
+
+USER>
+
+USER>
+
+IF $$$defClassDefined("%IPM.Generated.MacroEval") { do $system.OBJ.Delete("%IPM.
+^
+Generated.MacroEval","-d") }
+<SYNTAX>
+USER>
+[32mIPM (zpm)[0m [39m0.10.11-SNAPSHOT[0m
+USER>
+
+
+uplift
+	Source: 		/tmp/uplift/fixtures/repo/*
+	Enabled?		Yes
+	Available?		Yes
+	Use for Snapshots?	Yes
+	Use for Prereleases?	Yes
+	Is Read-Only?		No
+
+USER>
+
+history rows left 4
+
+USER>
+R4 classes: 00
+
+USER>

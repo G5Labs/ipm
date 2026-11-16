@@ -1,0 +1,332 @@
+--- actual-before/.g5/ontology/root.g5.md
++++ iter3/.g5/ontology/root.g5.md
+@@ -2,7 +2,7 @@
+ 
+ IPM installs, updates and removes modules in InterSystems IRIS. A module is a package of ObjectScript code, data, files, web applications and Python dependencies, described by a `module.xml` manifest. IPM gets modules from local folders, archives, git repositories or package registries, installs their dependencies, and keeps a log of every change it makes in each namespace.
+ 
+-This ontology states what IPM is meant to do. It was recovered from the README, CHANGELOG, wiki, command help, issues, pull requests and tests of IPM at commit `571e04a1` (tag `v0.10.11-beta.28`). Loading packages and the transaction history log are covered in depth, because they are the scope of the formal verification. Other capabilities are covered at the level a reader needs to find and rebuild them.
++This ontology states what IPM is meant to do. It was recovered from the README, CHANGELOG, wiki, command help, issues, pull requests and tests of IPM at commit `571e04a1` (tag `v0.10.11-beta.28`). Loading packages and transaction history remain the deepest formal scope. Artifact downloads, resource defaults, deployment, requirements and test selection also have scoped contracts, identified in the [iteration 3 evidence index](../uplift/consolidated/iter3/INDEX.json); other capabilities retain explicit gaps. These recovered commitments remain proposed intent until accepted by their owners.
+ 
+ ## How the parts fit
+ 
+@@ -52,6 +52,7 @@
+ - [Updating](features/update.g5.md) (`update.*`): updating to a newer version and running update steps.
+ - [Uninstalling](features/uninstall.g5.md) (`uninstall.*`): removing modules, dependents, `-recurse`, `-all` and removing IPM itself.
+ - [Dependency resolution and lock files](features/dependencies.g5.md) (`deps.*`): picking dependency versions, conflicts and `module-lock.json`.
++- [Downloading build artifacts](features/artifact-download.g5.md) (`artifact.*`): authenticated and anonymous Artifactory selection, local reuse, copying and archive error boundaries.
+ - [Testing, packaging and publishing](features/build-and-publish.g5.md) (`build.*`): `test`, `package`, `verify`, `publish`, `unpublish` and `makedeployed`.
+ - [Developer tools](features/developer-tools.g5.md) (`devtools.*`): `sync`, `generate`, `init`, `arrange`, `module-version` and scripting commands.
+ - [Inspecting modules](features/inspection.g5.md) (`inspect`): `search`, `list-installed`, `show`, `info` and similar read-only commands.
+--- actual-before/.g5/ontology/concepts/modules.g5.md
++++ iter3/.g5/ontology/concepts/modules.g5.md
+@@ -6,6 +6,7 @@
+ 
+ - **Manifest**: the `module.xml` file that describes a module.
+ - **Resource**: one item a module installs, such as a class, routine, include file, global, file or web application.
++- **Unique resource name**: the key used to prevent two stored resource references from claiming the same item; a processor may supply a key different from the manifest name.
+ - **Resource processor**: the code that installs, compiles and removes one kind of resource.
+ 
+ ## Statements
+@@ -30,6 +31,14 @@
+ 
+ - Resource attributes include `Deploy`, `Directory`, `Preload` and `Scope`.
+ - Processors with special behavior are listed under [resource processors](#module.processor).
++
++<a id="module.resource.identity"></a>
++[D · module.resource.identity]
++
++When saving a module, IPM refuses a new resource reference if its nonempty unique name is already stored, even for the same module. Reusing the stored reference passes this check; the other save checks still apply.
++
++- The check uses the resource's stored identity and unique name, not just the module name. It runs before a deployed-project installer can be called.
++- A refused save can leave changed object fields that were not written to the row. Read the database separately when deciding what survived.
+ 
+ <a id="module.resource.scope"></a>
+ [I · module.resource.scope]
+@@ -90,12 +99,23 @@
+ - `IPMVersion` and `PythonVersion`: the IPM and Python versions it needs.
+ - `SYSNamespace`: the module must be installed in `%SYS`.
+ 
++<a id="module.requirement.values"></a>
++[D · module.requirement.values]
++
++An omitted Health requirement accepts either kind of instance; explicit false excludes Health products, while true requires one. Health true also requires an interoperability-enabled namespace, even with `Interoperability="disabled"`.
++
++- `Interoperability="enabled"` requires an enabled namespace. As built, `disabled` does not require it to be disabled. The tests accept that declaration without an exclusion check.
++- `SYSNamespace="true"` requires the exact `%SYS` namespace. False or omission adds no namespace restriction.
++- The aggregate appends returned errors from its checks in order rather than stopping after the first returned error. A thrown exception may stop later checks. Version parsing, runtime detection and the known SemVer exceptions remain separate dependencies.
++
+ <a id="module.invoke"></a>
+ [I · module.invoke]
+ 
+-`<Invoke>` runs a class method during a lifecycle phase, by default after the Configure phase. If the method returns a status, IPM checks it, and an error fails the phase.
+-
+-- `CustomPhase` makes the method run only when that [custom phase](lifecycle.g5.md#lifecycle.custom) is requested.
++`<Invoke>` runs a class method during a lifecycle phase, by default after Configure. By default IPM checks a declared status return; a returned error then fails the phase.
++
++- Explicit `CheckStatus="0"` discards the return, even for a status method. `CheckStatus="1"` checks the return regardless of its declared type. A thrown exception still fails the invocation. These deprecated overrides are part of the pinned contract.
++
++- A nonempty `CustomPhase` replaces `Phase`. The phase and Before/After side must both match; it does not add a second call in the ordinary phase. See [custom phases](lifecycle.g5.md#lifecycle.custom).
+ 
+ <a id="module.processor"></a>
+ [I · module.processor]
+@@ -105,7 +125,18 @@
+ - `FileCopy`, which copies files or folders ([file copy](#module.processor.file-copy)).
+ - `WebApplication`, which sets up web applications. `CSPApplication` is deprecated.
+ - `CPF`, which merges configuration into the instance.
+-- `SystemSetting`, `ArtifactoryTarball`, unit test and localization processors.
++- `SystemSetting`, [Artifactory downloads](../features/artifact-download.g5.md#artifact), unit test and localization processors.
++
++Processor defaults and processing order are [owned here](#module.processor.defaults).
++
++<a id="module.processor.defaults"></a>
++[D · module.processor.defaults]
++
++A processor copies explicit attributes before applying matching defaults in declaration order. An explicit attribute, including an empty value, protects that property from defaults; without one, a later matching default can replace an earlier default.
++
++- Each default tests its conditions against the processor's current values, including changes from earlier defaults. It must name the same processor class, using its full name or the built-in short form; inheritance alone is not a match.
++- Supplying parameters again reevaluates attributes and defaults. It does not turn a default into an explicit attribute.
++- Named document resources run first, sorted by name without the extension. Equal names keep their declaration order. Path-style and other resources follow in declaration order. The formal contract checks pair ordering and default precedence; a complete sorting refinement and all comparison operators remain open.
+ 
+ <a id="module.processor.file-copy"></a>
+ [I · module.processor.file-copy]
+@@ -137,7 +168,20 @@
+ <a id="module.deployed"></a>
+ [I · module.deployed]
+ 
+-A resource with `Deploy="true"` ships as compiled code without its source. IPM picks the package built for the current IRIS version and platform, and installs deployed code into the database each resource maps to.
++Deployment ships eligible code without its source. An explicit resource `Deploy` value takes precedence over the lifecycle default, unless a named deployment parameter exists on that class: then only parameter value `1` enables deployment, even when the resource says true.
++
++- The normal Module lifecycle defaults to false; DeployedModule defaults to true. The class parameter override applies only to an existing class with that parameter.
++- Built-in compiled-only deployment applies to classes and MAC/INT routines. Include files and other types keep their source form unless their own processor handles deployment. IPM picks the package built for the current IRIS version and platform and installs code into each resource's mapped database.
++- Loading a deployed project has separate [eligibility and retry rules](#module.deployed.project-load).
++
++<a id="module.deployed.project-load"></a>
++[D · module.deployed.project-load]
++
++A deployed resource loads from the module's Studio project only when its type is deployable or its name is a path, the project file exists, and the resource is neither generated nor preloaded. Otherwise the ordinary source path remains in use.
++
++- IPM sets the object's Deployed flag before attempting its save. If save fails, the database row can remain false while the object says true, and the installer is not called. After save succeeds, a corrupt-project install error can leave the stored flag true; neither flag proves installation.
++- A process-local marker is set only after successful project installation. Other resources using that path then skip the installer. Failure leaves no success marker, so a later attempt may retry. Provider writes before failure are not assumed atomic. A fresh duplicate resource reference can cause the earlier save to fail; [reusing its stored identity](#module.resource.identity) is a different input.
++- Packaging's project check has a different purpose: it removes missing project items and can return success after doing so. Check success alone does not establish that every requested item remains in the project.
+ 
+ <a id="module.python"></a>
+ [I · module.python]
+@@ -202,7 +246,7 @@
+ 
+ ## Metadata
+ 
+-Source locators follow the conventions on the [root page](../root.g5.md#how-to-read-this-ontology). Inventory IDs refer to [A1](../../uplift/ipm-verus-20261113/A/intent-inventory.md) and [A2](../../uplift/ipm-verus-20261113/A/operation-inventory.md). These blocks are outside the formal scope.
++Source locators follow the conventions on the [root page](../root.g5.md#how-to-read-this-ontology). Inventory IDs refer to [A1](../../uplift/ipm-verus-20261113/A/intent-inventory.md) and [A2](../../uplift/ipm-verus-20261113/A/operation-inventory.md). Only explicitly indexed clauses have iteration 3 formal contracts. Source links alone supply no proof.
+ 
+ ### module
+ 
+@@ -225,7 +269,7 @@
+ - human-provided
+ - user-facing-behavior
+ - Expands: [Module](#module).
+-- Children: [scope](#module.resource.scope).
++- Children: [scope](#module.resource.scope), [stored identity](#module.resource.identity).
+ 
+ Sources: `wiki/03` L279-343; `wiki/00` L5-7. Inventory: CAT-02. `wiki/03` L302 misdescribes `Deploy` as not shipped. It means shipped as compiled code ([deployed code](#module.deployed)).
+ 
+@@ -292,6 +336,7 @@
+ - user-facing-behavior
+ - test-coverage
+ - Expands: [Module](#module).
++- Children: [requirement values](#module.requirement.values).
+ 
+ Sources: `wiki/03` L260-272; CHANGELOG 0.9.0 (`#364`), 0.10.0 (`#469`), 0.10.4 (`#874`), 0.10.10 (`#106`). Inventory: CAT-05; OP-LOAD-12. Tests: `VersionReq.cls` (`IPMVersion`, `PythonVersion`), `SystemRequirements.cls`, `Health.cls`, `Interoperability.cls`. When the check runs is open ([timing](../features/load.g5.md#load.refusal.requirements.timing)). `wiki/03` L267 dates `IPMVersion` to 0.9.0, CHANGELOG says 0.10.0.
+ 
+@@ -300,6 +345,8 @@
+ - human-provided
+ - user-facing-behavior
+ - Expands: [Module](#module).
++
++Iteration 3: [Invoke contracts](../../Verus_verification/consolidated/iter3/public_repairs.rs), `invoke_ok` and `invoke_selected`, with native checked/unchecked returned-error neighbors in [the index](../../uplift/consolidated/iter3/INDEX.json). Dictionary return type and argument evaluation are source bindings, not implementation proofs.
+ 
+ Sources: `wiki/03` L345-362; CHANGELOG 0.10.0 (`#530`), 0.10.5 (`#828`). Inventory: CAT-06. Tests: `Invoke.cls`, `CustomPhase.cls`. `wiki/03` L359 gives a stale `CheckStatus` default. Observed: an Invoke that returns an error leaves its phase's history entry open ([returned errors](../features/history.g5.md#history.phases.returned-errors)).
+ 
+@@ -340,6 +387,8 @@
+ - test-coverage
+ - Expands: [Module](#module).
+ 
++Children: [project loading](#module.deployed.project-load). Iteration 3 Verus `resources.rs::deploy` and `deployment_precedence` derive class-parameter override and lifecycle defaults; actual native calls distinguish parameter false, resource true, Module and DeployedModule.
++
+ Sources: `wiki/05`; CHANGELOG 0.10.0 (`#754`), 0.10.4 (`#815`), 0.10.10 (`#1158`), 0.10.11 (`#1242`, `#1279`, `#1125`). Inventory: CAT-34. Tests: `DeployedItems.cls`, `DeployedPackageLoad.cls`, `OrasDeployedPlatformFilter.cls`. `wiki/05` L22-67 is stale about plain loads and removed phases.
+ 
+ ### module.python
+@@ -397,3 +446,31 @@
+ - Expands: [CPF effects](#module.processor.cpf-effects).
+ 
+ Authority remains open; source observation and checked alternatives are in the parent. Arbitrary CPF compensation has not been designed or implemented.
++
++### module.requirement.values
++
++- agent
++- Expands: [System requirements](#module.requirement).
++
++Sources: `Storage/SystemRequirements.cls::{CheckRequirements,CheckHealth,CheckInteroperability,CheckSYSNamespace}`; tests `Health.cls`, `Interoperability.cls`, `SystemRequirements.cls`. Verus `resources.rs::{requirement_failures,requirement_neighbors}`. Native environment-subclass probes exercise the unmodified check bodies, not every product variant or version expression.
++
++### module.processor.defaults
++
++- agent
++- Expands: [Resource processors](#module.processor).
++
++Sources: `ResourceProcessor/Abstract.cls::{%OnNew,SetParams,CopyAttributes,ApplyDefaults,CopyDefaultAttributes,SatisfiesCondition}`; `Storage/Module.cls::GetOrderedResourceList`. Verus `resources.rs::{defaults_step,apply_defaults,ordered_before,chained_defaults_and_last_writer,explicit_default_is_protected,resource_order}`. Defaults use literal equality conditions in the checked native/formal group; expression conversion, other condition operators and full list ordering are residuals.
++
++### module.deployed.project-load
++
++- agent
++- Expands: [Deployment](#module.deployed).
++
++Sources: `ResourceProcessor/Default/Document.cls::{OnPhase,LoadFromDeployedProject}`; `Lifecycle/Base.cls::%Export`; native `%Studio.Project.Check` contract and item counts. Verus `resources.rs::{load_project,check_project,load_project_boundaries,project_check_prunes_missing}`. Native receipts distinguish reused-reference installer error (object=true, SQL=true, marker absent) from fresh-duplicate save refusal (object=true, SQL=false, installer not reached). Success-marker installation is source/formal only. No proof of installer atomicity.
++
++### module.resource.identity
++
++- agent
++- Expands: [Resources](#module.resource).
++
++Sources: `Storage/Module.cls::%OnValidateObject`; `Storage/ResourceReference.cls` unique-name property/index. Verus `resources.rs::{resource_save_allowed,project_database,resource_identity_and_database_reader}`. Native reused-reference corrupt-install error leaves stored Deployed=true; a fresh duplicate reference instead fails validation with object=true and SQL row=false. These probes distinguish the two actual error origins. Other module-save guards remain separate obligations.
+--- actual-before/.g5/ontology/concepts/repositories.g5.md
++++ iter3/.g5/ontology/concepts/repositories.g5.md
+@@ -30,7 +30,9 @@
+ <a id="repo.search-order"></a>
+ [I · repo.search-order]
+ 
+-IPM searches all enabled repositories for a module, in the order they were created. A `<repo>/<module>` prefix limits the search to one repository.
++IPM searches enabled repositories for a module, in the order they were created. A `<repo>/<module>` prefix limits the search to one repository.
++
++- A request containing keywords skips filesystem repositories; ordinary name searches can use them. This filter applies even when that filesystem repository is explicitly named.
+ 
+ - IPM takes the highest version that satisfies the request, whichever repository offers it.
+ - When several repositories offer that version, the one created first wins. A repository's sort position does not change this.
+@@ -148,6 +150,9 @@
+ 
+ Extension Verus: [temp_repo.rs::select](../../Verus_verification/consolidated/verus/temp_repo.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
+ 
++Iteration 3 search repair: `Repo/Manager.cls::SearchRepositoriesForModule` and `Repo/SearchCriteria.cls`; Verus `public_repairs.rs::repo_visited` and `search_neighbors`. Native same-repository search finds the seeded module by name and returns no result after adding a keyword. This changes no prior version/tie rule; command-local rejected-credential suppression remains a separate gate.
++
++
+ ### repo.read-only
+ 
+ - human-provided
+--- actual-before/.g5/ontology/concepts/settings.g5.md
++++ iter3/.g5/ontology/concepts/settings.g5.md
+@@ -25,6 +25,21 @@
+ | `SemVerPostRelease` | `0` | How `x.y.z-w` is ordered ([post-release](../concepts/versions.g5.md#version.post-release)). |
+ | `TerminalPrompt` | | What the shell prompt shows. |
+ | `TestReportFormat` | | Default format of test summaries. |
++
++<a id="settings.writes"></a>
++[D · settings.writes]
++
++A setting write with overwrite disabled keeps a nonempty current value. An absent or empty current value still accepts the write, and later writes preserve the first stored default even when the current value is cleared.
++
++- This describes the low-level writer. It does not remove the known `config delete` defect: most keys restore that first value rather than a factory default. TestReportFormat and ModuleRoot have explicit reset rules.
++
++<a id="settings.report-format"></a>
++[D · settings.report-format]
++
++The TestReportFormat setter accepts empty, JSON, YAML and TOON without regard to case and stores the supplied spelling. An invalid value returns an error before writing, preserving both the current value and its first default.
++
++- Empty selects legacy output. This setter validates before applying the overwrite rule; an invalid value is still an error when overwrite is disabled.
++- ModuleRoot's path normalization, directory creation and write-access checks are different rules. No validation guarantee for another key follows from this format setter.
+ 
+ <a id="settings.default-modifiers"></a>
+ [I · settings.default-modifiers]
+@@ -55,7 +70,7 @@
+ - human-provided
+ - user-facing-behavior
+ - test-coverage
+-- Children: [default modifiers](#settings.default-modifiers), [install flags](#settings.install-flags), [analytics](#settings.analytics).
++- Children: [writes](#settings.writes), [report format](#settings.report-format), [default modifiers](#settings.default-modifiers), [install flags](#settings.install-flags), [analytics](#settings.analytics).
+ 
+ Sources: `wiki/02` L93-141; `Main.cls:210-220`; CHANGELOG 0.9.0 (`#224`); `preload/cls/IPM/Installer.cls:110-124`. Inventory: CAT-26; A2 1.2 row 15 (`Main:Config`, `%IPM.Repo.UniversalSettings`), OP-HIST-22. Tests: `Unit/CLI.cls` `TestReportFormatConfiguration`, `ModuleRoot.cls`. Observed: settings are stored in `^IPM.settings` in `%SYS`, so they apply to the whole instance. Confirmed product defect B2 D5: `delete` restores the first value ever set, not the built-in default, so `config delete HistoryRetain` can leave retention on (case F0; `20261113T184628Z-repro-config-delete-retain`; also seen after `20261113T182514Z-suite-test-CLI`).
+ 
+@@ -82,3 +97,17 @@
+ - Expands: [Settings](#settings).
+ 
+ Sources: `Main.cls:211-215`; `wiki/02` L111, L124-138. Inventory: CAT-40; OP-LOAD-18 (`CollectAnalytics`). Observed: installs from a remote registry report their outcome to the registry and to Google Analytics when enabled (`Repo/Remote/PackageService.cls:201-272`). The data sent is not documented.
++
++### settings.writes
++
++- agent
++- Expands: [Settings](#settings).
++
++Sources: `Repo/UniversalSettings.cls::{SetValue,GetValue,GetDefaultValue,ResetToDefault}`. Verus `public_repairs.rs::{set_value,setting_neighbors}`. Native nonempty refusal, empty acceptance and first-default persistence are distinct observations. Cross-process concurrency and failed storage writes remain open.
++
++### settings.report-format
++
++- agent
++- Expands: [Settings](#settings).
++
++Sources: `Repo/UniversalSettings.cls::{SetTestReportFormat,GetTestReportFormat,UpdateOne}`; `%IPM.Test.Abstract.VALIDFORMATS`. Verus `public_repairs.rs::{lower,format_valid,set_format,setting_neighbors}`. Native `JsOn`, invalid refusal and spelling retention are checked. This is the persistent setter, not the later renderer's supported-format contract.
+--- actual-before/.g5/ontology/features/build-and-publish.g5.md
++++ iter3/.g5/ontology/features/build-and-publish.g5.md
+@@ -17,7 +17,16 @@
+ <a id="build.test"></a>
+ [I · build.test]
+ 
+-`test <module>` runs the module's unit tests in the current namespace. Test-scoped resources and dependencies load for this phase only.
++`test <module>` runs the module's unit tests in the current namespace. Test-scoped resources and dependencies load for this phase only. Resource targets and selector precedence follow [test selection](#build.test.selection).
++
++<a id="build.test.selection"></a>
++[D · build.test.selection]
++
++A test resource must declare exactly one of Class and Package. Its phase list matches phase names without regard to case; a Class resource ignores Suite and Case path selectors.
++
++- A Package resource uses Suite if that key is defined, otherwise Case. Suite slashes become dots. Even a defined empty Suite takes precedence over Case and leaves path filtering off.
++- Package selection compares raw prefixes in either direction, so package `A` can be selected by `AB`. Changed-class ownership is stricter: it accepts `A` or `A.` followed by a class name, and rejects `AB`.
++- These are two different readers. Selecting a test resource does not establish that sync assigns a changed class to it, and converting a file path does not itself establish class ownership.
+ 
+ <a id="build.test-output"></a>
+ [I · build.test-output]
+@@ -35,11 +44,20 @@
+ <a id="build.package"></a>
+ [I · build.package]
+ 
+-`package <module>` exports the module and bundles it into a `.tgz` archive.
++`package <module>` exports the module and bundles it into a `.tgz` archive. A deployed-item helper currently has a known [error propagation gap](#build.package.deployed-status).
+ 
+ - `-path` sets where the archive goes, and only the archive is left there.
+ - `-export-deps` controls whether dependencies are included, and `-export-python-deps` adds Python dependencies.
+ - Test-scoped resources are left out unless `-include-tests` or `<IncludeTests>` is set.
++
++<a id="build.package.deployed-status"></a>
++[D · build.package.deployed-status]
++
++As built, the document exporter overwrites the deployed-item helper's returned error with success before deciding whether to export source. A successful source fallback can therefore hide that earlier error; a source-export error still fails the operation.
++
++- The actual inherited exporter was exercised with a controlled failing helper override and a real successful source export. This confirms C:D19's local status suppression, not an ordinary default-helper failure in a complete package command.
++- The later Studio project check is an independent reader. It removes missing items and may return success with fewer items, so it is not proof that a discarded item or helper error will be caught. Source files, final project contents and command status must be assessed separately.
++- The proposed repair is to preserve the helper status. It has not been applied to the product. An error after a provider's partial write may leave that write; no compensation is inferred.
+ 
+ <a id="build.verify"></a>
+ [I · build.verify]
+@@ -58,7 +76,7 @@
+ <a id="build.makedeployed"></a>
+ [I · build.makedeployed]
+ 
+-`makedeployed <module>` turns resources marked `Deploy="true"` into compiled-only code. `-recurse` does the same for the module's dependencies.
++`makedeployed <module>` turns eligible resources selected by the [deployment rules](../concepts/modules.g5.md#module.deployed) into compiled-only code. A class deployment parameter can override `Deploy="true"`. `-recurse` also considers the module's dependencies.
+ 
+ <a id="build.publish.partial-effects"></a>
+ [D · build.publish.partial-effects]
+@@ -158,3 +176,17 @@
+ - Expands: [Test output](#build.test-output).
+ 
+ Sources: `Test/Abstract.cls::BuildResultTree`, `::GetSummary`; `Test/JsonOutput.cls`; `Lifecycle/Base.cls::%Verify`. [Verus state and reader projections](../../Verus_verification/consolidated/iter2/readers.rs); [actual seeded native readers](../../uplift/consolidated/iter2/native/receipt.json). Full serialization, namespace lifecycle and all format branches remain open.
++
++### build.test.selection
++
++- agent
++- Expands: [Testing](#build.test).
++
++Sources: `ResourceProcessor/Test.cls::{TestsShouldRun,%OnValidateObject,OwnsClassName,OnSync}`. Verus `public_repairs.rs::{test_selected,valid_test_target,owns_class,test_neighbors}`. Native Class ignore, phase case, raw-prefix, dot-boundary and empty-Suite contrasts are in [the iteration 3 index](../../uplift/consolidated/iter3/INDEX.json). Relative-path conversion remains a separate source-only boundary; no complete test-run or sync lifecycle proof.
++
++### build.package.deployed-status
++
++- agent
++- Expands: [Packaging](#build.package).
++
++Sources: `ResourceProcessor/Default/Document.cls::{OnExportItem,OnExportDeployedItem}`; `Storage/Module.cls::AddItemToProject`; `Lifecycle/Base.cls::{ExportSingleModule,%Export}`; native `%Studio.Project.Check` documentation and observations. Verus `resources.rs::{export_item,final_export,check_project,overwritten_error_and_final_reader,project_check_prunes_missing}`. The final checker status remains an explicit provider result; only its missing-item pruning is modeled. [C:D19](../../uplift/consolidated/BUGS.md) and [repair proposal C:S13](../../uplift/consolidated/DESIGN-SIMPLIFICATIONS.md) retain that limit.

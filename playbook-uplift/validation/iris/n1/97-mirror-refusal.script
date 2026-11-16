@@ -1,0 +1,5 @@
+zn "%SYS"
+kill p set sc1=##class(Security.Services).Get("%Service_Mirror",.p) set p("Enabled")=1 set sc1=##class(Security.Services).Modify("%Service_Mirror",.p)
+kill mi set mi("UseSSL")=0, mi("ECPAddress")="mira", mi("MirrorAddress")="mira", mi("AgentAddress")="mira" set sc2=##class(SYS.Mirror).CreateNewMirrorSet("UPLIFTMIR","MIRA",.mi)
+write !,"OBS|nc-mirror-license-refused|licensePlatform=",$system.License.KeyPlatform(),";serviceEnable=",$translate($select(sc1=1:"OK",1:$system.Status.GetErrorText(sc1)),";|=",",/:"),";createMirrorSet=",$translate($select(sc2=1:"OK",1:$system.Status.GetErrorText(sc2)),";|=",",/:"),";isMember=",$system.Mirror.IsMember(),";isPrimary=",$system.Mirror.IsPrimary(),";",!
+halt

@@ -1,0 +1,74 @@
+[
+  {
+    "member": "ResourceProcessor/FileCopy.cls::OnBeforePhase",
+    "family": "thin_surfaces",
+    "round": "E5",
+    "kind": "Verus-native",
+    "slice": "ResourceProcessor/FileCopy.cls:38-64",
+    "model_ref": ".g5/Verus_verification/consolidated/verus/thin_surfaces.rs::copies_before",
+    "behavior": "Only nondeferred, nonempty-target Activate copies at the before hook; a later Activate error does not undo copied file.",
+    "check_receipt": "verus/results/thin_surfaces.json",
+    "verdict": "pass",
+    "control": "erase-deferred-before"
+  },
+  {
+    "member": "ResourceProcessor/FileCopy.cls::DoCopy",
+    "family": "thin_surfaces",
+    "round": "E5",
+    "kind": "Verus-native",
+    "slice": "ResourceProcessor/FileCopy.cls:160-200",
+    "model_ref": ".g5/Verus_verification/consolidated/verus/thin_surfaces.rs::file_copy_observation",
+    "behavior": "File-branch source/admission failure returns error; filesystem effects and target-directory creation are independent of DB rollback; erroring OS copy may leave partial target effects.",
+    "check_receipt": "verus/results/thin_surfaces.json",
+    "verdict": "pass",
+    "control": "ignore-file-admission-error"
+  },
+  {
+    "member": "ResourceProcessor/FileCopy.cls::OnPhase",
+    "family": "thin_surfaces",
+    "round": "E5",
+    "kind": "Verus-native",
+    "slice": "ResourceProcessor/FileCopy.cls:216-243",
+    "model_ref": ".g5/Verus_verification/consolidated/verus/thin_surfaces.rs::clean_removes",
+    "behavior": "Clean preserves KeepOnUninstall targets and protected directories; unprotected single file is removed when keep is false.",
+    "check_receipt": "verus/results/thin_surfaces.json",
+    "verdict": "pass",
+    "control": "erase-keep-on-clean"
+  },
+  {
+    "member": "Repo/Oras/PackageService.cls::IsAvailable",
+    "family": "thin_surfaces",
+    "round": "E5",
+    "kind": "Verus-native",
+    "slice": "Repo/Oras/PackageService.cls:93-109",
+    "model_ref": ".g5/Verus_verification/consolidated/verus/thin_surfaces.rs::oras_available",
+    "behavior": "Transport success plus 2xx or 401 with WWW-Authenticate means registry available; 401 without challenge and403 do not. Availability is distinct from authorization/pull success.",
+    "check_receipt": "verus/results/thin_surfaces.json",
+    "verdict": "pass",
+    "control": "401-without-challenge-available"
+  },
+  {
+    "member": "ResourceProcessor/Test.cls::ReportTestResults",
+    "family": "thin_surfaces",
+    "round": "E5",
+    "kind": "Verus-native",
+    "slice": "ResourceProcessor/Test.cls:240-298",
+    "model_ref": ".g5/Verus_verification/consolidated/verus/thin_surfaces.rs::report_result",
+    "behavior": "Full file export precedes summary format validation; completed JSON file can remain despite an unknown summary format error; valid summary format succeeds.",
+    "check_receipt": "verus/results/thin_surfaces.json",
+    "verdict": "pass",
+    "control": "erase-summary-failure"
+  },
+  {
+    "member": "General/ModuleSummary.cls::Show",
+    "family": "thin_surfaces",
+    "round": "E5",
+    "kind": "Verus-native",
+    "slice": "General/ModuleSummary.cls:9-31",
+    "model_ref": ".g5/Verus_verification/consolidated/verus/thin_surfaces.rs::inspection_choice",
+    "behavior": "Name lookup has precedence, ExternalName is fallback; missing both yields error and inspection preserves installed record identity/version.",
+    "check_receipt": "verus/results/thin_surfaces.json",
+    "verdict": "pass",
+    "control": "erase-external-name-lookup"
+  }
+]

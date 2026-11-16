@@ -1,0 +1,13 @@
+# Iteration 8 trust and boundaries
+
+Proofs are hand-written Verus contracts with no assume/admit/external_body. They do not directly verify ObjectScript. Paths are normalized segment sequences, properties use named keys, and literal/{$cspdir} declarations are PathExpr values. Native XML inspection validates the chosen representation; a full XML/expression parser is not proved. Providers supply filesystem normalization/copying, app state, pip success, registry payload transport and parsed version/platform metadata.
+
+Generation derives authentication, prompted JWT precedence, file-app selection, root substitution and FileCopy target. The per-file copy contract preserves a selected source payload; a general recursive filesystem implementation is not proved. Package export distinguishes configuration from database documents. Reinstall derives the Path from the archived declaration and current CSP root. Registry key and manifest identity are independent outputs.
+
+Catalog sorting/range filtering is proved for major-only release versions after range parsing; full semver and tag decoding remain inherited/open. Compatibility is computed from raw deployed metadata and reported platform sets, not a supplied compatibility boolean. Native current/incompatible platform tags exercise real list, download, install and callable payload readers. Multi-version mixed-platform dependency resolution is not claimed.
+
+Explicit wheels compute their path and phase/status behavior; bypass only gates requirements processing. The native fixture copies a product wheel and uses --no-index --no-deps with an intentionally unavailable requirement skipped by bypass, so it needs no package-index network. Pip and importlib are native dependency boundaries; Python installation is not claimed transactional, nor is cleanup claimed to remove shared packages. IPM's warning path is exercised with the actual processor, an absent local wheel and module identity zpm.
+
+The registry is a fresh digest-pinned zot container on a fresh private Docker network without exposed host ports. It and the fresh IRIS container are removed after each run. Product source trees are hashed against the pinned image before probes. Source-binding corrections remain explicit; exact method declarations are now checked in addition to old token checks.
+
+Final audit correction: after a pip call fails, Wheel.installed is None (physical presence is unconfirmed), allowing partial installation. Missing-file refusal, which never calls pip, retains the prior known presence. The additional negative control rejects treating a pip error as rollback; no new native pip-partial-failure world was run. The prior verified iteration8 checkpoint remains preserved externally as checkpoint-a.

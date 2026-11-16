@@ -1,0 +1,8 @@
+from pathlib import Path
+import gzip
+p=Path('/tmp/g5-iter3')
+(p/'not-gzip.tgz').write_bytes(b'invalid archive')
+(p/'bad-checksum.tgz').write_bytes(gzip.compress(b'a'+b'\x00'*511+b'\x00'*1024))
+for sub in ['module/assets','activated','export/assets','cache','doc','repo/pkg','project']: (p/sub).mkdir(parents=True,exist_ok=True)
+(p/'repo/pkg/module.xml').write_text('<Export generator="IRIS" version="26"><Document name="g5-iter3-reposearch.ZPM"><Module><Name>g5-iter3-reposearch</Name><Version>1.0.0</Version><Packaging>module</Packaging></Module></Document></Export>')
+for sub,content in {'module/assets/new.txt':'new','activated/old.txt':'old','export/assets/old.txt':'old','export/sibling.txt':'keep','cache/payload.tgz':'old'}.items(): (p/sub).write_text(content)

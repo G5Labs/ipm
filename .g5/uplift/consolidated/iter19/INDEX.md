@@ -1,0 +1,8 @@
+# iter19 scoped evidence index
+
+These are builder cases, not independent holdouts. Proofs verify hand-written specifications. ObjectScript implementation proofs: 0.
+
+| Case | Canonical owner | Contract | Source decisions → consuming readers |
+|---|---|---|---|
+| S19-01 | [repo.filesystem.duplicates](../../../ontology/concepts/repositories.g5.md#repo.filesystem.duplicates) | [duplicates.rs](../../../Verus_verification/consolidated/iter19/duplicates.rs) `key, materialize, add_valid, fold, build, same_key_preserves_pair, distinct_key_inserts_pair, first_row_survives, admission_neighbor, warning_neighbor, logical_key_neighbor` | src/cls/IPM/Repo/Filesystem/Definition.cls::ScanDirectory; src/cls/IPM/Repo/Filesystem/Definition.cls::BuildCache; src/cls/IPM/Repo/Filesystem/Definition.cls::AddCacheItem; src/cls/IPM/Repo/Filesystem/Cache.cls::HandleSaveError → src/cls/IPM/Repo/Filesystem/PackageService.cls::GetModuleManifest; src/cls/IPM/Repo/Filesystem/PackageService.cls::GetModuleDirectory |
+| S19-02 | [repo.filesystem.duplicates](../../../ontology/concepts/repositories.g5.md#repo.filesystem.duplicates) | [duplicates.rs](../../../Verus_verification/consolidated/iter19/duplicates.rs) `lookup, service_manifest, service_directory, stable_selected_source, install_directory, loaded, shown_supplier, listed_for_repository, two_readers_open_same_row, service_neighbor, installation_neighbor, description, installed_root, supplier, installed_version` | src/cls/IPM/Repo/Filesystem/PackageService.cls::GetModuleDirectory; src/cls/IPM/Utils/Module.cls::LoadQualifiedReference; src/cls/IPM/Utils/Module.cls::LoadModuleReference; src/cls/IPM/Utils/Module.cls::LoadNewModule → src/cls/IPM/General/ModuleSummary.cls::GetLines; src/cls/IPM/Main.cls::GetListModules |

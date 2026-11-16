@@ -1,0 +1,43 @@
+verification results:: 4 verified, 2 errors
+note: function body check: not all errors may have been reported; rerun with a higher value for --multiple-errors to find other potential errors in this function
+  --> /Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter9/proofs/controls/ownership.rs/overbroad-cascade.rs:74:1
+   |
+74 | pub proof fn cascade_preserves_other_home(s:Store,k:Key,m:int)
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: postcondition not satisfied
+  --> /Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter9/proofs/controls/ownership.rs/overbroad-cascade.rs:76:10
+   |
+74 | pub proof fn cascade_preserves_other_home(s:Store,k:Key,m:int)
+   | -------------------------------------------------------------- at the end of the function body
+75 |  requires s.steps.contains_key(k),s.steps[k].home!=m
+76 |  ensures delete_module(s,m,true).steps.contains_key(k),delete_module(s,m,true).steps[k]==s.steps[k]
+   |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+note: recommendation not met
+  --> /Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter9/proofs/controls/ownership.rs/overbroad-cascade.rs:76:56
+   |
+76 |  ensures delete_module(s,m,true).steps.contains_key(k),delete_module(s,m,true).steps[k]==s.steps[k]
+   |                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+  --> map.rs:87:12
+   |
+   = note: recommendation not met
+
+error: postcondition not satisfied
+  --> /Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter9/proofs/controls/ownership.rs/overbroad-cascade.rs:76:56
+   |
+74 | pub proof fn cascade_preserves_other_home(s:Store,k:Key,m:int)
+   | -------------------------------------------------------------- at the end of the function body
+75 |  requires s.steps.contains_key(k),s.steps[k].home!=m
+76 |  ensures delete_module(s,m,true).steps.contains_key(k),delete_module(s,m,true).steps[k]==s.steps[k]
+   |                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: assertion failed
+  --> /Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter9/proofs/controls/ownership.rs/overbroad-cascade.rs:88:9
+   |
+88 |  assert(delete_module(moved,1,true).steps.contains_key(key(StepKind::Any)));
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ assertion failed
+
+error: aborting due to 3 previous errors
+

@@ -1,0 +1,485 @@
+# container: ipm-uplift-iris-repo  image: containers.intersystems.com/intersystems/iris-community:2026.1  at: 2026-11-13T18:22:24Z
+# script: validation/iris/repo/71-unin-checks.script
+
+Node: 2e8609ed30a0, Instance: IRIS
+
+USER>
+
+LOAD 1 
+
+USER>
+
+OBS|nc-unin-env-name-case|ExternalNameExists.IPM=1;ExternalNameExists.ZPM=0;ExternalNameExists.Zpm=0;ExternalNameExists.ipm=1;ExternalNameExists.zpm=0;NameExists.IPM=0;NameExists.ZPM=1;NameExists.Zpm=1;NameExists.ipm=0;NameExists.zpm=1;extIndexHasUpperIPM=10;nameIndexFirstSub=ZPM;nameIndexHasUpperZPM=10;storedExternalName=IPM;storedName=zpm;
+
+OBS|nc-unin-env-obj-delete-default|classAfter=absent;dataAfter=11;dataBefore=11;flags=-d;status=ok;
+
+OBS|nc-unin-env-obj-delete-e-flag|classAfter=absent;dataAfter=0;dataBefore=11;flags=-de;status=ok;
+
+>>> load /tmp/uplift/repo/fixtures/nc-web-dep/
+
+Building dependency graph...Done.
+[USER|nc-web-dep]	Initialize START
+[USER|nc-web-dep]	Initialize SUCCESS
+[USER|nc-web-dep]	Reload START (/tmp/uplift/repo/fixtures/nc-web-dep/)
+[USER|nc-web-dep]	Reload SUCCESS
+[nc-web-dep]	Module object refreshed.
+[USER|nc-web-dep]	Validate START
+[USER|nc-web-dep]	Validate SUCCESS
+[USER|nc-web-dep]	Compile START
+[USER|nc-web-dep]	Compile SUCCESS
+[USER|nc-web-dep]	Activate START
+[USER|nc-web-dep]	Configure START
+[USER|nc-web-dep]	Configure SUCCESS
+[USER|nc-web-dep]	Activate SUCCESS
+<<< status=OK
+
+>>> load /tmp/uplift/repo/fixtures/nc-web-top/
+
+Building dependency graph...Done.
+[USER|nc-web-top]	Initialize START
+[USER|nc-web-top]	Initialize SUCCESS
+[USER|nc-web-top]	Reload START (/tmp/uplift/repo/fixtures/nc-web-top/)
+[USER|nc-web-top]	Reload SUCCESS
+[nc-web-top]	Module object refreshed.
+[USER|nc-web-top]	Validate START
+[USER|nc-web-top]	Validate SUCCESS
+[USER|nc-web-top]	Compile START
+[USER|nc-web-top]	Compile SUCCESS
+[USER|nc-web-top]	Activate START
+[USER|nc-web-top]	Configure START
+[USER|nc-web-top]	Configure SUCCESS
+[USER|nc-web-top]	Activate SUCCESS
+<<< status=OK
+
+>>> uninstall nc-web-dep
+
+[USER|nc-web-dep]	Clean START
+[USER|nc-web-dep]	Clean SKIPPED - required by 1 other module. (nc-web-top)
+[USER|nc-web-dep]	Clean SUCCESS
+<<< status=OK
+
+OBS|nc-unin-1-blocked-uninstall|depClass=compiled;depInstalled=1;historyRowsAdded=1;lastHistoryDep=uninstall/success;loadDep=1;loadTop=1;printedCleanSuccess=1;printedNamesTop=1;printedSkipped=1;status=ok;webAfter=0;webBefore=1;
+
+>>> uninstall nc-web-top -force
+
+[USER|nc-web-top]	Clean START
+[USER|nc-web-top]	Unconfigure START
+[USER|nc-web-top]	Unconfigure SUCCESS
+[USER|nc-web-top]	Clean SUCCESS
+<<< status=OK
+
+>>> uninstall nc-web-dep -force
+
+[USER|nc-web-dep]	Clean START
+[USER|nc-web-dep]	Unconfigure START
+[USER|nc-web-dep]	Unconfigure SUCCESS
+[USER|nc-web-dep]	Clean SUCCESS
+<<< status=OK
+
+>>> load /tmp/uplift/repo/fixtures/nc-web-w/
+
+Building dependency graph...Done.
+[USER|nc-web-w]	Initialize START
+[USER|nc-web-w]	Initialize SUCCESS
+[USER|nc-web-w]	Reload START (/tmp/uplift/repo/fixtures/nc-web-w/)
+[USER|nc-web-w]	Reload SUCCESS
+[nc-web-w]	Module object refreshed.
+[USER|nc-web-w]	Validate START
+[USER|nc-web-w]	Validate SUCCESS
+[USER|nc-web-w]	Compile START
+[USER|nc-web-w]	Compile SUCCESS
+[USER|nc-web-w]	Activate START
+[USER|nc-web-w]	Configure START
+[USER|nc-web-w]	Configure SUCCESS
+[USER|nc-web-w]	Activate SUCCESS
+<<< status=OK
+
+>>> nc-web-w clean
+
+[USER|nc-web-w]	Clean START
+[USER|nc-web-w]	Unconfigure START
+[USER|nc-web-w]	Unconfigure SUCCESS
+[USER|nc-web-w]	Clean SUCCESS
+<<< status=OK
+
+OBS|nc-unin-2-clean-own-module|class=compiled;installed=1;load=1;printedCleanSuccess=1;status=ok;unconfigureCalls=1;uninstallHookCalls=1;webAfter=0;webBefore=1;
+
+>>> uninstall nc-web-w -force
+
+[USER|nc-web-w]	Clean START
+[USER|nc-web-w]	Unconfigure START
+[USER|nc-web-w]	Unconfigure SUCCESS
+[USER|nc-web-w]	Clean SUCCESS
+<<< status=OK
+
+>>> load /tmp/uplift/repo/fixtures/nc-purge/
+
+Building dependency graph...Done.
+[USER|nc-purge]	Initialize START
+[USER|nc-purge]	Initialize SUCCESS
+[USER|nc-purge]	Reload START (/tmp/uplift/repo/fixtures/nc-purge/)
+[USER|nc-purge]	Reload SUCCESS
+[nc-purge]	Module object refreshed.
+[USER|nc-purge]	Validate START
+[USER|nc-purge]	Validate SUCCESS
+[USER|nc-purge]	Compile START
+[USER|nc-purge]	Compile SUCCESS
+[USER|nc-purge]	Activate START
+[USER|nc-purge]	Configure START
+[USER|nc-purge]	Configure SUCCESS
+[USER|nc-purge]	Activate SUCCESS
+<<< status=OK
+
+>>> uninstall nc-purge
+
+[USER|nc-purge]	Clean START
+[USER|nc-purge]	Unconfigure START
+[USER|nc-purge]	Unconfigure SUCCESS
+[USER|nc-purge]	Clean SUCCESS
+<<< status=OK
+
+OBS|nc-unin-3-uninstall-plain|class=absent;dataAfter=11;dataGlobal=^NCPurge.ItemD;dataNodeAfter=row1;hookCalls=1;hookParamsPurge=<undef>;hookPurgeArg=0;insert=1;installed=0;load=1;rowsBefore=11;status=ok;
+
+>>> load /tmp/uplift/repo/fixtures/nc-purge/
+
+Building dependency graph...Done.
+[USER|nc-purge]	Initialize START
+[USER|nc-purge]	Initialize SUCCESS
+[USER|nc-purge]	Reload START (/tmp/uplift/repo/fixtures/nc-purge/)
+[USER|nc-purge]	Reload SUCCESS
+[nc-purge]	Module object refreshed.
+[USER|nc-purge]	Validate START
+[USER|nc-purge]	Validate SUCCESS
+[USER|nc-purge]	Compile START
+[USER|nc-purge]	Compile SUCCESS
+[USER|nc-purge]	Activate START
+[USER|nc-purge]	Configure START
+[USER|nc-purge]	Configure SUCCESS
+[USER|nc-purge]	Activate SUCCESS
+<<< status=OK
+
+>>> uninstall nc-purge -purge
+
+[USER|nc-purge]	Clean START
+[USER|nc-purge]	Unconfigure START
+[USER|nc-purge]	Unconfigure SUCCESS
+[USER|nc-purge]	Clean SUCCESS
+<<< status=OK
+
+OBS|nc-unin-3-uninstall-purge|class=absent;dataAfter=11;dataGlobal=^NCPurge.ItemD;dataNodeAfter=row1;hookCalls=1;hookParamsPurge=1;hookPurgeArg=0;insert=1;installed=0;load=1;rowsBefore=11;status=ok;
+
+>>> load /tmp/uplift/repo/fixtures/nc-ghost-a/
+
+Building dependency graph...Done.
+[USER|nc-ghost-a]	Initialize START
+[USER|nc-ghost-a]	Initialize SUCCESS
+[USER|nc-ghost-a]	Reload START (/tmp/uplift/repo/fixtures/nc-ghost-a/)
+[USER|nc-ghost-a]	Reload SUCCESS
+[nc-ghost-a]	Module object refreshed.
+[USER|nc-ghost-a]	Validate START
+[USER|nc-ghost-a]	Validate SUCCESS
+[USER|nc-ghost-a]	Compile START
+[USER|nc-ghost-a]	Compile SUCCESS
+[USER|nc-ghost-a]	Activate START
+[USER|nc-ghost-a]	Configure START
+[USER|nc-ghost-a]	Configure SUCCESS
+[USER|nc-ghost-a]	Activate SUCCESS
+<<< status=OK
+
+>>> load /tmp/uplift/repo/fixtures/nc-ghost-b/
+
+Building dependency graph...Done.
+[USER|nc-ghost-b]	Initialize START
+[USER|nc-ghost-b]	Initialize SUCCESS
+[USER|nc-ghost-b]	Reload START (/tmp/uplift/repo/fixtures/nc-ghost-b/)
+[USER|nc-ghost-b]	Reload SUCCESS
+[nc-ghost-b]	Module object refreshed.
+[USER|nc-ghost-b]	Validate START
+[USER|nc-ghost-b]	Validate SUCCESS
+[USER|nc-ghost-b]	Compile START
+[USER|nc-ghost-b]	Compile SUCCESS
+[USER|nc-ghost-b]	Activate START
+[USER|nc-ghost-b]	Configure START
+[USER|nc-ghost-b]	Configure SUCCESS
+[USER|nc-ghost-b]	Activate SUCCESS
+<<< status=OK
+
+>>> uninstall nc-ghost-a
+
+[USER|nc-ghost-a]	Clean START
+[USER|nc-ghost-a]	Clean SKIPPED - required by 1 other module. (nc-ghost-b)
+[USER|nc-ghost-a]	Clean SUCCESS
+<<< status=OK
+
+>>> uninstall nc-ghost-a
+
+[USER|nc-ghost-a]	Clean START
+[USER|nc-ghost-a]	Unconfigure START
+[USER|nc-ghost-a]	Unconfigure SUCCESS
+[USER|nc-ghost-a]	Clean SUCCESS
+<<< status=OK
+
+OBS|nc-unin-5-unresolvable-dependent|aClass=absent;aInstalled=0;bInstalled=1;control.aInstalled=1;control.skipped=1;control.status=ok;dependentsListed=0;editB=1;graphErrors=1;loadA=1;loadB=1;skipped=0;status=ok;
+
+>>> uninstall nc-ghost-b -force
+
+[USER|nc-ghost-b]	Clean START
+[USER|nc-ghost-b]	Unconfigure START
+[USER|nc-ghost-b]	Unconfigure SUCCESS
+[USER|nc-ghost-b]	Clean SUCCESS
+<<< status=OK
+
+>>> load /tmp/uplift/repo/fixtures/nc-gbl1/
+
+Building dependency graph...Done.
+[USER|nc-gbl1]	Initialize START
+[USER|nc-gbl1]	Initialize SUCCESS
+[USER|nc-gbl1]	Reload START (/tmp/uplift/repo/fixtures/nc-gbl1/)
+[USER|nc-gbl1]	Reload SUCCESS
+[nc-gbl1]	Module object refreshed.
+[USER|nc-gbl1]	Validate START
+[USER|nc-gbl1]	Validate SUCCESS
+[USER|nc-gbl1]	Compile START
+[USER|nc-gbl1]	Compile SUCCESS
+[USER|nc-gbl1]	Activate START
+[USER|nc-gbl1]	Configure START
+[USER|nc-gbl1]	Configure SUCCESS
+[USER|nc-gbl1]	Activate SUCCESS
+<<< status=OK
+
+>>> load /tmp/uplift/repo/fixtures/nc-gbl2/
+
+Building dependency graph...Done.
+[USER|nc-gbl2]	Initialize START
+[USER|nc-gbl2]	Initialize SUCCESS
+[USER|nc-gbl2]	Reload START (/tmp/uplift/repo/fixtures/nc-gbl2/)
+[USER|nc-gbl2]	Reload SUCCESS
+[nc-gbl2]	Module object refreshed.
+[USER|nc-gbl2]	Validate START
+[USER|nc-gbl2]	Validate SUCCESS
+[USER|nc-gbl2]	Compile START
+[USER|nc-gbl2]	Compile SUCCESS
+[USER|nc-gbl2]	Activate START
+[USER|nc-gbl2]	Configure START
+[USER|nc-gbl2]	Configure SUCCESS
+[USER|nc-gbl2]	Activate SUCCESS
+<<< status=OK
+
+>>> uninstall nc-gbl1
+
+[USER|nc-gbl1]	Clean START
+[USER|nc-gbl1]	Unconfigure START
+[USER|nc-gbl1]	Unconfigure SUCCESS
+[USER|nc-gbl1]	Clean SUCCESS
+<<< status=OK
+
+>>> uninstall nc-gbl2
+
+[USER|nc-gbl2]	Clean START
+[USER|nc-gbl2]	Unconfigure START
+[USER|nc-gbl2]	Unconfigure SUCCESS
+[USER|nc-gbl2]	Clean SUCCESS
+<<< status=OK
+
+OBS|nc-unin-6-global-resources|data2After=0;data2Before=10;dataAfter=10;dataBefore=10;installed1=0;installed2=0;load1=1;load2=1;u1.status=ok;u2.status=ok;
+
+>>> load /home/irisowner/zpm/tests/integration_tests/Test/PM/Integration/_data/file-copy-test/fc-keep-on-uninstall/
+
+Building dependency graph...Done.
+[USER|fc-keep-on-uninstall]	Initialize START
+[USER|fc-keep-on-uninstall]	Initialize SUCCESS
+[USER|fc-keep-on-uninstall]	Reload START (/home/irisowner/zpm/tests/integration_tests/Test/PM/Integration/_data/file-copy-test/fc-keep-on-uninstall/)
+[USER|fc-keep-on-uninstall]	Reload SUCCESS
+[fc-keep-on-uninstall]	Module object refreshed.
+[USER|fc-keep-on-uninstall]	Validate START
+[USER|fc-keep-on-uninstall]	Validate SUCCESS
+[USER|fc-keep-on-uninstall]	Compile START
+[USER|fc-keep-on-uninstall]	Compile SUCCESS
+[USER|fc-keep-on-uninstall]	Activate START
+[USER|fc-keep-on-uninstall]	Configure START
+[USER|fc-keep-on-uninstall]	Configure SUCCESS
+[USER|fc-keep-on-uninstall]	Activate SUCCESS
+<<< status=OK
+
+>>> uninstall fc-keep-on-uninstall
+
+[USER|fc-keep-on-uninstall]	Clean START
+[USER|fc-keep-on-uninstall]	Unconfigure START
+[USER|fc-keep-on-uninstall]	Unconfigure SUCCESS
+[USER|fc-keep-on-uninstall]	Clean SUCCESS
+<<< status=OK
+
+OBS|nc-unin-7-control-keep-module|after.dir=1;after.mine.txt=0;after.other.txt=0;after.shared-file.txt=1;after.shared.txt=1;before.dir=1;before.mine.txt=1;before.other.txt=0;before.shared-file.txt=1;before.shared.txt=1;loadKeep=1;status=ok;
+
+>>> load /home/irisowner/zpm/tests/integration_tests/Test/PM/Integration/_data/file-copy-test/fc-keep-on-uninstall/
+
+Building dependency graph...Done.
+[USER|fc-keep-on-uninstall]	Initialize START
+[USER|fc-keep-on-uninstall]	Initialize SUCCESS
+[USER|fc-keep-on-uninstall]	Reload START (/home/irisowner/zpm/tests/integration_tests/Test/PM/Integration/_data/file-copy-test/fc-keep-on-uninstall/)
+[USER|fc-keep-on-uninstall]	Reload SUCCESS
+[fc-keep-on-uninstall]	Module object refreshed.
+[USER|fc-keep-on-uninstall]	Validate START
+[USER|fc-keep-on-uninstall]	Validate SUCCESS
+[USER|fc-keep-on-uninstall]	Compile START
+[USER|fc-keep-on-uninstall]	Compile SUCCESS
+[USER|fc-keep-on-uninstall]	Activate START
+[USER|fc-keep-on-uninstall]	Configure START
+[USER|fc-keep-on-uninstall]	Configure SUCCESS
+[USER|fc-keep-on-uninstall]	Activate SUCCESS
+<<< status=OK
+
+>>> load /tmp/uplift/repo/fixtures/nc-fc-other/
+
+Building dependency graph...Done.
+[USER|nc-fc-other]	Initialize START
+[USER|nc-fc-other]	Initialize SUCCESS
+[USER|nc-fc-other]	Reload START (/tmp/uplift/repo/fixtures/nc-fc-other/)
+[USER|nc-fc-other]	Reload SUCCESS
+[nc-fc-other]	Module object refreshed.
+[USER|nc-fc-other]	Validate START
+[USER|nc-fc-other]	Validate SUCCESS
+[USER|nc-fc-other]	Compile START
+[USER|nc-fc-other]	Compile SUCCESS
+[USER|nc-fc-other]	Activate START
+[USER|nc-fc-other]	Configure START
+[USER|nc-fc-other]	Configure SUCCESS
+[USER|nc-fc-other]	Activate SUCCESS
+<<< status=OK
+
+>>> uninstall nc-fc-other
+
+[USER|nc-fc-other]	Clean START
+[USER|nc-fc-other]	Unconfigure START
+[USER|nc-fc-other]	Unconfigure SUCCESS
+[USER|nc-fc-other]	Clean SUCCESS
+<<< status=OK
+
+OBS|nc-unin-7-shared-target-folder|after.dir=0;after.mine.txt=0;after.other.txt=0;after.shared-file.txt=0;after.shared.txt=0;before.dir=1;before.mine.txt=1;before.other.txt=1;before.shared-file.txt=1;before.shared.txt=1;keepInstalled=1;loadKeep=1;loadOther=1;status=ok;
+
+>>> uninstall fc-keep-on-uninstall
+
+[USER|fc-keep-on-uninstall]	Clean START
+[USER|fc-keep-on-uninstall]	Unconfigure START
+[USER|fc-keep-on-uninstall]	Unconfigure SUCCESS
+[USER|fc-keep-on-uninstall]	Clean SUCCESS
+<<< status=OK
+
+>>> load /tmp/uplift/repo/fixtures/nc-q/
+
+Building dependency graph...Done.
+[USER|nc-q]	Initialize START
+[USER|nc-q]	Initialize SUCCESS
+[USER|nc-q]	Reload START (/tmp/uplift/repo/fixtures/nc-q/)
+[USER|nc-q]	Reload SUCCESS
+[nc-q]	Module object refreshed.
+[USER|nc-q]	Validate START
+[USER|nc-q]	Validate SUCCESS
+[USER|nc-q]	Compile START
+[USER|nc-q]	Compile SUCCESS
+[USER|nc-q]	Activate START
+[USER|nc-q]	Configure START
+[USER|nc-q]	Configure SUCCESS
+[USER|nc-q]	Activate SUCCESS
+<<< status=OK
+
+>>> load /tmp/uplift/repo/fixtures/nc-p/
+
+Building dependency graph...Done.
+[USER|nc-p]	Initialize START
+[USER|nc-p]	Initialize SUCCESS
+[USER|nc-p]	Reload START (/tmp/uplift/repo/fixtures/nc-p/)
+[USER|nc-p]	Reload SUCCESS
+[nc-p]	Module object refreshed.
+[USER|nc-p]	Validate START
+[USER|nc-p]	Validate SUCCESS
+[USER|nc-p]	Compile START
+[USER|nc-p]	Compile SUCCESS
+[USER|nc-p]	Activate START
+[USER|nc-p]	Configure START
+[USER|nc-p]	Configure SUCCESS
+[USER|nc-p]	Activate SUCCESS
+<<< status=OK
+
+>>> uninstall nc-p -r
+
+[USER|nc-p]	Clean START
+[USER|nc-p]	Unconfigure START
+[USER|nc-p]	Unconfigure SUCCESS
+[USER|nc-q]	Clean START
+[USER|nc-q]	Unconfigure START
+[nc-q]	Unconfigure FAILURE
+[nc-q]	Clean FAILURE
+[nc-p]	Clean FAILURE
+[31mERROR![0m nc-q refuses to uninstall
+<<< status=ERROR #5001: nc-q refuses to uninstall
+
+OBS|nc-unin-8-dependency-hook-fails|error=ERROR #5001: nc-q refuses to uninstall;historyP=uninstall/failure;historyQ=uninstall/failure;loadP=1;loadQ=1;pClass=absent;pInstalled=1;qClass=compiled;qHookCalls=1;qInstalled=1;status=err;
+
+>>> uninstall nc-p -force
+
+[USER|nc-p]	Clean START
+[USER|nc-p]	Unconfigure START
+[USER|nc-p]	Unconfigure SUCCESS
+[USER|nc-p]	Clean SUCCESS
+<<< status=OK
+
+>>> uninstall nc-q -force
+
+[USER|nc-q]	Clean START
+[USER|nc-q]	Unconfigure START
+[USER|nc-q]	Unconfigure SUCCESS
+[USER|nc-q]	Clean SUCCESS
+<<< status=OK
+
+>>> load /tmp/uplift/repo/fixtures/nc-ghost-a/
+
+Building dependency graph...Done.
+[USER|nc-ghost-a]	Initialize START
+[USER|nc-ghost-a]	Initialize SUCCESS
+[USER|nc-ghost-a]	Reload START (/tmp/uplift/repo/fixtures/nc-ghost-a/)
+[USER|nc-ghost-a]	Reload SUCCESS
+[nc-ghost-a]	Module object refreshed.
+[USER|nc-ghost-a]	Validate START
+[USER|nc-ghost-a]	Validate SUCCESS
+[USER|nc-ghost-a]	Compile START
+[USER|nc-ghost-a]	Compile SUCCESS
+[USER|nc-ghost-a]	Activate START
+[USER|nc-ghost-a]	Configure START
+[USER|nc-ghost-a]	Configure SUCCESS
+[USER|nc-ghost-a]	Activate SUCCESS
+<<< status=OK
+
+>>> orphans -type CLS
+NC.Orphan.cls
+Uplift.Repo.Unin.cls
+Uplift.Repo.UninIpm.cls
+Uplift.Repo.Util.cls
+
+<<< status=OK
+
+>>> orphans
+%IRIS_X12ReplyType.LUT
+/csp/user/menu.csp
+/csp/user/showsource.csp
+Ens-Analytics-ActivityVolumeAndDuration.dashboard.DFI
+Ens.SSH.InteractiveAuth.DTL.dtl
+Ens.Util.DTL.Audit.MessageView.dtl
+EnsLib.Background.Process.ExportMessageSearch.bpl
+EnsLib.ebXML.Process.MessageReceiver.bpl
+EnsLib.ebXML.Process.MessageSender.bpl
+EnsLib.Printing.Dispatcher.bpl
+EnsLib.PushNotifications.IdentityManager.Process.bpl
+HIPAA_4010.X12
+HIPAA_5010.X12
+HIPAA_6020.X12
+NC.Orphan.cls
+Uplift.Repo.Unin.cls
+Uplift.Repo.UninIpm.cls
+Uplift.Repo.Util.cls
+
+<<< status=OK
+
+OBS|nc-unin-10-orphans|all.byType=BPL:5 CLS:4 CSP:2 DFI:1 DTL:2 LUT:1 X12:3;all.lines=18;all.listsOrphan=1;all.listsOwnedClass=0;all.percentItems=1;all.status=ok;cls.byType=CLS:4;cls.lines=4;cls.listsOrphan=1;cls.listsOwnedClass=0;cls.percentItems=0;cls.status=ok;compileOrphan=1;createOrphan=1;loadOwned=1;moduleGlobalsUnchanged=1;
+
+USER>

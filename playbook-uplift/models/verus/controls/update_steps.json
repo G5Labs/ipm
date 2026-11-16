@@ -1,0 +1,254 @@
+[
+  {
+    "name": "init-no-tstart",
+    "description": "the command does not open its transaction (TSTART at Utils/Module.cls#L1195 removed)",
+    "old": "L2 { pre: s.db, snap: if s.op.txn { Option::Some(s.db) } else { Option::None }, pc: Pc::Guard,",
+    "new": "L2 { pre: s.db, snap: Option::None, pc: Pc::Guard,",
+    "expect": [
+      "inst_step_init"
+    ]
+  },
+  {
+    "name": "guard-ignores-force",
+    "description": "install refuses a newer version with an update package even with -force",
+    "old": "&& !op.force && !dev && newer(from, op.to) && op.has_pkg)",
+    "new": "&& !dev && newer(from, op.to) && op.has_pkg)",
+    "expect": [
+      "inst_step_guard"
+    ]
+  },
+  {
+    "name": "downgrade-allowed",
+    "description": "the downgrade check is removed (the guard lets an older target through; the older version is written at the manifest step)",
+    "old": "    ||| older(from, op.to)\n",
+    "new": "",
+    "expect": [
+      "inst_step_manifest"
+    ]
+  },
+  {
+    "name": "manifest-commits-always",
+    "description": "the manifest is committed in every mode, not only developer mode",
+    "old": "snap: if dev_run(s.op, s.db) { Option::None } else { s.snap }, pc: Pc::Phases",
+    "new": "snap: Option::None, pc: Pc::Phases",
+    "expect": [
+      "inst_step_manifest"
+    ]
+  },
+  {
+    "name": "force-install-not-seeded",
+    "description": "Activate does not seed the steps of a forced install",
+    "old": "else if !s.db.dev { L2 { pc: Pc::Walk",
+    "new": "else if !s.db.dev && !s.op.force { L2 { pc: Pc::Walk",
+    "expect": [
+      "inst_step_phases"
+    ]
+  },
+  {
+    "name": "no-rollback-on-failure",
+    "description": "a failed command keeps the writes of its open transaction",
+    "old": "let d = if out == Out::Ok { s.db } else { durable(s) };",
+    "new": "let d = s.db;",
+    "expect": [
+      "inst_step_phases"
+    ]
+  },
+  {
+    "name": "crash-keeps-open-writes",
+    "description": "a halt commits the open transaction (premise P2 broken)",
+    "old": "pub open spec fn step_crash(s: L2) -> L2 { L2 { db: durable(s),",
+    "new": "pub open spec fn step_crash(s: L2) -> L2 { L2 { db: s.db,",
+    "expect": [
+      "inst_step_crash"
+    ]
+  },
+  {
+    "name": "seed-step-not-saved",
+    "description": "the seeding walk does not save the seeded record",
+    "old": "L2 { db: Db { recs: s.db.recs.insert(k, seeded(v)), ..s.db }, i: s.i + 1, ..s }",
+    "new": "L2 { i: s.i + 1, ..s }",
+    "expect": [
+      "inst_walk_seed"
+    ]
+  },
+  {
+    "name": "seeding-skips-failed-steps",
+    "description": "seeding leaves a step that failed last time as it is",
+    "old": "pub open spec fn seeded(x: Rec) -> Rec { if !x.end || !x.ok {",
+    "new": "pub open spec fn seeded(x: Rec) -> Rec { if !x.end {",
+    "expect": [
+      "inst_walk_end"
+    ]
+  },
+  {
+    "name": "flag-not-reset-per-class",
+    "description": "newStepToApply carries over from one class to the next",
+    "old": "let f = (!cstart(s.steps, s.i as int) && s.flag) || run_needed(v);",
+    "new": "let f = s.flag || run_needed(v);",
+    "expect": [
+      "inst_walk_exec_go"
+    ]
+  },
+  {
+    "name": "run-test-ignores-status",
+    "description": "the run test checks only TimeStampEnd, not the status of the last run",
+    "old": "pub open spec fn run_needed(x: Rec) -> bool { !x.end || !x.ok }",
+    "new": "pub open spec fn run_needed(x: Rec) -> bool { !x.end }",
+    "expect": [
+      "inst_walk_exec_facts"
+    ]
+  },
+  {
+    "name": "mirror-skip-ignored",
+    "description": "primary-only steps run on a non-primary mirror member",
+    "old": "if f && !skipped(s.op, k) {",
+    "new": "if f {",
+    "expect": [
+      "inst_walk_exec_go"
+    ]
+  },
+  {
+    "name": "no-premise-pl",
+    "description": "drop premise PL (the update lock is granted)",
+    "old": "pub open spec fn premise_pl(c: Choice) -> bool { c != Choice::Lock(false) }",
+    "new": "pub open spec fn premise_pl(c: Choice) -> bool { true }",
+    "expect": [
+      "inst_step_lock"
+    ]
+  },
+  {
+    "name": "no-premise-pf5",
+    "description": "drop premise PF5 (the run has the developer mode asked for, or the stored one); the bridge lemma inst_lemma_pf5 that every step lemma uses for the run's mode must fail",
+    "old": "pub open spec fn premise_pf5(s: L2) -> bool {\n    ||| s.op.source == Source::Path\n    ||| ((s.op.dev == Option::Some(true) ==> (s.op.kind == Kind::Install && s.op.top) || s.op.snapshot)\n         && (s.op.dev is None ==> !stored_dev(s.pre)))\n}",
+    "new": "pub open spec fn premise_pf5(s: L2) -> bool { true }",
+    "expect": [
+      "inst_lemma_pf5"
+    ]
+  },
+  {
+    "name": "l1-update-ok-unconstrained",
+    "description": "vacuity: L1 without 'an OK update ran every due step' must lose the busy-lock witness (F-INST-1)",
+    "old": "            &&& a.log == sched_upto(a.pre.recs, a.steps, a.op, a.steps.len())\n            &&& forall|j: int| #![trigger a.steps[j]] 0 <= j < a.steps.len() && !skipped(a.op, a.steps[j]) ==> done(rec(a.d.recs, a.steps[j]))",
+    "new": "            true",
+    "expect": [
+      "inst_witness_busy_lock_reports_success"
+    ]
+  },
+  {
+    "name": "l1-dev-failure-unconstrained",
+    "description": "vacuity: L1 without 'a developer-mode failure is kept' must lose the F-INST-5 witness",
+    "old": "(want_dev(a.op, a.pre) ==> a.d.ver == Option::Some(a.op.to) && a.d.dev",
+    "new": "(want_dev(a.op, a.pre) ==> true",
+    "expect": [
+      "inst_witness_dev_update_from_registry_rolls_back"
+    ]
+  },
+  {
+    "name": "l1-missing-record-not-due-a",
+    "description": "vacuity: L1 where a step with no record is not due must lose the DEC-INST-2 witness",
+    "old": "match o { Option::None => true, Option::Some(x) => !x.end || !x.ok }",
+    "new": "match o { Option::None => false, Option::Some(x) => !x.end || !x.ok }",
+    "expect": [
+      "inst_witness_dev_install_leaves_steps_due"
+    ]
+  },
+  {
+    "name": "l1-missing-record-not-due-b",
+    "description": "vacuity: the same L1 change must lose the DEC-INST-5 witness (the retry reruns the step)",
+    "old": "match o { Option::None => true, Option::Some(x) => !x.end || !x.ok }",
+    "new": "match o { Option::None => false, Option::Some(x) => !x.end || !x.ok }",
+    "expect": [
+      "inst_witness_failed_update_repeats_effects"
+    ]
+  },
+  {
+    "name": "l1-step-classes-unconstrained",
+    "description": "vacuity: L1 without 'every step class is walked' must lose the F-INST-6 witness",
+    "old": "Option::Some(m) => forall|i: int| #![trigger cs[i]] 0 <= i < cs.len() && cs[i].step_class ==> walks_class(m, cs[i]),",
+    "new": "Option::Some(m) => true,",
+    "expect": [
+      "inst_witness_helper_class_hides_steps"
+    ]
+  },
+  {
+    "name": "l1-class-list-error-accepted",
+    "description": "vacuity: L1 that accepts a failing class list must lose the F-INST-7 witness",
+    "old": "    match class_list(cs) {\n        Option::None => false,",
+    "new": "    match class_list(cs) {\n        Option::None => true,",
+    "expect": [
+      "inst_witness_class_without_number_fails"
+    ]
+  },
+  {
+    "name": "dev-success-reported-failed",
+    "description": "finding 1, reviewer mutant 5: a developer-mode install or load whose phases worked ends Out::Failed",
+    "old": "    else { finish(s, Out::Ok) }\n}",
+    "new": "    else { finish(s, Out::Failed) }\n}",
+    "expect": [
+      "inst_step_phases"
+    ]
+  },
+  {
+    "name": "phase-failure-reported-ok",
+    "description": "finding 1, converse: a phase that threw ends Out::Ok (passes the old one-way L1 in developer mode)",
+    "old": "if !ok { finish(L2 { fault: true, ..s }, Out::Failed) }",
+    "new": "if !ok { finish(L2 { fault: true, ..s }, Out::Ok) }",
+    "expect": [
+      "inst_step_phases"
+    ]
+  },
+  {
+    "name": "step-failure-reported-ok",
+    "description": "finding 1, converse: an update step that threw ends Out::Ok",
+    "old": "log: s.log.push(k), fault: true, ..s }, Out::Failed)",
+    "new": "log: s.log.push(k), fault: true, ..s }, Out::Ok)",
+    "expect": [
+      "inst_walk_exec_fail"
+    ]
+  },
+  {
+    "name": "walk-end-reported-failed",
+    "description": "finding 1: a walk that ran every step ends Out::Failed and rolls back (passes the old one-way L1 with a transaction)",
+    "old": "if s.i >= s.steps.len() { finish(s, Out::Ok) }",
+    "new": "if s.i >= s.steps.len() { finish(s, Out::Failed) }",
+    "expect": [
+      "inst_walk_end"
+    ]
+  },
+  {
+    "name": "crash-reports-success",
+    "description": "finding 1: a halted command reports success",
+    "old": "snap: Option::None, pc: Pc::Crashed, ..s }",
+    "new": "snap: Option::None, pc: Pc::Crashed, out: Out::Ok, ..s }",
+    "expect": [
+      "inst_step_crash"
+    ]
+  },
+  {
+    "name": "stored-dev-ignored",
+    "description": "finding 7: with no -dev/-nodev typed, the run ignores the stored DeveloperMode (Utils/Module.cls#L1305); the run's mode then differs from L1 want_dev, which inst_lemma_pf5 (used by every step lemma) states",
+    "old": "Option::None => d.ver is Some && d.dev }",
+    "new": "Option::None => false }",
+    "expect": [
+      "inst_lemma_pf5"
+    ]
+  },
+  {
+    "name": "guard-reads-stored-dev",
+    "description": "finding 7: the install/load guard reads the run's developer mode (stored mode included) instead of the DeveloperMode parameter (#L1219)",
+    "old": "if refuses(s.op, dev_guard(s.op), s.db.ver)",
+    "new": "if refuses(s.op, dev_run(s.op, s.db), s.db.ver)",
+    "expect": [
+      "inst_step_guard"
+    ]
+  },
+  {
+    "name": "seeding-tests-typed-flag",
+    "description": "finding 7: Activate seeds by the typed -dev flag instead of the module's stored DeveloperMode (Lifecycle/Module.cls#L122)",
+    "old": "else if !s.db.dev { L2 { pc: Pc::Walk",
+    "new": "else if s.op.dev != Option::Some(true) { L2 { pc: Pc::Walk",
+    "expect": [
+      "inst_step_phases"
+    ]
+  }
+]

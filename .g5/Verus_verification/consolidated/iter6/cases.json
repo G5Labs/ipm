@@ -1,0 +1,83 @@
+{
+  "models": {
+    "workflows.rs": {
+      "copy-allow-child": [
+        "below(a,b) || below(b,a) || same_inode_ancestor",
+        "below(b,a) || same_inode_ancestor"
+      ],
+      "copy-ignore-alias": [
+        "|| same_inode_ancestor",
+        "|| false"
+      ],
+      "copy-ignore-provider": [
+        "!overlap(a,b,alias) && provider_ok",
+        "!overlap(a,b,alias)"
+      ],
+      "template-package-tests": [
+        "&& !(test_dir.len() > 0 && below(test_dir,i.path))",
+        ""
+      ],
+      "template-missing-accepted": [
+        "if source_exists { 1 } else { 0 }",
+        "if source_exists { 1 } else { 1 }"
+      ],
+      "global-drop-sources-root": [
+        "sources + (match directory",
+        "seq![] + (match directory"
+      ],
+      "global-wrong-default": [
+        "None => seq![10int]",
+        "None => seq![11int]"
+      ],
+      "global-no-import": [
+        "if files.contains_key(path) { files[path] } else { old }",
+        "old"
+      ],
+      "alias-only-internal": [
+        "else if external.contains_key(arg) { Some(external[arg]) }",
+        "else if false { Some(external[arg]) }"
+      ],
+      "custom-always-run": [
+        "selected_phases.contains(custom_phase)",
+        "true"
+      ],
+      "zero-size-means-end": [
+        "e.name == 0",
+        "e.name == 0 || e.size == 0"
+      ],
+      "zero-file-skipped": [
+        "!end_header(e) && e.regular",
+        "!end_header(e) && e.regular && e.size > 0"
+      ],
+      "zero-consumes-block": [
+        "offset+512+((size+511)/512)*512",
+        "offset+512+(size/512+1)*512"
+      ],
+      "global-wrong-export-value": [
+        ".insert(global_path(sources,directory,name),value)",
+        ".insert(global_path(sources,directory,name),0)"
+      ]
+    }
+  },
+  "session": [
+    "do $system.OBJ.Load(\"/tmp/iter6/Probe.cls\",\"ck\")",
+    "do ##class(Iter6.Probe).Run()"
+  ],
+  "replay_model": "workflows.rs",
+  "replay": {
+    "template-app": "b(application_item(Item{path:seq![1int,2,3],loaded:true,supported_ext:true},seq![1int,9]))",
+    "template-test": "b(test_item(Item{path:seq![1int,9,8],loaded:true,supported_ext:true},seq![1int,9],true))",
+    "template-missing": "1-template_status(false)",
+    "copy-child": "b(copy_ok(seq![1int,2],seq![1int,2,3],false,true))",
+    "copy-parent": "b(copy_ok(seq![1int,2,3],seq![1int,2],false,true))",
+    "copy-sibling": "b(copy_ok(seq![1int,2],seq![1int,4],false,true))",
+    "global-path": "b(global_path(seq![5int],None,7)==seq![5int,10,7])",
+    "global-value": "reload_global(package_global(seq![5int],None,7,42),seq![5int],None,7,0)",
+    "alias-internal": "b(selected_module(map![1int=>99int],map![2int=>99int],1)==Some(99))",
+    "alias-external": "b(selected_module(map![1int=>99int],map![2int=>99int],2)==Some(99))",
+    "zero-exists": "b(creates_file(Entry{name:7,size:0,regular:true}))",
+    "zero-later": "b(next_header(0,0)==512)",
+    "zero-size": "(Entry{name:7,size:0,regular:true}).size as int"
+  },
+  "replay_prelude": "assert(global_path(seq![5int],None,7) =~= seq![5int,10,7]);\n"
+}

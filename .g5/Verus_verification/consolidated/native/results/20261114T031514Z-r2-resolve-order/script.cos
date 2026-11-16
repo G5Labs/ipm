@@ -1,0 +1,6 @@
+set r=##class(%IPM.Repo.Filesystem.Definition).%New(), r.Name="reg2b", r.Root="/tmp/c2b/reg/", r.Snapshots=1, r.Prereleases=1
+write !,"OBS S5.setup buildcache=",$system.Status.IsOK(r.BuildCache(1,0,0)),!
+do ##class(Consolidated.Obs).Run("S5","load /tmp/c2b/zz/")
+do ##class(Consolidated.Obs).Mod("S5","shared-zz") do ##class(Consolidated.Obs).Mod("S5","root-zz")
+write !,"NATIVE-END",!
+halt

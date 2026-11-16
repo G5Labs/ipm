@@ -1,0 +1,157 @@
+{
+  "verus_dir": ".g5/Verus_verification/consolidated/iter21",
+  "changed_files": [
+    ".g5/ontology/concepts/repositories.g5.md",
+    ".g5/uplift/consolidated/BUGS.md",
+    ".g5/uplift/consolidated/QUESTIONS.md",
+    ".g5/uplift/consolidated/DESIGN-SIMPLIFICATIONS.md"
+  ],
+  "rows": [
+    {
+      "id": "S21-01",
+      "owner": ".g5/ontology/concepts/repositories.g5.md#repo.filesystem.mutable-source",
+      "model": "temporal.rs",
+      "symbols": [
+        "source",
+        "initial",
+        "physical_replace",
+        "configure_same_repo",
+        "cache_row",
+        "cache_version",
+        "cache_manifest_version",
+        "service_manifest",
+        "service_version",
+        "service_directory",
+        "snapshot_neighbor",
+        "refresh_neighbor",
+        "physical_writer_frames_cache_and_runtime"
+      ],
+      "direct": [
+        [
+          "src/cls/IPM/Repo/Filesystem/Definition.cls",
+          "OnConfigure"
+        ],
+        [
+          "src/cls/IPM/Repo/Filesystem/Definition.cls",
+          "BuildCache"
+        ]
+      ],
+      "reader": [
+        [
+          "src/cls/IPM/Repo/Filesystem/PackageService.cls",
+          "GetModuleManifest"
+        ],
+        [
+          "src/cls/IPM/Repo/Filesystem/PackageService.cls",
+          "GetModuleDirectory"
+        ]
+      ],
+      "scope": "Same enabled normalized filesystem root, one valid parsed module1/2 and completed ordinary maintainer file replacement. Cache snapshot is separate from current manifest/code. Same-definition normal configuration calls successful purge/build; current installed projection unchanged by file replacement/rebuild. Copy is external input/provider, not invented production writer. Generic parsing/order/status/refresh failure/concurrency unassessed; inherited outer-lock withdrawal retained."
+    },
+    {
+      "id": "S21-02",
+      "owner": ".g5/ontology/concepts/repositories.g5.md#repo.install.version-request",
+      "model": "temporal.rs",
+      "symbols": [
+        "selected_row",
+        "eligible_actual",
+        "actual_directory_load",
+        "install",
+        "stable_neighbor",
+        "stale_neighbor",
+        "refusal_frames_selected_state",
+        "requested_version_preserved",
+        "installed_version",
+        "payload",
+        "shown_version"
+      ],
+      "direct": [
+        [
+          "src/cls/IPM/Main.cls",
+          "Install"
+        ],
+        [
+          "src/cls/IPM/Repo/Manager.cls",
+          "SearchRepositoriesForModule"
+        ],
+        [
+          "src/cls/IPM/Utils/Module.cls",
+          "LoadQualifiedReference"
+        ],
+        [
+          "src/cls/IPM/Utils/Module.cls",
+          "LoadModuleReference"
+        ],
+        [
+          "src/cls/IPM/Utils/Module.cls",
+          "LoadModuleFromDirectory"
+        ],
+        [
+          "src/cls/IPM/Utils/Module.cls",
+          "GetModuleObjectFromPath"
+        ],
+        [
+          "src/cls/IPM/Utils/Module.cls",
+          "GetModuleObjectFromStream"
+        ],
+        [
+          "src/cls/IPM/Utils/Module.cls",
+          "LoadNewModule"
+        ]
+      ],
+      "reader": [
+        [
+          "src/cls/IPM/ResourceProcessor/Default/Document.cls",
+          "OnLoad"
+        ],
+        [
+          "src/cls/IPM/General/ModuleSummary.cls",
+          "GetLines"
+        ]
+      ],
+      "scope": "Selected plain1/2 exact-version keys, same module name, no dependencies/dependent constraints/UpdatePackage/dev/force, successful normal DIRECTORY manifest import/compile/save. Cached key selects physical directory; actual current file determines loaded version/Description/code. Stable1 succeeds; stale selected1 loadsactual2; after rebuilt2 cache old1 refuses and retains2, valid2 succeeds. Other delivery branches unassessed/unpursued. General XML/parser/flags/history/refusal failures and concurrent filesystem mutation outside."
+    },
+    {
+      "id": "S21-03",
+      "owner": ".g5/ontology/concepts/repositories.g5.md#repo.filesystem.mutable-source",
+      "model": "temporal.rs",
+      "symbols": [
+        "selected_row",
+        "offered",
+        "cache_version",
+        "listed_version",
+        "shown_version",
+        "readers_neighbor"
+      ],
+      "direct": [
+        [
+          "src/cls/IPM/Repo/Filesystem/Cache.cls",
+          "OrderedMatchesExecute"
+        ],
+        [
+          "src/cls/IPM/Repo/Filesystem/Cache.cls",
+          "OrderedMatchesFetch"
+        ],
+        [
+          "src/cls/IPM/Repo/Filesystem/PackageService.cls",
+          "ListModules"
+        ],
+        [
+          "src/cls/IPM/Repo/Utils.cls",
+          "moduleSqlToList"
+        ],
+        [
+          "src/cls/IPM/Repo/Manager.cls",
+          "SearchRepositoriesForModule"
+        ]
+      ],
+      "reader": [
+        [
+          "src/cls/IPM/Main.cls",
+          "Search"
+        ]
+      ],
+      "scope": "One cached row/root/name and selected literal plain1/2 expression/index/SQL provider domain. Cache query delegates version matching and filters stored root, SQL adapter produces module info; model exact-row projection constrains only selected neighbors. Search lists cache1 before rebuild andcache2 after, while show reads actual installed1/2. Generic ranges/prereleases/order/multiple rows/SQL generated engine and full formatting remain conditional."
+    }
+  ]
+}

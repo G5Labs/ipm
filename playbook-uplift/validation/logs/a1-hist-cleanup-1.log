@@ -1,0 +1,50 @@
+# container: ipm-uplift-iris  image: containers.intersystems.com/intersystems/iris-community:2026.1  at: 2026-11-13T23:25:25Z
+# script: validation/iris/r4/hist/06-cleanup.script
+
+Node: 37eecb272560, Instance: IRIS
+
+USER>
+
+LOAD 1
+
+USER>
+
+jobs r4: 20343:0 
+
+USER>
+
+CMD> uninstall r4h-parent -force
+
+[USER|r4h-parent]	Clean START
+[USER|r4h-parent]	Unconfigure START
+[USER|r4h-parent]	Unconfigure SUCCESS
+[USER|r4h-parent]	Clean SUCCESS
+CMD< OK
+
+CMD> uninstall r4h-dep-wait -force
+
+[USER|r4h-dep-wait]	Clean START
+[USER|r4h-dep-wait]	Unconfigure START
+[USER|r4h-dep-wait]	Unconfigure SUCCESS
+[USER|r4h-dep-wait]	Clean SUCCESS
+CMD< OK
+
+CMD> repo -n r4hist -delete
+
+CMD< OK
+
+CLEANUP history SQLCODE=0 rows=15
+
+USER>
+[32mIPM (zpm)[0m [39m0.10.11-SNAPSHOT[0m
+USER>
+
+163 load rest-demo load /home/irisowner/zpm/tests/integration_tests/Test/PM/Integration/_data/rest-app/
+164 uninstall rest-demo uninstall rest-demo
+165 load rest-demo load /home/irisowner/zpm/tests/integration_tests/Test/PM/Integration/_data/rest-app/
+166 uninstall rest-demo uninstall rest-demo
+USER>
+
+tlevel 0
+
+USER>

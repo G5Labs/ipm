@@ -1,0 +1,820 @@
+{
+  "product": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+  "family": "thin_surfaces",
+  "artifact": ".g5/Verus_verification/consolidated/verus/thin_surfaces.rs",
+  "model_sha256": "cfe15cc1b1eda073bdaac19628343310a884a231031742737e617aa8bf55f1f6",
+  "check": ".g5/Verus_verification/consolidated/verus/check_thin_surfaces.py",
+  "result": ".g5/Verus_verification/consolidated/verus/results/thin_surfaces.json",
+  "trust": ".g5/Verus_verification/consolidated/verus/thin_surfaces.TRUST.md",
+  "bindings": [
+    {
+      "id": "thin:ResourceProcessor/FileCopy.cls::OnBeforePhase",
+      "member": "ResourceProcessor/FileCopy.cls::OnBeforePhase",
+      "source": {
+        "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+        "path": "src/cls/IPM/ResourceProcessor/FileCopy.cls",
+        "start": 38,
+        "end": 64,
+        "sha256": "91e4c543cf76fd42e5ef954dbc9dab72209aad4ef70defb366313bf1475c2c9b"
+      },
+      "ontology_ids": [
+        "module.processor.file-copy"
+      ],
+      "artifact": ".g5/Verus_verification/consolidated/verus/thin_surfaces.rs",
+      "symbols": [
+        "copies_before"
+      ],
+      "property": "Only nondeferred, nonempty-target Activate copies at the before hook; a later Activate error does not undo copied file.",
+      "role": "owns",
+      "critical": true,
+      "obligation_status": "proved-with-premises",
+      "premises": [
+        "normalized disjoint paths; IRIS filesystem operation outcomes",
+        "native correspondence is finite ARM64 IRIS 2026.1 build234U, not product-body proof"
+      ],
+      "cases": [
+        "HELD-FILE-ORDER",
+        "IMMEDIATE",
+        "DEFERRED"
+      ],
+      "native": {
+        "status": "matched-on-listed-cases",
+        "receipts": [
+          ".g5/uplift/consolidated/extension/independent-native-final/receipt.json"
+        ]
+      },
+      "prior_representation": null,
+      "historical_credit": "candidate only when own native-rejected wrong variant is listed by check_thin_surfaces.py; do not count citation as behavior",
+      "symbol": "copies_before",
+      "ontology": "module.processor.file-copy",
+      "slice": "ResourceProcessor/FileCopy.cls:38-64",
+      "represented": true,
+      "representation_scope": "Only nondeferred, nonempty-target Activate copies at the before hook; a later Activate error does not undo copied file.",
+      "status": "represented",
+      "open": []
+    },
+    {
+      "id": "thin:ResourceProcessor/FileCopy.cls::OnAfterPhase",
+      "member": "ResourceProcessor/FileCopy.cls::OnAfterPhase",
+      "source": {
+        "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+        "path": "src/cls/IPM/ResourceProcessor/FileCopy.cls",
+        "start": 66,
+        "end": 91,
+        "sha256": "a416ad71bd3764036a956938f0a318f2de087b0a1e060e828cb48a9b54df6ca5"
+      },
+      "ontology_ids": [
+        "module.processor.file-copy"
+      ],
+      "artifact": ".g5/Verus_verification/consolidated/verus/thin_surfaces.rs",
+      "symbols": [
+        "copies_after"
+      ],
+      "property": "Deferred copy requires the after hook to be reached; before/after distinction does not imply cleanup on an earlier failure.",
+      "role": "owns",
+      "critical": true,
+      "obligation_status": "proved-with-premises;native-successful-after-hook-open",
+      "premises": [
+        "normalized disjoint paths; IRIS filesystem operation outcomes",
+        "native correspondence is finite ARM64 IRIS 2026.1 build234U, not product-body proof"
+      ],
+      "cases": [
+        "HELD-FILE-ORDER",
+        "DEFERRED"
+      ],
+      "native": {
+        "status": "open",
+        "receipts": []
+      },
+      "prior_representation": null,
+      "historical_credit": "candidate only when own native-rejected wrong variant is listed by check_thin_surfaces.py; do not count citation as behavior",
+      "symbol": "copies_after",
+      "ontology": "module.processor.file-copy",
+      "slice": "ResourceProcessor/FileCopy.cls:66-91",
+      "represented": true,
+      "representation_scope": "Deferred copy requires the after hook to be reached; before/after distinction does not imply cleanup on an earlier failure.",
+      "status": "represented",
+      "open": [
+        "No successful deferred after-hook native correspondence; failed-before-after hook was observed."
+      ]
+    },
+    {
+      "id": "thin:ResourceProcessor/FileCopy.cls::DoCopy",
+      "member": "ResourceProcessor/FileCopy.cls::DoCopy",
+      "source": {
+        "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+        "path": "src/cls/IPM/ResourceProcessor/FileCopy.cls",
+        "start": 160,
+        "end": 200,
+        "sha256": "5b704f8c7d219320540239b650fc916cdce78a5678ba6fd6a0b77d7dbeed2646"
+      },
+      "ontology_ids": [
+        "module.processor.file-copy",
+        "transaction.rollback-scope"
+      ],
+      "artifact": ".g5/Verus_verification/consolidated/verus/thin_surfaces.rs",
+      "symbols": [
+        "file_copy_observation",
+        "clears_target",
+        "copy_step",
+        "copied_file_survives_rollback"
+      ],
+      "property": "File-branch source/admission failure returns error; filesystem effects and target-directory creation are independent of DB rollback; erroring OS copy may leave partial target effects.",
+      "role": "owns",
+      "critical": true,
+      "obligation_status": "proved-with-premises",
+      "premises": [
+        "normalized disjoint paths; IRIS filesystem operation outcomes",
+        "native correspondence is finite ARM64 IRIS 2026.1 build234U, not product-body proof"
+      ],
+      "cases": [
+        "HELD-FILE-ROLLBACK",
+        "F-YES",
+        "F-MISSING"
+      ],
+      "native": {
+        "status": "matched-on-listed-cases",
+        "receipts": [
+          ".g5/uplift/consolidated/extension/independent-native-final/receipt.json"
+        ]
+      },
+      "prior_representation": null,
+      "historical_credit": "candidate only when own native-rejected wrong variant is listed by check_thin_surfaces.py; do not count citation as behavior",
+      "symbol": "file_copy_observation",
+      "ontology": "module.processor.file-copy",
+      "slice": "ResourceProcessor/FileCopy.cls:160-200",
+      "represented": true,
+      "representation_scope": "File-branch source/admission failure returns error; filesystem effects and target-directory creation are independent of DB rollback; erroring OS copy may leave partial target effects.",
+      "status": "represented",
+      "open": []
+    },
+    {
+      "id": "thin:ResourceProcessor/FileCopy.cls::OnPhase",
+      "member": "ResourceProcessor/FileCopy.cls::OnPhase",
+      "source": {
+        "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+        "path": "src/cls/IPM/ResourceProcessor/FileCopy.cls",
+        "start": 216,
+        "end": 243,
+        "sha256": "dbbbf69b7d3f934cc0ae46c7704bd307d218902ac596f1120995a7f1e91b0297"
+      },
+      "ontology_ids": [
+        "module.processor.file-copy"
+      ],
+      "artifact": ".g5/Verus_verification/consolidated/verus/thin_surfaces.rs",
+      "symbols": [
+        "clean_removes"
+      ],
+      "property": "Clean preserves KeepOnUninstall targets and protected directories; unprotected single file is removed when keep is false.",
+      "role": "owns",
+      "critical": true,
+      "obligation_status": "proved-with-premises",
+      "premises": [
+        "normalized disjoint paths; IRIS filesystem operation outcomes",
+        "native correspondence is finite ARM64 IRIS 2026.1 build234U, not product-body proof"
+      ],
+      "cases": [
+        "HELD-FILE-CLEAN",
+        "C-KEEP",
+        "C-DELETE"
+      ],
+      "native": {
+        "status": "matched-on-listed-cases",
+        "receipts": [
+          ".g5/uplift/consolidated/extension/independent-native-final/receipt.json"
+        ]
+      },
+      "prior_representation": {
+        "artifact": "playbook-uplift/models/verus/uninstall.rs",
+        "symbols": [
+          "RKind",
+          "clean_step"
+        ],
+        "same_distinction": true
+      },
+      "historical_credit": "candidate only when own native-rejected wrong variant is listed by check_thin_surfaces.py; do not count citation as behavior",
+      "symbol": "clean_removes",
+      "ontology": "module.processor.file-copy",
+      "slice": "ResourceProcessor/FileCopy.cls:216-243",
+      "represented": true,
+      "representation_scope": "Clean preserves KeepOnUninstall targets and protected directories; unprotected single file is removed when keep is false.",
+      "status": "represented",
+      "open": []
+    },
+    {
+      "id": "thin:Utils/Module.cls::LoadDependencies",
+      "member": "Utils/Module.cls::LoadDependencies",
+      "source": {
+        "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+        "path": "src/cls/IPM/Utils/Module.cls",
+        "start": 1368,
+        "end": 1423,
+        "sha256": "1c7eff6d45d946bb148405267d35e731f0d312ae79417efb322100a06c8c2559"
+      },
+      "ontology_ids": [
+        "deps.lockfile",
+        "transaction.rollback-scope"
+      ],
+      "artifact": ".g5/Verus_verification/consolidated/verus/thin_surfaces.rs",
+      "symbols": [
+        "dependency_status",
+        "lock_written"
+      ],
+      "property": "Dependency errors propagate; a requested top-level lockfile is attempted after successful dependencies, and its write exception is printed and swallowed. Files can survive parent rollback.",
+      "role": "owns",
+      "critical": true,
+      "obligation_status": "proved-with-premises",
+      "premises": [
+        "IRIS runtime/adapter and provider outcomes are explicit inputs; hand translation, not product-body proof"
+      ],
+      "cases": [
+        "HELD-LOCKFILE-WRITE-FAIL",
+        "HELD-LOCKFILE-ROLLBACK",
+        "LOCKFAIL",
+        "LOCKOK"
+      ],
+      "native": {
+        "status": "matched-on-listed-cases",
+        "receipts": [
+          ".g5/uplift/consolidated/extension/independent-native-final/receipt.json",
+          ".g5/uplift/consolidated/extension/independent-native-lockfailure/receipt.json"
+        ]
+      },
+      "prior_representation": {
+        "artifact": "playbook-uplift/models/verus/dep_resolve.rs",
+        "symbols": [
+          "step",
+          "dep_witness_lockfile_name_order"
+        ],
+        "missing": "file path/write-status/rollback stores"
+      },
+      "historical_credit": "candidate only when own native-rejected wrong variant is listed by check_thin_surfaces.py; do not count citation as behavior",
+      "symbol": "dependency_status",
+      "ontology": "deps.lockfile",
+      "slice": "Utils/Module.cls:1368-1423",
+      "represented": true,
+      "representation_scope": "Dependency errors propagate; a requested top-level lockfile is attempted after successful dependencies, and its write exception is printed and swallowed. Files can survive parent rollback.",
+      "status": "represented",
+      "open": []
+    },
+    {
+      "id": "thin:General/LockFile.cls::CreateLockFileForModule",
+      "member": "General/LockFile.cls::CreateLockFileForModule",
+      "source": {
+        "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+        "path": "src/cls/IPM/General/LockFile.cls",
+        "start": 29,
+        "end": 90,
+        "sha256": "58f15f2dc88aa7dada8d445d2c4a915edce01f66545e842704115036fa656677"
+      },
+      "ontology_ids": [
+        "deps.lockfile",
+        "transaction.rollback-scope"
+      ],
+      "artifact": ".g5/Verus_verification/consolidated/verus/thin_surfaces.rs",
+      "symbols": [
+        "write_file",
+        "lock_in_module_root",
+        "copied_file_survives_rollback"
+      ],
+      "property": "A completed lockfile byte write survives database rollback. Empty module.Root produces a relative path resolved in process cwd.",
+      "role": "owns",
+      "critical": true,
+      "obligation_status": "proved-with-premises",
+      "premises": [
+        "normalized disjoint paths; IRIS filesystem operation outcomes",
+        "native correspondence is finite ARM64 IRIS 2026.1 build234U, not product-body proof"
+      ],
+      "cases": [
+        "HELD-LOCKFILE-ROLLBACK",
+        "L-YES",
+        "IMMEDIATE",
+        "DEFERRED"
+      ],
+      "native": {
+        "status": "matched-on-listed-cases",
+        "receipts": [
+          ".g5/uplift/consolidated/extension/independent-native-final/receipt.json"
+        ]
+      },
+      "prior_representation": {
+        "artifact": "playbook-uplift/models/verus/dep_resolve.rs",
+        "symbols": [
+          "name_order",
+          "needs_first",
+          "dep_witness_lockfile_name_order"
+        ],
+        "missing": "location and external write lifecycle"
+      },
+      "historical_credit": "candidate only when own native-rejected wrong variant is listed by check_thin_surfaces.py; do not count citation as behavior",
+      "symbol": "write_file",
+      "ontology": "deps.lockfile",
+      "slice": "General/LockFile.cls:29-90",
+      "represented": true,
+      "representation_scope": "A completed lockfile byte write survives database rollback. Empty module.Root produces a relative path resolved in process cwd.",
+      "status": "represented",
+      "open": []
+    },
+    {
+      "id": "thin:ResourceProcessor/CPF.cls::MergeCPF",
+      "member": "ResourceProcessor/CPF.cls::MergeCPF",
+      "source": {
+        "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+        "path": "src/cls/IPM/ResourceProcessor/CPF.cls",
+        "start": 173,
+        "end": 196,
+        "sha256": "115c49d4223aa2d0802aa5e212c4ffd0f1bc3bdd610edaf19cacc194bc98dd3b"
+      },
+      "ontology_ids": [
+        "module.processor",
+        "transaction.rollback-scope"
+      ],
+      "artifact": ".g5/Verus_verification/consolidated/verus/thin_surfaces.rs",
+      "symbols": [
+        "cpf_status",
+        "cpf_effect",
+        "cpf_database_rollback_boundary"
+      ],
+      "property": "Child exit0 yields success, nonzero produces error; external configuration effects need not be reversed by database rollback.",
+      "role": "owns",
+      "critical": true,
+      "obligation_status": "proved-conditional-environment;native-open",
+      "premises": [
+        "IRIS runtime/adapter and provider outcomes are explicit inputs; hand translation, not product-body proof"
+      ],
+      "cases": [
+        "HELD-CPF-ROLLBACK"
+      ],
+      "native": {
+        "status": "open",
+        "receipts": []
+      },
+      "prior_representation": null,
+      "historical_credit": "candidate only when own native-rejected wrong variant is listed by check_thin_surfaces.py; do not count citation as behavior",
+      "symbol": "cpf_status",
+      "ontology": "module.processor",
+      "slice": "ResourceProcessor/CPF.cls:173-196",
+      "represented": true,
+      "representation_scope": "Child exit0 yields success, nonzero produces error; external configuration effects need not be reversed by database rollback.",
+      "status": "represented",
+      "open": [
+        "External merge side effect native correspondence and arbitrary child process behavior remain open."
+      ]
+    },
+    {
+      "id": "thin:Repo/Oras/PackageService.cls::IsAvailable",
+      "member": "Repo/Oras/PackageService.cls::IsAvailable",
+      "source": {
+        "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+        "path": "src/cls/IPM/Repo/Oras/PackageService.cls",
+        "start": 93,
+        "end": 109,
+        "sha256": "fd7ac53f50408849027c356800a9ed813bc2a2429fcf057d1aff98e86de1bdf2"
+      },
+      "ontology_ids": [
+        "repo.oras"
+      ],
+      "artifact": ".g5/Verus_verification/consolidated/verus/thin_surfaces.rs",
+      "symbols": [
+        "oras_available"
+      ],
+      "property": "Transport success plus 2xx or 401 with WWW-Authenticate means registry available; 401 without challenge and403 do not. Availability is distinct from authorization/pull success.",
+      "role": "owns",
+      "critical": true,
+      "obligation_status": "proved-with-premises",
+      "premises": [
+        "IRIS runtime/adapter and provider outcomes are explicit inputs; hand translation, not product-body proof"
+      ],
+      "cases": [
+        "HELD-ORAS-CHALLENGE",
+        "ORAS-18171",
+        "ORAS-18172",
+        "ORAS-18173",
+        "ORAS-18174"
+      ],
+      "native": {
+        "status": "matched-on-listed-cases",
+        "receipts": [
+          ".g5/uplift/consolidated/extension/independent-native-final/receipt.json"
+        ]
+      },
+      "prior_representation": null,
+      "historical_credit": "candidate only when own native-rejected wrong variant is listed by check_thin_surfaces.py; do not count citation as behavior",
+      "symbol": "oras_available",
+      "ontology": "repo.oras",
+      "slice": "Repo/Oras/PackageService.cls:93-109",
+      "represented": true,
+      "representation_scope": "Transport success plus 2xx or 401 with WWW-Authenticate means registry available; 401 without challenge and403 do not. Availability is distinct from authorization/pull success.",
+      "status": "represented",
+      "open": []
+    },
+    {
+      "id": "thin:ResourceProcessor/Test.cls::ReportTestResults",
+      "member": "ResourceProcessor/Test.cls::ReportTestResults",
+      "source": {
+        "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+        "path": "src/cls/IPM/ResourceProcessor/Test.cls",
+        "start": 240,
+        "end": 298,
+        "sha256": "394654cc71175634867ce192d6dffe23bb34f838b4459a66d2094a70c7c317c7"
+      },
+      "ontology_ids": [
+        "build.test-output"
+      ],
+      "artifact": ".g5/Verus_verification/consolidated/verus/thin_surfaces.rs",
+      "symbols": [
+        "report_result",
+        "report_status",
+        "report_file_written",
+        "report_error_can_keep_output"
+      ],
+      "property": "Full file export precedes summary format validation; completed JSON file can remain despite an unknown summary format error; valid summary format succeeds.",
+      "role": "owns",
+      "critical": true,
+      "obligation_status": "proved-with-premises",
+      "premises": [
+        "IRIS runtime/adapter and provider outcomes are explicit inputs; hand translation, not product-body proof"
+      ],
+      "cases": [
+        "HELD-REPORT-COMPOSE",
+        "REPORT-COMPOSE",
+        "REPORT-NEIGHBOR"
+      ],
+      "native": {
+        "status": "matched-on-listed-cases",
+        "receipts": [
+          ".g5/uplift/consolidated/extension/independent-native-final/receipt.json"
+        ]
+      },
+      "prior_representation": null,
+      "historical_credit": "candidate only when own native-rejected wrong variant is listed by check_thin_surfaces.py; do not count citation as behavior",
+      "symbol": "report_result",
+      "ontology": "build.test-output",
+      "slice": "ResourceProcessor/Test.cls:240-298",
+      "represented": true,
+      "representation_scope": "Full file export precedes summary format validation; completed JSON file can remain despite an unknown summary format error; valid summary format succeeds.",
+      "status": "represented",
+      "open": []
+    },
+    {
+      "id": "thin:General/ModuleSummary.cls::Show",
+      "member": "General/ModuleSummary.cls::Show",
+      "source": {
+        "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+        "path": "src/cls/IPM/General/ModuleSummary.cls",
+        "start": 9,
+        "end": 31,
+        "sha256": "4fd9cbd11bd0382e600ce0dfba30885d1c5759e7255954f9bc5cdc89f7ae855c"
+      },
+      "ontology_ids": [
+        "inspect"
+      ],
+      "artifact": ".g5/Verus_verification/consolidated/verus/thin_surfaces.rs",
+      "symbols": [
+        "inspection_choice",
+        "inspection_ok",
+        "inspection_state",
+        "inspection_preserves_stores"
+      ],
+      "property": "Name lookup has precedence, ExternalName is fallback; missing both yields error and inspection preserves installed record identity/version.",
+      "role": "owns",
+      "critical": false,
+      "obligation_status": "proved-with-premises",
+      "premises": [
+        "IRIS runtime/adapter and provider outcomes are explicit inputs; hand translation, not product-body proof"
+      ],
+      "cases": [
+        "HELD-INSPECTION-NAME",
+        "INSPECT-g5-independent-report",
+        "INSPECT-g5-independent-report-alias",
+        "INSPECT-g5-independent-report-missing",
+        "INSPECT-G5-INDEPENDENT-REPORT-ALIAS"
+      ],
+      "native": {
+        "status": "matched-on-listed-cases",
+        "receipts": [
+          ".g5/uplift/consolidated/extension/independent-native-final/receipt.json",
+          ".g5/uplift/consolidated/extension/independent-native-inspection-case/receipt.json"
+        ]
+      },
+      "prior_representation": null,
+      "historical_credit": "candidate only when own native-rejected wrong variant is listed by check_thin_surfaces.py; do not count citation as behavior",
+      "symbol": "inspection_choice",
+      "ontology": "inspect",
+      "slice": "General/ModuleSummary.cls:9-31",
+      "represented": true,
+      "representation_scope": "Name lookup has precedence, ExternalName is fallback; missing both yields error and inspection preserves installed record identity/version.",
+      "status": "represented",
+      "open": []
+    }
+  ],
+  "open_obligations": [
+    {
+      "id": "thin:sync-revert",
+      "ontology_id": "devtools.sync.retry",
+      "prior_artifact": "playbook-uplift/models/verus/sync_baseline.rs",
+      "symbols": [
+        "sync_state",
+        "sync_ok",
+        "sync_lemma_sync",
+        "sync_witness_failed_compile_then_revert"
+      ],
+      "status": "already-represented;reconcile-owning-rule-not-new-proof",
+      "critical": true
+    },
+    {
+      "id": "thin:history-delete-finalize",
+      "ontology_id": "history.delete.running-records",
+      "status": "native-concurrent-schedule-observed;general-interleaving-policy-open",
+      "receipt": ".g5/uplift/consolidated/extension/independent-native-concurrent-valid/receipt.json",
+      "critical": true
+    },
+    {
+      "id": "thin:instance-restart",
+      "ontology_id": "history.record",
+      "status": "inherited-P-process-instance-distinction-retained;no-shared-instance-restart-performed",
+      "prior_artifact": "playbook-uplift/models/verus/load_general.rs",
+      "symbols": [
+        "Kind",
+        "step_crash"
+      ],
+      "critical": true
+    }
+  ],
+  "formal_file": ".g5/Verus_verification/consolidated/verus/thin_surfaces.rs",
+  "obligations": [
+    {
+      "id": "thin:ResourceProcessor/FileCopy.cls::OnBeforePhase",
+      "ontology": "module.processor.file-copy",
+      "property": "Only nondeferred, nonempty-target Activate copies at the before hook; a later Activate error does not undo copied file.",
+      "symbol": "copies_before",
+      "represented": true,
+      "proved": true,
+      "premises": [
+        "normalized disjoint paths; IRIS filesystem operation outcomes",
+        "native correspondence is finite ARM64 IRIS 2026.1 build234U, not product-body proof"
+      ],
+      "refuted": false,
+      "open": false,
+      "critical": true,
+      "native": {
+        "status": "matched-on-listed-cases",
+        "receipts": [
+          ".g5/uplift/consolidated/extension/independent-native-final/receipt.json"
+        ]
+      },
+      "status": "proved-with-premises"
+    },
+    {
+      "id": "thin:ResourceProcessor/FileCopy.cls::OnAfterPhase",
+      "ontology": "module.processor.file-copy",
+      "property": "Deferred copy requires the after hook to be reached; before/after distinction does not imply cleanup on an earlier failure.",
+      "symbol": "copies_after",
+      "represented": true,
+      "proved": true,
+      "premises": [
+        "normalized disjoint paths; IRIS filesystem operation outcomes",
+        "native correspondence is finite ARM64 IRIS 2026.1 build234U, not product-body proof"
+      ],
+      "refuted": false,
+      "open": true,
+      "critical": true,
+      "native": {
+        "status": "open",
+        "receipts": []
+      },
+      "status": "proved-with-premises;native-successful-after-hook-open"
+    },
+    {
+      "id": "thin:ResourceProcessor/FileCopy.cls::DoCopy",
+      "ontology": "module.processor.file-copy",
+      "property": "File-branch source/admission failure returns error; filesystem effects and target-directory creation are independent of DB rollback; erroring OS copy may leave partial target effects.",
+      "symbol": "file_copy_observation",
+      "represented": true,
+      "proved": true,
+      "premises": [
+        "normalized disjoint paths; IRIS filesystem operation outcomes",
+        "native correspondence is finite ARM64 IRIS 2026.1 build234U, not product-body proof"
+      ],
+      "refuted": false,
+      "open": false,
+      "critical": true,
+      "native": {
+        "status": "matched-on-listed-cases",
+        "receipts": [
+          ".g5/uplift/consolidated/extension/independent-native-final/receipt.json"
+        ]
+      },
+      "status": "proved-with-premises"
+    },
+    {
+      "id": "thin:ResourceProcessor/FileCopy.cls::OnPhase",
+      "ontology": "module.processor.file-copy",
+      "property": "Clean preserves KeepOnUninstall targets and protected directories; unprotected single file is removed when keep is false.",
+      "symbol": "clean_removes",
+      "represented": true,
+      "proved": true,
+      "premises": [
+        "normalized disjoint paths; IRIS filesystem operation outcomes",
+        "native correspondence is finite ARM64 IRIS 2026.1 build234U, not product-body proof"
+      ],
+      "refuted": false,
+      "open": false,
+      "critical": true,
+      "native": {
+        "status": "matched-on-listed-cases",
+        "receipts": [
+          ".g5/uplift/consolidated/extension/independent-native-final/receipt.json"
+        ]
+      },
+      "status": "proved-with-premises"
+    },
+    {
+      "id": "thin:Utils/Module.cls::LoadDependencies",
+      "ontology": "deps.lockfile",
+      "property": "Dependency errors propagate; a requested top-level lockfile is attempted after successful dependencies, and its write exception is printed and swallowed. Files can survive parent rollback.",
+      "symbol": "dependency_status",
+      "represented": true,
+      "proved": true,
+      "premises": [
+        "IRIS runtime/adapter and provider outcomes are explicit inputs; hand translation, not product-body proof"
+      ],
+      "refuted": false,
+      "open": false,
+      "critical": true,
+      "native": {
+        "status": "matched-on-listed-cases",
+        "receipts": [
+          ".g5/uplift/consolidated/extension/independent-native-final/receipt.json",
+          ".g5/uplift/consolidated/extension/independent-native-lockfailure/receipt.json"
+        ]
+      },
+      "status": "proved-with-premises"
+    },
+    {
+      "id": "thin:General/LockFile.cls::CreateLockFileForModule",
+      "ontology": "deps.lockfile",
+      "property": "A completed lockfile byte write survives database rollback. Empty module.Root produces a relative path resolved in process cwd.",
+      "symbol": "write_file",
+      "represented": true,
+      "proved": true,
+      "premises": [
+        "normalized disjoint paths; IRIS filesystem operation outcomes",
+        "native correspondence is finite ARM64 IRIS 2026.1 build234U, not product-body proof"
+      ],
+      "refuted": false,
+      "open": false,
+      "critical": true,
+      "native": {
+        "status": "matched-on-listed-cases",
+        "receipts": [
+          ".g5/uplift/consolidated/extension/independent-native-final/receipt.json"
+        ]
+      },
+      "status": "proved-with-premises"
+    },
+    {
+      "id": "thin:ResourceProcessor/CPF.cls::MergeCPF",
+      "ontology": "module.processor",
+      "property": "Child exit0 yields success, nonzero produces error; external configuration effects need not be reversed by database rollback.",
+      "symbol": "cpf_status",
+      "represented": true,
+      "proved": true,
+      "premises": [
+        "IRIS runtime/adapter and provider outcomes are explicit inputs; hand translation, not product-body proof"
+      ],
+      "refuted": false,
+      "open": true,
+      "critical": true,
+      "native": {
+        "status": "open",
+        "receipts": []
+      },
+      "status": "proved-conditional-environment;native-open"
+    },
+    {
+      "id": "thin:Repo/Oras/PackageService.cls::IsAvailable",
+      "ontology": "repo.oras",
+      "property": "Transport success plus 2xx or 401 with WWW-Authenticate means registry available; 401 without challenge and403 do not. Availability is distinct from authorization/pull success.",
+      "symbol": "oras_available",
+      "represented": true,
+      "proved": true,
+      "premises": [
+        "IRIS runtime/adapter and provider outcomes are explicit inputs; hand translation, not product-body proof"
+      ],
+      "refuted": false,
+      "open": false,
+      "critical": true,
+      "native": {
+        "status": "matched-on-listed-cases",
+        "receipts": [
+          ".g5/uplift/consolidated/extension/independent-native-final/receipt.json"
+        ]
+      },
+      "status": "proved-with-premises"
+    },
+    {
+      "id": "thin:ResourceProcessor/Test.cls::ReportTestResults",
+      "ontology": "build.test-output",
+      "property": "Full file export precedes summary format validation; completed JSON file can remain despite an unknown summary format error; valid summary format succeeds.",
+      "symbol": "report_result",
+      "represented": true,
+      "proved": true,
+      "premises": [
+        "IRIS runtime/adapter and provider outcomes are explicit inputs; hand translation, not product-body proof"
+      ],
+      "refuted": false,
+      "open": false,
+      "critical": true,
+      "native": {
+        "status": "matched-on-listed-cases",
+        "receipts": [
+          ".g5/uplift/consolidated/extension/independent-native-final/receipt.json"
+        ]
+      },
+      "status": "proved-with-premises"
+    },
+    {
+      "id": "thin:General/ModuleSummary.cls::Show",
+      "ontology": "inspect",
+      "property": "Name lookup has precedence, ExternalName is fallback; missing both yields error and inspection preserves installed record identity/version.",
+      "symbol": "inspection_choice",
+      "represented": true,
+      "proved": true,
+      "premises": [
+        "IRIS runtime/adapter and provider outcomes are explicit inputs; hand translation, not product-body proof"
+      ],
+      "refuted": false,
+      "open": false,
+      "critical": false,
+      "native": {
+        "status": "matched-on-listed-cases",
+        "receipts": [
+          ".g5/uplift/consolidated/extension/independent-native-final/receipt.json"
+        ]
+      },
+      "status": "proved-with-premises"
+    },
+    {
+      "id": "thin:lockfile-root-guarantee",
+      "ontology": "deps.lockfile",
+      "property": "Requested first-load lockfile is written in the loaded module directory rather than process cwd",
+      "symbol": "lock_in_module_root",
+      "represented": true,
+      "proved": false,
+      "refuted": true,
+      "open": false,
+      "critical": true,
+      "premises": [
+        "Product 571e04a1 first normal load reaches lockfile writer while stored module.Root is empty; %Stream resolves relative path in process cwd",
+        "Validated native counterexample and successful developer-mode rooted neighbor; no ObjectScript-body theorem"
+      ],
+      "witness": {
+        "receipt": ".g5/uplift/consolidated/extension/independent-native-final/receipt.json",
+        "cases": [
+          "IMMEDIATE",
+          "DEFERRED"
+        ],
+        "observation": "rootlock=0 cwdlock=1; JSON lockname matches just-loaded module; module row absent after later Activate rollback"
+      },
+      "valid_neighbor": {
+        "receipt": ".g5/uplift/consolidated/extension/independent-native-lockfailure/receipt.json",
+        "case": "LOCKOK",
+        "observation": "developer-mode root configured; commandOK, completed module-root file1"
+      }
+    }
+  ],
+  "open_boundaries": [
+    {
+      "id": "thin:sync-revert",
+      "status": "already-represented;reconcile-owning-rule-not-new-proof",
+      "critical": true
+    },
+    {
+      "id": "thin:history-delete-finalize",
+      "status": "native-concurrent-schedule-observed;general-interleaving-policy-open",
+      "critical": true
+    },
+    {
+      "id": "thin:instance-restart",
+      "status": "inherited-P-process-instance-distinction-retained;no-shared-instance-restart-performed",
+      "critical": true
+    },
+    {
+      "id": "thin:path-normalization",
+      "gap": "Symlinks, path normalization, ancestor directory effects, OS partial-copy outcomes and concurrent filesystem writers are environment inputs."
+    },
+    {
+      "id": "thin:registry-protocol",
+      "gap": "Availability does not establish credentials, pull/publish, response body/digest or retry contracts."
+    },
+    {
+      "id": "thin:reporting",
+      "gap": "Summary class lookup/export and detailed result tree assembly are inputs; JSON correctness of every full report not proved."
+    },
+    {
+      "id": "thin:inspection-query",
+      "gap": "Lookup selection and frame only; all detailed module/dependency query rendering remains open."
+    }
+  ]
+}

@@ -1,0 +1,83 @@
+{
+  "family": "partial_compile",
+  "formal_file": "partial_compile.rs",
+  "bindings": [
+    {
+      "member": "Utils/Module.cls::LoadNewModule",
+      "slice": "Utils/Module.cls:1152-1364",
+      "ontology": "load.outcome",
+      "symbol": "compile",
+      "property": "compiler outcome per resource, rollback boundary, status and remaining transaction",
+      "premises": [
+        "IRIS compiler attempts both A and B; descriptor and callability outcomes are independent inputs",
+        "Modeled no caller transaction; transactional class rollback premise from exact native platform"
+      ],
+      "role": "delegates",
+      "native": {
+        "runs": [
+          "20261114T030000Z-r1-two-resources"
+        ],
+        "cases": [
+          "R2txn",
+          "R2notxn",
+          "R2dev",
+          "R2ok"
+        ]
+      },
+      "status": "represented-scoped"
+    }
+  ],
+  "obligations": [
+    {
+      "id": "compile-rollback",
+      "ontology": "load.outcome",
+      "symbol": "rollback_removes_every_resource",
+      "property": "normal failure removes all modeled resource state",
+      "represented": true,
+      "proved": true,
+      "refuted": false,
+      "open": false,
+      "premises": [
+        "IRIS compiler/database rollback correspondence"
+      ],
+      "native": "R2txn",
+      "critical": true
+    },
+    {
+      "id": "compile-atomicity",
+      "ontology": "load.outcome",
+      "symbol": "two_resource_witness",
+      "property": "failure leaves every resource usable or none",
+      "represented": true,
+      "proved": false,
+      "refuted": true,
+      "open": false,
+      "premises": [],
+      "native": "R2notxn,R2dev",
+      "critical": true
+    },
+    {
+      "id": "compile-neighbor",
+      "ontology": "load.outcome",
+      "symbol": "successful_neighbor",
+      "property": "successful compiler inputs make both resources callable",
+      "represented": true,
+      "proved": true,
+      "refuted": false,
+      "open": false,
+      "premises": [],
+      "native": "R2ok",
+      "critical": true
+    }
+  ],
+  "inherited_correspondence": [
+    {
+      "symbol": ".g5/Verus_verification/crates/ipm-load-history/src/model.rs::lnm_phase",
+      "represented": "aggregate resource boolean",
+      "missing": "per-resource descriptor versus actual usability"
+    }
+  ],
+  "open_boundaries": [
+    "IRIS multicompile, platform-specific physical class rollback and arbitrary callback effects are environment premises, not proved compiler code."
+  ]
+}

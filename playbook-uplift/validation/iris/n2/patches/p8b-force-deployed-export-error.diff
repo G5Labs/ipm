@@ -1,0 +1,10 @@
+--- a/src/cls/IPM/ResourceProcessor/Default/Document.cls	2026-11-06 16:03:47
++++ b/src/cls/IPM/ResourceProcessor/Default/Document.cls	2026-11-13 14:19:09
+@@ -315,6 +315,7 @@
+             }
+             // Skip the per-item project check; the caller checks the project once after all
+             // deployed items have been added.
++            if $get(^UpliftForceDeployErr) { $$$ThrowStatus($$$ERROR($$$GeneralError, "uplift: forced deployed-export failure for "_pItemName)) }
+             $$$ThrowOnError(##class(%IPM.Storage.Module).AddItemToProject(deployedProject, pItemName, 0))
+             set pItemHandled = 1
+         }

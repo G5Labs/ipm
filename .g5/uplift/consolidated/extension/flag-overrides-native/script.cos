@@ -1,0 +1,19 @@
+do $system.OBJ.Load("/tmp/g5flagoverride20261114/Probe.cls","ck-d")
+do ##class(G5FlagOverride20261114.Probe).Snapshot("before")
+do ##class(G5FlagOverride20261114.Probe).Run("JA","/tmp/g5flagoverride20261114/fixtures/JA/","NoJournal",0,"g5flagx20261114-ja-root","g5flagx20261114-ja-dep")
+do ##class(G5FlagOverride20261114.Probe).Run("J0","/tmp/g5flagoverride20261114/fixtures/J0/","NoJournal",1,"g5flagx20261114-j0-root","g5flagx20261114-j0-dep")
+do ##class(G5FlagOverride20261114.Probe).Run("TA","/tmp/g5flagoverride20261114/fixtures/TA/","NoTransaction",0,"g5flagx20261114-ta-root","g5flagx20261114-ta-dep")
+do ##class(G5FlagOverride20261114.Probe).Run("T0","/tmp/g5flagoverride20261114/fixtures/T0/","NoTransaction",1,"g5flagx20261114-t0-root","g5flagx20261114-t0-dep")
+do ##class(G5FlagOverride20261114.Probe).Run("JS","/tmp/g5flagoverride20261114/fixtures/JS/","NoJournal",0,"g5flagx20261114-js-root","g5flagx20261114-js-dep")
+do ##class(G5FlagOverride20261114.Probe).Run("TS","/tmp/g5flagoverride20261114/fixtures/TS/","NoTransaction",0,"g5flagx20261114-ts-root","g5flagx20261114-ts-dep")
+do ##class(G5FlagOverride20261114.Probe).Snapshot("observed")
+do ##class(G5FlagOverride20261114.Probe).Cleanup("g5flagx20261114-ja-root","g5flagx20261114-ja-dep")
+do ##class(G5FlagOverride20261114.Probe).Cleanup("g5flagx20261114-j0-root","g5flagx20261114-j0-dep")
+do ##class(G5FlagOverride20261114.Probe).Cleanup("g5flagx20261114-ta-root","g5flagx20261114-ta-dep")
+do ##class(G5FlagOverride20261114.Probe).Cleanup("g5flagx20261114-t0-root","g5flagx20261114-t0-dep")
+do ##class(G5FlagOverride20261114.Probe).Cleanup("g5flagx20261114-js-root","g5flagx20261114-js-dep")
+do ##class(G5FlagOverride20261114.Probe).Cleanup("g5flagx20261114-ts-root","g5flagx20261114-ts-dep")
+kill ^G5FlagOverride20261114
+do ##class(G5FlagOverride20261114.Probe).Snapshot("after")
+write "ZV=",$zversion,!,"NATIVE-END",!
+halt

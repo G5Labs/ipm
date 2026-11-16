@@ -1,0 +1,269 @@
+use vstd::prelude::*;
+#[path="model-lane/settings_projection.rs"] pub mod settings_projection;
+verus! {
+// Selected ASCII files and known config/exec leaves only. File reads, %FromJSON,
+// object iteration order, Shell lexer, numeric/text ranks and runtime fault are
+// explicitly qualified provider ports. No generic parser or interpreter proof.
+pub type Text=Seq<char>;
+pub enum Case {TxtValid,TxtUnknown,TxtRuntime,JsonValid,JsonUnknown,JsonRuntime,JsonArray,JsonWrong,Unsupported,Missing}
+pub struct File {pub name:Text,pub exists:bool,pub raw:Text}
+pub struct JsonCommand {pub name:Text,pub params:Seq<(Text,Text)>}
+pub enum CommandField {Items(Seq<JsonCommand>),WrongType}
+pub enum JsonDoc {Object(CommandField),Array(Seq<JsonCommand>)}
+pub enum Error {MissingFile,UnsupportedExtension,ExpectedObject,ExpectedCommandsArray,JsonDecode,UnknownCommand,MissingCommand,InvalidParameter,Runtime}
+pub struct Prepared {pub commands:Seq<Text>,pub error:Option<Error>}
+pub struct World {pub cfg:settings_projection::Cfg,pub calls:nat}
+pub struct Step {pub world:World,pub error:Option<Error>}
+pub struct Out {pub world:World,pub error:Option<Error>,pub listed:Seq<Text>,pub attempted:Seq<Text>}
+pub open spec fn b(x:bool)->int {if x{1}else{0}}
+pub open spec fn key()->nat {3}
+pub open spec fn setting_name()->Text {"DefaultLogEntryLimit"@}
+pub open spec fn first()->Text {"config set DefaultLogEntryLimit 101"@}
+pub open spec fn last()->Text {"config set DefaultLogEntryLimit 202"@}
+pub open spec fn unknown()->Text {"iter28-no-such-command"@}
+pub open spec fn expression()->Text {"set ^||Iter28RuntimeCalls=$increment(^||Iter28RuntimeCalls) set x=1/0"@}
+pub open spec fn fault()->Text {"exec "@+expression()}
+// A current-cell representative, not exact whole %SYS store. All selected
+// sequencing results are independent of other keys and existing default nodes.
+pub open spec fn initial_with_default(d:Option<nat>)->World {
+ World{cfg:settings_projection::Cfg{nodes:map![key()=>settings_projection::Node{val:Some(7nat),dflt:d}],conf:set![key()],seed:Map::empty()},calls:0}
+}
+pub open spec fn initial()->World {initial_with_default(None)}
+pub open spec fn setting_value(w:World)->nat {settings_projection::get_value(w.cfg,key())}
+pub open spec fn raw_value(w:World)->nat {if w.cfg.nodes.contains_key(key()) && w.cfg.nodes[key()].val.is_some(){w.cfg.nodes[key()].val.unwrap()}else{0}}
+// Existing unchanged settings contract: Main.Config ignores helper status,
+// and this selected configurable non-special key goes through SetValue.
+pub open spec fn set_selected(w:World,v:nat)->World {World{cfg:settings_projection::config_set(w.cfg,1,key(),v).0,..w}}
+pub open spec fn shell(w:World,command:Text)->Step {
+ if command==first(){Step{world:set_selected(w,101),error:None}}
+ else if command==last(){Step{world:set_selected(w,202),error:None}}
+ else if command==fault(){Step{world:World{calls:w.calls+1,..w},error:Some(Error::Runtime)}}
+ else{Step{world:w,error:Some(Error::UnknownCommand)}}
+}
+pub open spec fn whitespace(c:char)->bool {c==' ' || c=='\t' || c=='\r' || c=='\n'}
+pub open spec fn left(s:Text,i:int)->int recommends 0<=i<=s.len() decreases s.len()-i {
+ if i>=s.len() || !whitespace(s[i]){i}else{left(s,i+1)}
+}
+pub open spec fn right(s:Text,n:int)->int recommends 0<=n<=s.len() decreases n {
+ if n<=0 || !whitespace(s[n-1]){n}else{right(s,n-1)}
+}
+pub open spec fn trim(s:Text)->Text {let a=left(s,0);let z=right(s,s.len() as int);if a>=z{seq![]}else{s.subrange(a,z)}}
+pub open spec fn line_item(s:Text)->Seq<Text> {let t=trim(s);if t.len()==0{seq![]}else{seq![t]}}
+pub open spec fn lines(s:Text,i:int,start:int)->Seq<Text>
+ recommends 0<=start<=i<=s.len()
+ decreases s.len()-i
+{
+ if i>=s.len(){line_item(s.subrange(start,s.len() as int))}
+ else if s[i]=='\n'{line_item(s.subrange(start,i))+lines(s,i+1,i+1)}
+ else{lines(s,i+1,start)}
+}
+pub open spec fn dot(s:Text,n:int)->int recommends 0<=n<=s.len() decreases n {
+ if n==0{-1}else if s[n-1]=='.'{n-1}else{dot(s,n-1)}
+}
+pub open spec fn extension(name:Text)->Text {let d=dot(name,name.len() as int);name.subrange(d+1,name.len() as int)}
+pub open spec fn params_ok(name:Text,ps:Seq<(Text,Text)>,i:int)->bool
+ recommends 0<=i<=ps.len() decreases ps.len()-i
+{
+ if i>=ps.len(){true}else{
+  let k=ps[i].0;let v=ps[i].1;
+  v.len()>0 && (if name=="config"@{k=="action"@ || k=="key"@ || k=="value"@}else{k=="expression"@}) && params_ok(name,ps,i+1)
+ }
+}
+pub open spec fn values(ps:Seq<(Text,Text)>,i:int)->Text
+ recommends 0<=i<=ps.len() decreases ps.len()-i
+{
+ if i>=ps.len(){seq![]}else{ps[i].1+(if i+1<ps.len(){" "@+values(ps,i+1)}else{seq![]})}
+}
+pub open spec fn translate(c:JsonCommand)->Prepared {
+ if c.name.len()==0{Prepared{commands:seq![],error:Some(Error::MissingCommand)}}
+ else if c.name!="config"@ && c.name!="exec"@{Prepared{commands:seq![],error:Some(Error::UnknownCommand)}}
+ else if !params_ok(c.name,c.params,0){Prepared{commands:seq![],error:Some(Error::InvalidParameter)}}
+ else{Prepared{commands:seq![c.name+(if c.params.len()>0{" "@+values(c.params,0)}else{seq![]})],error:None}}
+}
+pub open spec fn render(c:JsonCommand)->Text {c.name+(if c.params.len()>0{" "@+values(c.params,0)}else{seq![]})}
+pub open spec fn validate_all(cs:Seq<JsonCommand>,i:int)->Option<Error>
+ recommends 0<=i<=cs.len() decreases cs.len()-i
+{
+ if i>=cs.len(){None}else{
+  let head=translate(cs[i]);
+  if head.error.is_some(){head.error}else{validate_all(cs,i+1)}
+ }
+}
+pub open spec fn render_all(cs:Seq<JsonCommand>,i:int)->Seq<Text>
+ recommends 0<=i<=cs.len() decreases cs.len()-i
+{if i>=cs.len(){seq![]}else{seq![render(cs[i])]+render_all(cs,i+1)}}
+pub open spec fn translate_all(cs:Seq<JsonCommand>,i:int)->Prepared
+ recommends 0<=i<=cs.len()
+{
+ let error=validate_all(cs,i);
+ Prepared{commands:if error.is_none(){render_all(cs,i)}else{seq![]},error}
+}
+pub open spec fn raw_txtvalid()->Text {"  config set DefaultLogEntryLimit 101  \n\n\tconfig set DefaultLogEntryLimit 202\t\n"@}
+pub open spec fn raw_txtunknown()->Text {"config set DefaultLogEntryLimit 101\niter28-no-such-command\nconfig set DefaultLogEntryLimit 202\n"@}
+pub open spec fn raw_txtruntime()->Text {"config set DefaultLogEntryLimit 101\nexec set ^||Iter28RuntimeCalls=$increment(^||Iter28RuntimeCalls) set x=1/0\nconfig set DefaultLogEntryLimit 202\n"@}
+pub open spec fn raw_jsonvalid()->Text {"{\n  \"commands\": [\n    {\n      \"command\": \"config\",\n      \"parameters\": {\n        \"action\": \"set\",\n        \"key\": \"DefaultLogEntryLimit\",\n        \"value\": \"101\"\n      }\n    },\n    {\n      \"command\": \"config\",\n      \"parameters\": {\n        \"action\": \"set\",\n        \"key\": \"DefaultLogEntryLimit\",\n        \"value\": \"202\"\n      }\n    }\n  ]\n}\n"@}
+pub open spec fn raw_jsonunknown()->Text {"{\n  \"commands\": [\n    {\n      \"command\": \"config\",\n      \"parameters\": {\n        \"action\": \"set\",\n        \"key\": \"DefaultLogEntryLimit\",\n        \"value\": \"101\"\n      }\n    },\n    {\n      \"command\": \"iter28-no-such-command\"\n    },\n    {\n      \"command\": \"config\",\n      \"parameters\": {\n        \"action\": \"set\",\n        \"key\": \"DefaultLogEntryLimit\",\n        \"value\": \"202\"\n      }\n    }\n  ]\n}\n"@}
+pub open spec fn raw_jsonruntime()->Text {"{\n  \"commands\": [\n    {\n      \"command\": \"config\",\n      \"parameters\": {\n        \"action\": \"set\",\n        \"key\": \"DefaultLogEntryLimit\",\n        \"value\": \"101\"\n      }\n    },\n    {\n      \"command\": \"exec\",\n      \"parameters\": {\n        \"expression\": \"set ^||Iter28RuntimeCalls=$increment(^||Iter28RuntimeCalls) set x=1/0\"\n      }\n    },\n    {\n      \"command\": \"config\",\n      \"parameters\": {\n        \"action\": \"set\",\n        \"key\": \"DefaultLogEntryLimit\",\n        \"value\": \"202\"\n      }\n    }\n  ]\n}\n"@}
+pub open spec fn raw_jsonarray()->Text {"[\n  {\n    \"command\": \"config\",\n    \"parameters\": {\n      \"action\": \"set\",\n      \"key\": \"DefaultLogEntryLimit\",\n      \"value\": \"101\"\n    }\n  },\n  {\n    \"command\": \"config\",\n    \"parameters\": {\n      \"action\": \"set\",\n      \"key\": \"DefaultLogEntryLimit\",\n      \"value\": \"202\"\n    }\n  }\n]\n"@}
+pub open spec fn raw_jsonwrong()->Text {"{\n  \"commands\": {}\n}\n"@}
+pub open spec fn raw_unsupported()->Text {"config set DefaultLogEntryLimit 101\nconfig set DefaultLogEntryLimit 202\n"@}
+pub open spec fn fixture(c:Case)->File {match c {
+ Case::TxtValid=>File{name:"valid.txt"@,exists:true,raw:raw_txtvalid()},
+ Case::TxtUnknown=>File{name:"unknown.txt"@,exists:true,raw:raw_txtunknown()},
+ Case::TxtRuntime=>File{name:"runtime.txt"@,exists:true,raw:raw_txtruntime()},
+ Case::JsonValid=>File{name:"valid.json"@,exists:true,raw:raw_jsonvalid()},
+ Case::JsonUnknown=>File{name:"unknown.json"@,exists:true,raw:raw_jsonunknown()},
+ Case::JsonRuntime=>File{name:"runtime.json"@,exists:true,raw:raw_jsonruntime()},
+ Case::JsonArray=>File{name:"array.json"@,exists:true,raw:raw_jsonarray()},
+ Case::JsonWrong=>File{name:"wrongcommands.json"@,exists:true,raw:raw_jsonwrong()},
+ Case::Unsupported=>File{name:"unsupported.text"@,exists:true,raw:raw_unsupported()},
+ Case::Missing=>File{name:"missing.txt"@,exists:false,raw:seq![]}
+}}
+pub open spec fn decode_json(raw:Text)->Option<JsonDoc> {
+ if raw==raw_jsonvalid(){Some(JsonDoc::Object(CommandField::Items(seq![JsonCommand{name:"config"@,params:seq![("action"@,"set"@),("key"@,"DefaultLogEntryLimit"@),("value"@,"101"@)]},JsonCommand{name:"config"@,params:seq![("action"@,"set"@),("key"@,"DefaultLogEntryLimit"@),("value"@,"202"@)]}])))}
+ else if raw==raw_jsonunknown(){Some(JsonDoc::Object(CommandField::Items(seq![JsonCommand{name:"config"@,params:seq![("action"@,"set"@),("key"@,"DefaultLogEntryLimit"@),("value"@,"101"@)]},JsonCommand{name:"iter28-no-such-command"@,params:seq![]},JsonCommand{name:"config"@,params:seq![("action"@,"set"@),("key"@,"DefaultLogEntryLimit"@),("value"@,"202"@)]}])))}
+ else if raw==raw_jsonruntime(){Some(JsonDoc::Object(CommandField::Items(seq![JsonCommand{name:"config"@,params:seq![("action"@,"set"@),("key"@,"DefaultLogEntryLimit"@),("value"@,"101"@)]},JsonCommand{name:"exec"@,params:seq![("expression"@,"set ^||Iter28RuntimeCalls=$increment(^||Iter28RuntimeCalls) set x=1/0"@)]},JsonCommand{name:"config"@,params:seq![("action"@,"set"@),("key"@,"DefaultLogEntryLimit"@),("value"@,"202"@)]}])))}
+ else if raw==raw_jsonarray(){Some(JsonDoc::Array(seq![JsonCommand{name:"config"@,params:seq![("action"@,"set"@),("key"@,"DefaultLogEntryLimit"@),("value"@,"101"@)]},JsonCommand{name:"config"@,params:seq![("action"@,"set"@),("key"@,"DefaultLogEntryLimit"@),("value"@,"202"@)]}]))}
+ else if raw==raw_jsonwrong(){Some(JsonDoc::Object(CommandField::WrongType))}
+ else{None}
+}
+
+// Finite raw-byte adapter above is a named SDK %FromJSON premise tied to the
+// exact fixture file hashes. It is not a generic JSON parser/UTF8 guarantee.
+pub open spec fn prepare(file:File)->Prepared {
+ if !file.exists{Prepared{commands:seq![],error:Some(Error::MissingFile)}}
+ else if extension(file.name)=="txt"@{Prepared{commands:lines(file.raw,0,0),error:None}}
+ else if extension(file.name)=="json"@{
+  match decode_json(file.raw) {
+   None=>Prepared{commands:seq![],error:Some(Error::JsonDecode)},
+   Some(JsonDoc::Array(_))=>Prepared{commands:seq![],error:Some(Error::ExpectedObject)},
+   Some(JsonDoc::Object(CommandField::WrongType))=>Prepared{commands:seq![],error:Some(Error::ExpectedCommandsArray)},
+   Some(JsonDoc::Object(CommandField::Items(cs)))=>translate_all(cs,0),
+  }
+ }else{Prepared{commands:seq![],error:Some(Error::UnsupportedExtension)}}
+}
+pub open spec fn execute(w:World,commands:Seq<Text>,i:int,dry:bool)->Out
+ recommends 0<=i<=commands.len() decreases commands.len()-i
+{
+ if i>=commands.len(){Out{world:w,error:None,listed:seq![],attempted:seq![]}}else{
+  let command=commands[i];
+  let step=if dry{Step{world:w,error:None}}else{shell(w,command)};
+  let attempted=if dry{seq![]}else{seq![command]};
+  if step.error.is_some(){Out{world:step.world,error:step.error,listed:seq![command],attempted}}
+  else{let rest=execute(step.world,commands,i+1,dry);Out{listed:seq![command]+rest.listed,attempted:attempted+rest.attempted,..rest}}
+ }
+}
+pub open spec fn run(w:World,file:File,dry:bool)->Out {
+ let p=prepare(file);
+ if p.error.is_some(){Out{world:w,error:p.error,listed:seq![],attempted:seq![]}}else{execute(w,p.commands,0,dry)}
+}
+pub open spec fn named(c:Case,dry:bool)->Out {run(initial(),fixture(c),dry)}
+pub open spec fn ok(o:Out)->bool {o.error.is_none()}
+pub open spec fn last_listed(o:Out)->bool {o.listed.contains(last())}
+pub open spec fn first_listed(o:Out)->bool {o.listed.contains(first())}
+// Focused witnesses call only definitions; no proof-lemma calls.
+pub proof fn text_preparation()
+ ensures prepare(fixture(Case::TxtValid)).commands==seq![first(),last()],prepare(fixture(Case::TxtValid)).error.is_none(),
+ prepare(fixture(Case::TxtUnknown)).commands==seq![first(),unknown(),last()],prepare(fixture(Case::TxtUnknown)).error.is_none(),
+ prepare(fixture(Case::TxtRuntime)).commands==seq![first(),fault(),last()],prepare(fixture(Case::TxtRuntime)).error.is_none()
+{
+ assert(prepare(fixture(Case::TxtValid)).commands==seq![first(),last()]) by(compute);
+ assert(prepare(fixture(Case::TxtValid)).error.is_none()) by(compute);
+ assert(prepare(fixture(Case::TxtUnknown)).commands==seq![first(),unknown(),last()]) by(compute);
+ assert(prepare(fixture(Case::TxtUnknown)).error.is_none()) by(compute);
+ assert(prepare(fixture(Case::TxtRuntime)).commands==seq![first(),fault(),last()]) by(compute);
+ assert(prepare(fixture(Case::TxtRuntime)).error.is_none()) by(compute);
+}
+pub proof fn json_preparation()
+ ensures prepare(fixture(Case::JsonValid)).commands==seq![first(),last()],prepare(fixture(Case::JsonValid)).error.is_none(),
+ prepare(fixture(Case::JsonUnknown)).commands==seq![],prepare(fixture(Case::JsonUnknown)).error==Some(Error::UnknownCommand),
+ prepare(fixture(Case::JsonRuntime)).commands==seq![first(),fault(),last()],prepare(fixture(Case::JsonRuntime)).error.is_none()
+{
+ assert(prepare(fixture(Case::JsonValid)).commands==seq![first(),last()]) by(compute);
+ assert(prepare(fixture(Case::JsonValid)).error.is_none()) by(compute);
+ assert(prepare(fixture(Case::JsonUnknown)).commands==seq![]) by(compute);
+ assert(prepare(fixture(Case::JsonUnknown)).error==Some(Error::UnknownCommand)) by(compute);
+ assert(prepare(fixture(Case::JsonRuntime)).commands==seq![first(),fault(),last()]) by(compute);
+ assert(prepare(fixture(Case::JsonRuntime)).error.is_none()) by(compute);
+}
+pub proof fn shape_neighbor()
+ ensures prepare(fixture(Case::JsonArray)).error==Some(Error::ExpectedObject),
+ prepare(fixture(Case::JsonWrong)).error==Some(Error::ExpectedCommandsArray),
+ prepare(fixture(Case::Missing)).error==Some(Error::MissingFile),
+ prepare(fixture(Case::Unsupported)).error==Some(Error::UnsupportedExtension)
+{
+ assert(prepare(fixture(Case::JsonArray)).error==Some(Error::ExpectedObject)) by(compute);
+ assert(prepare(fixture(Case::JsonWrong)).error==Some(Error::ExpectedCommandsArray)) by(compute);
+ assert(prepare(fixture(Case::Missing)).error==Some(Error::MissingFile)) by(compute);
+ assert(prepare(fixture(Case::Unsupported)).error==Some(Error::UnsupportedExtension)) by(compute);
+}
+pub proof fn translation_neighbor() {
+ let valid=JsonCommand{name:"config"@,params:seq![("action"@,"set"@),("key"@,setting_name()),("value"@,"101"@)]};
+ assert(translate(valid).commands==seq![first()]) by(compute);
+ assert(translate(valid).error.is_none()) by(compute);
+ assert(translate(JsonCommand{name:unknown(),params:seq![]}).error==Some(Error::UnknownCommand)) by(compute);
+ assert(translate(JsonCommand{name:seq![],params:seq![]}).error==Some(Error::MissingCommand)) by(compute);
+ assert(translate(JsonCommand{name:"config"@,params:seq![("bad"@,"101"@)]}).error==Some(Error::InvalidParameter)) by(compute);
+ assert(translate(JsonCommand{name:"config"@,params:seq![("value"@,seq![])]}).error==Some(Error::InvalidParameter)) by(compute);
+ let reordered=JsonCommand{name:"config"@,params:seq![("value"@,"101"@),("action"@,"set"@),("key"@,setting_name())]};
+ assert(translate(reordered).commands==seq!["config 101 set DefaultLogEntryLimit"@]) by(compute);
+}
+pub proof fn settings_neighbor() {
+ let a=set_selected(initial(),101);let z=set_selected(a,202);
+ assert(setting_value(a)==101);assert(raw_value(a)==101);
+ assert(setting_value(z)==202);assert(raw_value(z)==202);
+ assert(a.calls==0);assert(z.calls==0);
+}
+pub proof fn settings_default_frame(w:World,v:nat)
+ requires w.cfg.conf.contains(key()),v>0
+ ensures setting_value(set_selected(w,v))==v,raw_value(set_selected(w,v))==v,
+ w.cfg.nodes.contains_key(key()) && w.cfg.nodes[key()].dflt.is_some() ==> set_selected(w,v).cfg.nodes[key()].dflt==w.cfg.nodes[key()].dflt
+{}
+pub proof fn execution_neighbor()
+ ensures ok(execute(initial(),seq![first(),last()],0,false)),setting_value(execute(initial(),seq![first(),last()],0,false).world)==202,
+ !ok(execute(initial(),seq![first(),unknown(),last()],0,false)),setting_value(execute(initial(),seq![first(),unknown(),last()],0,false).world)==101,
+ !last_listed(execute(initial(),seq![first(),unknown(),last()],0,false)),
+ execute(initial(),seq![first(),unknown(),last()],0,false).listed==seq![first(),unknown()],
+ execute(initial(),seq![first(),unknown(),last()],0,false).attempted==seq![first(),unknown()]
+{
+ reveal_with_fuel(execute,4);
+}
+pub proof fn dry_execution_neighbor()
+ ensures ok(execute(initial(),seq![first(),unknown(),last()],0,true)),setting_value(execute(initial(),seq![first(),unknown(),last()],0,true).world)==7,
+ last_listed(execute(initial(),seq![first(),unknown(),last()],0,true)),execute(initial(),seq![first(),unknown(),last()],0,true).attempted==seq![],
+ execute(initial(),seq![first(),fault(),last()],0,true).world.calls==0
+{
+ reveal_with_fuel(execute,4);
+}
+pub proof fn runtime_neighbor()
+ ensures !ok(execute(initial(),seq![first(),fault(),last()],0,false)),
+ setting_value(execute(initial(),seq![first(),fault(),last()],0,false).world)==101,
+ execute(initial(),seq![first(),fault(),last()],0,false).world.calls==1,
+ !last_listed(execute(initial(),seq![first(),fault(),last()],0,false))
+{
+ reveal_with_fuel(execute,4);
+ assert(shell(initial(),fault()).world.calls==1);assert(shell(initial(),fault()).error==Some(Error::Runtime));
+}
+// Successful raw preparation facts are tied to the active execution function;
+// no finite observation or already-rendered answer is assumed.
+pub proof fn named_neighbors()
+ ensures
+ ok(named(Case::TxtValid,false)),setting_value(named(Case::TxtValid,false).world)==202,
+ !ok(named(Case::TxtUnknown,false)),setting_value(named(Case::TxtUnknown,false).world)==101,
+ ok(named(Case::TxtUnknown,true)),setting_value(named(Case::TxtUnknown,true).world)==7,
+ !ok(named(Case::TxtRuntime,false)),setting_value(named(Case::TxtRuntime,false).world)==101,
+ ok(named(Case::JsonValid,false)),setting_value(named(Case::JsonValid,false).world)==202,
+ !ok(named(Case::JsonUnknown,false)),setting_value(named(Case::JsonUnknown,false).world)==7,
+ !ok(named(Case::JsonRuntime,false)),setting_value(named(Case::JsonRuntime,false).world)==101,
+ ok(named(Case::JsonValid,true)),setting_value(named(Case::JsonValid,true).world)==7,
+ !ok(named(Case::JsonUnknown,true)),setting_value(named(Case::JsonUnknown,true).world)==7,
+ !ok(named(Case::JsonArray,false)),setting_value(named(Case::JsonArray,false).world)==7,
+ !ok(named(Case::JsonWrong,false)),setting_value(named(Case::JsonWrong,false).world)==7,
+ !ok(named(Case::Missing,false)),setting_value(named(Case::Missing,false).world)==7,
+ !ok(named(Case::Unsupported,false)),setting_value(named(Case::Unsupported,false).world)==7
+{
+ text_preparation();json_preparation();shape_neighbor();execution_neighbor();dry_execution_neighbor();runtime_neighbor();
+ reveal_with_fuel(execute,4);
+}
+}
+fn main(){}
