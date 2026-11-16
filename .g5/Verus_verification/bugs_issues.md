@@ -140,7 +140,7 @@ Reproduced by: e2e reproduced. real competing update lock; command OK with old s
 
 [Executable regression receipt](../uplift/consolidated/findings-audit-iter28/runs/20261116T031657840431Z-inst/receipt.json); [Runner](../uplift/consolidated/findings-audit-iter28/run_regressions.py) `inst`. The receipt records commands, expected observations, actual readers and provider qualifications.
 
-[Governing owner](../ontology/features/update.g5.md#update.steps.busy-policy). No product repair or maintainer approval is claimed. This is a reproduced discrepancy under an open policy assumption, not a settled defect verdict.
+[Governing owner](open_questions.md#update.steps.busy-policy). No product repair or maintainer approval is claimed. This is a reproduced discrepancy under an open policy assumption, not a settled defect verdict.
 
 <a id="p-f-inst-6"></a>
 ### P:F-INST-6: A class of the update package named `V<n><something>` (e.g. `V3Helper`) replaces step class `V<n>` in the step list; update then reports success without runn...
@@ -651,7 +651,7 @@ Found by: source review of `Lifecycle/Base.cls::GetCompletePhases`, then [iterat
 
 Reproduced by: E2E reproduced. [Iteration30 native receipt](../uplift/consolidated/iter30/native/20261116T170433591502Z/observations.json). `phasecase reload mycustom` (case c4) succeeds after Initialize and Reload, and the module's `MyCustom` Invoke counter does not change. `phasecase compile bogus` (c6) succeeds as a plain compile chain. Passing and contrasting neighbours: `phasecase MYCUSTOM` (c5) runs the custom hook once, and `phasecase bogus` (c7) fails.
 
-In complete mode `GetCompletePhases` keeps a non-standard name only when it is the sole name. Otherwise each name contributes its standard chain, and a custom or unknown name contributes none. A requested custom phase is therefore skipped without notice, and a mistyped phase name beside a valid one is ignored while the command reports success. The [custom-phase statement](../ontology/concepts/lifecycle.g5.md#lifecycle.custom) says a custom phase runs when requested by name. Where it should run in a mixed list, and whether an unknown name must refuse the command, is the open [phase-list policy](../ontology/concepts/lifecycle.g5.md#lifecycle.phase-list-policy). No repair was checked.
+In complete mode `GetCompletePhases` keeps a non-standard name only when it is the sole name. Otherwise each name contributes its standard chain, and a custom or unknown name contributes none. A requested custom phase is therefore skipped without notice, and a mistyped phase name beside a valid one is ignored while the command reports success. The [custom-phase statement](../ontology/concepts/lifecycle.g5.md#lifecycle.custom) says a custom phase runs when requested by name. Where it should run in a mixed list, and whether an unknown name must refuse the command, is the open [phase-list policy](open_questions.md#lifecycle.phase-list-policy). No repair was checked.
 
 <a id="c-d36"></a>
 ### C:D36: A module whose classes sit directly under SourcesRoot loads, but sync never sees its edits or deletions
@@ -807,7 +807,7 @@ Reproduced by: e2e reproduced. new dependency installed during update runs V1; f
 
 [Executable regression receipt](../uplift/consolidated/findings-audit-iter28/runs/20261116T031657840431Z-inst/receipt.json); [Runner](../uplift/consolidated/findings-audit-iter28/run_regressions.py) `inst`. The receipt records commands, expected observations, actual readers and provider qualifications.
 
-[Governing owner](../ontology/features/update.g5.md#update.steps.fresh-seeding-policy). No product repair or maintainer approval is claimed. This is a reproduced discrepancy under an open policy assumption, not a settled defect verdict.
+[Governing owner](open_questions.md#update.steps.fresh-seeding-policy). No product repair or maintainer approval is claimed. This is a reproduced discrepancy under an open policy assumption, not a settled defect verdict.
 
 <a id="p-f-inst-4"></a>
 ### P:F-INST-4: Between registries that offer the same version, the registry created first wins; `OverriddenSortOrder` has no effect. Deleting and re-adding a registry chang...
@@ -859,7 +859,7 @@ Reproduced by: e2e reproduced. developer fresh install leaves zero step records;
 
 [Executable regression receipt](../uplift/consolidated/findings-audit-iter28/runs/20261116T031657840431Z-inst/receipt.json); [Runner](../uplift/consolidated/findings-audit-iter28/run_regressions.py) `inst`. The receipt records commands, expected observations, actual readers and provider qualifications.
 
-[Governing owner](../ontology/features/update.g5.md#update.steps.dev-seeding-policy). No product repair or maintainer approval is claimed. This is a reproduced discrepancy under an open policy assumption, not a settled defect verdict.
+[Governing owner](open_questions.md#update.steps.dev-seeding-policy). No product repair or maintainer approval is claimed. This is a reproduced discrepancy under an open policy assumption, not a settled defect verdict.
 
 <a id="p-f-inst-9"></a>
 ### P:F-INST-9: Install silently replaces a needed module that is in developer mode and clears its developer mode; the guard covers only the named module. Wiki Concepts: a d...
@@ -872,7 +872,7 @@ Reproduced by: e2e reproduced. ordinary parent install replaces developer depend
 
 [Executable regression receipt](../uplift/consolidated/findings-audit-iter28/runs/20261116T031657840431Z-inst/receipt.json); [Runner](../uplift/consolidated/findings-audit-iter28/run_regressions.py) `inst`. The receipt records commands, expected observations, actual readers and provider qualifications.
 
-[Governing owner](../ontology/concepts/transactions-and-dev-mode.g5.md#dev-mode.overwrite-guard.dependency-policy). No product repair or maintainer approval is claimed. This is a reproduced discrepancy under an open policy assumption, not a settled defect verdict.
+[Governing owner](open_questions.md#dev-mode.overwrite-guard.dependency-policy). No product repair or maintainer approval is claimed. This is a reproduced discrepancy under an open policy assumption, not a settled defect verdict.
 
 <a id="p-f-nsp-2"></a>
 ### P:F-NSP-2: In a namespace that gets IPM by mapping, an `IPMVersion` requirement is checked against an empty version, so every module with such a requirement is refused ...
@@ -937,7 +937,7 @@ Reproduced by: e2e reproduced. ordinary failed compile then exact-byte revert ma
 
 [Executable regression receipt](../uplift/consolidated/findings-audit-iter28/runs/20261116T030308508323Z-nsp/receipt.json); [Runner](../uplift/consolidated/findings-audit-iter28/run_regressions.py) `nsp`. The receipt records commands, expected observations, actual readers and provider qualifications.
 
-[Governing owner](../ontology/features/developer-tools.g5.md#devtools.sync.failed-import-policy). No product repair or maintainer approval is claimed. This is a reproduced discrepancy under an open policy assumption, not a settled defect verdict.
+[Governing owner](open_questions.md#devtools.sync.failed-import-policy). No product repair or maintainer approval is claimed. This is a reproduced discrepancy under an open policy assumption, not a settled defect verdict.
 
 <a id="p-f-unin-2"></a>
 ### P:F-UNIN-2: `uninstall -purge` deletes no table data. Nothing reads the `Purge` parameter; `%Clean` deletes classes without the extent flag `e`. (An installer can read `...
@@ -1444,7 +1444,7 @@ Reproduced by: e2e reproduced. ordinary local-loaded dependency produces lockfil
 
 [Executable regression receipt](../uplift/consolidated/findings-audit-iter28/runs/20261116T031657840431Z-inst/receipt.json); [Runner](../uplift/consolidated/findings-audit-iter28/run_regressions.py) `inst`. The receipt records commands, expected observations, actual readers and provider qualifications.
 
-[Governing owner](../ontology/features/dependencies.g5.md#deps.lockfile.local-supplier-policy). No product repair or maintainer approval is claimed. This is a reproduced discrepancy under an open policy assumption, not a settled defect verdict.
+[Governing owner](open_questions.md#deps.lockfile.local-supplier-policy). No product repair or maintainer approval is claimed. This is a reproduced discrepancy under an open policy assumption, not a settled defect verdict.
 
 <a id="p-f-load-4"></a>
 ### P:F-LOAD-4: A load can fail after its final commit: an after-install message with `{` and a `$$$` macro that does not compile throws in `%EvaluateMacro`. The command ret...
@@ -1500,7 +1500,7 @@ Reproduced by: e2e reproduced. ordinary reload of normal module succeeds without
 
 [Executable regression receipt](../uplift/consolidated/findings-audit-iter28/runs/20261116T030308508323Z-nsp/receipt.json); [Runner](../uplift/consolidated/findings-audit-iter28/run_regressions.py) `nsp`. The receipt records commands, expected observations, actual readers and provider qualifications.
 
-[Governing owner](../ontology/concepts/lifecycle.g5.md#lifecycle.empty-reload-policy). No product repair or maintainer approval is claimed. This is a reproduced discrepancy under an open policy assumption, not a settled defect verdict.
+[Governing owner](open_questions.md#lifecycle.empty-reload-policy). No product repair or maintainer approval is claimed. This is a reproduced discrepancy under an open policy assumption, not a settled defect verdict.
 
 <a id="p-f-unin-9"></a>
 ### P:F-UNIN-9: A dependency removed by `uninstall -r` keeps its stored manifest in `^IPM.StudioDoc.ModuleStreamD`; only the top module's manifest is deleted.
