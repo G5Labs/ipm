@@ -576,7 +576,7 @@ Found by: source review of `General/ModuleSummary.cls::GetSystemRequirements` (H
 
 Reproduced by: E2E reproduced. [Iteration46 native receipt](iter46/native/20261116T175856608516Z/observations.json) on IRIS 2026.1 x86-64 at `571e04a1`. `show s46d`, whose only stored requirement is `Health="false"`, prints no System requirements section (case d). `show s46a` lists IRIS and Interoperability but no Health entry (case a). Passing neighbours: s46h, which has no requirements, also shows none, and the other set requirements are listed.
 
-A reader of `show` cannot tell that the module refuses IRIS for Health, contrary to the [inspection statement](../../ontology/features/inspection.g5.md#inspect) that `show` shows the module's details. A repair would list "not supported on IRIS for Health" when Health is explicitly false. It was not checked.
+A reader of `show` cannot tell that the module refuses IRIS for Health, contrary to the [show summary statement](../../ontology/features/inspection.g5.md#inspect.show), which says the summary prints the module's system requirements. A repair would list "not supported on IRIS for Health" when Health is explicitly false. It was not checked.
 
 <a id="c-d53"></a>
 ### C:D53: YAML and TOON test reports change assertion message text
