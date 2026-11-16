@@ -98,6 +98,14 @@ A namespace's source-control extension can follow module lifecycles. IPM calls i
 - If the before-phase call returns an error, that phase and the command fail, and the after-phase call for it is not made.
 - As built, the root-change call is not made when a module is loaded from another directory or reloaded with an explicit root, although the stored root changes (defect C:D51).
 
+<a id="lifecycle.source-control.editor"></a>
+[D · lifecycle.source-control.editor]
+
+Editor callbacks on IPM's composite source-control class, such as save, load, compile, delete and icon state, go only to the primary extension, with item names normalized (a path such as `/A/B.cls` becomes `A.B.CLS`). A menu action goes to the extension that defines the menu, and other actions go to the primary.
+
+- An item is editable only if every configured extension allows editing. As built, the read-only check asks only the primary, so another extension that marks an item read-only is ignored there (defect C:D70).
+- As built, configuring a nonexistent extension class returns success, and every later creation of the composite then fails (defect C:D71). An empty primary name leaves the previous primary in place.
+
 <a id="lifecycle.alias"></a>
 [D · lifecycle.alias]
 
@@ -250,6 +258,18 @@ Sources: no IPM caller writes `Configure.IsUpgrade` or `Configure.DatabaseName`.
 Sources: `ExtensionBase/SourceControl/Interface.cls` comments and `%GetClass`; `ExtensionBase/CompositeMethodOverrides.cls::SetExtensionClasses`; `Main.cls` init (lines 1876-1890); `Storage/Module.cls::ExecutePhases`. Model: [schooks.rs](../../Verus_verification/consolidated/iter43/schooks.rs) `active`, `observe`, `before_error_stops_phase`, `nested_hooks_inside_parent`, `root_hook_not_reached` ([handoff](../../uplift/consolidated/iter43/HANDOFF.md)). Interactive `init` prompts, Studio menus and `%OnMakeModuleEditable` are not assessed.
 
 Findings: [A source-control extension is never told that a module's root changed](../../uplift/consolidated/BUGS.md#c-d51)
+
+### lifecycle.source-control.editor
+
+- agent
+- user-facing-behavior
+- Expands: [Source-control extension](#lifecycle.source-control).
+
+Sources: `ExtensionBase/Composite.cls` (GetStatus comment "An item is editable only if all extensions allow editing"), `ExtensionBase/CompositeMethodOverrides.cls`, `ExtensionBase/Utils.cls::CorrectInternalNames`. Model: [composite.rs](../../Verus_verification/consolidated/iter67/composite.rs) `other_extension_inconsistency`, `neighbors`, `misconfigured_other_breaks_creation`, `empty_primary_ignored` ([handoff](../../uplift/consolidated/iter67/HANDOFF.md)). Mapped source-control routing is not exercised.
+
+Findings: [The composite's read-only check ignores other extensions](../../uplift/consolidated/BUGS.md#c-d70)
+
+Findings: [Configuring a nonexistent composite extension succeeds and then breaks source control in the namespace](../../uplift/consolidated/BUGS.md#c-d71)
 
 ### lifecycle.alias
 

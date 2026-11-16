@@ -1,0 +1,85 @@
+{
+ "recorded_utc": "2026-11-16T18:44:46.960283+00:00",
+ "batch": 15,
+ "iteration": 67,
+ "workflow": "editor-facing callbacks of IPM composite source control (%IPM.ExtensionBase.Composite): which configured extension (primary vs others) receives OnBeforeSave/OnAfterSave/OnBeforeLoad/OnAfterCompile/OnBeforeDelete/GetStatus/IsReadOnly/UserAction/ItemIconState for module and non-module items, and how results combine",
+ "unbound_members": [
+  "ExtensionBase/Composite.cls::* (29)",
+  "ExtensionBase/CompositeMethodOverrides.cls::{%OnNew,FindNamespaceForDatabase,FindNamespaceForInternalName,GetMenuExtension,MapMenus}",
+  "ExtensionBase/Utils.cls::CorrectInternalNames"
+ ],
+ "owner": ".g5/ontology/concepts/lifecycle.g5.md#lifecycle.source-control (lifecycle hooks only; editor callbacks unowned)",
+ "exposure": "Composite.cls declaration list and its class comment read (\"directs the action and lifecycle calls to corresponding primary/secondary extension class\"; \"%DispatchMethod: dispatch unknown methods to primary extension class\"). Method bodies unread. iter43 handoff read.",
+ "predictions_from_comments": [
+  {
+   "case": "OnBeforeSave/OnAfterSave on a class of an installed module and on a non-module class",
+   "reader": "which test extension recorded the call",
+   "predicted": "the corresponding extension; primary at least; secondary for items it is mapped to (unclear what \"corresponding\" means)"
+  },
+  {
+   "case": "IsReadOnly / GetStatus when primary says read-only and secondary says editable (or vice versa)",
+   "reader": "returned values",
+   "predicted": "result of the corresponding extension (primary for non-module items)"
+  },
+  {
+   "case": "an unknown method call on the Composite",
+   "reader": "test extension call log",
+   "predicted": "dispatched to primary"
+  },
+  {
+   "case": "OnBeforeSave error from primary",
+   "reader": "returned status",
+   "predicted": "error propagates"
+  },
+  {
+   "case": "no primary configured (Composite with empty extension list)",
+   "reader": "status / calls",
+   "predicted": "no calls, OK"
+  }
+ ],
+ "exposure_after_source": "Read Composite.cls bodies (AfterUserAction, ExternalName, GetStatus, IsReadOnly, ItemIconState, On*Save/Load/Compile/Delete, OnMenuItem, UserAction, dispatchers), CompositeMethodOverrides (%OnNew, GetPrimaryExtension, FindNamespaceForInternalName, FindNamespaceForDatabase, GetMenuExtension, MapMenus, Set*ExtensionClass(es), GetSubExtensionClasses) and Utils.CorrectInternalNames, after the comment-based predictions.",
+ "source_predictions": [
+  {
+   "case": "per-item callbacks",
+   "predicted": "primary only, names corrected"
+  },
+  {
+   "case": "GetStatus P editable, O uneditable",
+   "predicted": "Editable 0; primary called twice (sub list includes primary)"
+  },
+  {
+   "case": "IsReadOnly P false, O true",
+   "predicted": "false and O not called (short-circuit stop at primary)"
+  },
+  {
+   "case": "menu UserAction",
+   "predicted": "owner of the menu; unknown menu nobody"
+  },
+  {
+   "case": "SetExtensionClasses with a nonexistent other",
+   "predicted": "OK, stored raw, composite %New fails"
+  },
+  {
+   "case": "SetExtensionClasses with empty primary",
+   "predicted": "OK, previous primary kept"
+  }
+ ],
+ "outcome": {
+  "model": "composite.rs 4 verified, 5/5 controls",
+  "native": "20261116T184753560177Z 55 fields; 33 replayed; flips r1.ro, s1.new, g1.editable rejected",
+  "findings": [
+   "IsReadOnly ignores other extensions (Low)",
+   "nonexistent other extension accepted then breaks creation (Low)"
+  ],
+  "misses": "comment-based prediction (corresponding extension) was vague; source predictions all matched"
+ },
+ "integration": {
+  "by": "main thread",
+  "independent_rerun": "run.py --no-native: 4 verified, 5/5 controls, 33 replayed",
+  "findings": [
+   "C:D70 Low",
+   "C:D71 Low"
+  ],
+  "convergence_role": "final test: different underserved workflow"
+ }
+}

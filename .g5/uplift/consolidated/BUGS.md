@@ -799,6 +799,32 @@ Reproduced by: E2E reproduced. [Iteration66 native receipt](iter66/native/202611
 
 This is documentation drift against the module-action help, recorded under the [Document phase statement](../../ontology/concepts/lifecycle.g5.md#lifecycle.document). A repair would generate documentation or reword the help to "runs Document-phase hooks for the module and its dependencies". It was not checked.
 
+<a id="c-d70"></a>
+### C:D70: The composite's read-only check ignores other extensions
+
+Severity: Low · Decision: Open
+
+Run: Uplift 2026-11-16
+
+Found by: source review of `ExtensionBase/Composite.cls::IsReadOnly`, then [iteration67 model](../../Verus_verification/consolidated/iter67/composite.rs) `other_extension_inconsistency` with control `readonly-all-extensions` ([proof receipt](iter67/proofs/models.json)).
+
+Reproduced by: E2E reproduced. [Iteration67 native receipt](iter67/native/20261116T184753560177Z/observations.json) on IRIS 2026.1 x86-64 at `571e04a1`. With the primary not read-only and the other extension read-only, `IsReadOnly("M67.Main.cls")` returns 0 and the other extension is never asked (case r1), while `GetStatus` for the same configuration reports the item not editable (g1). Passing neighbour: a read-only primary gives 1 (r2).
+
+The two checks disagree, contrary to the [editor statement](../../ontology/concepts/lifecycle.g5.md#lifecycle.source-control.editor). A repair would consult the other extensions after a false primary answer. It was not checked.
+
+<a id="c-d71"></a>
+### C:D71: Configuring a nonexistent composite extension succeeds and then breaks source control in the namespace
+
+Severity: Low · Decision: Open
+
+Run: Uplift 2026-11-16
+
+Found by: source review of `ExtensionBase/CompositeMethodOverrides.cls::SetSubExtensionClasses` (validated list discarded, raw list stored) and `%OnNew`, then [iteration67 model](../../Verus_verification/consolidated/iter67/composite.rs) `misconfigured_other_breaks_creation` with control `subs-filtered` ([proof receipt](iter67/proofs/models.json)).
+
+Reproduced by: E2E reproduced. [Iteration67 native receipt](iter67/native/20261116T184753560177Z/observations.json). `SetExtensionClasses("IPMCont.P67",$lb("IPMCont.O67","No.Such67"))` returns OK and stores `No.Such67`, after which creating the composite fails (case s1). Passing neighbour: the same call without the bad name creates the composite (setup).
+
+The trigger is a direct API call rather than an ordinary command, which keeps this Low. It contradicts the [editor statement](../../ontology/concepts/lifecycle.g5.md#lifecycle.source-control.editor). A repair would store the validated list or refuse unknown class names. It was not checked.
+
 ## Outside active reproduction scope
 
 <a id="c-d17"></a>

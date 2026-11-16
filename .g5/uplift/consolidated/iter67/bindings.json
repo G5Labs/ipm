@@ -1,0 +1,137 @@
+{
+ "verus_dir": ".g5/Verus_verification/consolidated/iter67",
+ "changed_files": [
+  "composite.rs",
+  "cases.json",
+  "run.py",
+  "native/**"
+ ],
+ "rows": [
+  {
+   "id": "S67-01",
+   "owner": ".g5/ontology/concepts/lifecycle.g5.md#lifecycle.source-control.editor",
+   "model": "composite.rs",
+   "symbols": [
+    "per_item",
+    "user_action",
+    "neighbors"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/ExtensionBase/Composite.cls",
+     "OnBeforeSave"
+    ],
+    [
+     "src/cls/IPM/ExtensionBase/Composite.cls",
+     "OnAfterSave"
+    ],
+    [
+     "src/cls/IPM/ExtensionBase/Composite.cls",
+     "OnBeforeLoad"
+    ],
+    [
+     "src/cls/IPM/ExtensionBase/Composite.cls",
+     "OnAfterCompile"
+    ],
+    [
+     "src/cls/IPM/ExtensionBase/Composite.cls",
+     "OnBeforeDelete"
+    ],
+    [
+     "src/cls/IPM/ExtensionBase/Composite.cls",
+     "ItemIconState"
+    ],
+    [
+     "src/cls/IPM/ExtensionBase/Composite.cls",
+     "UserAction"
+    ],
+    [
+     "src/cls/IPM/ExtensionBase/Composite.cls",
+     "%DispatchMethod"
+    ],
+    [
+     "src/cls/IPM/ExtensionBase/CompositeMethodOverrides.cls",
+     "GetPrimaryExtension"
+    ],
+    [
+     "src/cls/IPM/ExtensionBase/CompositeMethodOverrides.cls",
+     "GetMenuExtension"
+    ],
+    [
+     "src/cls/IPM/ExtensionBase/CompositeMethodOverrides.cls",
+     "MapMenus"
+    ]
+   ],
+   "reader": [
+    [
+     "src/cls/IPM/ExtensionBase/Utils.cls",
+     "CorrectInternalNames"
+    ]
+   ],
+   "scope": "Non-mapped composite: per-item callbacks and type-1 actions reach only the primary with corrected names (incl. /A/B.cls path form); menu actions reach the extension owning the menu; unknown methods dispatch to the primary. Native a1-a3, u1-u3, d1. Mapped source control (MappedSourceControl, FindNamespaceFor*) not exercised."
+  },
+  {
+   "id": "S67-02",
+   "owner": ".g5/ontology/concepts/lifecycle.g5.md#lifecycle.source-control.editor",
+   "model": "composite.rs",
+   "symbols": [
+    "editable",
+    "status_calls",
+    "read_only",
+    "ro_calls",
+    "other_extension_inconsistency",
+    "neighbors"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/ExtensionBase/Composite.cls",
+     "GetStatus"
+    ],
+    [
+     "src/cls/IPM/ExtensionBase/Composite.cls",
+     "IsReadOnly"
+    ]
+   ],
+   "reader": [
+    [
+     "src/cls/IPM/ExtensionBase/CompositeMethodOverrides.cls",
+     "GetSubExtensionClasses"
+    ]
+   ],
+   "scope": "GetStatus ANDs Editable over [primary, others] (primary consulted twice); IsReadOnly returns only the primary answer and never consults others. Native g1-g3, r1-r3."
+  },
+  {
+   "id": "S67-03",
+   "owner": ".g5/ontology/concepts/lifecycle.g5.md#lifecycle.source-control.editor",
+   "model": "composite.rs",
+   "symbols": [
+    "configure_ok",
+    "create_ok",
+    "primary_after_set",
+    "misconfigured_other_breaks_creation",
+    "empty_primary_ignored"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/ExtensionBase/CompositeMethodOverrides.cls",
+     "SetSubExtensionClasses"
+    ],
+    [
+     "src/cls/IPM/ExtensionBase/CompositeMethodOverrides.cls",
+     "SetPrimaryExtensionClass"
+    ],
+    [
+     "src/cls/IPM/ExtensionBase/CompositeMethodOverrides.cls",
+     "%OnNew"
+    ]
+   ],
+   "reader": [
+    [
+     "src/cls/IPM/ExtensionBase/CompositeMethodOverrides.cls",
+     "SetExtensionClasses"
+    ]
+   ],
+   "scope": "A nonexistent other-extension name is stored raw with OK and makes every composite creation fail; an empty primary name is ignored with OK. Native s1, e1."
+  }
+ ]
+}
