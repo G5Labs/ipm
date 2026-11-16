@@ -1,0 +1,147 @@
+{
+ "verus_dir": ".g5/Verus_verification/consolidated/iter32",
+ "changed_files": [
+  "sync.rs",
+  "cases.json",
+  "run.py",
+  "native/Reader.cls",
+  "native/*/module.xml",
+  "native/*/src/**"
+ ],
+ "rows": [
+  {
+   "id": "S32-01",
+   "owner": ".g5/ontology/features/developer-tools.g5.md#devtools.sync",
+   "model": "sync.rs",
+   "symbols": [
+    "modified",
+    "deleted",
+    "count_mod",
+    "count_del",
+    "nothing",
+    "sync_file",
+    "sync",
+    "no_delete_without_flag",
+    "delete_flag_removes_compilable",
+    "delete_schedule"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/General/Sync/Pipeline.cls",
+     "Run"
+    ],
+    [
+     "src/cls/IPM/General/Sync/Pipeline.cls",
+     "SyncBuildReverseIndex"
+    ],
+    [
+     "src/cls/IPM/General/Sync/Pipeline.cls",
+     "SyncRoutePathSet"
+    ],
+    [
+     "src/cls/IPM/General/Sync/Pipeline.cls",
+     "SyncApplyDeletes"
+    ],
+    [
+     "src/cls/IPM/Storage/FileHash.cls",
+     "ComputeChanges"
+    ]
+   ],
+   "reader": [
+    [
+     "src/cls/IPM/Storage/FileHash.cls",
+     "CommitChanges"
+    ]
+   ],
+   "scope": "Developer-mode PKG and single-CLS resources in conventional layout: modified/deleted against baseline, early \"Nothing to sync\" exit, -delete removes compilable documents, deletions without -delete reported and kept. Native s0-s4. SHA-1 provider, $system.OBJ.Delete and compiler are premises; non-compilable resources, test routing and retries are owned elsewhere or outside."
+  },
+  {
+   "id": "S32-02",
+   "owner": ".g5/ontology/features/developer-tools.g5.md#devtools.sync",
+   "model": "sync.rs",
+   "symbols": [
+    "manifest_change",
+    "sync",
+    "delete_schedule"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/General/Sync/Pipeline.cls",
+     "SyncCheckModuleXml"
+    ],
+    [
+     "src/cls/IPM/General/Sync/Pipeline.cls",
+     "SyncCommitModuleXml"
+    ]
+   ],
+   "reader": [
+    [
+     "src/cls/IPM/General/Sync/Pipeline.cls",
+     "SyncBuildReverseIndex"
+    ]
+   ],
+   "scope": "Changed module.xml reloads the manifest before scanning; a newly declared resource file has no baseline row and syncs as modified. Native s5. Manifest removal of a resource is observed only as its routing disappearing."
+  },
+  {
+   "id": "S32-03",
+   "owner": ".g5/ontology/features/developer-tools.g5.md#devtools.sync",
+   "model": "sync.rs",
+   "symbols": [
+    "loads",
+    "scanned",
+    "flat_layout_loads_but_is_not_synced",
+    "untracked_never_synced",
+    "flat_schedule",
+    "load_module"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/ResourceProcessor/Default/Document.cls",
+     "GetSyncDirectory"
+    ],
+    [
+     "src/cls/IPM/ResourceProcessor/Default/Document.cls",
+     "OnItemRelativePath"
+    ],
+    [
+     "src/cls/IPM/Storage/FileHash.cls",
+     "CollectScanDirs"
+    ]
+   ],
+   "reader": [
+    [
+     "src/cls/IPM/ResourceProcessor/Default/Document.cls",
+     "OnPhase"
+    ]
+   ],
+   "scope": "Sync scans {SourcesRoot}/{Directory}; Reload also tries {SourcesRoot} when Directory is undeclared. Flat-layout PKG module loads, its edit/delete are never synced, a reload picks the edit up. Native f1-f3 (C:D36). Other Directory spellings, preload and path-style resources not assessed."
+  },
+  {
+   "id": "S32-04",
+   "owner": ".g5/ontology/features/developer-tools.g5.md#devtools.sync",
+   "model": "sync.rs",
+   "symbols": [
+    "dev",
+    "ready_deps",
+    "pass",
+    "rest",
+    "order_from",
+    "order",
+    "order_neighbors"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/Utils/Module.cls",
+     "GetDevModeModulesInDependencyOrder"
+    ]
+   ],
+   "reader": [
+    [
+     "src/cls/IPM/Main.cls",
+     "Sync"
+    ]
+   ],
+   "scope": "Developer-mode rows in ID order, edges restricted to the developer-mode set, repeated row-order passes, cycle fallback. Native order run: direct dependency respected, transitive dependency through a non-developer module not (C:D37). SQL row order is a provider premise."
+  }
+ ]
+}

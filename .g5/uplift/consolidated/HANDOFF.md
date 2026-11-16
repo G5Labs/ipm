@@ -1,5 +1,5 @@
 <!-- continuation-pointer:start -->
-> **Continuation pointer (2026-11-16 Linux run).** Current: batch 1 sealed (iteration30 `6122cdf1`, iteration31 in the commit "Iteration31 seal"; see `git log`). Material outcome: phase-selection producer and installed-requirement decisions bound; 413/1216 locator members (+6 from 407); new defects C:D34, C:D35; questions C:Q24-C:Q26 ([iter30](iter30/HANDOFF.md), [iter31](iter31/HANDOFF.md)). Cost: native+formal runs under 30 s each; iteration31 fork ~285k tokens; main-thread tokens not available. Next: batch 2 selection from the [iter31 map](iter31/project-map.json).
+> **Continuation pointer (2026-11-16 Linux run).** Current: batch 2. Sealed: iteration30 `6122cdf1`, iteration31 `aab17e2c`, iteration32 in the commit "Iteration32 seal" (see `git log`); iteration33 (`list-dependents` reporting) running as a delegated lane. Material outcome: 420/1216 locator members (+13 from 407); new defects C:D34-C:D37; questions C:Q24-C:Q26 ([iter30](iter30/HANDOFF.md), [iter31](iter31/HANDOFF.md), [iter32](iter32/HANDOFF.md)). Cost: each native+formal run under 30 s; iteration31 fork ~285k tokens; main-thread tokens not available. Next: integrate iteration33, then batch 3 selection from the [iter32 map](iter32/project-map.json).
 <!-- continuation-pointer:end -->
 
 # IPM consolidation: final handoff

@@ -1,0 +1,96 @@
+{
+ "recorded_utc": "2026-11-16T17:09:13.171949+00:00",
+ "batch": 2,
+ "iteration": 32,
+ "prior_seal": "aab17e2c",
+ "workflow": "sync [-delete] on developer-mode modules: file change/delete detection -> reverse index routing -> namespace item deletion, module.xml change, whole-namespace order -> namespace items, compiled values, sync summary",
+ "unbound_members": [
+  "General/Sync/Pipeline.cls::SyncApplyDeletes",
+  "General/Sync/Pipeline.cls::SyncBuildReverseIndex",
+  "General/Sync/Pipeline.cls::SyncRoutePathSet",
+  "General/Sync/Pipeline.cls::SyncCheckModuleXml",
+  "General/Sync/Pipeline.cls::SyncCommitModuleXml",
+  "General/Sync/Pipeline.cls::SyncCollectPreloadResources",
+  "General/Sync/Pipeline.cls::SyncCollectTestPaths",
+  "Utils/Module.cls::GetDevModeModulesInDependencyOrder"
+ ],
+ "owner": ".g5/ontology/features/developer-tools.g5.md#devtools.sync",
+ "exposure": "Pipeline bodies not yet read; only call sites (Pipeline.cls lines 41,74,102,119-121,142,168; Main.cls:2385) were seen by grep. Predictions below are from the devtools.sync owner.",
+ "predictions": [
+  {
+   "case": "delete one class file of a dev module, sync m -delete",
+   "reader": "class existence in namespace",
+   "predicted": "class removed; other classes unchanged"
+  },
+  {
+   "case": "same, sync m without -delete",
+   "reader": "class existence",
+   "predicted": "class stays"
+  },
+  {
+   "case": "delete one file and edit another, sync m -delete",
+   "reader": "existence + compiled value",
+   "predicted": "deleted removed, edited recompiled"
+  },
+  {
+   "case": "delete a file belonging to another dev module, sync m -delete",
+   "reader": "other module class",
+   "predicted": "not deleted by syncing m"
+  },
+  {
+   "case": "module.xml adds a resource whose file exists, sync m",
+   "reader": "new class exists",
+   "predicted": "unspecified by owner; expected loaded"
+  },
+  {
+   "case": "sync without a module name, two dev modules X depends on Y",
+   "reader": "order of per-module sync output",
+   "predicted": "Y before X (dependency order)"
+  }
+ ],
+ "exposure_after_source": "Read Pipeline Run, SyncCheckModuleXml, SyncCommitModuleXml, SyncBuildReverseIndex, SyncRoutePathSet, SyncApplyDeletes, Main.Sync and GetDevModeModulesInDependencyOrder after the owner predictions above.",
+ "source_predictions": [
+  {
+   "case": "s1 delete B.cls, sync without -delete",
+   "predicted": "B kept; \"detected but not applied\" warning; ok"
+  },
+  {
+   "case": "s2 sync -delete",
+   "predicted": "B deleted (PKG child routed via reverse index, AbstractCompilable), A/C kept"
+  },
+  {
+   "case": "s3 edit A + delete C, -delete",
+   "predicted": "A=2, C deleted"
+  },
+  {
+   "case": "s4 delete single-class resource file",
+   "predicted": "class deleted"
+  },
+  {
+   "case": "s5 module.xml adds SyncM2.PKG with new file",
+   "predicted": "manifest reloaded, E loaded and compiled"
+  },
+  {
+   "case": "o1 direct dev dependency ox->oy, ox row first",
+   "predicted": "oy synced before ox"
+  },
+  {
+   "case": "o2 tx(dev)->tz(non-dev)->ty(dev), tx row before ty",
+   "predicted": "tx synced before ty: edges restricted to dev set lose the transitive constraint (ontology predicts ty first)"
+  }
+ ],
+ "outcome": {
+  "status": "sealed",
+  "model": "sync.rs 15 verified, 7/7 controls rejected",
+  "native": "20261116T171504430334Z 206 fields; 191 replayed; 3 flips rejected",
+  "misses": "explore1 flat layout: every sync Nothing to sync -> C:D36 discovered",
+  "findings": [
+   "C:D36 new Medium",
+   "C:D37 new Low"
+  ],
+  "reach": "420/1216 (+7 new, +7 strengthened, 14 distinct)",
+  "cost": {
+   "run_wall_s": 25.1
+  }
+ }
+}

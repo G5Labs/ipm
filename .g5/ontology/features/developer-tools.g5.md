@@ -18,8 +18,10 @@ IPM includes tools to keep developer-mode modules in step with files on disk, to
 
 `sync [<module>]` brings changed files from disk into developer-mode modules without a full reload. It finds files changed since the last load or sync by their hash and recompiles only what is out of date.
 
-- With no module, it syncs every developer-mode module in dependency order.
-- `-delete` also removes items whose files were deleted, and `-test` runs test classes that changed.
+- With no module, it syncs every developer-mode module in dependency order. As built, only dependencies between developer-mode modules count, so a module that depends on another through a module not in developer mode can be synced first (defect C:D37).
+- `-delete` also removes items whose files were deleted, and `-test` runs test classes that changed. Without `-delete`, sync keeps those items and reports how many deleted files it did not apply.
+- A changed `module.xml` is reloaded first, so files of a newly declared resource are synced as new.
+- Sync looks for a resource's files only in `{SourcesRoot}/{Directory}`, where Directory defaults to the file type, such as `cls`. As built, a module whose class files sit directly under SourcesRoot still loads, but sync never sees their edits or deletions and reports "Nothing to sync" (defect C:D36).
 - `load -skip-sync` leaves recording the hashes to the next `sync`.
 
 - A failed sync with an existing baseline keeps its retry mark. The next sync retries that file even if its bytes equal the stored baseline.
@@ -203,6 +205,12 @@ Sources: `Main.cls:85-119`, `:322-404`, `:509-522`, `:639-705`, `:781-805`. Inve
 - Children: [retry](#devtools.sync.retry), [compile after a resolution failure](#devtools.sync.compile-after-resolve), [test stop](#devtools.sync.test-stop), [skipped-test tracking](#devtools.sync.skipped-tracking), [test paths](#devtools.sync.test-paths).
 
 Sources: `Main.cls:108-119`; `wiki/02` L1136-1189; CHANGELOG 0.10.10 (`#1117`), 0.10.11 (`#1290`). Inventory: CAT-31; A2 1.2 row 6 (`Main:Sync`, `General/Sync/Pipeline.cls`). Tests: `Sync.cls` `TestNoChangeIsNoOp`, `TestModifiedClassRecompiles`, `TestLoadSkipSyncStampsNoBaseline`. Observed: `sync` runs without a transaction.
+
+Model: [sync.rs](../../Verus_verification/consolidated/iter32/sync.rs) `sync`, `delete_schedule`, `flat_schedule`, `order_neighbors`. Iteration32 native cases cover `-delete` against its absence, an edit with a deletion, a single-class resource, a manifest that adds a resource, the flat-layout contrast and whole-namespace order ([handoff](../../uplift/consolidated/iter32/HANDOFF.md)).
+
+Findings: [A module whose classes sit directly under SourcesRoot loads, but sync never sees its edits or deletions](../../uplift/consolidated/BUGS.md#c-d36)
+
+Findings: [Whole-namespace sync ignores dependencies that pass through a module not in developer mode](../../uplift/consolidated/BUGS.md#c-d37)
 
 ### devtools.sync.retry
 
