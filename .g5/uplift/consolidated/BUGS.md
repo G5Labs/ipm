@@ -227,6 +227,32 @@ Reproduced by: e2e reproduced. default snapshot reinstall refuses; shallow/relea
 
 [Governing owner](../../ontology/concepts/versions.g5.md#version.range.snapshot-intersection). No product repair or maintainer approval is claimed.
 
+<a id="c-d34"></a>
+### C:D34: `-only` with two or more phase names fails before any phase runs
+
+Severity: Medium · Decision: Open
+
+Run: Uplift 2026-11-16
+
+Found by: source review of `Lifecycle/Base.cls::MatchSinglePhase` and `Storage/Module.cls::ExecutePhases`, then [iteration30 model](../../Verus_verification/consolidated/iter30/phases.rs) `only_multiple_names_fail` and its control `only-runs-each-name` ([proof receipt](iter30/proofs/models.json)).
+
+Reproduced by: E2E reproduced. [Iteration30 native receipt](iter30/native/20261116T170433591502Z/observations.json) on IRIS 2026.1 x86-64 at `571e04a1`, developer-mode directory module `phasecase`. `phasecase compile activate -only` (case c3) and `mycustom compile -only` (c10) return an error status with `<METHOD DOES NOT EXIST> *%Compile,Activate` and `*%Mycustom,Compile`. Neither the After-Compile nor the After-Activate hook runs, and the compiled class keeps its old value. Passing neighbours: `phasecase compile -only` (c1), `compile phasecase -only` (c9) and `phasecase activate -only` (c11) each run exactly the named phase.
+
+`ModuleAction` builds a phase list and, under `-only`, `ExecutePhases` passes `$listtostring` of the whole list to `MatchSinglePhase`. The comma-joined name matches neither a standard nor a custom phase, so the lifecycle method call fails. The module-action help says `-only` "Only runs the specified phase(s)", and the [governing statement](../../ontology/concepts/lifecycle.g5.md#lifecycle.only) says it runs just the named phases. A repair would match each name separately and keep the given order. A distinguishing check is c3 running Compile then Activate with no Initialize or Reload. The proposed repair was not checked.
+
+<a id="c-d35"></a>
+### C:D35: A phase list silently drops custom and unknown names listed beside a standard phase
+
+Severity: Medium · Decision: Open
+
+Run: Uplift 2026-11-16
+
+Found by: source review of `Lifecycle/Base.cls::GetCompletePhases`, then [iteration30 model](../../Verus_verification/consolidated/iter30/phases.rs) `custom_and_unknown_neighbors` and its control `custom-beside-standard-runs` ([proof receipt](iter30/proofs/models.json)).
+
+Reproduced by: E2E reproduced. [Iteration30 native receipt](iter30/native/20261116T170433591502Z/observations.json). `phasecase reload mycustom` (case c4) succeeds after Initialize and Reload, and the module's `MyCustom` Invoke counter does not change. `phasecase compile bogus` (c6) succeeds as a plain compile chain. Passing and contrasting neighbours: `phasecase MYCUSTOM` (c5) runs the custom hook once, and `phasecase bogus` (c7) fails.
+
+In complete mode `GetCompletePhases` keeps a non-standard name only when it is the sole name. Otherwise each name contributes its standard chain, and a custom or unknown name contributes none. A requested custom phase is therefore skipped without notice, and a mistyped phase name beside a valid one is ignored while the command reports success. The [custom-phase statement](../../ontology/concepts/lifecycle.g5.md#lifecycle.custom) says a custom phase runs when requested by name. Where it should run in a mixed list, and whether an unknown name must refuse the command, is the open [phase-list policy](../../ontology/concepts/lifecycle.g5.md#lifecycle.phase-list-policy). No repair was checked.
+
 <a id="c-d2"></a>
 ### C:D2: When IPM cannot create a load's temporary `.modules` repository, it prints "Failed to clean up repository 'ipm-temp-modules-N'. You may need to manually dele...
 

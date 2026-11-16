@@ -1,0 +1,122 @@
+{
+ "verus_dir": ".g5/Verus_verification/consolidated/iter30",
+ "changed_files": [
+  "phases.rs",
+  "cases.json",
+  "run.py",
+  "native/Reader.cls",
+  "native/phasecase/module.xml",
+  "native/phasecase/src/PhaseCase/Hook.cls",
+  "native/phasecase/src/PhaseCase/Value.cls"
+ ],
+ "rows": [
+  {
+   "id": "S30-01",
+   "owner": ".g5/ontology/concepts/lifecycle.g5.md#lifecycle.chain",
+   "model": "phases.rs",
+   "symbols": [
+    "in_chain",
+    "any_chain",
+    "ordered_from",
+    "complete_plan",
+    "single_step",
+    "plan",
+    "fixed_order",
+    "only_versus_chain",
+    "custom_and_unknown_neighbors"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/Lifecycle/Base.cls",
+     "GetCompletePhases"
+    ],
+    [
+     "src/cls/IPM/Lifecycle/Base.cls",
+     "GetCompletePhasesForOne"
+    ],
+    [
+     "src/cls/IPM/Main.cls",
+     "ModuleAction"
+    ]
+   ],
+   "reader": [
+    [
+     "src/cls/IPM/Storage/Module.cls",
+     "ExecutePhases"
+    ]
+   ],
+   "scope": "Complete mode: union of each requested word's chain in PHASES order, each phase once; one non-standard word kept as-is; custom or unknown word beside a standard word contributes nothing. Tokens abstract ASCII words; Register, \"*\" and empty lists outside domain. Native c2,c4,c6,c7,c8 and setup."
+  },
+  {
+   "id": "S30-02",
+   "owner": ".g5/ontology/concepts/lifecycle.g5.md#lifecycle.only",
+   "model": "phases.rs",
+   "symbols": [
+    "only_plan",
+    "single_step",
+    "plan",
+    "only_versus_chain",
+    "only_multiple_names_fail"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/Lifecycle/Base.cls",
+     "MatchSinglePhase"
+    ],
+    [
+     "src/cls/IPM/Main.cls",
+     "ModuleAction"
+    ],
+    [
+     "src/cls/IPM/Main.cls",
+     "RunOnePhase"
+    ]
+   ],
+   "reader": [
+    [
+     "src/cls/IPM/Storage/Module.cls",
+     "ExecutePhases"
+    ]
+   ],
+   "scope": "-only: one word runs only that phase (standard or declared custom, case-insensitive); two or more words become one comma-joined name that is neither standard nor custom and fails before any phase work. Runtime METHOD DOES NOT EXIST for the joined/unknown name is a native-qualified provider premise. Native c1,c3,c5,c9,c10,c11."
+  },
+  {
+   "id": "S30-03",
+   "owner": ".g5/ontology/concepts/lifecycle.g5.md#lifecycle.chain",
+   "model": "phases.rs",
+   "symbols": [
+    "step",
+    "run_steps",
+    "execute",
+    "position",
+    "case",
+    "world_before"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/Storage/Module.cls",
+     "ExecutePhases"
+    ],
+    [
+     "src/cls/IPM/Storage/Module.cls",
+     "GetCustomPhases"
+    ],
+    [
+     "src/cls/IPM/Lifecycle/Module.cls",
+     "%Activate"
+    ],
+    [
+     "src/cls/IPM/Lifecycle/Base.cls",
+     "%DispatchMethod"
+    ]
+   ],
+   "reader": [
+    [
+     "src/cls/IPM/Storage/InvokeReference.cls",
+     "OnAfterPhase"
+    ]
+   ],
+   "scope": "Per-step effects observed natively: START line per executed phase, \"*\" refresh silent, developer-mode Reload copies disk source, Compile compiles namespace source and runs After-Compile Invoke, Activate runs After-Activate Invoke and a nested complete Configure phase via %DispatchMethod, custom phase runs its Invoke, a non-dispatchable name prints START then fails and stops. Resource processors, source control hooks and lifecycle bodies other than these effects are not modelled."
+  }
+ ]
+}

@@ -1,3 +1,7 @@
+<!-- continuation-pointer:start -->
+> **Continuation pointer (2026-11-16 Linux run).** Current: iteration30 sealed by the commit "Iteration30 seal" (see `git log`); iteration31 (installed-module version requirements) executed and awaiting integration. Material outcome: phase-selection producer bound (411/1216 locator members, +4), new defects C:D34/C:D35, question C:Q24 ([handoff](iter30/HANDOFF.md)). Cost: iteration30 native+formal run 28 s wall; session tokens not available. Next missing role: integrate iteration31 (`deps.installed`), then batch 2 selection from the [iter30 map](iter30/project-map.json).
+<!-- continuation-pointer:end -->
+
 # IPM consolidation: final handoff
 
 > Subsequent Verus extension: see [checked models, before/after measurements and residual gaps](extension/REPORT.md). The historical consolidation below remains preserved. The extension records current behavior reach155/1,216 and scoped Verus representation174/1,216 (audited inherited baseline100); all inherited models and the git index remain unchanged.

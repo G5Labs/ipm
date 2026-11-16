@@ -145,3 +145,5 @@ No new question or owner decision. Public DEC-RES-2 already settles the JSON roo
 All C:Q1–C:Q22 were traced to their actual canonical owners; the source and settlement gate are in [the question review](findings-audit-iter28/QUESTION-REVIEW.md). No passing observation ratifies policy. Opening-arm assumptions and aliases are now reconciled in the G/P crosswalks. C:Q14 and the archive/target/integrity security questions remain outside active reproduction scope.
 
 C:Q23: [Should a higher-version load remove an omitted web application?](../../ontology/concepts/modules.g5.md#module.webapp.upgrade.policy) C:D26 observed retention after load; it did not establish update behavior or owner approval.
+
+C:Q24: [When a phase list mixes standard phases with a custom or unknown name, what should run?](../../ontology/concepts/lifecycle.g5.md#lifecycle.phase-list-policy) Iteration30 observed that such names are dropped without notice (C:D35); the order of a custom phase in a mixed list and refusal of unknown names are not settled by any source.

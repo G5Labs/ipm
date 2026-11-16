@@ -1,0 +1,180 @@
+#!/usr/bin/env python3
+"""Replayable proof and native-conformance harness; no product mutation or trusted proof bodies.
+
+Iteration30+ copy of iteration28 harness: Linux Verus path, run-isolated image/container prefix and
+configurable session timeout. Proof, control, replay and native gates are otherwise unchanged."""
+from pathlib import Path
+import datetime, hashlib, json, os, re, resource, subprocess, sys, time, tempfile
+PIN='571e04a19aba9f9b4bc0ea23fbe09182038f4e55'
+TOOL=Path(os.environ.get('VERUS',str(Path.home()/'.local/share/g5-verification/verus-0.2026.09.27.3cf1832/verus-x86-linux/verus')))
+IMAGE=os.environ.get('IPM_NATIVE_IMAGE','ipmcont20261116-iris:571e04a1-fresh')
+PREFIX='ipmcont20261116-'
+def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
+def call(cmd, **kw):
+ t=time.monotonic(); b=resource.getrusage(resource.RUSAGE_CHILDREN)
+ p=subprocess.run(cmd,capture_output=True,text=True,timeout=int(os.environ.get('IPM_CALL_TIMEOUT','600')),**kw);a=resource.getrusage(resource.RUSAGE_CHILDREN)
+ return p,{'command':cmd,'exit':p.returncode,'wall_seconds':time.monotonic()-t,'child_cpu_seconds':a.ru_utime+a.ru_stime-b.ru_utime-b.ru_stime,'raw':p.stdout+p.stderr}
+def proof(path,out,options=()):
+ p,r=call([str(TOOL),str(path),'--triggers-mode','silent']+list(options));out.parent.mkdir(parents=True,exist_ok=True);out.write_text(r.pop('raw'));raw=out.read_text();attempts=out.parent/'attempts';attempts.mkdir(exist_ok=True);(attempts/(str(time.time_ns())+'.log')).write_text(raw)
+ m=re.search(r'verification results:: (\d+) verified, (\d+) errors',raw)
+ r.update(verified=int(m[1]) if m else None,errors=int(m[2]) if m else None,log=str(out),assertion_rejected=p.returncode!=0 and ('assertion failed' in raw or 'postcondition not satisfied' in raw or 'evaluates to false' in raw or 'expression simplifies to false' in raw) and not any(t in raw.lower() for t in ['resource limit','rlimit','timed out','time limit exceeded']))
+ return r
+def output_observations(raw,cfg):
+ clean=re.sub(r'\x1b\[[0-?]*[ -/]*[@-~]','',raw).replace('\r\n','\n')
+ values={}
+ for item in cfg.get('output_observations',[]):
+  begin='BEGIN|'+item['command']+'\n';end='END|'+item['command']+'\n'
+  assert clean.count(begin)==1,(item['command'],'missing/duplicate command start')
+  part=clean.split(begin,1)[1];assert end in part,item['command'];part=part.split(end,1)[0]
+  assert item['key'] not in values,item['key']
+  values[item['key']]=int(re.search(item['pattern'],part,re.M) is not None)
+ if cfg.get('report_json'):
+  from report_observer import observe
+  report=observe(raw);assert not set(values)&set(report);values.update(report)
+ if cfg.get('cache_trace'):
+  from cache_observer import observe
+  trace=observe(raw);assert not set(values)&set(trace);values.update(trace)
+ return values
+def main(here):
+ here=Path(here).resolve(); root=here.parents[3]; n=here.name; out=root/'.g5/uplift/consolidated'/n;out.mkdir(exist_ok=True)
+ cfg=json.loads((here/'cases.json').read_text());native_dir=cfg.get('native_dir',n);assert re.fullmatch(r'iter[0-9]+',native_dir); started=time.monotonic(); records=[]
+ def prepare_control(source,selected):
+  if not cfg.get('control_isolation_helper'):return source,None
+  assert selected,'Isolated controls require a selected proof function'
+  import importlib.util
+  helper=(here/cfg['control_isolation_helper']).resolve();assert helper.is_relative_to(here)
+  spec=importlib.util.spec_from_file_location('isolated_control_witness',helper);module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+  transformed,metadata=getattr(module,cfg.get('control_isolation_function','isolate'))(source,selected)
+  metadata.update(helper_sha256=sha(helper),transformed_sha256=hashlib.sha256(transformed.encode()).hexdigest())
+  return transformed,metadata
+ for file,mutations in ({} if '--native-only' in sys.argv else cfg['models']).items():
+  src=here/file; text=src.read_text(); b=proof(src,out/'proofs'/f'{file}.log');assert b['exit']==0 and b['errors']==0,b
+  controls=[];positive_controls={}
+  def selected_options(name):
+   selected=cfg.get('control_functions',{}).get(file,{}).get(name);options=list(cfg.get('control_options',[]))
+   if not selected:return options,None,None
+   assert re.fullmatch(r'[A-Za-z_]\w*',selected),selected
+   options+=['--verify-root','--verify-function',selected]
+   if selected not in positive_controls:
+    good=out/'proofs/positive-controls'/file/(selected+'.rs');good.parent.mkdir(parents=True,exist_ok=True)
+    good_source,isolation=prepare_control(text,selected)
+    good.write_text(re.sub(r'#\[path="([^"]+)"\]',lambda m:'#[path="'+os.path.relpath((src.parent/m[1]).resolve(),good.parent)+'"]',good_source))
+    neighbor=proof(good,good.with_suffix('.log'),options);assert neighbor['exit']==0 and neighbor['errors']==0 and neighbor['verified']==1,neighbor
+    if isolation:neighbor['isolation']=isolation
+    positive_controls[selected]=neighbor
+   return options,selected,positive_controls[selected]
+  for name,(old,new) in mutations.items():
+   assert text.count(old)==1,(file,name,text.count(old)); target=out/'proofs/controls'/file/(name+'.rs');target.parent.mkdir(parents=True,exist_ok=True);patched=text.replace(old,new,1)
+   patched,isolation=prepare_control(patched,cfg.get('control_functions',{}).get(file,{}).get(name))
+   patched=re.sub(r'#\[path="([^"]+)"\]',lambda m:'#[path="'+os.path.relpath((src.parent/m[1]).resolve(),target.parent)+'"]',patched)
+   target.write_text(patched)
+   options,selected,neighbor=selected_options(name)
+   r=proof(target,target.with_suffix('.log'),options);assert r['assertion_rejected'],r
+   if isolation:r['isolation']=isolation
+   controls.append(dict(id=name,source=str(target.relative_to(root)),selected_function=selected,passing_neighbor=neighbor,**r))
+  for name,mutation in cfg.get('dependency_controls',{}).get(file,{}).items():
+   dep=root/mutation['path'];dep_text=dep.read_text();assert dep_text.count(mutation['old'])==1
+   folder=out/'proofs/dependency-controls'/name;folder.mkdir(parents=True,exist_ok=True)
+   changed=folder/dep.name;changed.write_text(dep_text.replace(mutation['old'],mutation['new'],1))
+   target=folder/file
+   def link(m):
+    resolved=(src.parent/m[1]).resolve();dest=changed if resolved==dep.resolve() else resolved
+    return '#[path="'+os.path.relpath(dest,target.parent)+'"]'
+   transformed,isolation=prepare_control(text,cfg.get('control_functions',{}).get(file,{}).get(name))
+   target.write_text(re.sub(r'#\[path="([^"]+)"\]',link,transformed))
+   options,selected,neighbor=selected_options(name)
+   r=proof(target,target.with_suffix('.log'),options);assert r['assertion_rejected'],r
+   if isolation:r['isolation']=isolation
+   controls.append(dict(id=name,source=str(target.relative_to(root)),dependency=str(changed.relative_to(root)),selected_function=selected,passing_neighbor=neighbor,**r))
+  records.append({'file':file,'sha256':sha(src),'baseline':b,'controls':controls})
+ (out/'proofs').mkdir(exist_ok=True)
+ (out/'proofs/models.json').write_text(json.dumps({'tool_sha256':sha(TOOL),'models':records,'implementation_proofs':0},indent=2)+'\n')
+ if '--no-native' not in sys.argv:
+  stamp=datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%dT%H%M%S%fZ');dest=out/'native'/stamp;dest.mkdir(parents=True)
+  c=PREFIX+n+'-'+stamp.lower();image=IMAGE;cmds=[]
+  def run(cmd,**kw):
+   p,r=call(cmd,**kw);cmds.append({**r,**({'stdin':kw['input']} if 'input' in kw else {})});assert not p.returncode,r;return p.stdout
+  try:
+   run(['docker','run','-d','--name',c]+(['--network',os.environ['IPM_NATIVE_NETWORK']] if 'IPM_NATIVE_NETWORK' in os.environ else ['--network','none'])+[image])
+   actual_image_id=run(['docker','inspect',c,'--format','{{.Image}}']).strip()
+   for attempt in range(60):
+    p,r=call(['docker','exec','-i',c,'iris','session','IRIS','-U','USER'],input='write "READY",!\nhalt\n')
+    if p.returncode==0 and 'READY' in p.stdout:break
+    time.sleep(.5)
+   else:raise RuntimeError('IRIS not ready')
+   expected={str(p.relative_to(root)):sha(p) for folder in ['src','preload','tests','modules'] for p in (root/folder).rglob('*') if p.is_file()}
+   script='from pathlib import Path;import hashlib,json;r=Path("/home/irisowner/zpm");q='+repr(list(expected))+';print(json.dumps({p:hashlib.sha256((r/p).read_bytes()).hexdigest() if (r/p).is_file() else None for p in q}))'
+   actual=json.loads(run(['docker','exec',c,'python3','-c',script])); mismatches=[p for p in expected if expected[p]!=actual[p]]
+   (dest/'source-pin.json').write_text(json.dumps({'pin':PIN,'source_sha256':expected,'mismatches':mismatches},indent=2)+'\n');assert not mismatches,mismatches[:5]
+   run(['docker','cp',str(here/'native'),c+':/tmp/'+native_dir])
+   run(['docker','exec','-u','root',c,'chmod','-R','a+rwX','/tmp/'+native_dir])
+   command=['docker','exec','-i',c,'iris','session','IRIS','-U','USER'];stdin='\n'.join(cfg['session']+['halt'])+'\n'
+   t=time.monotonic();before_cpu=resource.getrusage(resource.RUSAGE_CHILDREN)
+   binary=subprocess.run(command,input=stdin.encode('utf-8'),capture_output=True,timeout=int(cfg.get('session_timeout',900)))
+   after_cpu=resource.getrusage(resource.RUSAGE_CHILDREN)
+   (dest/'session.stdout.bin').write_bytes(binary.stdout);(dest/'session.stderr.bin').write_bytes(binary.stderr)
+   if cfg.get('and_error_kind'):
+    from and_error_observer import facts
+    (dest/'and-error-kind.json').write_text(json.dumps(facts(binary.stdout),indent=2)+'\n')
+   raw_bytes=binary.stdout+binary.stderr;raw=raw_bytes.decode('utf-8','backslashreplace')
+   cmds.append({'command':command,'stdin':stdin,'exit':binary.returncode,'wall_seconds':time.monotonic()-t,'child_cpu_seconds':after_cpu.ru_utime+after_cpu.ru_stime-before_cpu.ru_utime-before_cpu.ru_stime,'raw':raw,'stdout_sha256':sha(dest/'session.stdout.bin'),'stderr_sha256':sha(dest/'session.stderr.bin')})
+   assert binary.returncode==0,cmds[-1]
+   (dest/'session.log').write_text(raw)
+   obs={}
+   for line in raw.splitlines():
+    if line.startswith('OBS|'):
+     _,key,value=line.split('|',2);assert key not in obs,key;obs[key]=int(value.strip())
+   rendered=output_observations(raw,cfg);assert not set(rendered)&set(obs);obs.update(rendered)
+   if cfg.get("byte_observer",False):
+    from bytes_observer import observe as observe_bytes
+    byte_obs=observe_bytes(raw_bytes);assert not set(byte_obs)&set(obs);obs.update(byte_obs)
+   assert set(cfg['replay'])<=set(obs),(set(cfg['replay'])-set(obs),raw[-3000:])
+   assert all(obs.get(k)==v for k,v in cfg.get('native_expected',{}).items()),[(k,v,obs.get(k)) for k,v in cfg.get('native_expected',{}).items() if obs.get(k)!=v]
+   (dest/'observations.json').write_text(json.dumps({'pin':PIN,'image':image,'actual_container_image_id':actual_image_id,'observations':obs,'commands':cmds,'stdout_sha256':sha(dest/'session.stdout.bin'),'stderr_sha256':sha(dest/'session.stderr.bin'),'fixture_sha256':{str(p.relative_to(root)):sha(p) for p in (here/'native').rglob('*') if p.is_file()}},indent=2)+'\n')
+   (out/'native/LATEST').write_text(stamp+'\n')
+  finally:subprocess.run(['docker','rm','-f',c],capture_output=True)
+ if '--native-only' in sys.argv:
+  print(json.dumps({'native_only':True,'stamp':(out/'native/LATEST').read_text().strip(),'formal_gate_run':False}));return
+ stamp=(out/'native/LATEST').read_text().strip();native=json.loads((out/'native'/stamp/'observations.json').read_text());obs=native['observations']
+ assert native['actual_container_image_id']==cfg['native_image_id'],'Native container image identity differs from configured provider pin'
+ assert all(obs.get(k)==val for k,val in output_observations((out/'native'/stamp/'session.log').read_text(),cfg).items()),'CLI output replay changed'
+ assert native['stdout_sha256']==sha(out/'native'/stamp/'session.stdout.bin') and native['stderr_sha256']==sha(out/'native'/stamp/'session.stderr.bin')
+ if cfg.get('and_error_kind'):
+  from and_error_observer import facts
+  assert json.loads((out/'native'/stamp/'and-error-kind.json').read_text())==facts((out/'native'/stamp/'session.stdout.bin').read_bytes())
+ if cfg.get('byte_observer',False):
+  from bytes_observer import observe as observe_bytes
+  assert all(obs.get(k)==val for k,val in observe_bytes((out/'native'/stamp/'session.stdout.bin').read_bytes()+(out/'native'/stamp/'session.stderr.bin').read_bytes()).items()),'Original byte observation replay changed'
+ assert native['fixture_sha256']=={str(p.relative_to(root)):sha(p) for p in (here/'native').rglob('*') if p.is_file()},'Native fixture bytes changed; fresh execution required'
+ assert all(obs.get(k)==v for k,v in cfg.get('native_expected',{}).items()),[(k,v,obs.get(k)) for k,v in cfg.get('native_expected',{}).items() if obs.get(k)!=v]
+ bridge=out/'replay/native.rs';bridge.parent.mkdir(exist_ok=True)
+ head='#[path="'+os.path.relpath(here/cfg['replay_model'],bridge.parent)+'"] mod model;\nuse model::*;\nuse vstd::prelude::*;\nverus! {\npub proof fn observations() {\n'
+ assertions=['assert(('+expr+') == '+str(obs[key])+'); // '+key for key,expr in cfg['replay'].items()]
+ if cfg.get('replay_grouped'):
+  bridge.write_text(head+cfg.get('replay_prelude','')+'\n'+'\n'.join(cfg.get('replay_preludes',{}).get(key,'')+assertions[i] for i,key in enumerate(cfg['replay']))+'\n}\n}\nfn main() {}\n')
+ else:
+  bridge.write_text(head.replace('pub proof fn observations() {\n','')+''.join('pub proof fn observation_'+str(i)+'() {\n'+cfg.get('replay_preludes',{}).get(key,cfg.get('replay_prelude',''))+assertions[i]+'\n}\n' for i,key in enumerate(cfg['replay']))+'}\nfn main() {}\n')
+ replay=proof(bridge,bridge.with_suffix('.log'));assert replay['exit']==0,replay
+ flipped=[]
+ for i,(key,expr) in enumerate(list(cfg['replay'].items())[:3]):
+  prelude=cfg.get('replay_preludes',{}).get(key,cfg.get('replay_prelude',''))
+  focused=head.replace('pub proof fn observations() {\n','')+'pub proof fn observation_'+str(i)+'() {\n'+prelude+assertions[i]+'\n}\n}\nfn main() {}\n'
+  barrier=cfg.get('focused_replay_barrier',False)
+  if barrier:
+   support=cfg.get('replay_prelude','')+'\n'+cfg.get('replay_preludes',{}).get(key,'')
+   imports=head.split('verus! {',1)[0]
+   focused=imports+'mod measured {\nuse super::*;\nverus! {\npub closed spec fn value()->int { '+expr+' }\npub proof fn establish() ensures value()=='+str(obs[key])+' {\n'+support+'\n'+assertions[i]+'\n}\n}\n}\nverus! { pub proof fn observation_'+str(i)+'(){ measured::establish();assert(measured::value()=='+str(obs[key])+'); // '+key+'\n} }\nfn main(){}\n'
+  good=bridge.parent/('focused-good'+str(i)+'.rs');good.write_text(focused)
+  passing=proof(good,good.with_suffix('.log'));assert passing['exit']==0,passing
+  changed=1-obs[key] if obs[key] in (0,1) else obs[key]+1
+  f=bridge.parent/('focused-flip'+str(i)+'.rs')
+  original_check=('measured::value()=='+str(obs[key])+'); // '+key) if barrier else ('== '+str(obs[key])+'); // '+key)
+  changed_check=('measured::value()=='+str(changed)+'); // '+key) if barrier else ('== '+str(changed)+'); // '+key)
+  assert focused.count(original_check)==1
+  f.write_text(focused.replace(original_check,changed_check,1))
+  r=proof(f,f.with_suffix('.log'));assert r['assertion_rejected'],r
+  flipped.append({'field':key,'model_expression':expr,'observed':obs[key],'changed':changed,'passing_neighbor':passing,'proved_closed_alias_barrier':barrier,'support_scope':'Closed alias contains actual model field expression; establish proves original observation before paired terminal assertion. No assumed native value or model-rule change.' if barrier else 'direct expression',**r})
+ (out/'replay/receipt.json').write_text(json.dumps({'observations':len(assertions),'baseline':replay,'flipped':flipped},indent=2)+'\n')
+ result={'ok':True,'wall_seconds':time.monotonic()-started,'verified':sum(r['baseline']['verified'] for r in records),'controls':sum(len(r['controls']) for r in records),'native_fields':len(obs),'replayed_fields':len(assertions),'model_source_sha256':{f:sha(here/f) for f in cfg['models']},'implementation_proofs':0}
+ (out/'run.json').write_text(json.dumps(result,indent=2)+'\n');print(json.dumps(result))
+if __name__=='__main__':main(Path(sys.argv[1]))

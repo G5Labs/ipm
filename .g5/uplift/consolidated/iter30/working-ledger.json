@@ -1,0 +1,174 @@
+{
+ "recorded_utc": "2026-11-16T16:03:25.089253+00:00",
+ "run": "continuous cloud continuation 2026-11-16 (Linux x86-64 VM)",
+ "start_tag": "cloud-uplift-start-20261116",
+ "start_commit": "18d15d05229cd511983296c88d197fdd9a3b82be",
+ "product_pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+ "guidance": {
+  "path": "/home/ziniu_wu_g5labs_ai/experiments/iris-ipm-continuous-20261116/harness",
+  "sha256": {
+   "AGENTS.md": "f771605fa065cd777c3192ff1359ef136fa77d58abc46fcc699148c5dcd3cb7a",
+   "Verus/uplift-iteration.md": "af3f5f7200a0e8ebd5bb9e014b4f651c259a5bebad2924a37a039ad5b8acc7ed",
+   "Verus/uplift-scoring.md": "f67cb9089aa6c8b03a56de79102908b5f3906a0391d74e6557456882da7328ec",
+   "Verus/uplift.md": "959656b52fb031116031057efdd0c1dd4a1df46ead1e33bc14877343ed7b35f7",
+   "Verus/setup_foundation.md": "5113691d48422a638b4fbad6d33f872bc9a5576697f24b1ee18240271bd636eb",
+   "TLC/setup_foundation.md": "7d7d1af71aa48b1727bfd937f201e0c9ca9dd38edd4a46670bd755878bf78c23",
+   "Verus/verification-playbook.txt": "665edc91f1bc8de442c5b2b35316f967ab32182cdf3cf8295714df865e4d3f4b",
+   "Verus/verification.md": "3449a886d0f83eee72c422a3b815a5582bc3e577b43ca8dfc62ca7624bfde4b2"
+  },
+  "changed_since_iter28_snapshot": {
+   "Verus/uplift-iteration.md": "148019a1 -> af3f5f72",
+   "Verus/uplift-scoring.md": "8442346f -> f67cb908",
+   "Verus/setup_foundation.md": "f053aad3 -> 5113691d"
+  },
+  "unchanged": [
+   "AGENTS.md",
+   "Verus/uplift.md",
+   "Verus/verification-playbook.txt",
+   "Verus/verification.md"
+  ]
+ },
+ "reconciliation": {
+  "last_completed_iteration": 28,
+  "iter28_archive_seal": "8bf2e2688d5a963d18f4cb66504b180a88f685e32179601183117f4a800813b4",
+  "iter28_formal_replay_linux": "script.rs 26 verified, 0 errors with Linux Verus 0.2026.09.27.3cf1832 (9.5 s); matches iter28 run.json verified=26",
+  "iter29": "Stopped/ungraded ModuleRoot configuration lane; native-only attempts retained as-is. No credit taken. Its open gap (ModuleRoot custom directory to actual install root) stays in the residual queue with its archive-boundary limit.",
+  "findings_audit_iter28": "Register audit after iter28 changed ontology owners (restored Q blocks) and registers; preserved as-is. iter28 project-map --check now fails only because 19 ontology input hashes changed; entries, members and flags are identical (checked by regenerating in memory). Map regenerated under iter30.",
+  "scope_preserved": "Archive/package/export/verify traversal stays outside (inherited user-instructed boundary); security attack simulation excluded; local fixtures only."
+ },
+ "environment": {
+  "verus": "~/.local/share/g5-verification/verus-0.2026.09.27.3cf1832/verus-x86-linux/verus",
+  "image": "ipmcont20261116-iris:571e04a1-fresh (built from iris-community:2026.1 546fe52b + git archive 571e04a1 + IPM.Installer.setup, network none; snapshot sha256:7da4480b)",
+  "iris": "IRIS 2026.1 (Build 234U) x86-64",
+  "container_prefix": "ipmcont20261116-",
+  "previous_native_platform": "ARM64 macOS; inherited native receipts are not re-executed unless replayed"
+ },
+ "batch1": {
+  "selection_basis": "iter28 map: 407/1216 locator members, 809 unlinked. Ranked unbound decision producers whose readers are already modelled only via an assumed input.",
+  "lanes": [
+   {
+    "iteration": 30,
+    "workflow": "module-action/RunOnePhase phase selection -> ExecutePhases -> executed phases, compiled code, custom-hook effect and command status",
+    "unbound_members": [
+     "Lifecycle/Base.cls::GetCompletePhases",
+     "Lifecycle/Base.cls::MatchSinglePhase",
+     "Lifecycle/Base.cls::%DispatchMethod",
+     "Main.cls::RunOnePhase"
+    ],
+    "why": "iter6 contract (workflows.rs selected_module/custom_hook) takes the resolved phase sequence as boundary input; producer of that sequence is unbound. Owners lifecycle.chain/only/custom.",
+    "exposure": "GetCompletePhases, GetCompletePhasesForOne, MatchSinglePhase, ModuleAction and ExecutePhases bodies were read before these predictions were written; predictions are labelled by source.",
+    "predictions": [
+     {
+      "case": "m compile (complete)",
+      "changing_input": "-only absent",
+      "reader": "START lines + value of on-disk-edited class",
+      "ontology": "Initialize,Reload,Validate,Compile; edited source loaded",
+      "source": "same"
+     },
+     {
+      "case": "m compile -only",
+      "changing_input": "-only present",
+      "reader": "same",
+      "ontology": "Compile only; on-disk edit not loaded",
+      "source": "same"
+     },
+     {
+      "case": "m compile activate -only",
+      "changing_input": "two phases with -only",
+      "reader": "START lines, status, class value",
+      "ontology": "Compile then Activate only",
+      "source": "one phase named Compile,Activate -> no such lifecycle method -> failure, no phase work"
+     },
+     {
+      "case": "m reload mycustom (complete)",
+      "changing_input": "custom phase listed with a standard phase",
+      "reader": "custom hook counter",
+      "ontology": "custom phase runs (requested by name)",
+      "source": "custom name has no chain entry and is dropped; success without hook"
+     },
+     {
+      "case": "m MYCUSTOM",
+      "changing_input": "single custom phase, other case",
+      "reader": "hook counter",
+      "ontology": "runs",
+      "source": "runs"
+     },
+     {
+      "case": "m compile bogus",
+      "changing_input": "unknown name beside a standard phase",
+      "reader": "status/START lines",
+      "ontology": "unspecified",
+      "source": "unknown dropped, success"
+     },
+     {
+      "case": "m bogus",
+      "changing_input": "unknown name alone",
+      "reader": "status",
+      "ontology": "unspecified (fail expected)",
+      "source": "failure (no such method)"
+     },
+     {
+      "case": "m activate initialize",
+      "changing_input": "phase order in command",
+      "reader": "START order",
+      "ontology": "fixed order Initialize..Activate",
+      "source": "same"
+     }
+    ]
+   },
+   {
+    "iteration": 31,
+    "workflow": "installed modules constrain dependency/version choice (deps.installed) -> BuildDependencyGraph choice and LoadModuleReference refusal -> installed version/status",
+    "unbound_members": [
+     "Utils/Module.cls::GetRequiredVersionExpression",
+     "Storage/Module.cls::VersionRequirements",
+     "Utils/Module.cls::InvertDependencies"
+    ],
+    "why": "deps.installed owner has no formal link; decision changes which version installs or refuses.",
+    "exposure": "GetRequiredVersionExpression body and the LoadModuleReference and BuildDependencyGraph call fragments were read before predictions.",
+    "predictions": [
+     {
+      "case": "installed A requires B 1.x; install P (requires B >=1.0) from FS repo holding B 1.5.0 and 2.0.0",
+      "reader": "installed B version",
+      "ontology": "satisfies all requirements (1.5.0) or fails; never 2.0.0",
+      "source": "1.5.0 (installed requirement And-ed into search expression)"
+     },
+     {
+      "case": "same without A",
+      "reader": "installed B version",
+      "ontology": "2.0.0",
+      "source": "2.0.0"
+     },
+     {
+      "case": "installed A requires B 1.x; install B 2.0.0 directly from repo",
+      "reader": "status/message/version",
+      "ontology": "refused with does-not-satisfy message",
+      "source": "refused in LoadModuleReference"
+     }
+    ]
+   },
+   {
+    "iteration": 32,
+    "workflow": "module SystemRequirements Version/Python -> CheckSystemRequirements -> load refusal and module record",
+    "status": "deferred to batch 2 unless time permits; product integration tests already cover the version-req fixtures"
+   }
+  ]
+ },
+ "iteration30_outcome": {
+  "status": "sealed",
+  "model": "phases.rs 12 verified, 7/7 controls rejected",
+  "native": "20261116T170433591502Z 276 fields all expected; replay 243 fields, 3 flips rejected",
+  "predictions": "All 11 cases matched the source prediction; c3, c4, c10 contradicted the ontology prediction (C:D34, C:D35); setup miss (non-dev reload no-op) traced to owned load reload-root rule",
+  "reach": "411/1216 (+4 new: GetCompletePhases, MatchSinglePhase, %DispatchMethod, RunOnePhase; +6 strengthened; 10 distinct)",
+  "findings": [
+   "C:D34 new",
+   "C:D35 new",
+   "C:Q24 new (lifecycle.phase-list-policy)"
+  ],
+  "cost": {
+   "native_run_wall_s": 27.8,
+   "tokens": "not available in session"
+  }
+ },
+ "iteration31_status": "Lane executed by delegated fork; integration pending in iteration31 seal"
+}
