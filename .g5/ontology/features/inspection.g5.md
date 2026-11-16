@@ -12,6 +12,7 @@ These commands show information without changing installed modules:
 - `search` lists modules in all registries, filtered to this platform. `-versions` shows every version.
 - `list-installed` lists installed modules, optionally as a tree, with Python packages or sorted.
 - `list-dependents` lists modules that depend on a given module.
+- `information` prints instance details and the installed top-level modules: every installed module, IPM included, that no installed module names as a dependency. It shows the external name (with `-v`, `External (name)`) and the version without build metadata.
 - `show` shows one installed module's details, resources, dependencies and the modules that require it. It looks up stored `Name` first, then `ExternalName`; if both could match, `Name` wins. Neither match produces an error naming the missing module and namespace.
   - The summary prints only non-empty blocks: description and fields, the after-install message and `<Default>` values, resources by kind, dependencies with their install status, direct dependents, and system requirements.
   - Scoped and unit-test resources, `<Defaults><Parameter>` values and keywords are not shown, and a FileCopy target is shown as written, before expansion.
@@ -96,6 +97,8 @@ Extension Verus: [thin_surfaces.rs::inspection_choice](../../Verus_verification/
 Iteration46 summary: [summary.rs](../../Verus_verification/consolidated/iter46/summary.rs) `health_false_hidden`, `parameter_not_listed`, `empty_blocks_omitted`, `scoped_hidden` ([handoff](../../uplift/consolidated/iter46/HANDOFF.md)).
 
 Findings: [`show` omits a `Health="false"` system requirement](../../uplift/consolidated/BUGS.md#c-d52)
+
+Iteration51 `information`: [toplevel.rs](../../Verus_verification/consolidated/iter51/toplevel.rs) `listed`, `neighbors` ([handoff](../../uplift/consolidated/iter51/HANDOFF.md)).
 ### inspect.orphans.ownership
 
 - agent; user-facing-behavior; source-inspected; native-tested; Verus-scoped

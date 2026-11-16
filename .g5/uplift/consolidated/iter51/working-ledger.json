@@ -1,0 +1,46 @@
+{
+ "recorded_utc": "2026-11-16T18:01:01.676043+00:00",
+ "batch": 9,
+ "iteration": 51,
+ "prior_seal": "0c7305cc",
+ "workflow": "`information` (info) lists installed top-level modules: installed modules minus every module named as a dependency; external names and versions without build",
+ "unbound_members": [
+  "Main.cls::Information",
+  "Main.cls::BuildIntroMessages",
+  "Main.cls::GetSystemMode"
+ ],
+ "owner": "none beyond the help (\"Output information about the current ZPM environment\"; output heading \"Currently installed top-level modules\")",
+ "exposure": "Main.Information body read before predictions (dependency names lowercased into visited, installed names compared as stored).",
+ "predictions": [
+  {
+   "case": "top51 depends on dep51; info",
+   "reader": "listed names",
+   "owner": "top51 listed, dep51 not",
+   "source": "same"
+  },
+  {
+   "case": "top51 also depends on a module whose manifest Name is MixedDep51",
+   "reader": "listed names",
+   "owner": "MixedDep51 not listed (it is a dependency)",
+   "source": "listed as top-level if the stored Name keeps its case"
+  },
+  {
+   "case": "module with ExternalName",
+   "reader": "listed label",
+   "owner": "external name shown",
+   "source": "external name; with -v \"External (name)\""
+  },
+  {
+   "case": "snapshot version 1.0.0+snapshot",
+   "reader": "version shown",
+   "owner": "unspecified",
+   "source": "1.0.0 (build dropped)"
+  }
+ ],
+ "outcome": {
+  "status": "sealed",
+  "model": "toplevel.rs 2 verified, 3/3 controls",
+  "native": "20261116T180139215751Z 21 fields; 11 replayed",
+  "findings": "none; source prediction (mixed-case dependency listed) refuted: module names stored lowercase"
+ }
+}
