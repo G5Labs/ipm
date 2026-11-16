@@ -1,0 +1,91 @@
+{
+ "recorded_utc": "2026-11-16T17:59:49.471627+00:00",
+ "batch": 9,
+ "iteration": 49,
+ "prior_seal": "cf77ce95",
+ "workflow": "import <file|dir> [-norecurse] [-nocompile]: files -> classes loaded/compiled in namespace -> command status/output",
+ "unbound_members": [
+  "Main.cls::Import"
+ ],
+ "owner": ".g5/ontology/features/developer-tools.g5.md#devtools.authoring (\"import loads classes from files and re-exports them to source control if needed\") + Main.cls command help",
+ "exposure": "Command help text read (parent transcript); Main.Import body not read before these predictions.",
+ "predictions": [
+  {
+   "case": "i1 import an XML export file with two classes",
+   "reader": "both defined and compiled",
+   "predicted": "both compiled"
+  },
+  {
+   "case": "i2 import a directory with root and subdirectory classes (default)",
+   "reader": "both defined+compiled",
+   "predicted": "recursive: both"
+  },
+  {
+   "case": "i3 same tree with -norecurse",
+   "reader": "subdirectory class",
+   "predicted": "root only"
+  },
+  {
+   "case": "i4 -nocompile",
+   "reader": "defined but not compiled",
+   "predicted": "defined, not compiled"
+  },
+  {
+   "case": "i5 file with a compile error",
+   "reader": "command status",
+   "predicted": "error status"
+  },
+  {
+   "case": "i6 non-existent path",
+   "reader": "command status",
+   "predicted": "error status"
+  }
+ ],
+ "exposure_after_source": "Read Main.Import body (load flags \"c\"/\"\" + display + \"k\"; ImportDir with default wildcard and recurse flag; $system.OBJ.Load for a file; FileDoesNotExist; two-pass source-control branch with UserAction(1,6,list), GetStatus, OnAfterSave or AddToSourceControl; errors re-thrown as \"Error in import: ...\").",
+ "source_predictions": [
+  {
+   "case": "i1 XML export with two classes",
+   "predicted": "both compiled"
+  },
+  {
+   "case": "i2 directory with .cls and .xml at root and in sub/",
+   "predicted": "depends on ImportDir default wildcard: if xml-only, .cls files are skipped (contrast with help \"Import the classes from the given directory\")"
+  },
+  {
+   "case": "i3 -norecurse",
+   "predicted": "sub/ items absent"
+  },
+  {
+   "case": "i4 -nocompile",
+   "predicted": "defined, not compiled"
+  },
+  {
+   "case": "i5 directory with one class that fails to compile",
+   "predicted": "status error \"Error in import\"; the good class compiled"
+  },
+  {
+   "case": "i6 missing path",
+   "predicted": "error"
+  },
+  {
+   "case": "i7 with a source-control class configured",
+   "predicted": "UserAction once, OnAfterSave for an item already in source control, AddToSourceControl for a new item"
+  }
+ ],
+ "outcome": {
+  "status": "lane complete, not sealed (main thread integrates)",
+  "model": "importcmd.rs 6 verified, 5/5 controls rejected",
+  "native": "20261116T180209444815Z 67 fields; 65 replayed; flips of i3.defined.I49N.Sub, i5.ok, i7.add.new rejected",
+  "attempts": [
+   "explore1 reader crash on empty $lb() after i6",
+   "run1 replay name clash add vs vstd add (native receipt kept)"
+  ],
+  "findings": "none; every prediction matched"
+ },
+ "integration": {
+  "by": "main thread",
+  "independent_rerun": "run.py --no-native: 6 verified, 5/5 controls, 65 replayed",
+  "findings": "none",
+  "fork_cost": "~758k subagent tokens, 217 s"
+ }
+}

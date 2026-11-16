@@ -109,6 +109,14 @@ Commands for writing modules:
 - `dependency-analyzer` finds references to items outside the module and its dependencies.
 - `module-version` sets or bumps a module's version, and refuses a downgrade unless `-force` is given.
 
+<a id="devtools.authoring.import"></a>
+[D · devtools.authoring.import]
+
+`import <file|dir>` loads class files into the current namespace and compiles them. A directory is searched recursively unless `-norecurse` is given, and `-nocompile` loads without compiling.
+
+- A class that fails to compile fails the command with "Error in import", while the other classes in the same import stay loaded and compiled. A missing path fails before anything loads.
+- When the namespace has a source-control class, IPM first tells it which items will load, then loads them, then saves each loaded item through it. An item it already tracks is re-exported, and a new one is added.
+
 <a id="devtools.authoring.module-version"></a>
 [I · devtools.authoring.module-version]
 
@@ -300,6 +308,14 @@ Iteration44 `arrange`: [comments.rs](../../Verus_verification/consolidated/iter4
 Findings: [`arrange` fails in a namespace without a source-control class](../../uplift/consolidated/BUGS.md#c-d49)
 
 Findings: [`arrange` drops comments placed before resources and a module's last comment](../../uplift/consolidated/BUGS.md#c-d50)
+### devtools.authoring.import
+
+- agent
+- user-facing-behavior
+- Expands: [Authoring commands](#devtools.authoring).
+
+Sources: `Main.cls::Import`; command help. Model: [importcmd.rs](../../Verus_verification/consolidated/iter49/importcmd.rs) `norecurse_skips_subdirectories`, `nocompile_defines_only`, `one_bad_item_fails_command_but_keeps_good`, `source_control_routing`, `missing_path_fails` ([handoff](../../uplift/consolidated/iter49/HANDOFF.md)).
+
 ### devtools.authoring.module-version
 
 - agent
