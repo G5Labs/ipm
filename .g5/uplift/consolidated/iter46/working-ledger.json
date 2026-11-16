@@ -1,0 +1,108 @@
+{
+ "recorded_utc": "2026-11-16T17:56:36.871713+00:00",
+ "batch": 8,
+ "iteration": 46,
+ "prior_seal": "02cc12fe",
+ "workflow": "show <module>: stored manifest -> ModuleSummary sections (fields, resources by section, dependencies, system requirements, requirements.txt, dependents) -> printed text",
+ "unbound_members": [
+  "General/ModuleSummary.cls::AddBlock",
+  "::AddList",
+  "::AddTable",
+  "::GetRequirements",
+  "::GetSection",
+  "::GetShortName",
+  "::GetSystemRequirements",
+  "::Join",
+  "::SplitLines"
+ ],
+ "owner": ".g5/ontology/features/inspection.g5.md#inspect (show bullet), #inspect.dependents, web-app detail statement",
+ "exposure": "Only member names/line numbers of ModuleSummary.cls seen; Show/GetDirectDependents/GetLines/ParseRequirements bound in iter2 (readers.rs); bodies of the unbound members not read.",
+ "predictions": [
+  {
+   "case": "module with dependencies declaring ranges",
+   "reader": "dependency lines",
+   "owner": "each dependency shown with its declared range"
+  },
+  {
+   "case": "module with SystemRequirements Version/Interoperability",
+   "reader": "system requirements section",
+   "owner": "requirements shown (show shows details); not stated which"
+  },
+  {
+   "case": "module with no optional fields (no description, keywords, deps)",
+   "reader": "sections",
+   "owner": "empty sections omitted or shown empty: unspecified"
+  },
+  {
+   "case": "long multi-line description",
+   "reader": "description lines",
+   "owner": "shown in full"
+  },
+  {
+   "case": "resources of different kinds (PKG, CLS, INC, FileCopy, web app)",
+   "reader": "resource section placement and processor short name",
+   "owner": "resources listed; grouping unspecified"
+  }
+ ],
+ "exposure_after_source": "Read ModuleSummary Show, GetLines, SplitLines, GetSection, GetShortName, GetWebApplicationDetail, GetAttribute, GetRequirements, Join, GetSystemRequirements, AddField, AddList, AddTable, AddBlock; ModuleSetting class list (Parameter is not a Default).",
+ "source_predictions": [
+  {
+   "case": "s46a SystemRequirements Health=\"false\" with Version and Interoperability",
+   "predicted": "shows \"IRIS >=2020.1\" and \"Interoperability disabled\" but no Health line, although CheckHealth enforces Health=0 (refuses Health instances)"
+  },
+  {
+   "case": "s46d only Health=\"false\"",
+   "predicted": "no System requirements section at all"
+  },
+  {
+   "case": "s46a <Defaults> with <Parameter Mode> and <Default Greeting>",
+   "predicted": "Defaults list shows Greeting = hi only; Mode omitted"
+  },
+  {
+   "case": "s46a Keywords",
+   "predicted": "not shown anywhere"
+  },
+  {
+   "case": "s46a multi-line Description with extra spaces",
+   "predicted": "one Description line with whitespace collapsed"
+  },
+  {
+   "case": "s46a Scope=\"test\" resource",
+   "predicted": "hidden"
+  },
+  {
+   "case": "s46a AfterInstallMessage two lines",
+   "predicted": "After install: heading with two trimmed lines"
+  },
+  {
+   "case": "s46a dependency s46b >=1.0.0, installed 1.0.0",
+   "predicted": "Depends on (1) row with installed 1.0.0"
+  },
+  {
+   "case": "s46b minimal",
+   "predicted": "no Defaults/Code-less? Code lists S46B.PKG; Required by directly (1) s46a 1.0.0; no Depends on or System requirements blocks"
+  }
+ ],
+ "outcome": {
+  "status": "ready for integration (not sealed by lane)",
+  "model": "summary.rs 5 verified, 4/4 controls (run2; run1 control scoped-shown survived and was preserved)",
+  "native": "20261116T175856608516Z 113 fields gated; 52 replayed; flips d.sysreq.heading, a.defaults.mode, a.sysreq.health rejected",
+  "proposed_findings": [
+   "Low: show omits a Health=\"false\" system requirement"
+  ],
+  "facts": [
+   "<Parameter> defaults not listed; keywords never shown; FileCopy target printed unexpanded"
+  ],
+  "cost": {
+   "run_wall_s": 12.2
+  }
+ },
+ "integration": {
+  "by": "main thread",
+  "independent_rerun": "run.py --no-native: 5 verified, 4/4 controls, 52 replayed",
+  "findings": [
+   "C:D52 Low"
+  ],
+  "fork_cost": "~733k subagent tokens, 224 s"
+ }
+}

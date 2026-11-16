@@ -13,6 +13,9 @@ These commands show information without changing installed modules:
 - `list-installed` lists installed modules, optionally as a tree, with Python packages or sorted.
 - `list-dependents` lists modules that depend on a given module.
 - `show` shows one installed module's details, resources, dependencies and the modules that require it. It looks up stored `Name` first, then `ExternalName`; if both could match, `Name` wins. Neither match produces an error naming the missing module and namespace.
+  - The summary prints only non-empty blocks: description and fields, the after-install message and `<Default>` values, resources by kind, dependencies with their install status, direct dependents, and system requirements.
+  - Scoped and unit-test resources, `<Defaults><Parameter>` values and keywords are not shown, and a FileCopy target is shown as written, before expansion.
+  - As built, a `Health="false"` system requirement is not shown, although it stops installation on IRIS for Health (defect C:D52).
 - Name and alias lookup use the module datatype's case-insensitive normalization. Native stored-name, alias, uppercase-alias and missing-name neighbors preserve the selected record and version.
 - `info` and `version` show the IPM environment and version.
 - `namespace` (`zn`) lists modules by namespace and switches to a namespace.
@@ -89,6 +92,10 @@ Sources: `Main.cls:17-27`, `:524-616`, `:683-724`, `:807-816`; CHANGELOG 0.10.11
 
 Extension Verus: [thin_surfaces.rs::inspection_choice](../../Verus_verification/consolidated/verus/thin_surfaces.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
 
+
+Iteration46 summary: [summary.rs](../../Verus_verification/consolidated/iter46/summary.rs) `health_false_hidden`, `parameter_not_listed`, `empty_blocks_omitted`, `scoped_hidden` ([handoff](../../uplift/consolidated/iter46/HANDOFF.md)).
+
+Findings: [`show` omits a `Health="false"` system requirement](../../uplift/consolidated/BUGS.md#c-d52)
 ### inspect.orphans.ownership
 
 - agent; user-facing-behavior; source-inspected; native-tested; Verus-scoped

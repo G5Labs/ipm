@@ -1,0 +1,35 @@
+verification results:: 2 verified, 2 errors
+error: postcondition not satisfied
+  --> /home/ziniu_wu_g5labs_ai/experiments/iris-ipm-continuous-20261116/ipm/.g5/uplift/consolidated/iter46/proofs/controls/summary.rs/health-false-shown.rs:46:13
+   |
+44 | pub proof fn health_false_hidden(m: M, r: Req)
+   | ---------------------------------------------- at the end of the function body
+45 |     requires m.req == Some(r), r.health == Some(false), !r.version, !r.interop
+46 |     ensures !sysreq(m)
+   |             ^^^^^^^^^^ failed this postcondition
+
+note: function body check: not all errors may have been reported; rerun with a higher value for --multiple-errors to find other potential errors in this function
+  --> /home/ziniu_wu_g5labs_ai/experiments/iris-ipm-continuous-20261116/ipm/.g5/uplift/consolidated/iter46/proofs/controls/summary.rs/health-false-shown.rs:65:1
+   |
+65 | pub proof fn schedule()
+   | ^^^^^^^^^^^^^^^^^^^^^^^
+
+error: postcondition not satisfied
+  --> /home/ziniu_wu_g5labs_ai/experiments/iris-ipm-continuous-20261116/ipm/.g5/uplift/consolidated/iter46/proofs/controls/summary.rs/health-false-shown.rs:66:52
+   |
+65 | pub proof fn schedule()
+   | ----------------------- at the end of the function body
+66 |     ensures blocks(a()) == 4, blocks(bmod()) == 2, blocks(d()) == 1, blocks(h()) == 1,
+   |                                                    ^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: postcondition not satisfied
+  --> /home/ziniu_wu_g5labs_ai/experiments/iris-ipm-continuous-20261116/ipm/.g5/uplift/consolidated/iter46/proofs/controls/summary.rs/health-false-shown.rs:67:9
+   |
+65 | pub proof fn schedule()
+   | ----------------------- at the end of the function body
+66 |     ensures blocks(a()) == 4, blocks(bmod()) == 2, blocks(d()) == 1, blocks(h()) == 1,
+67 |         !sysreq(d()), sysreq(a()), req_entries(a().req) == 2, usage(a()), !keywords_shown(a())
+   |         ^^^^^^^^^^^^ failed this postcondition
+
+error: aborting due to 3 previous errors
+

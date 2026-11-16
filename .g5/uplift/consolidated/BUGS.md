@@ -565,6 +565,19 @@ Reproduced by: E2E reproduced. [Iteration43 native receipt](iter43/native/202611
 
 The interface comment says the call is "invoked when an existing module is reloaded from a different directory than its known module root". `%Reload` compares against a root that was already updated, so extensions that track module locations never learn of the move, contrary to the [source-control statement](../../ontology/concepts/lifecycle.g5.md#lifecycle.source-control). A repair would compare against the stored root before it is overwritten. It was not checked.
 
+<a id="c-d52"></a>
+### C:D52: `show` omits a `Health="false"` system requirement
+
+Severity: Low · Decision: Open
+
+Run: Uplift 2026-11-16
+
+Found by: source review of `General/ModuleSummary.cls::GetSystemRequirements` (Health listed only when true) against `Storage/SystemRequirements.cls::CheckHealth` (Health=0 refuses Health instances), and [iteration46 model](../../Verus_verification/consolidated/iter46/summary.rs) `health_false_hidden` with control `health-false-shown` ([proof receipt](iter46/proofs/models.json)).
+
+Reproduced by: E2E reproduced. [Iteration46 native receipt](iter46/native/20261116T175856608516Z/observations.json) on IRIS 2026.1 x86-64 at `571e04a1`. `show s46d`, whose only stored requirement is `Health="false"`, prints no System requirements section (case d). `show s46a` lists IRIS and Interoperability but no Health entry (case a). Passing neighbours: s46h, which has no requirements, also shows none, and the other set requirements are listed.
+
+A reader of `show` cannot tell that the module refuses IRIS for Health, contrary to the [inspection statement](../../ontology/features/inspection.g5.md#inspect) that `show` shows the module's details. A repair would list "not supported on IRIS for Health" when Health is explicitly false. It was not checked.
+
 ## Outside active reproduction scope
 
 <a id="c-d17"></a>
