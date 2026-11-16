@@ -153,3 +153,5 @@ C:Q25: [Should an unversioned install fall back to the newest offer that satisfi
 C:Q26: [Should a directory load refuse or warn when it breaks an installed module's requirement?](../../ontology/features/dependencies.g5.md#deps.installed.directory-policy) Iteration31 case S6 observed a silent success; S7 is the passing neighbour after the requiring module is removed.
 
 C:Q27: [What should the installer's upgrade flag and database name mean?](../../ontology/concepts/lifecycle.g5.md#lifecycle.installer.upgrade-policy) Iteration36 observed that IPM never sets them, even when a newer version replaces an installed one.
+
+C:Q28: [Should a load fail or warn when `LifecycleClass` names a class that is not available?](../../ontology/concepts/modules.g5.md#module.lifecycle-class.unknown-policy) Iteration52 observed a silent fallback to `Module`.

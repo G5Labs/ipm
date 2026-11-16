@@ -35,12 +35,30 @@ An installed module's manifest can be edited as its `<Name>.ZPM` document, as ed
 - As built, a save that IPM refuses, such as malformed XML, still empties the stored document text while the record keeps the earlier manifest (defect C:D44).
 - As built, a manifest naming a different module is accepted under the old name: the record takes the other fields and the document keeps the new name (defect C:D45).
 
+<a id="module.lifecycle-class"></a>
+[D · module.lifecycle-class]
+
+A manifest's `LifecycleClass` picks the lifecycle IPM runs, with short names resolved under `%IPM.Lifecycle`. IPM resolves it when a command starts and again after Reload.
+
+- A lifecycle class shipped in the module's `preload` folder is used on the first install. A class shipped as an ordinary resource is compiled only later, so the first install runs the default `Module` lifecycle and stores `Module`, and a later load uses the named class.
+- As built, a class that does not exist is replaced by `Module` without a warning ([question](#module.lifecycle-class.unknown-policy)).
+
+<a id="module.lifecycle-class.unknown-policy"></a>
+[Q · module.lifecycle-class.unknown-policy]
+
+Should a load fail or warn when `LifecycleClass` names a class that is not available when the lifecycle is resolved?
+
+- Working assumption: as built, fall back to `Module` silently.
+- Alternative and implications: fail the load, which catches typos but blocks modules that ship the class as an ordinary resource; or warn and keep the manifest's name.
+- This assumption guides review; it is not a maintainer decision.
+
 <a id="module.resource"></a>
 [I · module.resource]
 
 A module lists its resources, and IPM picks a resource processor for each one from its type or element.
 
 - Resource attributes include `Deploy`, `Directory`, `Preload` and `Scope`.
+- Loading a manifest that no longer lists a resource or dependency updates the stored record but leaves the dropped resource's code and the dropped dependency module installed. Whether IPM should remove them is the open upgrade-cleanup policy (C:D26).
 - Processors with special behavior are listed under [resource processors](#module.processor).
 
 <a id="module.resource.identity"></a>
@@ -453,6 +471,24 @@ Findings: [A refused module document save empties the stored document text](../.
 
 Findings: [A module document that names a different module is saved under the old name](../../uplift/consolidated/BUGS.md#c-d45)
 
+
+Iteration52: the record's LastModifiedTimestamp, which the `.ZPM` document timestamp falls back to, changes on every save because the hashed export includes LastUpdated ([record.rs](../../Verus_verification/consolidated/iter52/record.rs) `identical_reload_still_modified`).
+### module.lifecycle-class
+
+- agent
+- user-facing-behavior
+- Expands: [Module](#module).
+
+Sources: `Storage/Module.cls::LifecycleGet`, `::ExecutePhases`. Model: [record.rs](../../Verus_verification/consolidated/iter52/record.rs) `resolve`, `lifecycle_neighbors` ([handoff](../../uplift/consolidated/iter52/HANDOFF.md)).
+
+### module.lifecycle-class.unknown-policy
+
+- agent
+- uncertain
+- Expands: [Lifecycle class](#module.lifecycle-class).
+
+Sources: native iteration52 cases n1 and l1.
+
 ### module.resource
 
 - human-provided
@@ -462,6 +498,8 @@ Findings: [A module document that names a different module is saved under the ol
 
 Sources: `wiki/03` L279-343; `wiki/00` L5-7. Inventory: CAT-02. `wiki/03` L302 misdescribes `Deploy` as not shipped. It means shipped as compiled code ([deployed code](#module.deployed)).
 
+
+Iteration52 changed manifest: [record.rs](../../Verus_verification/consolidated/iter52/record.rs) `changed_manifest_keeps_old_code`.
 ### module.resource.identity
 
 - agent

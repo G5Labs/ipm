@@ -101,6 +101,7 @@ Should sync retry a failed compile or reload after its source is reverted?
 Commands for writing modules:
 
 - `generate` writes a `module.xml`, asking for details, including a tests folder.
+  - [Generation details](#devtools.authoring.generate).
 - `init` sets up a namespace for IPM and its editor extensions.
 - `arrange` puts a manifest's resources in the standard order.
   - It rewrites the stored `<Name>.ZPM` document, not `module.xml` on disk. Resources are written in name order inside a `<Resources>` element, and fields such as `LastUpdated` and dependency `DisplayName` are added.
@@ -108,6 +109,14 @@ Commands for writing modules:
   - Comments before `Name` and inside dependencies are kept. As built, comments before each resource and a module's last comment are dropped (defect C:D50).
 - `dependency-analyzer` finds references to items outside the module and its dependencies.
 - `module-version` sets or bumps a module's version, and refuses a downgrade unless `-force` is given.
+
+<a id="devtools.authoring.generate"></a>
+[D · devtools.authoring.generate]
+
+`generate -t <dir>` writes a fixed example manifest without asking questions. Interactive `generate` writes the answers it is given, plus source resources grouped by package, test classes as UnitTest entries and the dependencies entered as `name:version`.
+
+- As built, with `-author` the License and Copyright Date answers are stored in each other's fields (defect C:D54).
+- `-export <flags>,<mask>,<ignore>` first exports matching namespace items into the source folder. As built, the ignore list applies only to classes, and routines match when the mask appears anywhere in their name, so ignored or unrelated routines are exported and become resources (defect C:D55).
 
 <a id="devtools.authoring.import"></a>
 [D · devtools.authoring.import]
@@ -308,6 +317,18 @@ Iteration44 `arrange`: [comments.rs](../../Verus_verification/consolidated/iter4
 Findings: [`arrange` fails in a namespace without a source-control class](../../uplift/consolidated/BUGS.md#c-d49)
 
 Findings: [`arrange` drops comments placed before resources and a module's last comment](../../uplift/consolidated/BUGS.md#c-d50)
+### devtools.authoring.generate
+
+- agent
+- user-facing-behavior
+- Expands: [Authoring commands](#devtools.authoring).
+
+Sources: `Main.cls::GenerateModuleXML`; `Storage/ModuleTemplate.cls`. Model: [generator.rs](../../Verus_verification/consolidated/iter53/generator.rs) `author_swapped`, `export_neighbors`, `grouping_neighbors` ([handoff](../../uplift/consolidated/iter53/HANDOFF.md)).
+
+Findings: [`generate -author` stores the license and copyright answers in each other's fields](../../uplift/consolidated/BUGS.md#c-d54)
+
+Findings: [`generate -export` ignores the ignore list for routines and matches routine masks anywhere in the name](../../uplift/consolidated/BUGS.md#c-d55)
+
 ### devtools.authoring.import
 
 - agent

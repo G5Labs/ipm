@@ -1,0 +1,74 @@
+{
+ "verus_dir": ".g5/Verus_verification/consolidated/iter52",
+ "changed_files": [
+  "record.rs",
+  "cases.json",
+  "run.py",
+  "native/**"
+ ],
+ "rows": [
+  {
+   "id": "S52-01",
+   "owner": ".g5/ontology/concepts/modules.g5.md#module.lifecycle-class",
+   "model": "record.rs",
+   "symbols": [
+    "resolve",
+    "compiled_at_refresh",
+    "first_install",
+    "reinstall",
+    "unknown",
+    "lifecycle_neighbors"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/Storage/Module.cls",
+     "LifecycleGet"
+    ],
+    [
+     "src/cls/IPM/Storage/Module.cls",
+     "OverrideLifecycleClassSet"
+    ]
+   ],
+   "reader": [
+    [
+     "src/cls/IPM/Storage/Module.cls",
+     "ExecutePhases"
+    ]
+   ],
+   "scope": "Lifecycle class resolved before Initialize and after the Reload refresh: an ordinary-resource class runs the default lifecycle on first install and is stored as Module; a preload class or a reinstall uses the named class; an unknown name becomes Module silently. Native l1, l2, p1, n1."
+  },
+  {
+   "id": "S52-02",
+   "owner": ".g5/ontology/concepts/modules.g5.md#module.resource",
+   "model": "record.rs",
+   "symbols": [
+    "State",
+    "load_changed",
+    "changed_manifest_keeps_old_code",
+    "modified_changes",
+    "identical_reload_still_modified"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/Storage/Module.cls",
+     "%OnAddToSaveSet"
+    ],
+    [
+     "src/cls/IPM/Storage/Module.cls",
+     "%OnBeforeSave"
+    ],
+    [
+     "src/cls/IPM/Storage/Module.cls",
+     "%OnNew"
+    ]
+   ],
+   "reader": [
+    [
+     "src/cls/IPM/Storage/Module.cls",
+     "%OnOpen"
+    ]
+   ],
+   "scope": "Loading a changed manifest replaces the stored resources, dependencies and defaults; the dropped class and the dropped dependency module stay installed; LastModifiedTimestamp changes on every save because the exported hash includes LastUpdated. Native c0-c2. Root override from source control in %OnOpen and deployed DeveloperMode reset are not exercised."
+  }
+ ]
+}

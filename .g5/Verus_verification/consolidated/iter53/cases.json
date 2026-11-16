@@ -1,0 +1,121 @@
+{
+ "native_dir": "iter53",
+ "native_image_id": "sha256:7da4480b6916c2205bb839c342d35ceed69abd6ef771f948922e7dd29963f903",
+ "session_timeout": 900,
+ "models": {
+  "generator.rs": {
+   "author-args-in-order": [
+    "pub open spec fn stored_author(a: Answers) -> Author { set_author_props(a.license, a.copyright) }",
+    "pub open spec fn stored_author(a: Answers) -> Author { set_author_props(a.copyright, a.license) }"
+   ],
+   "routines-honour-ignore": [
+    "if i.is_class { i.prefix_mask && !i.prefix_ignore } else { i.contains_mask }",
+    "if i.is_class { i.prefix_mask && !i.prefix_ignore } else { i.contains_mask && !i.prefix_ignore }"
+   ],
+   "routines-prefix-mask": [
+    "if i.is_class { i.prefix_mask && !i.prefix_ignore } else { i.contains_mask }",
+    "if i.is_class { i.prefix_mask && !i.prefix_ignore } else { i.prefix_mask }"
+   ],
+   "no-package-sharing": [
+    "pub open spec fn shared_resource(first_top: int, second_top: int) -> bool { first_top == second_top }",
+    "pub open spec fn shared_resource(first_top: int, second_top: int) -> bool { false }"
+   ]
+  }
+ },
+ "replay": {
+  "t2.licenseIsYear": "b(fixture_author().license == 2)",
+  "e1.skiprout": "b(exported(skip_rout()))",
+  "t2.copyrightIsLicense": "b(fixture_author().copyright == 1)",
+  "t2.licenseIsLicense": "b(fixture_author().license == 1)",
+  "t2.copyrightIsYear": "b(fixture_author().copyright == 2)",
+  "e1.keep": "b(exported(keep()))",
+  "e1.skipcls": "b(exported(skip_cls()))",
+  "e1.rout": "b(exported(rout()))",
+  "e1.zz": "b(exported(zz()))",
+  "t2.pkgG53": "b(shared_resource(1, 1))",
+  "t2.pkgG53A": "b(!shared_resource(1, 1))"
+ },
+ "replay_preludes": {
+  "t2.licenseIsYear": "assert((b(fixture_author().license == 2)) == 1);",
+  "e1.skiprout": "assert((b(exported(skip_rout()))) == 1);",
+  "t2.copyrightIsLicense": "assert((b(fixture_author().copyright == 1)) == 1);",
+  "t2.licenseIsLicense": "assert((b(fixture_author().license == 1)) == 0);",
+  "t2.copyrightIsYear": "assert((b(fixture_author().copyright == 2)) == 0);",
+  "e1.keep": "assert((b(exported(keep()))) == 1);",
+  "e1.skipcls": "assert((b(exported(skip_cls()))) == 0);",
+  "e1.rout": "assert((b(exported(rout()))) == 1);",
+  "e1.zz": "assert((b(exported(zz()))) == 1);",
+  "t2.pkgG53": "assert((b(shared_resource(1, 1))) == 1);",
+  "t2.pkgG53A": "assert((b(!shared_resource(1, 1))) == 0);"
+ },
+ "replay_grouped": true,
+ "replay_prelude": "",
+ "replay_model": "generator.rs",
+ "session": [
+  "do $system.OBJ.Load(\"/tmp/iter53/Reader.cls\",\"ck-d\")",
+  "do ##class(IPMCont.GenReader).Setup()",
+  "zpm \"generate -t /tmp/iter53/g1\"",
+  "zpm \"generate /tmp/iter53/g2 -author\"",
+  "g53",
+  "2.0.0",
+  "desc",
+  "kw",
+  "Ann",
+  "Org",
+  "Apache-2.0",
+  "2024",
+  "n",
+  "src",
+  "tests",
+  "",
+  "N",
+  "N",
+  "g53dep:1.x",
+  "",
+  "zpm \"generate /tmp/iter53/g3 -export 00000,G53E,G53E.Skip\"",
+  "g53e",
+  "1.0.0",
+  "",
+  "",
+  "src",
+  "tests",
+  "",
+  "N",
+  "N",
+  "",
+  "do ##class(IPMCont.GenReader).After()"
+ ],
+ "native_expected": {
+  "setup.defs": 1,
+  "setup.routines": 3,
+  "setup.apps": 1,
+  "t1.exists": 1,
+  "t1.name": 1,
+  "t1.version": 1,
+  "t1.license": 1,
+  "t1.copyright": 1,
+  "t1.dep": 1,
+  "t2.exists": 1,
+  "t2.name": 1,
+  "t2.version": 1,
+  "t2.licenseIsLicense": 0,
+  "t2.licenseIsYear": 1,
+  "t2.copyrightIsYear": 0,
+  "t2.copyrightIsLicense": 1,
+  "t2.person": 1,
+  "t2.pkgG53": 1,
+  "t2.pkgG53A": 0,
+  "t2.pkgOther": 1,
+  "t2.unittest": 1,
+  "t2.testsAsPkg": 0,
+  "t2.dep": 1,
+  "t2.depver": 1,
+  "e1.keep": 1,
+  "e1.skipcls": 0,
+  "e1.rout": 1,
+  "e1.skiprout": 1,
+  "e1.zz": 1,
+  "t3.exists": 1
+ },
+ "expectation_basis": "Owner/help and source predictions in iter53/working-ledger.json before native runs; explore2 setup did not load the .mac fixtures (LoadDir loads classes only here), corrected before explore4; values fixed from explore4."
+}

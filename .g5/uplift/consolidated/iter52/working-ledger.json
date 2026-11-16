@@ -1,0 +1,98 @@
+{
+ "recorded_utc": "2026-11-16T18:03:33.145499+00:00",
+ "batch": 9,
+ "iteration": 52,
+ "role": "convergence test: strongest remaining candidate",
+ "workflow": "module record persistence on load of a changed manifest: save hooks (%OnAddToSaveSet, %OnBeforeSave, %OnOpen, %OnNew), relationship comparison, lifecycle class resolution -> stored record and namespace code",
+ "unbound_members": [
+  "Storage/Module.cls::%OnAddToSaveSet",
+  "::%OnBeforeSave",
+  "::%OnOpen",
+  "::%OnNew",
+  "::CompareWithRelationships",
+  "::GetNamespaceConfig",
+  "::GetKnownDependencies",
+  "::HaveToDeploy",
+  "::LifecycleGet",
+  "::OverrideLifecycleClassSet",
+  "::CalculatedResourcesGet",
+  "::IsLocked",
+  "::Lock",
+  "::ValidateStream"
+ ],
+ "owner": ".g5/ontology/concepts/modules.g5.md (module.resource, module.webapp.upgrade incl. C:D26 dropped declaration retained); features/load.g5.md",
+ "exposure": "Only call sites (grep) read before these predictions; C:D26 (dropped webapp declaration retained after load) known from the register.",
+ "predictions": [
+  {
+   "case": "reload/load a module whose new manifest drops resource R2 (class)",
+   "reader": "stored Resources count; class R2 still defined",
+   "owner": "record lists only R1; class R2 left in namespace (no uninstall of dropped resources; cf C:D26 policy open)"
+  },
+  {
+   "case": "new manifest drops a dependency",
+   "reader": "stored Dependencies; dependency module still installed",
+   "owner": "record without the dependency; dependency module stays installed"
+  },
+  {
+   "case": "new manifest changes a <Default>",
+   "reader": "stored Defaults value / Invoke argument",
+   "owner": "new value"
+  },
+  {
+   "case": "new manifest names a custom LifecycleClass",
+   "reader": "stored LifecycleClass and lifecycle used",
+   "owner": "new lifecycle used"
+  },
+  {
+   "case": "second module declares a resource already owned by the first",
+   "reader": "status",
+   "owner": "refused (resource owned by another module)"
+  }
+ ],
+ "exposure_after_source": "Read Storage/Module %OnAddToSaveSet, %OnBeforeSave, %OnOpen, %OnNew, CompareWithRelationships, LifecycleGet, OverrideLifecycleClassSet, CalculatedResourcesGet, HaveToDeploy; grep showed CompareWithRelationships has no caller in src or tests.",
+ "source_predictions": [
+  {
+   "case": "c1 load the identical manifest again",
+   "predicted": "LastModifiedTimestamp unchanged (export hash equal), LastUpdated changes"
+  },
+  {
+   "case": "c2 load changed manifest (drop R2, drop dep52, Default a->b)",
+   "predicted": "record: 1 resource, 0 dependencies, LastModified changes; class M52.R2 still defined; dep52 still installed; Invoke receives b"
+  },
+  {
+   "case": "l1 first load of a module whose LifecycleClass is its own resource L52.Life",
+   "predicted": "class not compiled when the lifecycle is resolved -> default Module lifecycle used and LifecycleClass replaced by \"Module\"; custom %Activate does not run"
+  },
+  {
+   "case": "l2 load the same directory again",
+   "predicted": "manifest re-imported with L52.Life, now compiled -> custom %Activate runs"
+  },
+  {
+   "case": "n1 LifecycleClass NoSuch52",
+   "predicted": "load succeeds with Module lifecycle; stored LifecycleClass becomes Module"
+  },
+  {
+   "case": "o1 another module declaring M52.R1.CLS",
+   "predicted": "refused (resource owned by another module; existing owner statement)"
+  }
+ ],
+ "excluded": {
+  "Storage/Module.cls::CompareWithRelationships": "no caller in src or tests at the pin (unreachable for ordinary operations)",
+  "Storage/Module.cls::HaveToDeploy": "deployed-code path (excluded scope)"
+ },
+ "outcome": {
+  "status": "ready for integration (not sealed, not committed)",
+  "model": "record.rs 3 verified, 4/4 controls",
+  "native": "20261116T180626798933Z 35 fields; 17 replayed; 3 flips rejected",
+  "new_discrepancies": "none filed as defects; one owner question proposed (unknown or not-yet-compiled LifecycleClass silently replaced by Module)",
+  "refuted_predictions": [
+   "identical reload keeps LastModifiedTimestamp"
+  ]
+ },
+ "integration": {
+  "by": "main thread",
+  "independent_rerun": "run.py --no-native passed",
+  "findings": "none new; Q C:Q28 module.lifecycle-class.unknown-policy",
+  "convergence_role": "strongest remaining candidate"
+ }
+}

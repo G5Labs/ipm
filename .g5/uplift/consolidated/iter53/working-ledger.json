@@ -1,0 +1,114 @@
+{
+ "recorded_utc": "2026-11-16T18:04:10.557619+00:00",
+ "batch": 9,
+ "iteration": 53,
+ "role": "convergence test: different underserved workflow",
+ "workflow": "generate -t <dir> (template) and generate <dir> -export <spec> (export namespace items) -> written module.xml and exported files",
+ "unbound_members": [
+  "Storage/ModuleTemplate.cls::GenerateTemplate",
+  "SetTemplateProps",
+  "SetAuthorProps",
+  "AddDependant",
+  "ExportResources",
+  "ExportOneResource",
+  "Expfilename",
+  "GetCSPApplications",
+  "GetGlobalsList",
+  "ReadGlobals",
+  "RelativeFolder",
+  "SharedPackage"
+ ],
+ "owner": ".g5/ontology/features/developer-tools.g5.md devtools.authoring (generate writes a module.xml, asking for details) and devtools.generate.* (interactive resource grouping, cors, webapps)",
+ "exposure": "Only the generate command help and the owner statements read; Main generate handler and ModuleTemplate bodies not read.",
+ "predictions": [
+  {
+   "case": "generate -t /tmp/g1 (empty dir)",
+   "reader": "module.xml exists, well-formed, has Name/Version placeholders",
+   "predicted": "template module.xml written; command OK"
+  },
+  {
+   "case": "generate -t /tmp/g2 where module.xml already exists",
+   "reader": "existing file kept or overwritten",
+   "predicted": "unspecified; likely refused or overwritten"
+  },
+  {
+   "case": "generate /tmp/g3 -export 00000,PkgA (classes PkgA.X, PkgA.Sub.Y in namespace)",
+   "reader": "exported .cls files under /tmp/g3/src, module.xml resources",
+   "predicted": "PkgA classes exported to src, resources list PkgA"
+  },
+  {
+   "case": "-export with ignore list PkgA,PkgA.Sub",
+   "reader": "PkgA.Sub.Y exported or not",
+   "predicted": "ignored package not exported"
+  },
+  {
+   "case": "-export with a generated class / a global",
+   "reader": "exported or not per flag byte",
+   "predicted": "flag bytes control generated/system/percent/mapped/DFI items"
+  }
+ ],
+ "exposure_after_source": "Read Main.GenerateModuleXML and all of Storage/ModuleTemplate.cls.",
+ "source_predictions": [
+  {
+   "case": "generate -t",
+   "predicted": "template module.xml: Name template, Version 1.0.0, Author License MIT and CopyrightDate current year, dependency module 1.*, example resources"
+  },
+  {
+   "case": "interactive generate -author with license L and copyright C",
+   "predicted": "module.xml Author License = C and CopyrightDate = L (Main passes license/copyright in the opposite order to SetAuthorProps)"
+  },
+  {
+   "case": "classes G53.A.X and G53.B.Y in one source directory",
+   "predicted": "one G53.PKG resource (shared top-level package)"
+  },
+  {
+   "case": "tests folder classes",
+   "predicted": "UnitTest resource with Phase=test, not an application resource"
+  },
+  {
+   "case": "dependency answer g53dep:1.x",
+   "predicted": "ModuleReference g53dep 1.x"
+  },
+  {
+   "case": "-export 00000,G53E,G53E.Skip",
+   "predicted": "class G53E.Keep exported, G53E.Skip.Gone not; routine G53E.Skip.R exported (ignore mask not applied to routines); routine ZZG53E exported (routine mask is a substring match)"
+  },
+  {
+   "case": "ReadGlobals/GetGlobalsList",
+   "predicted": "no CLI caller; unreachable from generate"
+  }
+ ],
+ "outcome": {
+  "status": "lane complete (not sealed; main thread integrates)",
+  "model": "generator.rs 3 verified, 4/4 controls",
+  "native": "20261116T180748958256Z 30 fields; 11 replayed; 3 flips rejected",
+  "findings": [
+   "author License/CopyrightDate swapped (Low, E2E)",
+   "-export routine filter ignores the ignore list and matches the mask anywhere (Low, E2E)"
+  ],
+  "predictions": "Both source predictions confirmed; owner/help predicted neither. explore2 setup miss (routines not loaded) corrected before explore4.",
+  "reach_candidates": [
+   "Storage/ModuleTemplate.cls::SetAuthorProps",
+   "Storage/ModuleTemplate.cls::NewTemplate",
+   "Storage/ModuleTemplate.cls::ExportResources",
+   "Storage/ModuleTemplate.cls::ExportOneResource",
+   "Storage/ModuleTemplate.cls::Expfilename",
+   "Storage/ModuleTemplate.cls::SharedPackage",
+   "Storage/ModuleTemplate.cls::AddDependant",
+   "Storage/ModuleTemplate.cls::RelativeFolder",
+   "Storage/ModuleTemplate.cls::GenerateTemplate",
+   "Storage/ModuleTemplate.cls::SetTemplateProps"
+  ],
+  "unreachable": "ReadGlobals and GetGlobalsList have no CLI caller; GetCSPApplications/AddWebApps reached with an empty list only"
+ },
+ "integration": {
+  "by": "main thread",
+  "independent_rerun": "run.py --no-native passed",
+  "findings": [
+   "C:D54 Low",
+   "C:D55 Low"
+  ],
+  "convergence_role": "different underserved workflow",
+  "scope_note": "generate -export is the authoring export of namespace source, not package/artifact export"
+ }
+}

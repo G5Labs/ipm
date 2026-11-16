@@ -1,0 +1,109 @@
+{
+ "native_dir": "iter52",
+ "native_image_id": "sha256:7da4480b6916c2205bb839c342d35ceed69abd6ef771f948922e7dd29963f903",
+ "session_timeout": 900,
+ "models": {
+  "record.rs": {
+   "first-install-uses-named": [
+    "pub open spec fn compiled_at_refresh(preload: bool, installed_before: bool, exists: bool) -> bool {\n    exists && (preload || installed_before)\n}",
+    "pub open spec fn compiled_at_refresh(preload: bool, installed_before: bool, exists: bool) -> bool {\n    exists\n}"
+   ],
+   "preload-not-compiled": [
+    "exists && (preload || installed_before)",
+    "exists && installed_before"
+   ],
+   "changed-manifest-deletes-old": [
+    "State { record_resources: new_resources, record_deps: new_deps, default_value: new_default, ..s }",
+    "State { record_resources: new_resources, record_deps: new_deps, default_value: new_default, old_class_defined: false, ..s }"
+   ],
+   "hash-ignores-lastupdated": [
+    "pub open spec fn modified_changes(definition_changed: bool) -> bool { true }",
+    "pub open spec fn modified_changes(definition_changed: bool) -> bool { definition_changed }"
+   ]
+  }
+ },
+ "replay": {
+  "l1.life": "code(first_install(2, false))",
+  "c2.r2defined": "b(load_changed(s0(), 1, 0, 2).old_class_defined)",
+  "c1.modchanged": "b(modified_changes(false))",
+  "l2.life": "code(reinstall(2))",
+  "p1.life": "code(first_install(5, true))",
+  "n1.life": "code(unknown(3))",
+  "l1.custom": "b(first_install(2, false) == Life::Named(2))",
+  "l2.custom": "b(reinstall(2) == Life::Named(2))",
+  "p1.custom": "b(first_install(5, true) == Life::Named(5))",
+  "c0.resources": "s0().record_resources as int",
+  "c0.deps": "s0().record_deps as int",
+  "c0.greeting": "s0().default_value",
+  "c2.resources": "load_changed(s0(), 1, 0, 2).record_resources as int",
+  "c2.deps": "load_changed(s0(), 1, 0, 2).record_deps as int",
+  "c2.dep52installed": "b(load_changed(s0(), 1, 0, 2).dep_installed)",
+  "c2.greeting": "load_changed(s0(), 1, 0, 2).default_value",
+  "c2.modchanged": "b(modified_changes(true))"
+ },
+ "replay_preludes": {
+  "l1.life": "assert((code(first_install(2, false))) == 1);",
+  "c2.r2defined": "assert((b(load_changed(s0(), 1, 0, 2).old_class_defined)) == 1);",
+  "c1.modchanged": "assert((b(modified_changes(false))) == 1);",
+  "l2.life": "assert((code(reinstall(2))) == 2);",
+  "p1.life": "assert((code(first_install(5, true))) == 5);",
+  "n1.life": "assert((code(unknown(3))) == 1);",
+  "l1.custom": "assert((b(first_install(2, false) == Life::Named(2))) == 0);",
+  "l2.custom": "assert((b(reinstall(2) == Life::Named(2))) == 1);",
+  "p1.custom": "assert((b(first_install(5, true) == Life::Named(5))) == 1);",
+  "c0.resources": "assert((s0().record_resources as int) == 2);",
+  "c0.deps": "assert((s0().record_deps as int) == 1);",
+  "c0.greeting": "assert((s0().default_value) == 1);",
+  "c2.resources": "assert((load_changed(s0(), 1, 0, 2).record_resources as int) == 1);",
+  "c2.deps": "assert((load_changed(s0(), 1, 0, 2).record_deps as int) == 0);",
+  "c2.dep52installed": "assert((b(load_changed(s0(), 1, 0, 2).dep_installed)) == 1);",
+  "c2.greeting": "assert((load_changed(s0(), 1, 0, 2).default_value) == 2);",
+  "c2.modchanged": "assert((b(modified_changes(true))) == 1);"
+ },
+ "replay_grouped": true,
+ "replay_prelude": "",
+ "replay_model": "record.rs",
+ "session": [
+  "set sc=$system.OBJ.Load(\"/tmp/iter52/Reader.cls\",\"ck-d\")",
+  "write !,\"LOADSTATUS|\",sc,!",
+  "do ##class(IPMCont.StoreReader).All()"
+ ],
+ "native_expected": {
+  "c0.ok": 1,
+  "c0.resources": 2,
+  "c0.deps": 1,
+  "c0.r2defined": 1,
+  "c0.dep52installed": 1,
+  "c0.greeting": 1,
+  "c1.ok": 1,
+  "c1.modchanged": 1,
+  "c1.updchanged": 1,
+  "c1.resources": 2,
+  "c1.deps": 1,
+  "c1.r2defined": 1,
+  "c1.dep52installed": 1,
+  "c1.greeting": 1,
+  "c2.ok": 1,
+  "c2.modchanged": 1,
+  "c2.updchanged": 1,
+  "c2.resources": 1,
+  "c2.deps": 0,
+  "c2.r2defined": 1,
+  "c2.dep52installed": 1,
+  "c2.greeting": 2,
+  "l1.ok": 1,
+  "l1.life": 1,
+  "l1.custom": 0,
+  "l2.ok": 1,
+  "l2.life": 2,
+  "l2.custom": 1,
+  "p1.ok": 1,
+  "p1.life": 5,
+  "p1.custom": 1,
+  "n1.ok": 1,
+  "n1.life": 1,
+  "o1.ok": 0,
+  "o1.installed": 0
+ },
+ "expectation_basis": "Owner/source predictions in iter52/working-ledger.json before explore1; explore1 refuted the unchanged-LastModifiedTimestamp prediction; the preload variant (p1) was added and predicted before explore2; values from explore2."
+}

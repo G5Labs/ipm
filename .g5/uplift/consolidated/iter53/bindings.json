@@ -1,0 +1,135 @@
+{
+ "verus_dir": ".g5/Verus_verification/consolidated/iter53",
+ "changed_files": [
+  "generator.rs",
+  "cases.json",
+  "run.py",
+  "native/**"
+ ],
+ "rows": [
+  {
+   "id": "S53-01",
+   "owner": ".g5/ontology/features/developer-tools.g5.md#devtools.authoring.generate",
+   "model": "generator.rs",
+   "symbols": [
+    "Answers",
+    "Author",
+    "set_author_props",
+    "stored_author",
+    "author_swapped",
+    "fixture_author"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "SetAuthorProps"
+    ],
+    [
+     "src/cls/IPM/Main.cls",
+     "GenerateModuleXML"
+    ]
+   ],
+   "reader": [
+    [
+     "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "NewTemplate"
+    ]
+   ],
+   "scope": "Author answers (license, copyright) passed positionally into SetAuthorProps(copy, license): stored License = copyright answer, CopyrightDate = license answer. Native t2 (C:D-next author swap). Prompt reading by %Library.Prompt from the piped terminal is a provider."
+  },
+  {
+   "id": "S53-02",
+   "owner": ".g5/ontology/features/developer-tools.g5.md#devtools.authoring.generate",
+   "model": "generator.rs",
+   "symbols": [
+    "Item",
+    "exported",
+    "export_neighbors",
+    "keep",
+    "skip_cls",
+    "rout",
+    "skip_rout",
+    "zz"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "ExportResources"
+    ],
+    [
+     "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "ExportOneResource"
+    ],
+    [
+     "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "Expfilename"
+    ]
+   ],
+   "reader": [
+    [
+     "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "ReadResources"
+    ],
+    [
+     "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "ReadItems"
+    ]
+   ],
+   "scope": "-export flags/mask/ignore: classes need a prefix mask match and no prefix ignore match; routines need only a substring mask match (ignore list unused). Exported files land in <src>/cls and <src>/mac and become resources. Native e1, t3 (C:D-next export filter). DFI export, flag bytes 1-5 other than 00000, and the system/generated filters not exercised."
+  },
+  {
+   "id": "S53-03",
+   "owner": ".g5/ontology/features/developer-tools.g5.md#devtools.generate.resources",
+   "model": "generator.rs",
+   "symbols": [
+    "shared_resource",
+    "grouping_neighbors"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "GroupClasses"
+    ],
+    [
+     "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "SharedPackage"
+    ],
+    [
+     "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "AddPackages"
+    ]
+   ],
+   "reader": [
+    [
+     "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "AddDependant"
+    ],
+    [
+     "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "RelativeFolder"
+    ]
+   ],
+   "scope": "G53.A.X and G53.B.Y in one directory give one G53.PKG; Other.Z gives Other.PKG; tests folder gives a UnitTest Phase=test; dependency answer g53dep:1.x becomes a ModuleReference. Native t2."
+  },
+  {
+   "id": "S53-04",
+   "owner": ".g5/ontology/features/developer-tools.g5.md#devtools.authoring.generate",
+   "model": "generator.rs",
+   "symbols": [
+    "fixture_author"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "GenerateTemplate"
+    ],
+    [
+     "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "SetTemplateProps"
+    ]
+   ],
+   "reader": [],
+   "scope": "generate -t writes the fixed template (Name template, Version 1.0.0, License MIT, CopyrightDate current year, dependency module 1.*). Native t1 gated only; not replayed in Verus (fixed literals)."
+  }
+ ]
+}

@@ -591,6 +591,32 @@ Reproduced by: E2E reproduced. [Iteration47 native receipt](iter47/native/202611
 
 A CI tool reading the YAML or TOON report gets assertion text that differs from the JSON report for the same run, although the [test output statement](../../ontology/features/build-and-publish.g5.md#build.test-output) offers these formats as alternative renderings of the same full results. A repair would write YAML descriptions as escaped double-quoted scalars and escape CR in TOON quoted fields. It was not checked.
 
+<a id="c-d54"></a>
+### C:D54: `generate -author` stores the license and copyright answers in each other's fields
+
+Severity: Low · Decision: Open
+
+Run: Uplift 2026-11-16
+
+Found by: source review of `Main.cls::GenerateModuleXML` against `Storage/ModuleTemplate.cls::SetAuthorProps`, and [iteration53 model](../../Verus_verification/consolidated/iter53/generator.rs) `author_swapped` with control `author-args-in-order` ([proof receipt](iter53/proofs/models.json)).
+
+Reproduced by: E2E reproduced. [Iteration53 native receipt](iter53/native/20261116T180748958256Z/observations.json) on IRIS 2026.1 x86-64 at `571e04a1`. Answering `Apache-2.0` for the license and `2024` for the copyright date writes `<License>2024</License>` and `<CopyrightDate>Apache-2.0</CopyrightDate>` (case t2). Passing neighbour: the `-t` template's own License MIT and CopyrightDate year are in the right fields (t1).
+
+The command passes the two answers to `SetAuthorProps` in the wrong order, contrary to the [generation statement](../../ontology/features/developer-tools.g5.md#devtools.authoring.generate). A repair would pass them in parameter order. It was not checked.
+
+<a id="c-d55"></a>
+### C:D55: `generate -export` ignores the ignore list for routines and matches routine masks anywhere in the name
+
+Severity: Low · Decision: Open
+
+Run: Uplift 2026-11-16
+
+Found by: source review of `Storage/ModuleTemplate.cls::ExportOneResource`, then [iteration53 model](../../Verus_verification/consolidated/iter53/generator.rs) `export_neighbors` with controls `routines-honour-ignore` and `routines-prefix-mask` ([proof receipt](iter53/proofs/models.json)).
+
+Reproduced by: E2E reproduced. [Iteration53 native receipt](iter53/native/20261116T180748958256Z/observations.json). With `-export 00000,G53E,G53E.Skip`, class `G53E.Skip.Gone` is not exported, but routine `G53E.Skip.R` and the unrelated `ZZG53E` are exported and listed as resources (cases e1, t3). Passing neighbours: `G53E.Keep` and `G53E.Rout` are exported.
+
+This is the `generate` authoring export of namespace source into the module folder, not package or artifact export. Ignored or unrelated routines end up in a new module, contrary to the [generation statement](../../ontology/features/developer-tools.g5.md#devtools.authoring.generate). A repair would apply the same prefix mask and ignore test to routines as to classes. It was not checked.
+
 ## Outside active reproduction scope
 
 <a id="c-d17"></a>
