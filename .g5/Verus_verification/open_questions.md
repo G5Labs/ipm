@@ -1,4 +1,4 @@
-# IPM verification questions
+# Ontology clarification questions
 
 <a id="lifecycle.installer.upgrade-policy"></a>
 ### What should the installer's upgrade flag and database name mean?
@@ -14,15 +14,21 @@
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#lifecycle.installer.upgrade-policy)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "lifecycle.installer.upgrade-policy",
-  "status": "open",
-  "prompt": "What should the installer's upgrade flag and database name mean?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": []
-}
+schema: 1
+id: lifecycle.installer.upgrade-policy
+status: open
+prompt: What should the installer's upgrade flag and database name mean?
+severity: medium
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: as built, IPM never sets them. The upgrade flag is 0 and the database name is empty unless `-DConfigure.IsUpgrade` or `-DConfigure.DatabaseName` supplies them, even when a newer version replaces an installed one.
 ```
 
 <a id="lifecycle.phase-list-policy"></a>
@@ -39,15 +45,21 @@ Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/Q
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#lifecycle.phase-list-policy)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "lifecycle.phase-list-policy",
-  "status": "open",
-  "prompt": "When a phase list mixes standard phases with a custom or unknown name, what should run?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": []
-}
+schema: 1
+id: lifecycle.phase-list-policy
+status: open
+prompt: When a phase list mixes standard phases with a custom or unknown name, what should run?
+severity: medium
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: Run the standard chain, then each custom phase in the order named. Refuse the whole command before any phase runs when a name is neither a standard nor a declared custom phase.
 ```
 
 <a id="dec-sync-4"></a>
@@ -65,15 +77,21 @@ Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/Q
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#lifecycle.empty-reload-policy)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "lifecycle.empty-reload-policy",
-  "status": "open",
-  "prompt": "Should standalone reload warn or fail when a module has no source root?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": []
-}
+schema: 1
+id: lifecycle.empty-reload-policy
+status: open
+prompt: Should standalone reload warn or fail when a module has no source root?
+severity: medium
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: A standalone `reload` of a module with no root says that nothing was loaded; the phase stays silent inside other phase lists.
 ```
 
 <a id="module.lifecycle-class.unknown-policy"></a>
@@ -90,15 +108,21 @@ Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/Q
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#module.lifecycle-class.unknown-policy)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "module.lifecycle-class.unknown-policy",
-  "status": "open",
-  "prompt": "Should a load fail or warn when `LifecycleClass` names a class that is not available when the lifecycle is resolved?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": []
-}
+schema: 1
+id: module.lifecycle-class.unknown-policy
+status: open
+prompt: Should a load fail or warn when `LifecycleClass` names a class that is not available when the lifecycle is resolved?
+severity: medium
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: as built, fall back to `Module` silently.
 ```
 
 <a id="module.webapp.upgrade.policy"></a>
@@ -115,15 +139,21 @@ Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/Q
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#module.webapp.upgrade.policy)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "module.webapp.upgrade.policy",
-  "status": "open",
-  "prompt": "Should a higher-version load remove a web application omitted by the new manifest?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": []
-}
+schema: 1
+id: module.webapp.upgrade.policy
+status: open
+prompt: Should a higher-version load remove a web application omitted by the new manifest?
+severity: medium
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: disclose that the application remains; do not promise automatic removal without an ownership rule.
 ```
 
 <a id="c-q15"></a>
@@ -141,15 +171,21 @@ Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/Q
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#module.webapp.ownership)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "module.webapp.ownership",
-  "status": "open",
-  "prompt": "Should install take over an existing web application of the same name, and should uninstall delete one IPM did not create?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": []
-}
+schema: 1
+id: module.webapp.ownership
+status: open
+prompt: Should install take over an existing web application of the same name, and should uninstall delete one IPM did not create?
+severity: medium
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: keep the as-built behavior and disclose it. Alternatives are to refuse install when the application exists and no module lists it, or to record creation and delete only what IPM created. Both change today's reinstall-over-manual-setup path.
 ```
 
 <a id="c-q6"></a>
@@ -166,15 +202,21 @@ Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/Q
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#module.env.failure)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "module.env.failure",
-  "status": "open",
-  "prompt": "When one of several `-env` files is missing, malformed or an array, what should the command keep, and how should two arrays merge?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": []
-}
+schema: 1
+id: module.env.failure
+status: open
+prompt: When one of several `-env` files is missing, malformed or an array, what should the command keep, and how should two arrays merge?
+severity: medium
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: as built. The command fails and keeps nothing from any file, and a later array overwrites the earlier one position by position, so it cannot remove items.
 ```
 
 <a id="c-q2"></a>
@@ -193,20 +235,27 @@ Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/Q
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#module.parameter.expressions.brace-policy)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "module.parameter.expressions.brace-policy",
-  "status": "open",
-  "prompt": "Should a `$$$macro` expand when the attribute contains no opening brace?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": [
-    {
-      "label": "expand macros with or without a brace.\n- Affected claims: parameter evaluation, after-install message, file-copy target and Invoke arguments. Alias C:Q2; parent",
-      "description": "expand macros with or without a brace.\n- Affected claims: parameter evaluation, after-install message, file-copy target and Invoke arguments. Alias C:Q2; parent [module.parameter.expressions](../ontology/concepts/modules.g5.md#module.parameter.expressions)"
-    }
-  ]
-}
+schema: 1
+id: module.parameter.expressions.brace-policy
+status: open
+prompt: Should a `$$macro` expand when the attribute contains no opening brace?
+severity: medium
+multi_select: false
+allow_free_text: true
+options:
+  - label: |-
+      expand macros with or without a brace.
+      - Affected claims: parameter evaluation, after-install message, file-copy target and Invoke arguments. Alias C:Q2; parent
+    description: |-
+      expand macros with or without a brace.
+      - Affected claims: parameter evaluation, after-install message, file-copy target and Invoke arguments. Alias C:Q2; parent [module.parameter.expressions](../ontology/concepts/modules.g5.md#module.parameter.expressions)
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: keep the observed brace gate until a maintainer chooses otherwise.
 ```
 
 <a id="c-q12"></a>
@@ -224,15 +273,21 @@ Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/Q
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#module.processor.cpf-effects.policy)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "module.processor.cpf-effects.policy",
-  "status": "open",
-  "prompt": "Must package failure undo instance configuration changes?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": []
-}
+schema: 1
+id: module.processor.cpf-effects.policy
+status: open
+prompt: Must package failure undo instance configuration changes?
+severity: medium
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: database rollback alone gives no such promise. Alternatives are compensating selected changes or refusing them inside package transactions.
 ```
 
 <a id="module.system-setting.cleanup-policy"></a>
@@ -247,15 +302,21 @@ The implementation keeps the installed value, and that is the working assumption
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#module.system-setting.cleanup-policy)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "module.system-setting.cleanup-policy",
-  "status": "open",
-  "prompt": "Should uninstall keep a legacy SystemSetting value or restore the value that preceded installation?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": []
-}
+schema: 1
+id: module.system-setting.cleanup-policy
+status: open
+prompt: Should uninstall keep a legacy SystemSetting value or restore the value that preceded installation?
+severity: medium
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: Q17).
 ```
 
 <a id="module.python.cleanup-policy"></a>
@@ -270,15 +331,21 @@ The working assumption preserves the current shared installation on Clean. Track
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#module.python.cleanup-policy)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "module.python.cleanup-policy",
-  "status": "open",
-  "prompt": "How should IPM remove Python packages without removing a package another module or administrator uses?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": []
-}
+schema: 1
+id: module.python.cleanup-policy
+status: open
+prompt: How should IPM remove Python packages without removing a package another module or administrator uses?
+severity: medium
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: Q18).
 ```
 
 <a id="c-q22"></a>
@@ -294,15 +361,21 @@ The observed rule is the latter. Tests cover exact unconfigured markers and conf
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#module.processor.file-copy.unknown-descendants)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "module.processor.file-copy.unknown-descendants",
-  "status": "open",
-  "prompt": "Should FileCopy protect a parent containing an unconfigured descendant with an IRIS.DAT marker, or only configured roots/ancestors and a marker at the exact target?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": []
-}
+schema: 1
+id: module.processor.file-copy.unknown-descendants
+status: open
+prompt: Should FileCopy protect a parent containing an unconfigured descendant with an IRIS.DAT marker, or only configured roots/ancestors and a marker at the exact target?
+severity: medium
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: Protect configured storage roots, their ancestors, and an exact target containing an IRIS.DAT marker. Preserve the observed behavior while a recursive search requirement remains undecided.
 ```
 
 <a id="dec-nsp-6"></a>
@@ -320,15 +393,21 @@ Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/Q
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#namespace.enable.source-ambiguity-policy)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "namespace.enable.source-ambiguity-policy",
-  "status": "open",
-  "prompt": "Which source owns mapped IPM when several namespace records name one code database?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": []
-}
+schema: 1
+id: namespace.enable.source-ambiguity-policy
+status: open
+prompt: Which source owns mapped IPM when several namespace records name one code database?
+severity: medium
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: The source of a mapped namespace is the namespace whose own code database holds the IPM code.
 ```
 
 <a id="dec-nsp-4"></a>
@@ -346,15 +425,21 @@ Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/Q
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#namespace.enable.community-failure-policy)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "namespace.enable.community-failure-policy",
-  "status": "open",
-  "prompt": "What status should enable -community return when a component step fails?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": []
-}
+schema: 1
+id: namespace.enable.community-failure-policy
+status: open
+prompt: What status should enable -community return when a component step fails?
+severity: medium
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: If a step of `enable -community` fails, the command stops and returns that error.
 ```
 
 <a id="dec-repo-5"></a>
@@ -372,15 +457,21 @@ Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/Q
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#repo.oras.unpublish-platform-policy)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "repo.oras.unpublish-platform-policy",
-  "status": "open",
-  "prompt": "Which platform tags should unpublish remove when only a version is named?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": []
-}
+schema: 1
+id: repo.oras.unpublish-platform-policy
+status: open
+prompt: Which platform tags should unpublish remove when only a version is named?
+severity: medium
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: ORAS `unpublish R/M V` deletes the plain tag and every `V__<platform>` tag of that version.
 ```
 
 <a id="dec-repo-3"></a>
@@ -398,15 +489,21 @@ Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/Q
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#repo.oras.credentials-change-policy)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "repo.oras.credentials-change-policy",
-  "status": "open",
-  "prompt": "Should changing an ORAS registry address clear its stored credentials?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": []
-}
+schema: 1
+id: repo.oras.credentials-change-policy
+status: open
+prompt: Should changing an ORAS registry address clear its stored credentials?
+severity: medium
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: Changing an ORAS registry's address clears its stored credentials, as for a remote registry.
 ```
 
 <a id="c-q5"></a>
@@ -424,20 +521,23 @@ Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/Q
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#repo.filesystem.bad-module)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "repo.filesystem.bad-module",
-  "status": "open",
-  "prompt": "Should a module with an invalid name in a filesystem repository's folder block the whole repository?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": [
-    {
-      "label": "fail every bad manifest, including unreadable ones, so nothing is silently hidden",
-      "description": ""
-    }
-  ]
-}
+schema: 1
+id: repo.filesystem.bad-module
+status: open
+prompt: Should a module with an invalid name in a filesystem repository's folder block the whole repository?
+severity: medium
+multi_select: false
+allow_free_text: true
+options:
+  - label: fail every bad manifest, including unreadable ones, so nothing is silently hidden
+    description: ""
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: no. Skip it with a warning, like an unreadable manifest, so the other modules stay available.
 ```
 
 <a id="c-q9"></a>
@@ -455,15 +555,21 @@ Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/Q
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#repo.oras.integrity.policy)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "repo.oras.integrity.policy",
-  "status": "open",
-  "prompt": "Should an untagged pull always select the highest semantic version, and must a package have exactly one archive layer?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": []
-}
+schema: 1
+id: repo.oras.integrity.policy
+status: open
+prompt: Should an untagged pull always select the highest semantic version, and must a package have exactly one archive layer?
+severity: medium
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: expose the mismatch and retain size/digest checking. Alternatives are sorting before selection or requiring a registry ordering contract, plus rejecting ambiguous archives or selecting by declared digest.
 ```
 
 <a id="c-q14"></a>
@@ -481,15 +587,21 @@ Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/Q
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#repo.remote.download.credentials)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "repo.remote.download.credentials",
-  "status": "open",
-  "prompt": "Should registry credentials be sent to a download URL on a different server?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": []
-}
+schema: 1
+id: repo.remote.download.credentials
+status: open
+prompt: Should registry credentials be sent to a download URL on a different server?
+severity: medium
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: keep following the returned URL, and record the forwarding as suspected defect C:D20. The proposed alternative sends credentials only when the URL's server and port match the repository; a third choice is to refuse such URLs. Either change can break registries that redirect downloads to storage needing the same credentials.
 ```
 
 <a id="c-q8"></a>
@@ -507,15 +619,21 @@ Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/Q
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#repo.filesystem.concurrent-refresh)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "repo.filesystem.concurrent-refresh",
-  "status": "open",
-  "prompt": "Does cache replacement need its explicit lock until the caller's transaction ends?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": []
-}
+schema: 1
+id: repo.filesystem.concurrent-refresh
+status: open
+prompt: Does cache replacement need its explicit lock until the caller's transaction ends?
+severity: medium
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: keep the intended consistent cache and investigate competing refreshes under actual database isolation. Alternatives are deferred release, refusing an outer transaction or demonstrating that existing database locks suffice.
 ```
 
 <a id="g-q-22"></a>
@@ -535,20 +653,23 @@ Unresolved Q-25: [May an escaped NoJournal dependency remain without its own dep
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#transaction.flag-sources.dependency-defaults)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "transaction.flag-sources.dependency-defaults",
-  "status": "open",
-  "prompt": "Does a dependency's own `<Defaults>` `NoJournal` apply inside its parent's transaction, so that the dependency's changes escape the parent's normal-mode rollback?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": [
-    {
-      "label": "the parent's transaction governs every nested load, so a dependency's `<Defaults>` `NoJournal` is ignored, or the dependency is refused, while a parent transact",
-      "description": "the parent's transaction governs every nested load, so a dependency's `<Defaults>` `NoJournal` is ignored, or the dependency is refused, while a parent transaction is open. This keeps [the whole-load rollback](../ontology/features/load.g5.md#load.outcome)"
-    }
-  ]
-}
+schema: 1
+id: transaction.flag-sources.dependency-defaults
+status: open
+prompt: Does a dependency's own `<Defaults>` `NoJournal` apply inside its parent's transaction, so that the dependency's changes escape the parent's normal-mode rollback?
+severity: medium
+multi_select: false
+allow_free_text: true
+options:
+  - label: the parent's transaction governs every nested load, so a dependency's `<Defaults>` `NoJournal` is ignored, or the dependency is refused, while a parent transact
+    description: the parent's transaction governs every nested load, so a dependency's `<Defaults>` `NoJournal` is ignored, or the dependency is refused, while a parent transaction is open. This keeps [the whole-load rollback](../ontology/features/load.g5.md#load.outcome)
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: yes. A module's `<Defaults>` apply whenever that module is installed, including as a dependency. A `NoJournal` dependency therefore keeps its changes when the parent rolls back, and its history record must survive and say so.
 ```
 
 <a id="g-q-23"></a>
@@ -566,20 +687,23 @@ Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/Q
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#transaction.flag-sources.dependency-no-transaction)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "transaction.flag-sources.dependency-no-transaction",
-  "status": "open",
-  "prompt": "Should a dependency's own `<Defaults>` `NoTransaction` suppress its parent's transaction?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": [
-    {
-      "label": "the flag affects only the dependency's own load, so the parent's transaction still wraps it and undoes it on failure. A user whose install contains a conflictin",
-      "description": "the flag affects only the dependency's own load, so the parent's transaction still wraps it and undoes it on failure. A user whose install contains a conflicting module passes `-DNoTransaction=1` for the whole command"
-    }
-  ]
-}
+schema: 1
+id: transaction.flag-sources.dependency-no-transaction
+status: open
+prompt: Should a dependency's own `<Defaults>` `NoTransaction` suppress its parent's transaction?
+severity: medium
+multi_select: false
+allow_free_text: true
+options:
+  - label: the flag affects only the dependency's own load, so the parent's transaction still wraps it and undoes it on failure. A user whose install contains a conflictin
+    description: the flag affects only the dependency's own load, so the parent's transaction still wraps it and undoes it on failure. A user whose install contains a conflicting module passes `-DNoTransaction=1` for the whole command
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: yes. A module that declares `NoTransaction` must not run inside a transaction opened for its parent, so the package change runs without one, and a failure may leave a partial install.
 ```
 
 <a id="g-q-03"></a>
@@ -597,20 +721,23 @@ Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/Q
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#dev-mode.overwrite-guard.force)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "dev-mode.overwrite-guard.force",
-  "status": "open",
-  "prompt": "May `-force` lift the developer-mode overwrite guard, and does the guard cover `load`?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": [
-    {
-      "label": "let `-force` lift the guard as the wiki says, and decide whether `load` is covered",
-      "description": ""
-    }
-  ]
-}
+schema: 1
+id: dev-mode.overwrite-guard.force
+status: open
+prompt: May `-force` lift the developer-mode overwrite guard, and does the guard cover `load`?
+severity: medium
+multi_select: false
+allow_free_text: true
+options:
+  - label: let `-force` lift the guard as the wiki says, and decide whether `load` is covered
+    description: ""
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: keep the current scope. The guard covers `install` only, and `-force` does not lift it.
 ```
 
 <a id="g-q-01"></a>
@@ -630,20 +757,23 @@ Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/Q
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#dev-mode.sticky)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "dev-mode.sticky",
-  "status": "open",
-  "prompt": "When a module is already in developer mode, does a plain `load` with neither `-dev` nor `-nodev` keep developer mode?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": [
-    {
-      "label": "a plain load always uses normal mode, following that fix's wording that a module \"should only be DevMode if the -dev flag is included\"",
-      "description": ""
-    }
-  ]
-}
+schema: 1
+id: dev-mode.sticky
+status: open
+prompt: When a module is already in developer mode, does a plain `load` with neither `-dev` nor `-nodev` keep developer mode?
+severity: medium
+multi_select: false
+allow_free_text: true
+options:
+  - label: a plain load always uses normal mode, following that fix's wording that a module "should only be DevMode if the -dev flag is included"
+    description: ""
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: yes, it keeps the stored mode.
 ```
 
 <a id="g-q-04"></a>
@@ -662,20 +792,27 @@ Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/Q
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#transaction.rollback-scope.policy)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "transaction.rollback-scope.policy",
-  "status": "open",
-  "prompt": "Should a failed package change compensate external effects that the database cannot roll back?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": [
-    {
-      "label": "add explicit compensating actions for each external writer.\n- Affected claims: load failure atomicity, lock-file location and status, file copy, CPF and history",
-      "description": "add explicit compensating actions for each external writer.\n- Affected claims: load failure atomicity, lock-file location and status, file copy, CPF and history `Committed`"
-    }
-  ]
-}
+schema: 1
+id: transaction.rollback-scope.policy
+status: open
+prompt: Should a failed package change compensate external effects that the database cannot roll back?
+severity: medium
+multi_select: false
+allow_free_text: true
+options:
+  - label: |-
+      add explicit compensating actions for each external writer.
+      - Affected claims: load failure atomicity, lock-file location and status, file copy, CPF and history
+    description: |-
+      add explicit compensating actions for each external writer.
+      - Affected claims: load failure atomicity, lock-file location and status, file copy, CPF and history `Committed`
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: database rollback is the existing boundary; external effects need separate receipts and must be reported.
 ```
 
 <a id="g-q-24"></a>
@@ -696,20 +833,27 @@ Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/Q
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#dev-mode.overwrite-guard.dependency-policy)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "dev-mode.overwrite-guard.dependency-policy",
-  "status": "open",
-  "prompt": "May a parent replace a dependency that is already in developer mode?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": [
-    {
-      "label": "Allow top-level guard only, with a warning when dependency developer mode is cleared.\n- Affected claims: install refusal, dependency replacement and developer w",
-      "description": "Allow top-level guard only, with a warning when dependency developer mode is cleared.\n- Affected claims: install refusal, dependency replacement and developer working copy preservation. Alias Q-24"
-    }
-  ]
-}
+schema: 1
+id: dev-mode.overwrite-guard.dependency-policy
+status: open
+prompt: May a parent replace a dependency that is already in developer mode?
+severity: medium
+multi_select: false
+allow_free_text: true
+options:
+  - label: |-
+      Allow top-level guard only, with a warning when dependency developer mode is cleared.
+      - Affected claims: install refusal, dependency replacement and developer w
+    description: |-
+      Allow top-level guard only, with a warning when dependency developer mode is cleared.
+      - Affected claims: install refusal, dependency replacement and developer working copy preservation. Alias Q-24
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: Preserve the stated install overwrite guard for dependencies; load scope follows the parent force/load question.
 ```
 
 <a id="g-q-25"></a>
@@ -728,20 +872,27 @@ Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/Q
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#transaction.flag-sources.dependency-closure)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "transaction.flag-sources.dependency-closure",
-  "status": "open",
-  "prompt": "May an escaped NoJournal dependency remain without its own dependencies?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": [
-    {
-      "label": "Document temporary inconsistency after failure, or use one load-wide transaction mode.\n- Affected claims: dependency satisfaction, mixed-mode rollback and retry",
-      "description": "Document temporary inconsistency after failure, or use one load-wide transaction mode.\n- Affected claims: dependency satisfaction, mixed-mode rollback and retry. Alias Q-25"
-    }
-  ]
-}
+schema: 1
+id: transaction.flag-sources.dependency-closure
+status: open
+prompt: May an escaped NoJournal dependency remain without its own dependencies?
+severity: medium
+multi_select: false
+allow_free_text: true
+options:
+  - label: |-
+      Document temporary inconsistency after failure, or use one load-wide transaction mode.
+      - Affected claims: dependency satisfaction, mixed-mode rollback and retry
+    description: |-
+      Document temporary inconsistency after failure, or use one load-wide transaction mode.
+      - Affected claims: dependency satisfaction, mixed-mode rollback and retry. Alias Q-25
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: Require closure consistency as intent; record the observed violating state rather than assuming a repair.
 ```
 
 <a id="c-q3"></a>
@@ -758,20 +909,23 @@ Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/Q
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#version.range.year)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "version.range.year",
-  "status": "open",
-  "prompt": "Should a partial version such as `2024.1` mean exactly `2024.1.0`, as built, while `2024.12` and `1.2` mean a whole minor series?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": [
-    {
-      "label": "one rule for every partial version. Then `2022.2` would also accept `2022.2.1`",
-      "description": ""
-    }
-  ]
-}
+schema: 1
+id: version.range.year
+status: open
+prompt: Should a partial version such as `2024.1` mean exactly `2024.1.0`, as built, while `2024.12` and `1.2` mean a whole minor series?
+severity: medium
+multi_select: false
+allow_free_text: true
+options:
+  - label: one rule for every partial version. Then `2022.2` would also accept `2022.2.1`
+    description: ""
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: keep the special case for IRIS-style versions, because IPM's tests require `2022.2` to match only `2022.2`.
 ```
 
 <a id="c-q10"></a>
@@ -789,15 +943,21 @@ Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/Q
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#artifact.refresh-policy)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "artifact.refresh-policy",
-  "status": "open",
-  "prompt": "When should an existing artifact folder or same-named temporary file be refreshed?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": []
-}
+schema: 1
+id: artifact.refresh-policy
+status: open
+prompt: When should an existing artifact folder or same-named temporary file be refreshed?
+severity: medium
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: preserve observed reuse and disclose that it gives no freshness guarantee. Alternatives are immutable digest-addressed files, explicit refresh, or validating the cached bytes against the selected artifact.
 ```
 
 <a id="c-q11"></a>
@@ -815,15 +975,21 @@ Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/Q
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#artifact.target-policy)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "artifact.target-policy",
-  "status": "open",
-  "prompt": "Should artifact copies refuse protected installation folders as FileCopy does?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": []
-}
+schema: 1
+id: artifact.target-policy
+status: open
+prompt: Should artifact copies refuse protected installation folders as FileCopy does?
+severity: medium
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: disclose the warning boundary without promising protection. Alternatives are a common refusal rule, an explicit operator override, or retaining warning-only behavior.
 ```
 
 <a id="c-q13"></a>
@@ -841,15 +1007,21 @@ Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/Q
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#build.test.outcome.empty.policy)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "build.test.outcome.empty.policy",
-  "status": "open",
-  "prompt": "Should a declared test package with no test classes fail `test` and `verify`?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": []
-}
+schema: 1
+id: build.test.outcome.empty.policy
+status: open
+prompt: Should a declared test package with no test classes fail `test` and `verify`?
+severity: medium
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: keep the warning and the passing status. The alternative is to fail, or to fail only when a run executes no tests at all. Either alternative changes current green builds whose test package is intentionally empty.
 ```
 
 <a id="build.package.include-refresh.policy"></a>
@@ -865,15 +1037,21 @@ Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/Q
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#build.package.include-refresh.policy)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "build.package.include-refresh.policy",
-  "status": "open",
-  "prompt": "Should a reloaded manifest that omits IncludeTests keep the previous value or reset it to false?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": []
-}
+schema: 1
+id: build.package.include-refresh.policy
+status: open
+prompt: Should a reloaded manifest that omits IncludeTests keep the previous value or reset it to false?
+severity: medium
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: preserve the checked behavior and use an explicit false to clear it. Resetting on omission would make a removed declaration disable test packaging, but would change existing reload behavior.
 ```
 
 <a id="deps.installed.unversioned-policy"></a>
@@ -890,15 +1068,21 @@ Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/Q
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#deps.installed.unversioned-policy)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "deps.installed.unversioned-policy",
-  "status": "open",
-  "prompt": "When the newest offer of a module breaks an installed module's requirement, should `install <module>` without a version fall back to the newest offer that satisfies every requirement?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": []
-}
+schema: 1
+id: deps.installed.unversioned-policy
+status: open
+prompt: When the newest offer of a module breaks an installed module's requirement, should `install <module>` without a version fall back to the newest offer that satisfies every requirement?
+severity: medium
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: keep the as-built refusal, so the user sees the conflict and chooses a version explicitly.
 ```
 
 <a id="deps.installed.directory-policy"></a>
@@ -915,15 +1099,21 @@ Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/Q
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#deps.installed.directory-policy)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "deps.installed.directory-policy",
-  "status": "open",
-  "prompt": "Should `load <directory>` refuse or warn when the loaded module's version breaks a requirement that installed modules declare on it?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": []
-}
+schema: 1
+id: deps.installed.directory-policy
+status: open
+prompt: Should `load <directory>` refuse or warn when the loaded module's version breaks a requirement that installed modules declare on it?
+severity: medium
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: as built, the load succeeds without a warning, and installed modules keep requirements the namespace no longer satisfies.
 ```
 
 <a id="dec-dep-3"></a>
@@ -941,15 +1131,21 @@ Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/Q
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#deps.lockfile.local-supplier-policy)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "deps.lockfile.local-supplier-policy",
-  "status": "open",
-  "prompt": "Should a lock file accept a directory-loaded dependency with no registry?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": []
-}
+schema: 1
+id: deps.lockfile.local-supplier-policy
+status: open
+prompt: Should a lock file accept a directory-loaded dependency with no registry?
+severity: medium
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: A needed module loaded from a folder is written to the lock file with an empty registry.
 ```
 
 <a id="dec-sync-3"></a>
@@ -967,15 +1163,21 @@ Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/Q
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#devtools.sync.aggregate-status-policy)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "devtools.sync.aggregate-status-policy",
-  "status": "open",
-  "prompt": "Should sync without a module name return an error when a module fails?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": []
-}
+schema: 1
+id: devtools.sync.aggregate-status-policy
+status: open
+prompt: Should sync without a module name return an error when a module fails?
+severity: medium
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: "`sync` with no module name reports each failure and a summary, then returns OK."
 ```
 
 <a id="dec-sync-1"></a>
@@ -993,15 +1195,21 @@ Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/Q
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#devtools.sync.failed-import-policy)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "devtools.sync.failed-import-policy",
-  "status": "open",
-  "prompt": "Should sync retry a failed compile or reload after its source is reverted?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": []
-}
+schema: 1
+id: devtools.sync.failed-import-policy
+status: open
+prompt: Should sync retry a failed compile or reload after its source is reverted?
+severity: medium
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: Files that a failed `compile`, `load -dev` or `reload` put on the server are re-detected by the next `sync`.
 ```
 
 <a id="c-q4"></a>
@@ -1018,20 +1226,23 @@ Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/Q
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#devtools.authoring.module-version.file)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "devtools.authoring.module-version.file",
-  "status": "open",
-  "prompt": "Should `module-version` also update the `module.xml` file a module was loaded from?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": [
-    {
-      "label": "yes for a module loaded in developer mode, whose folder is its working copy",
-      "description": ""
-    }
-  ]
-}
+schema: 1
+id: devtools.authoring.module-version.file
+status: open
+prompt: Should `module-version` also update the `module.xml` file a module was loaded from?
+severity: medium
+multi_select: false
+allow_free_text: true
+options:
+  - label: yes for a module loaded in developer mode, whose folder is its working copy
+    description: ""
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: no, as built. The command edits the namespace's copy, and source control hooks, when present, take it from there.
 ```
 
 <a id="devtools.generate.invalid-source"></a>
@@ -1046,15 +1257,21 @@ As built, it skips the file and can produce a manifest without it. The working a
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#devtools.generate.invalid-source)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "devtools.generate.invalid-source",
-  "status": "open",
-  "prompt": "Should `generate` report or refuse a source file that cannot load?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": []
-}
+schema: 1
+id: devtools.generate.invalid-source
+status: open
+prompt: Should `generate` report or refuse a source file that cannot load?
+severity: medium
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: Q16).
 ```
 
 <a id="g-q-09"></a>
@@ -1072,20 +1289,23 @@ Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/Q
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#history.record.unlogged-refusals)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "history.record.unlogged-refusals",
-  "status": "open",
-  "prompt": "Should IPM record `update`, `reinstall` and `uninstall` attempts it refuses because of their arguments, as it records refused loads and installs?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": [
-    {
-      "label": "argument refusals are not attempts, because IPM refuses them before the action starts",
-      "description": ""
-    }
-  ]
-}
+schema: 1
+id: history.record.unlogged-refusals
+status: open
+prompt: Should IPM record `update`, `reinstall` and `uninstall` attempts it refuses because of their arguments, as it records refused loads and installs?
+severity: medium
+multi_select: false
+allow_free_text: true
+options:
+  - label: argument refusals are not attempts, because IPM refuses them before the action starts
+    description: ""
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: record them. Examples are `update` or `reinstall` of a module that is not installed, and `uninstall` with no name.
 ```
 
 <a id="g-q-08"></a>
@@ -1103,20 +1323,23 @@ Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/Q
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#history.record.abnormal-end)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "history.record.abnormal-end",
-  "status": "open",
-  "prompt": "What should `Committed` say on the record of an action that never ended?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": [
-    {
-      "label": "an empty end time means the outcome is unknown, so readers must not trust `Committed=0` on such a record",
-      "description": ""
-    }
-  ]
-}
+schema: 1
+id: history.record.abnormal-end
+status: open
+prompt: What should `Committed` say on the record of an action that never ended?
+severity: medium
+multi_select: false
+allow_free_text: true
+options:
+  - label: an empty end time means the outcome is unknown, so readers must not trust `Committed=0` on such a record
+    description: ""
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: "`Committed` reflects the changes kept, even on an unfinished record. IPM writes it to the permanent record at each commit."
 ```
 
 <a id="g-q-15"></a>
@@ -1137,20 +1360,29 @@ Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/Q
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#history.fields.dependency-source)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "history.fields.dependency-source",
-  "status": "open",
-  "prompt": "How should the log label and show a dependency that IPM pulled from a repository while running a `load` or `update`, and what source does an `update` from a registry store?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": [
-    {
-      "label": "label them `install` with their source, following the original request's wording \"install (including as a dependency)\". That changes the maintainer test.\n- Alte",
-      "description": "label them `install` with their source, following the original request's wording \"install (including as a dependency)\". That changes the maintainer test.\n- Alternative: keep the `load` label and show the stored source in listings for any record that has one. That changes the wiki's rule that listings show `n/a` for anything other than install.\n- Alternative: clear the source of records labeled `load`, as the field's description says for loads. This was not chosen, because hiding a real source loses useful history.\n- `update` is not covered by any source. Provisionally it may store its registry, and listings still show `n/a` for it"
-    }
-  ]
-}
+schema: 1
+id: history.fields.dependency-source
+status: open
+prompt: How should the log label and show a dependency that IPM pulled from a repository while running a `load` or `update`, and what source does an `update` from a registry store?
+severity: medium
+multi_select: false
+allow_free_text: true
+options:
+  - label: |-
+      label them `install` with their source, following the original request's wording "install (including as a dependency)". That changes the maintainer test.
+      - Alte
+    description: |-
+      label them `install` with their source, following the original request's wording "install (including as a dependency)". That changes the maintainer test.
+      - Alternative: keep the `load` label and show the stored source in listings for any record that has one. That changes the wiki's rule that listings show `n/a` for anything other than install.
+      - Alternative: clear the source of records labeled `load`, as the field's description says for loads. This was not chosen, because hiding a real source loses useful history.
+      - `update` is not covered by any source. Provisionally it may store its registry, and listings still show `n/a` for it
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: keep the `load` label for dependencies of `load` and `update`, keep their stored source, and keep the rule that listings show a source only for installs.
 ```
 
 <a id="g-q-14"></a>
@@ -1167,20 +1399,23 @@ Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/Q
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#history.phases.returned-errors)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "history.phases.returned-errors",
-  "status": "open",
-  "prompt": "Must every phase that starts also record its end and status, including when an `<Invoke>` returns an error status instead of throwing one?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": [
-    {
-      "label": "accept open phases for returned errors and document it",
-      "description": ""
-    }
-  ]
-}
+schema: 1
+id: history.phases.returned-errors
+status: open
+prompt: Must every phase that starts also record its end and status, including when an `<Invoke>` returns an error status instead of throwing one?
+severity: medium
+multi_select: false
+allow_free_text: true
+options:
+  - label: accept open phases for returned errors and document it
+    description: ""
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: yes. The docs read a phase with no end time as a hang or crash, so an ordinary error must not look like one.
 ```
 
 <a id="g-q-05"></a>
@@ -1203,20 +1438,27 @@ Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/Q
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#history.committed.nested)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "history.committed.nested",
-  "status": "open",
-  "prompt": "When a caller wraps an IPM command in its own transaction, must the record survive the caller's rollback, and what should `Committed` say?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": [
-    {
-      "label": "compare the transaction level at the end with the level at the start, so any commit nested in a caller transaction reads uncommitted.\n- Alternative: treat calle",
-      "description": "compare the transaction level at the end with the level at the start, so any commit nested in a caller transaction reads uncommitted.\n- Alternative: treat caller-held transactions as unsupported, so the record may be lost with them"
-    }
-  ]
-}
+schema: 1
+id: history.committed.nested
+status: open
+prompt: When a caller wraps an IPM command in its own transaction, must the record survive the caller's rollback, and what should `Committed` say?
+severity: medium
+multi_select: false
+allow_free_text: true
+options:
+  - label: |-
+      compare the transaction level at the end with the level at the start, so any commit nested in a caller transaction reads uncommitted.
+      - Alternative: treat calle
+    description: |-
+      compare the transaction level at the end with the level at the start, so any commit nested in a caller transaction reads uncommitted.
+      - Alternative: treat caller-held transactions as unsupported, so the record may be lost with them
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: the record survives, because the original request says "if install rolls back we still need the history". `Committed` is exact only for actions started outside any caller transaction, because IPM cannot know the caller's later outcome. Record this limit.
 ```
 
 <a id="dec-load-1"></a>
@@ -1234,15 +1476,21 @@ Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/Q
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#history.committed.terminal-choice-policy)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "history.committed.terminal-choice-policy",
-  "status": "open",
-  "prompt": "What history outcome is required when an operator commits a stopped load at the terminal?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": []
-}
+schema: 1
+id: history.committed.terminal-choice-policy
+status: open
+prompt: What history outcome is required when an operator commits a stopped load at the terminal?
+severity: medium
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: Answering "Commit" at a crash prompt is an operator error to document.
 ```
 
 <a id="g-q-10"></a>
@@ -1260,20 +1508,23 @@ Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/Q
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#history.read.filter.invalid-column)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "history.read.filter.invalid-column",
-  "status": "open",
-  "prompt": "What should happen to a filter on a column such as `Version_Major`, on a column that does not exist, or when the query fails?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": [
-    {
-      "label": "refuse an unknown column with an error, or ignore it with a warning and apply the rest",
-      "description": ""
-    }
-  ]
-}
+schema: 1
+id: history.read.filter.invalid-column
+status: open
+prompt: What should happen to a filter on a column such as `Version_Major`, on a column that does not exist, or when the query fails?
+severity: medium
+multi_select: false
+allow_free_text: true
+options:
+  - label: refuse an unknown column with an error, or ignore it with a warning and apply the rest
+    description: ""
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: filters on listed columns, including version parts, must work, and IPM must never silently drop a filter. When `find` cannot run its query, it reports the error instead of showing an empty log.
 ```
 
 <a id="g-q-18"></a>
@@ -1291,20 +1542,23 @@ Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/Q
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#history.read.filter.default-modifiers)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "history.read.filter.default-modifiers",
-  "status": "open",
-  "prompt": "Should the namespace's [default modifiers](../concepts/settings.g5.md#settings.default-modifiers) act as `history` filters?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": [
-    {
-      "label": "apply them as filters and document it",
-      "description": ""
-    }
-  ]
-}
+schema: 1
+id: history.read.filter.default-modifiers
+status: open
+prompt: Should the namespace's [default modifiers](../concepts/settings.g5.md#settings.default-modifiers) act as `history` filters?
+severity: medium
+multi_select: false
+allow_free_text: true
+options:
+  - label: apply them as filters and document it
+    description: ""
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: no. Default modifiers are meant for package changes, such as `-DNoTransaction=1`, while `history` filters are explicit requests.
 ```
 
 <a id="g-q-11"></a>
@@ -1322,20 +1576,23 @@ Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/Q
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#history.delete.confirm-with-filter)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "history.delete.confirm-with-filter",
-  "status": "open",
-  "prompt": "Does `-confirm` together with a filter delete every record, or only the matching ones?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": [
-    {
-      "label": "follow the command help",
-      "description": ""
-    }
-  ]
-}
+schema: 1
+id: history.delete.confirm-with-filter
+status: open
+prompt: Does `-confirm` together with a filter delete every record, or only the matching ones?
+severity: medium
+multi_select: false
+allow_free_text: true
+options:
+  - label: follow the command help
+    description: ""
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: only the matching ones. `-confirm` only permits a delete without a filter.
 ```
 
 <a id="g-q-20"></a>
@@ -1361,20 +1618,23 @@ Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/Q
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#history.delete.running-records)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "history.delete.running-records",
-  "status": "open",
-  "prompt": "May `history delete` or the daily [purge](#history.retention) remove the record of an action that is still running, and what should that action's final write do then?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": [
-    {
-      "label": "skip records of running actions, or always write the final result back",
-      "description": ""
-    }
-  ]
-}
+schema: 1
+id: history.delete.running-records
+status: open
+prompt: May `history delete` or the daily [purge](#history.retention) remove the record of an action that is still running, and what should that action's final write do then?
+severity: medium
+multi_select: false
+allow_free_text: true
+options:
+  - label: skip records of running actions, or always write the final result back
+    description: ""
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: a delete or purge may remove any matching record, and the running action must still finish normally whether or not its record comes back.
 ```
 
 <a id="g-q-21"></a>
@@ -1392,20 +1652,23 @@ Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/Q
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#history.locked.unfinished)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "history.locked.unfinished",
-  "status": "open",
-  "prompt": "May IPM finalize, and so lock, the record of an action that never ended?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": [
-    {
-      "label": "finalize whenever IPM releases the record, and accept locked records with no end time",
-      "description": ""
-    }
-  ]
-}
+schema: 1
+id: history.locked.unfinished
+status: open
+prompt: May IPM finalize, and so lock, the record of an action that never ended?
+severity: medium
+multi_select: false
+allow_free_text: true
+options:
+  - label: finalize whenever IPM releases the record, and accept locked records with no end time
+    description: ""
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: no. A finalized record is one whose action has ended, so a record without an end time stays unfinalized.
 ```
 
 <a id="g-q-13"></a>
@@ -1423,20 +1686,23 @@ Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/Q
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#history.retention.effect)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "history.retention.effect",
-  "status": "open",
-  "prompt": "May a failure of the daily purge stop the user's command?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": [
-    {
-      "label": "report the purge error and stop, as a signal that retention is broken",
-      "description": ""
-    }
-  ]
-}
+schema: 1
+id: history.retention.effect
+status: open
+prompt: May a failure of the daily purge stop the user's command?
+severity: medium
+multi_select: false
+allow_free_text: true
+options:
+  - label: report the purge error and stop, as a signal that retention is broken
+    description: ""
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: no. The command should still run, which is a proposed change.
 ```
 
 <a id="g-q-16"></a>
@@ -1453,20 +1719,23 @@ Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/Q
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#history.keep-on-ipm-uninstall.other-namespaces)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "history.keep-on-ipm-uninstall.other-namespaces",
-  "status": "open",
-  "prompt": "May uninstalling IPM in one namespace delete the in-progress records of other namespaces?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": [
-    {
-      "label": "accept it, because removing IPM is rare",
-      "description": ""
-    }
-  ]
-}
+schema: 1
+id: history.keep-on-ipm-uninstall.other-namespaces
+status: open
+prompt: May uninstalling IPM in one namespace delete the in-progress records of other namespaces?
+severity: medium
+multi_select: false
+allow_free_text: true
+options:
+  - label: accept it, because removing IPM is rare
+    description: ""
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: no. History belongs to each namespace.
 ```
 
 <a id="g-q-26"></a>
@@ -1485,20 +1754,27 @@ Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/Q
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#history.committed.escaped-dependency)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "history.committed.escaped-dependency",
-  "status": "open",
-  "prompt": "Should a parent record count writes kept only by its NoJournal dependency?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": [
-    {
-      "label": "Keep per-activation marker only and rely on independent child records after a repair.\n- Affected claims: Committed truth, record existence and aggregate load ou",
-      "description": "Keep per-activation marker only and rely on independent child records after a repair.\n- Affected claims: Committed truth, record existence and aggregate load outcome. Alias Q-26"
-    }
-  ]
-}
+schema: 1
+id: history.committed.escaped-dependency
+status: open
+prompt: Should a parent record count writes kept only by its NoJournal dependency?
+severity: medium
+multi_select: false
+allow_free_text: true
+options:
+  - label: |-
+      Keep per-activation marker only and rely on independent child records after a repair.
+      - Affected claims: Committed truth, record existence and aggregate load ou
+    description: |-
+      Keep per-activation marker only and rely on independent child records after a repair.
+      - Affected claims: Committed truth, record existence and aggregate load outcome. Alias Q-26
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: Count surviving child writes in the parent outcome; retain the distinction between parent and child records.
 ```
 
 <a id="g-q-27"></a>
@@ -1517,20 +1793,25 @@ Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/Q
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#history.delete.global-errors)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "history.delete.global-errors",
-  "status": "open",
-  "prompt": "Must global delete report namespace errors other than missing permission?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": [
-    {
-      "label": "Keep best-effort behavior and explicitly list skipped namespaces and errors.\n- Affected claims: global delete status and namespace scope. Alias Q-27",
-      "description": ""
-    }
-  ]
-}
+schema: 1
+id: history.delete.global-errors
+status: open
+prompt: Must global delete report namespace errors other than missing permission?
+severity: medium
+multi_select: false
+allow_free_text: true
+options:
+  - label: |-
+      Keep best-effort behavior and explicitly list skipped namespaces and errors.
+      - Affected claims: global delete status and namespace scope. Alias Q-27
+    description: ""
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: Report errors that mean requested deletion was not performed.
 ```
 
 <a id="g-q-28"></a>
@@ -1549,20 +1830,25 @@ Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/Q
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#history.read.global-shape)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "history.read.global-shape",
-  "status": "open",
-  "prompt": "Must programmatic global history rows carry their namespace and ID?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": [
-    {
-      "label": "Keep the legacy row shape and document a separate namespace-aware API.\n- Affected claims: global query scope, identity and details lookup. Alias Q-28",
-      "description": ""
-    }
-  ]
-}
+schema: 1
+id: history.read.global-shape
+status: open
+prompt: Must programmatic global history rows carry their namespace and ID?
+severity: medium
+multi_select: false
+allow_free_text: true
+options:
+  - label: |-
+      Keep the legacy row shape and document a separate namespace-aware API.
+      - Affected claims: global query scope, identity and details lookup. Alias Q-28
+    description: ""
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: Return identities sufficient for a caller to distinguish colliding namespace-local IDs.
 ```
 
 <a id="g-q-29"></a>
@@ -1581,20 +1867,25 @@ Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/Q
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#history.retention.running-policy)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "history.retention.running-policy",
-  "status": "open",
-  "prompt": "May automatic retention remove an action that has not ended?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": [
-    {
-      "label": "Skip active rows and define how killed actions eventually expire.\n- Affected claims: retention fix, active writers and abnormal process ends. Alias Q-29",
-      "description": ""
-    }
-  ]
-}
+schema: 1
+id: history.retention.running-policy
+status: open
+prompt: May automatic retention remove an action that has not ended?
+severity: medium
+multi_select: false
+allow_free_text: true
+options:
+  - label: |-
+      Skip active rows and define how killed actions eventually expire.
+      - Affected claims: retention fix, active writers and abnormal process ends. Alias Q-29
+    description: ""
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: Retain the documented age rule while keeping deletion/finalization races explicit; no repair outcome is claimed.
 ```
 
 <a id="g-q-30"></a>
@@ -1613,20 +1904,27 @@ Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/Q
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#history.survives-rollback.repair-policy)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "history.survives-rollback.repair-policy",
-  "status": "open",
-  "prompt": "Which repair should preserve child history without lying about Committed?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": [
-    {
-      "label": "Use one load-wide mode plus guarded close and mark ordering, or extend the repair to durably mark escaped child writes.\n- Affected claims: D1 and aliases, calle",
-      "description": "Use one load-wide mode plus guarded close and mark ordering, or extend the repair to durably mark escaped child writes.\n- Affected claims: D1 and aliases, caller rollback, crash cuts and mirrored history. Alias Q-30"
-    }
-  ]
-}
+schema: 1
+id: history.survives-rollback.repair-policy
+status: open
+prompt: Which repair should preserve child history without lying about Committed?
+severity: medium
+multi_select: false
+allow_free_text: true
+options:
+  - label: |-
+      Use one load-wide mode plus guarded close and mark ordering, or extend the repair to durably mark escaped child writes.
+      - Affected claims: D1 and aliases, calle
+    description: |-
+      Use one load-wide mode plus guarded close and mark ordering, or extend the repair to durably mark escaped child writes.
+      - Affected claims: D1 and aliases, caller rollback, crash cuts and mirrored history. Alias Q-30
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: Keep current survival requirement and report the repair as undecided; no product repair applied.
 ```
 
 <a id="g-q-31"></a>
@@ -1645,20 +1943,27 @@ Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/Q
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#history.committed.marking.refusal-policy)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "history.committed.marking.refusal-policy",
-  "status": "open",
-  "prompt": "Should the no-transaction marker run only after every refusal?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": [
-    {
-      "label": "Declare every no-transaction attempt committed from its start and change the owning I rule explicitly.\n- Affected claims: validation timing, no-transaction hist",
-      "description": "Declare every no-transaction attempt committed from its start and change the owning I rule explicitly.\n- Affected claims: validation timing, no-transaction history, D12 and requirement refusals. Alias Q-31"
-    }
-  ]
-}
+schema: 1
+id: history.committed.marking.refusal-policy
+status: open
+prompt: Should the no-transaction marker run only after every refusal?
+severity: medium
+multi_select: false
+allow_free_text: true
+options:
+  - label: |-
+      Declare every no-transaction attempt committed from its start and change the owning I rule explicitly.
+      - Affected claims: validation timing, no-transaction hist
+    description: |-
+      Declare every no-transaction attempt committed from its start and change the owning I rule explicitly.
+      - Affected claims: validation timing, no-transaction history, D12 and requirement refusals. Alias Q-31
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: Keep the intent that a no-write refusal is uncommitted; classify the early marker as a defect.
 ```
 
 <a id="g-q-19"></a>
@@ -1677,20 +1982,23 @@ Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/Q
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#reinstall.version)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "reinstall.version",
-  "status": "open",
-  "prompt": "Does `reinstall` install the version already installed, or the latest available version?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": [
-    {
-      "label": "the latest version, as the command description and the wiki say",
-      "description": ""
-    }
-  ]
-}
+schema: 1
+id: reinstall.version
+status: open
+prompt: Does `reinstall` install the version already installed, or the latest available version?
+severity: medium
+multi_select: false
+allow_free_text: true
+options:
+  - label: the latest version, as the command description and the wiki say
+    description: ""
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: the version already installed, as the command summary and its examples say.
 ```
 
 <a id="g-q-02"></a>
@@ -1711,20 +2019,27 @@ Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/Q
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#load.refusal.update-required.dev-bypass)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "load.refusal.update-required.dev-bypass",
-  "status": "open",
-  "prompt": "Should `-dev` also lift the update-required refusal?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": [
-    {
-      "label": "only `-force` lifts it, as the README says.\n- Related: a `-dev` install from a [read-only repository](../ontology/concepts/repositories.g5.md#repo.read-only) is",
-      "description": "only `-force` lifts it, as the README says.\n- Related: a `-dev` install from a [read-only repository](../ontology/concepts/repositories.g5.md#repo.read-only) is checked before developer mode is turned off for it"
-    }
-  ]
-}
+schema: 1
+id: load.refusal.update-required.dev-bypass
+status: open
+prompt: Should `-dev` also lift the update-required refusal?
+severity: medium
+multi_select: false
+allow_free_text: true
+options:
+  - label: |-
+      only `-force` lifts it, as the README says.
+      - Related: a `-dev` install from a [read-only repository](../ontology/concepts/repositories.g5.md#repo.read-only) is
+    description: |-
+      only `-force` lifts it, as the README says.
+      - Related: a `-dev` install from a [read-only repository](../ontology/concepts/repositories.g5.md#repo.read-only) is checked before developer mode is turned off for it
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: yes. A maintainer test expects a newer version to install with `-dev`, and the original request asked IPM to point users to `-dev` or `-force`.
 ```
 
 <a id="g-q-17"></a>
@@ -1744,20 +2059,23 @@ Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/Q
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#load.refusal.requirements.timing)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "load.refusal.requirements.timing",
-  "status": "open",
-  "prompt": "Must IPM check system requirements before it writes anything, even in developer mode or without a transaction?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": [
-    {
-      "label": "accept that a refused developer-mode or `-DNoTransaction=1` load keeps its saved manifest, since developer mode keeps what it did",
-      "description": ""
-    }
-  ]
-}
+schema: 1
+id: load.refusal.requirements.timing
+status: open
+prompt: Must IPM check system requirements before it writes anything, even in developer mode or without a transaction?
+severity: medium
+multi_select: false
+allow_free_text: true
+options:
+  - label: accept that a refused developer-mode or `-DNoTransaction=1` load keeps its saved manifest, since developer mode keeps what it did
+    description: ""
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: yes. The manifest docs say requirements are checked "before module installation", and a module that fails them was never installable.
 ```
 
 <a id="c-q1"></a>
@@ -1775,20 +2093,27 @@ Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/Q
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#load.dependencies.local-repo.precedence)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "load.dependencies.local-repo.precedence",
-  "status": "open",
-  "prompt": "When another repository offers the same version of a dependency as the `.modules` folder, which copy should IPM install?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": [
-    {
-      "label": "the `.modules` copy, because the code that creates the temporary repository says it should be found first and gives it the first sort position.\n- Either way, a ",
-      "description": "the `.modules` copy, because the code that creates the temporary repository says it should be found first and gives it the first sort position.\n- Either way, a higher version wins, wherever it is"
-    }
-  ]
-}
+schema: 1
+id: load.dependencies.local-repo.precedence
+status: open
+prompt: When another repository offers the same version of a dependency as the `.modules` folder, which copy should IPM install?
+severity: medium
+multi_select: false
+allow_free_text: true
+options:
+  - label: |-
+      the `.modules` copy, because the code that creates the temporary repository says it should be found first and gives it the first sort position.
+      - Either way, a
+    description: |-
+      the `.modules` copy, because the code that creates the temporary repository says it should be found first and gives it the first sort position.
+      - Either way, a higher version wins, wherever it is
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: the copy in the older repository, as built. The changelog says ties go to the repository created first.
 ```
 
 <a id="dec-unin-3"></a>
@@ -1806,15 +2131,21 @@ Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/Q
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#uninstall.dependents.scoped-policy)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "uninstall.dependents.scoped-policy",
-  "status": "open",
-  "prompt": "Should a phase-scoped dependency block uninstall?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": []
-}
+schema: 1
+id: uninstall.dependents.scoped-policy
+status: open
+prompt: Should a phase-scoped dependency block uninstall?
+severity: medium
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: A need declared only for a phase (test, verify) does not block uninstall.
 ```
 
 <a id="uninstall.class-delete-error.policy"></a>
@@ -1830,15 +2161,21 @@ Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/Q
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#uninstall.class-delete-error.policy)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "uninstall.class-delete-error.policy",
-  "status": "open",
-  "prompt": "Should uninstall report an error and keep its metadata when a class cannot be deleted, or warn and remove the metadata as it does now?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": []
-}
+schema: 1
+id: uninstall.class-delete-error.policy
+status: open
+prompt: Should uninstall report an error and keep its metadata when a class cannot be deleted, or warn and remove the metadata as it does now?
+severity: medium
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: preserve and disclose the checked behavior pending an owner decision. Returning an error would make incomplete removal visible to scripts; retaining metadata would preserve a retry route. Earlier external effects may already have occurred.
 ```
 
 <a id="update.steps.shared-ownership"></a>
@@ -1855,15 +2192,21 @@ Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/Q
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#update.steps.shared-ownership)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "update.steps.shared-ownership",
-  "status": "open",
-  "prompt": "Should two modules be allowed to share an update-step class and method, or should the second registration fail?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": []
-}
+schema: 1
+id: update.steps.shared-ownership
+status: open
+prompt: Should two modules be allowed to share an update-step class and method, or should the second registration fail?
+severity: medium
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: authors use distinct update packages. Alternatives are to refuse a conflicting home, key records by module, or retain explicit shared owners. Each changes registration and deletion behavior; concurrent writers need a separate check.
 ```
 
 <a id="dec-inst-2"></a>
@@ -1881,15 +2224,21 @@ Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/Q
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#update.steps.dev-seeding-policy)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "update.steps.dev-seeding-policy",
-  "status": "open",
-  "prompt": "Should a developer-mode install seed update-step records?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": []
-}
+schema: 1
+id: update.steps.dev-seeding-policy
+status: open
+prompt: Should a developer-mode install seed update-step records?
+severity: medium
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: A developer-mode install or load seeds update steps like any install; a later update runs only newer steps.
 ```
 
 <a id="dec-inst-8"></a>
@@ -1907,15 +2256,21 @@ Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/Q
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#update.steps.fresh-seeding-policy)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "update.steps.fresh-seeding-policy",
-  "status": "open",
-  "prompt": "Should a dependency first installed by update run its old steps or seed them?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": []
-}
+schema: 1
+id: update.steps.fresh-seeding-policy
+status: open
+prompt: Should a dependency first installed by update run its old steps or seed them?
+severity: medium
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: A module that `update` installs for the first time has its steps seeded, as on a fresh install.
 ```
 
 <a id="dec-inst-6"></a>
@@ -1933,15 +2288,21 @@ Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/Q
 Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#update.steps.busy-policy)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "update.steps.busy-policy",
-  "status": "open",
-  "prompt": "Should an update whose step lock is busy fail or report success?",
-  "allow_free_text": true,
-  "multi_select": false,
-  "options": []
-}
+schema: 1
+id: update.steps.busy-policy
+status: open
+prompt: Should an update whose step lock is busy fail or report success?
+severity: medium
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: If the update lock is busy, `update` fails with an error that says so; it never reports success.
 ```
 
 <a id="g-q-06"></a>
@@ -1951,6 +2312,24 @@ G:Q-06 · settled meaning; inherited attributed source preserved
 
 A dependency's `Success` records its own returned status, even if its parent's later rollback undoes its data. `Committed` describes kept database writes.
 
+```g5-question
+schema: 1
+id: g-q-06
+status: answered
+prompt: "Q-06: What `Success` does a dependency record show after its parent's rollback?"
+severity: medium
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: A dependency's `Success` records its own returned status, even if its parent's later rollback undoes its data. `Committed` describes kept database writes.
+  rationale: Existing source interpretation retained from the findings audit.
+  answered_by: null
+  answered_at: null
+resolution_source: .g5/uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md
+```
+
 <a id="g-q-07"></a>
 ### Q-07: Does `Committed` cover changes outside the database?
 
@@ -1958,12 +2337,48 @@ G:Q-07 · settled meaning; inherited attributed source preserved
 
 This question is resolved for the field's meaning: `Committed` covers database changes. It makes no filesystem rollback promise.
 
+```g5-question
+schema: 1
+id: g-q-07
+status: answered
+prompt: "Q-07: Does `Committed` cover changes outside the database?"
+severity: medium
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: "This question is resolved for the field's meaning: `Committed` covers database changes. It makes no filesystem rollback promise."
+  rationale: Existing source interpretation retained from the findings audit.
+  answered_by: null
+  answered_at: null
+resolution_source: .g5/uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md
+```
+
 <a id="g-q-12"></a>
 ### Q-12: Global unfiltered delete without `-confirm` (resolved)
 
 G:Q-12 · settled meaning; inherited attributed source preserved
 
 `history delete -globally` does not require `-confirm`. With no filter, it deletes every record on the instance without asking.
+
+```g5-question
+schema: 1
+id: g-q-12
+status: answered
+prompt: "Q-12: Global unfiltered delete without `-confirm` (resolved)"
+severity: medium
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: "`history delete -globally` does not require `-confirm`. With no filter, it deletes every record on the instance without asking."
+  rationale: Existing source interpretation retained from the findings audit.
+  answered_by: null
+  answered_at: null
+resolution_source: .g5/uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md
+```
 
 <a id="dec-sys-1"></a>
 ### The playbook says a term may be used if an ancestor or an earlier same-level statement defines it. Should a definition by an earlier sibling of an ancestor (lexical scope) count? The index script assumes yes, so SYS-D* definitions reach every module.
@@ -1974,6 +2389,24 @@ DEC-SYS-1 · method/verification observation; not an unresolved IPM policy decis
 
 Source: [DEC-SYS-1](../../playbook-uplift/decisions/00-02.md)
 
+```g5-question
+schema: 1
+id: dec-sys-1
+status: answered
+prompt: The playbook says a term may be used if an ancestor or an earlier same-level statement defines it. Should a definition by an earlier sibling of an ancestor (lexical scope) count? The index script assumes yes, so SYS-D* definitions reach every module.
+severity: medium
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: "(A) lexical scope, as implemented; (B) strict reading: repeat or chain shared definitions under each module root."
+  rationale: Existing source interpretation retained from the findings audit.
+  answered_by: null
+  answered_at: null
+resolution_source: playbook-uplift/decisions/00-02.md
+```
+
 <a id="dec-hist-1"></a>
 ### When a parent load rolls back, should the history records of the dependency loads it ran survive? Today they vanish with the rollback (F-HIST-1), although the class comment says history is kept apart from rollbacks.
 
@@ -1982,6 +2415,24 @@ DEC-HIST-1 · inherited source-supported interpretation; not new owner approval
 (A) keep them: write dependency records outside the parent's transaction (for example from IRISTEMP after the parent's outcome is known); (B) accept: a dependency record exists only when the dependency's changes were kept, and say so in the docs. Recommendation: A, because the top-level record already follows A. Proved design (models/verus/load_general.rs, `fix`): re-persist pending dependency rows after the parent's rollback and at the next command after a crash, with Committed taken from the dependency's installed state (keeping the logged Committed was shown dishonest by the explorer). Sub-question: a dependency that loaded and was then undone by the parent then reads Success = 1, Committed = 0; is that the wanted reading, or should Success also be cleared?
 
 Source: [DEC-HIST-1](../../playbook-uplift/decisions/00-02.md)
+
+```g5-question
+schema: 1
+id: dec-hist-1
+status: answered
+prompt: When a parent load rolls back, should the history records of the dependency loads it ran survive? Today they vanish with the rollback (F-HIST-1), although the class comment says history is kept apart from rollbacks.
+severity: medium
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: "(A) keep them: write dependency records outside the parent's transaction (for example from IRISTEMP after the parent's outcome is known); (B) accept: a dependency record exists only when the dependency's changes were kept, and say so in the docs. Recommendation: A, because the top-level record already follows A. Proved design (models/verus/load_general.rs, `fix`): re-persist pending dependency rows after the parent's rollback and at the next command after a crash, with Committed taken from the dependency's installed state (keeping the logged Committed was shown dishonest by the explorer). Sub-question: a dependency that loaded and was then undone by the parent then reads Success = 1, Committed = 0; is that the wanted reading, or should Success also be cleared?"
+  rationale: Existing source interpretation retained from the findings audit.
+  answered_by: null
+  answered_at: null
+resolution_source: playbook-uplift/decisions/00-02.md
+```
 
 <a id="dec-hist-2"></a>
 ### How should the Committed flag survive a crash after a developer-mode load has committed its manifest (F-HIST-2)?
@@ -1993,14 +2444,21 @@ DEC-HIST-2 · inherited source-supported interpretation; not new owner approval
 Source: [DEC-HIST-2](../../playbook-uplift/decisions/00-02.md)
 
 ```g5-question
-{
-  "schema": 1,
-  "id": "dec-hist-2",
-  "status": "open",
-  "prompt": "How should the Committed flag survive a crash after a developer-mode load has committed its manifest (F-HIST-2)?",
-  "allow_free_text": true,
-  "options": []
-}
+schema: 1
+id: dec-hist-2
+status: answered
+prompt: How should the Committed flag survive a crash after a developer-mode load has committed its manifest (F-HIST-2)?
+severity: medium
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: "(A) persist the twin row right after the first TCOMMIT (Utils/Module.cls#L1311-L1313, before the next TSTART) so the durable row says Committed = 1; (B) keep the IRISTEMP record when %OnClose runs at $TLEVEL > 0 and reconcile it at the next command; (C) accept and document. Recommendation: A, a two-line change at a point with no transaction open."
+  rationale: Existing source interpretation retained from the findings audit.
+  answered_by: null
+  answered_at: null
+resolution_source: playbook-uplift/decisions/00-02.md
 ```
 
 <a id="dec-hist-3"></a>
@@ -2012,6 +2470,24 @@ DEC-HIST-3 · inherited source-supported interpretation; not new owner approval
 
 Source: [DEC-HIST-3](../../playbook-uplift/decisions/00-02.md)
 
+```g5-question
+schema: 1
+id: dec-hist-3
+status: answered
+prompt: Must a record name the module whenever IPM has read its manifest (refusals, crashes before SetName)? Today such records have an empty package and version 0.0.0 (F-HIST-5). The property comment only promises a name is "not necessarily required, e.g. when loading a nonexistent directory".
+severity: medium
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: "(A) yes: set the name from the manifest read in LoadNewModule before the guards; (B) no: the name is best effort."
+  rationale: Existing source interpretation retained from the findings audit.
+  answered_by: null
+  answered_at: null
+resolution_source: playbook-uplift/decisions/00-02.md
+```
+
 <a id="dec-hist-5"></a>
 ### Does Committed describe only database changes? File-system effects are never rolled back: an archive load deletes and recreates `<ModuleRoot>/<name>/<version>/` before any check (Main.cls#L2507-L2513), and FileCopy writes files.
 
@@ -2020,6 +2496,24 @@ DEC-HIST-5 · inherited source-supported interpretation; not new owner approval
 (A) Committed covers database writes only; document it; (B) Committed should also turn on when files change.
 
 Source: [DEC-HIST-5](../../playbook-uplift/decisions/00-02.md)
+
+```g5-question
+schema: 1
+id: dec-hist-5
+status: answered
+prompt: "Does Committed describe only database changes? File-system effects are never rolled back: an archive load deletes and recreates `<ModuleRoot>/<name>/<version>/` before any check (Main.cls#L2507-L2513), and FileCopy writes files."
+severity: medium
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: (A) Committed covers database writes only; document it; (B) Committed should also turn on when files change.
+  rationale: Existing source interpretation retained from the findings audit.
+  answered_by: null
+  answered_at: null
+resolution_source: playbook-uplift/decisions/00-02.md
+```
 
 <a id="dec-sem-1"></a>
 ### `^IRIS.Temp.IPM.LoadedResourceD` (IPM working data in IRISTEMP) is still set after commands end (O:ws-residue-after-commands). Is it a deliberate per-instance cache, or should each command clear it?
@@ -2030,6 +2524,24 @@ DEC-SEM-1 · method/verification observation; not an unresolved IPM policy decis
 
 Source: [DEC-SEM-1](../../playbook-uplift/decisions/00-02.md)
 
+```g5-question
+schema: 1
+id: dec-sem-1
+status: answered
+prompt: "`^IRIS.Temp.IPM.LoadedResourceD` (IPM working data in IRISTEMP) is still set after commands end (O:ws-residue-after-commands). Is it a deliberate per-instance cache, or should each command clear it?"
+severity: medium
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: "(A) deliberate cache: document its lifetime (until IRIS restarts); (B) clear it at the end of each command."
+  rationale: Existing source interpretation retained from the findings audit.
+  answered_by: null
+  answered_at: null
+resolution_source: playbook-uplift/decisions/00-02.md
+```
+
 <a id="dec-sem-2"></a>
 ### Uninstalling a module that has a web application writes compiled-code globals in IRISSYS (`^oddDEF`, `^oddCOM`, `^rOBJ`; O:ws-uninstall-webapp). Is a system-database code change an accepted side effect of removing the web application, or a frame violation to investigate?
 
@@ -2038,6 +2550,24 @@ DEC-SEM-2 · method/verification observation; not an unresolved IPM policy decis
 (A) accept: IRIS regenerates system class metadata when a security application is deleted; document it; (B) investigate which classes change and why.
 
 Source: [DEC-SEM-2](../../playbook-uplift/decisions/00-02.md)
+
+```g5-question
+schema: 1
+id: dec-sem-2
+status: answered
+prompt: Uninstalling a module that has a web application writes compiled-code globals in IRISSYS (`^oddDEF`, `^oddCOM`, `^rOBJ`; O:ws-uninstall-webapp). Is a system-database code change an accepted side effect of removing the web application, or a frame violation to investigate?
+severity: medium
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: "(A) accept: IRIS regenerates system class metadata when a security application is deleted; document it; (B) investigate which classes change and why."
+  rationale: Existing source interpretation retained from the findings audit.
+  answered_by: null
+  answered_at: null
+resolution_source: playbook-uplift/decisions/00-02.md
+```
 
 <a id="dec-inst-5"></a>
 ### What delivery promise do update steps have? Rollback undoes step records, so steps that worked in a failed run rerun; effects outside the database (files, $INCREMENT, other systems) can repeat; a kill between the step and its record save reruns that step. Observed on IRIS (nc-inst-4-nondev-failed-update, nc-inst-4b-nondev-retry): after a failed non-dev update the ordinary global set by the step that worked is rolled back, but its $INCREMENT counter and file line stay; the retry runs that step again (counter 2, two file lines). In developer mode (nc-inst-4c, nc-inst-4d) the worked step's record is kept and the retry skips it. Proved: a transactional update whose second step fails rolls the records back while the first step's effects outside the database stay, and the retry schedules that step again (inst_witness_failed_update_repeats_effects). Review round: INST-B67 now states the intent the seed asks about (a step's effects happen once) with this decision open and `O!:nc-inst-4b-nondev-retry`; the witness is cited in Notes, not as P.
@@ -2048,6 +2578,24 @@ A) At-least-once; require idempotent steps and document it in VersionBase. B) Ex
 
 Source: [DEC-INST-5](../../playbook-uplift/decisions/03-04.md)
 
+```g5-question
+schema: 1
+id: dec-inst-5
+status: answered
+prompt: "What delivery promise do update steps have? Rollback undoes step records, so steps that worked in a failed run rerun; effects outside the database (files, $INCREMENT, other systems) can repeat; a kill between the step and its record save reruns that step. Observed on IRIS (nc-inst-4-nondev-failed-update, nc-inst-4b-nondev-retry): after a failed non-dev update the ordinary global set by the step that worked is rolled back, but its $INCREMENT counter and file line stay; the retry runs that step again (counter 2, two file lines). In developer mode (nc-inst-4c, nc-inst-4d) the worked step's record is kept and the retry skips it. Proved: a transactional update whose second step fails rolls the records back while the first step's effects outside the database stay, and the retry schedules that step again (inst_witness_failed_update_repeats_effects). Review round: INST-B67 now states the intent the seed asks about (a step's effects happen once) with this decision open and `O!:nc-inst-4b-nondev-retry`; the witness is cited in Notes, not as P."
+severity: medium
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: A) At-least-once; require idempotent steps and document it in VersionBase. B) Exactly-once for database effects only (document the boundary). C) Add a stronger mechanism (per-step commit or idempotency key).
+  rationale: Existing source interpretation retained from the findings audit.
+  answered_by: null
+  answered_at: null
+resolution_source: playbook-uplift/decisions/03-04.md
+```
+
 <a id="dec-inst-7"></a>
 ### Are primary-only update steps promised to run when a mirror member becomes primary at this revision? VersionBase.cls L18 says so; no code does it; PR #887 lists mirrored updates as out of scope and the wiki update guide (not read here) is reported by the seed to call mirroring future work. Native check #20 not run: the IRIS container is not a mirror member (nc-inst-20-no-mirror).
 
@@ -2056,6 +2604,24 @@ DEC-INST-7 · inherited source-supported interpretation; not new owner approval
 A) Not promised at this revision; fix the VersionBase comment. B) Promised; implement a become-primary hook and mirror tests.
 
 Source: [DEC-INST-7](../../playbook-uplift/decisions/03-04.md)
+
+```g5-question
+schema: 1
+id: dec-inst-7
+status: answered
+prompt: "Are primary-only update steps promised to run when a mirror member becomes primary at this revision? VersionBase.cls L18 says so; no code does it; PR #887 lists mirrored updates as out of scope and the wiki update guide (not read here) is reported by the seed to call mirroring future work. Native check #20 not run: the IRIS container is not a mirror member (nc-inst-20-no-mirror)."
+severity: medium
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: A) Not promised at this revision; fix the VersionBase comment. B) Promised; implement a become-primary hook and mirror tests.
+  rationale: Existing source interpretation retained from the findings audit.
+  answered_by: null
+  answered_at: null
+resolution_source: playbook-uplift/decisions/03-04.md
+```
 
 <a id="dec-dep-1"></a>
 ### Must dependency resolution find a solution whenever one exists? The resolver is greedy (newest first, one-level check, no backtracking past one level), so it can fail on solvable inputs; the method comment says "with backtracking". Observed on IRIS: `install nc-dep-root` (A ^1, B ^1; A 1.1.0 needs C ^2, A 1.0.0 and B need C ^1) fails with a clash on nc-dep-c naming nc-dep-a 1.1.0; installing nc-dep-a 1.0.0 first makes the same install succeed (nc-dep-11-greedy-resolution, nc-dep-11b-solvable-with-pin). Proved in models/verus/dep_resolve.rs: on the nc-dep-11 instance a sound choice exists and the (deterministic) resolver fails (dep_witness_greedy_rejects_solvable, dep_deterministic). Explored (models/explorer/inst/check.py, dep-explore-completeness): 2,040 of 70,656 small instances are solvable but fail; some fail because the quick check ignores the installed-version floor. A resolution that ends Done is always sound (dep_refines; 0 of 59,776 explored). Review round: DEP-B13 now states the intent ("if some choice of versions meets every requirement, IPM finds one") with this decision open and `O!:nc-dep-11-greedy-resolution`; the witness is cited in Notes, not as P. A failure is now proved to name a reason (a loop of recorded requirements, or a requirement with no version allowed by it and the requirements already recorded; DEP-B54); those recorded requirements include earlier greedy choices, which is why option B is not met.
@@ -2066,6 +2632,24 @@ A) Greedy is the contract; fix the comment and document that pins may be needed.
 
 Source: [DEC-DEP-1](../../playbook-uplift/decisions/03-04.md)
 
+```g5-question
+schema: 1
+id: dec-dep-1
+status: answered
+prompt: 'Must dependency resolution find a solution whenever one exists? The resolver is greedy (newest first, one-level check, no backtracking past one level), so it can fail on solvable inputs; the method comment says "with backtracking". Observed on IRIS: `install nc-dep-root` (A ^1, B ^1; A 1.1.0 needs C ^2, A 1.0.0 and B need C ^1) fails with a clash on nc-dep-c naming nc-dep-a 1.1.0; installing nc-dep-a 1.0.0 first makes the same install succeed (nc-dep-11-greedy-resolution, nc-dep-11b-solvable-with-pin). Proved in models/verus/dep_resolve.rs: on the nc-dep-11 instance a sound choice exists and the (deterministic) resolver fails (dep_witness_greedy_rejects_solvable, dep_deterministic). Explored (models/explorer/inst/check.py, dep-explore-completeness): 2,040 of 70,656 small instances are solvable but fail; some fail because the quick check ignores the installed-version floor. A resolution that ends Done is always sound (dep_refines; 0 of 59,776 explored). Review round: DEP-B13 now states the intent ("if some choice of versions meets every requirement, IPM finds one") with this decision open and `O!:nc-dep-11-greedy-resolution`; the witness is cited in Notes, not as P. A failure is now proved to name a reason (a loop of recorded requirements, or a requirement with no version allowed by it and the requirements already recorded; DEP-B54); those recorded requirements include earlier greedy choices, which is why option B is not met.'
+severity: medium
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: A) Greedy is the contract; fix the comment and document that pins may be needed. B) Complete resolution is the contract; add real backtracking.
+  rationale: Existing source interpretation retained from the findings audit.
+  answered_by: null
+  answered_at: null
+resolution_source: playbook-uplift/decisions/03-04.md
+```
+
 <a id="dec-dep-2"></a>
 ### Should a failed install leave a lock file behind? The file is written after dependencies load but before the module's own Activate, outside the transaction. Observed on IRIS: `install -create-lockfile nc-dep-lf-fail` whose Activate fails returns an error, rolls back both modules, and leaves module-lock.json (listing nc-dep-lf-base) in the module folder (nc-dep-15-lockfile-failed-install).
 
@@ -2074,6 +2658,24 @@ DEC-DEP-2 · inherited source-supported interpretation; not new owner approval
 A) Write it only after the whole install succeeds. B) Remove it on failure. C) Keep as is and document.
 
 Source: [DEC-DEP-2](../../playbook-uplift/decisions/03-04.md)
+
+```g5-question
+schema: 1
+id: dec-dep-2
+status: answered
+prompt: "Should a failed install leave a lock file behind? The file is written after dependencies load but before the module's own Activate, outside the transaction. Observed on IRIS: `install -create-lockfile nc-dep-lf-fail` whose Activate fails returns an error, rolls back both modules, and leaves module-lock.json (listing nc-dep-lf-base) in the module folder (nc-dep-15-lockfile-failed-install)."
+severity: medium
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: A) Write it only after the whole install succeeds. B) Remove it on failure. C) Keep as is and document.
+  rationale: Existing source interpretation retained from the findings audit.
+  answered_by: null
+  answered_at: null
+resolution_source: playbook-uplift/decisions/03-04.md
+```
 
 <a id="dec-unin-1"></a>
 ### When `uninstall M` is blocked because a dependent is installed (no `-force`), should the command report failure? Help (Main.cls#L486-L487) says uninstall "will be prevented"; the code comment (Lifecycle/Base.cls#L276) says "return an error status"; the code returns OK, prints `Clean SUCCESS` and logs a successful uninstall; PublishModuleWithDeps.cls#L25-L26 asserts that success. See F-UNIN-6.
@@ -2084,6 +2686,24 @@ DEC-UNIN-1 · inherited source-supported interpretation; not new owner approval
 
 Source: [DEC-UNIN-1](../../playbook-uplift/decisions/05-06.md)
 
+```g5-question
+schema: 1
+id: dec-unin-1
+status: answered
+prompt: When `uninstall M` is blocked because a dependent is installed (no `-force`), should the command report failure? Help (Main.cls#L486-L487) says uninstall "will be prevented"; the code comment (Lifecycle/Base.cls#L276) says "return an error status"; the code returns OK, prints `Clean SUCCESS` and logs a successful uninstall; PublishModuleWithDeps.cls#L25-L26 asserts that success. See F-UNIN-6.
+severity: medium
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: (a) Fail with an error that names the dependents, and log the uninstall as failed. (b) Keep success, but log it as skipped. (c) Keep current behaviour and document it.
+  rationale: Existing source interpretation retained from the findings audit.
+  answered_by: null
+  answered_at: null
+resolution_source: playbook-uplift/decisions/05-06.md
+```
+
 <a id="dec-unin-2"></a>
 ### What should the Clean phase do when run on IPM itself (`zpm clean`)? Code runs the IPM-only block at every level and prints "WARNING: N module(s) orphaned" while removing nothing (Lifecycle/Module.cls#L27-L81); ExecutePhases also treats it as a self-uninstall (Storage/Module.cls#L631).
 
@@ -2092,6 +2712,24 @@ DEC-UNIN-2 · inherited source-supported interpretation; not new owner approval
 (a) Refuse Clean on IPM. (b) Run it, but only warn when IPM is really removed (Clean.Level>0). (c) Treat it as uninstall of IPM.
 
 Source: [DEC-UNIN-2](../../playbook-uplift/decisions/05-06.md)
+
+```g5-question
+schema: 1
+id: dec-unin-2
+status: answered
+prompt: 'What should the Clean phase do when run on IPM itself (`zpm clean`)? Code runs the IPM-only block at every level and prints "WARNING: N module(s) orphaned" while removing nothing (Lifecycle/Module.cls#L27-L81); ExecutePhases also treats it as a self-uninstall (Storage/Module.cls#L631).'
+severity: medium
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: (a) Refuse Clean on IPM. (b) Run it, but only warn when IPM is really removed (Clean.Level>0). (c) Treat it as uninstall of IPM.
+  rationale: Existing source interpretation retained from the findings audit.
+  answered_by: null
+  answered_at: null
+resolution_source: playbook-uplift/decisions/05-06.md
+```
 
 <a id="dec-repo-1"></a>
 ### When `publish` (or `unpublish` without a prefix) names no registry and no registry holds the publish flag, which registry is used? Help (Main.cls#L56-L57): "saves that artifact to the repository for which deployment is enabled". Code (Remote/Definition.cls#L117-L129, Oras/Definition.cls#L143-L155) falls back to a registry with a token, then one with user and password, then any enabled remote or ORAS registry, which can be the public community registry. See F-REPO-3.
@@ -2102,6 +2740,24 @@ DEC-REPO-1 · inherited source-supported interpretation; not new owner approval
 
 Source: [DEC-REPO-1](../../playbook-uplift/decisions/05-06.md)
 
+```g5-question
+schema: 1
+id: dec-repo-1
+status: answered
+prompt: 'When `publish` (or `unpublish` without a prefix) names no registry and no registry holds the publish flag, which registry is used? Help (Main.cls#L56-L57): "saves that artifact to the repository for which deployment is enabled". Code (Remote/Definition.cls#L117-L129, Oras/Definition.cls#L143-L155) falls back to a registry with a token, then one with user and password, then any enabled remote or ORAS registry, which can be the public community registry. See F-REPO-3.'
+severity: medium
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: (a) Fail when no registry has the publish flag. (b) Keep the fallback order and document it. (c) Fall back only to registries with credentials.
+  rationale: Existing source interpretation retained from the findings audit.
+  answered_by: null
+  answered_at: null
+resolution_source: playbook-uplift/decisions/05-06.md
+```
+
 <a id="dec-repo-2"></a>
 ### What may IPM still do with a registry that is not enabled? Help: "-disable: specifies that it can not be used." Install lookups (Manager.cls#L69) and unpublish (PublishManager classes) refuse it; `search` lists it (Main.cls#L2047, Utils/Module.cls#L916) and `publish -r R` sends to it (Lifecycle/Base.cls#L1598). See F-REPO-7.
 
@@ -2110,6 +2766,24 @@ DEC-REPO-2 · inherited source-supported interpretation; not new owner approval
 (a) Refuse it everywhere. (b) Allow read-only listing (search) but refuse publish. (c) Allow anything that names it explicitly.
 
 Source: [DEC-REPO-2](../../playbook-uplift/decisions/05-06.md)
+
+```g5-question
+schema: 1
+id: dec-repo-2
+status: answered
+prompt: 'What may IPM still do with a registry that is not enabled? Help: "-disable: specifies that it can not be used." Install lookups (Manager.cls#L69) and unpublish (PublishManager classes) refuse it; `search` lists it (Main.cls#L2047, Utils/Module.cls#L916) and `publish -r R` sends to it (Lifecycle/Base.cls#L1598). See F-REPO-7.'
+severity: medium
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: (a) Refuse it everywhere. (b) Allow read-only listing (search) but refuse publish. (c) Allow anything that names it explicitly.
+  rationale: Existing source interpretation retained from the findings audit.
+  answered_by: null
+  answered_at: null
+resolution_source: playbook-uplift/decisions/05-06.md
+```
 
 <a id="dec-repo-4"></a>
 ### Should `config set` or `config get` with an unknown key, or `config set` with an invalid value (for example a bad TestReportFormat), make the command fail? Code prints "Config key ... not found" or the error text and returns OK (Main.cls#L2063-L2093 ignores the status of `UpdateOne`). Changelog #1115 treated "printing the error and reporting success" as a bug for unpublish. See F-REPO-8.
@@ -2120,6 +2794,24 @@ DEC-REPO-4 · inherited source-supported interpretation; not new owner approval
 
 Source: [DEC-REPO-4](../../playbook-uplift/decisions/05-06.md)
 
+```g5-question
+schema: 1
+id: dec-repo-4
+status: answered
+prompt: 'Should `config set` or `config get` with an unknown key, or `config set` with an invalid value (for example a bad TestReportFormat), make the command fail? Code prints "Config key ... not found" or the error text and returns OK (Main.cls#L2063-L2093 ignores the status of `UpdateOne`). Changelog #1115 treated "printing the error and reporting success" as a bug for unpublish. See F-REPO-8.'
+severity: medium
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: (a) Return an error status. (b) Keep printing only.
+  rationale: Existing source interpretation retained from the findings audit.
+  answered_by: null
+  answered_at: null
+resolution_source: playbook-uplift/decisions/05-06.md
+```
+
 <a id="dec-repo-6"></a>
 ### Is storing registry passwords and tokens as plain text in the namespace (`^IPM.Repo.DefinitionD`, Http/Definition.cls#L17-L21) acceptable? `-password-env` and `-token-env` (changelog #1178) protect only the command line; the value is still stored.
 
@@ -2128,6 +2820,24 @@ DEC-REPO-6 · inherited source-supported interpretation; not new owner approval
 (a) Accept and document. (b) Store a reference to the environment variable instead of the value. (c) Encrypt at rest or use IRIS credential storage.
 
 Source: [DEC-REPO-6](../../playbook-uplift/decisions/05-06.md)
+
+```g5-question
+schema: 1
+id: dec-repo-6
+status: answered
+prompt: "Is storing registry passwords and tokens as plain text in the namespace (`^IPM.Repo.DefinitionD`, Http/Definition.cls#L17-L21) acceptable? `-password-env` and `-token-env` (changelog #1178) protect only the command line; the value is still stored."
+severity: medium
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: (a) Accept and document. (b) Store a reference to the environment variable instead of the value. (c) Encrypt at rest or use IRIS credential storage.
+  rationale: Existing source interpretation retained from the findings audit.
+  answered_by: null
+  answered_at: null
+resolution_source: playbook-uplift/decisions/05-06.md
+```
 
 <a id="dec-nsp-1"></a>
 ### A namespace gets IPM code and repo settings by mapping, then gets its own IPM (installer or `load`). What should happen to the repo settings mapping?
@@ -2138,6 +2848,24 @@ DEC-NSP-1 · inherited source-supported interpretation; not new owner approval
 
 Source: [DEC-NSP-1](../../playbook-uplift/decisions/07-09.md)
 
+```g5-question
+schema: 1
+id: dec-nsp-1
+status: answered
+prompt: A namespace gets IPM code and repo settings by mapping, then gets its own IPM (installer or `load`). What should happen to the repo settings mapping?
+severity: medium
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: '(a) Remove it with the code mapping, since README#L77 says repos are only mapped together with code from the same namespace. (b) Keep it (current code: installer touches only `%IPM` package/routine mapping, Installer.cls#L25-29). Note that afterwards `unmap -ns X` reports "No mapping found" (Main.cls#L3968) so the repo mapping can no longer be removed by `unmap`. Native (N7): after the installer ran in NCD (code and repos mapped from USER), NCD kept its repo mapping and also its code mapping, and `unmap -ns NCD` then said "No mapping found for NCD" and removed nothing (O:nc-nsp-N7-installer-in-mapped, O:nc-nsp-N7-unmap-after-local-install; F-NSP-5).'
+  rationale: Existing source interpretation retained from the findings audit.
+  answered_by: null
+  answered_at: null
+resolution_source: playbook-uplift/decisions/07-09.md
+```
+
 <a id="dec-nsp-2"></a>
 ### May IPM be installed locally in a namespace that currently gets IPM by mapping?
 
@@ -2146,6 +2874,24 @@ DEC-NSP-2 · inherited source-supported interpretation; not new owner approval
 (a) Yes: help for `enable -map -globally` says "Namespace-specific installation will override this" (Main.cls#L743) and the installer / `load` have no guard. (b) No: `install`, `reinstall` and `uninstall` of `zpm` refuse with "Cannot install 'zpm' in namespace X because it is mapped from namespace Y" (Main.cls#L2534-2539). The two paths disagree. Native (N7): `install zpm` in NCD was refused with the mapped-from error; the installer run returned OK but did not give NCD its own code: the mappings to USER stayed, so the install compiles through them into USER's database (re-point probe), while NCD gained a `zpm` record (O:nc-nsp-N7-install-zpm-mapped, O:nc-nsp-N7-installer-in-mapped, O:nc-nsp-installer-repoint; F-NSP-5).
 
 Source: [DEC-NSP-2](../../playbook-uplift/decisions/07-09.md)
+
+```g5-question
+schema: 1
+id: dec-nsp-2
+status: answered
+prompt: May IPM be installed locally in a namespace that currently gets IPM by mapping?
+severity: medium
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: "(a) Yes: help for `enable -map -globally` says \"Namespace-specific installation will override this\" (Main.cls#L743) and the installer / `load` have no guard. (b) No: `install`, `reinstall` and `uninstall` of `zpm` refuse with \"Cannot install 'zpm' in namespace X because it is mapped from namespace Y\" (Main.cls#L2534-2539). The two paths disagree. Native (N7): `install zpm` in NCD was refused with the mapped-from error; the installer run returned OK but did not give NCD its own code: the mappings to USER stayed, so the install compiles through them into USER's database (re-point probe), while NCD gained a `zpm` record (O:nc-nsp-N7-install-zpm-mapped, O:nc-nsp-N7-installer-in-mapped, O:nc-nsp-installer-repoint; F-NSP-5)."
+  rationale: Existing source interpretation retained from the findings audit.
+  answered_by: null
+  answered_at: null
+resolution_source: playbook-uplift/decisions/07-09.md
+```
 
 <a id="dec-nsp-3"></a>
 ### When `enable -map` (or `-community`) reaches a namespace that still holds legacy ZPM module records, should those records be migrated?
@@ -2156,6 +2902,24 @@ DEC-NSP-3 · inherited source-supported interpretation; not new owner approval
 
 Source: [DEC-NSP-3](../../playbook-uplift/decisions/07-09.md)
 
+```g5-question
+schema: 1
+id: dec-nsp-3
+status: answered
+prompt: When `enable -map` (or `-community`) reaches a namespace that still holds legacy ZPM module records, should those records be migrated?
+severity: medium
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: "(a) Yes, run the same `MigrateZPMToIPM` that an IPM load runs (Migration.cls#L6-35). (b) No (current code: EnableIPM never calls RunAll, Main.cls#L3611-3708); the operator must re-load IPM. No doc covers this case. Native: not run (no legacy ZPM in these containers). Side fact: `MigrateRepoDefinitions` returns OK when there is nothing to copy (O:nc-nsp-migrate-repo-defs-success)."
+  rationale: Existing source interpretation retained from the findings audit.
+  answered_by: null
+  answered_at: null
+resolution_source: playbook-uplift/decisions/07-09.md
+```
+
 <a id="dec-res-1"></a>
 ### Should a namespace switch done inside `exec` persist after the command?
 
@@ -2164,6 +2928,24 @@ DEC-RES-1 · inherited source-supported interpretation; not new owner approval
 (a) No, isolate (PR #996, changelog 0.10.6 at CHANGELOG.md#L142, code `new $namespace` Main.cls#L2435); then the help example "set the namespace to MYAPP" (Main.cls#L515-516) is stale. (b) Yes, as the help example shows. Native (N16): the switch holds inside the command (INSIDE:%SYS) and ends with it; the caller stays in USER (O:nc-res-N16-exec-namespace-v2).
 
 Source: [DEC-RES-1](../../playbook-uplift/decisions/07-09.md)
+
+```g5-question
+schema: 1
+id: dec-res-1
+status: answered
+prompt: Should a namespace switch done inside `exec` persist after the command?
+severity: medium
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: '(a) No, isolate (PR #996, changelog 0.10.6 at CHANGELOG.md#L142, code `new $namespace` Main.cls#L2435); then the help example "set the namespace to MYAPP" (Main.cls#L515-516) is stale. (b) Yes, as the help example shows. Native (N16): the switch holds inside the command (INSIDE:%SYS) and ends with it; the caller stays in USER (O:nc-res-N16-exec-namespace-v2).'
+  rationale: Existing source interpretation retained from the findings audit.
+  answered_by: null
+  answered_at: null
+resolution_source: playbook-uplift/decisions/07-09.md
+```
 
 <a id="dec-res-2"></a>
 ### What is the JSON format of a `run-from-file` command file?
@@ -2174,6 +2956,24 @@ DEC-RES-2 · inherited source-supported interpretation; not new owner approval
 
 Source: [DEC-RES-2](../../playbook-uplift/decisions/07-09.md)
 
+```g5-question
+schema: 1
+id: dec-res-2
+status: answered
+prompt: What is the JSON format of a `run-from-file` command file?
+severity: medium
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: '(a) A root object with a `commands` array (help example Main.cls#L364-404, code Main.cls#L2003-2009). (b) A single root array, as the help description says (Main.cls#L352). The code rejects (b). Native (N17): a root array is refused ("Expected JSON object at root level"); a `commands` object runs (O:nc-res-N17-run-from-file-v2).'
+  rationale: Existing source interpretation retained from the findings audit.
+  answered_by: null
+  answered_at: null
+resolution_source: playbook-uplift/decisions/07-09.md
+```
+
 <a id="dec-res-3"></a>
 ### Packaging a module that has `Deploy="true"` classes runs MakeDeployed in the current namespace, which removes those classes' source even in developer mode. Is that intended?
 
@@ -2183,6 +2983,24 @@ DEC-RES-3 · inherited source-supported interpretation; not new owner approval
 
 Source: [DEC-RES-3](../../playbook-uplift/decisions/07-09.md)
 
+```g5-question
+schema: 1
+id: dec-res-3
+status: answered
+prompt: Packaging a module that has `Deploy="true"` classes runs MakeDeployed in the current namespace, which removes those classes' source even in developer mode. Is that intended?
+severity: medium
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: "(a) Yes: the verbose message says \"unless packaging, in which case items WILL be deployed\" (Base.cls#L1837). (b) No: packaging should deploy into the artifact only and leave the developer's namespace editable. Native (N12): `package` of a `-dev` module made DeployMapA.First Deployed=1 in the namespace and its method source unreadable (O:nc-res-N12b-package-dev)."
+  rationale: Existing source interpretation retained from the findings audit.
+  answered_by: null
+  answered_at: null
+resolution_source: playbook-uplift/decisions/07-09.md
+```
+
 <a id="dec-sync-2"></a>
 ### When a module has no baseline (after `load -dev -skip-sync`, or from before sync existed), should the first `sync` load files edited since the load?
 
@@ -2191,3 +3009,21 @@ DEC-SYNC-2 · inherited source-supported interpretation; not new owner approval
 (a) Yes: help for `-skip-sync` says "The next sync of the module records them instead" (Main.cls#L315), and sync help promises changes since the last load. (b) No (current, and asserted by Sync.cls#L126-133 for the pre-feature case): the first sync only stamps; edits made before it are absorbed. Native (N19): after `load -dev -skip-sync` and an edit, the first sync only set the baseline, the second said "Nothing to sync", and the server kept the old code (O:nc-sync-N19-skip-sync-first-sync).
 
 Source: [DEC-SYNC-2](../../playbook-uplift/decisions/07-09.md)
+
+```g5-question
+schema: 1
+id: dec-sync-2
+status: answered
+prompt: When a module has no baseline (after `load -dev -skip-sync`, or from before sync existed), should the first `sync` load files edited since the load?
+severity: medium
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: '(a) Yes: help for `-skip-sync` says "The next sync of the module records them instead" (Main.cls#L315), and sync help promises changes since the last load. (b) No (current, and asserted by Sync.cls#L126-133 for the pre-feature case): the first sync only stamps; edits made before it are absorbed. Native (N19): after `load -dev -skip-sync` and an edit, the first sync only set the baseline, the second said "Nothing to sync", and the server kept the old code (O:nc-sync-N19-skip-sync-first-sync).'
+  rationale: Existing source interpretation retained from the findings audit.
+  answered_by: null
+  answered_at: null
+resolution_source: playbook-uplift/decisions/07-09.md
+```
