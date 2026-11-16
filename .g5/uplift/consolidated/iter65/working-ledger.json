@@ -1,0 +1,48 @@
+{
+ "recorded_utc": "2026-11-16T18:39:16.992981+00:00",
+ "batch": 14,
+ "iteration": 65,
+ "prior_seal": "acfe17e3",
+ "workflow": "developer-mode versus normal-mode refresh across resource kinds (CLS/PKG, INC, MAC, GBL, FileCopy, WebApplication, LOC, DFI) on load again, module reload+compile, and sync -> namespace content",
+ "owner": ".g5/ontology/concepts/transactions-and-dev-mode.g5.md#dev-mode; features/load.g5.md#load.reload.root; features/developer-tools.g5.md#devtools.sync",
+ "exposure": "Owner statements read. Earlier lanes in this run read %Reload (root only in dev mode), sync Pipeline/FileHash, LocalizedMessages, DeepSeeItem, FileCopy and WebApplication processors; no new bodies read before these predictions.",
+ "predictions": [
+  {
+   "case": "A: edit all sources, load <dir> again",
+   "dev": "every kind refreshed",
+   "normal": "every kind refreshed"
+  },
+  {
+   "case": "B: edit, <m> reload then <m> compile",
+   "dev": "every kind refreshed (stored root)",
+   "normal": "nothing refreshed (no root; owned load.reload.root / P:F-SYNC-3)"
+  },
+  {
+   "case": "C: edit, sync <m>",
+   "dev": "compilable kinds (CLS, INC, MAC) refreshed; GBL/FileCopy/WebApplication/LOC/DFI unspecified",
+   "normal": "refused (sync requires developer mode)"
+  }
+ ],
+ "excluded": "UnitTest resource lifetime is C:D48; preload is C:D47; flat-layout sync is C:D36; not re-filed.",
+ "source_predictions": {
+  "note": "recorded after explore1, before explore2",
+  "dev_b": "compile chain excludes Activate, so FileCopy/WebApplication stay stale; reload refreshes INC/GBL/DFI only",
+  "dev_c": "sync skips processors without SupportsSync (Global, FileCopy, WebApplication); note only with -verbose"
+ },
+ "misses": [
+  "owner prediction \"every kind refreshed\" for developer-mode reload+compile missed FileCopy and WebApplication (Activate not in the compile chain)",
+  "explore1 fixture error: both modules declared FileCopy Name=\"static/\", normal-mode module refused as duplicate resource"
+ ],
+ "outcome": {
+  "status": "lane complete, not sealed",
+  "model": "moderefresh.rs 5 verified, 5/5 controls",
+  "native": "20261116T184118648509Z 126 fields; 114 replayed; flips c.D.gbl, b2.D.filecopy, b1.N.inc rejected",
+  "findings": "none new"
+ },
+ "integration": {
+  "by": "main thread",
+  "independent_rerun": "run.py --no-native: 5 verified, 5/5 controls, 114 replayed",
+  "findings": "none",
+  "convergence_role": "cross-cutting sweep (dev vs normal mode)"
+ }
+}

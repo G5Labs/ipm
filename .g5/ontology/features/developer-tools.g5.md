@@ -22,6 +22,7 @@ IPM includes tools to keep developer-mode modules in step with files on disk, to
 - `-delete` also removes items whose files were deleted, and `-test` runs test classes that changed. Without `-delete`, sync keeps those items and reports how many deleted files it did not apply.
 - A changed `module.xml` is reloaded first, so files of a newly declared resource are synced as new.
 - Within those folders, sync finds files at any depth and in any extension case, except under `.git`, `__pycache__` and `node_modules`. A changed file it cannot read fails the sync, and the next sync retries it.
+- Sync applies class, include, routine, `.LOC` and `.DFI` files. Global data, FileCopy and WebApplication resources have no sync support, so sync leaves their edits unapplied and names them only with `-verbose`, which suggests `reload`.
 - Sync looks for a resource's files only in `{SourcesRoot}/{Directory}`, where Directory defaults to the file type, such as `cls`. As built, a module whose class files sit directly under SourcesRoot still loads, but sync never sees their edits or deletions and reports "Nothing to sync" (defect C:D36).
 - `load -skip-sync` leaves recording the hashes to the next `sync`.
 
@@ -249,6 +250,8 @@ Findings: [Whole-namespace sync ignores dependencies that pass through a module 
 
 
 Iteration45 discovery: [scan.rs](../../Verus_verification/consolidated/iter45/scan.rs) `depth_and_case_do_not_matter`, `unreadable_fails_then_retries`, `skipped_directory_never_synced` ([handoff](../../uplift/consolidated/iter45/HANDOFF.md)).
+
+Iteration65: [moderefresh.rs](../../Verus_verification/consolidated/iter65/moderefresh.rs) `sync_skips_unsupported` ([handoff](../../uplift/consolidated/iter65/HANDOFF.md)).
 ### devtools.sync.retry
 
 - human-provided

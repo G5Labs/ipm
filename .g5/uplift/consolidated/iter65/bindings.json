@@ -1,0 +1,114 @@
+{
+ "verus_dir": ".g5/Verus_verification/consolidated/iter65",
+ "changed_files": [
+  "moderefresh.rs",
+  "cases.json",
+  "run.py",
+  "native/Reader.cls"
+ ],
+ "rows": [
+  {
+   "id": "S65-01",
+   "owner": ".g5/ontology/features/load.g5.md#load.reload.root",
+   "model": "moderefresh.rs",
+   "symbols": [
+    "refreshes",
+    "on_reload",
+    "on_compile",
+    "value",
+    "normal_mode_only_load_refreshes",
+    "schedule"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/Lifecycle/Base.cls",
+     "%Reload"
+    ]
+   ],
+   "reader": [
+    [
+     "src/cls/IPM/Storage/Module.cls",
+     "ExecutePhases"
+    ]
+   ],
+   "scope": "Across eight resource kinds, normal-mode reload/compile module actions refresh nothing while load <dir> refreshes everything; developer mode refreshes through the stored root. Native s0, a, b1, b2 for md65/mn65."
+  },
+  {
+   "id": "S65-02",
+   "owner": ".g5/ontology/features/developer-tools.g5.md#devtools.sync",
+   "model": "moderefresh.rs",
+   "symbols": [
+    "sync_support",
+    "command_ok",
+    "refreshes",
+    "sync_skips_unsupported",
+    "schedule"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/General/Sync/Pipeline.cls",
+     "Run"
+    ],
+    [
+     "src/cls/IPM/ResourceProcessor/Abstract.cls",
+     "SupportsSync"
+    ],
+    [
+     "src/cls/IPM/ResourceProcessor/AbstractCompilable.cls",
+     "SupportsSync"
+    ]
+   ],
+   "reader": [
+    [
+     "src/cls/IPM/General/Sync/Output.cls",
+     "PrintUnsupportedNote"
+    ],
+    [
+     "src/cls/IPM/General/Sync/Output.cls",
+     "PrintTail"
+    ]
+   ],
+   "scope": "Sync refreshes CLS, INC, MAC, LOC and DFI; GBL, FileCopy and WebApplication have no sync support and are named only with -verbose; normal-mode sync refused. Native c, v."
+  },
+  {
+   "id": "S65-03",
+   "owner": ".g5/ontology/concepts/lifecycle.g5.md#lifecycle.chain",
+   "model": "moderefresh.rs",
+   "symbols": [
+    "on_reload",
+    "on_compile",
+    "on_activate",
+    "compile_chain_skips_activate"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/ResourceProcessor/Default/Global.cls",
+     "OnPhase"
+    ],
+    [
+     "src/cls/IPM/ResourceProcessor/Default/DeepSeeItem.cls",
+     "OnPhase"
+    ],
+    [
+     "src/cls/IPM/ResourceProcessor/Default/LocalizedMessages.cls",
+     "OnPhase"
+    ],
+    [
+     "src/cls/IPM/ResourceProcessor/FileCopy.cls",
+     "OnAfterPhase"
+    ],
+    [
+     "src/cls/IPM/ResourceProcessor/WebApplication.cls",
+     "OnPhase"
+    ]
+   ],
+   "reader": [
+    [
+     "src/cls/IPM/ResourceProcessor/Default/Document.cls",
+     "OnPhase"
+    ]
+   ],
+   "scope": "Phase at which each kind becomes observable: INC text, GBL data and DFI items at Reload; CLS, MAC and LOC at Compile; FileCopy and WebApplication at Activate, so the compile chain leaves them stale. Native b1, b2 (developer mode)."
+  }
+ ]
+}

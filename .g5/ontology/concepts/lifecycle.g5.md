@@ -31,6 +31,8 @@ Initialize imports and compiles everything in the module's `preload` folder befo
 
 A command runs its phase together with all the phases it needs first. For example, `load`, `install` and the Activate phase run Initialize, Reload, Validate, Compile and Activate, and `test` adds Test.
 
+- Each resource kind becomes visible at its own phase: include text, global data and `.DFI` items at Reload, classes, routines and `.LOC` messages at Compile, and FileCopy and WebApplication at Activate. A `compile` module action therefore leaves FileCopy targets and web applications stale.
+
 <a id="lifecycle.only"></a>
 [I · lifecycle.only]
 
@@ -153,6 +155,8 @@ Sources: `wiki/00` L41-58; `%IPM.Lifecycle.Base:GetCompletePhasesForOne` (`Lifec
 
 Model: [phases.rs](../../Verus_verification/consolidated/iter30/phases.rs) `complete_plan`, `fixed_order`, `execute`. Iteration30 native cases replay the START order, compiled value and hook counts for full chains, reordered lists and Activate's nested Configure ([index](../../uplift/consolidated/iter30/HANDOFF.md)).
 
+
+Iteration65: [moderefresh.rs](../../Verus_verification/consolidated/iter65/moderefresh.rs) `compile_chain_skips_activate`.
 ### lifecycle.only
 
 - human-provided
