@@ -331,6 +331,19 @@ Reproduced by: E2E reproduced. [Iteration39 native receipt](iter39/native/202611
 
 `ImportStream` clears the stored stream and writes the new text before its transaction starts. When the record update fails, the rollback discards the written text but not the earlier clear. An editor that reopens the document then sees an empty manifest, and saving that empty document resets the version (see the [document statement](../../ontology/concepts/modules.g5.md#module.identity.document)). A repair would clear and write the stream inside the transaction. It was not checked.
 
+<a id="c-d46"></a>
+### C:D46: A preload class that fails to compile does not fail the load
+
+Severity: Medium · Decision: Open
+
+Run: Uplift 2026-11-16
+
+Found by: source review of `Lifecycle/Base.cls::%Initialize`, which keeps the import status in a local and returns its own OK status, then [iteration42 model](../../Verus_verification/consolidated/iter42/initialize.rs) `preload_error_swallowed` with control `preload-error-returned` ([proof receipt](iter42/proofs/models.json)).
+
+Reproduced by: E2E reproduced. [Iteration42 native receipt](iter42/native/20261116T174706181264Z/observations.json) on IRIS 2026.1 x86-64 at `571e04a1`. `load m42b`, whose `preload/cls/M42B/Broken.cls` uses an undefined property type, reports Initialize SUCCESS and succeeds; the module is installed and `M42B.Broken` is not compiled (case b1). Passing neighbour: the same class error in an ordinary `src` resource fails `load m42c` and installs nothing (c1).
+
+Preload code usually bootstraps what later phases need, so a broken preload passes silently and fails later or not at all, contrary to the [Initialize statement](../../ontology/concepts/lifecycle.g5.md#lifecycle.initialize) and to a load failing on compile errors. A repair would return the ImportDir/compile status from `%Initialize`. It was not checked.
+
 <a id="c-d2"></a>
 ### C:D2: When IPM cannot create a load's temporary `.modules` repository, it prints "Failed to clean up repository 'ipm-temp-modules-N'. You may need to manually dele...
 
@@ -486,6 +499,19 @@ Found by: iteration39 native exploration (`iter39/attempts/explore1.log`, `explo
 Reproduced by: E2E reproduced. [Iteration39 native receipt](iter39/native/20261116T174319930857Z/observations.json). Saving `m39.ZPM` with `<Name>m39other</Name>` and version 1.2.0 succeeds (e3). The record stays named m39 and takes version 1.2.0, no `m39other` record exists, and the stored document text says m39other. Passing neighbour: a save that keeps the name (e1) updates the record and the text consistently.
 
 `UpdatePersistentFromStream` refuses a name that differs from the document name, but importing onto the existing record does not replace its Name, so the comparison always passes. The document and the record then disagree, contrary to the [document statement](../../ontology/concepts/modules.g5.md#module.identity.document). A repair would compare the parsed manifest name before importing it onto the record. It was not checked.
+
+<a id="c-d47"></a>
+### C:D47: Module actions never refresh a developer-mode module's preload code
+
+Severity: Low · Decision: Open
+
+Run: Uplift 2026-11-16
+
+Found by: source review of `Lifecycle/Base.cls::%Initialize` (preload root from the RootDirectory parameter only) against `%Reload` (developer-mode root fallback), then [iteration42 model](../../Verus_verification/consolidated/iter42/initialize.rs) `module_action_skips_preload` with control `module-action-uses-module-root` ([proof receipt](iter42/proofs/models.json)).
+
+Reproduced by: E2E reproduced. [Iteration42 native receipt](iter42/native/20261116T174706181264Z/observations.json). After editing `preload/cls/M42P/Boot.cls` from 1 to 2, `m42 initialize -only` and `m42 compile` both print "Skipping preload - directory does not exist" and Boot stays 1 (cases i1, i2). Passing neighbours: `load <dir> -dev` (i3) and `m42 initialize -only -DRootDirectory=<dir>` (i4) refresh it.
+
+Reload falls back to the stored root for developer-mode modules, but Initialize does not, so the chain run by `compile` reloads `src` but not `preload`. The [Initialize statement](../../ontology/concepts/lifecycle.g5.md#lifecycle.initialize) and CHANGELOG `#702` place preload in the complete chain. A repair would use the same root fallback as Reload. It was not checked.
 
 ## Outside active reproduction scope
 

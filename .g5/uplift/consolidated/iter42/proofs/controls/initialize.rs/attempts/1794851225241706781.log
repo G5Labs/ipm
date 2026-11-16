@@ -1,0 +1,21 @@
+verification results:: 2 verified, 2 errors
+error: postcondition not satisfied
+  --> /home/ziniu_wu_g5labs_ai/experiments/iris-ipm-continuous-20261116/ipm/.g5/uplift/consolidated/iter42/proofs/controls/initialize.rs/preload-error-returned.rs:40:13
+   |
+38 | pub proof fn preload_error_swallowed(w: World)
+   | ---------------------------------------------- at the end of the function body
+39 |     requires w.preload_broken
+40 |     ensures initialize(w, true).ok, !initialize(w, true).world.broken_compiled, !ordinary_compile_ok(true)
+   |             ^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: postcondition not satisfied
+  --> /home/ziniu_wu_g5labs_ai/experiments/iris-ipm-continuous-20261116/ipm/.g5/uplift/consolidated/iter42/proofs/controls/initialize.rs/preload-error-returned.rs:55:31
+   |
+53 | pub proof fn schedule()
+   | ----------------------- at the end of the function body
+54 |     ensures setup().world.boot == 1, i1().world.boot == 1, i1().skipped, i2().world.boot == 1, i3().world.boot == 2,
+55 |         i4().world.boot == 3, b1().ok, !b1().world.broken_compiled
+   |                               ^^^^^^^ failed this postcondition
+
+error: aborting due to 2 previous errors
+

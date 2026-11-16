@@ -1,0 +1,76 @@
+{
+ "recorded_utc": "2026-11-16T17:45:19.533507+00:00",
+ "batch": 6,
+ "iteration": 42,
+ "prior_seal": "d0bb0707",
+ "workflow": "preload code: Initialize phase loads/compiles the module preload directory -> preload classes available; -only phase selection decides whether preload is refreshed",
+ "unbound_members": [
+  "Lifecycle/Base.cls::%Initialize"
+ ],
+ "owner": ".g5/ontology/concepts/lifecycle.g5.md#lifecycle (Initialize brings in preload code); CHANGELOG 0.10.0 #702",
+ "exposure": "%Initialize body not read; iteration30 established which phases each command runs.",
+ "predictions": [
+  {
+   "case": "load m -dev with preload/cls/P.cls",
+   "reader": "P compiled value",
+   "predicted": "P compiled during Initialize"
+  },
+  {
+   "case": "edit P on disk, m reload -only",
+   "reader": "P value",
+   "predicted": "unchanged (no Initialize; CHANGELOG #702)"
+  },
+  {
+   "case": "edit P, m initialize -only",
+   "reader": "P value",
+   "predicted": "new value"
+  },
+  {
+   "case": "edit P, m compile (full chain)",
+   "reader": "P value",
+   "predicted": "new value (chain includes Initialize)"
+  },
+  {
+   "case": "module with no preload directory",
+   "reader": "status/output",
+   "predicted": "Initialize succeeds, nothing loaded"
+  }
+ ],
+ "exposure_after_source": "Read Lifecycle/Base %Initialize: preloadRoot = pParams(\"RootDirectory\")_\"preload\"; ImportDir status assigned to tSC and quit without copying into the returned status.",
+ "source_predictions": [
+  {
+   "case": "i1 edit Boot to 2, m42 initialize -only",
+   "predicted": "unchanged 1: no RootDirectory parameter in a module action, preload path is relative \"preload\" and skipped"
+  },
+  {
+   "case": "i2 m42 compile (chain includes Initialize)",
+   "predicted": "Boot still 1 while src reload happens via developer-mode root"
+  },
+  {
+   "case": "i3 load the directory again -dev",
+   "predicted": "Boot 2"
+  },
+  {
+   "case": "i4 edit to 3, m42 initialize -only -DRootDirectory=<dir>",
+   "predicted": "Boot 3"
+  },
+  {
+   "case": "b1 load module whose preload class has a syntax error",
+   "predicted": "load succeeds; Initialize SUCCESS; broken class not compiled (status swallowed)"
+  },
+  {
+   "case": "c1 neighbour: syntax error in an ordinary src resource",
+   "predicted": "load fails"
+  }
+ ],
+ "outcome": {
+  "status": "sealed",
+  "model": "initialize.rs 4 verified, 4/4 controls",
+  "native": "20261116T174706181264Z 70 fields; 20 replayed; 3 flips rejected",
+  "findings": [
+   "C:D46 Medium",
+   "C:D47 Low"
+  ],
+  "reach": "454/1216 (+2)"
+ }
+}

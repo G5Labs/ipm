@@ -18,6 +18,14 @@ IPM runs a module's phases in this fixed order: Clean, Initialize, Reload, Valid
 - Compile compiles the module, and Activate runs post-compile setup, including Configure.
 - Clean removes the module's resources.
 
+<a id="lifecycle.initialize"></a>
+[D · lifecycle.initialize]
+
+Initialize imports and compiles everything in the module's `preload` folder before Reload.
+
+- It finds that folder only through the root a directory load supplies. A module action such as `<module> compile` or `<module> initialize` on an installed developer-mode module skips preload with "Skipping preload - directory does not exist", so edited preload code is not refreshed (defect C:D47).
+- As built, a preload class that fails to compile does not fail Initialize. The load succeeds and the class stays uncompiled, while the same error in an ordinary resource fails the load (defect C:D46).
+
 <a id="lifecycle.chain"></a>
 [I · lifecycle.chain]
 
@@ -112,6 +120,18 @@ Source locators follow the conventions on the [root page](../root.g5.md#how-to-r
 - Children: [chain](#lifecycle.chain), [only](#lifecycle.only), [module-action](#lifecycle.module-action), [custom](#lifecycle.custom), [hooks](#lifecycle.hooks).
 
 Sources: `wiki/00` L3-39; `Main.cls:32-58`. Inventory: CAT-11; A2 1.3 lifecycle phases (`%IPM.Lifecycle.Base`, `%IPM.Lifecycle.Module`). The help lists a `register` phase and example (`Main.cls:53-55`, `:64`) that has no implementation.
+
+### lifecycle.initialize
+
+- agent
+- user-facing-behavior
+- Expands: [Lifecycle](#lifecycle).
+
+Sources: `Lifecycle/Base.cls::%Initialize`; CHANGELOG 0.10.0 (`#702`: preload moved to Initialize; `reload -only` no longer compiles preload). Model: [initialize.rs](../../Verus_verification/consolidated/iter42/initialize.rs) `module_action_skips_preload`, `directory_load_refreshes`, `preload_error_swallowed` ([handoff](../../uplift/consolidated/iter42/HANDOFF.md)).
+
+Findings: [A preload class that fails to compile does not fail the load](../../uplift/consolidated/BUGS.md#c-d46)
+
+Findings: [Module actions never refresh a developer-mode module's preload code](../../uplift/consolidated/BUGS.md#c-d47)
 
 ### lifecycle.chain
 
