@@ -103,6 +103,9 @@ Commands for writing modules:
 - `generate` writes a `module.xml`, asking for details, including a tests folder.
 - `init` sets up a namespace for IPM and its editor extensions.
 - `arrange` puts a manifest's resources in the standard order.
+  - It rewrites the stored `<Name>.ZPM` document, not `module.xml` on disk. Resources are written in name order inside a `<Resources>` element, and fields such as `LastUpdated` and dependency `DisplayName` are added.
+  - As built, `arrange` works only when the namespace has a source-control class. Otherwise it fails with "Not logged into source control system" and changes nothing (defect C:D49).
+  - Comments before `Name` and inside dependencies are kept. As built, comments before each resource and a module's last comment are dropped (defect C:D50).
 - `dependency-analyzer` finds references to items outside the module and its dependencies.
 - `module-version` sets or bumps a module's version, and refuses a downgrade unless `-force` is given.
 
@@ -291,6 +294,12 @@ Findings: [P:F-SYNC-1 — e2e reproduced](../../../playbook-uplift/BUGS.md#p-f-s
 
 Sources: `Main.cls:85-99`, `:639-705`, `:781-805`; CHANGELOG 0.10.11 (`#150`, `#806`, `#503`), 0.10.0 (`#710`). Inventory: CAT-36; A2 1.2 rows 4, 29, 30, 32, 37. Tests: `Generate.cls`, `ModuleVersion.cls`.
 
+
+Iteration44 `arrange`: [comments.rs](../../Verus_verification/consolidated/iter44/comments.rs) `arrange`, `without_source_control_nothing_changes`, `resource_comments_dropped`, `trailing_comment_dropped`, `leading_and_dependency_comments_kept` ([handoff](../../uplift/consolidated/iter44/HANDOFF.md)).
+
+Findings: [`arrange` fails in a namespace without a source-control class](../../uplift/consolidated/BUGS.md#c-d49)
+
+Findings: [`arrange` drops comments placed before resources and a module's last comment](../../uplift/consolidated/BUGS.md#c-d50)
 ### devtools.authoring.module-version
 
 - agent

@@ -344,6 +344,19 @@ Reproduced by: E2E reproduced. [Iteration42 native receipt](iter42/native/202611
 
 Preload code usually bootstraps what later phases need, so a broken preload passes silently and fails later or not at all, contrary to the [Initialize statement](../../ontology/concepts/lifecycle.g5.md#lifecycle.initialize) and to a load failing on compile errors. A repair would return the ImportDir/compile status from `%Initialize`. It was not checked.
 
+<a id="c-d49"></a>
+### C:D49: `arrange` fails in a namespace without a source-control class
+
+Severity: Medium · Decision: Open
+
+Run: Uplift 2026-11-16
+
+Found by: iteration44 native exploration, then source review of `Utils/Module.cls::ExportDocumentForObject`, which throws the `%Studio.SourceControl.Interface` status, and [iteration44 model](../../Verus_verification/consolidated/iter44/comments.rs) `without_source_control_nothing_changes` with control `no-source-control-ok` ([proof receipt](iter44/proofs/models.json)).
+
+Reproduced by: E2E reproduced. [Iteration44 native receipt](iter44/native/20261116T175351554424Z/observations.json) on IRIS 2026.1 x86-64 at `571e04a1`. In a fresh namespace, `arrange c44` and `arrange n44` (a module without comments) fail with error #5889 "Not logged into source control system" and leave the stored manifests unchanged (cases a1, n1). Passing neighbour: after configuring `%Studio.SourceControl.Base`, both succeed (s1, s3).
+
+The [authoring statement](../../ontology/features/developer-tools.g5.md#devtools.authoring) offers `arrange` as an ordinary authoring command, and no product test covers it. A repair would treat an absent source-control class as "not under source control, editable". It was not checked.
+
 <a id="c-d2"></a>
 ### C:D2: When IPM cannot create a load's temporary `.modules` repository, it prints "Failed to clean up repository 'ipm-temp-modules-N'. You may need to manually dele...
 
@@ -525,6 +538,19 @@ Found by: source review of `ResourceProcessor/Test.cls::OnPhase`, whose existenc
 Reproduced by: E2E reproduced. [Iteration40 native receipt](iter40/native/20261116T174722753053Z/observations.json) on IRIS 2026.1 x86-64 at `571e04a1`. After `load t40` (not developer mode) and `test t40 -only`, `T40.Tests.Basic` and the never-run verify-only `T40.VTests.Basic` are both defined, and the former is compiled (case n1). Passing neighbours: the plain load has no test classes (n0), and `uninstall` removes them (n2).
 
 The processor means to delete loaded test code outside developer mode, but the check that should protect pre-existing classes always sees the classes it just loaded, so `/nodelete` is always passed. This contradicts the [test statement](../../ontology/features/build-and-publish.g5.md#build.test) that test-scoped resources load for this phase only. A repair would take the existence check before loading the test directory. It was not checked.
+
+<a id="c-d50"></a>
+### C:D50: `arrange` drops comments placed before resources and a module's last comment
+
+Severity: Low · Decision: Open
+
+Run: Uplift 2026-11-16
+
+Found by: iteration44 exploration, then source review of `Utils/XMLCommentHandler.cls` (`GetPosition`, `endElement`, `Reapply`), and [iteration44 model](../../Verus_verification/consolidated/iter44/comments.rs) `resource_comments_dropped` and `trailing_comment_dropped` with controls `resource-path-unchanged` and `trailing-attached-to-parent` ([proof receipt](iter44/proofs/models.json)).
+
+Reproduced by: E2E reproduced. [Iteration44 native receipt](iter44/native/20261116T175351554424Z/observations.json). With a source-control class configured, `arrange c44` keeps the comments before `Name` and inside a dependency, but drops the comments before each resource and the module's last comment (case s1). A second `arrange` gives the same result. Passing neighbours: comments C1 to C3 are kept.
+
+The export wraps resources in a new `<Resources>` element, so the recorded resource comment paths no longer match, and a comment with no following sibling is discarded. This contradicts the handler's purpose of carrying comments across the rewrite. A repair would map resource comments by resource name onto the exported path and keep trailing comments as the parent's last child. It was not checked.
 
 ## Outside active reproduction scope
 

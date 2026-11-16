@@ -1,0 +1,67 @@
+{
+ "recorded_utc": "2026-11-16T17:50:56.249103+00:00",
+ "batch": 7,
+ "iteration": 44,
+ "prior_seal": "b2a9ed3a",
+ "workflow": "arrange <module>: ExportDocumentForObject rewrites the module manifest (stored .ZPM document and module.xml on disk) in standard order; XMLCommentHandler carries existing XML comments over",
+ "unbound_members": [
+  "Utils/XMLCommentHandler.cls::*",
+  "Utils/Module.cls::ExportDocumentForObject",
+  "Main.cls::Arrange"
+ ],
+ "consumers": {
+  "Main.cls::Arrange (arrange command)": "ordinary, exercised",
+  "Lifecycle/Base.cls Publish (~1669)": "excluded scope (publish/package), not exercised",
+  "Utils/Module.cls::LockWithCurrentDependencies": "no callers at pin (grep src/tests)"
+ },
+ "owner": ".g5/ontology/features/developer-tools.g5.md devtools (arrange puts a manifest's resources in the standard order); nothing about comments",
+ "exposure": "XMLCommentHandler bodies and ExportDocumentForObject body not read; only the class/caller names and the arrange command help/handler head (Main.cls:3278-3315) were read.",
+ "predictions": [
+  {
+   "case": "arrange of a dev module whose module.xml has comments at top level, inside Module, between resources and inside a dependency",
+   "reader": "module.xml on disk and stored .ZPM text",
+   "owner": "resources reordered; comments: unspecified (presence of a comment handler suggests they are kept)"
+  },
+  {
+   "case": "arrange of a module with no comments",
+   "reader": "same",
+   "owner": "reordered standard manifest"
+  },
+  {
+   "case": "resource order in the file",
+   "reader": "position of resource names",
+   "owner": "standard order (sorted?)"
+  }
+ ],
+ "exposure_after_source": "Read Utils/Module.cls::ExportDocumentForObject and all of Utils/XMLCommentHandler.cls after the owner predictions.",
+ "source_predictions": [
+  {
+   "case": "arrange c44",
+   "predicted": "comments kept when the next element keeps its XPath in the export; C6 (last child of Module) dropped at endElement; C0 never stored (outside the Module document content)"
+  },
+  {
+   "case": "resources",
+   "predicted": "re-emitted by XMLExportToStream; comment kept if Resource[@Name] path still matches"
+  }
+ ],
+ "explore": {
+  "explore1": "arrange fails for every module: %Studio.SourceControl.Interface.GetStatus returns #5889 \"Not logged into source control system\" when the namespace has no source-control class; ExportDocumentForObject throws before comment handling. Refutes the owner prediction that arrange reorders resources in an ordinary namespace.",
+  "explore3": "with %Studio.SourceControl.Base configured, arrange succeeds: resources sorted and wrapped in <Resources>, C1-C3 kept, C4/C5 (before resources) and C6 (trailing) dropped; idempotent; module.xml on disk untouched"
+ },
+ "source_predictions_round2": [
+  {
+   "case": "C4/C5 under source control",
+   "status": "discovered in explore3, not predicted beforehand; cause traced afterwards to the <Resources> wrapper in XMLExportToStream"
+  }
+ ],
+ "note": "explore3 outcomes for C4/C5 were observed before a source prediction for them was written; they are labelled as discovered, not predicted.",
+ "integration": {
+  "by": "main thread",
+  "independent_rerun": "run.py --no-native: 5 verified, 4/4 controls, 43 replayed",
+  "findings": [
+   "C:D49 Medium",
+   "C:D50 Low"
+  ],
+  "fork_cost": "~692k subagent tokens, 253 s"
+ }
+}
