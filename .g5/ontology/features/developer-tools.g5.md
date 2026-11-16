@@ -230,10 +230,11 @@ Open questions: [Should `generate` report or refuse a source file that cannot lo
 
 ### devtools.sync
 
+- design-verified
+
 - uncertain
 - human-provided
 - user-facing-behavior
-- test-coverage
 - Expands: [Developer tools](#devtools).
 
 - Children: [retry](#devtools.sync.retry), [compile after a resolution failure](#devtools.sync.compile-after-resolve), [test stop](#devtools.sync.test-stop), [skipped-test tracking](#devtools.sync.skipped-tracking), [test paths](#devtools.sync.test-paths).
@@ -315,9 +316,10 @@ State machines: [repairs4 · iter4](../../Verus_verification/models/iter4-repair
 
 ### devtools.authoring
 
+- design-verified
+
 - human-provided
 - user-facing-behavior
-- test-coverage
 - Expands: [Developer tools](#devtools).
 - Children: [module-version](#devtools.authoring.module-version).
 

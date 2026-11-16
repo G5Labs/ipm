@@ -720,9 +720,10 @@ Dead check: `ResourceProcessor/WebApplication.cls::OnPhase` (Validate branch, `D
 
 ### module.processor.cpf
 
+- design-verified
+
 - agent
 - user-facing-behavior
-- test-coverage
 - Expands: [Resource processors](#module.processor).
 
 Sources: `ResourceProcessor/CPF.cls` (`OnBeforePhase`, `OnAfterPhase`, `OnCustomPhase`, `DoMerge`, `MergeCPF`); test `CPFMerge.cls` and fixture `cpf-merge`. Model: [cpfmerge.rs](../../Verus_verification/consolidated/iter48/cpfmerge.rs) `merges_in`, `neighbors`, `after_is_not_before` ([handoff](../../uplift/consolidated/iter48/HANDOFF.md)). Compensation after a later failure is the open question C:Q12.
@@ -838,9 +839,10 @@ State machines: [mappings · iter59](../../Verus_verification/models/iter59-mapp
 
 ### module.deployed
 
+- design-verified
+
 - human-provided
 - user-facing-behavior
-- test-coverage
 - Expands: [Module](#module).
 
 Children: [project loading](#module.deployed.project-load). Iteration 3 Verus `resources.rs::deploy` and `deployment_precedence` derive class-parameter override and lifecycle defaults; actual native calls distinguish parameter false, resource true, Module and DeployedModule.

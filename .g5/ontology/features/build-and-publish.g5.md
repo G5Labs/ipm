@@ -238,9 +238,10 @@ Sources: `Main.cls:32-58`, `:120-162`; `wiki/00` L3-83. Inventory: CAT-11, CAT-2
 
 ### build.test
 
+- design-verified
+
 - human-provided
 - user-facing-behavior
-- test-coverage
 - Expands: [Build](#build).
 - Children: [selection](#build.test.selection), [outcome](#build.test.outcome).
 
@@ -317,9 +318,10 @@ Direct decision: `Test/Manager.cls::{GetAllTestsStatus,OutputFailures,SaveResult
 
 ### build.test-output
 
+- design-verified
+
 - human-provided
 - user-facing-behavior
-- test-coverage
 - Expands: [Build](#build).
 - Children: [run identity](#build.test-output.run-identity), [counted rows](#build.test-output.counted-rows).
 

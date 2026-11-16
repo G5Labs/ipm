@@ -160,9 +160,10 @@ State machines: [initialize · iter42](../../Verus_verification/models/iter42-in
 
 ### lifecycle.chain
 
+- design-verified
+
 - human-provided
 - user-facing-behavior
-- test-coverage
 - Expands: [Lifecycle](#lifecycle).
 
 Sources: `wiki/00` L41-58; `%IPM.Lifecycle.Base:GetCompletePhasesForOne` (`Lifecycle/Base.cls:165-189`). Inventory: CAT-11; OP-LOAD-23. Test: `History.cls` `TestPhases` (load and install record the five phases).
@@ -214,10 +215,11 @@ Sources: `wiki/00` L60-69; `Main.cls:32-83`; CHANGELOG 0.10.0 (`#702`, `#722`, `
 
 ### lifecycle.custom
 
+- design-verified
+
 - uncertain
 - human-provided
 - user-facing-behavior
-- test-coverage
 - Expands: [Lifecycle](#lifecycle).
 
 Sources: `wiki/00` L85-103; `wiki/03` L492-529; CHANGELOG 0.10.5 (`#828`). Inventory: CAT-06. Test: `CustomPhase.cls`.

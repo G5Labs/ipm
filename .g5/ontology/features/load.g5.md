@@ -401,10 +401,11 @@ State machines: [reloading · iter18](../../Verus_verification/models/iter18-rel
 
 ### load.outcome
 
+- design-verified
+
 - uncertain
 - human-provided
 - user-facing-behavior
-- test-coverage
 - Expands: [Load](#load).
 - Children: [developer-mode commits](#load.outcome.dev).
 
@@ -418,9 +419,10 @@ State machines: [failkeep · iter64](../../Verus_verification/models/iter64-fail
 
 ### load.outcome.dev
 
+- design-verified
+
 - human-verified
 - user-facing-behavior
-- test-coverage
 - Expands: [Outcome](#load.outcome).
 - Children: [early failure](#load.outcome.dev.early-failure).
 

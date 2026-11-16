@@ -113,9 +113,10 @@ Source locators follow the conventions on the [root page](../root.g5.md#how-to-r
 
 ### inspect
 
+- design-verified
+
 - human-provided
 - user-facing-behavior
-- test-coverage
 - Children: [CLS orphan ownership](#inspect.orphans.ownership), [identifier case](#inspect.orphans.identifier-case).
 
 Sources: `Main.cls:17-27`, `:524-616`, `:683-724`, `:807-816`; CHANGELOG 0.10.11 (`#1019`), 0.10.7 (`#1079`), 0.10.5 (`#950`), 0.10.10 (`#1158`). Inventory: CAT-17, CAT-25; A2 1.2 rows 1, 24-27, 31, 33, 34, 38. Tests: `Show.cls`, `Unit/CLI.cls` `TestSortList`, `ListInstPythonLibrariesTest.cls`. No wiki page covers `show` or `info`.

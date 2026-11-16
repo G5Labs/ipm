@@ -87,9 +87,10 @@ Source locators follow the conventions on the [root page](../root.g5.md#how-to-r
 
 ### settings
 
+- design-verified
+
 - human-provided
 - user-facing-behavior
-- test-coverage
 - Children: [writes](#settings.writes), [report format](#settings.report-format), [default modifiers](#settings.default-modifiers), [install flags](#settings.install-flags), [analytics](#settings.analytics).
 
 Sources: `wiki/02` L93-141; `Main.cls:210-220`; CHANGELOG 0.9.0 (`#224`); `preload/cls/IPM/Installer.cls:110-124`. Inventory: CAT-26; A2 1.2 row 15 (`Main:Config`, `%IPM.Repo.UniversalSettings`), OP-HIST-22. Tests: `Unit/CLI.cls` `TestReportFormatConfiguration`, `ModuleRoot.cls`. Observed: settings are stored in `^IPM.settings` in `%SYS`, so they apply to the whole instance. Confirmed product defect B2 D5: `delete` restores the first value ever set, not the built-in default, so `config delete HistoryRetain` can leave retention on (case F0; `20261113T184628Z-repro-config-delete-retain`; also seen after `20261113T182514Z-suite-test-CLI`).

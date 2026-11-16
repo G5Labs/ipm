@@ -103,10 +103,11 @@ Sources: CHANGELOG 0.10.8 (`#1192`, `#1077`); `Storage/Module.cls:954-959`. Timi
 
 ### deps.installed
 
+- design-verified
+
 - uncertain
 - human-provided
 - user-facing-behavior
-- test-coverage
 - Expands: [Dependency resolution](#deps).
 
 Sources: message `Utils/Module.cls:116-126`. Inventory: INT-LOAD-14; OP-LOAD-18 (`GetRequiredVersionExpression`). Test: `BuildDependencyGraph.cls` `TestCoUpdatingModulesExcludedFromInstalledCheck`. Modules being updated together are excluded from this check ([update requirements](update.g5.md#update.requirements)).

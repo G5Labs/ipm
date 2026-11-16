@@ -424,10 +424,11 @@ Native evidence: the premises behind the decision hold for an ordinary error. IR
 
 ### history.fields
 
+- design-verified
+
 - uncertain
 - human-provided
 - user-facing-behavior
-- test-coverage
 - Expands: [History](#history).
 - Children: [How should the log label and show a dependency that IPM pulled from a repository while running a `load` or `update`, and what source does an `update` from a registry store?](../../Verus_verification/open_questions.md#history.fields.dependency-source).
 
@@ -598,9 +599,10 @@ Open questions: [Should the namespace's [default modifiers](../concepts/settings
 
 ### history.read.details
 
+- design-verified
+
 - human-provided
 - user-facing-behavior
-- test-coverage
 - Expands: [Reading](#history.read).
 
 Sources: `Main.cls:824`, `:839`; `wiki/09` L114-161. Inventory: INT-HIST-10; OP-HIST-15. Test: `TestInvalidHistoryCommands` (`details 0` and `details blah` fail). Native evidence: cases R1 and R2 conform (`184444Z-cases-hr`). The raw status follows `wiki/09` L133, so round 1 withdrew B2 D7 (R1-ONT-13). Consolidated round 3 (`20261114T032054Z-r3-history.partial-purge-failed`, ARM64): for a failed action the raw status is printed as the stored bytes, which include the internal call stack (H3d); repository details read `reg3 (filesystem): /tmp/c3/reg/*` (H1d); `-phases` lists name, time and result per phase (HB1d, `20261114T032620Z-r3-history-b`); a missing ID reports "No record found with ID 999999" (H5). Model `Verus_verification/consolidated/models/history_display.py`.
