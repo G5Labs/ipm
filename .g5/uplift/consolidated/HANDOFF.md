@@ -1,5 +1,5 @@
 <!-- continuation-pointer:start -->
-> **Continuation pointer (2026-11-16 Linux run).** Current: iteration30 sealed by the commit "Iteration30 seal" (see `git log`); iteration31 (installed-module version requirements) executed and awaiting integration. Material outcome: phase-selection producer bound (411/1216 locator members, +4), new defects C:D34/C:D35, question C:Q24 ([handoff](iter30/HANDOFF.md)). Cost: iteration30 native+formal run 28 s wall; session tokens not available. Next missing role: integrate iteration31 (`deps.installed`), then batch 2 selection from the [iter30 map](iter30/project-map.json).
+> **Continuation pointer (2026-11-16 Linux run).** Current: batch 1 sealed (iteration30 `6122cdf1`, iteration31 in the commit "Iteration31 seal"; see `git log`). Material outcome: phase-selection producer and installed-requirement decisions bound; 413/1216 locator members (+6 from 407); new defects C:D34, C:D35; questions C:Q24-C:Q26 ([iter30](iter30/HANDOFF.md), [iter31](iter31/HANDOFF.md)). Cost: native+formal runs under 30 s each; iteration31 fork ~285k tokens; main-thread tokens not available. Next: batch 2 selection from the [iter31 map](iter31/project-map.json).
 <!-- continuation-pointer:end -->
 
 # IPM consolidation: final handoff

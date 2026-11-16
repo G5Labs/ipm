@@ -1,0 +1,103 @@
+{
+ "verus_dir": ".g5/Verus_verification/consolidated/iter31",
+ "changed_files": [
+  ".g5/Verus_verification/consolidated/iter31/installed.rs",
+  ".g5/Verus_verification/consolidated/iter31/cases.json",
+  ".g5/Verus_verification/consolidated/iter31/run.py",
+  ".g5/Verus_verification/consolidated/iter31/native/"
+ ],
+ "rows": [
+  {
+   "id": "S31-01",
+   "owner": ".g5/ontology/features/dependencies.g5.md#deps.installed",
+   "model": "installed.rs",
+   "symbols": [
+    "installed_reqs",
+    "sat_all",
+    "Reqs",
+    "Excluded",
+    "reference_ok",
+    "graph_excluded"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/Utils/Module.cls",
+     "GetRequiredVersionExpression"
+    ],
+    [
+     "src/cls/IPM/Storage/Module.cls",
+     "VersionRequirements"
+    ]
+   ],
+   "reader": [
+    [
+     "src/cls/IPM/Utils/Module.cls",
+     "LoadModuleReference"
+    ]
+   ],
+   "scope": "Installed modules dependency rows on the requested name (VersionRequirements, minus excluded names) are And-ed; LoadModuleReference refuses a repository reference that fails them. Explicit 2.0.0 and unversioned requests refused (message lists i31a and i31p), explicit satisfying 1.7.0 accepted, removing A admits 2.0.0. Graph-module exclusion is represented but undistinguished (parent never installed in checked cases). SemVer And/IsSatisfiedBy are provider premises over x.y.z release codes."
+  },
+  {
+   "id": "S31-02",
+   "owner": ".g5/ontology/features/dependencies.g5.md#deps.installed",
+   "model": "installed.rs",
+   "symbols": [
+    "resolve_b",
+    "first_sat",
+    "cand",
+    "install_parent"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/Storage/Module.cls",
+     "ProcessSingleDependencyIterative"
+    ]
+   ],
+   "reader": [
+    [
+     "src/cls/IPM/Utils/Module.cls",
+     "LoadModuleReference"
+    ]
+   ],
+   "scope": "Same P manifest picks B 2.0.0 without A and 1.7.0 with A installed: installed requirements and the no-downgrade floor join the search expression; installed B kept only when it satisfies them. Highest-first repository order is a provider premise (control search-lists-lowest-first). Snapshot reload, PermitDowngrade, co-updating exclusion and fuzzy backtracking over sub-dependencies unassessed."
+  },
+  {
+   "id": "S31-03",
+   "owner": ".g5/ontology/features/dependencies.g5.md#deps.installed",
+   "model": "installed.rs",
+   "symbols": [
+    "top_choice",
+    "install_b"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/Main.cls",
+     "Install"
+    ]
+   ],
+   "reader": [
+    [
+     "src/cls/IPM/Utils/Module.cls",
+     "LoadModuleReference"
+    ]
+   ],
+   "scope": "Unversioned install takes the first (latest) repository result without consulting installed requirements, so it is refused although installed 1.7.0 satisfies them; explicit literal selects that version. -prompt/-keywords/registry prefix unassessed."
+  },
+  {
+   "id": "S31-04",
+   "owner": ".g5/ontology/features/dependencies.g5.md#deps.installed",
+   "model": "installed.rs",
+   "symbols": [
+    "load_b_directory"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/Utils/Module.cls",
+     "LoadNewModule"
+    ]
+   ],
+   "reader": [],
+   "scope": "load <directory> of B 2.0.0 succeeds and replaces B while installed A requires <2.0.0; the installed-requirement check is only reached through LoadModuleReference (source: two callers of GetRequiredVersionExpression). Dev-mode directory load unassessed."
+  }
+ ]
+}

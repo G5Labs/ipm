@@ -31,6 +31,29 @@ When no version can satisfy every requirement, IPM stops the load with an error 
 
 A dependency version must also satisfy the requirements of modules already installed in the namespace. Otherwise the load fails with "Requested version ... does not satisfy the requirements of other modules installed in the current namespace", like a [conflict](#deps.conflict).
 
+- Resolution picks the highest offered version that meets the parent's range, every installed module's range and the no-downgrade floor. An installed requirement can therefore select an older version than the newest offer.
+- An explicit `install <module> <version>` is refused with that message when the version breaks an installed module's requirement, and the installed version stays.
+- As built, `install <module>` without a version takes the newest offer and is refused if it breaks an installed requirement, even when an older offer satisfies all of them. Whether it should fall back is the [unversioned-install question](#deps.installed.unversioned-policy).
+- As built, `load <directory>` does not apply this check to the module it loads. Whether it should is the [directory-load question](#deps.installed.directory-policy).
+
+<a id="deps.installed.unversioned-policy"></a>
+[Q · deps.installed.unversioned-policy]
+
+When the newest offer of a module breaks an installed module's requirement, should `install <module>` without a version fall back to the newest offer that satisfies every requirement?
+
+- Working assumption: keep the as-built refusal, so the user sees the conflict and chooses a version explicitly.
+- Alternative and implications: fall back to the newest satisfying offer, which matches how dependency resolution already chooses versions but can silently install an older version than the user expected.
+- This assumption guides review; it is not a maintainer decision. The install help says only that the latest available version is installed.
+
+<a id="deps.installed.directory-policy"></a>
+[Q · deps.installed.directory-policy]
+
+Should `load <directory>` refuse or warn when the loaded module's version breaks a requirement that installed modules declare on it?
+
+- Working assumption: as built, the load succeeds without a warning, and installed modules keep requirements the namespace no longer satisfies.
+- Alternative and implications: refuse with the same message as a repository install, which protects installed modules but blocks deliberate local overrides; or warn and continue.
+- This assumption guides review; it is not a maintainer decision. If the owner requires a check, iteration31 case S6 reproduces the gap and S7 is its passing neighbour.
+
 <a id="deps.lockfile"></a>
 [I · deps.lockfile]
 
@@ -104,6 +127,24 @@ Sources: CHANGELOG 0.10.8 (`#1192`, `#1077`); `Storage/Module.cls:954-959`. Timi
 - Expands: [Dependency resolution](#deps).
 
 Sources: message `Utils/Module.cls:116-126`. Inventory: INT-LOAD-14; OP-LOAD-18 (`GetRequiredVersionExpression`). Test: `BuildDependencyGraph.cls` `TestCoUpdatingModulesExcludedFromInstalledCheck`. Modules being updated together are excluded from this check ([update requirements](update.g5.md#update.requirements)).
+
+Model: [installed.rs](../../Verus_verification/consolidated/iter31/installed.rs) `resolve_b`, `reference_ok`, `install_b`, `load_b_directory`. Iteration31 native cases S1-S7 on a local filesystem repository replay the chosen version, refusals and the directory bypass ([handoff](../../uplift/consolidated/iter31/HANDOFF.md)).
+
+### deps.installed.unversioned-policy
+
+- agent
+- uncertain
+- Expands: [Installed requirements](#deps.installed).
+
+Sources: `Main.cls::Install` takes the first repository offer; `Utils/Module.cls::LoadModuleReference` then applies the installed-requirement check. Native iteration31 case S4.
+
+### deps.installed.directory-policy
+
+- agent
+- uncertain
+- Expands: [Installed requirements](#deps.installed).
+
+Sources: `GetRequiredVersionExpression` has two callers, dependency resolution and `LoadModuleReference`, and a directory load of the top-level module reaches neither. Native iteration31 cases S6 and S7.
 
 ### deps.lockfile
 

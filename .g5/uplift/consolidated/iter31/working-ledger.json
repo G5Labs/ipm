@@ -1,0 +1,67 @@
+{
+ "recorded_utc": "2026-11-16T17:01:20.253697+00:00",
+ "lane": "iteration31: installed modules constrain dependency/version choice",
+ "owner": ".g5/ontology/features/dependencies.g5.md#deps.installed",
+ "exposure": "Read before predictions: Utils/Module GetRequiredVersionExpression, LoadModuleReference head and refusal, ConstructInvertedDependencyGraph, GetFlatDependencyListFromInvertedDependencyGraph head; Storage/Module ProcessSingleDependencyIterative installed/downgrade/search branch, VersionRequirements query; Main.Install selection (GetAt(1) of version-filtered search); product test BuildDependencyGraph.cls docstrings (API-level conflict, downgrade bound, co-updating exclusion). Predictions are source-informed.",
+ "fixture": "B=i31b 1.5.0/1.7.0/2.0.0; A=i31a requires i31b \">=1.0.0 <2.0.0\"; P=i31p requires i31b \">=1.6.0\"; FS repo r31 depth 1; loose B 2.0.0 directory outside repo.",
+ "predictions": [
+  {
+   "case": "S1 B1.5 installed, no A; install P",
+   "ontology": "B upgraded to highest satisfying P: 2.0.0",
+   "source": "searchExpr >=1.6.0 and >=1.5.0 -> 2.0.0"
+  },
+  {
+   "case": "S2 B1.5, A installed; install P",
+   "ontology": "B must satisfy A too: 1.7.0 (or fail)",
+   "source": "A requirement And-ed into search -> 1.7.0"
+  },
+  {
+   "case": "S3 explicit install B 2.0.0 with A,P installed",
+   "ontology": "refused with does-not-satisfy message; B unchanged 1.7.0",
+   "source": "same (LoadModuleReference)"
+  },
+  {
+   "case": "S4 unversioned install B with A,P installed",
+   "ontology": "unspecified for top-level; deps.installed suggests satisfying version or refusal",
+   "source": "Main.Install takes highest (2.0.0) without installed filter -> refusal although 1.7.0 satisfies"
+  },
+  {
+   "case": "S5 explicit install B 1.7.0",
+   "ontology": "success, B 1.7.0",
+   "source": "success"
+  },
+  {
+   "case": "S6 load loose B 2.0.0 directory with A,P installed",
+   "ontology": "deps.installed scoped to dependency versions; load of a top-level directory not stated",
+   "source": "load path does not call GetRequiredVersionExpression -> B becomes 2.0.0, A requirement violated"
+  },
+  {
+   "case": "S7 uninstall A then install B 2.0.0",
+   "ontology": "success",
+   "source": "success"
+  }
+ ],
+ "results": {
+  "exploratory": "attempts/explore1.log: every case matched its source prediction (not counted).",
+  "formal_receipt": "native/20261116T170410450915Z (final); earlier full pass 20261116T170334434989Z kept, its trivial repo.* flip fields superseded (attempts/run1-trivial-flips).",
+  "observed": {
+   "S1 P without A": "B 2.0.0",
+   "S2 P with A": "B 1.7.0",
+   "S3 install B 2.0.0": "refused, B stays 1.7.0, message lists i31a and i31p",
+   "S4 install B": "refused (2.0.0 chosen), B stays 1.7.0",
+   "S5 install B 1.7.0": "ok",
+   "S6 load B 2.0.0 dir": "ok, B 2.0.0 with A (<2.0.0) installed",
+   "S7 uninstall A, install B 2.0.0": "ok"
+  },
+  "proof": "installed.rs 4 verified, 0 errors; 6 semantic controls rejected; 106 replayed fields; 3 discriminating flips rejected",
+  "implementation_proofs": 0
+ },
+ "integration": {
+  "by": "main thread",
+  "independent_rerun": "run.py --no-native: 4 verified, 6/6 controls rejected, 106 fields replayed from 20261116T170410450915Z",
+  "ontology": "deps.installed bullets + Q deps.installed.unversioned-policy (C:Q25), deps.installed.directory-policy (C:Q26)",
+  "reach": "413/1216 (+2: GetRequiredVersionExpression, VersionRequirements; +4 strengthened: ProcessSingleDependencyIterative, Main.Install, LoadNewModule, LoadModuleReference)",
+  "findings": "no defect filed: S4 and S6 are unsettled policy, recorded as questions",
+  "fork_note": "first fork attempt stopped at a session boundary without files; retry completed (~285k subagent tokens, 400 s)"
+ }
+}
