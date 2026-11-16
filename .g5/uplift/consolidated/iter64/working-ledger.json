@@ -1,0 +1,104 @@
+{
+ "recorded_utc": "2026-11-16T18:38:20.820701+00:00",
+ "batch": 14,
+ "iteration": 64,
+ "prior_seal": "acfe17e3",
+ "workflow": "failed ordinary load (normal mode in a transaction, and developer mode) with side-effecting resources: FileCopy, WebApplication, declared <Mapping>, .LOC messages and export, CPF merge, dev ^Sources -> what survives the failure vs a successful load",
+ "owners": [
+  "features/load.g5.md#load.outcome",
+  "concepts/transactions-and-dev-mode.g5.md#transaction.rollback-scope",
+  "concepts/modules.g5.md#module.webapp.failure",
+  "concepts/modules.g5.md#module.processor.cpf",
+  "concepts/modules.g5.md#module.processor.localized-messages",
+  "features/uninstall.g5.md#uninstall.cleanup"
+ ],
+ "exposure": "Read before predictions (as the parent lane): Lifecycle/Base %Reload mapping loop (mappings set up in Reload), %Initialize, CPF processor timing (default Initialize/Before), LocalizationExport (Activate export), CSPApplication/WebApplication creation timing from earlier lanes, iter63 cleanup results. Load transaction code (Utils/Module LoadNewModule) not reread for this lane.",
+ "failure_points": {
+  "early": "class with an undefined property type -> Compile phase fails",
+  "late": "Invoke Phase=Activate When=After returns an error -> fails after Activate effects"
+ },
+ "predictions_owner": [
+  {
+   "kind": "module record and good class",
+   "early": "absent",
+   "late": "absent",
+   "basis": "load.outcome: normal mode rolls back all module data"
+  },
+  {
+   "kind": "FileCopy file",
+   "early": "absent if copy happens in Activate",
+   "late": "present",
+   "basis": "transaction.rollback-scope: copies are not undone"
+  },
+  {
+   "kind": "WebApplication",
+   "early": "absent",
+   "late": "absent",
+   "basis": "module.webapp.failure: rollback removes the application"
+  },
+  {
+   "kind": "declared Mapping (global, package)",
+   "early": "unspecified",
+   "late": "unspecified",
+   "basis": "no owner statement; mappings are configuration, not module data"
+  },
+  {
+   "kind": ".LOC messages in ^IRIS.Msg",
+   "early": "absent",
+   "late": "absent",
+   "basis": "journaled namespace data, rolled back"
+  },
+  {
+   "kind": ".LOC export file",
+   "early": "absent",
+   "late": "present",
+   "basis": "file effect at Activate not undone"
+  },
+  {
+   "kind": "CPF merge effect",
+   "early": "present",
+   "late": "present",
+   "basis": "rollback-scope: CPF effects not undone; merge runs before Initialize"
+  },
+  {
+   "kind": "history record",
+   "early": "failure, Committed=0",
+   "late": "failure, Committed=0",
+   "basis": "history.committed"
+  },
+  {
+   "kind": "dev-mode ^Sources and record",
+   "early": "kept (developer commit)",
+   "late": "kept",
+   "basis": "load.outcome.dev"
+  }
+ ],
+ "predictions_source": [
+  {
+   "kind": "declared Mapping",
+   "early": "present: created in %Reload before Compile; Config.Map* writes the CPF and is not undone by the database rollback",
+   "late": "present"
+  }
+ ],
+ "outcome": {
+  "status": "complete, not sealed (main thread integrates)",
+  "model": "failkeep.rs 4 verified, 5/5 controls",
+  "native": "20261116T184141777914Z 81 fields; 72 replayed; flips ec.cpf, la.filea, dv.mapg rejected",
+  "findings": "none new",
+  "refuted_predictions": [
+   "source: declared mappings survive a normal-mode rollback (they are rolled back)"
+  ],
+  "re_observed": [
+   "transaction.rollback-scope (FileCopy, CPF survive)",
+   "module.webapp.failure (rollback removes app)",
+   "load.outcome.dev",
+   "C:Q12 (CPF compensation)"
+  ]
+ },
+ "integration": {
+  "by": "main thread",
+  "independent_rerun": "run.py --no-native: 4 verified, 5/5 controls, 72 replayed",
+  "findings": "none",
+  "convergence_role": "cross-cutting sweep (failed-load side effects)"
+ }
+}

@@ -29,6 +29,7 @@ A database rollback undoes journaled writes in its transaction. It does not undo
 
 - A direct missing-source copy fails without a copied target file; the successful-copy neighbor leaves its file after database rollback. Directory creation and partial operating-system errors are separate effects.
 - [CPF observations](modules.g5.md#module.processor.cpf-effects) now include a real role-creation merge and an invalid-section neighbor on a disposable provider. Child exit and applied configuration are separate outputs; other CPF effects remain external premises.
+- A normal-mode rollback also undoes declared `<Mapping>` entries and a web application created during the load. A CPF merge, FileCopy targets and the localization export file written in Activate remain.
 - The broader policy question remains [external effects](#transaction.rollback-scope.policy). These observed outcomes do not ratify compensation policy.
 
 <a id="transaction.opt-out"></a>
@@ -198,6 +199,8 @@ Sources: `wiki/00` L125-126, L145-149 ("the entire load/install is wrapped in a 
 
 Sources: A1 Q-04; `wiki/00` L126; CHANGELOG 0.10.11 (`#1183`, temp folder cleanup). Observed: archive loads delete and replace `<ModuleRoot>/<name>/<version>/` before any version check, and a rollback does not restore it (OBS-L7). Lock files, `LoadedResource` rows in IRISTEMP and the git clone folder also survive a rollback (OBS-L11, OBS-L13, OBS-L15, premises P-2 and P-7). Affects [load outcome](../features/load.g5.md#load.outcome) and [committed side effects](../features/history.g5.md#history.committed.side-effects).
 
+
+Iteration64: [failkeep.rs](../../Verus_verification/consolidated/iter64/failkeep.rs) `normal_compile_failure_keeps_only_cpf`, `late_failure_keeps_external_effects`, `developer_failure_keeps_database_effects` ([handoff](../../uplift/consolidated/iter64/HANDOFF.md)).
 ### transaction.opt-out
 
 - human-provided

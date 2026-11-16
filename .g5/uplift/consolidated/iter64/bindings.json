@@ -1,0 +1,105 @@
+{
+ "verus_dir": ".g5/Verus_verification/consolidated/iter64",
+ "changed_files": [
+  "failkeep.rs",
+  "cases.json",
+  "run.py",
+  "native/**"
+ ],
+ "rows": [
+  {
+   "id": "S64-01",
+   "owner": ".g5/ontology/features/load.g5.md#load.outcome",
+   "model": "failkeep.rs",
+   "symbols": [
+    "phase",
+    "external",
+    "happened",
+    "kept",
+    "hist_committed",
+    "normal_compile_failure_keeps_only_cpf",
+    "late_failure_keeps_external_effects",
+    "success_keeps_all_but_nondev_sources"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/Utils/Module.cls",
+     "LoadNewModule"
+    ],
+    [
+     "src/cls/IPM/Lifecycle/Base.cls",
+     "%Reload"
+    ],
+    [
+     "src/cls/IPM/Utils/Module.cls",
+     "AddGlobalMapping"
+    ],
+    [
+     "src/cls/IPM/Utils/Module.cls",
+     "AddPackageMapping"
+    ]
+   ],
+   "reader": [
+    [
+     "src/cls/IPM/ResourceProcessor/WebApplication.cls",
+     "OnPhase"
+    ]
+   ],
+   "scope": "Normal-mode load in a transaction failing at Compile or after Activate: record, classes, messages, declared mappings and web application roll back; CPF merge, FileCopy targets and the .LOC export file survive. Native ok/ec/la. Config/Security rollback and the compiler are native-qualified premises."
+  },
+  {
+   "id": "S64-02",
+   "owner": ".g5/ontology/concepts/transactions-and-dev-mode.g5.md#transaction.rollback-scope",
+   "model": "failkeep.rs",
+   "symbols": [
+    "external",
+    "kept",
+    "late_failure_keeps_external_effects"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/ResourceProcessor/CPF.cls",
+     "OnBeforePhase"
+    ],
+    [
+     "src/cls/IPM/ResourceProcessor/FileCopy.cls",
+     "OnAfterPhase"
+    ],
+    [
+     "src/cls/IPM/ResourceProcessor/LocalizationExport.cls",
+     "OnBeforePhase"
+    ]
+   ],
+   "reader": [
+    [
+     "src/cls/IPM/ResourceProcessor/FileCopy.cls",
+     "DoCopy"
+    ]
+   ],
+   "scope": "External effects (iris merge, file copies, localization export file) are not undone by the load rollback; database-backed configuration (mappings, web application) is. Native ec/la."
+  },
+  {
+   "id": "S64-03",
+   "owner": ".g5/ontology/features/load.g5.md#load.outcome.dev",
+   "model": "failkeep.rs",
+   "symbols": [
+    "kept",
+    "hist_committed",
+    "developer_failure_keeps_database_effects"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/Utils/Module.cls",
+     "LoadNewModule"
+    ]
+   ],
+   "reader": [
+    [
+     "src/cls/IPM/Lifecycle/Base.cls",
+     "%Reload"
+    ]
+   ],
+   "scope": "Developer-mode load failing at Compile keeps the record, compiled valid class, messages, declared mappings and ^Sources; Activate effects never happen; history reads committed. Native dv."
+  }
+ ]
+}
