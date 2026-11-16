@@ -1,0 +1,20 @@
+verification results:: 4 verified, 2 errors
+error: postcondition not satisfied
+  --> /home/ziniu_wu_g5labs_ai/experiments/iris-ipm-continuous-20261116/ipm/.g5/uplift/consolidated/iter50/proofs/controls/defmods.rs/set-replaces-all.rs:49:13
+   |
+47 |   pub proof fn set_appends_and_overwrites(s: Store, d: Store, k: int)
+   |   ------------------------------------------------------------------- at the end of the function body
+48 |       requires s.len() == 4, d.len() == 4, 0 <= k < 4
+49 |       ensures default_modifiers(s, Cmd { set: true, get: false, delete: false, unknown_modifier: false, data: d }).stored[k]
+   |  _____________^
+50 | |               == (if d[k].is_some() { d[k] } else { s[k] })
+   | |___________________________________________________________^ failed this postcondition
+
+error: assertion failed
+  --> /home/ziniu_wu_g5labs_ai/experiments/iris-ipm-continuous-20261116/ipm/.g5/uplift/consolidated/iter50/proofs/controls/defmods.rs/set-replaces-all.rs:93:12
+   |
+93 |     assert(s2() =~= seq![None, Some(1int), Some(5int), None]);
+   |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ assertion failed
+
+error: aborting due to 2 previous errors
+

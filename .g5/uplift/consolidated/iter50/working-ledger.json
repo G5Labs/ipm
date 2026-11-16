@@ -1,0 +1,129 @@
+{
+ "recorded_utc": "2026-11-16T18:00:08.943935+00:00",
+ "batch": 9,
+ "iteration": 50,
+ "prior_seal": "cf77ce95",
+ "workflow": "default-modifiers -set/-get/-delete -> stored namespace defaults -> merged into later commands (data -D and flag modifiers) -> consumer outcome",
+ "unbound_members": [
+  "Main.cls::ProcessDefaultModifiers (only citation links)",
+  "Main.cls::AccumulateDefaultModifierList",
+  "Main.cls::WarnOnDeprecatedModifiersOrParameters"
+ ],
+ "owner": ".g5/ontology/concepts/settings.g5.md#settings.default-modifiers; existing G:D18 (history filters) reused, not duplicated",
+ "exposure": "No ProcessDefaultModifiers/AccumulateDefaultModifierList body read. Seen earlier: help text of default-modifiers (set appends, never deletes; get; delete), Main.cls ModuleAction body.",
+ "predictions": [
+  {
+   "case": "-set -DA=1 then -set -DB=2; -get",
+   "reader": "printed list",
+   "owner": "both stored (append)"
+  },
+  {
+   "case": "-set -DA=1 then -set -DA=2",
+   "reader": "printed list / effective value",
+   "owner": "unspecified; latest likely wins or both kept"
+  },
+  {
+   "case": "stored -DMode=stored; load with -DMode=cmd; installer/Invoke observes Mode",
+   "reader": "value seen by module code",
+   "owner": "cmd (command line wins)"
+  },
+  {
+   "case": "stored -DMode=stored; load without -D",
+   "reader": "value seen",
+   "owner": "stored"
+  },
+  {
+   "case": "stored flag -verbose (or -v); load",
+   "reader": "verbose output present",
+   "owner": "verbose output"
+  },
+  {
+   "case": "-delete then load",
+   "reader": "value seen",
+   "owner": "default (no stored value)"
+  },
+  {
+   "case": "-set without modifiers / two of set,get,delete",
+   "reader": "status",
+   "owner": "refused (exactly one required)"
+  }
+ ],
+ "exposure_after_source": "Read Main.cls ProcessDefaultModifiers, AccumulateDefaultModifierList, WarnOnDeprecatedModifiersOrParameters, Get/Set/DeleteNamespaceDefaultModifiers, the Shell dispatcher merge (defaults merged into data before the parsed command), Reinstall and Repository data merges, and Common.inc ZPMDefaultModifiers = ^%IPM.DefaultModifiers (shared global; already registered as G:D19 alias of P:F-REPO-5, reused, not re-tested).",
+ "source_predictions": [
+  {
+   "case": "g0 -get with none",
+   "predicted": "prints \"No default modifiers currently set\", ok"
+  },
+  {
+   "case": "e1 no modifier / e2 -set -get",
+   "predicted": "refused, exactly-one error"
+  },
+  {
+   "case": "s0 -set with no -D",
+   "predicted": "ok, \"Successfully updated\", nothing stored"
+  },
+  {
+   "case": "s1 -set -DMode=stored; s2 -set -DOther.Sub=x",
+   "predicted": "-get lists -DMode=stored and -DOther.Sub=x (append, nested key rendered dotted)"
+  },
+  {
+   "case": "s3 -set -DMode=second",
+   "predicted": "Mode overwritten: -get lists -DMode=second only"
+  },
+  {
+   "case": "l1 load m50 (manifest <Parameter Name=\"Mode\">manifest</Parameter>, Invoke records ${Mode})",
+   "predicted": "second: stored namespace default beats manifest default (command data merged over module defaults in ExecutePhases)"
+  },
+  {
+   "case": "l2 reload with -DMode=cmd",
+   "predicted": "cmd; stored value unchanged"
+  },
+  {
+   "case": "v1 stored -DVerbose=1, load",
+   "predicted": "verbose output (Loading file lines); v2 with -quiet: not verbose (command line wins)"
+  },
+  {
+   "case": "d1 -delete, load",
+   "predicted": "manifest; -get says none"
+  }
+ ],
+ "explore1": {
+  "log": "attempts/explore1.log",
+  "miss": "Invoke Arg ${Mode} was recorded literally in every case: a <Defaults><Parameter> name is not expanded in Invoke arguments, and -D/namespace defaults for it are not either. Fixture switched to <Default Name=\"Mode\" Value=\"manifest\"/> (iteration36 observed that form expands). Not claimed as a finding in this lane; noted for the parameter owner.",
+  "other": "-get/-set/-delete and exactly-one refusal matched predictions; stored -DVerbose=1 made load verbose and -quiet overrode it."
+ },
+ "explore3": "All cases matched source predictions: stored namespace default beats manifest <Default>, command-line -D beats stored, -delete restores manifest; stored -DVerbose=1 makes load verbose and -quiet overrides it; -set of an existing key overwrites it.",
+ "source_predictions_round2": [
+  {
+   "case": "f1 default-modifiers -set -verbose (flag, not -D)",
+   "predicted": "refused by the parser (default-modifiers declares only set/get/delete modifiers plus D data prefix); nothing stored"
+  }
+ ],
+ "outcome": {
+  "status": "executed, not sealed (main thread integrates)",
+  "model": "defmods.rs 6 verified, 5/5 controls",
+  "native": "20261116T180355420390Z 66 fields; 50 replayed; flips l2.mode, l1.mode, f1.ok rejected",
+  "findings": "no new defect; owner wording \"flags\" imprecise (only -D data storable); <Parameter> defaults not expanded in Invoke args noted for the parameter owner",
+  "reach_candidates": {
+   "new": [
+    "Main.cls::ProcessDefaultModifiers",
+    "Main.cls::AccumulateDefaultModifierList"
+   ],
+   "strengthened": [
+    "Main.cls::GetNamespaceDefaultModifiers",
+    "Main.cls::SetNamespaceDefaultModifiers",
+    "Main.cls::DeleteNamespaceDefaultModifiers",
+    "Main.cls::ShellInternal",
+    "Storage/Module.cls::ExecutePhases"
+   ]
+  }
+ },
+ "integration": {
+  "by": "main thread",
+  "independent_rerun": "run.py --no-native: 6 verified, 5/5 controls, 50 replayed",
+  "ontology": "as-built bullets added; human-provided \"flags\" sentence preserved rather than reworded",
+  "findings": "none",
+  "unconfirmed_candidate": "explore1 observed a <Defaults><Parameter> name not expanded as ${name} in an Invoke argument (a <Default> name was); not traced or gated; left for a later module.parameter lane, not registered",
+  "fork_cost": "~767k subagent tokens, 313 s"
+ }
+}

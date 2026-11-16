@@ -1,0 +1,79 @@
+{
+ "verus_dir": ".g5/Verus_verification/consolidated/iter50",
+ "changed_files": [
+  "defmods.rs",
+  "cases.json",
+  "run.py",
+  "native/Reader.cls",
+  "native/m50/**"
+ ],
+ "rows": [
+  {
+   "id": "S50-01",
+   "owner": ".g5/ontology/concepts/settings.g5.md#settings.default-modifiers",
+   "model": "defmods.rs",
+   "symbols": [
+    "default_modifiers",
+    "merged",
+    "set_appends_and_overwrites",
+    "exactly_one_and_known",
+    "delete_restores_manifest",
+    "none_listed",
+    "listed",
+    "schedule"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/Main.cls",
+     "ProcessDefaultModifiers"
+    ],
+    [
+     "src/cls/IPM/Main.cls",
+     "SetNamespaceDefaultModifiers"
+    ],
+    [
+     "src/cls/IPM/Main.cls",
+     "DeleteNamespaceDefaultModifiers"
+    ]
+   ],
+   "reader": [
+    [
+     "src/cls/IPM/Main.cls",
+     "AccumulateDefaultModifierList"
+    ],
+    [
+     "src/cls/IPM/Main.cls",
+     "GetNamespaceDefaultModifiers"
+    ]
+   ],
+   "scope": "Exactly one of -set/-get/-delete; -set merges the command data (append, same key overwritten); -delete clears all; -get renders every stored node as -D<dotted name>=<value>; non-D modifiers such as -verbose refused by the parser. Native g0, e1, e2, s0-s3, f1, d0. Cross-namespace sharing of the global is owned by P:F-REPO-5 and not re-modelled."
+  },
+  {
+   "id": "S50-02",
+   "owner": ".g5/ontology/concepts/settings.g5.md#settings.default-modifiers",
+   "model": "defmods.rs",
+   "symbols": [
+    "merged",
+    "effective",
+    "command_line_wins",
+    "stored_beats_manifest",
+    "verbose_load",
+    "mode_code",
+    "schedule"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/Main.cls",
+     "ShellInternal"
+    ]
+   ],
+   "reader": [
+    [
+     "src/cls/IPM/Storage/Module.cls",
+     "ExecutePhases"
+    ]
+   ],
+   "scope": "Dispatcher merges stored defaults into command data before the parsed command; module <Default> values sit under command data. Stored value beats the manifest <Default>, command-line -D or -quiet beats stored, -delete restores the manifest value. Native l1, l2, v1, v2, d1. Invoke expression expansion (only <Default> names expand) is a provider fact here, not modelled."
+  }
+ ]
+}

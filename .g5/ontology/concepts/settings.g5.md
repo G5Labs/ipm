@@ -50,6 +50,9 @@ The TestReportFormat setter accepts empty, JSON, YAML and TOON without regard to
 - `-get` shows them, and `-delete` removes them all.
 - Exactly one of these three is required.
 - A flag given on the command line wins over a stored one.
+- As built, only `-D<name>=<value>` data values can be stored. A modifier such as `-verbose` is refused, while a stored `-DVerbose=1` acts like it and `-quiet` on the command line still overrides it.
+- `-set` of a name already stored replaces its value, and `-set` without any `-D` value stores nothing. A stored value overrides a module's own `<Default>` for that name until `-delete` removes it.
+- `-get` lists each stored value as `-D<name>=<value>`, with nested names joined by dots.
 
 <a id="settings.install-flags"></a>
 [I · settings.install-flags]
@@ -113,6 +116,8 @@ Sources: `Main.cls:617-637`; `wiki/02` L143-166; maintainer comment `Main.cls:10
 
 Findings: [P:F-REPO-5 — e2e reproduced](../../../playbook-uplift/BUGS.md#p-f-repo-5). The linked entry qualifies the caller, reader and providers.
 
+
+Iteration50: [defmods.rs](../../Verus_verification/consolidated/iter50/defmods.rs) `default_modifiers`, `effective`, `command_line_wins`, `stored_beats_manifest`, `set_appends_and_overwrites` ([handoff](../../uplift/consolidated/iter50/HANDOFF.md)).
 ### settings.install-flags
 
 - human-provided
