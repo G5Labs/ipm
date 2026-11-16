@@ -38,6 +38,7 @@ The diagram shows the order at the pinned revision. The blocks below say which p
 
 `load <path>` loads a module into the current namespace. IPM also loads the module's dependencies, if it can find them in the repositories set up with `repo`.
 
+
 <a id="load.path"></a>
 [I · load.path]
 
@@ -47,10 +48,12 @@ The path can be one of:
 - A `.tgz` or `.tar.gz` archive that contains `module.xml`.
 - A git repository URL. `-branch` picks the branch.
 
+
 <a id="load.path.archive"></a>
 [I · load.path.archive]
 
 IPM unpacks an archive into `<ModuleRoot>/<name>/<version>/`, as `install` does, and loads the module from there. A folder load stays where it is. IPM removes its temporary unpacking folder whether the load succeeds or fails.
+
 
 <a id="load.core"></a>
 [I · load.core]
@@ -62,12 +65,13 @@ IPM unpacks an archive into `<ModuleRoot>/<name>/<version>/`, as `install` does,
 - `update` also runs ApplyUpdateSteps.
 - Rules that apply only to `install` are owned on the [install page](install.g5.md) and the [overwrite guard](../concepts/transactions-and-dev-mode.g5.md#dev-mode.overwrite-guard).
 
+
 <a id="load.options"></a>
 [I · load.options]
 
 Other `load` options:
 
-- `-dev` and `-nodev` turn [developer mode](../concepts/transactions-and-dev-mode.g5.md#dev-mode) on or off. Without either, see [plain load keeps mode](../concepts/transactions-and-dev-mode.g5.md#dev-mode.sticky).
+- `-dev` and `-nodev` turn [developer mode](../concepts/transactions-and-dev-mode.g5.md#dev-mode) on or off. Without either, see [plain load keeps mode](../../Verus_verification/open_questions.md#dev-mode.sticky).
 - `-force` allows a newer version without running its update steps ([update required](#load.refusal.update-required)).
 - `-env` names `;`-separated JSON files of settings the module can read ([environment files](../concepts/modules.g5.md#module.env)).
 - `-quiet` and `-verbose` set how much output appears.
@@ -77,7 +81,11 @@ Other `load` options:
 - `-D<name>=<value>` passes a parameter to the module and its phases, including the [transaction flags](../concepts/transactions-and-dev-mode.g5.md#transaction.opt-out).
 - `-synchronous` is deprecated and ignored.
 
+- Working assumption: yes, it keeps the stored mode.
+
+
 ## Refusals
+
 
 <a id="load.refusal"></a>
 [I · load.refusal]
@@ -85,20 +93,25 @@ Other `load` options:
 IPM refuses a load with an error when the request is not allowed. A refusal happens before IPM writes any module data, so in every mode the installed module's data stays as it was and the record reads uncommitted.
 
 - This covers the refusals below and the [developer-mode overwrite guard](../concepts/transactions-and-dev-mode.g5.md#dev-mode.overwrite-guard).
-- When the requirements check runs is open ([timing](#load.refusal.requirements.timing)).
+- When the requirements check runs is open ([timing](../../Verus_verification/open_questions.md#load.refusal.requirements.timing)).
 - Files written before the checks, such as an unpacked archive, follow the [rollback scope](../concepts/transactions-and-dev-mode.g5.md#transaction.rollback-scope).
 - A [dependency conflict](dependencies.g5.md#deps.conflict) is found while dependencies load, so [what a failed load keeps](#load.outcome) applies to it.
 - Every refused attempt still gets a [history record](history.g5.md#history.actions).
+
+- Working assumption: yes. The manifest docs say requirements are checked "before module installation", and a module that fails them was never installable.
+
 
 <a id="load.refusal.path"></a>
 [I · load.refusal.path]
 
 `load` accepts only absolute paths and git URLs. It refuses an empty path, and a path that does not exist fails with an error instead of reporting success.
 
+
 <a id="load.refusal.manifest"></a>
 [I · load.refusal.manifest]
 
 IPM refuses a module whose manifest is missing or invalid, for example malformed XML, no `<Module>` element or more than one document. It rejects such a manifest before it touches any resource.
+
 
 <a id="load.refusal.downgrade"></a>
 [I · load.refusal.downgrade]
@@ -107,34 +120,22 @@ IPM never replaces an installed module with an older version. It refuses with "C
 
 - As built, the check uses [version order](../concepts/versions.g5.md#version.order), which does not order prereleases of two different versions. So `1.0.0-rc` replaces an installed `2.0.0-beta` without a refusal. This is a known defect.
 
+
 <a id="load.refusal.update-required"></a>
 [I · load.refusal.update-required]
 
 IPM refuses to load or install a newer version of an installed module when the new manifest declares `<UpdatePackage>`, and points the user to `update`. `-force` allows it, and the new version's update steps are then not run.
 
-<a id="load.refusal.update-required.dev-bypass"></a>
-[Q · load.refusal.update-required.dev-bypass]
+- Working assumption: yes. A maintainer test expects a newer version to install with `-dev`, and the original request asked IPM to point users to `-dev` or `-force`.
 
-Should `-dev` also lift the update-required refusal?
-
-- Provisional answer: yes. A maintainer test expects a newer version to install with `-dev`, and the original request asked IPM to point users to `-dev` or `-force`.
-- Reason for doubt: the README and the `-force` help name only `-force`.
-- Alternative: only `-force` lifts it, as the README says.
-- Related: a `-dev` install from a [read-only repository](../concepts/repositories.g5.md#repo.read-only) is checked before developer mode is turned off for it.
 
 <a id="load.refusal.requirements"></a>
 [I · load.refusal.requirements]
 
 IPM refuses a module whose [system requirements](../concepts/modules.g5.md#module.requirement) are not met. For example, a module that must be installed in `%SYS` fails to load in any other namespace and loads in `%SYS`.
 
-<a id="load.refusal.requirements.timing"></a>
-[Q · load.refusal.requirements.timing]
+- Working assumption: yes. The manifest docs say requirements are checked "before module installation", and a module that fails them was never installable.
 
-Must IPM check system requirements before it writes anything, even in developer mode or without a transaction?
-
-- Provisional answer: yes. The manifest docs say requirements are checked "before module installation", and a module that fails them was never installable.
-- Reason: keeping changes for debugging is meant for failures of a module that could be installed.
-- Alternative: accept that a refused developer-mode or `-DNoTransaction=1` load keeps its saved manifest, since developer mode keeps what it did.
 
 <a id="load.same-version"></a>
 [D · load.same-version]
@@ -144,6 +145,7 @@ Loading or installing the version that is already installed succeeds without `-f
 - A different qualified filesystem supplier can change the loaded files at the same version; [current and historical source readers](../concepts/repositories.g5.md#repo.origin.same-version) distinguish those actions.
 
 ## What a failed load keeps
+
 
 <a id="load.outcome"></a>
 [I · load.outcome]
@@ -158,7 +160,7 @@ What a failed load keeps depends on how it ran.
 
 - A [refusal](#load.refusal) keeps no module data in any mode. The requirements check is the open exception.
 - A process that dies mid-load ends like a failure at that point. The open transaction is rolled back, so the table applies, and with `-DNoTransaction=1` or `-DNoJournal=1` nothing is rolled back and the namespace may be left inconsistent.
-- Whether a dependency's own `<Defaults>` transaction flags change this is open: `NoJournal` ([dependency defaults](../concepts/transactions-and-dev-mode.g5.md#transaction.flag-sources.dependency-defaults)) and `NoTransaction` ([dependency NoTransaction](../concepts/transactions-and-dev-mode.g5.md#transaction.flag-sources.dependency-no-transaction)).
+- Whether a dependency's own `<Defaults>` transaction flags change this is open: `NoJournal` ([dependency defaults](../../Verus_verification/open_questions.md#transaction.flag-sources.dependency-defaults)) and `NoTransaction` ([dependency NoTransaction](../../Verus_verification/open_questions.md#transaction.flag-sources.dependency-no-transaction)).
 - Files and other changes outside the database follow the [rollback scope](../concepts/transactions-and-dev-mode.g5.md#transaction.rollback-scope).
 - The [history record](history.g5.md#history.committed) shows whether anything was kept. After a dying process, see [record](history.g5.md#history.record).
 
@@ -167,6 +169,10 @@ What a failed load keeps depends on how it ran.
 - Child `NoTransaction` skips its own `TSTART` and leaves an existing parent transaction open. Child `NoJournal` can make its writes survive parent rollback. Their intended policy stays in the linked child questions.
 - Class descriptors and usable code are separate outcomes. After two-resource compile failure, ordinary rollback removes both classes.
 - Without transactions, or after the developer commit, both descriptors may remain while only the first class runs. This relies on the observed IRIS compiler behavior, not on a proof of the compiler.
+
+- Working assumption: yes. A module's `<Defaults>` apply whenever that module is installed, including as a dependency. A `NoJournal` dependency therefore keeps its changes when the parent rolls back, and its history record must survive and say so.
+- Working assumption: yes. A module that declares `NoTransaction` must not run inside a transaction opened for its parent, so the package change runs without one, and a failure may leave a partial install.
+
 
 <a id="load.outcome.dev"></a>
 [I · load.outcome.dev]
@@ -178,12 +184,14 @@ In developer mode, a load commits in steps so the developer can debug a failure.
 - The module's own phases, Initialize through Activate, run outside a transaction. Whatever they did before a failure stays.
 - These commits happen only when transactions are on.
 
+
 <a id="load.outcome.dev.early-failure"></a>
 [I · load.outcome.dev.early-failure]
 
 A developer-mode load that fails or is refused before its first commit is rolled back in full, like a normal-mode load. For example, loading an older version with `-dev` is refused and leaves the installed version in place.
 
 ## Dependencies
+
 
 <a id="load.dependencies"></a>
 [I · load.dependencies]
@@ -195,6 +203,7 @@ IPM loads a module's dependencies before running the module's own phases.
 - Each dependency load gets its own [history record](history.g5.md#history.dependencies).
 - [Resolution and conflicts](dependencies.g5.md#deps) and [which parameters pass down](../concepts/transactions-and-dev-mode.g5.md#dev-mode.not-propagated) are owned elsewhere.
 
+
 <a id="load.dependencies.local-repo"></a>
 [I · load.dependencies.local-repo]
 
@@ -203,19 +212,13 @@ A `.modules` folder in the module root serves as a temporary repository for that
 - IPM creates none when the folder is missing or another repository already uses that folder. That other repository stays.
 - The temporary repository takes the first unused name `ipm-temp-modules-N`.
 - A dependency's own `.modules` folder gets the same treatment while that dependency loads.
-- Which copy of a dependency wins is owned by [search order](../concepts/repositories.g5.md#repo.search-order). Whether the `.modules` copy should win a tie is [open](#load.dependencies.local-repo.precedence).
+- Which copy of a dependency wins is owned by [search order](../concepts/repositories.g5.md#repo.search-order). Whether the `.modules` copy should win a tie is [open](../../Verus_verification/open_questions.md#load.dependencies.local-repo.precedence).
 
 - Cache creation failure can leave no row but retain its allocated id in the manager. Cleanup may warn about that missing row (C:D2). At the top-level cleanup call the module can already be committed; at a dependency call the parent rolls back, retaining its first manifest commit only in developer mode.
 - A higher candidate version wins before repository order. Equal versions choose the older repository id in the native observations; temporary sort position does not force local priority (C:Q1).
 
-<a id="load.dependencies.local-repo.precedence"></a>
-[Q · load.dependencies.local-repo.precedence]
+- Working assumption: the copy in the older repository, as built. The changelog says ties go to the repository created first.
 
-When another repository offers the same version of a dependency as the `.modules` folder, which copy should IPM install?
-
-- Provisional answer: the copy in the older repository, as built. The changelog says ties go to the repository created first.
-- Alternative: the `.modules` copy, because the code that creates the temporary repository says it should be found first and gives it the first sort position.
-- Either way, a higher version wins, wherever it is.
 
 <a id="load.status"></a>
 [I · load.status]
@@ -226,6 +229,7 @@ A load's result tells the caller whether the load took effect. Success means the
 
 - As built, an error can also follow the final commit. The caller must read the stored module and committed history result separately from status ([late errors](#load.status.after-commit)); a successful message and a brace-free macro are distinct valid neighbors.
 
+
 <a id="load.status.after-commit"></a>
 [I · load.status.after-commit]
 
@@ -235,15 +239,18 @@ Some work runs after the final commit, so it cannot undo the load. A failure the
 - As built, a failure in this work returns an error although the module stays installed and its history record reads committed. This is a known defect.
 - Inside a parent's load, the same failure in a dependency fails the dependency. The parent then rolls back as [a failed load](#load.outcome): fully in normal mode, and back to its first commit in developer mode.
 
+
 <a id="load.after-install-message"></a>
 [I · load.after-install-message]
 
 After a module loads, IPM prints the module's after-install message with its [expressions](../concepts/modules.g5.md#module.parameter.expressions) filled in. A message without a `{` is printed as written.
 
+
 <a id="load.write-check"></a>
 [I · load.write-check]
 
 Before installing files, `install` and `load` check that IPM can write to the target folder.
+
 
 
 <a id="load.reload.root"></a>
@@ -270,7 +277,9 @@ Source locators follow the conventions on the [root page](../root.g5.md#how-to-r
 
 Sources: `Main.cls:268-276` (summary and description); `wiki/02` L564-568; vendor manual AIPM. Inventory: CAT-12, INT-LOAD-01; OP-LOAD-01, OP-LOAD-02. Tests: `History.cls` `TestSimpleHistory`; `LoadModuleWithDeps.cls` `TestLoadModuleWithDependencies`. Native evidence: valid completions conform in cases A0, B0, C0 and g1 (`182759Z-cases-a`, `182820Z-cases-b`, `182903Z-cases-c-terminate`, `182832Z-cases-dg`). Suites pass: History 13 of 13 (`175623Z-smoke-history-suite-oras`) and LoadModuleWithDeps 2 of 2 (`182313Z-suite-verify-LoadModuleWithDeps`).
 
-Findings: [P:F-LOAD-4 — e2e reproduced](../../../playbook-uplift/BUGS.md#p-f-load-4). The linked entry qualifies the caller, reader and providers.
+Findings: [P:F-LOAD-4 — e2e reproduced](../../Verus_verification/bugs_issues.md#p-f-load-4). The linked entry qualifies the caller, reader and providers.
+
+State machines: [Load outcome contracts](../../Verus_verification/models/load-outcomes/manifest.json)
 
 ### load.path
 
@@ -300,21 +309,27 @@ Sources: `Main.cls:273` and `:407` (load and install descriptions); `wiki/00` L4
 
 ### load.options
 
+- uncertain
 - human-provided
 - user-facing-behavior
 - Expands: [Load](#load).
 
 Sources: `Main.cls:304-315`; CHANGELOG `#704`, `#1260`, `#595`, `#647`, `#961`, `#1290`, `#885`. Inventory: INT-LOAD-15, INT-LOAD-14; OP-LOAD-02. `wiki/02` L589-590 still describes `-synchronous` as active. Native evidence: `-nodev` (g9) sets normal mode, and a plain load (g8) keeps the stored developer mode (`182832Z-cases-dg`). `-create-lockfile`, `-env` and the pip options were not run.
 
+Open questions: [When a module is already in developer mode, does a plain `load` with neither `-dev` nor `-nodev` keep developer mode?](../../Verus_verification/open_questions.md#dev-mode.sticky)
+
 ### load.refusal
 
+- uncertain
 - human-verified
 - user-facing-behavior
 - test-coverage
 - Expands: [Load](#load).
 - Children: [path](#load.refusal.path), [manifest](#load.refusal.manifest), [downgrade](#load.refusal.downgrade), [update required](#load.refusal.update-required), [requirements](#load.refusal.requirements).
 
-Sources: downgrade message `Utils/Module.cls:1214-1217`; `wiki/03` L260-261 ("validated before module installation"); CHANGELOG 0.10.11 (`#1237`). Inventory: INT-LOAD-02, -09, -10, -11. Tests: `History.cls` `TestDevModeRollbackNotCommitted`, `TestDevMode`. The tests check status and history only, not the installed module afterwards. The requirements refusal is the open exception ([timing](#load.refusal.requirements.timing)). Reconstruction check R6 and R7: the no-write rule now covers every refusal and the overwrite guard, and is limited to module data. Sources for the timing: PR #1322 body (committed marking "before writing when there is no transaction" follows the version checks); `wiki/09` L133. Confirmed product defects against this rule. D11: manifest refusals under `-DNoTransaction=1` or `-DNoJournal=1` keep module data ([manifest](#load.refusal.manifest)). D12: a no-transaction refusal after the marker reads `Committed=1` with nothing kept (model case B1-C08, `20261113T193952Z-replay-return-b`). D16: `update -path` with another module's archive crashes before the mismatch check ([update refusal](update.g5.md#update.refusal)). D17: an existing relative path is accepted ([path](#load.refusal.path)). Native evidence: version refusals keep no module data in any mode (g3, g6, g7; `182832Z-cases-dg`). The requirements exception is confirmed as B2 D4 ([timing](#load.refusal.requirements.timing)). Refused loads record no package name (D9, [fields](history.g5.md#history.fields)).
+Sources: downgrade message `Utils/Module.cls:1214-1217`; `wiki/03` L260-261 ("validated before module installation"); CHANGELOG 0.10.11 (`#1237`). Inventory: INT-LOAD-02, -09, -10, -11. Tests: `History.cls` `TestDevModeRollbackNotCommitted`, `TestDevMode`. The tests check status and history only, not the installed module afterwards. The requirements refusal is the open exception ([Must IPM check system requirements before it writes anything, even in developer mode or without a transaction?](../../Verus_verification/open_questions.md#load.refusal.requirements.timing)). Reconstruction check R6 and R7: the no-write rule now covers every refusal and the overwrite guard, and is limited to module data. Sources for the timing: PR #1322 body (committed marking "before writing when there is no transaction" follows the version checks); `wiki/09` L133. Confirmed product defects against this rule. D11: manifest refusals under `-DNoTransaction=1` or `-DNoJournal=1` keep module data ([manifest](#load.refusal.manifest)). D12: a no-transaction refusal after the marker reads `Committed=1` with nothing kept (model case B1-C08, `20261113T193952Z-replay-return-b`). D16: `update -path` with another module's archive crashes before the mismatch check ([update refusal](update.g5.md#update.refusal)). D17: an existing relative path is accepted ([path](#load.refusal.path)). Native evidence: version refusals keep no module data in any mode (g3, g6, g7; `182832Z-cases-dg`). The requirements exception is confirmed as B2 D4 ([Must IPM check system requirements before it writes anything, even in developer mode or without a transaction?](../../Verus_verification/open_questions.md#load.refusal.requirements.timing)). Refused loads record no package name (D9, [fields](history.g5.md#history.fields)).
+
+Open questions: [Must IPM check system requirements before it writes anything, even in developer mode or without a transaction?](../../Verus_verification/open_questions.md#load.refusal.requirements.timing)
 
 ### load.refusal.path
 
@@ -344,53 +359,37 @@ Sources: message `Utils/Module.cls:1214-1217`; `-force` help `Main.cls:313`, `:4
 
 Extension Verus: [semver.rs::load_refused](../../Verus_verification/consolidated/verus/semver.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
 
-Findings: [C:D15 — e2e reproduced](../../uplift/consolidated/BUGS.md#c-d15). The linked entry qualifies the caller, reader and providers.
+Findings: [C:D15 — e2e reproduced](../../Verus_verification/bugs_issues.md#c-d15). The linked entry qualifies the caller, reader and providers.
 
 ### load.refusal.update-required
 
+- uncertain
 - human-provided
 - user-facing-behavior
 - test-coverage
 - Expands: [Refusals](#load.refusal).
-- Children: [developer-mode bypass](#load.refusal.update-required.dev-bypass).
+- Children: [Should `-dev` also lift the update-required refusal?](../../Verus_verification/open_questions.md#load.refusal.update-required.dev-bypass).
 
 Sources: README L62; `-force` help `Main.cls:313`, `:441`; message `Utils/Module.cls:1218-1222`; CHANGELOG 0.10.4 (`#550`); `wiki/08` L3; PR #887 review r2388507362 by isc-tleavitt. Inventory: INT-LOAD-10; OP-LOAD-06. Test: `InstallModule.cls` `TestInstallForceFlag`. Observed: a forced normal-mode install records every update step as already done, so they never run (`Lifecycle/Module.cls:122-127`). Native evidence: g3 refused and kept 1.2.1, and g4 (`-force`) loaded 2.1.1 (`182832Z-cases-dg`).
 
-### load.refusal.update-required.dev-bypass
-
-- agent
-- uncertain
-- user-facing-behavior
-- Expands: [Update required](#load.refusal.update-required).
-
-Sources: A1 Q-02; test `InstallModule.cls` `TestDevMode` ("succeeds in dev mode and fails otherwise"); issue #903 by isc-eneil; README L62. Observed: the check skips `-dev` (`Utils/Module.cls:1219`), and a `-dev` install leaves the update steps pending for a later `update`. A read-only repository forces normal mode only after this check (`Utils/Module.cls:1277-1288`). Native evidence: g5 (`load -dev` of 3.x over 2.1.1) loads, consistent with the provisional answer (`182832Z-cases-dg`).
-
-Findings audit: [sources, alternatives, implications and settlement gate](../../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#load.refusal.update-required.dev-bypass). The recorded assumption is provisional; no new maintainer approval was found.
+Open questions: [Should `-dev` also lift the update-required refusal?](../../Verus_verification/open_questions.md#load.refusal.update-required.dev-bypass)
 
 ### load.refusal.requirements
 
+- uncertain
 - human-provided
 - user-facing-behavior
 - test-coverage
 - Expands: [Refusals](#load.refusal).
-- Children: [timing](#load.refusal.requirements.timing).
+- Children: [Must IPM check system requirements before it writes anything, even in developer mode or without a transaction?](../../Verus_verification/open_questions.md#load.refusal.requirements.timing).
 
 Sources: `wiki/03` L260-269; CHANGELOG 0.10.10 (`#106`), 0.10.0 (`#469`), 0.9.0 (`#364`), 0.10.4 (`#874`). Inventory: INT-LOAD-11, CAT-05; OP-LOAD-12. Test: `SystemRequirements.cls` `TestSYSNamespaceRequirement` (status and message only). Native evidence: B1 (normal mode) refused with "requires the %SYS namespace" and kept nothing. Suite SystemRequirements passes (`182820Z-cases-b`, `182248Z-suite-verify-SystemRequirements`).
 
-### load.refusal.requirements.timing
-
-- agent
-- uncertain
-- user-facing-behavior
-- Expands: [Requirements](#load.refusal.requirements).
-
-Sources: A1 Q-17; `wiki/03` L260-261; issue #363 comment by isc-tleavitt. Confirmed as B2 D4, pending this question: refused `-dev`, `-DNoTransaction=1` and `-DNoJournal=1` loads keep the module record, with no classes, and read `Committed=1`. `list-installed` shows the module (cases B2, B3, B4; `182820Z-cases-b`, `184230Z-replay-fast`, `184630Z-repro-sysreq-dev-manifest-left`). B0 and B1 conform. Observed cause: the check runs after the manifest is saved and after the developer-mode first commit (`Utils/Module.cls:1251-1321`, OBS-L10).
-
-Findings audit: [sources, alternatives, implications and settlement gate](../../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#load.refusal.requirements.timing). The recorded assumption is provisional; no new maintainer approval was found.
-
-Findings: [G:D4 — e2e reproduced](../../Verus_verification/bugs_issues.md#g-d4). The linked entry qualifies the caller, reader and providers.
+Open questions: [Must IPM check system requirements before it writes anything, even in developer mode or without a transaction?](../../Verus_verification/open_questions.md#load.refusal.requirements.timing)
 
 ### load.same-version
+
+- design-verified
 
 - human-provided
 - architecture-decision
@@ -398,17 +397,24 @@ Findings: [G:D4 — e2e reproduced](../../Verus_verification/bugs_issues.md#g-d4
 
 Sources: PR #887 review r2388507362 by isc-tleavitt, 2025-09-29 ("someone's automation ... does an 'install' of the same version every time and makes sure that it succeeds"); r2392741268 by isc-jili ("removed check for newVer==currVer"). Inventory: INT-LOAD-18; OP-LOAD-06. This supersedes issue #903 and the CHANGELOG 0.10.4 `#903` entry, which said a same-version install should fail. No product-authored test covers a same-version install. Earlier native g2 reloads 1.2.1 successfully (`182832Z-cases-dg`); [iteration18](../../uplift/consolidated/iter18/HANDOFF.md) now checks actual qualified repository installs at1.0.0 across two suppliers without uninstall, plus missing-qualifier refusal. [Verus](../../Verus_verification/consolidated/iter18/reloading.rs) retains the declared successful-provider domain and bounds the new version relation to the checked plain release.
 
+State machines: [reloading · iter18](../../Verus_verification/models/iter18-reloading/manifest.json)
+
 ### load.outcome
 
+- uncertain
 - human-provided
 - user-facing-behavior
 - test-coverage
 - Expands: [Load](#load).
 - Children: [developer-mode commits](#load.outcome.dev).
 
-Sources: `wiki/00` L125-126, L145-155; CHANGELOG 0.10.11 (`#1237`). Inventory: INT-LOAD-08, A1 2.2 and 2.3; commit-point matrix in A2 2.3; OP-LOAD-05, -07, -11, -14, -15, -16. Tests: `History.cls` `TestFailingPhases` (normal mode), `TestNoTransactionFailure`. The tests check status and history only. Observed: a load nested inside a caller's transaction cannot make its own commits final (P-4, OBS-H16, see [nested commits](history.g5.md#history.committed.nested)). Reconstruction check R5 added the dying-process rule from `wiki/00` L147 ("a failure mid-way through is fully rolled back") and L155 (with `NoJournal`, "if the process crashes mid-install, changes cannot be rolled back and the namespace may be left in an inconsistent state"). That IRIS rolls back a dead process's open transaction is premise P-6. Observed: the `.modules` temporary repository and unpacked files stay after a killed load. Native evidence: A1 (normal mode, parent fails after its dependency loaded) leaves the modules and classes absent. C1 and C3 (terminated or killed in Activate) are rolled back. B3 and B4 keep partial writes (`182759Z-cases-a`, `182903Z-cases-c-terminate`, `182927Z-cases-c-sigkill`, `182820Z-cases-b`). Premise P-6 is confirmed and refined (round 1 R1-ONT-14, N-P12, N-P18). After a SIGKILL, IRIS rolls back only when it cleans up the dead process's slot, which took 105 s, 226 s and about 10 minutes in three runs, and other processes can read the uncommitted writes until then (`181724Z-premise-p18-sigkill-r3`, `182927Z-cases-c-sigkill`, `183827Z-cases-c4r`). Compiled classes of a rolled-back normal-mode load were absent afterwards (A1, C1). Round 2 R2-03 and round 3 R3-03: whether a dependency's own `<Defaults>` `NoJournal` escapes the normal-mode rollback is Q-22, and whether its `NoTransaction` suppresses the parent's transaction is Q-23 ([dependency defaults](../concepts/transactions-and-dev-mode.g5.md#transaction.flag-sources.dependency-defaults)). Stage C M5 kept a `NoJournal` dependency installed after the parent's rollback (D14, `20261113T204405Z-stagec2`). D13 reports failure after a committed load ([local repository](#load.dependencies.local-repo)).
+Sources: `wiki/00` L125-126, L145-155; CHANGELOG 0.10.11 (`#1237`). Inventory: INT-LOAD-08, A1 2.2 and 2.3; commit-point matrix in A2 2.3; OP-LOAD-05, -07, -11, -14, -15, -16. Tests: `History.cls` `TestFailingPhases` (normal mode), `TestNoTransactionFailure`. The tests check status and history only. Observed: a load nested inside a caller's transaction cannot make its own commits final (P-4, OBS-H16, see [When a caller wraps an IPM command in its own transaction, must the record survive the caller's rollback, and what should `Committed` say?](../../Verus_verification/open_questions.md#history.committed.nested)). Reconstruction check R5 added the dying-process rule from `wiki/00` L147 ("a failure mid-way through is fully rolled back") and L155 (with `NoJournal`, "if the process crashes mid-install, changes cannot be rolled back and the namespace may be left in an inconsistent state"). That IRIS rolls back a dead process's open transaction is premise P-6. Observed: the `.modules` temporary repository and unpacked files stay after a killed load. Native evidence: A1 (normal mode, parent fails after its dependency loaded) leaves the modules and classes absent. C1 and C3 (terminated or killed in Activate) are rolled back. B3 and B4 keep partial writes (`182759Z-cases-a`, `182903Z-cases-c-terminate`, `182927Z-cases-c-sigkill`, `182820Z-cases-b`). Premise P-6 is confirmed and refined (round 1 R1-ONT-14, N-P12, N-P18). After a SIGKILL, IRIS rolls back only when it cleans up the dead process's slot, which took 105 s, 226 s and about 10 minutes in three runs, and other processes can read the uncommitted writes until then (`181724Z-premise-p18-sigkill-r3`, `182927Z-cases-c-sigkill`, `183827Z-cases-c4r`). Compiled classes of a rolled-back normal-mode load were absent afterwards (A1, C1). Round 2 R2-03 and round 3 R3-03: whether a dependency's own `<Defaults>` `NoJournal` escapes the normal-mode rollback is Q-22, and whether its `NoTransaction` suppresses the parent's transaction is Q-23 ([Does a dependency's own `<Defaults>` `NoJournal` apply inside its parent's transaction, so that the dependency's changes escape the parent's normal-mode rollback?](../../Verus_verification/open_questions.md#transaction.flag-sources.dependency-defaults)). Stage C M5 kept a `NoJournal` dependency installed after the parent's rollback (D14, `20261113T204405Z-stagec2`). D13 reports failure after a committed load ([local repository](#load.dependencies.local-repo)).
 
 Extension Verus: [partial_compile.rs::compile](../../Verus_verification/consolidated/verus/partial_compile.rs), [temp_repo.rs::postcommit_cleanup](../../Verus_verification/consolidated/verus/temp_repo.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
+
+Open questions: [Does a dependency's own `<Defaults>` `NoJournal` apply inside its parent's transaction, so that the dependency's changes escape the parent's normal-mode rollback?](../../Verus_verification/open_questions.md#transaction.flag-sources.dependency-defaults), [Should a dependency's own `<Defaults>` `NoTransaction` suppress its parent's transaction?](../../Verus_verification/open_questions.md#transaction.flag-sources.dependency-no-transaction)
+
+State machines: [failkeep · iter64](../../Verus_verification/models/iter64-failkeep/manifest.json)
 
 ### load.outcome.dev
 
@@ -419,6 +425,8 @@ Extension Verus: [partial_compile.rs::compile](../../Verus_verification/consolid
 - Children: [early failure](#load.outcome.dev.early-failure).
 
 Sources: `wiki/00` L126; `wiki/09` L86; maintainer comments `Utils/Module.cls:1310`, `:1316-1317`, `:1336-1337` ("commit load of dependencies (if all went well) and don't wrap reload/compile ... in a transaction; we want to be able to debug!"). Inventory: INT-LOAD-06; OP-LOAD-11, OP-LOAD-14. Test: `History.cls` `TestDevModeFailureAfterCommit`. Observed: a developer-mode dependency commits inside its parent's transaction, so its own commits are not final (P-4). Native evidence: A2 (dependency fails) keeps the parent manifest and drops the dependency. A5 (parent fails after the dependency transaction) keeps the manifest, classes and dependency. C2 and C4R keep the module after termination (`182759Z-cases-a`, `182903Z-cases-c-terminate`, `183827Z-cases-c4r`).
+
+State machines: [failkeep · iter64](../../Verus_verification/models/iter64-failkeep/manifest.json)
 
 ### load.outcome.dev.early-failure
 
@@ -443,28 +451,20 @@ Extension Verus: [loadtx.rs::survived](../../Verus_verification/consolidated/ver
 
 ### load.dependencies.local-repo
 
+- uncertain
 - human-provided
 - user-facing-behavior
 - Expands: [Dependencies](#load.dependencies).
 
-- Children: [precedence](#load.dependencies.local-repo.precedence).
+- Children: [When another repository offers the same version of a dependency as the `.modules` folder, which copy should IPM install?](../../Verus_verification/open_questions.md#load.dependencies.local-repo.precedence).
 
 Consolidated round 1 (native run `20261114T025102Z-r1-temp-repo`, model `Verus_verification/consolidated/models/temp_repo.py`): TR1 no folder, no repository; TR2 removed after use; TR3 a leftover `ipm-temp-modules-1` makes the new one `-2` and the leftover stays; TR4 an existing repository at the same root is used and kept; TR7 a failed creation leaves no row but prints "Failed to clean up repository" for it (C:D2). The earlier text said the folder is searched first; TR5 shows an equal version in an older repository wins, so that clause moved to the precedence question. Issue I2's "resolve dependencies from that folder first" holds only for versions no older repository offers. Sources: PR #726 body by isc-shuliu; CHANGELOG 0.10.0 (`#726`, `#729`); comment `Main.cls:2523-2524`. Inventory: INT-LOAD-14; OP-LOAD-04. Confirmed product defect D13 (model case B1-C29, `20261113T193952Z-replay-return-b`): a load that committed reports `<INVALID OREF>` when the temporary repository could not be created. Earlier code reading: if the `.modules` folder cannot be cached, the temporary repository is never created and the final cleanup fails after the load has committed (OBS-L12). Issue I2: a load ended by Terminate or SIGKILL leaves its temporary repository registered at first priority, so later installs resolve dependencies from that folder first (six leftovers after the B2 replays, `20261113T210229Z-temp-repos-leftover`). No source covers a process end.
 
 Extension Verus: [temp_repo.rs::cleanup](../../Verus_verification/consolidated/verus/temp_repo.rs), [temp_repo.rs::on_new](../../Verus_verification/consolidated/verus/temp_repo.rs), [temp_repo.rs::skip_create](../../Verus_verification/consolidated/verus/temp_repo.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
 
-Findings: [C:D2 — e2e reproduced](../../uplift/consolidated/BUGS.md#c-d2). The linked entry qualifies the caller, reader and providers.
+Findings: [C:D2 — e2e reproduced](../../Verus_verification/bugs_issues.md#c-d2). The linked entry qualifies the caller, reader and providers.
 
-### load.dependencies.local-repo.precedence
-
-- human-verified
-- uncertain
-- user-facing-behavior
-- Expands: [Local repository](#load.dependencies.local-repo).
-
-Sources: CHANGELOG 0.9.x "Repo check should happen in the order to repo creation, not by repo name" (HSIEO-9269, HSIEO-9404); comment `General/TempLocalRepoManager.cls:27` and commit `2dc933dd` (temporary repository "first/last repo to be found"); `Repo/Manager.cls:150` (ties keyed by repository ID). Consolidated round 1 case TR5: an older filesystem repository and `.modules` both offer `tr5-dep` 1.0.0, and the older repository's copy is installed. TR5b and TR5c: the higher version wins from either side. The temporary repository's sort position never changed a result in these runs (surviving control `create-sort-last`). Native run `20261114T025102Z-r1-temp-repo`; model `Verus_verification/consolidated/models/temp_repo.py`. Question C:Q1 in [consolidated QUESTIONS](../../uplift/consolidated/QUESTIONS.md).
-
-Findings audit: [sources, alternatives, implications and settlement gate](../../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#load.dependencies.local-repo.precedence). The recorded assumption is provisional; no new maintainer approval was found.
+Open questions: [When another repository offers the same version of a dependency as the `.modules` folder, which copy should IPM install?](../../Verus_verification/open_questions.md#load.dependencies.local-repo.precedence)
 
 ### load.status
 
@@ -502,7 +502,11 @@ Sources: CHANGELOG 0.10.7 (`#1053`); issue #1053. Inventory: INT-LOAD-16; OP-LOA
 
 ### load.reload.root
 
+- design-verified
+
 - agent; user-facing-behavior; source-inspected; Verus-scoped
 - Expands: [load.core](#load.core).
 
 Sources and readers: `Lifecycle/Base.cls::%Reload` → `LoadEnvironmentConfig`, `$system.OBJ.Load` and `Storage/Module.cls::ExecutePhases`. [Iteration 7 index](../../uplift/consolidated/iter7/INDEX.md). [Contract](../../Verus_verification/consolidated/iter7/inputs.rs): `reload`. These are specification proofs; native observations and remaining provider boundaries are in the index and trust inventory.
+
+State machines: [moderefresh · iter65](../../Verus_verification/models/iter65-moderefresh/manifest.json), [inputs · iter7](../../Verus_verification/models/iter7-inputs/manifest.json)

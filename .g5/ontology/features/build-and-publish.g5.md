@@ -14,6 +14,7 @@ Module authors test, package and ship modules with lifecycle phase commands. Eac
 
 IPM gives module authors commands to test, package, verify, publish and deploy a loaded module.
 
+
 <a id="build.test"></a>
 [I · build.test]
 
@@ -21,6 +22,7 @@ IPM gives module authors commands to test, package, verify, publish and deploy a
 
 - A module's test classes are loaded at load time only in developer mode. The test phase loads every class under the test resource's directory, then compiles and runs the resource's package.
 - As built, the test phase never deletes the test classes it loaded, even for a module not in developer mode. They stay in the namespace, including verify-only packages that did not run, until the module is uninstalled (defect C:D48).
+
 
 <a id="build.test.selection"></a>
 [D · build.test.selection]
@@ -33,6 +35,7 @@ A test resource must declare exactly one of Class and Package. The requested pha
 - Package selection compares raw prefixes in either direction, so package `A` can be selected by `AB`. Changed-class ownership is stricter: it accepts `A` or `A.` followed by a class name, and rejects `AB`.
 - These are two different readers. Selecting a test resource does not establish that sync assigns a changed class to it, and converting a file path does not itself establish class ownership.
 
+
 <a id="build.test.outcome"></a>
 [D · build.test.outcome]
 
@@ -43,10 +46,12 @@ A test command fails when any test it ran failed. Each case error, each method e
 - The red `FAILED` lines appear only when no summary format is active. They list the same rows that are counted.
 - A CI job learns the result only from the [command status and exit code](#build.test.outcome.exit).
 
+
 <a id="build.test.outcome.not-fatal"></a>
 [D · build.test.outcome.not-fatal]
 
 `-DUnitTest.FailuresAreFatal=0` makes a run with failing tests succeed. The summary still says "Some tests FAILED", but no failure is counted, no `FAILED` lines are printed and the process exit code stays 0.
+
 
 <a id="build.test.outcome.empty"></a>
 [D · build.test.outcome.empty]
@@ -54,16 +59,10 @@ A test command fails when any test it ran failed. Each case error, each method e
 A Package test resource whose package has no test classes prints a warning and is skipped. The command can still succeed, so a CI job can pass with no tests run, for example after a package rename.
 
 - A Suite selector that names a folder that does not exist is different. The command fails with "Directory name ... is invalid" before any test runs.
-- Whether an empty test package should fail the run is an [open question](#build.test.outcome.empty.policy).
+- Whether an empty test package should fail the run is an [open question](../../Verus_verification/open_questions.md#build.test.outcome.empty.policy).
 
-<a id="build.test.outcome.empty.policy"></a>
-[Q · build.test.outcome.empty.policy]
-
-Should a declared test package with no test classes fail `test` and `verify`?
-
-- Evidence: the source comment calls it "not an error in itself" and skips it on purpose. No changelog entry, test or maintainer discussion states what CI users should see.
 - Working assumption: keep the warning and the passing status. The alternative is to fail, or to fail only when a run executes no tests at all. Either alternative changes current green builds whose test package is intentionally empty.
-- Register: C:Q13.
+
 
 <a id="build.test.outcome.exit"></a>
 [D · build.test.outcome.exit]
@@ -71,6 +70,7 @@ Should a declared test package with no test classes fail `test` and `verify`?
 A CI job sees a test failure only through the command status. `%IPM.Main:Shell(command, 1)` ends the process with exit code 1 when the command fails. `zpm "<command>"` and `Shell(command)` without the second argument end with exit code 0 even when tests fail.
 
 - `zpm "<command>",1` does not work as a CI form: it exits 0 after a failure. The `$zpm()` function form raises an error instead of returning the status. Both are owned by [shell entry forms](../root.g5.md#ipm.shell.forms).
+
 
 <a id="build.test.outcome.nested"></a>
 [D · build.test.outcome.nested]
@@ -80,6 +80,7 @@ Test results gather in a per-process list. Each test resource counts only the re
 - A test command run inside a test method, such as `verify` inside `verify`, counts and removes only its own results. The outer run's earlier results stay in the list. The outer test learns about the inner failure from the inner command's status, not from the list.
 - A reader that started from an empty list removes the whole list. When failures are not fatal, or when the report step fails first, nothing is removed. A later test command in the same process starts after those leftover entries and ignores them.
 - `FAILED` lines are printed only for results after the start, and empty entries are skipped.
+
 
 <a id="build.test-output"></a>
 [I · build.test-output]
@@ -97,6 +98,7 @@ Test results gather in a per-process list. Each test resource counts only the re
 - All formats print the same method and assertion counts, and JSON keeps assertion and error text exactly. As built, YAML and TOON files drop carriage returns from that text, and YAML descriptions read back with a trailing newline and without the first line's leading spaces (defect C:D53).
 - TOON writes one row per assertion. A method with an error and no assertions gets an error row and a status row.
 
+
 <a id="build.test-output.run-identity"></a>
 [D · build.test-output.run-identity]
 
@@ -104,7 +106,8 @@ The device summary and exported report are intended to describe the selected tes
 
 - The device summary uses the last tracked completed run, falling back to the latest stored run only when tracking has no ID. File export omits that ID and uses the numerically latest stored run instead.
 - A passing or failing run alone has the same ID in both readers. In the checked nested sequence, the failing outer run is allocated before a passing child. The child completes first; the outer finishes last and supplies the tracked device ID. The device reports the outer failures and the command fails, but the outer report file contains the passing child's class and results.
-- This is [C:D31](../../uplift/consolidated/BUGS.md), not an accepted change to the reporting intent. Supplying the outer ID explicitly to the export API writes the outer results in the checked comparison. The product call site remains unchanged. Other formats and general nested lifecycle/provider failures are not newly qualified here.
+- This is [C:D31](../../Verus_verification/bugs_issues.md), not an accepted change to the reporting intent. Supplying the outer ID explicitly to the export API writes the outer results in the checked comparison. The product call site remains unchanged. Other formats and general nested lifecycle/provider failures are not newly qualified here.
+
 
 <a id="build.test-output.counted-rows"></a>
 [D · build.test-output.counted-rows]
@@ -113,6 +116,7 @@ The summary's assertion count includes every numeric result entry under a method
 
 - The checked IRIS build appends a passing `LogMessage` duration entry. A method with two passing assertion calls therefore reports three passing assertions. One passing and two failing calls report four entries, two failed.
 - These counts describe stored result entries, not a guarantee that every entry came from an assertion call. Assertion execution, ID allocation and duration logging remain provider boundaries qualified by the pinned native observations.
+
 
 <a id="build.package"></a>
 [I · build.package]
@@ -123,6 +127,7 @@ The summary's assertion count includes every numeric result entry under a method
 - `-export-deps` controls whether dependencies are included, and `-export-python-deps` adds Python dependencies.
 - Test-scoped resources are left out unless their phase is requested or test inclusion adds it. `-include-tests` enables inclusion; an explicit `-DIncludeTests=0` overrides a true `<IncludeTests>` value.
 
+
 <a id="build.package.deployed-status"></a>
 [D · build.package.deployed-status]
 
@@ -132,10 +137,12 @@ As built, the document exporter overwrites the deployed-item helper's returned e
 - The later Studio project check is an independent reader. It removes missing items and may return success with fewer items, so it is not proof that a discarded item or helper error will be caught. Source files, final project contents and command status must be assessed separately.
 - The proposed repair is to preserve the helper status. It has not been applied to the product. An error after a provider's partial write may leave that write; no compensation is inferred.
 
+
 <a id="build.verify"></a>
 [I · build.verify]
 
 `verify <module>` packages the module, installs the package in the VERIFY namespace with journaling off, and runs its integration tests there. With `-only`, the VERIFY namespace loads the module from its folder on disk instead.
+
 
 <a id="build.publish"></a>
 [I · build.publish]
@@ -146,10 +153,12 @@ As built, the document exporter overwrites the deployed-item helper's returned e
 - `unpublish [<repo>/]<module> <version|all>` deletes a published package. It asks first unless `-force` is given, and the registry must still allow it.
 - `unpublish` fails when the module or version does not exist or the registry refuses.
 
+
 <a id="build.makedeployed"></a>
 [I · build.makedeployed]
 
 `makedeployed <module>` turns eligible resources selected by the [deployment rules](../concepts/modules.g5.md#module.deployed) into compiled-only code. A class deployment parameter can override `Deploy="true"`. `-recurse` also considers the module's dependencies.
+
 
 <a id="build.publish.partial-effects"></a>
 [D · build.publish.partial-effects]
@@ -160,6 +169,7 @@ A failed publish or unpublish does not establish that the registry is unchanged.
 - Remote publishing and deletion require credentials and exactly HTTP 200 for success, while ORAS permission probing currently reports enabled before attempting the operation. An HTTP error or other returned error may follow external effects.
 - These source-backed contracts use explicit provider results. Actual multi-tag failure, cleanup errors and postpublication local export have not been exercised end to end in this iteration.
 
+
 <a id="build.test-output.counts"></a>
 [D · build.test-output.counts]
 
@@ -168,10 +178,12 @@ As built, a failed test method counts as failed even if every assertion passed. 
 - A blank error category hides the aggregate error message; it does not change a failed status to passed. JSON files contain the full result tree; device JSON always has a summary and selects method details or failures from its detail and verbose settings.
 - `verify` creates its NoJournal load parameter when it creates a fresh VERIFY namespace. Reuse and SkipLoad take other setup paths; the plan does not establish namespace cleanup after errors or all serialized formats.
 
+
 <a id="build.archive.empty-file"></a>
 [D · build.archive.empty-file]
 
 Extracting a named regular archive entry creates a file even when its size is zero. The next entry is still read; an empty filename in the header, rather than a zero payload size, ends the archive.
+
 
 <a id="build.copy.overlap"></a>
 [D · build.copy.overlap]
@@ -180,12 +192,14 @@ Directory copying refuses a target that is the source, contains it or lies insid
 
 The Python check also detects aliases through device and inode ancestry. If Python or file IDs are unavailable, the fallback compares normalized directory paths, so alias detection is not guaranteed there.
 
+
 <a id="build.publish.external-identity"></a>
 [D · build.publish.external-identity]
 
 Publishing with `-use-external-name` changes the registry key to the module's external name. It does not rename the module inside the archived manifest.
 
 Installing by that registry key therefore installs the original internal module name. The default publish mode uses the internal name for the key as well. Empty or invalid chosen publish names are refused before publication.
+
 
 <a id="build.package.test-path"></a>
 [D · build.package.test-path]
@@ -195,21 +209,16 @@ A UnitTest resource's Phase also sets its returned child scope. Export requires 
 - Test inclusion adds Test and Verify to the export phases. An explicit IncludeTests parameter, including zero, overrides the manifest for that addition; it does not remove a phase already requested.
 - Direct child enumeration does not return the test directory itself. Export adds that directory after the scope checks. The checked archives omit it by default, include it by flag or manifest, and omit it again with the explicit zero override.
 
+
 <a id="build.package.include-refresh"></a>
 [D · build.package.include-refresh]
 
 Reloading an existing module with IncludeTests omitted keeps its stored value. An explicit false clears it; a command-only zero override disables test inclusion for that command and leaves the stored value unchanged.
 
 - A later package command with no override therefore includes tests again when the stored value is still true. A fresh module with the field omitted starts false.
-- Whether omission should reset this field is an [open policy question](#build.package.include-refresh.policy).
-
-<a id="build.package.include-refresh.policy"></a>
-[Q · build.package.include-refresh.policy]
-
-Should a reloaded manifest that omits IncludeTests keep the previous value or reset it to false?
+- Whether omission should reset this field is an [open policy question](../../Verus_verification/open_questions.md#build.package.include-refresh.policy).
 
 - Working assumption: preserve the checked behavior and use an explicit false to clear it. Resetting on omission would make a removed declaration disable test packaging, but would change existing reload behavior.
-- Evidence: the XML reader reuses the existing module object, does not reset this scalar field and writes the result back. Native package/extract observations distinguish retention from an explicit false. No owner decision found. Register: C:Q20.
 
 ## Metadata
 
@@ -240,8 +249,13 @@ Sources: `Main.cls:48`; `wiki/00` L36; CHANGELOG 0.10.11 (`#1023`, `#1005`). Inv
 
 Iteration40 test-code lifetime: [unittests.rs](../../Verus_verification/consolidated/iter40/unittests.rs) `test_leaves_test_code`, `non_dev_load_has_no_tests`, `uninstall_clears` ([handoff](../../uplift/consolidated/iter40/HANDOFF.md)).
 
-Findings: [The test phase keeps test classes loaded in a module that is not in developer mode](../../uplift/consolidated/BUGS.md#c-d48)
+Findings: [The test phase keeps test classes loaded in a module that is not in developer mode](../../Verus_verification/bugs_issues.md#c-d48)
+
+State machines: [unittests · iter40](../../Verus_verification/models/iter40-unittests/manifest.json)
+
 ### build.test.selection
+
+- design-verified
 
 - agent
 - Expands: [Testing](#build.test).
@@ -250,7 +264,11 @@ Sources: `ResourceProcessor/Test.cls::{TestsShouldRun,%OnValidateObject,OwnsClas
 
 Iteration 4 phase-domain repair: the phase admission producer is `Test.cls` property `Phase As ListOfOptions(VALUELIST=",test,verify")`. Verus [repairs4.rs](../../Verus_verification/consolidated/iter4/repairs4.rs) `{admitted,phase_enabled,lemma_admitted_agree,phase_neighbors}` proves that iteration 3's folded reading equals the as-built reading on admitted declarations and differs on a stored `TEST`. Native P-stored-test (valid, runs for a `TEST` request) and P-stored-TEST (invalid, does not run) on a real installed Test processor. Controls `stored-phase-folded` and `request-not-lowercased` are rejected.
 
+State machines: [repairs4 · iter4](../../Verus_verification/models/iter4-repairs4/manifest.json)
+
 ### build.test.outcome
+
+- design-verified
 
 - agent
 - user-facing-behavior
@@ -258,6 +276,8 @@ Iteration 4 phase-domain repair: the phase admission producer is `Test.cls` prop
 - Children: [not fatal](#build.test.outcome.not-fatal), [empty package](#build.test.outcome.empty), [exit code](#build.test.outcome.exit), [nested runs](#build.test.outcome.nested).
 
 Direct decision: `ResourceProcessor/Test.cls::{OnPhase,ReportTestResults}`, `Test/Manager.cls::GetAllTestsStatus`. Readers and callers: `Lifecycle/Base.cls::%Test` (accumulates every resource with `$$$ADDSC`), `Storage/Module.cls::ExecutePhases`, `Test/Manager.cls::OutputFailures`, `Test/Abstract.cls::BuildResultTree`. Verus [test_outcome.rs](../../Verus_verification/consolidated/iter4/test_outcome.rs) `{failures,resource_ok,all_ok,lifecycle_invoked,sync_invoked,report_written,outcome_neighbors}`. Native T1 (4 failures, later resources still run), T5 (`.csv` after passing tests), T6 (`.json` written, still failing), replayed as Verus assertions. Contrast with `sync -test` is source-only for the throw (`General/Sync/Pipeline.cls::SyncRunTests`). Discovery in iteration 4; this also answers the public panel's two-processor aggregation question.
+
+State machines: [test outcome · iter4](../../Verus_verification/models/iter4-test-outcome/manifest.json)
 
 ### build.test.outcome.not-fatal
 
@@ -269,22 +289,15 @@ Direct decision: `ResourceProcessor/Test.cls::ReportTestResults` (`FailuresAreFa
 
 ### build.test.outcome.empty
 
+- uncertain
 - agent
 - user-facing-behavior
 - Expands: [Test outcome](#build.test.outcome).
-- Children: [policy](#build.test.outcome.empty.policy).
+- Children: [Should a declared test package with no test classes fail `test` and `verify`?](../../Verus_verification/open_questions.md#build.test.outcome.empty.policy).
 
 Direct decision: `ResourceProcessor/Test.cls::OnPhase` (no-class warning and skip; Suite folder load before it). Native T1 (warning, run continues) and T4 (`ERROR #5007` for a named missing suite folder). Verus `load_fails`, `resource_ok`; controls `empty-package-fails` and `missing-suite-dir-skipped` rejected. A Suite folder that exists but holds no classes is source-only.
 
-### build.test.outcome.empty.policy
-
-- agent
-- uncertain
-- Expands: [Empty test package](#build.test.outcome.empty).
-
-No authorized policy decision. Register entry C:Q13 in [QUESTIONS.md](../../uplift/consolidated/QUESTIONS.md).
-
-Findings audit: [sources, alternatives, implications and settlement gate](../../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#build.test.outcome.empty.policy). The recorded assumption is provisional; no new maintainer approval was found.
+Open questions: [Should a declared test package with no test classes fail `test` and `verify`?](../../Verus_verification/open_questions.md#build.test.outcome.empty.policy)
 
 ### build.test.outcome.exit
 
@@ -317,8 +330,13 @@ Extension Verus: [thin_surfaces.rs::report_result](../../Verus_verification/cons
 
 Iteration47 formats: [formats.rs](../../Verus_verification/consolidated/iter47/formats.rs) `fixture_rendering`, `summaries_agree`, `error_method_two_toon_rows` ([handoff](../../uplift/consolidated/iter47/HANDOFF.md)).
 
-Findings: [YAML and TOON test reports change assertion message text](../../uplift/consolidated/BUGS.md#c-d53)
+Findings: [YAML and TOON test reports change assertion message text](../../Verus_verification/bugs_issues.md#c-d53)
+
+State machines: [formats · iter47](../../Verus_verification/models/iter47-formats/manifest.json)
+
 ### build.test-output.run-identity
+
+- design-verified
 
 - agent
 - user-facing-behavior
@@ -326,17 +344,23 @@ Findings: [YAML and TOON test reports change assertion message text](../../uplif
 
 Verus [report_identity.rs](../../Verus_verification/consolidated/iter17/report_identity.rs) models persistent run identity, completion tracking, the two reader choices and explicit-ID export. [Iteration17](../../uplift/consolidated/iter17/HANDOFF.md) records ordinary Shell producers, actual raw rows, file/device JSON and the valid alone neighbors. The earlier seeded accumulator model is retained; it did not establish this actual allocation schedule. No direct implementation-body proof or general provider guarantee is claimed.
 
-Findings: [C:D31 — e2e reproduced](../../uplift/consolidated/BUGS.md#c-d31). The linked entry qualifies the caller, reader and providers.
+Findings: [C:D31 — e2e reproduced](../../Verus_verification/bugs_issues.md#c-d31). The linked entry qualifies the caller, reader and providers.
 
-Findings: [C:S21 — scoped repair comparison](../../uplift/consolidated/DESIGN-SIMPLIFICATIONS.md#c-s21).
+Findings: [C:S21 — scoped repair comparison](../../Verus_verification/design_simplification.md#c-s21).
+
+State machines: [report identity · iter17](../../Verus_verification/models/iter17-report-identity/manifest.json)
 
 ### build.test-output.counted-rows
+
+- design-verified
 
 - agent
 - user-facing-behavior
 - Expands: [Test output](#build.test-output).
 
 Verus [report_identity.rs](../../Verus_verification/consolidated/iter17/report_identity.rs) represents raw row decoding and derived summary/failure counts. The pre-native two/three count prediction was refuted by the provider's duration row; the original fixture and raw log remain in [iteration17](../../uplift/consolidated/iter17/HANDOFF.md). Timing text and serialization/persistence internals are explicit boundaries.
+
+State machines: [report identity · iter17](../../Verus_verification/models/iter17-report-identity/manifest.json)
 
 ### build.package
 
@@ -352,11 +376,11 @@ Sources: `Main.cls:135-144`; `wiki/02` L803-838; `wiki/03` L720-727; CHANGELOG 0
 - agent
 - Expands: [Packaging](#build.package).
 
-Sources: `ResourceProcessor/Default/Document.cls::{OnExportItem,OnExportDeployedItem}`; `Storage/Module.cls::AddItemToProject`; `Lifecycle/Base.cls::{ExportSingleModule,%Export}`; native `%Studio.Project.Check` documentation and observations. Verus `resources.rs::{export_item,final_export,check_project,overwritten_error_and_final_reader,project_check_prunes_missing}`. The final checker status remains an explicit provider result; only its missing-item pruning is modeled. [C:D19](../../uplift/consolidated/BUGS.md) and [repair proposal C:S13](../../uplift/consolidated/DESIGN-SIMPLIFICATIONS.md) retain that limit.
+Sources: `ResourceProcessor/Default/Document.cls::{OnExportItem,OnExportDeployedItem}`; `Storage/Module.cls::AddItemToProject`; `Lifecycle/Base.cls::{ExportSingleModule,%Export}`; native `%Studio.Project.Check` documentation and observations. Verus `resources.rs::{export_item,final_export,check_project,overwritten_error_and_final_reader,project_check_prunes_missing}`. The final checker status remains an explicit provider result; only its missing-item pruning is modeled. [C:D19](../../Verus_verification/bugs_issues.md) and [repair proposal C:S13](../../Verus_verification/design_simplification.md) retain that limit.
 
-Findings: [C:D19 — partial reproduced](../../uplift/consolidated/BUGS.md#c-d19). The linked entry qualifies the caller, reader and providers.
+Findings: [C:D19 — partial reproduced](../../Verus_verification/bugs_issues.md#c-d19). The linked entry qualifies the caller, reader and providers.
 
-Findings: [C:S13 — scoped repair comparison](../../uplift/consolidated/DESIGN-SIMPLIFICATIONS.md#c-s13).
+Findings: [C:S13 — scoped repair comparison](../../Verus_verification/design_simplification.md#c-s13).
 
 ### build.verify
 
@@ -385,13 +409,19 @@ Sources: `Main.cls:189-195`; `wiki/05`; CHANGELOG 0.10.4 (`#815`). Inventory: CA
 
 ### build.publish.partial-effects
 
+- design-verified
+
 - agent
 - user-facing-behavior
 - Expands: [Publishing](#build.publish).
 
 Sources: `Repo/Oras/PublishService.cls::PushOras`, `::DeleteTags`, `::PublishModule`; `Repo/Remote/PublishService.cls`; `Lifecycle/Base.cls::%Publish`. [Actual state and scoped assertions](../../Verus_verification/consolidated/iter2/registry.rs); [source review and withheld mappings](../../uplift/consolidated/iter2/inventory/new-binding-review.json). Remote effects are provider inputs, not implementation proofs. Simplification proposal: expose which external stages completed; no compensation design has been accepted.
 
+State machines: [registry · iter2](../../Verus_verification/models/iter2-registry/manifest.json)
+
 ### build.test-output.counts
+
+- design-verified
 
 - agent
 - user-facing-behavior
@@ -399,49 +429,63 @@ Sources: `Repo/Oras/PublishService.cls::PushOras`, `::DeleteTags`, `::PublishMod
 
 Sources: `Test/Abstract.cls::BuildResultTree`, `::GetSummary`; `Test/JsonOutput.cls`; `Lifecycle/Base.cls::%Verify`. [Verus state and reader projections](../../Verus_verification/consolidated/iter2/readers.rs); [actual seeded native readers](../../uplift/consolidated/iter2/native/receipt.json). Full serialization, namespace lifecycle and all format branches remain open.
 
+State machines: [readers · iter2](../../Verus_verification/models/iter2-readers/manifest.json)
+
 ### build.archive.empty-file
+
+- design-verified
 
 - agent; user-facing-behavior; source-inspected; native-tested; Verus-scoped
 - Expands: [Packaging](#build.package).
 
 Sources: `Utils/FileBinaryTar.cls::{ExtractStream,ExtractTo}` → `General/Archive.cls::Extract`. Native S6-06 packages the product zero-byte-file fixture, extracts it and checks the empty and following populated files. [Contract](../../Verus_verification/consolidated/iter6/workflows.rs): `end_header`, `creates_file`, `next_header`; validated header parsing and file-provider success are premises. Compression, checksums and extended headers are outside this proof.
 
+State machines: [workflows · iter6](../../Verus_verification/models/iter6-workflows/manifest.json)
+
 ### build.copy.overlap
+
+- design-verified
 
 - agent; user-facing-behavior; source-inspected; native-tested; Verus-scoped
 - Expands: [Packaging](#build.package).
 
 Sources: `Utils/File.cls::{DirectoriesOverlap,DirectoriesOverlapPython,CopyDir}` → FileCopy/CSP copying callers. Native S6-03 checks refusal leaves source nested files intact, and sibling copy contains the nested file. [Contract](../../Verus_verification/consolidated/iter6/workflows.rs): `below`, `overlap`, `copy_ok`. Path normalization, device/inode ancestry and provider copy status are explicit premises; inode ancestry itself is not proved. [Index](../../uplift/consolidated/iter6/INDEX.md).
 
+State machines: [workflows · iter6](../../Verus_verification/models/iter6-workflows/manifest.json)
+
 ### build.publish.external-identity
+
+- design-verified
 
 - agent; user-facing-behavior; native-tested; source-inspected; Verus-scoped
 - Expands: [build.publish](#build.publish).
 
 Sources and readers: `Lifecycle/Base.cls::%Publish` selects `Remote.ModuleInfo.Name` but exports `Module.XMLExportToStream` unchanged → `Repo/Oras/PublishService.cls::PublishModule` → `Utils/Module.cls::LoadModuleReference` and `Storage/Module.cls::NameExists` reader. [Iteration 8 index](../../uplift/consolidated/iter8/INDEX.md). [Contract](../../Verus_verification/consolidated/iter8/webapps.rs): `published_key`, `archive_manifest_name`. The [trust inventory](../../Verus_verification/consolidated/iter8/TRUST.md) names provider and input boundaries; direct ObjectScript implementation proofs: 0.
 
+State machines: [webapps · iter8](../../Verus_verification/models/iter8-webapps/manifest.json)
+
 ### build.package.test-path
+
+- design-verified
 
 - agent; user-facing-behavior; source-inspected; native-tested; Verus-scoped
 - Expands: [Packaging](#build.package).
 
 [Formal contract](../../Verus_verification/consolidated/iter10/scope.rs) derives the phase scope, selection, path entry and selected bytes at the archive boundary. [Producer/writer/reader evidence](../../uplift/consolidated/iter10/INDEX.md). XML/path decoding, class enumeration, filesystem copy and tar provider behavior retain explicit premises; no general archive parser or filesystem proof is claimed.
 
+State machines: [scope · iter10](../../Verus_verification/models/iter10-scope/manifest.json)
+
 ### build.package.include-refresh
 
+- design-verified
+
+- uncertain
 - agent; user-facing-behavior; source-inspected; native-tested; Verus-scoped
 - Expands: [Packaging](#build.package).
-- Children: [Omission policy](#build.package.include-refresh.policy).
+- Children: [Should a reloaded manifest that omits IncludeTests keep the previous value or reset it to false?](../../Verus_verification/open_questions.md#build.package.include-refresh.policy).
 
 [Formal contract](../../Verus_verification/consolidated/iter10/scope.rs): `refresh_include`, `refresh_and_package`, `refresh_neighbors`. Parsed optional input is distinct from explicit false; the stored field is carried to package selection and output bytes. [Evidence](../../uplift/consolidated/iter10/INDEX.md).
 
-### build.package.include-refresh.policy
+Open questions: [Should a reloaded manifest that omits IncludeTests keep the previous value or reset it to false?](../../Verus_verification/open_questions.md#build.package.include-refresh.policy)
 
-- agent
-- Expands: [Reloaded inclusion field](#build.package.include-refresh).
-
-[Formal alternatives and observed behavior](../../Verus_verification/consolidated/iter10/scope.rs). Neither runtime behavior nor an agent proposal is owner approval.
-
-Findings audit: [sources, alternatives, implications and settlement gate](../../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#build.package.include-refresh.policy). The recorded assumption is provisional; no new maintainer approval was found.
-
-- uncertain
+State machines: [scope · iter10](../../Verus_verification/models/iter10-scope/manifest.json)

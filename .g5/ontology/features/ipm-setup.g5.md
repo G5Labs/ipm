@@ -9,10 +9,12 @@ How IPM itself gets into an IRIS instance. IPM installs itself with its own [loa
 
 IPM is installed with a one-line installer downloaded from the registry, or offline from a `zpm.xml` file. A user with the `%ALL` role runs it.
 
+
 <a id="setup.language-extension"></a>
 [I · setup.language-extension]
 
 IPM adds the `zpm` command to the instance's language-extension routines. It rewrites only the block it generated and keeps every other line, so a user's own extensions survive repeated installs.
+
 
 <a id="setup.installer"></a>
 [I · setup.installer]

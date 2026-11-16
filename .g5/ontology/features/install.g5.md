@@ -19,6 +19,7 @@
 - `-latest` installs the latest without asking. `-prompt` asks which version to install when several are found. `-keywords` searches by keywords.
 - `-dev`, `-force` and the other load options work [as for `load`](load.g5.md#load.options).
 
+
 <a id="install.refusal"></a>
 [I · install.refusal]
 
@@ -29,15 +30,20 @@ IPM refuses an install when:
 - The module is IPM itself and IPM is [mapped from another namespace](../concepts/namespaces.g5.md#namespace.mapped-refusal).
 - A [load refusal](load.g5.md#load.refusal) or the [developer-mode overwrite guard](../concepts/transactions-and-dev-mode.g5.md#dev-mode.overwrite-guard) applies.
 
+
 <a id="install.package"></a>
 [I · install.package]
 
 IPM downloads the package, unpacks it into `<ModuleRoot>/<name>/<version>/` and loads the module from there. For modules with deployed code, IPM picks the package built for this IRIS version and platform.
 
+
 <a id="reinstall"></a>
 [I · reinstall]
 
 `reinstall <module>` installs an installed module again from a repository. By default it also refreshes dependencies that have `+snapshot` versions, and `-shallow` turns that off.
+
+- Working assumption: the version already installed, as the command summary and its examples say.
+
 
 <a id="reinstall.selection"></a>
 [D · reinstall.selection]
@@ -47,7 +53,10 @@ IPM downloads the package, unpacks it into `<ModuleRoot>/<name>/<version>/` and 
 - In the checked plain `1.0.0` case, a module installed from beta reloads alpha's files when alpha is the older eligible repository. Alpha also offers `2.0.0`, but reinstall still requests and loads `1.0.0`. Disabling alpha makes the same reinstall reload beta instead.
 - With both repository definitions removed, ordinary and `-dev` reinstalls fail even though the installed code and its source folder remain. The saved supplier, root and callable payload stay beta's.
 - Current `show` and repository-filtered lists follow the newly selected supplier. Earlier successful history retains its past supplier, even after that definition is deleted. These are the shared [source-reader rules](../concepts/repositories.g5.md#repo.origin.installed) applied to this caller.
-- The qualification covers stable filesystem sources, no dependencies and successful ordinary nondeveloper loads. Snapshot dependency refresh, successful developer-mode reinstall, other versions and general provider failures remain outside it. The [current-versus-latest question](#reinstall.version) remains open.
+- The qualification covers stable filesystem sources, no dependencies and successful ordinary nondeveloper loads. Snapshot dependency refresh, successful developer-mode reinstall, other versions and general provider failures remain outside it. The [current-versus-latest question](../../Verus_verification/open_questions.md#reinstall.version) remains open.
+
+- Working assumption: the version already installed, as the command summary and its examples say.
+
 
 <a id="reinstall.history"></a>
 [D · reinstall.history]
@@ -55,6 +64,7 @@ IPM downloads the package, unpacks it into `<ModuleRoot>/<name>/<version>/` and 
 A reinstall of an existing module delegates to `install` and creates one install-history record in the checked no-dependency cases. A no-repository failure still creates a failed record, while a missing installed-module name is rejected before delegation and creates no record.
 
 Successful records keep the original `reinstall` command and selected source. The checked failure rows appear with their error in `history find`; their other fields and detailed status rendering are not newly qualified here.
+
 
 <a id="reinstall.snapshot-dependencies"></a>
 [D · reinstall.snapshot-dependencies]
@@ -64,14 +74,6 @@ Default reinstall can refuse to refresh an installed snapshot dependency because
 - In the checked filesystem case, changing dependency `1.0.0+snapshot` from payload 1 to 2 leaves the installed payload at 1. `-shallow` succeeds and keeps 1; default reinstall reports the range conflict and also keeps 1.
 - Supplying `-DPermitDowngrade=1` skips that added lower bound, selects the dependency from alpha and reloads it. Both a direct dependency call and a call through its parent then return 2. A release dependency `1.0.0` keeps payload 1 under default reinstall.
 - This qualifies one exact dependency per parent, successful directory loads and the selected conflict refusal. Other ranges, graph shapes, providers, failures and concurrent source changes remain outside it. No product repair is applied or certified.
-
-<a id="reinstall.version"></a>
-[Q · reinstall.version]
-
-Does `reinstall` install the version already installed, or the latest available version?
-
-- Provisional answer: the version already installed, as the command summary and its examples say.
-- Alternative: the latest version, as the command description and the wiki say.
 
 ## Metadata
 
@@ -110,14 +112,20 @@ Sources: `wiki/02` L651 ("matching the behavior of `install`"); CHANGELOG 0.10.1
 
 ### reinstall
 
+- uncertain
 - human-provided
 - user-facing-behavior
-- Children: [selection](#reinstall.selection), [history](#reinstall.history), [snapshot dependencies](#reinstall.snapshot-dependencies), [version](#reinstall.version).
+- Children: [selection](#reinstall.selection), [history](#reinstall.history), [snapshot dependencies](#reinstall.snapshot-dependencies), [Does `reinstall` install the version already installed, or the latest available version?](../../Verus_verification/open_questions.md#reinstall.version).
 
 Sources: `Main.cls:447-481`; `wiki/02` L879-911. Inventory: CAT-14; OP-LOAD-22 (`Main:Reinstall`). Observed: recorded in history as `install`. A `reinstall` of a module that is not installed is refused before any history record is created.
 
+Open questions: [Does `reinstall` install the version already installed, or the latest available version?](../../Verus_verification/open_questions.md#reinstall.version)
+
 ### reinstall.selection
 
+- design-verified
+
+- uncertain
 - agent; user-facing-behavior; source-inspected; native-tested; Verus-scoped
 - Expands: [Reinstall](#reinstall).
 
@@ -125,27 +133,28 @@ Sources: `Main.cls:447-481`; `wiki/02` L879-911. Inventory: CAT-14; OP-LOAD-22 (
 
 [Iteration 25 source-file qualification](../concepts/transactions-and-dev-mode.g5.md#dev-mode.source-files) extends the caller evidence to successful developer-mode reinstalls and the following normal-mode refusal in two directory layouts. It does not settle the current-versus-latest question or the developer-mode force/load policy.
 
+Open questions: [Does `reinstall` install the version already installed, or the latest available version?](../../Verus_verification/open_questions.md#reinstall.version)
+
+State machines: [reinstall · iter22](../../Verus_verification/models/iter22-reinstall/manifest.json)
+
 ### reinstall.history
+
+- design-verified
 
 - agent; user-facing-behavior; source-inspected; native-tested; Verus-scoped
 - Expands: [Reinstall](#reinstall).
 
 [History effect contract](../../Verus_verification/consolidated/iter22/reinstall.rs) distinguishes the early no-delegation branch from install initialization before repository refusal. It reuses successful history records and separately counts delegated install records without inventing failed-row fields. [Receipts](../../uplift/consolidated/iter22/HANDOFF.md) include persistent-row counts, summary readers, original command production and retained source snapshots. The shared [history action rules](history.g5.md#history.actions) and unresolved refusal policy retain their existing owners.
 
+State machines: [reinstall · iter22](../../Verus_verification/models/iter22-reinstall/manifest.json)
+
 ### reinstall.snapshot-dependencies
+
+- design-verified
 
 - agent; user-facing-behavior; source-inspected; native-tested; Verus-scoped
 - Expands: [Reinstall](#reinstall).
 
 [Dependency composition](../../Verus_verification/consolidated/iter24/snapshot_dependencies.rs) connects the caller's default or shallow flag, parsed snapshot classification, installed reuse, inherited version-expression intersection, the graph's empty-server marker and dependency loading. [Iteration 24](../../uplift/consolidated/iter24/HANDOFF.md) preserves the initial refresh prediction and its refutation, the explicit permission neighbor, graph and flat-reference readers, physical source edits and callable parent results. This extends iteration 22's configuration-only snapshot scope. The checked error and retained payload do not prove general rollback or history behavior.
 
-### reinstall.version
-
-- agent
-- uncertain
-- user-facing-behavior
-- Expands: [Reinstall](#reinstall).
-
-Sources: A1 conflict 27; summary `Main.cls:448`; examples `Main.cls:455-458`; description `Main.cls:450-451`; `wiki/02` L880; `wiki/01` L40-44. Observed: the code pins the installed version (`Main.cls:2695-2697`). [Iteration 22](../../uplift/consolidated/iter22/HANDOFF.md) also observes a `1.0.0` reinstall while `2.0.0` is available. This establishes the checked as-built choice, not an owner decision between the conflicting descriptions.
-
-Findings audit: [sources, alternatives, implications and settlement gate](../../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#reinstall.version). The recorded assumption is provisional; no new maintainer approval was found.
+State machines: [snapshot dependencies · iter24](../../Verus_verification/models/iter24-snapshot-dependencies/manifest.json)
