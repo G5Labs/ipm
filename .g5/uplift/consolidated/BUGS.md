@@ -552,6 +552,19 @@ Reproduced by: E2E reproduced. [Iteration44 native receipt](iter44/native/202611
 
 The export wraps resources in a new `<Resources>` element, so the recorded resource comment paths no longer match, and a comment with no following sibling is discarded. This contradicts the handler's purpose of carrying comments across the rewrite. A repair would map resource comments by resource name onto the exported path and keep trailing comments as the parent's last child. It was not checked.
 
+<a id="c-d51"></a>
+### C:D51: A source-control extension is never told that a module's root changed
+
+Severity: Low · Decision: Open
+
+Run: Uplift 2026-11-16
+
+Found by: iteration43 native exploration (explore4) refuting the source prediction, then source review of `Lifecycle/Base.cls::%Reload` against `Storage/Module.cls::ExecutePhases` (Root assigned before the comparison), and [iteration43 model](../../Verus_verification/consolidated/iter43/schooks.rs) `root_hook_not_reached` with control `root-hook-fires` ([proof receipt](iter43/proofs/models.json)).
+
+Reproduced by: E2E reproduced. [Iteration43 native receipt](iter43/native/20261116T175445272137Z/observations.json) on IRIS 2026.1 x86-64 at `571e04a1`. With the IPM-aware test extension as the composite's primary, loading m43 from `/tmp/iter43/m43copy` after `/tmp/iter43/m43` changes the stored root but records no OnChangeModuleRoot call (p4). Reloading with `-DRootDirectory` back to the original directory also changes the root without the call (p4b). Passing neighbours: the before/after-phase and resource-change calls in the same runs (p1, p4, p4b).
+
+The interface comment says the call is "invoked when an existing module is reloaded from a different directory than its known module root". `%Reload` compares against a root that was already updated, so extensions that track module locations never learn of the move, contrary to the [source-control statement](../../ontology/concepts/lifecycle.g5.md#lifecycle.source-control). A repair would compare against the stored root before it is overwritten. It was not checked.
+
 ## Outside active reproduction scope
 
 <a id="c-d17"></a>

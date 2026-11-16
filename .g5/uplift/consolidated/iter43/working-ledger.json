@@ -1,0 +1,115 @@
+{
+ "recorded_utc": "2026-11-16T17:50:45.477449+00:00",
+ "batch": 7,
+ "iteration": 43,
+ "prior_seal": "b2a9ed3a",
+ "workflow": "namespace source-control extension -> IPM lifecycle/document hooks (%OnBeforePhase/%OnAfterPhase/%OnModifyResources/%OnChangeModuleRoot) -> calls received and phase outcome",
+ "owner": "none; intent from Interface.cls and Composite.cls class/method comments and init help",
+ "exposure": "Read: Interface.cls declaration list and /// comments (lines 1-190 headers), Composite.cls comments and member list, init help. Earlier main-thread sessions saw the call sites in ExecutePhases (before/after each phase, ThrowOnError) and UpdatePersistentFromStream (%OnModifyResources). Dispatcher bodies (Interface 10-90) not read.",
+ "predictions": [
+  {
+   "case": "no source control class configured; load -dev, compile, doc save, uninstall",
+   "reader": "recorded calls",
+   "predicted": "no calls; operations unaffected"
+  },
+  {
+   "case": "namespace source control = test class extending %Studio.Extension.Base and %IPM.ExtensionBase.SourceControl.Interface; load -dev",
+   "reader": "OnBeforePhase/OnAfterPhase calls per phase",
+   "predicted": "one Before and one After per executed phase, in phase order, with module name"
+  },
+  {
+   "case": "same, module-action compile",
+   "reader": "calls",
+   "predicted": "Before/After for Initialize, Reload, Validate, Compile"
+  },
+  {
+   "case": "same, save the .ZPM document",
+   "reader": "OnModifyResources",
+   "predicted": "called once with the module"
+  },
+  {
+   "case": "test class OnBeforePhase returns an error for Compile",
+   "reader": "command status, compile hook",
+   "predicted": "phase fails, command fails"
+  },
+  {
+   "case": "configured class extends %Studio.Extension.Base only (not IPM interface)",
+   "reader": "calls",
+   "predicted": "no IPM hook calls"
+  },
+  {
+   "case": "Composite configured with the test class as primary",
+   "reader": "calls",
+   "predicted": "hooks reach the primary (comment: directs lifecycle calls to primary/secondary)"
+  }
+ ],
+ "exposure_after_source": "Read Interface %GetClass and all % dispatchers, CompositeMethodOverrides Set/GetPrimaryExtensionClass, Main init lines 1830-1900, Lifecycle/Base %Reload root-change and %OnModifyResources call sites, ResourceReference OnChange trigger.",
+ "source_predictions": [
+  {
+   "case": "M0 no source control",
+   "predicted": "no calls"
+  },
+  {
+   "case": "M1 TestSC set directly as namespace source control",
+   "predicted": "no IPM hook calls (%GetClass requires the Composite)"
+  },
+  {
+   "case": "M3 Composite with a plain extension as primary and TestSC secondary",
+   "predicted": "no calls (only the primary is consulted)"
+  },
+  {
+   "case": "M2 Composite with TestSC primary (what init sets up), load -dev",
+   "predicted": "Before/After for each executed phase incl. nested Configure; OnModifyResources from resource saves/Reload"
+  },
+  {
+   "case": "M2 m43 compile -only",
+   "predicted": "Before Compile, After Compile"
+  },
+  {
+   "case": "M2 load from a second copy of the directory",
+   "predicted": "OnChangeModuleRoot once"
+  },
+  {
+   "case": "M2 TestSC OnBeforePhase errors for Compile; compile -only",
+   "predicted": "command fails, no After Compile"
+  },
+  {
+   "case": "M2 uninstall",
+   "predicted": "Before/After Clean"
+  }
+ ],
+ "explore": {
+  "explore1": "session line with \\x27 not interpreted; reader class not loaded (no observations)",
+  "explore2": "same quoting problem",
+  "explore3": "p4 downgrade refusal from fixture versions (doc save bumped to 1.0.1)",
+  "explore4": "p4 load from a different directory: OnChangeModuleRoot NOT called (source prediction refuted)"
+ },
+ "source_predictions_round2": [
+  {
+   "case": "p4 load from m43copy",
+   "predicted": "no R call: LoadNewModule stores the new Root before Reload compares"
+  },
+  {
+   "case": "p4b m43 reload -only -DRootDirectory=<original dir>",
+   "predicted": "R called once (explicit root differs from stored)"
+  }
+ ],
+ "outcome": {
+  "status": "executed, not sealed (main thread integrates)",
+  "model": "schooks.rs 8 verified, 5/5 controls",
+  "native": "20261116T175445272137Z 278 fields; 260 replayed; flips p5.ok, d1.total, p6.B.Unconfigure rejected",
+  "findings_proposed": [
+   "Low: OnChangeModuleRoot is never reached on the checked reload paths"
+  ],
+  "reach_candidates": "13 new (Interface %GetClass, %OnBeforePhase, %OnAfterPhase, %OnModifyResources, %OnChangeModuleRoot; CompositeMethodOverrides GetPrimaryExtensionClass, SetExtensionClasses, SetPrimaryExtensionClass, SetSubExtensionClasses; ResourceReference OnChange) + strengthened ExecutePhases, %Reload, UpdatePersistentFromStream, ModuleAction"
+ },
+ "integration": {
+  "by": "main thread",
+  "independent_rerun": "run.py --no-native: 8 verified, 5/5 controls, 260 replayed",
+  "ontology": "new D lifecycle.source-control",
+  "findings": [
+   "C:D51 Low"
+  ],
+  "fork_cost": "~700k subagent tokens, 330 s"
+ }
+}

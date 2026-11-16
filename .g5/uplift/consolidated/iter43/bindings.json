@@ -1,0 +1,123 @@
+{
+ "verus_dir": ".g5/Verus_verification/consolidated/iter43",
+ "changed_files": [
+  "schooks.rs",
+  "cases.json",
+  "run.py",
+  "native/**"
+ ],
+ "rows": [
+  {
+   "id": "S43-01",
+   "owner": ".g5/ontology/concepts/lifecycle.g5.md#lifecycle.source-control",
+   "model": "schooks.rs",
+   "symbols": [
+    "Config",
+    "active",
+    "observe",
+    "inactive_no_calls",
+    "direct_or_secondary_inactive"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/ExtensionBase/SourceControl/Interface.cls",
+     "%GetClass"
+    ],
+    [
+     "src/cls/IPM/ExtensionBase/CompositeMethodOverrides.cls",
+     "GetPrimaryExtensionClass"
+    ],
+    [
+     "src/cls/IPM/ExtensionBase/CompositeMethodOverrides.cls",
+     "SetExtensionClasses"
+    ],
+    [
+     "src/cls/IPM/ExtensionBase/CompositeMethodOverrides.cls",
+     "SetPrimaryExtensionClass"
+    ],
+    [
+     "src/cls/IPM/ExtensionBase/CompositeMethodOverrides.cls",
+     "SetSubExtensionClasses"
+    ]
+   ],
+   "reader": [
+    [
+     "src/cls/IPM/ExtensionBase/SourceControl/Interface.cls",
+     "%OnBeforePhase"
+    ]
+   ],
+   "scope": "Hooks active only when the namespace source-control class is the Composite and its stored primary extends the IPM interface; none, direct and secondary-only configurations get no calls. Native n1-s2, p1. Studio/Atelier interactive extension behaviour, menus and init prompts not exercised."
+  },
+  {
+   "id": "S43-02",
+   "owner": ".g5/ontology/concepts/lifecycle.g5.md#lifecycle.source-control",
+   "model": "schooks.rs",
+   "symbols": [
+    "op_phases",
+    "nested",
+    "run_phases",
+    "observe",
+    "count",
+    "before_error_stops_phase",
+    "nested_hooks_inside_parent",
+    "load_schedule"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/ExtensionBase/SourceControl/Interface.cls",
+     "%OnBeforePhase"
+    ],
+    [
+     "src/cls/IPM/ExtensionBase/SourceControl/Interface.cls",
+     "%OnAfterPhase"
+    ],
+    [
+     "src/cls/IPM/Storage/Module.cls",
+     "ExecutePhases"
+    ]
+   ],
+   "reader": [
+    [
+     "src/cls/IPM/Main.cls",
+     "ModuleAction"
+    ]
+   ],
+   "scope": "Before/After per executed phase, nested Configure/Unconfigure inside Activate/Clean, a Before error fails the command without After. Native p1, p2, p4, p5, p6. Error from After hooks not exercised."
+  },
+  {
+   "id": "S43-03",
+   "owner": ".g5/ontology/concepts/lifecycle.g5.md#lifecycle.source-control",
+   "model": "schooks.rs",
+   "symbols": [
+    "modify_calls",
+    "observe",
+    "root_hook_not_reached"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/ExtensionBase/SourceControl/Interface.cls",
+     "%OnModifyResources"
+    ],
+    [
+     "src/cls/IPM/ExtensionBase/SourceControl/Interface.cls",
+     "%OnChangeModuleRoot"
+    ],
+    [
+     "src/cls/IPM/Storage/ResourceReference.cls",
+     "OnChange"
+    ]
+   ],
+   "reader": [
+    [
+     "src/cls/IPM/Lifecycle/Base.cls",
+     "%Reload"
+    ],
+    [
+     "src/cls/IPM/StudioDocument/Module.cls",
+     "UpdatePersistentFromStream"
+    ]
+   ],
+   "scope": "OnModifyResources counts per operation are native premises (load 4, document save 1, reload 2); OnChangeModuleRoot not reached on load from another directory (p4) or reload with an explicit root (p4b) although the stored root changed. Other callers (%OnMakeModuleEditable, build hooks) not exercised."
+  }
+ ]
+}

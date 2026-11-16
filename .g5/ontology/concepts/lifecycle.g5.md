@@ -80,6 +80,15 @@ What should the installer's upgrade flag and database name mean?
 - Alternative and implications: set the upgrade flag when the module is already installed. That lets installers migrate data but changes the calls existing installers receive.
 - This assumption guides review; it is not a maintainer decision.
 
+<a id="lifecycle.source-control"></a>
+[D · lifecycle.source-control]
+
+A namespace's source-control extension can follow module lifecycles. IPM calls it before and after every phase it runs, including nested phases such as Configure inside Activate. It also calls it when a module's resources or manifest change, and when a module's root changes.
+
+- These calls reach only the primary extension of IPM's composite source-control class, which `init` configures by wrapping the namespace's existing extension. An extension set directly as the namespace source control, or listed only as a secondary extension, receives no calls.
+- If the before-phase call returns an error, that phase and the command fail, and the after-phase call for it is not made.
+- As built, the root-change call is not made when a module is loaded from another directory or reloaded with an explicit root, although the stored root changes (defect C:D51).
+
 <a id="lifecycle.alias"></a>
 [D · lifecycle.alias]
 
@@ -210,6 +219,16 @@ Findings: [The installer class does not receive `<Default>` values](../../uplift
 - Expands: [Installer class](#lifecycle.installer).
 
 Sources: no IPM caller writes `Configure.IsUpgrade` or `Configure.DatabaseName`. Model: [installer.rs](../../Verus_verification/consolidated/iter36/installer.rs) `upgrade_ignores_installed_state`.
+
+### lifecycle.source-control
+
+- agent
+- user-facing-behavior
+- Expands: [Resource hooks](#lifecycle.hooks).
+
+Sources: `ExtensionBase/SourceControl/Interface.cls` comments and `%GetClass`; `ExtensionBase/CompositeMethodOverrides.cls::SetExtensionClasses`; `Main.cls` init (lines 1876-1890); `Storage/Module.cls::ExecutePhases`. Model: [schooks.rs](../../Verus_verification/consolidated/iter43/schooks.rs) `active`, `observe`, `before_error_stops_phase`, `nested_hooks_inside_parent`, `root_hook_not_reached` ([handoff](../../uplift/consolidated/iter43/HANDOFF.md)). Interactive `init` prompts, Studio menus and `%OnMakeModuleEditable` are not assessed.
+
+Findings: [A source-control extension is never told that a module's root changed](../../uplift/consolidated/BUGS.md#c-d51)
 
 ### lifecycle.alias
 
