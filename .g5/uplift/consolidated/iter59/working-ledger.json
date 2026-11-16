@@ -1,0 +1,107 @@
+{
+ "recorded_utc": "2026-11-16T18:26:20.547958+00:00",
+ "batch": 12,
+ "iteration": 59,
+ "prior_seal": "4366f6d2",
+ "workflow": "automatic resource mappings: Reload calls each resource processor OnConfigureMappings (unless NoMapping) -> namespace package/routine/global mappings -> which database the code resolves from; uninstall",
+ "unbound_members": [
+  "ResourceProcessor/Default/Class.cls::OnConfigureMappings",
+  "ResourceProcessor/Default/Package.cls::OnConfigureMappings",
+  "ResourceProcessor/Default/Routine.cls::OnConfigureMappings",
+  "ResourceProcessor/Default/LocalizedMessages.cls::OnConfigureMappings",
+  "ResourceProcessor/Abstract.cls::OnConfigureMappings",
+  "ResourceProcessor/Default/Document.cls::ResourceIsMappedToDefaultDB",
+  "ResourceProcessor/Default/Document.cls::OnAfterPhase"
+ ],
+ "owner": ".g5/ontology/concepts/modules.g5.md#module.placement (NoMapping turns off the automatic mappings for its resources; GlobalScope; <Mappings>)",
+ "exposure": "Document.cls OnPhase Reload fragment (lines 60-135) read in iteration32: it calls ..OnConfigureMappings(.pParams) unless pParams(\"NoMapping\"). OnConfigureMappings bodies, ResourceIsMappedToDefaultDB and OnAfterPhase not read.",
+ "predictions": [
+  {
+   "case": "ordinary load of a module whose classes are new in the namespace",
+   "reader": "Config.MapPackages for the package",
+   "predicted": "no mapping (code goes to the default routine database)"
+  },
+  {
+   "case": "some state where the resource code already lives in a database other than the namespace default",
+   "reader": "mapping entries, code resolution",
+   "predicted": "IPM adds a mapping so the namespace keeps seeing that copy (the \"automatic mapping\")"
+  },
+  {
+   "case": "same with -DNoMapping=1",
+   "reader": "mapping entries",
+   "predicted": "no mapping created"
+  },
+  {
+   "case": "uninstall after an automatic mapping",
+   "reader": "mapping entries",
+   "predicted": "unspecified by owner; expected removed"
+  }
+ ],
+ "exposure_after_source": "Read Default/{Class,Package,Routine,LocalizedMessages}.OnConfigureMappings, Document.ResourceIsMappedToDefaultDB and OnAfterPhase, Abstract.OnConfigureMappings (no-op), Utils/Module.AddPackageMapping; grep shows RemovePackageMapping/RemoveRoutineMapping called only from Main unmap of %IPM.",
+ "source_predictions": [
+  {
+   "case": "a1 load m59a with resource %ZI59.PKG (default destination IRISSYS)",
+   "predicted": "package mapping %ZI59 -> USER routine DB created; class stored in USER DB, not visible from %SYS"
+  },
+  {
+   "case": "a2 uninstall m59a",
+   "predicted": "class deleted; mapping %ZI59 stays in the USER namespace configuration"
+  },
+  {
+   "case": "b1 admin maps P59 -> DB59; load m59b with P59.Sub.PKG",
+   "predicted": "mapping P59.Sub -> USER created; class stored in USER DB; DB59 has no P59.Sub class"
+  },
+  {
+   "case": "b2 uninstall m59b",
+   "predicted": "mapping P59.Sub stays, still overriding the administrator mapping of P59 for that subpackage"
+  },
+  {
+   "case": "c1 load m59c (%ZI59C.PKG) with -DNoMapping=1",
+   "predicted": "no mapping; class compiled into IRISSYS, visible from %SYS"
+  },
+  {
+   "case": "d1 ordinary N59.PKG",
+   "predicted": "no mapping"
+  },
+  {
+   "case": "e1 GlobalScope module with %ZI59G.PKG",
+   "predicted": "no mapping; class in IRISSYS"
+  }
+ ],
+ "explore1": "All source predictions matched; additionally c2: uninstall of the NoMapping module printed \"WARNING: Skipping mapped resource %ZI59C.Main.CLS\" and left the class in IRISSYS (Lifecycle/Base %Clean skips IsMapped classes unless Clean.GlobalScope).",
+ "source_predictions_round2": [
+  {
+   "case": "c2 module record after uninstall m59c",
+   "predicted": "module record gone while the class remains in IRISSYS"
+  },
+  {
+   "case": "e2 uninstall m59e (GlobalScope) without -global",
+   "predicted": "skipped: module and class stay (owner uninstall.global)"
+  },
+  {
+   "case": "e3 uninstall m59e -global",
+   "predicted": "module removed and class deleted from IRISSYS"
+  },
+  {
+   "case": "c3/c4 reinstall m59c -DNoMapping=1 then uninstall m59c -global",
+   "predicted": "class deleted from IRISSYS"
+  }
+ ],
+ "outcome": {
+  "model": "mappings.rs 5 verified, 5/5 controls",
+  "native": "20261116T182911128903Z 433 fields; 280 replayed; flips b2.b.map, c2.c.insys, e2.e.module rejected",
+  "findings": [
+   "proposed Medium: uninstall leaves auto-created mappings (shadowing an administrator mapping)",
+   "proposed Medium: uninstall of a NoMapping module orphans its code outside the namespace DB"
+  ],
+  "predictions": "all source predictions matched (explore1 and round 2)"
+ },
+ "integration": {
+  "by": "main thread",
+  "independent_rerun": "run.py --no-native: 5 verified, 5/5 controls, 280 replayed",
+  "findings": [
+   "C:D65 Medium",
+   "C:D66 Medium"
+  ]
+ }
+}

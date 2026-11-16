@@ -383,6 +383,32 @@ Reproduced by: E2E reproduced. [Iteration56 native receipt](iter56/native/202611
 
 The module asks for no export, and installing should not need to write into its source folder, contrary to the [localization statement](../../ontology/concepts/modules.g5.md#module.processor.localized-messages). A repair would skip or tolerate the export when the root is not writable, or write it only on request. It was not checked.
 
+<a id="c-d65"></a>
+### C:D65: Uninstall leaves the package mappings IPM created, overriding an administrator's mapping
+
+Severity: Medium · Decision: Open
+
+Run: Uplift 2026-11-16
+
+Found by: source review (no removal caller for mappings added by `OnConfigureMappings`), then [iteration59 model](../../Verus_verification/consolidated/iter59/mappings.rs) `mapping_outlives_uninstall` with control `mapping-removed-on-uninstall` ([proof receipt](iter59/proofs/models.json)).
+
+Reproduced by: E2E reproduced. [Iteration59 native receipt](iter59/native/20261116T182911128903Z/observations.json) on IRIS 2026.1 x86-64 at `571e04a1`. After `uninstall m59a`, the USER mapping `%ZI59 -> USER` remains (case a2). With an administrator mapping `P59 -> DB59`, `load m59b` adds `P59.Sub -> USER`, which remains after `uninstall m59b`, so `P59.Sub` still resolves to USER rather than DB59 (b2). Passing neighbour: an ordinary package gets no mapping (d1).
+
+Namespace configuration changed by an install persists after the module is gone, contrary to the [placement statement](../../ontology/concepts/modules.g5.md#module.placement). A repair would record the mappings a load created and remove them on uninstall unless another module needs them. It was not checked.
+
+<a id="c-d66"></a>
+### C:D66: Uninstall of a NoMapping module leaves its code outside the namespace
+
+Severity: Medium · Decision: Open
+
+Run: Uplift 2026-11-16
+
+Found by: native exploration (case c2) and source review of `Lifecycle/Base.cls::%Clean` (mapped classes skipped unless `Clean.GlobalScope`), then [iteration59 model](../../Verus_verification/consolidated/iter59/mappings.rs) `nomapping_code_orphaned` with control `mapped-code-deleted` ([proof receipt](iter59/proofs/models.json)).
+
+Reproduced by: E2E reproduced. [Iteration59 native receipt](iter59/native/20261116T182911128903Z/observations.json). `load m59c -DNoMapping=1` compiles `%ZI59C.Main` into IRISSYS. `uninstall m59c` prints "Skipping mapped resource", removes the module record and leaves the class visible from `%SYS` and every namespace (c2). Passing neighbour: `uninstall m59c -global` removes it (c4).
+
+The module record disappears while its code remains shared by every namespace, contrary to the [placement statement](../../ontology/concepts/modules.g5.md#module.placement). A repair would delete classes the module itself installed wherever they resolve, or refuse NoMapping placement outside the namespace database. It was not checked.
+
 <a id="c-d2"></a>
 ### C:D2: When IPM cannot create a load's temporary `.modules` repository, it prints "Failed to clean up repository 'ipm-temp-modules-N'. You may need to manually dele...
 

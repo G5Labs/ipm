@@ -278,6 +278,9 @@ A module controls where its code and data live.
 
 - `GlobalScope` makes it available in all namespaces without per-namespace mappings.
 - `NoMapping` turns off the automatic mappings for its resources.
+  - Automatic mapping applies when a resource would resolve to a database other than the namespace's own routine database, such as a `%Z` package or a subpackage of a package an administrator mapped elsewhere. Loading then maps that package to the namespace's routine database. With `NoMapping` or `GlobalScope` the code is stored where the package resolves, for example IRISSYS.
+  - As built, uninstall never removes those mappings, so the package keeps resolving to the namespace's database and overrides an administrator's mapping (defect C:D65).
+  - As built, uninstall skips classes that resolve outside the namespace's database unless `-global` is given, so a module installed with `NoMapping` leaves its code behind, shared by every namespace (defect C:D66).
 - `<Mappings>` adds explicit mappings.
 - `SourcesRoot` names the folder that holds its code.
 - Expressions such as `${ipmDir}` stand for system folders.
@@ -778,6 +781,12 @@ The prior thin_surfaces `clears_target` is a requested-argument predicate, not a
 
 Sources: `wiki/03` L188-241, L274-277, L533-573; CHANGELOG 0.9.0 (`#575`), 0.10.4 (`#374`). Inventory: CAT-10. Tests: `Mappings.cls`, `ModuleRoot.cls`. `wiki/03` L775 documents `${authUnauthenticated}`, which is not implemented.
 
+
+Iteration59: [mappings.rs](../../Verus_verification/consolidated/iter59/mappings.rs) `needs_map`, `load`, `uninstall`, `mapping_outlives_uninstall`, `nomapping_code_orphaned`, `global_module_skipped` ([handoff](../../uplift/consolidated/iter59/HANDOFF.md)).
+
+Findings: [Uninstall leaves the package mappings IPM created, overriding an administrator's mapping](../../uplift/consolidated/BUGS.md#c-d65)
+
+Findings: [Uninstall of a NoMapping module leaves its code outside the namespace](../../uplift/consolidated/BUGS.md#c-d66)
 ### module.deployed
 
 - human-provided
