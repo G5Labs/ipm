@@ -1,0 +1,80 @@
+{
+ "recorded_utc": "2026-11-16T17:35:57.466099+00:00",
+ "batch": 5,
+ "iteration": 38,
+ "prior_seal": "3445c460",
+ "workflow": "history find / details [-phases] rendering: stored %IPM_General.History rows -> VersionToString, TimeToString, SourceToString, SuccessToString, CommittedToString, ShowPhases, DisplayOneRecord/ShowColumns, DisplayQueryResult -> printed report",
+ "gap": "Renderer members carry only extension citations without a formal target (flags formal-target-missing, not-active-Verus-binding); RecordsFetch/RecordsExecute/ShowPhases/DisplayArray have no active Verus binding. iter23 binds the Success field selection only.",
+ "owner": ".g5/ontology/features/history.g5.md#history.fields, #history.phases, #history.read.find, #history.read.details, #history.read.unfinished",
+ "exposure": "Before these predictions: owner statements read; History.cls member list (grep of ClassMethod lines) and the extension citation scopes printed by the iter37 project map (placeholder <unset>, v<version>, Committed/Uncommitted, start-only time when no end, phase name/time/result). No renderer bodies read.",
+ "predictions": [
+  {
+   "case": "successful load of m38a 1.2.3, history find",
+   "reader": "printed row: version, source, result, committed",
+   "owner": "version v1.2.3 (citation), source n/a (load), result Success, committed Committed"
+  },
+  {
+   "case": "load of a folder whose manifest is invalid (failure before version known)",
+   "reader": "stored Version vs printed version",
+   "owner": "stored 0.0.0-0, printed <unset> (stored != shown contrast)"
+  },
+  {
+   "case": "install from a filesystem repo",
+   "reader": "printed source",
+   "owner": "repository name shown (not n/a)"
+  },
+  {
+   "case": "failed load (Invoke error after manifest read)",
+   "reader": "result text, committed",
+   "owner": "decoded error text, Uncommitted"
+  },
+  {
+   "case": "history details <id> -phases for the successful load",
+   "reader": "phase lines order and status",
+   "owner": "Initialize, Reload, Validate, Compile, Activate in order with Success; failed load lists phases up to failing one"
+  },
+  {
+   "case": "uninstall",
+   "reader": "phases",
+   "owner": "Clean phase listed"
+  },
+  {
+   "case": "module-action m compile",
+   "reader": "record count",
+   "owner": "no new record (phase commands not recorded)"
+  }
+ ],
+ "exposure_after_source": "Read RecordsExecute/Fetch, DisplayOneRecord, ShowColumns, ShowPhases, VersionToString, TimeToString, SourceToString, SuccessToString, CommittedToString, DisplayQueryResult after predictions.",
+ "source_predictions": [
+  {
+   "case": "module whose real version is 0.0.0-0",
+   "predicted": "shown <unset> (renderer compares text only)"
+  },
+  {
+   "case": "failed Invoke on Activate",
+   "predicted": "last phase without duration, error text (if status stored) or decoded empty status"
+  },
+  {
+   "case": "install",
+   "predicted": "source name shown"
+  }
+ ],
+ "outcome": {
+  "native": "20261116T173827930786Z 280 fields gated, 141 replayed, flips find.z.vunset/find.i.na/det.e.p5.success rejected",
+  "model": "render.rs 5 verified, 5/5 controls rejected",
+  "all_predictions_matched": true,
+  "not_exercised": [
+   "unfinished record (no TimeEnd)",
+   "install with empty source",
+   "empty phase status",
+   "history find -globally / DisplayArray",
+   "Records/GlobalRecords class queries"
+  ]
+ },
+ "integration": {
+  "by": "main thread",
+  "independent_rerun": "run.py --no-native: 5 verified, 5/5 controls, 141 replayed",
+  "findings": "C:D43 Low",
+  "fork_cost": "~596k subagent tokens, 268 s"
+ }
+}

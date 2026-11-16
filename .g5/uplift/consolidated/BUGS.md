@@ -448,6 +448,19 @@ Reproduced by: E2E reproduced. [Iteration35 native receipt](iter35/native/202611
 
 The [version order](../../ontology/concepts/versions.g5.md#version.order) compares numeric prerelease identifiers as numbers, so rc.2 comes before rc.10, and the [listing statement](../../ontology/features/inspection.g5.md#inspect.list-installed) promises a version sort. The same text comparison drives the install choice in C:D39, but through different code. A repair would compare prerelease identifiers in semantic-version order. It was not checked.
 
+<a id="c-d43"></a>
+### C:D43: History shows a module whose real version is 0.0.0-0 as `<unset>`
+
+Severity: Low · Decision: Open
+
+Run: Uplift 2026-11-16
+
+Found by: source review of `General/History.cls::VersionToString`, then [iteration38 model](../../Verus_verification/consolidated/iter38/render.rs) `known_placeholder_indistinguishable` with control `placeholder-only-when-unknown` ([proof receipt](iter38/proofs/models.json)).
+
+Reproduced by: E2E reproduced. [Iteration38 native receipt](iter38/native/20261116T173827930786Z/observations.json) on IRIS 2026.1 x86-64 at `571e04a1`. `load m38z`, whose manifest declares version 0.0.0-0, succeeds with a known package, yet `history find` and `history details` show `<unset>` for that record (record z). Passing neighbours: m38a 1.2.3 shows `v1.2.3`, and the record of an invalid manifest (record b) shows `<unset>` as intended.
+
+The renderer compares the stored version text with the placeholder, so a real `0.0.0-0` cannot be told apart from a version that was never known, contrary to the [Version field statement](../../ontology/features/history.g5.md#history.fields). A repair would show the placeholder only when the version was never set, for example with an explicit flag. It was not checked.
+
 ## Outside active reproduction scope
 
 <a id="c-d17"></a>

@@ -91,7 +91,7 @@ Each record holds:
 
 - `Action`: `load`, `install`, `uninstall` or `update`.
 - `Package`: the module name. It is empty only if the action failed before any name was known, such as a load of a folder without a valid manifest. A refusal after IPM read the manifest records the name.
-- `Version`: the module version. Until the version is known it is stored as `0.0.0-0` and shown as `<unset>`.
+- `Version`: the module version. Until the version is known it is stored as `0.0.0-0` and shown as `<unset>`. As built, a module whose declared version is `0.0.0-0` is also shown as `<unset>`, because listings compare the stored text only (defect C:D43).
 - Source name, type and details: the repository an install came from. They are empty for load and uninstall, and listings show `n/a` for any action other than install.
 - `TimeStart` and `TimeEnd`: the end time is empty while the action runs or after it ended abnormally.
 - `UserName`: the user who started the action.
@@ -277,6 +277,8 @@ Should the namespace's [default modifiers](../concepts/settings.g5.md#settings.d
 [I · history.read.details]
 
 `history details <id>` shows every field of one record in the current namespace, including full repository details and the raw status. `-phases` adds each phase's timing and status. An unknown ID is an error.
+
+- Phase lines keep the stored order. Each shows its start time, its duration only when it has an end time, and `Success` or the decoded error text. A phase left open after a returned error shows its start time and error text (see G:D6).
 
 <a id="history.read.status-bytes"></a>
 [D · history.read.status-bytes]
@@ -585,6 +587,10 @@ Extension Verus: [history.rs::set_source](../../Verus_verification/consolidated/
 
 Findings: [G:D9 — e2e reproduced](../../Verus_verification/bugs_issues.md#g-d9). The linked entry qualifies the caller, reader and providers.
 
+Iteration38 rendering: [render.rs](../../Verus_verification/consolidated/iter38/render.rs) `summary`, `placeholder_hides_version`, `source_only_for_install`, `known_placeholder_indistinguishable` ([handoff](../../uplift/consolidated/iter38/HANDOFF.md)).
+
+Findings: [History shows a module whose real version is 0.0.0-0 as `<unset>`](../../uplift/consolidated/BUGS.md#c-d43)
+
 ### history.fields.source-snapshot
 
 - agent; user-facing-behavior; source-inspected; native-tested; Verus-scoped
@@ -795,6 +801,8 @@ Findings: [G:D18 — e2e reproduced](../../Verus_verification/bugs_issues.md#g-d
 Sources: `Main.cls:824`, `:839`; `wiki/09` L114-161. Inventory: INT-HIST-10; OP-HIST-15. Test: `TestInvalidHistoryCommands` (`details 0` and `details blah` fail). Native evidence: cases R1 and R2 conform (`184444Z-cases-hr`). The raw status follows `wiki/09` L133, so round 1 withdrew B2 D7 (R1-ONT-13). Consolidated round 3 (`20261114T032054Z-r3-history.partial-purge-failed`, ARM64): for a failed action the raw status is printed as the stored bytes, which include the internal call stack (H3d); repository details read `reg3 (filesystem): /tmp/c3/reg/*` (H1d); `-phases` lists name, time and result per phase (HB1d, `20261114T032620Z-r3-history-b`); a missing ID reports "No record found with ID 999999" (H5). Model `Verus_verification/consolidated/models/history_display.py`.
 
 Extension Verus: [history.rs::source_shown](../../Verus_verification/consolidated/verus/history.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
+
+Iteration38 phase rendering: [render.rs](../../Verus_verification/consolidated/iter38/render.rs) `detail_phases`, `phase_rendering_keeps_order_and_status`.
 
 ### history.read.status-bytes
 
