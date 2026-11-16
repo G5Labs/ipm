@@ -1,0 +1,65 @@
+{
+ "recorded_utc": "2026-11-16T17:28:19.413681+00:00",
+ "batch": 4,
+ "iteration": 37,
+ "prior_seal": "276b7229",
+ "workflow": "Copy resource processor: resource copied from a Source namespace into the installing namespace during Reload, Overwrite flag -> target items after load",
+ "unbound_members": [
+  "ResourceProcessor/Copy.cls::OnAfterPhase",
+  "ResourceProcessor/Copy.cls::OnResolveChildren",
+  "ResourceProcessor/Copy.cls::OnPhase",
+  "ResourceProcessor/Copy.cls::TargetSet",
+  "ResourceProcessor/Copy.cls::OnGetUniqueName"
+ ],
+ "owner": "none in ontology; intent from the processor DESCRIPTION and property comments (Overwrite: \"If set to false (default is true), resources that already exist in the current/target namespace will not be overwritten.\")",
+ "exposure": "Copy.cls lines 1-40 (parameters, properties, TargetSet, start of OnAfterPhase) read before predictions; the rest not read.",
+ "predictions": [
+  {
+   "case": "class C in Source ns, absent in target; load module with Copy resource",
+   "reader": "C exists/compiled in target",
+   "predicted": "copied during Reload (and compiled if CompileAfter or compile phase)"
+  },
+  {
+   "case": "C exists in target with different body; Overwrite default",
+   "reader": "C body/value in target",
+   "predicted": "replaced by Source version"
+  },
+  {
+   "case": "same with Overwrite=0",
+   "reader": "C value",
+   "predicted": "target version kept"
+  },
+  {
+   "case": "uninstall module",
+   "reader": "C exists in target",
+   "predicted": "unspecified (AbstractCompilable: likely deleted)"
+  }
+ ],
+ "exposure_after_source": "Read Copy.OnAfterPhase (export from Source, /nocompile/checkuptodate load, Overwrite=0 drops items existing in target), OnPhase, OnResolveChildren (children owned by any module in target excluded).",
+ "explore": {
+  "explore1": "<Attribute> child elements on <Resource> were not stored; processor Source empty; validation failed. Fixture switched to XML attributes (Source=\"CPSRC\").",
+  "explore4": "o1 copy+overwrite older target; o2 Overwrite=0 keeps D1, copies D2; o3 newer target ALSO overwritten (source prediction that /checkuptodate skips it refuted); o4 owned class excluded; u1 uninstall deletes all copied classes including pre-existing C2"
+ },
+ "source_predictions_round2": [
+  {
+   "case": "u2 uninstall cpb (Overwrite=0 kept user D1)",
+   "predicted": "unknown: Clean resolves CopyB.PKG children; if resolved in target namespace, D1 (never copied) is deleted too"
+  },
+  {
+   "case": "u4 uninstall cpd",
+   "predicted": "Owned (resource of ownmod) kept if ownership exclusion applies at Clean; Free deleted"
+  }
+ ],
+ "outcome": {
+  "status": "sealed",
+  "model": "copy.rs 5 verified, 5/5 controls",
+  "native": "20261116T173211781373Z 136 fields; 128 replayed; 3 flips rejected",
+  "findings": [
+   "C:D40 new High"
+  ],
+  "reach": "437/1216 (+4 new, +1 strengthened)",
+  "refuted_predictions": [
+   "/checkuptodate keeps a newer target"
+  ]
+ }
+}

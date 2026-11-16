@@ -123,6 +123,7 @@ An omitted Health requirement accepts either kind of instance; explicit false ex
 Resource processors with special behavior include:
 
 - `FileCopy`, which copies files or folders ([file copy](#module.processor.file-copy)).
+- `Copy`, which copies classes from another namespace ([namespace copy](#module.processor.copy)).
 - `WebApplication`, which sets up [web applications](#module.webapp). `CSPApplication` is deprecated.
 - `CPF`, which merges configuration into the instance.
 - `SystemSetting`, [Artifactory downloads](../features/artifact-download.g5.md#artifact), unit test and localization processors.
@@ -180,6 +181,16 @@ Should install take over an existing web application of the same name, and shoul
 - Evidence: `CreateOrUpdateWebApp` updates any existing application and `DeleteWebApp` deletes by name. No changelog, test or discussion addresses applications made outside IPM. The duplicate-name refusal protects only applications another module lists.
 - Working assumption: keep the as-built behavior and disclose it. Alternatives are to refuse install when the application exists and no module lists it, or to record creation and delete only what IPM created. Both change today's reinstall-over-manual-setup path.
 - Register: C:Q15.
+
+<a id="module.processor.copy"></a>
+[D · module.processor.copy]
+
+A `Copy` resource copies the classes of the named package from its `Source` namespace into the installing namespace during Reload. They are then compiled there.
+
+- With `Overwrite` true, the default, a class that already exists in the installing namespace is replaced, even when it was changed after the source.
+- With `Overwrite="0"`, existing classes are kept and only missing ones are copied.
+- A class that another installed module lists as a resource is never copied.
+- As built, uninstall deletes every class of that package in the installing namespace except classes another module owns. That includes classes the load kept because of `Overwrite="0"`, which the module never wrote (defect C:D40).
 
 <a id="module.processor.file-copy"></a>
 [I · module.processor.file-copy]
@@ -588,6 +599,16 @@ Dead check: `ResourceProcessor/WebApplication.cls::OnPhase` (Validate branch, `D
 No authorized policy decision. Register entry C:Q15.
 
 Findings audit: [sources, alternatives, implications and settlement gate](../../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#module.webapp.ownership). The recorded assumption is provisional; no new maintainer approval was found.
+
+### module.processor.copy
+
+- agent
+- user-facing-behavior
+- Expands: [Resource processors](#module.processor).
+
+Sources: `ResourceProcessor/Copy.cls` description and property comments ("If set to false (default is true), resources that already exist in the current/target namespace will not be overwritten"), `::OnAfterPhase`, `::OnResolveChildren`; `Lifecycle/Base.cls::%Clean` child deletion. Model: [copy.rs](../../Verus_verification/consolidated/iter37/copy.rs) `load`, `uninstall`, `overwrite_false_keeps_existing`, `owned_never_copied_or_deleted`, `uninstall_deletes_kept_item` ([handoff](../../uplift/consolidated/iter37/HANDOFF.md)).
+
+Findings: [Uninstalling a Copy resource deletes classes that Overwrite="0" kept and the module never wrote](../../uplift/consolidated/BUGS.md#c-d40)
 
 ### module.processor.file-copy
 

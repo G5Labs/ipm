@@ -1,0 +1,70 @@
+{
+ "verus_dir": ".g5/Verus_verification/consolidated/iter37",
+ "changed_files": [
+  "copy.rs",
+  "cases.json",
+  "run.py",
+  "native/**"
+ ],
+ "rows": [
+  {
+   "id": "S37-01",
+   "owner": ".g5/ontology/concepts/modules.g5.md#module.processor.copy",
+   "model": "copy.rs",
+   "symbols": [
+    "child",
+    "copy_one",
+    "load",
+    "overwrite_false_keeps_existing",
+    "overwrite_true_replaces",
+    "owned_never_copied_or_deleted",
+    "fixture_schedule"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/ResourceProcessor/Copy.cls",
+     "OnAfterPhase"
+    ],
+    [
+     "src/cls/IPM/ResourceProcessor/Copy.cls",
+     "OnResolveChildren"
+    ],
+    [
+     "src/cls/IPM/ResourceProcessor/Copy.cls",
+     "TargetSet"
+    ]
+   ],
+   "reader": [
+    [
+     "src/cls/IPM/ResourceProcessor/Copy.cls",
+     "OnPhase"
+    ]
+   ],
+   "scope": "Reload copies the package classes from Source; Overwrite=0 keeps classes present in the target; classes owned by another module resource are excluded; copied classes are compiled. Native o1-o4. Export/Load providers and the /checkuptodate flag are native-qualified (a newer target was still replaced). CompileAfter and Flags attributes not assessed."
+  },
+  {
+   "id": "S37-02",
+   "owner": ".g5/ontology/concepts/modules.g5.md#module.processor.copy",
+   "model": "copy.rs",
+   "symbols": [
+    "uninstall",
+    "uninstall_deletes_kept_item",
+    "owned_never_copied_or_deleted",
+    "fixture_schedule"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/Lifecycle/Base.cls",
+     "%Clean"
+    ]
+   ],
+   "reader": [
+    [
+     "src/cls/IPM/ResourceProcessor/Copy.cls",
+     "OnResolveChildren"
+    ]
+   ],
+   "scope": "Uninstall resolves the Copy package in the installing namespace and deletes every class not owned by another module, including classes the load kept (C:D40). Native u1, u2, u4. Mapped classes and projection ordering in %Clean are not assessed."
+  }
+ ]
+}

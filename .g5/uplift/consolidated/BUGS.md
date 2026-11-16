@@ -60,6 +60,19 @@ Reproduced by: E2E reproduced. [Iteration34 native receipt](iter34/native/202611
 
 `moduleSqlToList` orders the cache rows by major, minor and patch, then by the prerelease column as text in descending order, and keeps the first row per module. That text order puts a release, whose prerelease is empty, after its own prereleases, and `rc.2` before `rc.10`. The repository manager then sees one offer per module, so Main.Install installs it. The method's comment says the query "returns items in correct order", and Main.Install says "the latest version will always be first". The [version order](../../ontology/concepts/versions.g5.md#version.order) and the [search rule](../../ontology/concepts/repositories.g5.md#repo.search-order) require the release and rc.10. A repair would keep the index order (`m.%id`) instead of the explicit version columns. It was not checked.
 
+<a id="c-d40"></a>
+### C:D40: Uninstalling a Copy resource deletes classes that Overwrite="0" kept and the module never wrote
+
+Severity: High · Decision: Open
+
+Run: Uplift 2026-11-16
+
+Found by: iteration37 native exploration (`iter37/attempts/explore5.log`), then source review of `Lifecycle/Base.cls::%Clean` child resolution against `ResourceProcessor/Copy.cls::OnAfterPhase`, and [iteration37 model](../../Verus_verification/consolidated/iter37/copy.rs) `uninstall_deletes_kept_item` with control `uninstall-only-copied` ([proof receipt](iter37/proofs/models.json)).
+
+Reproduced by: E2E reproduced. [Iteration37 native receipt](iter37/native/20261116T173211781373Z/observations.json) on IRIS 2026.1 x86-64 at `571e04a1`. The installing namespace already holds `CopyB.D1` (returns 4) before module `cpb` copies package `CopyB` from namespace CPSRC with `Overwrite="0"`. The load keeps D1 at 4 and copies only D2 (o2). `uninstall cpb` then deletes both D1 and D2 (u2). Passing neighbours: `CopyD.Owned`, listed by another installed module, survives `uninstall cpd` while the copied `CopyD.Free` is removed (u4). With the default `Overwrite`, the replaced pre-existing `CopyA.C2` is also removed by `uninstall cpa` (u1).
+
+The Copy load writes only the classes it exports from the source, but uninstall resolves the package in the installing namespace and deletes every class found there that no other module owns. Code a user kept by choosing `Overwrite="0"` is therefore lost on uninstall, contrary to the [Copy statement](../../ontology/concepts/modules.g5.md#module.processor.copy) and to uninstall removing the module's own resources. A repair would record the classes each load actually copied and delete only those. It was not checked.
+
 <a id="c-d4"></a>
 ### C:D4: A parameter value that contains `$` cannot be used. `%RegExReplace` passes the value as ICU replacement text and escapes only backslashes, so `$5` or an unfi...
 
