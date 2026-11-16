@@ -1,5 +1,5 @@
 <!-- continuation-pointer:start -->
-> **Continuation pointer (2026-11-16 Linux run).** Current: batch 12 sealed (iterations 58-60, then 59 in the commit "Iteration59 seal"; see `git log`). Untested resource processors and placement still yield material findings (C:D58, C:D60, C:D65, C:D66), so convergence remains deferred. Material outcome: 566/1216 locator members (+159 from 407); new defects C:D34-C:D66 (High: C:D39, C:D40, C:D60); questions C:Q24-C:Q28. Cost: delegated lanes ~13.6M tokens so far; main-thread tokens not available. Latest map: [iter59](iter59/project-map.json). Next: batch 13 on remaining processor phases (WebApplication phase/attributes, class/routine mapping variants, Interoperability resources) and uninstall cleanup across resource kinds.
+> **Continuation pointer (2026-11-16 Linux run).** Current: batch 13 sealed (iterations 61-62 `363ac628`; 63 in the commit "Iteration63 seal", see `git log`). Uninstall cleanup still yields Medium findings (C:D65-C:D67), so convergence remains deferred. Material outcome: 570/1216 locator members (+163 from 407); new defects C:D34-C:D68 (High: C:D39, C:D40, C:D60); questions C:Q24-C:Q28. Cost: delegated lanes ~16.3M tokens so far; main-thread tokens not available. Latest map: [iter63](iter63/project-map.json).
 <!-- continuation-pointer:end -->
 
 # IPM consolidation: final handoff

@@ -1,0 +1,79 @@
+{
+ "verus_dir": ".g5/Verus_verification/consolidated/iter63",
+ "changed_files": [
+  "cleanup.rs",
+  "cases.json",
+  "run.py",
+  "native/**"
+ ],
+ "rows": [
+  {
+   "id": "S63-01",
+   "owner": ".g5/ontology/features/uninstall.g5.md#uninstall.cleanup",
+   "model": "cleanup.rs",
+   "symbols": [
+    "Kind",
+    "remains",
+    "code_removed",
+    "globals_by_declaration",
+    "filecopy_keep",
+    "purge_changes_nothing"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/Lifecycle/Base.cls",
+     "%Clean"
+    ],
+    [
+     "src/cls/IPM/ResourceProcessor/Default/Global.cls",
+     "OnPhase"
+    ],
+    [
+     "src/cls/IPM/ResourceProcessor/FileCopy.cls",
+     "OnPhase"
+    ]
+   ],
+   "reader": [
+    [
+     "src/cls/IPM/ResourceProcessor/Default/Global.cls",
+     "OnResolveChildren"
+    ],
+    [
+     "src/cls/IPM/ResourceProcessor/Default/Document.cls",
+     "OnPhase"
+    ]
+   ],
+   "scope": "Per-kind outcome of uninstall (and -purge): CLS, PKG, INC, MAC/INT/OBJ, record, manifest stream and sync baseline removed; name-only GBL data kept (P:F-UNIN-5), Global-attribute GBL deleted; FileCopy removed unless KeepOnUninstall. Native x1, x3. Table data/purge is owned by uninstall.purge.as-built and not re-tested."
+  },
+  {
+   "id": "S63-02",
+   "owner": ".g5/ontology/features/uninstall.g5.md#uninstall.cleanup",
+   "model": "cleanup.rs",
+   "symbols": [
+    "remains",
+    "reload_side_effects_outlive_uninstall"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/Lifecycle/Base.cls",
+     "%Reload"
+    ],
+    [
+     "src/cls/IPM/Utils/Module.cls",
+     "AddGlobalMapping"
+    ],
+    [
+     "src/cls/IPM/Utils/Module.cls",
+     "AddPackageMapping"
+    ]
+   ],
+   "reader": [
+    [
+     "src/cls/IPM/Lifecycle/Base.cls",
+     "%Clean"
+    ]
+   ],
+   "scope": "Declared <Mapping> GBL and PKG entries added at Reload remain after uninstall and -purge; developer-mode ^Sources(\"MODULE\",name) and ^Sources(\"cls\",pkg) entries remain after uninstall. Native i1/x1/x3, i2/x2. No uninstall caller of RemoveGlobalMapping/RemovePackageMapping or ^Sources kill (source search)."
+  }
+ ]
+}

@@ -16,6 +16,14 @@
 - Uninstall runs without a transaction, so a failure can leave some resources removed.
 - For uninstall, the history `Committed` value [only shows success](history.g5.md#history.committed.uninstall).
 
+<a id="uninstall.cleanup"></a>
+[D · uninstall.cleanup]
+
+Uninstall deletes the module's classes, packages, includes and routines with their compiled forms, its record, its stored manifest and its sync baseline. A global resource's data is deleted only when the resource names it with `Global`, and FileCopy targets are deleted unless `KeepOnUninstall` is set.
+
+- As built, declared `<Mapping>` entries stay in the namespace, also with `-purge` (defect C:D67).
+- As built, a developer-mode module's `^Sources` entries stay and keep pointing at its old folder (defect C:D68).
+
 <a id="uninstall.dependents"></a>
 [I · uninstall.dependents]
 
@@ -123,11 +131,23 @@ Source locators follow the conventions on the [root page](../root.g5.md#how-to-r
 - human-provided
 - user-facing-behavior
 - test-coverage
-- Children: [dependents](#uninstall.dependents), [recurse](#uninstall.recurse), [all](#uninstall.all), [global](#uninstall.global), [purge](#uninstall.purge), [IPM itself](#uninstall.ipm).
+- Children: [cleanup](#uninstall.cleanup), [dependents](#uninstall.dependents), [recurse](#uninstall.recurse), [all](#uninstall.all), [global](#uninstall.global), [purge](#uninstall.purge), [IPM itself](#uninstall.ipm).
 
 Sources: `Main.cls:483-507`; `wiki/02` L1251-1288; CHANGELOG 0.10.5 (`#1018`); `General/AbstractHistory.cls:43`. Inventory: CAT-16; A2 1.2 row 22 (`Main:Uninstall`, `Storage.Module:Uninstall`), OP-HIST-02. Tests: `Unit/CLI.cls` `TestUninstallWithoutModuleName`; `History.cls` `TestSimpleHistory`. `FileCopy` targets marked `KeepOnUninstall` stay ([file copy](../concepts/modules.g5.md#module.processor.file-copy)).
 
 Findings: [P:F-UNIN-5 — e2e reproduced](../../../playbook-uplift/BUGS.md#p-f-unin-5). The linked entry qualifies the caller, reader and providers.
+
+### uninstall.cleanup
+
+- agent
+- user-facing-behavior
+- Expands: [Uninstall](#uninstall).
+
+Sources: `Lifecycle/Base.cls::%Clean`, `::%Reload`; `ResourceProcessor/Default/Global.cls`; `ResourceProcessor/FileCopy.cls`. Model: [cleanup.rs](../../Verus_verification/consolidated/iter63/cleanup.rs) `remains`, `code_removed`, `globals_by_declaration`, `filecopy_keep`, `reload_side_effects_outlive_uninstall` ([handoff](../../uplift/consolidated/iter63/HANDOFF.md)). Automatic mappings are C:D65; a name-only global keeping its data is P:F-UNIN-5.
+
+Findings: [Uninstall leaves a module's declared `<Mapping>` entries in the namespace](../../uplift/consolidated/BUGS.md#c-d67)
+
+Findings: [Uninstall leaves a developer-mode module's `^Sources` entries](../../uplift/consolidated/BUGS.md#c-d68)
 
 ### uninstall.dependents
 

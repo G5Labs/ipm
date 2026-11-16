@@ -409,6 +409,19 @@ Reproduced by: E2E reproduced. [Iteration59 native receipt](iter59/native/202611
 
 The module record disappears while its code remains shared by every namespace, contrary to the [placement statement](../../ontology/concepts/modules.g5.md#module.placement). A repair would delete classes the module itself installed wherever they resolve, or refuse NoMapping placement outside the namespace database. It was not checked.
 
+<a id="c-d67"></a>
+### C:D67: Uninstall leaves a module's declared `<Mapping>` entries in the namespace
+
+Severity: Medium · Decision: Open
+
+Run: Uplift 2026-11-16
+
+Found by: source search (no uninstall caller removes the mappings declared in `Module.Mappings`), then [iteration63 model](../../Verus_verification/consolidated/iter63/cleanup.rs) `reload_side_effects_outlive_uninstall` with control `mapping-removed` ([proof receipt](iter63/proofs/models.json)).
+
+Reproduced by: E2E reproduced. [Iteration63 native receipt](iter63/native/20261116T183505649094Z/observations.json) on IRIS 2026.1 x86-64 at `571e04a1`. After `load /tmp/iter63/u63` adds `U63M.GBL -> U63DB` and `U63MP.PKG -> U63DB`, both mappings remain after `uninstall u63` (case x1) and after `uninstall u63 -purge` (x3). Passing neighbour: every code resource, the record and the non-kept FileCopy targets are removed in the same runs.
+
+Namespace configuration made for the module outlives it, contrary to the [cleanup statement](../../ontology/features/uninstall.g5.md#uninstall.cleanup). This is the declared-mapping counterpart of C:D65. A repair would remove the module's declared mappings in Clean unless another installed module declares the same mapping. It was not checked.
+
 <a id="c-d2"></a>
 ### C:D2: When IPM cannot create a load's temporary `.modules` repository, it prints "Failed to clean up repository 'ipm-temp-modules-N'. You may need to manually dele...
 
@@ -759,6 +772,19 @@ Found by: iteration60 exploration refuting the source prediction, then source re
 Reproduced by: E2E reproduced. [Iteration60 native receipt](iter60/native/20261116T182833808281Z/observations.json) on IRIS 2026.1 x86-64 at `571e04a1`. For `includeFiles="L60DomA:L60IncA,L60DomB:L60IncB"`, the resource's only resolved child is `L60IncA,L60DomB.INC` (case p2), and after `uninstall lm60` both `L60IncA.INC` and `L60IncB.INC` remain (u1). Passing neighbour: the single-include form resolves `L60Inc1.INC`, and uninstall deletes it (p1, u2).
 
 The include name is read from the whole attribute instead of from each entry, contrary to the [legacy localization statement](../../ontology/concepts/modules.g5.md#module.processor.localized-messages.legacy). A repair would take the include name from each list entry. It was not checked.
+
+<a id="c-d68"></a>
+### C:D68: Uninstall leaves a developer-mode module's `^Sources` entries
+
+Severity: Low · Decision: Open
+
+Run: Uplift 2026-11-16
+
+Found by: source search (no `^Sources` removal for module entries), then [iteration63 model](../../Verus_verification/consolidated/iter63/cleanup.rs) `reload_side_effects_outlive_uninstall` with control `sources-cleared` ([proof receipt](iter63/proofs/models.json)).
+
+Reproduced by: E2E reproduced. [Iteration63 native receipt](iter63/native/20261116T183505649094Z/observations.json). After `load u63d -dev` and `uninstall u63d`, `^Sources("MODULE","u63d")` and `^Sources("cls","U63D.")` remain and point at the old folders (case x2). Passing neighbour: the module's record, class and sync baseline rows are removed.
+
+A later document in that package is still mapped to the old folder for source-control export, contrary to the [cleanup statement](../../ontology/features/uninstall.g5.md#uninstall.cleanup). A repair would remove the module's `^Sources` entries in Clean. It was not checked.
 
 ## Outside active reproduction scope
 

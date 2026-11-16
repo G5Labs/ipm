@@ -1,0 +1,119 @@
+{
+ "recorded_utc": "2026-11-16T18:32:13.953346+00:00",
+ "batch": 13,
+ "iteration": 63,
+ "prior_seal": "976937f3",
+ "workflow": "uninstall cleanup across ordinary resource kinds (CLS, PKG, INC, MAC/INT, GBL name-only and Global attribute, FileCopy file/folder with/without KeepOnUninstall, declared <Mapping>), non-dev and dev: what remains after uninstall",
+ "owner": ".g5/ontology/features/uninstall.g5.md#uninstall (\"removes an installed module's resources and its record\"); concepts/modules.g5.md file-copy and global statements; placement (<Mappings> adds explicit mappings)",
+ "known_not_refiled": [
+  "P:F-UNIN-5 name-only global keeps data",
+  "P:F-UNIN-2 purge keeps table data",
+  "P:F-UNIN-9 dependency manifest stream",
+  "C:D40",
+  "C:D59",
+  "C:D63",
+  "C:D64",
+  "C:D65",
+  "C:D66",
+  "C:D26"
+ ],
+ "exposure": "Owner statements and register titles read; no %Clean/processor Clean bodies read before these predictions (parent context earlier saw %Clean lines 330-380: resolve children, build delete arrays, mapped classes skipped unless global).",
+ "predictions": [
+  {
+   "kind": "CLS",
+   "reader": "class defined/compiled",
+   "owner": "removed"
+  },
+  {
+   "kind": "PKG",
+   "reader": "classes defined",
+   "owner": "removed"
+  },
+  {
+   "kind": "INC",
+   "reader": "include exists",
+   "owner": "removed"
+  },
+  {
+   "kind": "MAC/INT",
+   "reader": "routine .MAC and .INT exist",
+   "owner": "removed"
+  },
+  {
+   "kind": "GBL name-only",
+   "reader": "global data",
+   "owner": "kept (P:F-UNIN-5, as built)"
+  },
+  {
+   "kind": "GBL Global attribute",
+   "reader": "global data",
+   "owner": "deleted"
+  },
+  {
+   "kind": "FileCopy file / folder without KeepOnUninstall",
+   "reader": "target exists",
+   "owner": "removed"
+  },
+  {
+   "kind": "FileCopy with KeepOnUninstall",
+   "reader": "target exists",
+   "owner": "kept"
+  },
+  {
+   "kind": "declared <Mapping>",
+   "reader": "namespace mapping",
+   "owner": "unspecified (placement: <Mappings> adds explicit mappings)"
+  },
+  {
+   "kind": "dev-mode bookkeeping (^Sources entries, sync FileHash baseline rows)",
+   "reader": "globals/rows for module",
+   "owner": "removed with the record"
+  },
+  {
+   "kind": "module record, manifest stream",
+   "reader": "record/stream",
+   "owner": "removed"
+  }
+ ],
+ "exposure_after_source": "Read Lifecycle/Base %Reload mapping setup (lines 660-716) and ^Sources writes, %Clean start, Global processor attributes, FileHash ModuleNameFK (OnDelete cascade); searched for any uninstall caller of Remove*Mapping or ^Sources kill (none).",
+ "source_predictions": [
+  {
+   "kind": "declared <Mapping>",
+   "predicted": "remains after uninstall (no removal caller)"
+  },
+  {
+   "kind": "dev ^Sources entries",
+   "predicted": "remain"
+  },
+  {
+   "kind": "FileHash baseline rows",
+   "predicted": "removed by FK cascade"
+  }
+ ],
+ "explore": {
+  "explore1": "all kinds observed; ^Sources CLS counter keyed wrongly (count 0)",
+  "explore2": "full ^Sources dump: ^Sources(\"MODULE\",\"u63d\") and ^Sources(\"cls\",\"U63D.\") remain after uninstall"
+ },
+ "outcome": {
+  "status": "lane complete, not sealed",
+  "model": "cleanup.rs 5 verified, 5/5 controls",
+  "native": "20261116T183505649094Z 122 fields; 37 replayed; flips x1.map.pkg, x2.dev.sourcesmodule, x1.gbl.attr rejected",
+  "new_findings": [
+   "declared <Mapping> entries outlive uninstall (proposed Medium)",
+   "developer-mode ^Sources entries outlive uninstall (proposed Low)"
+  ],
+  "re_observed": [
+   "P:F-UNIN-5 name-only global data kept"
+  ],
+  "reach": "no new members; roles added to already-linked %Clean, %Reload, Global.OnPhase/OnResolveChildren, FileCopy.OnPhase, Document.OnPhase, AddGlobalMapping, AddPackageMapping"
+ },
+ "integration": {
+  "by": "main thread",
+  "independent_rerun": "run.py --no-native: 5 verified, 5/5 controls, 37 replayed",
+  "ontology": "new D uninstall.cleanup (human-provided uninstall statement left unchanged)",
+  "findings": [
+   "C:D67 Medium",
+   "C:D68 Low"
+  ]
+ }
+}
