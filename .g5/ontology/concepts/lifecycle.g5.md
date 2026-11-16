@@ -33,6 +33,13 @@ A command runs its phase together with all the phases it needs first. For exampl
 
 - Each resource kind becomes visible at its own phase: include text, global data and `.DFI` items at Reload, classes, routines and `.LOC` messages at Compile, and FileCopy and WebApplication at Activate. A `compile` module action therefore leaves FileCopy targets and web applications stale.
 
+<a id="lifecycle.document"></a>
+[D · lifecycle.document]
+
+The Document phase runs Document-phase hooks for the module and, unless `-DDocument.Recurse=0` is given, first for each installed dependency, all in one transaction. A failing hook fails the command and rolls back what the hooks wrote, and a dependency that is not installed stops the command before any hook runs.
+
+- As built, IPM itself generates no documentation in this phase, although the module-action help says `document` regenerates the module's API documentation (defect C:D69).
+
 <a id="lifecycle.only"></a>
 [I · lifecycle.only]
 
@@ -157,6 +164,16 @@ Model: [phases.rs](../../Verus_verification/consolidated/iter30/phases.rs) `comp
 
 
 Iteration65: [moderefresh.rs](../../Verus_verification/consolidated/iter65/moderefresh.rs) `compile_chain_skips_activate`.
+### lifecycle.document
+
+- agent
+- user-facing-behavior
+- Expands: [Lifecycle](#lifecycle).
+
+Sources: `Lifecycle/Base.cls::%Document`; `Main.cls` module-action help. Model: [docphase.rs](../../Verus_verification/consolidated/iter66/docphase.rs) `document`, `neighbors`, `phase_generates_nothing` ([handoff](../../uplift/consolidated/iter66/HANDOFF.md)).
+
+Findings: [`document` regenerates no API documentation unless a module adds its own Document hooks](../../uplift/consolidated/BUGS.md#c-d69)
+
 ### lifecycle.only
 
 - human-provided

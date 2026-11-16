@@ -786,6 +786,19 @@ Reproduced by: E2E reproduced. [Iteration63 native receipt](iter63/native/202611
 
 A later document in that package is still mapped to the old folder for source-control export, contrary to the [cleanup statement](../../ontology/features/uninstall.g5.md#uninstall.cleanup). A repair would remove the module's `^Sources` entries in Clean. It was not checked.
 
+<a id="c-d69"></a>
+### C:D69: `document` regenerates no API documentation unless a module adds its own Document hooks
+
+Severity: Low · Decision: Open
+
+Run: Uplift 2026-11-16
+
+Found by: source search (no consumer of the Document phase besides `%Document`), then [iteration66 model](../../Verus_verification/consolidated/iter66/docphase.rs) `phase_generates_nothing` with control `phase-writes-own-mark` ([proof receipt](iter66/proofs/models.json)).
+
+Reproduced by: E2E reproduced. [Iteration66 native receipt](iter66/native/20261116T184640249526Z/observations.json) on IRIS 2026.1 x86-64 at `571e04a1`. `n66 document` succeeds and does nothing (case c3), and `m66 document` only runs the modules' own Document hooks, dependency first (c1). Passing neighbour: the hooks run in the documented order and roll back on failure (c1, c4).
+
+This is documentation drift against the module-action help, recorded under the [Document phase statement](../../ontology/concepts/lifecycle.g5.md#lifecycle.document). A repair would generate documentation or reword the help to "runs Document-phase hooks for the module and its dependencies". It was not checked.
+
 ## Outside active reproduction scope
 
 <a id="c-d17"></a>

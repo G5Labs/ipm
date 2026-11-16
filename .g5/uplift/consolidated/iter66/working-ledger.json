@@ -1,0 +1,91 @@
+{
+ "recorded_utc": "2026-11-16T18:44:22.195904+00:00",
+ "batch": 15,
+ "iteration": 66,
+ "prior_seal": "7d5799a4",
+ "workflow": "<module> document: %Document phase -> dependency recursion -> generated API documentation artefacts, status, history",
+ "unbound_members": [
+  "Lifecycle/Base.cls::%Document"
+ ],
+ "owner": ".g5/ontology/concepts/lifecycle.g5.md#lifecycle (Document listed as a phase); module-action help: \"document: regenerates the API documentation for the module\"",
+ "exposure": "The parent thread read the first ~30 lines of %Document (tstart; Document.Recurse default 1; BuildDependencyGraph; error \"Cannot build documentation for module ... because required module ... is not installed\" when a graph node has a server). The rest of the body was not read before these predictions.",
+ "predictions": [
+  {
+   "case": "m document on an installed module with an installed dependency",
+   "reader": "generated doc artefacts for m and dep; status",
+   "owner": "docs regenerated for the module",
+   "source": "dependency docs also regenerated (Recurse default 1)"
+  },
+  {
+   "case": "m document -DDocument.Recurse=0",
+   "reader": "artefacts for dep",
+   "owner": "unspecified",
+   "source": "only m documented"
+  },
+  {
+   "case": "dependency not installed (graph node offered by a repository)",
+   "reader": "status/message",
+   "owner": "unspecified",
+   "source": "fails with \"required module ... is not installed\""
+  },
+  {
+   "case": "module with no classes",
+   "reader": "status",
+   "owner": "succeeds with nothing to document"
+  },
+  {
+   "case": "phase list",
+   "reader": "START lines",
+   "owner": "Document alone (complete chain for document is just Document, iteration30)",
+   "source": "same"
+  }
+ ],
+ "exposure_after_source": "Read the rest of %Document and searched src/cls for consumers of the Document phase: none besides %Document itself (no lifecycle override, no processor OnPhase(\"Document\")). Base %Document only builds the dependency graph, runs the Document phase on each dependency (deepest first, Recurse=0, Dependencies list), inside its own tstart/tcommit; with Recurse=0 it does nothing.",
+ "source_predictions": [
+  {
+   "case": "c1 m66 document",
+   "predicted": "Document START for d66 then m66; Document-phase Invoke hooks run d66 first; no other IPM artefact"
+  },
+  {
+   "case": "c2 m66 document -DDocument.Recurse=0",
+   "predicted": "only m66"
+  },
+  {
+   "case": "c3 n66 (no classes, no deps) document",
+   "predicted": "succeeds, nothing generated"
+  },
+  {
+   "case": "c4 f66 document where dependency e66 hook returns an error after writing a global",
+   "predicted": "fails; e66 write rolled back by %Document transaction"
+  },
+  {
+   "case": "c5 d66 uninstalled -force, no repository",
+   "predicted": "fails in dependency resolution"
+  },
+  {
+   "case": "c6 d66 uninstalled, filesystem repo offers d66",
+   "predicted": "fails with \"required module d66 is not installed\""
+  },
+  {
+   "case": "help claim",
+   "predicted": "discrepancy: document regenerates no API documentation by itself; only hooks act (Low, documentation drift)"
+  }
+ ],
+ "outcome": {
+  "status": "lane complete, not sealed (main thread integrates)",
+  "model": "docphase.rs 2 verified, 5/5 controls",
+  "native": "20261116T184640249526Z 63 fields; 42 replayed; flips rejected",
+  "findings": [
+   "new Low: document help claims to regenerate API documentation, but the phase generates nothing without module hooks"
+  ],
+  "predictions": "all source predictions matched; owner prediction (docs regenerated) contradicted"
+ },
+ "integration": {
+  "by": "main thread",
+  "independent_rerun": "run.py --no-native: 2 verified, 5/5 controls, 42 replayed",
+  "findings": [
+   "C:D69 Low (documentation drift)"
+  ],
+  "convergence_role": "final test: strongest remaining candidate"
+ }
+}
