@@ -1,5 +1,17 @@
 <!-- continuation-pointer:start -->
-> **Continuation pointer (2026-11-16 Linux run).** Current: batch 13 sealed (iterations 61-62 `363ac628`; 63 in the commit "Iteration63 seal", see `git log`). Uninstall cleanup still yields Medium findings (C:D65-C:D67), so convergence remains deferred. Material outcome: 570/1216 locator members (+163 from 407); new defects C:D34-C:D68 (High: C:D39, C:D40, C:D60); questions C:Q24-C:Q28. Cost: delegated lanes ~16.3M tokens so far; main-thread tokens not available. Latest map: [iter63](iter63/project-map.json).
+> **Continuation pointer (2026-11-16 Linux run): CONVERGED.** Final iteration: 67, with the evidentiary seal in the commit "Converged: continuation run evidence" (see `git log`; the last iteration seal is `e2d5b65a`). Material outcome:
+> - 591/1216 locator members (+184 from 407).
+> - 30 new owner statements.
+> - New defects C:D34-C:D71: High C:D39, C:D40, C:D60; 12 Medium; 23 Low.
+> - New questions C:Q24-C:Q28.
+> - All 38 continuation iterations replay from a clean extraction, and the freshness gate is clean.
+>
+> Convergence basis:
+> - The strongest remaining candidate (Document phase) and different underserved workflows (`generate`, `zn`/`exec`/`init`, editor composite) yielded only Low findings.
+> - The final cross-cutting sweeps yielded nothing new.
+> - The residual is plumbing, IDE, generator or excluded code ([convergence record](CONVERGENCE-20261116.md)).
+>
+> Cost: about 3 h of wall time and about 22.0M delegated-lane tokens; main-thread tokens are not available. Latest map: [iter67](iter67/project-map.json).
 <!-- continuation-pointer:end -->
 
 # IPM consolidation: final handoff

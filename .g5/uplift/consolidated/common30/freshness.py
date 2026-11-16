@@ -39,6 +39,11 @@ def main():
             p = verus_dir / f
             theorem[f] = 'fresh' if p.exists() and sha(p) == h else 'STALE: formal input changed; rerun proofs, controls and replay'
         mp = Path(a.map) if a.map else (it / 'project-map.json')
+        if not mp.exists():
+            # Iterations sealed jointly share the map of the next sealed iteration, which includes them.
+            later = sorted((p for p in cons.glob('iter[0-9]*') if int(p.name[4:]) > n and (p / 'project-map.json').exists()), key=lambda p: int(p.name[4:]))
+            if later:
+                mp = later[0] / 'project-map.json'
         corr = {}
         if mp.exists():
             m = json.loads(mp.read_text())
