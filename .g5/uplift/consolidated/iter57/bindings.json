@@ -1,0 +1,81 @@
+{
+ "verus_dir": ".g5/Verus_verification/consolidated/iter57",
+ "changed_files": [
+  "cspapp.rs",
+  "cases.json",
+  "run.py",
+  "native/Reader.cls",
+  "native/m57a/**",
+  "native/m57b/**",
+  "native/m57c/**"
+ ],
+ "rows": [
+  {
+   "id": "S57-01",
+   "owner": ".g5/ontology/concepts/modules.g5.md#module.csp.lifecycle",
+   "model": "cspapp.rs",
+   "symbols": [
+    "load",
+    "reload_recopies",
+    "takeover_resets_undeclared"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/ResourceProcessor/CSPApplication.cls",
+     "OnAfterPhase"
+    ],
+    [
+     "src/cls/IPM/ResourceProcessor/CSPApplication.cls",
+     "CreateOrUpdateCSPApp"
+    ],
+    [
+     "src/cls/IPM/ResourceProcessor/CSPApplication.cls",
+     "OnPhaseInternal"
+    ],
+    [
+     "src/cls/IPM/Utils/File.cls",
+     "CopyDir"
+    ]
+   ],
+   "reader": [
+    [
+     "src/cls/IPM/ResourceProcessor/CSPApplication.cls",
+     "OnBeforePhase"
+    ]
+   ],
+   "scope": "Load and reload create or modify the application with every ATTRIBUTES property and copy the source folder into DeployPath. Native a1, a2, a4, b1, c0, c1. Security.Applications and copy/chmod are providers; MatchRoles, delegated auth and DispatchClass are not exercised."
+  },
+  {
+   "id": "S57-02",
+   "owner": ".g5/ontology/concepts/modules.g5.md#module.csp.lifecycle",
+   "model": "cspapp.rs",
+   "symbols": [
+    "uninstall",
+    "no_deploy_path_uninstall_deletes_source",
+    "deploy_path_uninstall_keeps_source",
+    "deploy_path_uninstall_purges_deploy"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/ResourceProcessor/CSPApplication.cls",
+     "DeleteCSPApp"
+    ],
+    [
+     "src/cls/IPM/ResourceProcessor/CSPApplication.cls",
+     "OnPhaseInternal"
+    ]
+   ],
+   "reader": [
+    [
+     "src/cls/IPM/Utils/File.cls",
+     "IsProtectedDirectory"
+    ],
+    [
+     "src/cls/IPM/Lifecycle/Base.cls",
+     "%Clean"
+    ]
+   ],
+   "scope": "Uninstall deletes the application and purges the files of its Directory via deletePortal; without DeployPath that Directory is the module source folder. Native a3, b2, c2. deletePortal is a provider; protected directories are covered by the product FileCopy test and not re-run."
+  }
+ ]
+}

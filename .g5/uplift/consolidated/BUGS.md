@@ -73,6 +73,19 @@ Reproduced by: E2E reproduced. [Iteration37 native receipt](iter37/native/202611
 
 The Copy load writes only the classes it exports from the source, but uninstall resolves the package in the installing namespace and deletes every class found there that no other module owns. Code a user kept by choosing `Overwrite="0"` is therefore lost on uninstall, contrary to the [Copy statement](../../ontology/concepts/modules.g5.md#module.processor.copy) and to uninstall removing the module's own resources. A repair would record the classes each load actually copied and delete only those. It was not checked.
 
+<a id="c-d60"></a>
+### C:D60: Uninstalling a CSPApplication without DeployPath deletes the module's source folder
+
+Severity: High · Decision: Open
+
+Run: Uplift 2026-11-16
+
+Found by: source review of `ResourceProcessor/CSPApplication.cls::DeleteCSPApp` against the default directory recorded in [module.csp.directory](../../ontology/concepts/modules.g5.md#module.csp.directory), then [iteration57 model](../../Verus_verification/consolidated/iter57/cspapp.rs) `no_deploy_path_uninstall_deletes_source` with control `purge-skips-source-folder` ([proof receipt](iter57/proofs/models.json)).
+
+Reproduced by: E2E reproduced. [Iteration57 native receipt](iter57/native/20261116T182314549001Z/observations.json) on IRIS 2026.1 x86-64 at `571e04a1`. After `load m57b`, whose `<CSPApplication>` has no DeployPath, `uninstall m57b` removes the module's own source folder `/tmp/iter57/m57b/web/` and its `index.html` (case b2). Passing neighbour: with DeployPath, uninstall purges only the deployed copy and the source survives (a3).
+
+Uninstall destroys files outside the namespace that the module never installed, which a developer may not have elsewhere, contrary to the [CSP lifecycle statement](../../ontology/concepts/modules.g5.md#module.csp.lifecycle) and uninstall removing only the module's resources. A repair would never purge a directory inside the module's source root, or purge only a DeployPath. It was not checked.
+
 <a id="c-d4"></a>
 ### C:D4: A parameter value that contains `$` cannot be used. `%RegExReplace` passes the value as ICU replacement text and escapes only backslashes, so `$5` or an unfi...
 
@@ -668,6 +681,19 @@ Found by: iteration56 native case u1 against the Clean phase, which deletes only
 Reproduced by: E2E reproduced. [Iteration56 native receipt](iter56/native/20261116T182256528947Z/observations.json). After `uninstall loc56`, `^IRIS.Msg("D56Dom","en")` still holds messages A and C, while the document and module record are gone (u1). Passing neighbour: load and reload replace the domain correctly (l1, l2).
 
 This contradicts Clean removing the module's resources, as stated in the [localization statement](../../ontology/concepts/modules.g5.md#module.processor.localized-messages). A repair would delete the document's domains on Clean unless another module owns them. It was not checked.
+
+<a id="c-d61"></a>
+### C:D61: A CSPApplication load resets an existing application's undeclared properties
+
+Severity: Low · Decision: Open
+
+Run: Uplift 2026-11-16
+
+Found by: source review of `ResourceProcessor/CSPApplication.cls::CreateOrUpdateCSPApp` (every known property written), then [iteration57 model](../../Verus_verification/consolidated/iter57/cspapp.rs) `takeover_resets_undeclared` with control `takeover-keeps-undeclared` ([proof receipt](iter57/proofs/models.json)).
+
+Reproduced by: E2E reproduced. [Iteration57 native receipt](iter57/native/20261116T182314549001Z/observations.json). An administrator's `/ipmcont57c` loses its description, its timeout of 1234 and its password authentication after `load m57c` (cases c0, c1). Passing neighbour: `WebApplication` keeps undeclared properties (iteration5).
+
+This contradicts the [CSP lifecycle statement](../../ontology/concepts/modules.g5.md#module.csp.lifecycle) for a deprecated but supported processor. A repair would write only declared attributes when the application exists. It was not checked.
 
 ## Outside active reproduction scope
 

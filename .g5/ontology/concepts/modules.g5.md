@@ -367,6 +367,14 @@ For a legacy CSPApplication with no Directory and no DispatchClass, IPM uses the
 
 An explicit Directory is normalized and takes precedence over dispatch inference. The sentinel is an intermediate value, not a directory that readers should expect after the call.
 
+<a id="module.csp.lifecycle"></a>
+[D · module.csp.lifecycle]
+
+A deprecated `<CSPApplication>` creates or updates its web application during Activate and deletes it during uninstall. Each load prints a deprecation warning and copies the source folder into `DeployPath` when one is given.
+
+- Updating an existing application writes every property the processor knows, so properties the manifest does not declare, such as a description or timeout an administrator set, return to the processor defaults. `WebApplication` keeps them (defect C:D61).
+- Uninstall also deletes the files of the application's directory. As built, without `DeployPath` that directory is the module's own source folder, so uninstalling deletes the module's source files (defect C:D60).
+
 <a id="module.webapp.provider-status"></a>
 [D · module.webapp.provider-status]
 
@@ -835,6 +843,20 @@ Sources and readers: `Storage/ModuleSetting/Default.cls::EvaluateAttribute` → 
 - Expands: [module.processor](#module.processor).
 
 Sources and readers: `ResourceProcessor/CSPApplication.cls::OnBeforePhase` → `OnPhaseInternal`. [Iteration 7 index](../../uplift/consolidated/iter7/INDEX.md). [Contract](../../Verus_verification/consolidated/iter7/inputs.rs): `csp_directory`, `csp_after_before`. These are specification proofs; native observations and remaining provider boundaries are in the index and trust inventory.
+
+
+Findings: [Uninstalling a CSPApplication without DeployPath deletes the module's source folder](../../uplift/consolidated/BUGS.md#c-d60)
+### module.csp.lifecycle
+
+- agent
+- user-facing-behavior
+- Expands: [Resource processors](#module.processor).
+
+Sources: `ResourceProcessor/CSPApplication.cls::OnPhaseInternal`, `::CreateOrUpdateCSPApp`, `::DeleteCSPApp`. Model: [cspapp.rs](../../Verus_verification/consolidated/iter57/cspapp.rs) `load`, `uninstall`, `no_deploy_path_uninstall_deletes_source`, `takeover_resets_undeclared` ([handoff](../../uplift/consolidated/iter57/HANDOFF.md)). Deleting an application IPM did not create is the open [ownership question](#module.webapp.ownership).
+
+Findings: [Uninstalling a CSPApplication without DeployPath deletes the module's source folder](../../uplift/consolidated/BUGS.md#c-d60)
+
+Findings: [A CSPApplication load resets an existing application's undeclared properties](../../uplift/consolidated/BUGS.md#c-d61)
 
 ### module.webapp.provider-status
 

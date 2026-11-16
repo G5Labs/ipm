@@ -1,0 +1,110 @@
+{
+ "recorded_utc": "2026-11-16T18:20:42.268231+00:00",
+ "batch": 12,
+ "iteration": 57,
+ "prior_seal": "4ec615c6",
+ "workflow": "deprecated CSPApplication resource processor: load (non-dev, dev), reload, uninstall of a module declaring a CSP application with a static-file source directory -> Security.Applications entry, files in the deployment directory, pre-existing application handling",
+ "unbound_members": [
+  "ResourceProcessor/CSPApplication.cls (11 members)",
+  "Utils/File.cls::MakeDirectoryWriteable",
+  "Utils/File.cls::CopyFile",
+  "Utils/File.cls::WarnIfInInstallDirectory"
+ ],
+ "owner": ".g5/ontology/concepts/modules.g5.md#module.webapp (+ children) and #module.processor (\"CSPApplication is deprecated\")",
+ "exposure": "CSPApplication.cls bodies not read; only the parent thread listed member names/line counts and grep showed it calls MakeDirectoryWriteable, CopyFile, WarnIfInInstallDirectory.",
+ "predictions_owner": [
+  {
+   "case": "load (non-dev) of module with <CSPApplication Url=/ipmcont57a SourcePath=/web DeployPath=...>",
+   "reader": "Security.Applications exists + files in deploy dir",
+   "predicted": "application created; static files copied to the deploy path"
+  },
+  {
+   "case": "load -dev",
+   "reader": "same",
+   "predicted": "application created; in dev mode the app may point at the source directory instead of a copy"
+  },
+  {
+   "case": "reload after editing a static file",
+   "reader": "deploy-dir file content",
+   "predicted": "updated copy"
+  },
+  {
+   "case": "uninstall",
+   "reader": "application exists, deploy files",
+   "predicted": "application deleted (as module.webapp); copied files removed or left: unspecified"
+  },
+  {
+   "case": "pre-existing application with same URL created by an administrator",
+   "reader": "application properties after load and after uninstall",
+   "predicted": "like WebApplication: declared properties updated, others kept; uninstall deletes it (module.webapp.ownership as-built)"
+  },
+  {
+   "case": "deprecation",
+   "reader": "output",
+   "predicted": "a deprecation warning may be printed (owner says deprecated)"
+  }
+ ],
+ "exposure_after_source": "Read CSPApplication.cls (%OnNew, OnBeforePhase, OnAfterPhase, OnPhaseInternal, CreateOrUpdateCSPApp, DeleteCSPApp) and Utils/File.cls::MakeDirectoryWriteable before explore1.",
+ "predictions_source": [
+  {
+   "case": "first load with a not-yet-existing DeployPath",
+   "predicted": "files not copied (copy only when Directory exists)"
+  },
+  {
+   "case": "uninstall without DeployPath",
+   "predicted": "deletePortal purges the module source folder"
+  },
+  {
+   "case": "admin app takeover",
+   "predicted": "undeclared properties reset to processor defaults"
+  },
+  {
+   "case": "deprecation",
+   "predicted": "warning once per module per process"
+  }
+ ],
+ "explore1": "refuted: first install copies files although the deploy directory did not exist before; confirmed: b2 uninstall deletes m57b/web (module source folder); c1 takeover resets Description/Timeout/password auth; c2 uninstall deletes the admin app",
+ "outcome": {
+  "status": "lane complete, not sealed (main thread integrates)",
+  "model": "cspapp.rs 5 verified, 4/4 controls (run1 kept: uninstall-keeps-deploy-files survived before deploy_path_uninstall_purges_deploy was added)",
+  "native": "20261116T182314549001Z 174 fields; 18 replayed; flips b2.sourceB, c1.appc.descadmin, a2.deployA rejected",
+  "findings": [
+   "proposed High: uninstall of a CSPApplication without DeployPath deletes the module source folder",
+   "proposed Low: taking over an existing application resets undeclared properties"
+  ],
+  "reach_candidates": {
+   "new": [
+    "CSPApplication.cls::OnAfterPhase",
+    "::CreateOrUpdateCSPApp",
+    "::DeleteCSPApp"
+   ],
+   "strengthened": [
+    "CSPApplication.cls::OnBeforePhase",
+    "::OnPhaseInternal",
+    "Utils/File.cls::CopyDir",
+    "::IsProtectedDirectory",
+    "Lifecycle/Base.cls::%Clean"
+   ],
+   "not_claimed": [
+    "%OnNew (warning observed natively but not modelled)",
+    "MakeDirectoryWriteable",
+    "WarnIfInInstallDirectory",
+    "ReplaceMatchRoles",
+    "ActivateDelegated",
+    "OnBeforeArtifact (package scope)",
+    "OnGetUniqueName",
+    "GetSourceControlInfo",
+    "OnItemRelativePath"
+   ]
+  }
+ },
+ "integration": {
+  "by": "main thread",
+  "independent_rerun": "run.py --no-native: 5 verified, 4/4 controls, 18 replayed",
+  "findings": [
+   "C:D60 High",
+   "C:D61 Low"
+  ],
+  "convergence_role": "final probe (strongest remaining candidate) - produced a High, so convergence deferred"
+ }
+}

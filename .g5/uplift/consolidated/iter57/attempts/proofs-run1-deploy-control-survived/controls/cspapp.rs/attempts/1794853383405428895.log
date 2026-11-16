@@ -1,0 +1,27 @@
+verification results:: 3 verified, 1 errors
+note: function body check: not all errors may have been reported; rerun with a higher value for --multiple-errors to find other potential errors in this function
+  --> /home/ziniu_wu_g5labs_ai/experiments/iris-ipm-continuous-20261116/ipm/.g5/uplift/consolidated/iter57/proofs/controls/cspapp.rs/takeover-keeps-undeclared.rs:43:1
+   |
+43 | pub proof fn takeover_resets_undeclared(w: W, a: App)
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: postcondition not satisfied
+  --> /home/ziniu_wu_g5labs_ai/experiments/iris-ipm-continuous-20261116/ipm/.g5/uplift/consolidated/iter57/proofs/controls/cspapp.rs/takeover-keeps-undeclared.rs:45:13
+   |
+43 | pub proof fn takeover_resets_undeclared(w: W, a: App)
+   | ----------------------------------------------------- at the end of the function body
+44 |     requires w.app == Some(a), a.admin_desc, a.admin_timeout
+45 |     ensures !load(w, Res { has_deploy: true }).app.unwrap().admin_desc, !load(w, Res { has_deploy: true }).app.unwrap().admin_timeout
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: postcondition not satisfied
+  --> /home/ziniu_wu_g5labs_ai/experiments/iris-ipm-continuous-20261116/ipm/.g5/uplift/consolidated/iter57/proofs/controls/cspapp.rs/takeover-keeps-undeclared.rs:45:73
+   |
+43 | pub proof fn takeover_resets_undeclared(w: W, a: App)
+   | ----------------------------------------------------- at the end of the function body
+44 |     requires w.app == Some(a), a.admin_desc, a.admin_timeout
+45 |     ensures !load(w, Res { has_deploy: true }).app.unwrap().admin_desc, !load(w, Res { has_deploy: true }).app.unwrap().admin_timeout
+   |                                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: aborting due to 2 previous errors
+
