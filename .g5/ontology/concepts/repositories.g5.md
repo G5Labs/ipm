@@ -36,6 +36,7 @@ IPM searches enabled repositories for a module, in the order they were created. 
 - Keywords given as text are split on spaces, and empty pieces are dropped. A keyword string of only spaces therefore counts as no keywords and filesystem repositories are searched. The module name is lowercased before any repository is asked.
 
 - IPM takes the highest version that satisfies the request, whichever repository offers it.
+- As built, a filesystem repository offers only one version per module to that choice: the first row after it re-sorts its cache by version columns, comparing prerelease text as text and putting a release after its own prereleases. An unversioned install can therefore pick `2.0.0-beta.1` over `2.0.0`, or `1.0.0-rc.2` over `1.0.0-rc.10` (defect C:D39). Its version index itself lists versions in [version order](versions.g5.md#version.order).
 - When several repositories offer that version, the one created first wins. A repository's sort position does not change this.
 - The selected repository also supplies the [saved supplier name and historical source details](#repo.origin.installed).
 
@@ -310,7 +311,11 @@ Iteration 3 search repair: `Repo/Manager.cls::SearchRepositoriesForModule` and `
 
 Iteration 4 token producer: `Repo/SearchCriteria.cls::KeywordsSet` (text split on single spaces, `$list` input not split, empty elements dropped from both; a list object assigned as given) and the lowercased criteria name in `SearchRepositoriesForModule`. Verus [repairs4.rs](../../Verus_verification/consolidated/iter4/repairs4.rs) `{keywords,visits_filesystem,criteria_name,keyword_neighbors}`; controls `empty-tokens-kept`, `dollar-list-not-filtered`, `object-filtered`, `keywords-ignored-at-gate` rejected. The token rule is source-only; no new native case.
 
+Iteration 34 version producer: `General/SemanticVersion/Index.cls::GetIndexGlobalNode`, `General/SemanticVersion/Find.cls` reverse walk and flags, `Repo/Utils.cls::moduleSqlToList` re-sort and first row per name. Model: [versions.rs](../../Verus_verification/consolidated/iter34/versions.rs) `releases_agree`, `release_versus_own_prerelease`, `fixture_neighbors` ([handoff](../../uplift/consolidated/iter34/HANDOFF.md)). Release-only offers keep the highest-first premise relied on by iteration31.
+
 Findings: [P:F-INST-4 — e2e reproduced](../../../playbook-uplift/BUGS.md#p-f-inst-4). The linked entry qualifies the caller, reader and providers.
+
+Findings: [A filesystem repository install picks a prerelease over its own release and orders prerelease numbers as text](../../uplift/consolidated/BUGS.md#c-d39)
 
 ### repo.origin.installed
 

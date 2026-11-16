@@ -1,0 +1,94 @@
+{
+ "recorded_utc": "2026-11-16T17:17:44.478978+00:00",
+ "batch": 3,
+ "iteration": 34,
+ "prior_seal": "4641563d",
+ "workflow": "filesystem repository version index and match query (SemanticVersion.Index/Find via Repo/Filesystem/Cache OrderedMatches) -> offer order and match set -> install/search choice",
+ "unbound_members": [
+  "General/SemanticVersion/Index.cls::*",
+  "General/SemanticVersion/Find.cls::*",
+  "Repo/Filesystem/Cache.cls::SemVerNode (if in census)"
+ ],
+ "why": "iter21 binds OrderedMatches with ordering/ranges/prereleases/multiple rows conditional; iter31 depends on the premise that the FS repository lists candidates highest first. The producer of that order and match set is unbound.",
+ "owner": ".g5/ontology/concepts/versions.g5.md#version.order, #version.range; concepts/repositories.g5.md#repo.search-order; features/install.g5.md (latest available)",
+ "exposure": "Index/Find bodies not read; Cache.cls OrderedMatches declaration and PackageService.ListModules query were read.",
+ "predictions": [
+  {
+   "case": "offers 1.9.0, 1.10.0, 2.0.0-beta.1; install b (no version)",
+   "reader": "installed version",
+   "owner": "1.10.0 (numeric order, prerelease skipped)"
+  },
+  {
+   "case": "same, install b 1.x",
+   "reader": "installed version",
+   "owner": "1.10.0"
+  },
+  {
+   "case": "same, install b 2.0.0-beta.1 (exact)",
+   "reader": "installed version",
+   "owner": "2.0.0-beta.1"
+  },
+  {
+   "case": "offers 1.0.0-rc.2, 1.0.0-rc.10 only; install b >=1.0.0-rc.1 or unversioned",
+   "reader": "installed version / refusal",
+   "owner": "unversioned: no release; prerelease order rc.10 after rc.2"
+  },
+  {
+   "case": "search listing order of the FS repo",
+   "reader": "printed order",
+   "owner": "highest first"
+  }
+ ],
+ "exposure_after_source": "Read Index.GetIndexGlobalNode/Insert, Find.ContainsItem/PreviousItem/MatchesExecute/Fetch, Repo/Utils.moduleSqlToList, Repo/Manager search criteria merge, Main.Install result choice after the owner predictions.",
+ "source_predictions": [
+  {
+   "case": "offers 1.9.0, 1.10.0, 2.0.0-beta.1; install b (default repo)",
+   "predicted": "1.10.0: numeric subscripts collate 1.10 above 1.9; prerelease filtered by repo Prereleases=0"
+  },
+  {
+   "case": "install b 1.x",
+   "predicted": "1.10.0"
+  },
+  {
+   "case": "install b 2.0.0-beta.1 from default repo",
+   "predicted": "not found: the repo prerelease flag filters before the expression; owner predicts install (contrast)"
+  },
+  {
+   "case": "repo -prereleases 1: install b 2.0.0-beta.1",
+   "predicted": "installs"
+  },
+  {
+   "case": "repo -prereleases 1: install b (no version)",
+   "predicted": "2.0.0-beta.1 if \"*\" accepts prereleases; owner says ranges skip prereleases (contrast candidate)"
+  },
+  {
+   "case": "rc.2 vs rc.10 ordering with -prereleases 1",
+   "predicted": "rc.10 listed first (numeric subscripts)"
+  },
+  {
+   "case": "search listing",
+   "predicted": "descending"
+  }
+ ],
+ "explore1": {
+  "log": "attempts/explore1.log",
+  "misses": [
+   "a2/a4: default filesystem repo is created with Prereleases=1 and Snapshots=1 (Repo/Definition create defaults), so the prerelease filter predicted from Definition InitialExpression=0 did not apply",
+   "c1: install chose 1.0.0-rc.2 although the cache query lists rc.10 first: Repo/Utils.moduleSqlToList re-sorts by string Version_Prerelease desc and keeps the first row per name"
+  ]
+ },
+ "source_predictions_round2": [
+  {
+   "case": "d1 repo offers i34d 2.0.0 and 2.0.0-beta.1; install i34d",
+   "predicted": "2.0.0-beta.1 if the empty prerelease of the release sorts after a prerelease in desc order; owner predicts 2.0.0"
+  },
+  {
+   "case": "a8 install i34b >=1.0 (prerelease-enabled repo)",
+   "predicted": "2.0.0-beta.1 (expression does not exclude prereleases); owner version.range: highest in range skips prereleases -> 1.10.0"
+  },
+  {
+   "case": "c1 install i34c (rc.2, rc.10, 0.9.0)",
+   "predicted": "rc.2 (string order); owner version.order: rc.10"
+  }
+ ]
+}

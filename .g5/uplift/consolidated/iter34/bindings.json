@@ -1,0 +1,114 @@
+{
+ "verus_dir": ".g5/Verus_verification/consolidated/iter34",
+ "changed_files": [
+  "versions.rs",
+  "cases.json",
+  "run.py",
+  "native/Reader.cls",
+  "native/repoA/**",
+  "native/repoC/**"
+ ],
+ "rows": [
+  {
+   "id": "S34-01",
+   "owner": ".g5/ontology/concepts/versions.g5.md#version.order",
+   "model": "versions.rs",
+   "symbols": [
+    "key",
+    "pre_subs",
+    "sub_of",
+    "cmp_sub",
+    "cmp_key",
+    "index_first_before",
+    "rank",
+    "count",
+    "pos",
+    "releases_agree"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/General/SemanticVersion/Index.cls",
+     "GetIndexGlobalNode"
+    ],
+    [
+     "src/cls/IPM/General/SemanticVersion/Index.cls",
+     "Insert"
+    ],
+    [
+     "src/cls/IPM/General/SemanticVersion/Find.cls",
+     "PreviousItem"
+    ],
+    [
+     "src/cls/IPM/General/SemanticVersion/Find.cls",
+     "ContainsItem"
+    ],
+    [
+     "src/cls/IPM/General/SemanticVersion/Find.cls",
+     "%OnNew"
+    ]
+   ],
+   "reader": [
+    [
+     "src/cls/IPM/General/SemanticVersion/Find.cls",
+     "MatchesExecute"
+    ],
+    [
+     "src/cls/IPM/General/SemanticVersion/Find.cls",
+     "MatchesFetch"
+    ],
+    [
+     "src/cls/IPM/Repo/Filesystem/Cache.cls",
+     "OrderedMatchesExecute"
+    ],
+    [
+     "src/cls/IPM/Repo/Filesystem/Cache.cls",
+     "OrderedMatchesFetch"
+    ],
+    [
+     "src/cls/IPM/General/SemanticVersion.cls",
+     "FromListBuild"
+    ]
+   ],
+   "scope": "Index subscripts (release marker 2, prerelease 0 + identifiers + -1) walked in reverse give semantic descending order for the fixture versions, with and without the prerelease parameter. Native q1-q5. Build metadata, snapshots and other words not assessed; subscript collation is a native-qualified premise."
+  },
+  {
+   "id": "S34-02",
+   "owner": ".g5/ontology/concepts/repositories.g5.md#repo.search-order",
+   "model": "versions.rs",
+   "symbols": [
+    "digits",
+    "id_text",
+    "pre_text",
+    "cmp_text",
+    "sql_before",
+    "sql_rank_before",
+    "best_by",
+    "installed",
+    "semver_max",
+    "release_versus_own_prerelease",
+    "fixture_neighbors"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/Repo/Utils.cls",
+     "moduleSqlToList"
+    ],
+    [
+     "src/cls/IPM/Repo/Filesystem/PackageService.cls",
+     "ListModules"
+    ]
+   ],
+   "reader": [
+    [
+     "src/cls/IPM/Repo/Manager.cls",
+     "SearchRepositoriesForModule"
+    ],
+    [
+     "src/cls/IPM/Main.cls",
+     "Install"
+    ]
+   ],
+   "scope": "moduleSqlToList re-sorts cache rows by numeric triple then prerelease text DESC (empty last), keeps first row per name; Manager receives one offer; Install takes GetAt(1). Native a2-a7, c1-c2, d1-d2 (C:D39). Partial-version expressions (a8, C:D6) excluded; SQL ordering of the version columns is a native-qualified premise."
+  }
+ ]
+}

@@ -90,6 +90,10 @@ Sources: doc comment `General/SemanticVersion.cls:116-122` (SemVer 2.0.0 item 11
 
 Extension Verus: [semver.rs::compare_dot](../../Verus_verification/consolidated/verus/semver.rs), [semver.rs::fields_string](../../Verus_verification/consolidated/verus/semver.rs), [semver.rs::follows](../../Verus_verification/consolidated/verus/semver.rs), [semver.rs::parse](../../Verus_verification/consolidated/verus/semver.rs), [semver.rs::snapshot](../../Verus_verification/consolidated/verus/semver.rs), [semver.rs::validate](../../Verus_verification/consolidated/verus/semver.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
 
+Iteration34 index order: [versions.rs](../../Verus_verification/consolidated/iter34/versions.rs) `key`, `cmp_key`, `releases_agree`. The filesystem version index walks versions in this order; the install consumer re-sorts them differently ([search rule](repositories.g5.md#repo.search-order)).
+
+Findings: [A filesystem repository install picks a prerelease over its own release and orders prerelease numbers as text](../../uplift/consolidated/BUGS.md#c-d39)
+
 ### version.range
 
 - human-provided
