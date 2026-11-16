@@ -1,0 +1,274 @@
+{
+  "product_pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+  "counting": "Rows are canonical owner blocks; groups are work packages, not independent case wins. Implementation proofs: 0.",
+  "rows": [
+    {
+      "group": "W4 web application lifecycle",
+      "kind": "discovery",
+      "owner": ".g5/ontology/concepts/modules.g5.md#module.webapp",
+      "direct": [
+        [
+          "src/cls/IPM/ResourceProcessor/WebApplication.cls",
+          "CreateOrUpdateWebApp"
+        ],
+        [
+          "src/cls/IPM/ResourceProcessor/WebApplication.cls",
+          "DeleteWebApp"
+        ],
+        [
+          "src/cls/IPM/ResourceProcessor/WebApplication.cls",
+          "OnBeforePhase"
+        ]
+      ],
+      "reader": [
+        [
+          "src/cls/IPM/Storage/Module.cls",
+          "ExecutePhases"
+        ],
+        [
+          "src/cls/IPM/Storage/Module.cls",
+          "cannot also be listed in module"
+        ],
+        [
+          "src/cls/IPM/ResourceProcessor/WebApplication.cls",
+          "OnGetUniqueName"
+        ]
+      ],
+      "verus": [
+        ".g5/Verus_verification/consolidated/iter5/webapp.rs::merged",
+        ".g5/Verus_verification/consolidated/iter5/webapp.rs::install_app",
+        ".g5/Verus_verification/consolidated/iter5/webapp.rs::modify_called",
+        ".g5/Verus_verification/consolidated/iter5/webapp.rs::refused_at_import",
+        ".g5/Verus_verification/consolidated/iter5/webapp.rs::lemma_adoption_keeps_undeclared",
+        ".g5/Verus_verification/consolidated/iter5/webapp.rs::webapp_neighbors"
+      ],
+      "controls": [
+        "webapp/adoption-overwrites-undeclared",
+        "webapp/existing-app-not-adopted",
+        "webapp/modify-always-called"
+      ],
+      "native": [
+        "W1-install-a",
+        "W2-before",
+        "W2-install-b",
+        "W3-uninstall-b",
+        "W4-install-c",
+        "W5-reload-g"
+      ],
+      "question": "C:Q15"
+    },
+    {
+      "group": "W4 web application lifecycle",
+      "kind": "discovery",
+      "owner": ".g5/ontology/concepts/modules.g5.md#module.webapp.failure",
+      "direct": [
+        [
+          "src/cls/IPM/ResourceProcessor/WebApplication.cls",
+          "CreateOrUpdateWebApp"
+        ]
+      ],
+      "reader": [
+        [
+          "src/cls/IPM/Utils/Module.cls",
+          "NoTransaction"
+        ]
+      ],
+      "verus": [
+        ".g5/Verus_verification/consolidated/iter5/webapp.rs::failed_after_activate"
+      ],
+      "controls": [
+        "webapp/transaction-keeps-app"
+      ],
+      "native": [
+        "W8-install-e",
+        "W8b-install-e-notxn"
+      ]
+    },
+    {
+      "group": "W4 web application lifecycle",
+      "kind": "discovery",
+      "owner": ".g5/ontology/concepts/modules.g5.md#module.webapp.upgrade",
+      "direct": [
+        [
+          "src/cls/IPM/Lifecycle/Base.cls",
+          "%Clean"
+        ]
+      ],
+      "reader": [
+        [
+          "src/cls/IPM/Storage/Module.cls",
+          "ExecutePhases"
+        ]
+      ],
+      "verus": [
+        ".g5/Verus_verification/consolidated/iter5/webapp.rs::upgrade_drops_declaration"
+      ],
+      "controls": [
+        "webapp/upgrade-removes-app"
+      ],
+      "native": [
+        "W10-upgrade-g",
+        "W10-uninstall-g"
+      ],
+      "defect": "C:D26"
+    },
+    {
+      "group": "W4 web application lifecycle",
+      "kind": "discovery",
+      "owner": ".g5/ontology/concepts/modules.g5.md#module.webapp.validation",
+      "direct": [
+        [
+          "src/cls/IPM/Lifecycle/Base.cls",
+          "Method %Validate"
+        ],
+        [
+          "src/cls/IPM/ResourceProcessor/WebApplication.cls",
+          "DoPropertiesExist"
+        ]
+      ],
+      "reader": [
+        [
+          "src/cls/IPM/ResourceProcessor/Abstract.cls",
+          "OnBeforePhase"
+        ]
+      ],
+      "verus": [
+        ".g5/Verus_verification/consolidated/iter5/webapp.rs::validate_dispatches",
+        ".g5/Verus_verification/consolidated/iter5/webapp.rs::refused_at_validate"
+      ],
+      "controls": [
+        "webapp/validate-dispatches"
+      ],
+      "native": [
+        "W9-install-f"
+      ],
+      "defect": "C:D23",
+      "proposal": "C:S19"
+    },
+    {
+      "group": "W4 web application lifecycle",
+      "kind": "promotion",
+      "owner": ".g5/ontology/features/uninstall.g5.md#uninstall.dependents.as-built",
+      "inherited": [
+        "P:F-UNIN-1",
+        "P:F-UNIN-6",
+        "G:OBS-L17"
+      ],
+      "direct": [
+        [
+          "src/cls/IPM/Storage/Module.cls",
+          "ExecutePhases"
+        ],
+        [
+          "src/cls/IPM/Lifecycle/Base.cls",
+          "CheckBeforeClean"
+        ]
+      ],
+      "reader": [
+        [
+          "src/cls/IPM/ResourceProcessor/WebApplication.cls",
+          "DeleteWebApp"
+        ],
+        [
+          "src/cls/IPM/Lifecycle/Base.cls",
+          "%Clean"
+        ]
+      ],
+      "verus": [
+        ".g5/Verus_verification/consolidated/iter5/webapp.rs::uninstall",
+        ".g5/Verus_verification/consolidated/iter5/webapp.rs::repaired_uninstall",
+        ".g5/Verus_verification/consolidated/iter5/webapp.rs::lemma_blocked_uninstall_deletes"
+      ],
+      "controls": [
+        "webapp/blocked-uninstall-keeps-app",
+        "webapp/blocked-uninstall-fails",
+        "webapp/repair-still-deletes"
+      ],
+      "native": [
+        "W6-install-d",
+        "W6-uninstall-a",
+        "W7-force-a"
+      ],
+      "defect": "C:D25",
+      "proposal": "C:S17"
+    },
+    {
+      "group": "X challenges to iteration 4",
+      "kind": "challenge",
+      "owner": ".g5/ontology/root.g5.md#ipm.shell.forms",
+      "challenged": ".g5/ontology/features/build-and-publish.g5.md#build.test.outcome.exit",
+      "direct": [
+        [
+          "src/cls/IPM/Main.cls",
+          "UpdateLanguageExtensions"
+        ],
+        [
+          "src/cls/IPM/Main.cls",
+          "LanguageExtensions"
+        ]
+      ],
+      "reader": [
+        [
+          "src/cls/IPM/Main.cls",
+          "ClassMethod Shell("
+        ]
+      ],
+      "verus": [
+        ".g5/Verus_verification/consolidated/iter5/entry_forms.rs::function_returns_value",
+        ".g5/Verus_verification/consolidated/iter5/entry_forms.rs::pinned_body",
+        ".g5/Verus_verification/consolidated/iter5/entry_forms.rs::outcome",
+        ".g5/Verus_verification/consolidated/iter5/entry_forms.rs::entry_neighbors"
+      ],
+      "controls": [
+        "entry_forms/matcher-case-insensitive",
+        "entry_forms/pinned-body-capitalized",
+        "entry_forms/command-flag-terminates",
+        "entry_forms/plain-shell-terminates"
+      ],
+      "native": [
+        "form:Z1-zpm-command-flag",
+        "form:Z2-zpm-command",
+        "form:Z3-shell-flag-stdin",
+        "form:Z4-zpm-function-fail",
+        "form:Z5-zpm-function-pass"
+      ],
+      "defect": "C:D24",
+      "proposal": "C:S18"
+    },
+    {
+      "group": "X challenges to iteration 4",
+      "kind": "challenge",
+      "owner": ".g5/ontology/concepts/repositories.g5.md#repo.remote.download.redirect",
+      "challenged": "C:S14",
+      "direct": [
+        [
+          "src/cls/IPM/Repo/Http/PackageService.cls",
+          "FollowRedirect"
+        ]
+      ],
+      "reader": [
+        [
+          "src/cls/IPM/Repo/Remote/PackageService.cls",
+          "GetModule"
+        ]
+      ],
+      "verus": [
+        ".g5/Verus_verification/consolidated/iter5/redirect.rs::as_built_sends",
+        ".g5/Verus_verification/consolidated/iter5/redirect.rs::s14_sends",
+        ".g5/Verus_verification/consolidated/iter5/redirect.rs::s14b_sends",
+        ".g5/Verus_verification/consolidated/iter5/redirect.rs::lemma_s14_insufficient",
+        ".g5/Verus_verification/consolidated/iter5/redirect.rs::lemma_s14b_never_leaks"
+      ],
+      "controls": [
+        "redirect/redirect-drops-credentials-as-built",
+        "redirect/s14-checks-every-hop",
+        "redirect/s14b-checks-first-hop"
+      ],
+      "native": [
+        "X1-redirect"
+      ],
+      "defect": "C:D20",
+      "proposal": "C:S14b"
+    }
+  ]
+}

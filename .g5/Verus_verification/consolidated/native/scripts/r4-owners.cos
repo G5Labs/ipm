@@ -1,0 +1,40 @@
+// ---------- MV: module-version
+do ##class(Consolidated.Obs).Run("MV0","load /tmp/c4/mv-a/")
+do ##class(Consolidated.Obs).ZpmVersion("MV0","mv-a")
+for c="MV1|module-version mv-a minor","MV2|module-version mv-a 1.0.0","MV3|module-version mv-a 1.0.0 -force","MV4|module-version mv-a patch -prerelease rc.1 -build b7","MV5|module-version mv-a","MV6|module-version mv-a 2.0.0-beta","MV7|module-version mv-a 01.0.0","MV8|module-version mv-a major","MV9|module-version no-such-module" { do ##class(Consolidated.Obs).Run($piece(c,"|"),$piece(c,"|",2)) do ##class(Consolidated.Obs).ZpmVersion($piece(c,"|"),"mv-a") }
+set f=##class(%Stream.FileCharacter).%New() set f.Filename="/tmp/c4/mv-a/module.xml" set t=f.Read(32000)
+write "OBS MV10 file=",$piece($piece(t,"<Version>",2),"</Version>"),!
+// ---------- LK: filesystem repository cache refresh under another process's lock
+set r=##class(%IPM.Repo.Filesystem.Definition).%New(), r.Name="reglock", r.Root="/tmp/c4/reglock/", r.Snapshots=1, r.Prereleases=1
+set sc=r.BuildCache(1,0,0) set id=r.%Id()
+set n=0 set rs=##class(%SQL.Statement).%ExecDirect(,"SELECT Name FROM %IPM_Repo_Filesystem.Cache WHERE Root = ? ORDER BY Name","/tmp/c4/reglock/") set names="" while rs.%Next() { set names=names_rs.Name_" " }
+write "OBS LK1 build=",$system.Status.IsOK(sc)," cached=",$zstrip(names,">W"),!
+kill ^Consolidated.Probe job ##class(Consolidated.Obs).HoldLock(id,25) for i=1:1:50 { quit:$get(^Consolidated.Probe("held"))=1  hang 0.2 }
+write "OBS LK2.setup held=",$get(^Consolidated.Probe("held")),!
+set t0=$zh set sc=r.BuildCache(1,0,0) set dt=$zh-t0
+write "OBS LK2 build=",$system.Status.IsOK(sc)," waited=",$select(dt>=5:"timeout",1:"short")," tlevel=",$tlevel,!
+write "OBS LK2 error=",$piece($system.Status.GetErrorText(sc),$char(13,10)),!
+for i=1:1:200 { quit:$get(^Consolidated.Probe("held"))=0  hang 0.2 }
+do ##class(%File).RemoveDirectoryTree("/tmp/c4/reglock/lk-b/")
+set sc=r.BuildCache(1,0,0)
+set rs=##class(%SQL.Statement).%ExecDirect(,"SELECT Name FROM %IPM_Repo_Filesystem.Cache WHERE Root = ? ORDER BY Name","/tmp/c4/reglock/") set names="" while rs.%Next() { set names=names_rs.Name_" " }
+write "OBS LK3 build=",$system.Status.IsOK(sc)," cached=",$zstrip(names,">W")," tlevel=",$tlevel,!
+kill ^Consolidated.Probe("probe") job ##class(Consolidated.Obs).ProbeLock(id) for i=1:1:50 { quit:$data(^Consolidated.Probe("probe"))  hang 0.2 }
+write "OBS LK4 lockable=",$get(^Consolidated.Probe("probe"),"none"),!
+tstart set sc=r.BuildCache(1,0,0)
+kill ^Consolidated.Probe("probe") job ##class(Consolidated.Obs).ProbeLock(id) for i=1:1:50 { quit:$data(^Consolidated.Probe("probe"))  hang 0.2 }
+write "OBS LK5 build=",$system.Status.IsOK(sc)," tlevel=",$tlevel," lockable=",$get(^Consolidated.Probe("probe"),"none"),!
+trollback
+// ---------- LE: language extensions keep user code outside the generated block
+do ##class(Consolidated.Obs).ZLang("LE0")
+set rt=##class(%Routine).%New("%ZLANGC00.MAC") set saved=0 while 'rt.AtEnd { set saved=saved+1, saved(saved)=rt.ReadLine() }
+do rt.MoveToEnd() do rt.WriteLine(" ; consolidated-user-line") do rt.Save() do rt.Compile()
+do ##class(Consolidated.Obs).ZLang("LE1.setup")
+set sc=##class(%IPM.Main).UpdateLanguageExtensions(0,0,.found) write "OBS LE1 sc=",$system.Status.IsOK(sc)," found=",found," tlevel=",$tlevel,!
+do ##class(Consolidated.Obs).ZLang("LE1")
+set sc=##class(%IPM.Main).UpdateLanguageExtensions(0,0,.found) do ##class(Consolidated.Obs).ZLang("LE2")
+set found=0 set sc=##class(%IPM.Main).UpdateLanguageExtensions(0,1,.found) write "OBS LE3 testonly.found=",found,!
+set rt=##class(%Routine).%New("%ZLANGC00.MAC") do rt.Clear() for i=1:1:saved { do rt.WriteLine(saved(i)) } do rt.Save() do rt.Compile()
+do ##class(Consolidated.Obs).ZLang("LE.restored")
+write !,"NATIVE-END",!
+halt

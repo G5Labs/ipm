@@ -1,0 +1,325 @@
+{
+  "models": {
+    "sync_summary.rs": {
+      "inactive-records": [
+        "if !s.active{s}else",
+        "if false{s}else"
+      ],
+      "active-does-not-record": [
+        "if !s.active{s}else",
+        "if true{s}else"
+      ],
+      "counter-not-incremented": [
+        "let sequence=count(s,module)+1",
+        "let sequence=count(s,module)"
+      ],
+      "counter-global-module": [
+        "let sequence=count(s,module)+1",
+        "let sequence=count(s,zeta())+1"
+      ],
+      "counter-wrong-module-key": [
+        "counts:s.counts.insert(module,sequence)",
+        "counts:s.counts.insert(zeta(),sequence)"
+      ],
+      "row-wrong-module-key": [
+        "rows:s.rows.insert((module,sequence),class)",
+        "rows:s.rows.insert((alpha(),sequence),class)"
+      ],
+      "row-old-sequence": [
+        "rows:s.rows.insert((module,sequence),class)",
+        "rows:s.rows.insert((module,count(s,module)),class)"
+      ],
+      "row-erases-class": [
+        "rows:s.rows.insert((module,sequence),class)",
+        "rows:s.rows.insert((module,sequence),seq![])"
+      ],
+      "append-erases-old-rows": [
+        "rows:s.rows.insert((module,sequence),class)",
+        "rows:Map::<(Text,nat),Text>::empty().insert((module,sequence),class)"
+      ],
+      "counter-resets-each-call": [
+        "let sequence=count(s,module)+1",
+        "let sequence=1nat"
+      ],
+      "duplicate-class-deduplicated": [
+        "if !s.active{s}else",
+        "if !s.active || row_value(s,module,1)==Some(class){s}else"
+      ],
+      "begin-retains-counts": [
+        "pub open spec fn begin(_old:Store)->Store {Store{active:true,counts:Map::empty(),rows:Map::empty()}}",
+        "pub open spec fn begin(_old:Store)->Store {Store{active:true,counts:_old.counts,rows:Map::empty()}}"
+      ],
+      "begin-retains-rows": [
+        "pub open spec fn begin(_old:Store)->Store {Store{active:true,counts:Map::empty(),rows:Map::empty()}}",
+        "pub open spec fn begin(_old:Store)->Store {Store{active:true,counts:Map::empty(),rows:_old.rows}}"
+      ],
+      "end-only-deactivates": [
+        "pub open spec fn end(_old:Store)->Store {empty()}",
+        "pub open spec fn end(_old:Store)->Store {Store{active:false,.._old}}"
+      ],
+      "end-keeps-active": [
+        "pub open spec fn end(_old:Store)->Store {empty()}",
+        "pub open spec fn end(_old:Store)->Store {Store{active:true,..empty()}}"
+      ],
+      "named-sync-begins": [
+        "module_argument.len()==0 && ordered.len()>0",
+        "true && ordered.len()>0"
+      ],
+      "empty-list-sync-begins": [
+        "module_argument.len()==0 && ordered.len()>0",
+        "module_argument.len()==0 && true"
+      ],
+      "finish-does-not-clear": [
+        "if started{end(s)}else{s}",
+        "if started{s}else{s}"
+      ],
+      "verify-phase-treated-as-test": [
+        "r.phases.contains(test_phase()) || i>=classes.len()",
+        "r.phases.contains(verify_phase()) || i>=classes.len()"
+      ],
+      "test-phase-recorded-as-skip": [
+        "r.phases.contains(test_phase()) || i>=classes.len()",
+        "false || i>=classes.len()"
+      ],
+      "selected-owner-replaced-by-root": [
+        "Call{module:r.owner_module,class:classes[i as int]}",
+        "Call{module:zeta(),class:classes[i as int]}"
+      ],
+      "selected-class-replaced-by-owner": [
+        "Call{module:r.owner_module,class:classes[i as int]}",
+        "Call{module:r.owner_module,class:r.owner_module}"
+      ],
+      "selected-class-loop-truncated": [
+        "i>=classes.len(){seq![]}else{seq![Call",
+        "i>=classes.len() || i>0{seq![]}else{seq![Call"
+      ],
+      "report-ignores-active": [
+        "if !s.active{seq![]}else{report_from",
+        "if false{seq![]}else{report_from"
+      ],
+      "report-forces-module-order": [
+        "let m=names[i as int];",
+        "let m=if i==0{alpha()}else{zeta()};"
+      ],
+      "report-skips-first-sequence": [
+        "rows_from(s,m,1)",
+        "rows_from(s,m,2)"
+      ],
+      "report-class-is-module": [
+        "class:s.rows[(module,n)]",
+        "class:module"
+      ],
+      "report-stops-before-last-row": [
+        "if n>count(s,module){seq![]}",
+        "if n>=count(s,module){seq![]}"
+      ]
+    }
+  },
+  "dependency_controls": {},
+  "control_functions": {
+    "sync_summary.rs": {
+      "inactive-records": "inactive_neighbor",
+      "active-does-not-record": "append_neighbor",
+      "counter-not-incremented": "append_neighbor",
+      "counter-global-module": "append_neighbor",
+      "counter-wrong-module-key": "append_neighbor",
+      "row-wrong-module-key": "append_neighbor",
+      "row-old-sequence": "append_neighbor",
+      "row-erases-class": "append_neighbor",
+      "append-erases-old-rows": "duplicate_neighbor",
+      "counter-resets-each-call": "duplicate_neighbor",
+      "duplicate-class-deduplicated": "duplicate_neighbor",
+      "begin-retains-counts": "clear_neighbor",
+      "begin-retains-rows": "clear_neighbor",
+      "end-only-deactivates": "clear_neighbor",
+      "end-keeps-active": "clear_neighbor",
+      "named-sync-begins": "tracking_neighbor",
+      "empty-list-sync-begins": "tracking_neighbor",
+      "finish-does-not-clear": "tracking_neighbor",
+      "verify-phase-treated-as-test": "selected_neighbor",
+      "test-phase-recorded-as-skip": "selected_neighbor",
+      "selected-owner-replaced-by-root": "selected_owner_neighbor",
+      "selected-class-replaced-by-owner": "selected_owner_neighbor",
+      "selected-class-loop-truncated": "selected_neighbor",
+      "report-ignores-active": "inactive_neighbor",
+      "report-forces-module-order": "report_neighbor",
+      "report-skips-first-sequence": "report_neighbor",
+      "report-class-is-module": "report_neighbor",
+      "report-stops-before-last-row": "report_neighbor"
+    }
+  },
+  "control_options": [
+    "--multiple-errors",
+    "0"
+  ],
+  "control_isolation_helper": "model-lane/isolate_witness.py",
+  "control_isolation_function": "isolate",
+  "focused_replay_barrier": true,
+  "replay_model": "sync_summary.rs",
+  "replay_grouped": true,
+  "replay": {
+    "inactive-active": "b((inactive()).active)",
+    "begun-active": "b((begun()).active)",
+    "a1-zeta-class1-exists": "b(has_row(a1(),zeta(),1))",
+    "inactive-module-count": "module_count(inactive()) as int",
+    "inactive-zeta-count": "count(inactive(),zeta()) as int",
+    "inactive-alpha-count": "count(inactive(),alpha()) as int",
+    "inactive-zeta-rows": "rows_from(inactive(),zeta(),1).len() as int",
+    "inactive-zeta-class1": "b(matching(inactive(),zeta(),1,verify_z()))",
+    "inactive-zeta-class2": "b(matching(inactive(),zeta(),2,verify_a()))",
+    "inactive-zeta-class3": "b(matching(inactive(),zeta(),3,verify_z()))",
+    "inactive-alpha-class1": "b(matching(inactive(),alpha(),1,alpha_class()))",
+    "inactive-zeta-class1-exists": "b(has_row(inactive(),zeta(),1))",
+    "inactive-alpha-class1-exists": "b(has_row(inactive(),alpha(),1))",
+    "begun-module-count": "module_count(begun()) as int",
+    "begun-zeta-count": "count(begun(),zeta()) as int",
+    "begun-alpha-count": "count(begun(),alpha()) as int",
+    "begun-zeta-rows": "rows_from(begun(),zeta(),1).len() as int",
+    "begun-zeta-class1": "b(matching(begun(),zeta(),1,verify_z()))",
+    "begun-zeta-class2": "b(matching(begun(),zeta(),2,verify_a()))",
+    "begun-zeta-class3": "b(matching(begun(),zeta(),3,verify_z()))",
+    "begun-alpha-class1": "b(matching(begun(),alpha(),1,alpha_class()))",
+    "begun-zeta-class1-exists": "b(has_row(begun(),zeta(),1))",
+    "begun-alpha-class1-exists": "b(has_row(begun(),alpha(),1))",
+    "a1-active": "b((a1()).active)",
+    "a1-module-count": "module_count(a1()) as int",
+    "a1-zeta-count": "count(a1(),zeta()) as int",
+    "a1-alpha-count": "count(a1(),alpha()) as int",
+    "a1-zeta-rows": "rows_from(a1(),zeta(),1).len() as int",
+    "a1-zeta-class1": "b(matching(a1(),zeta(),1,verify_z()))",
+    "a1-zeta-class2": "b(matching(a1(),zeta(),2,verify_a()))",
+    "a1-zeta-class3": "b(matching(a1(),zeta(),3,verify_z()))",
+    "a1-alpha-class1": "b(matching(a1(),alpha(),1,alpha_class()))",
+    "a1-alpha-class1-exists": "b(has_row(a1(),alpha(),1))",
+    "b1-active": "b((b1()).active)",
+    "b1-module-count": "module_count(b1()) as int",
+    "b1-zeta-count": "count(b1(),zeta()) as int",
+    "b1-alpha-count": "count(b1(),alpha()) as int",
+    "b1-zeta-rows": "rows_from(b1(),zeta(),1).len() as int",
+    "b1-zeta-class1": "b(matching(b1(),zeta(),1,verify_z()))",
+    "b1-zeta-class2": "b(matching(b1(),zeta(),2,verify_a()))",
+    "b1-zeta-class3": "b(matching(b1(),zeta(),3,verify_z()))",
+    "b1-alpha-class1": "b(matching(b1(),alpha(),1,alpha_class()))",
+    "b1-zeta-class1-exists": "b(has_row(b1(),zeta(),1))",
+    "b1-alpha-class1-exists": "b(has_row(b1(),alpha(),1))",
+    "a2-active": "b((a2()).active)",
+    "a2-module-count": "module_count(a2()) as int",
+    "a2-zeta-count": "count(a2(),zeta()) as int",
+    "a2-alpha-count": "count(a2(),alpha()) as int",
+    "a2-zeta-rows": "rows_from(a2(),zeta(),1).len() as int",
+    "a2-zeta-class1": "b(matching(a2(),zeta(),1,verify_z()))",
+    "a2-zeta-class2": "b(matching(a2(),zeta(),2,verify_a()))",
+    "a2-zeta-class3": "b(matching(a2(),zeta(),3,verify_z()))",
+    "a2-alpha-class1": "b(matching(a2(),alpha(),1,alpha_class()))",
+    "a2-zeta-class1-exists": "b(has_row(a2(),zeta(),1))",
+    "a2-alpha-class1-exists": "b(has_row(a2(),alpha(),1))",
+    "a3-active": "b((a3()).active)",
+    "a3-module-count": "module_count(a3()) as int",
+    "a3-zeta-count": "count(a3(),zeta()) as int",
+    "a3-alpha-count": "count(a3(),alpha()) as int",
+    "a3-zeta-rows": "rows_from(a3(),zeta(),1).len() as int",
+    "a3-zeta-class1": "b(matching(a3(),zeta(),1,verify_z()))",
+    "a3-zeta-class2": "b(matching(a3(),zeta(),2,verify_a()))",
+    "a3-zeta-class3": "b(matching(a3(),zeta(),3,verify_z()))",
+    "a3-alpha-class1": "b(matching(a3(),alpha(),1,alpha_class()))",
+    "a3-zeta-class1-exists": "b(has_row(a3(),zeta(),1))",
+    "a3-alpha-class1-exists": "b(has_row(a3(),alpha(),1))",
+    "after-report-active": "b((after_report()).active)",
+    "after-report-module-count": "module_count(after_report()) as int",
+    "after-report-zeta-count": "count(after_report(),zeta()) as int",
+    "after-report-alpha-count": "count(after_report(),alpha()) as int",
+    "after-report-zeta-rows": "rows_from(after_report(),zeta(),1).len() as int",
+    "after-report-zeta-class1": "b(matching(after_report(),zeta(),1,verify_z()))",
+    "after-report-zeta-class2": "b(matching(after_report(),zeta(),2,verify_a()))",
+    "after-report-zeta-class3": "b(matching(after_report(),zeta(),3,verify_z()))",
+    "after-report-alpha-class1": "b(matching(after_report(),alpha(),1,alpha_class()))",
+    "after-report-zeta-class1-exists": "b(has_row(after_report(),zeta(),1))",
+    "after-report-alpha-class1-exists": "b(has_row(after_report(),alpha(),1))",
+    "after-end-active": "b((after_end()).active)",
+    "after-end-module-count": "module_count(after_end()) as int",
+    "after-end-zeta-count": "count(after_end(),zeta()) as int",
+    "after-end-alpha-count": "count(after_end(),alpha()) as int",
+    "after-end-zeta-rows": "rows_from(after_end(),zeta(),1).len() as int",
+    "after-end-zeta-class1": "b(matching(after_end(),zeta(),1,verify_z()))",
+    "after-end-zeta-class2": "b(matching(after_end(),zeta(),2,verify_a()))",
+    "after-end-zeta-class3": "b(matching(after_end(),zeta(),3,verify_z()))",
+    "after-end-alpha-class1": "b(matching(after_end(),alpha(),1,alpha_class()))",
+    "after-end-zeta-class1-exists": "b(has_row(after_end(),zeta(),1))",
+    "after-end-alpha-class1-exists": "b(has_row(after_end(),alpha(),1))",
+    "after-inactive-active": "b((after_inactive()).active)",
+    "after-inactive-module-count": "module_count(after_inactive()) as int",
+    "after-inactive-zeta-count": "count(after_inactive(),zeta()) as int",
+    "after-inactive-alpha-count": "count(after_inactive(),alpha()) as int",
+    "after-inactive-zeta-rows": "rows_from(after_inactive(),zeta(),1).len() as int",
+    "after-inactive-zeta-class1": "b(matching(after_inactive(),zeta(),1,verify_z()))",
+    "after-inactive-zeta-class2": "b(matching(after_inactive(),zeta(),2,verify_a()))",
+    "after-inactive-zeta-class3": "b(matching(after_inactive(),zeta(),3,verify_z()))",
+    "after-inactive-alpha-class1": "b(matching(after_inactive(),alpha(),1,alpha_class()))",
+    "after-inactive-zeta-class1-exists": "b(has_row(after_inactive(),zeta(),1))",
+    "after-inactive-alpha-class1-exists": "b(has_row(after_inactive(),alpha(),1))",
+    "reset-empty-active": "b((reset_empty()).active)",
+    "reset-empty-module-count": "module_count(reset_empty()) as int",
+    "reset-empty-zeta-count": "count(reset_empty(),zeta()) as int",
+    "reset-empty-alpha-count": "count(reset_empty(),alpha()) as int",
+    "reset-empty-zeta-rows": "rows_from(reset_empty(),zeta(),1).len() as int",
+    "reset-empty-zeta-class1": "b(matching(reset_empty(),zeta(),1,verify_z()))",
+    "reset-empty-zeta-class2": "b(matching(reset_empty(),zeta(),2,verify_a()))",
+    "reset-empty-zeta-class3": "b(matching(reset_empty(),zeta(),3,verify_z()))",
+    "reset-empty-alpha-class1": "b(matching(reset_empty(),alpha(),1,alpha_class()))",
+    "reset-empty-zeta-class1-exists": "b(has_row(reset_empty(),zeta(),1))",
+    "reset-empty-alpha-class1-exists": "b(has_row(reset_empty(),alpha(),1))",
+    "reset-active": "b((reset()).active)",
+    "reset-module-count": "module_count(reset()) as int",
+    "reset-zeta-count": "count(reset(),zeta()) as int",
+    "reset-alpha-count": "count(reset(),alpha()) as int",
+    "reset-zeta-rows": "rows_from(reset(),zeta(),1).len() as int",
+    "reset-zeta-class1": "b(matching(reset(),zeta(),1,verify_z()))",
+    "reset-zeta-class2": "b(matching(reset(),zeta(),2,verify_a()))",
+    "reset-zeta-class3": "b(matching(reset(),zeta(),3,verify_z()))",
+    "reset-alpha-class1": "b(matching(reset(),alpha(),1,alpha_class()))",
+    "reset-zeta-class1-exists": "b(has_row(reset(),zeta(),1))",
+    "reset-alpha-class1-exists": "b(has_row(reset(),alpha(),1))",
+    "report-zeta-module-order": "b(forward()[0].module==zeta() && forward()[3].module==alpha())",
+    "report-alpha-module-order": "b(reverse()[0].module==alpha() && reverse()[1].module==zeta())",
+    "report-zeta-sequence-duplicates": "b(forward()[0].class==verify_z() && forward()[1].class==verify_a() && forward()[2].class==verify_z())",
+    "cli-single-skipped": "b(verbose_skip_count(cli_resource(),seq![cli_class()],true)>0)",
+    "cli-all-reported-class": "b(cli_all_report()==seq![Row{module:cli_module(),sequence:1,class:cli_class()}])"
+  },
+  "replay_prelude": "reveal_with_fuel(rows_from,5);reveal_with_fuel(report_from,4);staged_store();report_neighbor();selected_neighbor();caller_neighbor();",
+  "native_expected": {
+    "report-inactive": 1,
+    "report-zeta-first": 1,
+    "report-alpha-first": 1,
+    "report-reset": 1,
+    "cli-fixture-compiled": 1,
+    "cli-load": 1,
+    "cli-initial-marker": 1,
+    "cli-copy-two": 1,
+    "cli-single": 1,
+    "cli-single-marker": 2,
+    "cli-single-no-test-call": 1,
+    "cli-single-summary-cleared": 1,
+    "cli-copy-three": 1,
+    "cli-all": 1,
+    "cli-all-marker": 3,
+    "cli-all-no-test-call": 1,
+    "cli-all-summary-cleared": 1,
+    "workflow-complete": 1,
+    "final-tlevel": 0,
+    "report-inactive-hidden": 0,
+    "cli-single-aggregate": 0,
+    "cli-all-aggregate": 1
+  },
+  "native_receipt": ".g5/uplift/consolidated/iter26/native/20261116T010227557083Z/observations.json",
+  "scope_notes": [
+    "Disclosed public repair, not independent discovery; separateIRISprivate sample not accessed.",
+    "One-job process-private Store, explicit per-module numericincrement/default0, generated-prefix wfReport domain.",
+    "module_count is skipped-only DIRECTAPI store projection, not actualCLI allSummarymodulebucket count.",
+    "Report alias is skippedclass/module/sequence projection; otherfields/header/formatting remain outside.",
+    "Conditional selected verify resource/class group with rawPhase list; full byName/Owns assignment, callback effects/statuses and testsunassessed.",
+    "CLI reloadmarkers/statuses/testcounter0/availability stay native-only; no fakealiasofcallback_selected.",
+    "After-report Storeidentity is source-inspected/native-confirmed frame, not mechanicallyproved no-mutation body.",
+    "Priorunintendedverify crossed excluded boundary; stopped, rawretainedunassessed/uncredited; no source/probe/model followup.",
+    "No SQL/persistent rows/opaqueIDs/wholeCLIproof; no currentPrivateinputs or excluded investigation."
+  ]
+}

@@ -19,6 +19,18 @@ Field expectations (in EXPECTED.json, cases.<id>.fields.<field>):
   "expect": null               observation only (no claim)
   "when": {"field": "f", "expect": ...}  apply only when another observed field satisfies the expectation
   "predicted_as_built": ...     optional code-read prediction (same forms), compared separately
+
+Rules the evaluator adds to every expectation file:
+  - A field observed twice with different values makes its case INCOMPLETE (conflicting_observations).
+  - A case that meets every contract expectation but whose observation refutes a predicted_as_built is
+    INCOMPLETE (as_built_refuted_fields): the observation is unexplained, so it cannot count as conformance.
+    A case that deviates still reports DEVIATES and lists the refuted fields beside its mismatches.
+  - In a non-premise case, an observed <label>.tlevel written by B2Native.Util.Run (next to <label>.ok) and
+    not listed in the case is expected to be 0: every case starts at $TLEVEL 0 (Cases.cls Go) and a shell
+    command returns at the level it was called at (ontology transaction; model theorem_tlevel). A case that
+    lists a non-zero level for itself (D0, D1) is left to its own expectations.
+  - A --mutate control is detected only when the mutated value is flagged (contract mismatch or refuted
+    prediction); a control that moves a field from mismatch to match reports effect "accepts mutated value".
 """
 import hashlib
 import json
@@ -38,7 +50,7 @@ ENV_PATTERNS = [
 
 
 def parse_log(path):
-    obs, begun, ended, env, dup = {}, [], [], set(), []
+    obs, begun, ended, env, dup, conflicts = {}, [], [], set(), [], {}
     with open(path, "r", encoding="utf-8", errors="replace") as fh:
         for raw in fh:
             line = raw.rstrip("\r\n")
@@ -47,6 +59,8 @@ def parse_log(path):
                 case, field, value = m.group(1), m.group(2), m.group(3).rstrip()
                 if field in obs.setdefault(case, {}):
                     dup.append(f"{case}:{field}")
+                    if obs[case][field] != value and field not in conflicts.setdefault(case, []):
+                        conflicts[case].append(field)
                 obs[case][field] = value
                 continue
             m = BEGIN_RE.search(line)
@@ -60,7 +74,19 @@ def parse_log(path):
             for name, pat in ENV_PATTERNS:
                 if pat.search(line):
                     env.add(name)
-    return obs, begun, ended, sorted(env), dup
+    return obs, begun, ended, sorted(env), dup, {c: f for c, f in conflicts.items() if f}
+
+
+TLEVEL_SOURCE = ("evaluator rule: the case starts at $TLEVEL 0 (Cases.cls Go) and a shell command returns at the level "
+                 "it was called at (ontology transactions-and-dev-mode#transaction; theorem_tlevel, proofs.rs:521-527)")
+
+
+def implicit_tlevel(spec_fields, case_obs):
+    """Expect 0 for each unlisted <label>.tlevel that B2Native.Util.Run wrote next to <label>.ok."""
+    if any(f.endswith(".tlevel") and s.get("expect") not in (None, "0") for f, s in spec_fields.items()):
+        return {}  # the case holds its own transaction levels (D0, D1) and lists them
+    return {f: {"expect": "0", "source": TLEVEL_SOURCE, "implicit": True} for f in case_obs
+            if f.endswith(".tlevel") and f not in spec_fields and f[:-len("tlevel")] + "ok" in case_obs}
 
 
 def check(spec, observed, case_obs):
@@ -90,10 +116,14 @@ def check(spec, observed, case_obs):
     return observed == str(spec)
 
 
-def evaluate_case(cid, cspec, case_obs, complete_markers):
+def evaluate_case(cid, cspec, case_obs, complete_markers, conflicting=()):
     fields = {}
-    missing, mismatched, harness_failed, pred_total, pred_hits = [], [], [], 0, 0
-    for fname, fspec in cspec.get("fields", {}).items():
+    missing, mismatched, harness_failed, refuted, pred_total, pred_hits = [], [], [], [], 0, 0
+    kind = cspec.get("kind", "case")
+    spec_fields = dict(cspec.get("fields", {}))
+    if kind != "premise":
+        spec_fields.update(implicit_tlevel(spec_fields, case_obs))
+    for fname, fspec in spec_fields.items():
         observed = case_obs.get(fname)
         exp = fspec.get("expect")
         cond = fspec.get("when")
@@ -110,6 +140,10 @@ def evaluate_case(cid, cspec, case_obs, complete_markers):
             entry["matches_prediction"] = pres
             pred_total += 1
             pred_hits += 1 if pres else 0
+            if pres is False and observed is not None:
+                refuted.append(fname)
+        if fspec.get("implicit"):
+            entry["implicit"] = True
         if observed is None:
             missing.append(fname)
         elif res is False and (fspec.get("harness") or fspec.get("source") == "harness"):
@@ -118,13 +152,15 @@ def evaluate_case(cid, cspec, case_obs, complete_markers):
             mismatched.append(fname)
         fields[fname] = entry
     extra = {k: v for k, v in case_obs.items() if k not in fields}
-    kind = cspec.get("kind", "case")
-    if missing or harness_failed or not complete_markers:
+    conflicting = list(conflicting)
+    if missing or harness_failed or conflicting or not complete_markers:
         verdict = "INCOMPLETE"
     elif kind == "premise":
         verdict = "REFUTED" if mismatched else "CONFIRMED"
+    elif mismatched:
+        verdict = "DEVIATES"
     else:
-        verdict = "DEVIATES" if mismatched else "CONFORMS"
+        verdict = "INCOMPLETE" if refuted else "CONFORMS"
     out = {
         "kind": kind,
         "claim": cspec.get("claim"),
@@ -134,6 +170,8 @@ def evaluate_case(cid, cspec, case_obs, complete_markers):
         "mismatched_fields": mismatched,
         "missing_fields": missing,
         "harness_failed_fields": harness_failed,
+        "as_built_refuted_fields": refuted,
+        "conflicting_observations": conflicting,
         "case_markers_complete": complete_markers,
         "fields": fields,
         "unexpected_observations": extra,
@@ -172,7 +210,7 @@ def main(argv):
         return 2
     run_dir, exp_paths = pos[0], pos[1:]
     receipt = json.load(open(os.path.join(run_dir, "receipt.json")))
-    obs, begun, ended, env, dup = parse_log(os.path.join(run_dir, "raw.log"))
+    obs, begun, ended, env, dup, conflicts = parse_log(os.path.join(run_dir, "raw.log"))
     started = datetime.strptime(receipt["started_utc"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
 
     cases_spec, exp_meta = {}, []
@@ -205,7 +243,7 @@ def main(argv):
         if cid not in obs and cid not in begun:
             continue  # case not part of this run
         markers = (cid in begun and cid in ended) or cspec.get("no_markers", False)
-        res = evaluate_case(cid, cspec, obs.get(cid, {}), markers and process_ok)
+        res = evaluate_case(cid, cspec, obs.get(cid, {}), markers and process_ok, conflicts.get(cid, ()))
         results[cid] = res
 
     controls = []
@@ -218,14 +256,23 @@ def main(argv):
         before = results[cid]
         mutated[fname] = value
         markers = (cid in begun and cid in ended) and process_ok
-        after = evaluate_case(cid, cases_spec[cid], mutated, markers)
-        detected = (after["verdict"] != before["verdict"]) or (
-            after["fields"].get(fname, {}).get("match") != before["fields"].get(fname, {}).get("match"))
+        after = evaluate_case(cid, cases_spec[cid], mutated, markers, conflicts.get(cid, ()))
+        fb, fa = before["fields"].get(fname, {}), after["fields"].get(fname, {})
+        changed = after["verdict"] != before["verdict"] or any(fa.get(k) != fb.get(k) for k in ("match", "matches_prediction"))
+        # Detected means the mutated value is flagged, not merely that the evaluation moved.
+        detected = changed and (fa.get("match") is False or fa.get("matches_prediction") is False)
+        if detected:
+            effect = "rejects mutated value"
+        elif changed:
+            effect = "accepts mutated value" + (" (verdict depends on this field)" if after["verdict"] != before["verdict"] else "")
+        else:
+            effect = "no effect"
         controls.append({"mutation": m, "original_observed": obs.get(cid, {}).get(fname),
                          "verdict_before": before["verdict"], "verdict_after": after["verdict"],
-                         "field_match_before": before["fields"].get(fname, {}).get("match"),
-                         "field_match_after": after["fields"].get(fname, {}).get("match"),
-                         "detected": detected})
+                         "field_match_before": fb.get("match"), "field_match_after": fa.get("match"),
+                         "field_prediction_before": fb.get("matches_prediction"),
+                         "field_prediction_after": fa.get("matches_prediction"),
+                         "effect": effect, "detected": detected})
 
     counts = {}
     for r in results.values():
@@ -244,6 +291,7 @@ def main(argv):
         "process_outcome": receipt["process_outcome"],
         "environment_flags": env,
         "duplicate_observations": dup,
+        "conflicting_observations": conflicts,
         "expected_files": exp_meta,
         "substantive_verdict": substantive,
         "case_verdict_counts": counts,
@@ -271,6 +319,8 @@ def main(argv):
                       "per_case": {k: v["verdict"] + (" mismatch=" + ",".join(v["mismatched_fields"]) if v["mismatched_fields"] else "")
                                    + (" harness_failed=" + ",".join(v["harness_failed_fields"]) if v["harness_failed_fields"] else "")
                                    + (" missing=" + ",".join(v["missing_fields"]) if v["missing_fields"] else "")
+                                   + (" conflicting=" + ",".join(v["conflicting_observations"]) if v["conflicting_observations"] else "")
+                                   + (" as_built_refuted=" + ",".join(v["as_built_refuted_fields"]) if v["as_built_refuted_fields"] else "")
                                    for k, v in results.items()},
                       "controls": [(c["mutation"], c.get("detected")) for c in controls]}, indent=1))
     return 0

@@ -1,0 +1,1166 @@
+{
+ "when": "20261114T025837Z",
+ "families": [
+  {
+   "family": "attribute-evaluator",
+   "runs": [
+    "20261114T025636Z-r1-evaluator",
+    "20261114T025551Z-r1-eval-postcommit"
+   ],
+   "fields_compared": 74,
+   "as_built_matches": true,
+   "mismatches": [],
+   "variants": {
+    "regex-escape-dollar": {
+     "member": "Utils/Module.cls::%RegExReplace",
+     "wrong": "escapes $ in the value, so a value with $ is substituted literally",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "E18",
+       "field": "error",
+       "wrong": "<not produced>",
+       "observed": [
+        "<REGULAR EXPRESSION>"
+       ]
+      },
+      {
+       "case": "E35",
+       "field": "error",
+       "wrong": "<not produced>",
+       "observed": [
+        "<REGULAR EXPRESSION>"
+       ]
+      },
+      {
+       "case": "E32",
+       "field": "error",
+       "wrong": "<not produced>",
+       "observed": [
+        "<REGULAR EXPRESSION>"
+       ]
+      }
+     ]
+    },
+    "regex-case-sensitive": {
+     "member": "Utils/Module.cls::%RegExReplace",
+     "wrong": "matches names case-sensitively",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "E04",
+       "field": "value",
+       "wrong": "{$NAMESPACE}",
+       "observed": [
+        "USER"
+       ]
+      },
+      {
+       "case": "E28",
+       "field": "value",
+       "wrong": "USER-{$NAMESPACELOWER}",
+       "observed": [
+        "USER-user"
+       ]
+      }
+     ]
+    },
+    "regex-literal-name": {
+     "member": "Utils/Module.cls::%RegExReplace",
+     "wrong": "treats the parameter name literally (no regex)",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "E21",
+       "field": "value",
+       "wrong": "{$axb}",
+       "observed": [
+        "DOT"
+       ]
+      }
+     ]
+    },
+    "regex-dollar-brace-only": {
+     "member": "Utils/Module.cls::%RegExReplace",
+     "wrong": "supports only ${name}",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "E02",
+       "field": "value",
+       "wrong": "{$namespace}",
+       "observed": [
+        "USER"
+       ]
+      },
+      {
+       "case": "E04",
+       "field": "value",
+       "wrong": "{$NAMESPACE}",
+       "observed": [
+        "USER"
+       ]
+      },
+      {
+       "case": "E05",
+       "field": "value",
+       "wrong": "{$namespaceLower}",
+       "observed": [
+        "user"
+       ]
+      }
+     ]
+    },
+    "sysexpr-no-lower": {
+     "member": "Utils/Module.cls::%EvaluateSystemExpression",
+     "wrong": "has no namespaceLower",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "E05",
+       "field": "value",
+       "wrong": "{$namespaceLower}",
+       "observed": [
+        "user"
+       ]
+      },
+      {
+       "case": "E28",
+       "field": "value",
+       "wrong": "USER-{$NAMESPACELOWER}",
+       "observed": [
+        "USER-user"
+       ]
+      }
+     ]
+    },
+    "sysexpr-mgr-is-install": {
+     "member": "Utils/Module.cls::%EvaluateSystemExpression",
+     "wrong": "mgrDir resolves to the install directory",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "E23",
+       "field": "value",
+       "wrong": "/usr/irissys/",
+       "observed": [
+        "/usr/irissys/mgr/"
+       ]
+      }
+     ]
+    },
+    "macro-skip": {
+     "member": "Utils/Module.cls::%EvaluateMacro",
+     "wrong": "does not expand $$$ macros",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "E12",
+       "field": "value",
+       "wrong": "",
+       "observed": [
+        "1"
+       ]
+      },
+      {
+       "case": "E16",
+       "field": "value",
+       "wrong": "{$x} $$$OK",
+       "observed": [
+        "{$x} 1"
+       ]
+      },
+      {
+       "case": "E17",
+       "field": "value",
+       "wrong": "$$$NoSuchMacroXyz {}",
+       "observed": [
+        " {}"
+       ]
+      }
+     ]
+    },
+    "macro-undefined-kept": {
+     "member": "Utils/Module.cls::%EvaluateMacro",
+     "wrong": "keeps an undefined macro as text",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "E17",
+       "field": "value",
+       "wrong": "$$$NoSuchMacroXyz {}",
+       "observed": [
+        " {}"
+       ]
+      }
+     ]
+    },
+    "macrohelper-swallow": {
+     "member": "Utils/Module.cls::EvaluateMacroHelper",
+     "wrong": "a macro that does not compile yields empty, no error",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "P2txn",
+       "field": "status",
+       "wrong": "OK",
+       "observed": [
+        "ERR"
+       ]
+      },
+      {
+       "case": "P2txn",
+       "field": "error",
+       "wrong": "<not produced>",
+       "observed": [
+        "ERROR #5475: Error compiling routine: %IPM.Generated.MacroEval.  Errors:  %IPM.Generated.MacroEval.cls"
+       ]
+      },
+      {
+       "case": "P2txn",
+       "field": "log.aftermsg",
+       "wrong": "Done {x} ",
+       "observed": [
+        "none"
+       ]
+      }
+     ]
+    },
+    "macrohelper-delete-on-error": {
+     "member": "Utils/Module.cls::EvaluateMacroHelper",
+     "wrong": "removes the generated class even when compilation fails",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "P2txn",
+       "field": "macroclass",
+       "wrong": "0",
+       "observed": [
+        "1"
+       ]
+      }
+     ]
+    },
+    "params-no-override": {
+     "member": "Storage/ModuleSetting/Default.cls::GetCustomParameters",
+     "wrong": "command parameters do not override defaults",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "E07",
+       "field": "value",
+       "wrong": "hello",
+       "observed": [
+        "hi"
+       ]
+      }
+     ]
+    },
+    "evalattr-skip": {
+     "member": "Storage/ModuleSetting/Default.cls::EvaluateAttribute",
+     "wrong": "does not substitute custom parameters",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "E06",
+       "field": "value",
+       "wrong": "${greeting} world",
+       "observed": [
+        "hello world"
+       ]
+      },
+      {
+       "case": "E09",
+       "field": "value",
+       "wrong": "{$packagename}-{$version}",
+       "observed": [
+        "evalmod-1.2.3"
+       ]
+      },
+      {
+       "case": "E18",
+       "field": "error",
+       "wrong": "<not produced>",
+       "observed": [
+        "<REGULAR EXPRESSION>"
+       ]
+      }
+     ]
+    },
+    "resolve-single-pass": {
+     "member": "Storage/ModuleSetting/Default.cls::ResolvePlaceholders",
+     "wrong": "one substitution pass only",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "E19",
+       "field": "value",
+       "wrong": "<not produced>",
+       "observed": [
+        "USER"
+       ]
+      },
+      {
+       "case": "E22",
+       "field": "value",
+       "wrong": "<not produced>",
+       "observed": [
+        "hellox"
+       ]
+      },
+      {
+       "case": "E31",
+       "field": "x",
+       "wrong": "${z} y=end",
+       "observed": [
+        "end y=end"
+       ]
+      }
+     ]
+    },
+    "resolve-raises-on-cycle": {
+     "member": "Storage/ModuleSetting/Default.cls::ResolvePlaceholders",
+     "wrong": "raises the circular-reference error its code names (intended reading)",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "E02",
+       "field": "value",
+       "wrong": "<not produced>",
+       "observed": [
+        "USER"
+       ]
+      },
+      {
+       "case": "E03",
+       "field": "value",
+       "wrong": "<not produced>",
+       "observed": [
+        "USER"
+       ]
+      },
+      {
+       "case": "E04",
+       "field": "value",
+       "wrong": "<not produced>",
+       "observed": [
+        "USER"
+       ]
+      }
+     ]
+    },
+    "resolve-no-system-fallback": {
+     "member": "Storage/ModuleSetting/Default.cls::ResolvePlaceholders",
+     "wrong": "does not resolve system expressions inside parameter values",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "E19",
+       "field": "value",
+       "wrong": "<not produced>",
+       "observed": [
+        "USER"
+       ]
+      }
+     ]
+    },
+    "evaluate-no-early-return": {
+     "member": "Storage/Module.cls::%Evaluate",
+     "wrong": "expands macros even without \"{\"",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "E15",
+       "field": "value",
+       "wrong": "1 no brace",
+       "observed": [
+        "$$$OK no brace"
+       ]
+      },
+      {
+       "case": "P4",
+       "field": "log.aftermsg",
+       "wrong": "Done 1",
+       "observed": [
+        "Done $$$OK"
+       ]
+      }
+     ]
+    },
+    "evaluate-defaults-override-builtins": {
+     "member": "Storage/Module.cls::%Evaluate",
+     "wrong": "a default named version overrides the module version",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "E09",
+       "field": "value",
+       "wrong": "evalmod-9.9.9",
+       "observed": [
+        "evalmod-1.2.3"
+       ]
+      },
+      {
+       "case": "E20",
+       "field": "value",
+       "wrong": "9.9.9",
+       "observed": [
+        "1.2.3"
+       ]
+      }
+     ]
+    },
+    "evaluate-no-name": {
+     "member": "Storage/Module.cls::%Evaluate",
+     "wrong": "does not replace {name}",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "E08",
+       "field": "value",
+       "wrong": "{name}/{NAME}",
+       "observed": [
+        "evalmod/evalmod"
+       ]
+      },
+      {
+       "case": "P1",
+       "field": "log.aftermsg",
+       "wrong": "Done USER {name}",
+       "observed": [
+        "Done USER pc-ok"
+       ]
+      }
+     ]
+    },
+    "expr-error-propagates": {
+     "member": "Storage/Module.cls::%EvaluateExpression",
+     "wrong": "an expression error propagates",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "E13",
+       "field": "value",
+       "wrong": "<not produced>",
+       "observed": [
+        ""
+       ]
+      },
+      {
+       "case": "E14",
+       "field": "value",
+       "wrong": "<not produced>",
+       "observed": [
+        ""
+       ]
+      }
+     ]
+    },
+    "expr-no-strip": {
+     "member": "Storage/Module.cls::%EvaluateExpression",
+     "wrong": "does not strip leading blanks",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "E11",
+       "field": "value",
+       "wrong": "",
+       "observed": [
+        "3"
+       ]
+      }
+     ]
+    },
+    "aftermsg-raw": {
+     "member": "Storage/Module.cls::WriteAfterInstallMessage",
+     "wrong": "prints the message unevaluated",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "P1",
+       "field": "log.aftermsg",
+       "wrong": "Done {$namespace} {name}",
+       "observed": [
+        "Done USER pc-ok"
+       ]
+      },
+      {
+       "case": "P2txn",
+       "field": "status",
+       "wrong": "OK",
+       "observed": [
+        "ERR"
+       ]
+      },
+      {
+       "case": "P2txn",
+       "field": "error",
+       "wrong": "<not produced>",
+       "observed": [
+        "ERROR #5475: Error compiling routine: %IPM.Generated.MacroEval.  Errors:  %IPM.Generated.MacroEval.cls"
+       ]
+      }
+     ]
+    },
+    "aftermsg-guarded": {
+     "member": "Storage/Module.cls::WriteAfterInstallMessage",
+     "wrong": "an evaluation error is caught and the load succeeds",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "P2txn",
+       "field": "status",
+       "wrong": "OK",
+       "observed": [
+        "ERR"
+       ]
+      },
+      {
+       "case": "P2txn",
+       "field": "error",
+       "wrong": "<not produced>",
+       "observed": [
+        "ERROR #5475: Error compiling routine: %IPM.Generated.MacroEval.  Errors:  %IPM.Generated.MacroEval.cls"
+       ]
+      },
+      {
+       "case": "P2txn",
+       "field": "hist.pc-bad-txn",
+       "wrong": "action:load success:1 committed:1 finalized:1",
+       "observed": [
+        "action:load success:0 committed:1 finalized:1"
+       ]
+      }
+     ]
+    },
+    "aftermsg-before-commit": {
+     "member": "Storage/Module.cls::WriteAfterInstallMessage",
+     "wrong": "the message is evaluated before the final commit, so its failure removes the module",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "P2txn",
+       "field": "mod.pc-bad-txn",
+       "wrong": "absent",
+       "observed": [
+        "present version=1.0.0 repo= desc= dev=0"
+       ]
+      },
+      {
+       "case": "P2txn",
+       "field": "hist.pc-bad-txn",
+       "wrong": "action:load success:0 committed:0 finalized:1",
+       "observed": [
+        "action:load success:0 committed:1 finalized:1"
+       ]
+      },
+      {
+       "case": "P2notxn",
+       "field": "mod.pc-bad-notxn",
+       "wrong": "absent",
+       "observed": [
+        "present version=1.0.0 repo= desc= dev=0"
+       ]
+      }
+     ]
+    }
+   },
+   "contract": [
+    {
+     "name": "a circular placeholder reference raises the error the code names",
+     "holds": false,
+     "expected": false,
+     "as_expected": true,
+     "ids": [
+      "C:D3"
+     ],
+     "detail": "0 a=${a} b=${a}"
+    },
+    {
+     "name": "a parameter value containing $ is substituted literally",
+     "holds": false,
+     "expected": false,
+     "as_expected": true,
+     "ids": [
+      "C:D4"
+     ],
+     "detail": "<REGULAR EXPRESSION>"
+    },
+    {
+     "name": "a failed after-install message does not report a committed load as failed",
+     "holds": false,
+     "expected": false,
+     "as_expected": true,
+     "ids": [
+      "P:F-LOAD-4",
+      "G:D13 family"
+     ],
+     "detail": ""
+    }
+   ],
+   "members": {
+    "Utils/Module.cls::%RegExReplace": {
+     "slice": "Utils/Module.cls:2804-2815",
+     "fn": "regex_replace",
+     "behavior": "case-insensitive {$n}/${n} replacement; name is a regex; only backslash escaped in the value (E04, E21, E18, E32)",
+     "fn_present": true,
+     "variants_rejected": [
+      "regex-escape-dollar",
+      "regex-case-sensitive",
+      "regex-literal-name",
+      "regex-dollar-brace-only"
+     ],
+     "credited": true
+    },
+    "Utils/Module.cls::%EvaluateSystemExpression": {
+     "slice": "Utils/Module.cls:2697-2744",
+     "fn": "system_expression",
+     "behavior": "namespace, namespaceLower, mgrDir, ... substitution (E02-E05, E23)",
+     "fn_present": true,
+     "variants_rejected": [
+      "sysexpr-no-lower",
+      "sysexpr-mgr-is-install"
+     ],
+     "credited": true
+    },
+    "Utils/Module.cls::%EvaluateMacro": {
+     "slice": "Utils/Module.cls:2746-2759",
+     "fn": "evaluate_macro",
+     "behavior": "$$$name replaced by its value, undefined -> empty (E12, E16, E17)",
+     "fn_present": true,
+     "variants_rejected": [
+      "macro-skip",
+      "macro-undefined-kept"
+     ],
+     "credited": true
+    },
+    "Utils/Module.cls::EvaluateMacroHelper": {
+     "slice": "Utils/Module.cls:2762-2782",
+     "fn": "macro_helper",
+     "behavior": "compiles %IPM.Generated.MacroEval; a compile error throws and leaves the class (P2)",
+     "fn_present": true,
+     "variants_rejected": [
+      "macrohelper-swallow",
+      "macrohelper-delete-on-error"
+     ],
+     "credited": true
+    },
+    "Storage/ModuleSetting/Default.cls::GetCustomParameters": {
+     "slice": "Storage/ModuleSetting/Default.cls:14-31",
+     "fn": "custom_parameters",
+     "behavior": "module defaults, overridden by command parameters of the same name (E06, E07)",
+     "fn_present": true,
+     "variants_rejected": [
+      "params-no-override"
+     ],
+     "credited": true
+    },
+    "Storage/ModuleSetting/Default.cls::EvaluateAttribute": {
+     "slice": "Storage/ModuleSetting/Default.cls:45-57",
+     "fn": "evaluate_attribute",
+     "behavior": "applies every custom parameter to the attribute (E06, E22)",
+     "fn_present": true,
+     "variants_rejected": [
+      "evalattr-skip"
+     ],
+     "credited": true
+    },
+    "Storage/ModuleSetting/Default.cls::ResolvePlaceholders": {
+     "slice": "Storage/ModuleSetting/Default.cls:62-110",
+     "fn": "resolve_placeholders",
+     "behavior": "fixed point over parameters, local first then system expression; never raises on a cycle (E19, E22, E30, E31, E36)",
+     "fn_present": true,
+     "variants_rejected": [
+      "resolve-single-pass",
+      "resolve-raises-on-cycle",
+      "resolve-no-system-fallback"
+     ],
+     "credited": true
+    },
+    "Storage/Module.cls::%Evaluate": {
+     "slice": "Storage/Module.cls:1833-1883",
+     "fn": "evaluate",
+     "behavior": "returns the value unchanged without \"{\"; built-ins override defaults; {name}; #{expr} (E15, E20, E08, E10)",
+     "fn_present": true,
+     "variants_rejected": [
+      "evaluate-no-early-return",
+      "evaluate-defaults-override-builtins",
+      "evaluate-no-name"
+     ],
+     "credited": true
+    },
+    "Storage/Module.cls::%EvaluateExpression": {
+     "slice": "Storage/Module.cls:1885-1894",
+     "fn": "evaluate_expression",
+     "behavior": "strips leading blanks; an error yields empty (E11, E13, E14)",
+     "fn_present": true,
+     "variants_rejected": [
+      "expr-error-propagates",
+      "expr-no-strip"
+     ],
+     "credited": true
+    },
+    "Storage/Module.cls::WriteAfterInstallMessage": {
+     "slice": "Storage/Module.cls:356-361",
+     "fn": "after_install_message",
+     "behavior": "prints the evaluated message after the final commit; an evaluation error fails the committed load (P1-P4)",
+     "fn_present": true,
+     "variants_rejected": [
+      "aftermsg-raw",
+      "aftermsg-guarded",
+      "aftermsg-before-commit"
+     ],
+     "credited": true
+    }
+   },
+   "source_sha256": "6cc7c3bcb9996dc36909e978be99bd30a74f0c10901feb1bc5e50769c73fbee2"
+  },
+  {
+   "family": "temp-repo-and-search-order",
+   "runs": [
+    "20261114T025102Z-r1-temp-repo"
+   ],
+   "fields_compared": 86,
+   "as_built_matches": true,
+   "mismatches": [],
+   "variants": {
+    "skip-ignores-existing-root": {
+     "member": "General/TempLocalRepoManager.cls::SkipCreate",
+     "wrong": "creates a temporary repository even when another repository has that root",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "TR5",
+       "field": "repo.reg5",
+       "wrong": "id:6 sort:2 root:/tmp/c1/reg5/",
+       "observed": [
+        "id:5 sort:2 root:/tmp/c1/reg5/"
+       ]
+      },
+      {
+       "case": "TR5c",
+       "field": "repo.reg5",
+       "wrong": "id:6 sort:2 root:/tmp/c1/reg5/",
+       "observed": [
+        "id:5 sort:2 root:/tmp/c1/reg5/"
+       ]
+      }
+     ]
+    },
+    "skip-ignores-missing-dir": {
+     "member": "General/TempLocalRepoManager.cls::SkipCreate",
+     "wrong": "creates (and removes) an empty repository for a missing folder; expected to survive: no fixture observes it",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "TR3",
+       "field": "repo.ipm-temp-modules-1",
+       "wrong": "id:3 sort:2 root:/tmp/c1/elsewhere/",
+       "observed": [
+        "id:2 sort:2 root:/tmp/c1/elsewhere/"
+       ]
+      },
+      {
+       "case": "TR4",
+       "field": "repo.keepme",
+       "wrong": "id:5 sort:2 root:/tmp/c1/tr4/.modules/",
+       "observed": [
+        "id:4 sort:2 root:/tmp/c1/tr4/.modules/"
+       ]
+      },
+      {
+       "case": "TR5",
+       "field": "repo.reg5",
+       "wrong": "id:6 sort:2 root:/tmp/c1/reg5/",
+       "observed": [
+        "id:5 sort:2 root:/tmp/c1/reg5/"
+       ]
+      }
+     ]
+    },
+    "create-always-first-name": {
+     "member": "General/TempLocalRepoManager.cls::Create",
+     "wrong": "always names the repository ipm-temp-modules-1",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "TR3",
+       "field": "status",
+       "wrong": "ERR",
+       "observed": [
+        "OK"
+       ]
+      },
+      {
+       "case": "TR3",
+       "field": "log.cleanup_failed",
+       "wrong": "ipm-temp-modules-1",
+       "observed": [
+        "none"
+       ]
+      },
+      {
+       "case": "TR3",
+       "field": "mod.tr3-dep",
+       "wrong": "absent",
+       "observed": [
+        "present version=1.0.0 repo=ipm-temp-modules-2 desc=from-dotmodules dev=0"
+       ]
+      }
+     ]
+    },
+    "create-sort-last": {
+     "member": "General/TempLocalRepoManager.cls::Create",
+     "wrong": "ignores useFirst (sort 1000); expected to survive: sort order never decides a result",
+     "rejected": false,
+     "rejected_by": []
+    },
+    "onnew-no-cleanup-in-catch": {
+     "member": "General/TempLocalRepoManager.cls::%OnNew",
+     "wrong": "does not call CleanUp when Create fails",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "TR7",
+       "field": "log.cleanup_failed",
+       "wrong": "none",
+       "observed": [
+        "ipm-temp-modules-1"
+       ]
+      }
+     ]
+    },
+    "onnew-ok-on-failure": {
+     "member": "General/TempLocalRepoManager.cls::%OnNew",
+     "wrong": "returns OK after a Create failure, so a manager object exists",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "TR7",
+       "field": "error",
+       "wrong": "<not produced>",
+       "observed": [
+        "ERROR #5002: ObjectScript error: <INVALID OREF>LoadInternal+83^%IPM.Main.1"
+       ]
+      },
+      {
+       "case": "TR7",
+       "field": "log.cleanup_failed",
+       "wrong": "ipm-temp-modules-1,ipm-temp-modules-1",
+       "observed": [
+        "ipm-temp-modules-1"
+       ]
+      },
+      {
+       "case": "TR7",
+       "field": "hist.tr7-main",
+       "wrong": "action:load success:1 committed:1 finalized:1",
+       "observed": [
+        "action:load success:0 committed:1 finalized:1"
+       ]
+      }
+     ]
+    },
+    "cleanup-noop": {
+     "member": "General/TempLocalRepoManager.cls::CleanUp",
+     "wrong": "never deletes the repository",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "TR2",
+       "field": "repos.count",
+       "wrong": "1",
+       "observed": [
+        "0"
+       ]
+      },
+      {
+       "case": "TR3",
+       "field": "repos.count",
+       "wrong": "3",
+       "observed": [
+        "1"
+       ]
+      },
+      {
+       "case": "TR4",
+       "field": "repos.count",
+       "wrong": "3",
+       "observed": [
+        "1"
+       ]
+      }
+     ]
+    },
+    "cleanup-quiet": {
+     "member": "General/TempLocalRepoManager.cls::CleanUp",
+     "wrong": "reports no message when the delete fails",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "TR7",
+       "field": "log.cleanup_failed",
+       "wrong": "none",
+       "observed": [
+        "ipm-temp-modules-1"
+       ]
+      }
+     ]
+    },
+    "search-tie-by-sortorder": {
+     "member": "Repo/Manager.cls::SearchRepositoriesForModule",
+     "wrong": "breaks version ties by repository sort order (the temporary repository first)",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "TR5",
+       "field": "mod.tr5-dep",
+       "wrong": "present version=1.0.0 repo=ipm-temp-modules-1 desc=from-dotmodules dev=0",
+       "observed": [
+        "present version=1.0.0 repo=reg5 desc=from-registry dev=0"
+       ]
+      }
+     ]
+    },
+    "search-first-repo": {
+     "member": "Repo/Manager.cls::SearchRepositoriesForModule",
+     "wrong": "takes the first repository (by sort order) that has any satisfying version",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "TR5",
+       "field": "mod.tr5-dep",
+       "wrong": "present version=1.0.0 repo=ipm-temp-modules-1 desc=from-dotmodules dev=0",
+       "observed": [
+        "present version=1.0.0 repo=reg5 desc=from-registry dev=0"
+       ]
+      },
+      {
+       "case": "TR5c",
+       "field": "mod.tr5c-dep",
+       "wrong": "present version=1.0.0 repo=ipm-temp-modules-1 desc=from-dotmodules dev=0",
+       "observed": [
+        "present version=1.1.0 repo=reg5 desc=from-registry dev=0"
+       ]
+      }
+     ]
+    },
+    "search-lowest-version": {
+     "member": "Repo/Manager.cls::SearchRepositoriesForModule",
+     "wrong": "orders versions ascending",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "TR5b",
+       "field": "mod.tr5b-dep",
+       "wrong": "present version=1.0.0 repo=reg5 desc=from-registry dev=0",
+       "observed": [
+        "present version=1.1.0 repo=ipm-temp-modules-1 desc=from-dotmodules dev=0"
+       ]
+      },
+      {
+       "case": "TR5c",
+       "field": "mod.tr5c-dep",
+       "wrong": "present version=1.0.0 repo=ipm-temp-modules-1 desc=from-dotmodules dev=0",
+       "observed": [
+        "present version=1.1.0 repo=reg5 desc=from-registry dev=0"
+       ]
+      }
+     ]
+    },
+    "loadinternal-guarded-cleanup": {
+     "member": "Main.cls::LoadInternal",
+     "wrong": "skips CleanUp when the manager is missing, so the load succeeds",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "TR7",
+       "field": "status",
+       "wrong": "OK",
+       "observed": [
+        "ERR"
+       ]
+      },
+      {
+       "case": "TR7",
+       "field": "error",
+       "wrong": "<not produced>",
+       "observed": [
+        "ERROR #5002: ObjectScript error: <INVALID OREF>LoadInternal+83^%IPM.Main.1"
+       ]
+      },
+      {
+       "case": "TR7",
+       "field": "hist.tr7-main",
+       "wrong": "action:load success:1 committed:1 finalized:1",
+       "observed": [
+        "action:load success:0 committed:1 finalized:1"
+       ]
+      }
+     ]
+    },
+    "late-error-rolls-back": {
+     "member": "Main.cls::LoadInternal",
+     "wrong": "an error after the commit removes the module",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "TR7",
+       "field": "mod.tr7-main",
+       "wrong": "absent",
+       "observed": [
+        "present version=1.0.0 repo= desc= dev=0"
+       ]
+      }
+     ]
+    },
+    "late-error-reports-success": {
+     "member": "Main.cls::LoadInternal",
+     "wrong": "an error after the commit is reported as success",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "TR7",
+       "field": "status",
+       "wrong": "OK",
+       "observed": [
+        "ERR"
+       ]
+      },
+      {
+       "case": "TR7",
+       "field": "error",
+       "wrong": "<not produced>",
+       "observed": [
+        "ERROR #5002: ObjectScript error: <INVALID OREF>LoadInternal+83^%IPM.Main.1"
+       ]
+      }
+     ]
+    }
+   },
+   "contract": [
+    {
+     "name": "a load leaves no temporary repository registered",
+     "holds": true,
+     "expected": true,
+     "as_expected": true,
+     "ids": [
+      "C:R1-1"
+     ],
+     "detail": []
+    },
+    {
+     "name": "a load keeps repositories it did not create",
+     "holds": true,
+     "expected": true,
+     "as_expected": true,
+     "ids": [
+      "C:R1-2"
+     ],
+     "detail": ""
+    },
+    {
+     "name": "the .modules copy wins over an equal version elsewhere (TempLocalRepoManager comment intent)",
+     "holds": false,
+     "expected": false,
+     "as_expected": true,
+     "ids": [
+      "C:D1"
+     ],
+     "detail": "present version=1.0.0 repo=reg5 desc=from-registry dev=0"
+    },
+    {
+     "name": "an error status means the module was not installed",
+     "holds": false,
+     "expected": false,
+     "as_expected": true,
+     "ids": [
+      "G:D13",
+      "P:F-LOAD-4 family"
+     ],
+     "detail": "TR7 status=ERR present version=1.0.0 repo= desc= dev=0"
+    },
+    {
+     "name": "a cleanup-failure message names a repository that still exists",
+     "holds": false,
+     "expected": false,
+     "as_expected": true,
+     "ids": [
+      "C:D2"
+     ],
+     "detail": "ipm-temp-modules-1"
+    }
+   ],
+   "members": {
+    "General/TempLocalRepoManager.cls::SkipCreate": {
+     "slice": "General/TempLocalRepoManager.cls:33-47",
+     "fn": "skip_create",
+     "behavior": "no temporary repository when another repository already has the .modules root (TR4)",
+     "fn_present": true,
+     "variants_rejected": [
+      "skip-ignores-existing-root",
+      "skip-ignores-missing-dir"
+     ],
+     "credited": true
+    },
+    "General/TempLocalRepoManager.cls::Create": {
+     "slice": "General/TempLocalRepoManager.cls:13-31",
+     "fn": "create",
+     "behavior": "first free ipm-temp-modules-N name; BuildCache failure leaves no row (TR3, TR7)",
+     "fn_present": true,
+     "variants_rejected": [
+      "create-always-first-name"
+     ],
+     "credited": true
+    },
+    "General/TempLocalRepoManager.cls::%OnNew": {
+     "slice": "General/TempLocalRepoManager.cls:49-71",
+     "fn": "on_new",
+     "behavior": "creation failure runs CleanUp and returns an error, so %New yields no object (TR7)",
+     "fn_present": true,
+     "variants_rejected": [
+      "onnew-no-cleanup-in-catch",
+      "onnew-ok-on-failure"
+     ],
+     "credited": true
+    },
+    "General/TempLocalRepoManager.cls::CleanUp": {
+     "slice": "General/TempLocalRepoManager.cls:73-85",
+     "fn": "cleanup",
+     "behavior": "deletes the repository it created; reports a failure for a row already rolled back (TR2, TR7)",
+     "fn_present": true,
+     "variants_rejected": [
+      "cleanup-noop",
+      "cleanup-quiet"
+     ],
+     "credited": true
+    },
+    "Repo/Manager.cls::SearchRepositoriesForModule": {
+     "slice": "Repo/Manager.cls:55-192",
+     "fn": "search",
+     "behavior": "candidates ordered by version descending, then repository ID ascending; first wins (TR5, TR5b, TR5c)",
+     "fn_present": true,
+     "variants_rejected": [
+      "search-tie-by-sortorder",
+      "search-first-repo",
+      "search-lowest-version"
+     ],
+     "credited": true
+    },
+    "Main.cls::LoadInternal": {
+     "slice": "Main.cls:2525-2532",
+     "fn": "load_internal",
+     "behavior": "temporary repository around LoadNewModule; unguarded CleanUp after the commit (TR7)",
+     "fn_present": true,
+     "variants_rejected": [
+      "loadinternal-guarded-cleanup",
+      "late-error-rolls-back",
+      "late-error-reports-success"
+     ],
+     "credited": true
+    }
+   },
+   "source_sha256": "3b8b073e4ede121890a4b9dc03428428208922d9b6d0e02e6b203dbfd71af27b"
+  }
+ ]
+}

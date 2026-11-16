@@ -1,0 +1,45 @@
+verification results:: 2 verified, 2 errors
+note: recommendation not met
+  --> /Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter11/proofs/controls/shared_steps.rs/busy-is-error.rs:53:10
+   |
+15 |  recommends !s.runs.contains_key(job)
+   |             ------------------------- recommendation not met
+...
+53 |  ensures begin(s,j,m,shared).state.row==s.row,
+   |          ^^^^^^^^^^^^^^^^^^^
+
+note: recommendation not met
+  --> /Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter11/proofs/controls/shared_steps.rs/busy-is-error.rs:54:2
+   |
+15 |  recommends !s.runs.contains_key(job)
+   |             ------------------------- recommendation not met
+...
+54 |  begin(s,j,m,shared).state.locks==s.locks,begin(s,j,m,shared).state.runs==s.runs,
+   |  ^^^^^^^^^^^^^^^^^^^
+
+note: recommendation not met
+  --> /Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter11/proofs/controls/shared_steps.rs/busy-is-error.rs:54:43
+   |
+15 |  recommends !s.runs.contains_key(job)
+   |             ------------------------- recommendation not met
+...
+54 |  begin(s,j,m,shared).state.locks==s.locks,begin(s,j,m,shared).state.runs==s.runs,
+   |                                           ^^^^^^^^^^^^^^^^^^^
+
+error: postcondition not satisfied
+  --> /Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter11/proofs/controls/shared_steps.rs/busy-is-error.rs:56:68
+   |
+51 | pub proof fn busy_preserves_state(s:State,j:int,m:int,shared:bool)
+   | ------------------------------------------------------------------ at the end of the function body
+...
+56 |  begin(s,j,m,shared).state.results[j],!begin(s,j,m,shared).started,begin(s,j,m,shared).ok
+   |                                                                    ^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: assertion failed
+  --> /Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter11/proofs/controls/shared_steps.rs/busy-is-error.rs:74:41
+   |
+74 |  assert(!same_attempt().started);assert(same_attempt().ok);assert(same_attempt().state.results[20]);assert(same_attempt().state.coun...
+   |                                         ^^^^^^^^^^^^^^^^^ assertion failed
+
+error: aborting due to 2 previous errors
+

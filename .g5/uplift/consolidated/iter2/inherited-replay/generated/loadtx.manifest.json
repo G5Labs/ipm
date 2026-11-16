@@ -1,0 +1,210 @@
+{
+  "family": "loadtx",
+  "formal_file": "loadtx.rs",
+  "bindings": [
+    {
+      "member": "Utils/Module.cls::LoadNewModule",
+      "slice": "Utils/Module.cls:1152-1364",
+      "ontology": "transaction.flag-sources",
+      "symbol": "effective",
+      "property": "per-activation flags, nested entry depth and write-prefix durability",
+      "premises": [
+        "Supported disjoint write keys; commit_at supplied by verified/tested scheduler boundaries",
+        "No caller transaction for settle depth0; arbitrary same-key compare-and-restore not derived",
+        "Kill versus Terminate distinction; instance restart loses IRISTEMP"
+      ],
+      "role": "owns",
+      "native": {
+        "followup": "loadtx.py corresponding_cases, N-R05, N-P19..21; P instance receipts",
+        "flag_override_receipt": ".g5/uplift/consolidated/extension/flag-overrides-native/results/20261114T160126Z/receipt.json",
+        "flag_override_raw": ".g5/uplift/consolidated/extension/flag-overrides-native/results/20261114T160126Z/raw.log"
+      },
+      "status": "represented-scoped"
+    },
+    {
+      "member": "Utils/Module.cls::LoadModuleFromDirectory",
+      "slice": "Utils/Module.cls:293-330",
+      "ontology": "transaction.flag-sources",
+      "symbol": "effective",
+      "property": "parent params override child defaults independently by key",
+      "premises": [
+        "Supported disjoint write keys; commit_at supplied by verified/tested scheduler boundaries",
+        "No caller transaction for settle depth0; arbitrary same-key compare-and-restore not derived",
+        "Kill versus Terminate distinction; instance restart loses IRISTEMP"
+      ],
+      "role": "owns",
+      "native": {
+        "followup": "loadtx.py corresponding_cases, N-R05, N-P19..21; P instance receipts",
+        "flag_override_receipt": ".g5/uplift/consolidated/extension/flag-overrides-native/results/20261114T160126Z/receipt.json",
+        "flag_override_raw": ".g5/uplift/consolidated/extension/flag-overrides-native/results/20261114T160126Z/raw.log"
+      },
+      "status": "represented-scoped"
+    },
+    {
+      "member": "Utils/Module.cls::LoadModuleReference",
+      "slice": "Utils/Module.cls:40-211",
+      "ontology": "load.dependencies",
+      "symbol": "survived",
+      "property": "child writes survive exactly at durability cut",
+      "premises": [
+        "Supported disjoint write keys; commit_at supplied by verified/tested scheduler boundaries",
+        "No caller transaction for settle depth0; arbitrary same-key compare-and-restore not derived",
+        "Kill versus Terminate distinction; instance restart loses IRISTEMP"
+      ],
+      "role": "owns",
+      "native": {
+        "followup": "loadtx.py corresponding_cases, N-R05, N-P19..21; P instance receipts",
+        "flag_override_receipt": ".g5/uplift/consolidated/extension/flag-overrides-native/results/20261114T160126Z/receipt.json",
+        "flag_override_raw": ".g5/uplift/consolidated/extension/flag-overrides-native/results/20261114T160126Z/raw.log"
+      },
+      "status": "represented-scoped"
+    },
+    {
+      "member": "Utils/JournalManager.cls::%OnClose",
+      "slice": "Utils/JournalManager.cls:22-25",
+      "ontology": "transaction.opt-out",
+      "symbol": "settle",
+      "property": "process end journaling/temporary effects contrasted with restart",
+      "premises": [
+        "Supported disjoint write keys; commit_at supplied by verified/tested scheduler boundaries",
+        "No caller transaction for settle depth0; arbitrary same-key compare-and-restore not derived",
+        "Kill versus Terminate distinction; instance restart loses IRISTEMP"
+      ],
+      "role": "delegates",
+      "native": {
+        "followup": "loadtx.py corresponding_cases, N-R05, N-P19..21; P instance receipts",
+        "flag_override_receipt": ".g5/uplift/consolidated/extension/flag-overrides-native/results/20261114T160126Z/receipt.json",
+        "flag_override_raw": ".g5/uplift/consolidated/extension/flag-overrides-native/results/20261114T160126Z/raw.log"
+      },
+      "status": "represented-scoped"
+    }
+  ],
+  "obligations": [
+    {
+      "id": "flags-override",
+      "ontology": "transaction.flag-sources",
+      "symbol": "explicit_false_parent_overrides_child",
+      "property": "defined parent flag including false overrides own default",
+      "represented": true,
+      "proved": true,
+      "refuted": false,
+      "open": false,
+      "premises": [],
+      "native": null,
+      "critical": true
+    },
+    {
+      "id": "child-notxn",
+      "ontology": "transaction.flag-sources.dependency-no-transaction",
+      "symbol": "no_transaction_child_does_not_cancel_parent",
+      "property": "NoTransaction child does not cancel parent open transaction",
+      "represented": true,
+      "proved": true,
+      "refuted": false,
+      "open": false,
+      "premises": [],
+      "native": "N-R05",
+      "critical": true
+    },
+    {
+      "id": "child-nojournal",
+      "ontology": "transaction.flag-sources.dependency-defaults",
+      "symbol": "nojournal_survives_parent_rollback",
+      "property": "NoJournal child write survives parent rollback",
+      "represented": true,
+      "proved": true,
+      "refuted": false,
+      "open": false,
+      "premises": [],
+      "native": "M5",
+      "critical": true
+    },
+    {
+      "id": "durable-prefix",
+      "ontology": "load.outcome",
+      "symbol": "homogeneous_transactional_domain",
+      "property": "all journaled writes sharing commit survive together under homogeneous mode",
+      "represented": true,
+      "proved": true,
+      "refuted": false,
+      "open": false,
+      "premises": [
+        "Disjoint keys; at<commit; same outer commit cut"
+      ],
+      "native": null,
+      "critical": true
+    },
+    {
+      "id": "impossible-state",
+      "ontology": "load.outcome",
+      "symbol": "impossible_partial_survival",
+      "property": "cannot keep only one of two journaled writes at same commit cut",
+      "represented": true,
+      "proved": true,
+      "refuted": false,
+      "open": false,
+      "premises": [],
+      "native": null,
+      "critical": true
+    },
+    {
+      "id": "process-instance",
+      "ontology": "history.record.abnormal-end",
+      "symbol": "process_kill_is_not_instance_restart",
+      "property": "process kill and instance restart have different temporary-store survival",
+      "represented": true,
+      "proved": true,
+      "refuted": false,
+      "open": false,
+      "premises": [
+        "IRIS termination and IRISTEMP premises"
+      ],
+      "native": "G SIGKILL, P instance restart receipts distinct",
+      "critical": true
+    },
+    {
+      "id": "retry-frame",
+      "ontology": "load.outcome",
+      "symbol": "retry_preserves_foreign",
+      "property": "fault-free retry preserves foreign keys",
+      "represented": true,
+      "proved": true,
+      "refuted": false,
+      "open": false,
+      "premises": [
+        "No new external failure; disjoint named module writes"
+      ],
+      "native": null,
+      "critical": true
+    },
+    {
+      "id": "all-cuts-refinement",
+      "ontology": "load.outcome",
+      "symbol": "survived",
+      "property": "complete event interpreter refines prefix at every nested same-key write/crash point",
+      "represented": true,
+      "proved": false,
+      "refuted": false,
+      "open": true,
+      "premises": [],
+      "native": null,
+      "critical": true
+    }
+  ],
+  "inherited_correspondence": [
+    {
+      "symbol": "playbook-uplift/models/verus/load_general.rs::g_refines",
+      "represented": "arbitrary dependency count and prior state under homogeneous mode P1c,P2,P3,PC,PI",
+      "missing": "per-activation flags and internal dependency cuts; retained unchanged via inherited_bridge.rs::homogeneous_imported_result"
+    },
+    {
+      "symbol": ".g5/Verus_verification/crates/ipm-load-history/src/model.rs::terminate",
+      "represented": "process destructor/kill cuts with global mode",
+      "missing": "mixed flags, whole instance restart"
+    }
+  ],
+  "open_boundaries": [
+    "No unbounded derivation of the detailed Python step interpreter or its same-key compare-and-restore policy. Prefix theorem is not a full nested IRIS transaction refinement.",
+    "Explicit false flag override is beyond inherited Python MODES abstraction; six real CLI/default/dependency cases now match, with90 native fields and42 Verus projections (flag-overrides-native/REPORT.md). No arbitrary concurrent rollback refinement follows."
+  ]
+}

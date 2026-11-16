@@ -1,0 +1,707 @@
+{
+ "when": "20261114T033709Z",
+ "families": [
+  {
+   "family": "owners-outside-load",
+   "runs": [
+    "20261114T033125Z-r4-owners",
+    "20261114T030608Z-r2-semver",
+    "20261114T025102Z-r1-temp-repo",
+    "20261114T025551Z-r1-eval-postcommit"
+   ],
+   "fields_compared": 61,
+   "as_built_matches": true,
+   "mismatches": [],
+   "variants": {
+    "mv-unchanged-skips": {
+     "member": "Main.cls::ModuleVersion",
+     "wrong": "an unchanged version is skipped with OK (the unreachable branch; intended reading)",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "MV5",
+       "field": "status",
+       "wrong": "OK",
+       "observed": [
+        "ERR"
+       ]
+      },
+      {
+       "case": "MV5",
+       "field": "error",
+       "wrong": "<not produced>",
+       "observed": [
+        "ERROR #5001: Cannot set version to 1.0.1-rc.1+b7 as it is not strictly higher than the current version 1.0.1-rc.1+b7 (Use -force to override)  Note: when either version has a nonempty prerelease value, and differ from the other by major.minor.patch, neither version is considered strictly higher than the other.        See https://github.com/npm/node-semver?tab=readme-ov-file#prerelease-tags for more information."
+       ]
+      }
+     ]
+    },
+    "mv-force-ignored": {
+     "member": "Main.cls::ModuleVersion",
+     "wrong": "-force does not allow a lower version",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "MV3",
+       "field": "status",
+       "wrong": "ERR",
+       "observed": [
+        "OK"
+       ]
+      },
+      {
+       "case": "MV3",
+       "field": "mv",
+       "wrong": "1.3.0 doc=1.3.0",
+       "observed": [
+        "1.0.0 doc=1.0.0"
+       ]
+      },
+      {
+       "case": "MV4",
+       "field": "mv",
+       "wrong": "1.3.1-rc.1+b7 doc=1.3.1-rc.1+b7",
+       "observed": [
+        "1.0.1-rc.1+b7 doc=1.0.1-rc.1+b7"
+       ]
+      }
+     ]
+    },
+    "mv-no-validation": {
+     "member": "Main.cls::ModuleVersion",
+     "wrong": "an invalid version string is accepted",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "MV7",
+       "field": "error",
+       "wrong": "ERROR #5001: Cannot set version to 1.0.0 as it is not strictly higher than the current version 1.0.1-rc.1+b7 (Use -force to override)  Note: when either version has a nonempty prerelease value, and differ from the other by major.minor.patch, neither version is considered strictly higher than the other.        See https://github.com/npm/node-semver?tab=readme-ov-file#prerelease-tags for more information.",
+       "observed": [
+        "ERROR #5001: Invalid version string: 01.0.0"
+       ]
+      }
+     ]
+    },
+    "mv-modifiers-ignored": {
+     "member": "Main.cls::ModuleVersion",
+     "wrong": "-prerelease and -build are ignored",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "MV4",
+       "field": "mv",
+       "wrong": "1.0.1 doc=1.0.1",
+       "observed": [
+        "1.0.1-rc.1+b7 doc=1.0.1-rc.1+b7"
+       ]
+      },
+      {
+       "case": "MV5",
+       "field": "error",
+       "wrong": "ERROR #5001: Cannot set version to 1.0.1 as it is not strictly higher than the current version 1.0.1 (Use -force to override)  Note: when either version has a nonempty prerelease value, and differ from the other by major.minor.patch, neither version is considered strictly higher than the other.        See https://github.com/npm/node-semver?tab=readme-ov-file#prerelease-tags for more information.",
+       "observed": [
+        "ERROR #5001: Cannot set version to 1.0.1-rc.1+b7 as it is not strictly higher than the current version 1.0.1-rc.1+b7 (Use -force to override)  Note: when either version has a nonempty prerelease value, and differ from the other by major.minor.patch, neither version is considered strictly higher than the other.        See https://github.com/npm/node-semver?tab=readme-ov-file#prerelease-tags for more information."
+       ]
+      },
+      {
+       "case": "MV5",
+       "field": "mv",
+       "wrong": "1.0.1 doc=1.0.1",
+       "observed": [
+        "1.0.1-rc.1+b7 doc=1.0.1-rc.1+b7"
+       ]
+      }
+     ]
+    },
+    "bump-major-keeps-minor": {
+     "member": "General/SemanticVersion.cls::WithBumpMajor",
+     "wrong": "major bump keeps minor",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "B1",
+       "field": "major",
+       "wrong": "2.2.0 minor=1.3.0 patch=1.2.4 pre=1.2.3-rc.1+b build=1.2.3-beta+x nobuild=1.2.3-beta",
+       "observed": [
+        "2.0.0 minor=1.3.0 patch=1.2.4 pre=1.2.3-rc.1+b build=1.2.3-beta+x nobuild=1.2.3-beta"
+       ]
+      }
+     ]
+    },
+    "bump-minor-keeps-patch": {
+     "member": "General/SemanticVersion.cls::WithBumpMinor",
+     "wrong": "minor bump keeps patch",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "MV1",
+       "field": "mv",
+       "wrong": "1.3.3 doc=1.3.3",
+       "observed": [
+        "1.3.0 doc=1.3.0"
+       ]
+      },
+      {
+       "case": "MV2",
+       "field": "error",
+       "wrong": "ERROR #5001: Cannot set version to 1.0.0 as it is not strictly higher than the current version 1.3.3 (Use -force to override)  Note: when either version has a nonempty prerelease value, and differ from the other by major.minor.patch, neither version is considered strictly higher than the other.        See https://github.com/npm/node-semver?tab=readme-ov-file#prerelease-tags for more information.",
+       "observed": [
+        "ERROR #5001: Cannot set version to 1.0.0 as it is not strictly higher than the current version 1.3.0 (Use -force to override)  Note: when either version has a nonempty prerelease value, and differ from the other by major.minor.patch, neither version is considered strictly higher than the other.        See https://github.com/npm/node-semver?tab=readme-ov-file#prerelease-tags for more information."
+       ]
+      },
+      {
+       "case": "MV2",
+       "field": "mv",
+       "wrong": "1.3.3 doc=1.3.3",
+       "observed": [
+        "1.3.0 doc=1.3.0"
+       ]
+      }
+     ]
+    },
+    "bump-patch-keeps-prerelease": {
+     "member": "General/SemanticVersion.cls::WithBumpPatch",
+     "wrong": "patch bump keeps the prerelease",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "B1",
+       "field": "major",
+       "wrong": "2.0.0 minor=1.3.0 patch=1.2.4-beta pre=1.2.3-rc.1+b build=1.2.3-beta+x nobuild=1.2.3-beta",
+       "observed": [
+        "2.0.0 minor=1.3.0 patch=1.2.4 pre=1.2.3-rc.1+b build=1.2.3-beta+x nobuild=1.2.3-beta"
+       ]
+      }
+     ]
+    },
+    "withpre-drops-build": {
+     "member": "General/SemanticVersion.cls::WithPrerelease",
+     "wrong": "setting a prerelease drops the build",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "B1",
+       "field": "major",
+       "wrong": "2.0.0 minor=1.3.0 patch=1.2.4 pre=1.2.3-rc.1 build=1.2.3-beta+x nobuild=1.2.3-beta",
+       "observed": [
+        "2.0.0 minor=1.3.0 patch=1.2.4 pre=1.2.3-rc.1+b build=1.2.3-beta+x nobuild=1.2.3-beta"
+       ]
+      }
+     ]
+    },
+    "withbuild-drops-pre": {
+     "member": "General/SemanticVersion.cls::WithBuild",
+     "wrong": "setting a build drops the prerelease",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "MV4",
+       "field": "mv",
+       "wrong": "1.0.1+b7 doc=1.0.1+b7",
+       "observed": [
+        "1.0.1-rc.1+b7 doc=1.0.1-rc.1+b7"
+       ]
+      },
+      {
+       "case": "MV5",
+       "field": "error",
+       "wrong": "ERROR #5001: Cannot set version to 1.0.1+b7 as it is not strictly higher than the current version 1.0.1+b7 (Use -force to override)  Note: when either version has a nonempty prerelease value, and differ from the other by major.minor.patch, neither version is considered strictly higher than the other.        See https://github.com/npm/node-semver?tab=readme-ov-file#prerelease-tags for more information.",
+       "observed": [
+        "ERROR #5001: Cannot set version to 1.0.1-rc.1+b7 as it is not strictly higher than the current version 1.0.1-rc.1+b7 (Use -force to override)  Note: when either version has a nonempty prerelease value, and differ from the other by major.minor.patch, neither version is considered strictly higher than the other.        See https://github.com/npm/node-semver?tab=readme-ov-file#prerelease-tags for more information."
+       ]
+      },
+      {
+       "case": "MV5",
+       "field": "mv",
+       "wrong": "1.0.1+b7 doc=1.0.1+b7",
+       "observed": [
+        "1.0.1-rc.1+b7 doc=1.0.1-rc.1+b7"
+       ]
+      }
+     ]
+    },
+    "updateversion-noop": {
+     "member": "StudioDocument/Module.cls::UpdateVersion",
+     "wrong": "the stored manifest keeps the old version",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "MV1",
+       "field": "mv",
+       "wrong": "1.3.0 doc=1.2.3",
+       "observed": [
+        "1.3.0 doc=1.3.0"
+       ]
+      },
+      {
+       "case": "MV2",
+       "field": "mv",
+       "wrong": "1.3.0 doc=1.2.3",
+       "observed": [
+        "1.3.0 doc=1.3.0"
+       ]
+      },
+      {
+       "case": "MV3",
+       "field": "mv",
+       "wrong": "1.0.0 doc=1.2.3",
+       "observed": [
+        "1.0.0 doc=1.0.0"
+       ]
+      }
+     ]
+    },
+    "updateversion-writes-file": {
+     "member": "StudioDocument/Module.cls::UpdateVersion",
+     "wrong": "module.xml on disk is rewritten too",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "MV10",
+       "field": "file",
+       "wrong": "2.0.0",
+       "observed": [
+        "1.2.3"
+       ]
+      }
+     ]
+    },
+    "buildcache-no-lock": {
+     "member": "Repo/Filesystem/Definition.cls::BuildCache",
+     "wrong": "a refresh does not lock the repository",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "LK2",
+       "field": "build",
+       "wrong": "1 waited=short tlevel=0",
+       "observed": [
+        "0 waited=timeout tlevel=0"
+       ]
+      },
+      {
+       "case": "LK2",
+       "field": "error",
+       "wrong": "<not produced>",
+       "observed": [
+        "ERROR #5803: Failed to acquire exclusive lock on instance of '2:%IPM.Repo.Filesystem.Definition'"
+       ]
+      }
+     ]
+    },
+    "buildcache-no-purge": {
+     "member": "Repo/Filesystem/Definition.cls::BuildCache",
+     "wrong": "a refresh keeps entries for removed modules",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "LK3",
+       "field": "build",
+       "wrong": "1 cached=lk-a lk-b tlevel=0",
+       "observed": [
+        "1 cached=lk-a tlevel=0"
+       ]
+      }
+     ]
+    },
+    "buildcache-keeps-save-on-failure": {
+     "member": "Repo/Filesystem/Definition.cls::BuildCache",
+     "wrong": "a failed build keeps the saved repository row",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "TR7",
+       "field": "repos.count",
+       "wrong": "1",
+       "observed": [
+        "0"
+       ]
+      }
+     ]
+    },
+    "addcache-malformed-fails": {
+     "member": "Repo/Filesystem/Definition.cls::AddCacheItem",
+     "wrong": "an unparseable manifest fails the build",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "LK1",
+       "field": "build",
+       "wrong": "0 cached=",
+       "observed": [
+        "1 cached=lk-a lk-b"
+       ]
+      },
+      {
+       "case": "LK3",
+       "field": "build",
+       "wrong": "0 cached= tlevel=0",
+       "observed": [
+        "1 cached=lk-a tlevel=0"
+       ]
+      },
+      {
+       "case": "LK5",
+       "field": "build",
+       "wrong": "0 tlevel=0 lockable=1",
+       "observed": [
+        "1 tlevel=0 lockable=1"
+       ]
+      }
+     ]
+    },
+    "addcache-invalid-name-skipped": {
+     "member": "Repo/Filesystem/Definition.cls::AddCacheItem",
+     "wrong": "an invalid name is skipped like an unparseable manifest",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "TR7",
+       "field": "status",
+       "wrong": "OK",
+       "observed": [
+        "ERR"
+       ]
+      },
+      {
+       "case": "TR7",
+       "field": "repos.count",
+       "wrong": "1",
+       "observed": [
+        "0"
+       ]
+      }
+     ]
+    },
+    "scan-ignores-depth": {
+     "member": "Repo/Filesystem/Definition.cls::ScanDirectory",
+     "wrong": "Depth is ignored",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "D.setup",
+       "field": "buildcache",
+       "wrong": "0",
+       "observed": [
+        "1"
+       ]
+      }
+     ]
+    },
+    "lock-deferred-in-transaction": {
+     "member": "Utils/LockManager.cls::%OnNew",
+     "wrong": "release on close is deferred until the outer transaction ends",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "LK5",
+       "field": "build",
+       "wrong": "1 tlevel=0 lockable=0",
+       "observed": [
+        "1 tlevel=0 lockable=1"
+       ]
+      }
+     ]
+    },
+    "lockclassid-noop": {
+     "member": "Utils/LockManager.cls::LockClassId",
+     "wrong": "no lock is taken",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "LK2",
+       "field": "build",
+       "wrong": "1 waited=short tlevel=0",
+       "observed": [
+        "0 waited=timeout tlevel=0"
+       ]
+      },
+      {
+       "case": "LK2",
+       "field": "error",
+       "wrong": "<not produced>",
+       "observed": [
+        "ERROR #5803: Failed to acquire exclusive lock on instance of '2:%IPM.Repo.Filesystem.Definition'"
+       ]
+      }
+     ]
+    },
+    "unlockclassid-noop": {
+     "member": "Utils/LockManager.cls::UnlockClassId",
+     "wrong": "the object lock is not released",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "LK4",
+       "field": "lockable",
+       "wrong": "0",
+       "observed": [
+        "1"
+       ]
+      },
+      {
+       "case": "LK5",
+       "field": "build",
+       "wrong": "1 tlevel=0 lockable=0",
+       "observed": [
+        "1 tlevel=0 lockable=1"
+       ]
+      }
+     ]
+    },
+    "unlockall-names-only": {
+     "member": "Utils/LockManager.cls::UnlockAll",
+     "wrong": "only name locks are released, object locks are kept",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "LK4",
+       "field": "lockable",
+       "wrong": "0",
+       "observed": [
+        "1"
+       ]
+      },
+      {
+       "case": "LK5",
+       "field": "build",
+       "wrong": "1 tlevel=0 lockable=0",
+       "observed": [
+        "1 tlevel=0 lockable=1"
+       ]
+      }
+     ]
+    },
+    "zlang-overwrite": {
+     "member": "Main.cls::UpdateLanguageExtensionsOne",
+     "wrong": "the routine is replaced, user lines lost",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "LE1",
+       "field": "zlang",
+       "wrong": "%ZLANGC00=starts:1,user:0 %ZLANGF00=starts:1,user:0",
+       "observed": [
+        "%ZLANGC00=starts:1,user:1 %ZLANGF00=starts:1,user:0"
+       ]
+      },
+      {
+       "case": "LE2",
+       "field": "zlang",
+       "wrong": "%ZLANGC00=starts:1,user:0 %ZLANGF00=starts:1,user:0",
+       "observed": [
+        "%ZLANGC00=starts:1,user:1 %ZLANGF00=starts:1,user:0"
+       ]
+      }
+     ]
+    },
+    "zlang-append-always": {
+     "member": "Main.cls::UpdateLanguageExtensionsOne",
+     "wrong": "the block is appended on every run",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "LE1",
+       "field": "zlang",
+       "wrong": "%ZLANGC00=starts:2,user:1 %ZLANGF00=starts:1,user:0",
+       "observed": [
+        "%ZLANGC00=starts:1,user:1 %ZLANGF00=starts:1,user:0"
+       ]
+      },
+      {
+       "case": "LE2",
+       "field": "zlang",
+       "wrong": "%ZLANGC00=starts:3,user:1 %ZLANGF00=starts:1,user:0",
+       "observed": [
+        "%ZLANGC00=starts:1,user:1 %ZLANGF00=starts:1,user:0"
+       ]
+      }
+     ]
+    }
+   },
+   "contract": [
+    {
+     "name": "module-version with the current version reports it unchanged (the code has a branch for it)",
+     "holds": false,
+     "expected": false,
+     "as_expected": true,
+     "ids": [
+      "C:D13"
+     ],
+     "detail": "ERROR #5001: Cannot set version to 1.0.1-rc.1+b7 as it is not strictly higher than the current version 1.0.1-rc.1+b7 (Use -force to override)  Note: when either version has a nonempty prerelease value, and differ from the other by major.minor.patch, neither version is considered strictly higher than the other.        See https://github.com/npm/node-semver?tab=readme-ov-file#prerelease-tags for more information."
+    },
+    {
+     "name": "module-version updates the module.xml it was loaded from",
+     "holds": false,
+     "expected": false,
+     "as_expected": true,
+     "ids": [
+      "C:Q4"
+     ],
+     "detail": "1.2.3"
+    }
+   ],
+   "members": {
+    "Main.cls::ModuleVersion": {
+     "slice": "Main.cls:4011-4098",
+     "fn": "module_version",
+     "behavior": "new version from bump/explicit/modifiers; refused unless strictly higher; validated; saved and manifest rewritten in one transaction (MV1-MV9)",
+     "fn_present": true,
+     "variants_rejected": [
+      "mv-unchanged-skips",
+      "mv-force-ignored",
+      "mv-no-validation",
+      "mv-modifiers-ignored"
+     ],
+     "credited": true
+    },
+    "General/SemanticVersion.cls::WithBumpMajor": {
+     "slice": "General/SemanticVersion.cls:212-221",
+     "fn": "with_bump",
+     "behavior": "major+1, minor and patch 0, no prerelease or build (MV8, B1)",
+     "fn_present": true,
+     "variants_rejected": [
+      "bump-major-keeps-minor"
+     ],
+     "credited": true
+    },
+    "General/SemanticVersion.cls::WithBumpMinor": {
+     "slice": "General/SemanticVersion.cls:223-232",
+     "fn": "with_bump",
+     "behavior": "minor+1, patch 0 (MV1, B1)",
+     "fn_present": true,
+     "variants_rejected": [
+      "bump-minor-keeps-patch"
+     ],
+     "credited": true
+    },
+    "General/SemanticVersion.cls::WithBumpPatch": {
+     "slice": "General/SemanticVersion.cls:234-243",
+     "fn": "with_bump",
+     "behavior": "patch+1, prerelease and build cleared (MV4, B1)",
+     "fn_present": true,
+     "variants_rejected": [
+      "bump-patch-keeps-prerelease"
+     ],
+     "credited": true
+    },
+    "General/SemanticVersion.cls::WithPrerelease": {
+     "slice": "General/SemanticVersion.cls:245-254",
+     "fn": "with_prerelease",
+     "behavior": "replaces the prerelease, keeps the build (B1)",
+     "fn_present": true,
+     "variants_rejected": [
+      "withpre-drops-build"
+     ],
+     "credited": true
+    },
+    "General/SemanticVersion.cls::WithBuild": {
+     "slice": "General/SemanticVersion.cls:256-265",
+     "fn": "with_build",
+     "behavior": "replaces the build, keeps the prerelease (MV4, B1)",
+     "fn_present": true,
+     "variants_rejected": [
+      "withbuild-drops-pre"
+     ],
+     "credited": true
+    },
+    "StudioDocument/Module.cls::UpdateVersion": {
+     "slice": "StudioDocument/Module.cls:403-420",
+     "fn": "update_version",
+     "behavior": "rewrites <Version> of the stored .ZPM document; the file on disk is untouched (MV, MV10)",
+     "fn_present": true,
+     "variants_rejected": [
+      "updateversion-noop",
+      "updateversion-writes-file"
+     ],
+     "credited": true
+    },
+    "Repo/Filesystem/Definition.cls::BuildCache": {
+     "slice": "Repo/Filesystem/Definition.cls:117-182",
+     "fn": "build_cache",
+     "behavior": "locks an existing repository, purges and rebuilds its cache in one transaction; any failure rolls back (LK2, LK3, TR7)",
+     "fn_present": true,
+     "variants_rejected": [
+      "buildcache-no-lock",
+      "buildcache-no-purge",
+      "buildcache-keeps-save-on-failure"
+     ],
+     "credited": true
+    },
+    "Repo/Filesystem/Definition.cls::AddCacheItem": {
+     "slice": "Repo/Filesystem/Definition.cls:184-241",
+     "fn": "add_cache_item",
+     "behavior": "an unparseable manifest is skipped; a manifest whose save fails (invalid name) fails the build (LK1, TR7)",
+     "fn_present": true,
+     "variants_rejected": [
+      "addcache-malformed-fails",
+      "addcache-invalid-name-skipped"
+     ],
+     "credited": true
+    },
+    "Repo/Filesystem/Definition.cls::ScanDirectory": {
+     "slice": "Repo/Filesystem/Definition.cls:313-357",
+     "fn": "scan_directory",
+     "behavior": "Depth limits how far below the root manifests are found (D.setup)",
+     "fn_present": true,
+     "variants_rejected": [
+      "scan-ignores-depth"
+     ],
+     "credited": true
+    },
+    "Utils/LockManager.cls::%OnNew": {
+     "slice": "Utils/LockManager.cls:23-27",
+     "fn": "lock_manager_new",
+     "behavior": "release on close is immediate by default, even inside an open transaction (LK5)",
+     "fn_present": true,
+     "variants_rejected": [
+      "lock-deferred-in-transaction"
+     ],
+     "credited": true
+    },
+    "Utils/LockManager.cls::LockClassId": {
+     "slice": "Utils/LockManager.cls:67-79",
+     "fn": "lock_class_id",
+     "behavior": "takes the object lock; another holder makes it fail after the timeout (LK2)",
+     "fn_present": true,
+     "variants_rejected": [
+      "lockclassid-noop"
+     ],
+     "credited": true
+    },
+    "Utils/LockManager.cls::UnlockClassId": {
+     "slice": "Utils/LockManager.cls:81-92",
+     "fn": "unlock_class_id",
+     "behavior": "releases a held object lock (LK4)",
+     "fn_present": true,
+     "variants_rejected": [
+      "unlockclassid-noop"
+     ],
+     "credited": true
+    },
+    "Utils/LockManager.cls::UnlockAll": {
+     "slice": "Utils/LockManager.cls:94-141",
+     "fn": "unlock_all",
+     "behavior": "releases every held name and object lock (LK4)",
+     "fn_present": true,
+     "variants_rejected": [
+      "unlockall-names-only"
+     ],
+     "credited": true
+    },
+    "Main.cls::UpdateLanguageExtensionsOne": {
+     "slice": "Main.cls:3420-3462",
+     "fn": "zlang_one",
+     "behavior": "replaces only the generated block, keeps user lines, appends the block once if absent (LE1, LE2, LE3)",
+     "fn_present": true,
+     "variants_rejected": [
+      "zlang-overwrite",
+      "zlang-append-always"
+     ],
+     "credited": true
+    }
+   },
+   "source_sha256": "d6287e4737deab063774efd86dd7a7139c2f37616a48278bef426f0ba5339a62"
+  }
+ ]
+}

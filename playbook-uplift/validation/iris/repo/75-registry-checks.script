@@ -1,0 +1,8 @@
+set sc=$system.OBJ.LoadDir("/tmp/uplift/repo/cls/","ck-d",.err,1) write !,"LOAD ",$system.Status.IsOK(sc)," ",$system.Status.GetErrorText(sc),!
+do ##class(Uplift.Repo.Reg).RunAll()
+set sc=##class(%IPM.Main).Shell("repo -type %Library.RegisteredObject -n nc-repo-x")
+^
+
+do ##class(Uplift.Repo.Reg).Repo10After(sc)
+do ##class(Uplift.Repo.Util).Reset()
+halt

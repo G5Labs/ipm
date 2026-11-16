@@ -1,0 +1,43 @@
+verification results:: 7 verified, 2 errors
+note: function body check: not all errors may have been reported; rerun with a higher value for --multiple-errors to find other potential errors in this function
+  --> /Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter10/proofs/controls/scope.rs/lose-phase-producer.rs:96:1
+   |
+96 | pub proof fn selected_file_keeps_payload(r:Resource,phases:Seq<Phase>,s:Map<Text,Text>,f:Text)
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: postcondition not satisfied
+  --> /Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter10/proofs/controls/scope.rs/lose-phase-producer.rs:98:10
+   |
+96 | pub proof fn selected_file_keeps_payload(r:Resource,phases:Seq<Phase>,s:Map<Text,Text>,f:Text)
+   | ---------------------------------------------------------------------------------------------- at the end of the function body
+97 |  requires path_name(r.name),has_scope(phases,r.declared),has_scope(phases,r.phase),s.contains_key(f),prefix(directory_prefix(r.name),f)
+98 |  ensures copied(r,phases,s).contains_key(f),copied(r,phases,s)[f]==s[f]
+   |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+note: recommendation not met
+  --> /Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter10/proofs/controls/scope.rs/lose-phase-producer.rs:98:45
+   |
+98 |  ensures copied(r,phases,s).contains_key(f),copied(r,phases,s)[f]==s[f]
+   |                                             ^^^^^^^^^^^^^^^^^^^^^
+   |
+  --> map.rs:87:12
+   |
+   = note: recommendation not met
+
+error: postcondition not satisfied
+  --> /Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter10/proofs/controls/scope.rs/lose-phase-producer.rs:98:45
+   |
+96 | pub proof fn selected_file_keeps_payload(r:Resource,phases:Seq<Phase>,s:Map<Text,Text>,f:Text)
+   | ---------------------------------------------------------------------------------------------- at the end of the function body
+97 |  requires path_name(r.name),has_scope(phases,r.declared),has_scope(phases,r.phase),s.contains_key(f),prefix(directory_prefix(r.name),f)
+98 |  ensures copied(r,phases,s).contains_key(f),copied(r,phases,s)[f]==s[f]
+   |                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: assertion failed
+   --> /Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter10/proofs/controls/scope.rs/lose-phase-producer.rs:200:9
+    |
+200 |  assert(references(split_scope(),seq![Phase::Test,Phase::Verify]).paths.contains(split_scope().name));
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ assertion failed
+
+error: aborting due to 3 previous errors
+

@@ -1,0 +1,11 @@
+set r=##class(%IPM.Repo.Filesystem.Definition).%New(), r.Name="reg3", r.Root="/tmp/c3/reg/", r.Snapshots=1, r.Prereleases=1
+write !,"OBS HB.setup buildcache=",$system.Status.IsOK(r.BuildCache(1,0,0)),!
+do ##class(Consolidated.Obs).Run("HB1","install h-inst")
+set id=$order(^IPM.General.HistoryD(""),-1) write "OBS HB1 id=",id,!
+do ##class(Consolidated.Obs).Run("HB1d","history details "_id_" -phases")
+set total=0 set rs=##class(%SQL.Statement).%ExecDirect(,"SELECT COUNT(*) AS c FROM %IPM_General.History") do rs.%Next() set total=rs.c
+write "OBS HB2 total=",total,!
+do ##class(Consolidated.Obs).Run("HB2","history find -DSucess=""0*""")
+do ##class(Consolidated.Obs).Run("HB3","history find -DSuccess=""0*""")
+write !,"NATIVE-END",!
+halt

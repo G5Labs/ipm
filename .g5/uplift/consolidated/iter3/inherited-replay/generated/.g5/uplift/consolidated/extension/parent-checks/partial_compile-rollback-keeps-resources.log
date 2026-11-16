@@ -1,0 +1,14 @@
+verification results:: 4 verified, 1 errors
+error: postcondition not satisfied
+  --> /var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-formal-zj6nmgph/model.rs:16:13
+   |
+15 |   pub proof fn rollback_removes_every_resource(results: Seq<CompilerOutcome>, entry: nat)
+   |   --------------------------------------------------------------------------------------- at the end of the function body
+16 |       ensures forall|i:int| 0 <= i < results.len() ==> !compile(Mode::Transaction,results,false,entry).resources[i].definition
+   |  _____________^
+17 | |         && !compile(Mode::Transaction,results,false,entry).resources[i].descriptor
+18 | |         && !compile(Mode::Transaction,results,false,entry).resources[i].callable
+   | |________________________________________________________________________________^ failed this postcondition
+
+error: aborting due to 1 previous error
+

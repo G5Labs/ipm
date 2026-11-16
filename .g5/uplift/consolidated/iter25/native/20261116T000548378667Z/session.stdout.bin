@@ -1,0 +1,100 @@
+
+Node: 8ea4f56f2162, Instance: IRIS
+
+USER>
+
+Load started on 11/16/2026 00:05:51
+Loading file /tmp/iter25/Discovery.cls as udl
+Compiling class Iter25.Discovery
+Compiling routine Iter25.Discovery.1
+Load finished successfully.
+
+USER>
+
+SDK-ORIGIN|ExtName|%Studio.SourceControl.File|Return filename of this item
+
+SDK-BODY-BEGIN|ExtName
+	Set name=..Name(InternalName)
+	Quit $select(name="":"",1:^Sources_$translate(name,"\","/"))
+
+SDK-BODY-END|ExtName
+
+SDK-ORIGIN|ExternalName|%Studio.SourceControl.File|
+
+SDK-BODY-BEGIN|ExternalName
+..ExtName(InternalName)
+
+SDK-BODY-END|ExternalName
+
+SDK-ORIGIN|Name|%Studio.SourceControl.File|Return the name of this item without the prefix to be added by ExtName
+
+SDK-BODY-BEGIN|Name
+	If $data(^Sources)'=11 Write !,"^Sources is not setup so hooks will not work" Quit ""
+		
+	// For an abstract document, use the GetOther() method to try to determine its "real" class
+	If ##class(%RoutineMgr).UserType(InternalName,.docclass,.doctype) {
+		// Check for a real abstract document subclass (or GetOther() may not work)
+		If $classmethod(docclass,"%IsA","%Studio.AbstractDocument") {
+			// Grab the actual name
+			Set actualName = $classmethod(docclass,"GetOther",InternalName)
+			// The actualName is only valid if we get a single .cls as a result
+			If actualName'[",",$ZCVT($P(actualName,".",$L(actualName,".")),"U")="CLS" {
+				// We use what GetOther() gives us, thus Demo.Loan.FindRateProcess.bpl becomes Demo.Loan.FindRateProcess.cls
+				Set InternalName = actualName
+			}
+		}
+	}	
+	
+	If $$CheckProtect^%qccServer(InternalName) Quit ""
+	Set nam=$p(InternalName,".",1,$l(InternalName,".")-1),ext=$p(InternalName,".",$l(InternalName,".")),ext=$zcvt(ext,"u")
+	If nam="" Quit ""
+	If ext="PRJ",nam["Default_" Quit ""
+	If ext="CLS",$$$defClassKeyGet(nam,$$$cCLASSgeneratedby)'="" Quit ""
+	Set default=0
+	Set p=$order(^Sources(ext,nam)) For  s p=$order(^Sources(ext,p),-1) Quit:p=""  If $extract(nam,1,$length(p))=p,$data(^Sources(ext,p),found) Quit
+	If $data(found)=0,$data(^Sources(ext,"*"),found) Set default=1
+	If $data(found)=0 Quit ""
+	If InternalName["/" {
+		Set InternalName=$extract(InternalName,$length(p)+1,*)
+		Quit $translate(found_$translate(InternalName,"%","_"),"\","/")
+	}
+	If ext="CLS"||(ext="PRJ")||(##class(%RoutineMgr).UserType(InternalName)) Quit $translate(found_$translate(nam,".%","/")_".xml","\","/")
+	Quit $translate($g(found)_$tr(nam,"%"_$s(default:".",1:""),"_/")_".xml","\","/")
+
+SDK-BODY-END|Name
+
+SDK-CANDIDATE|%Studio.Extension.Base|ExternalName|InternalName:%String
+
+SDK-CANDIDATE|%Studio.SourceControl.Base|ExternalName|InternalName:%String
+
+SDK-CANDIDATE|%Studio.SourceControl.Change|ExternalNameCompute|
+
+SDK-CANDIDATE|%Studio.SourceControl.Change|ExternalNameDisplayToLogical|
+
+SDK-CANDIDATE|%Studio.SourceControl.Change|ExternalNameGet|
+
+SDK-CANDIDATE|%Studio.SourceControl.Change|ExternalNameIsValid|
+
+SDK-CANDIDATE|%Studio.SourceControl.Change|ExternalNameLogicalToDisplay|
+
+SDK-CANDIDATE|%Studio.SourceControl.Change|ExternalNameLogicalToOdbc|
+
+SDK-CANDIDATE|%Studio.SourceControl.Change|ExternalNameNormalize|
+
+SDK-CANDIDATE|%Studio.SourceControl.Change|ExternalNameSQLCompute|
+
+SDK-CANDIDATE|%Studio.SourceControl.File|ExternalName|InternalName:%String
+
+SDK-CANDIDATE|%Studio.SourceControl.ISC|ExternalName|InternalName:%String
+
+SDK-CANDIDATE|%Studio.SourceControl.Interface|ExternalName|InternalName:%String
+
+SDK-CANDIDATE|%Studio.SourceControl.ItemSet|AddExternalItemsToUncommittedQueue|pCCR:%String,&skipped,path:%String=""
+
+SDK-CANDIDATE|%Studio.SourceControl.Production|ParseExternalName|externalName:%String,*internalName="",*productionName=""
+
+SDK-CANDIDATE|%Studio.SourceControl.Production|RemoveItemByExternalName|externalName:%String,nameMethod:%String
+
+OBS|discovery-complete|1
+
+USER>

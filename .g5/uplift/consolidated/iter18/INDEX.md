@@ -1,0 +1,8 @@
+# iter18 scoped evidence index
+
+These are builder cases, not independent holdouts. Proofs verify hand-written specifications. ObjectScript implementation proofs: 0.
+
+| Case | Canonical owner | Contract | Source decisions → consuming readers |
+|---|---|---|---|
+| S18-01 | [repo.origin.same-version](../../../ontology/concepts/repositories.g5.md#repo.origin.same-version) | [reloading.rs](../../../Verus_verification/consolidated/iter18/reloading.rs) `exact_request, follows_plain_equal, existing_equal, load_scope, skip_equal_load, reload, save_selected_module, load_selected_code, save_successful_history, successful_selected_load, after_b, after_missing, after_a_again, admission_neighbor, module_neighbor, refusal_neighbor` | src/cls/IPM/Main.cls::Install; src/cls/IPM/Repo/Manager.cls::SearchRepositoriesForModule; src/cls/IPM/Utils/Module.cls::LoadQualifiedReference; src/cls/IPM/Utils/Module.cls::LoadModuleReference; src/cls/IPM/Utils/Module.cls::LoadNewModule; src/cls/IPM/General/SemanticVersion.cls::Follows → src/cls/IPM/General/ModuleSummary.cls::GetLines; src/cls/IPM/Main.cls::GetListModules; src/cls/IPM/General/History.cls::SourceToString |
+| S18-02 | [load.same-version](../../../ontology/features/load.g5.md#load.same-version) | [reloading.rs](../../../Verus_verification/consolidated/iter18/reloading.rs) `composed_writer_reuses_inherited_relation, selected_source_controls_effect, missing_qualifier_preserves_selected_projection, old_receipts_survive, receipt_ok, receipt_neighbor, bounded_version_neighbor` | src/cls/IPM/General/AbstractHistory.cls::SetSource; src/cls/IPM/General/HistoryTemp.cls::PersistToTwin → src/cls/IPM/General/History.cls::DisplayOneRecord; src/cls/IPM/General/History.cls::ShowColumns; src/cls/IPM/Main.cls::History |

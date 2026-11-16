@@ -1,0 +1,229 @@
+# container: ipm-uplift-n2-p  image: containers.intersystems.com/intersystems/iris-community:2026.1  at: 2026-11-13T19:20:02Z
+# script: validation/iris/n2/30-p8-probe.script
+
+Node: d654847324a4, Instance: IRIS
+
+USER>
+
+LOAD 1 
+
+USER>
+
+SETUP hooks 1
+
+CMD> uninstall -all
+
+Uninstalling n2-dpl
+[USER|n2-dpl]	Clean START
+[USER|n2-dpl]	Unconfigure START
+[USER|n2-dpl]	Unconfigure SUCCESS
+[USER|n2-dpl]	Clean SUCCESS
+CMD< OK
+
+CMD> repo -delete-all
+
+CMD< OK
+
+CMD> history delete -confirm
+
+Deleted 2 record(s).
+CMD< OK
+
+OBS|nc-gap-P8-commit-window-control|cls:N2Solo.Marker=compiled/V:1.0.0;cmdStatus=n/a;historyRows=1;historyTempLeft=0;invokesRan=n2-solo:1;jobDone=ok;jobGone=1;mod:n2-solo=1.0.0;row1=id10/load/n2-solo/1.0.0/success:ok/committed:1/ended:1/finalized:1/phases:Initialize:ok Reload:ok Validate:ok Compile:ok Activate:ok;tlevel=0;
+
+CMD> uninstall -all
+
+Uninstalling n2-solo
+[USER|n2-solo]	Clean START
+[USER|n2-solo]	Unconfigure START
+[USER|n2-solo]	Unconfigure SUCCESS
+[USER|n2-solo]	Clean SUCCESS
+CMD< OK
+
+CMD> repo -delete-all
+
+CMD< OK
+
+CMD> history delete -confirm
+
+Deleted 2 record(s).
+CMD< OK
+
+OBS|nc-gap-P8-commit-window-after-commit|cls:N2Solo.Marker=compiled/V:1.0.0;cmdStatus=n/a;historyRows=1;historyTempLeft=0;invokesRan=n2-solo:1;jobDone=<none: halted>;jobGone=1;mod:n2-solo=1.0.0;row1=id12/load/n2-solo/1.0.0/success:err/committed:0/ended:0/finalized:1/phases:Initialize:ok Reload:ok Validate:ok Compile:ok Activate:ok;tlevel=0;
+
+CMD> uninstall -all
+
+Uninstalling n2-solo
+[USER|n2-solo]	Clean START
+[USER|n2-solo]	Unconfigure START
+[USER|n2-solo]	Unconfigure SUCCESS
+[USER|n2-solo]	Clean SUCCESS
+CMD< OK
+
+CMD> repo -delete-all
+
+CMD< OK
+
+CMD> history delete -confirm
+
+Deleted 2 record(s).
+CMD< OK
+
+CMD> load /tmp/uplift/n2/fixtures/p8/n2-dpl/
+
+Building dependency graph...Done.
+[USER|n2-dpl]	Initialize START
+[USER|n2-dpl]	Initialize SUCCESS
+[USER|n2-dpl]	Reload START (/tmp/uplift/n2/fixtures/p8/n2-dpl/)
+[USER|n2-dpl]	Reload SUCCESS
+[n2-dpl]	Module object refreshed.
+[USER|n2-dpl]	Validate START
+[USER|n2-dpl]	Validate SUCCESS
+[USER|n2-dpl]	Compile START
+[USER|n2-dpl]	Compile SUCCESS
+[USER|n2-dpl]	Activate START
+[USER|n2-dpl]	Configure START
+[USER|n2-dpl]	Configure SUCCESS
+[USER|n2-dpl]	Activate SUCCESS
+CMD< OK
+
+OS> rm -rf /tmp/n2pkg/control* rc=0
+OS< 
+
+CMD> package n2-dpl -v -path /tmp/n2pkg/control/
+
+[USER|n2-dpl]	Initialize START
+Skipping preload - directory does not exist.
+[USER|n2-dpl]	Initialize SUCCESS
+[USER|n2-dpl]	Reload START (/tmp/uplift/n2/fixtures/p8/n2-dpl/)
+[USER|n2-dpl]	Reload SUCCESS
+[n2-dpl]	Module object refreshed.
+[USER|n2-dpl]	Validate START
+[USER|n2-dpl]	Validate SUCCESS
+[USER|n2-dpl]	Compile START
+Compilation started on 11/13/2026 19:20:02 with qualifiers 'd-lck'
+Compiling class N2Dpl.Marker
+Compiling routine N2Dpl.Marker.1
+Compilation finished successfully in 0.002s.
+
+[USER|n2-dpl]	Compile SUCCESS
+[USER|n2-dpl]	Activate START
+[USER|n2-dpl]	Configure START
+[USER|n2-dpl]	Configure SUCCESS
+Seeding update steps for module = n2-dpl, for version = 1.0.0
+
+[USER|n2-dpl]	Activate SUCCESS
+[USER|n2-dpl]	Package START
+[USER|n2-dpl]	MakeDeployed START
+The following classes are flagged for deployment:
+	N2Dpl.Marker
+[USER|n2-dpl]	MakeDeployed SUCCESS
+Adding deployed item 'N2Dpl.Marker.CLS' to project 'n2-dpl__deployed'
+Exported to /tmp/n2pkg/control/BPmGBBdF/module.xml                              N2Dpl.Marker.cls
+Exporting to XML started on 11/13/2026 19:20:02
+Exporting global: ^||%pkg
+Export finished successfully.
+
+Module contents exported to temporary directory:
+	/tmp/n2pkg/control/BPmGBBdF/
+
+Module package generated:
+	/tmp/n2pkg/control.tgz
+[USER|n2-dpl]	Package SUCCESS
+CMD< OK
+
+OS> tar tzf /tmp/n2pkg/control.tgz rc=0
+OS< studio-project studio-project//Deployed.xml module.xml 
+
+OS> rm -rf /tmp/n2pkg/x-control && mkdir -p /tmp/n2pkg/x-control && tar xzf /tmp/n2pkg/control.tgz -C /tmp/n2pkg/x-control && grep -rl 'ClassMethod V' /tmp/n2pkg/x-control ; grep -c 'N2Dpl.Marker' /tmp/n2pkg/x-control/studio-project/Deployed.xml rc=0
+OS< 15 
+
+OBS|nc-gap-P8-deployed-export-control|cls:N2Dpl.Marker=compiled/V:1.0.0;cmdStatus=ok;filesWithMethodSource=15;historyRows=1;historyTempLeft=0;invokesRan=none;mod:n2-dpl=1.0.0;row1=id14/load/n2-dpl/1.0.0/success:ok/committed:1/ended:1/finalized:1/phases:Initialize:ok Reload:ok Validate:ok Compile:ok Activate:ok;shipsDeployedProject=1;shipsMarkerSourceFile=0;tgzEntries=studio-project studio-project//Deployed.xml module.xml;tgzExists=1;tlevel=0;
+
+CMD> uninstall -all
+
+Uninstalling n2-dpl
+[USER|n2-dpl]	Clean START
+[USER|n2-dpl]	Unconfigure START
+[USER|n2-dpl]	Unconfigure SUCCESS
+[USER|n2-dpl]	Clean SUCCESS
+CMD< OK
+
+CMD> repo -delete-all
+
+CMD< OK
+
+CMD> history delete -confirm
+
+Deleted 2 record(s).
+CMD< OK
+
+CMD> load /tmp/uplift/n2/fixtures/p8/n2-dpl/
+
+Building dependency graph...Done.
+[USER|n2-dpl]	Initialize START
+[USER|n2-dpl]	Initialize SUCCESS
+[USER|n2-dpl]	Reload START (/tmp/uplift/n2/fixtures/p8/n2-dpl/)
+[USER|n2-dpl]	Reload SUCCESS
+[n2-dpl]	Module object refreshed.
+[USER|n2-dpl]	Validate START
+[USER|n2-dpl]	Validate SUCCESS
+[USER|n2-dpl]	Compile START
+[USER|n2-dpl]	Compile SUCCESS
+[USER|n2-dpl]	Activate START
+[USER|n2-dpl]	Configure START
+[USER|n2-dpl]	Configure SUCCESS
+[USER|n2-dpl]	Activate SUCCESS
+CMD< OK
+
+OS> rm -rf /tmp/n2pkg/forced-error* rc=0
+OS< 
+
+CMD> package n2-dpl -v -path /tmp/n2pkg/forced-error/
+
+[USER|n2-dpl]	Initialize START
+Skipping preload - directory does not exist.
+[USER|n2-dpl]	Initialize SUCCESS
+[USER|n2-dpl]	Reload START (/tmp/uplift/n2/fixtures/p8/n2-dpl/)
+[USER|n2-dpl]	Reload SUCCESS
+[n2-dpl]	Module object refreshed.
+[USER|n2-dpl]	Validate START
+[USER|n2-dpl]	Validate SUCCESS
+[USER|n2-dpl]	Compile START
+Compilation started on 11/13/2026 19:20:03 with qualifiers 'd-lck'
+Compiling class N2Dpl.Marker
+Compiling routine N2Dpl.Marker.1
+Compilation finished successfully in 0.003s.
+
+[USER|n2-dpl]	Compile SUCCESS
+[USER|n2-dpl]	Activate START
+[USER|n2-dpl]	Configure START
+[USER|n2-dpl]	Configure SUCCESS
+Seeding update steps for module = n2-dpl, for version = 1.0.0
+
+[USER|n2-dpl]	Activate SUCCESS
+[USER|n2-dpl]	Package START
+[USER|n2-dpl]	MakeDeployed START
+The following classes are flagged for deployment:
+	N2Dpl.Marker
+[USER|n2-dpl]	MakeDeployed SUCCESS
+Adding deployed item 'N2Dpl.Marker.CLS' to project 'n2-dpl__deployed'
+Exporting 'N2Dpl.Marker.CLS' to '/tmp/n2pkg/forced-error/aee1uz7D/src/cls/N2Dpl/Marker.cls'
+Exported to /tmp/n2pkg/forced-error/aee1uz7D/module.xml
+Module contents exported to temporary directory:
+	/tmp/n2pkg/forced-error/aee1uz7D/
+
+Module package generated:
+	/tmp/n2pkg/forced-error.tgz
+[USER|n2-dpl]	Package SUCCESS
+CMD< OK
+
+OS> tar tzf /tmp/n2pkg/forced-error.tgz rc=0
+OS< src src//cls src/cls//N2Dpl src/cls/N2Dpl//Marker.cls module.xml 
+
+OS> rm -rf /tmp/n2pkg/x-forced-error && mkdir -p /tmp/n2pkg/x-forced-error && tar xzf /tmp/n2pkg/forced-error.tgz -C /tmp/n2pkg/x-forced-error && grep -rl 'ClassMethod V' /tmp/n2pkg/x-forced-error ; grep -c 'N2Dpl.Marker' /tmp/n2pkg/x-forced-error/studio-project/Deployed.xml rc=2
+OS< /tmp/n2pkg/x-forced-error/src/cls/N2Dpl/Marker.cls grep: /tmp/n2pkg/x-forced-error/studio-project/Deployed.xml: No such file or directory 
+
+OBS|nc-gap-P8-deployed-export-forced-error|cls:N2Dpl.Marker=compiled/V:1.0.0;cmdStatus=ok;filesWithMethodSource=/tmp/n2pkg/x-forced-error/src/cls/N2Dpl/Marker.cls grep: /tmp/n2pkg/x-forced-error/studio-project/Deployed.xml: No such file or directory;historyRows=1;historyTempLeft=0;invokesRan=none;mod:n2-dpl=1.0.0;row1=id16/load/n2-dpl/1.0.0/success:ok/committed:1/ended:1/finalized:1/phases:Initialize:ok Reload:ok Validate:ok Compile:ok Activate:ok;shipsDeployedProject=0;shipsMarkerSourceFile=1;tgzEntries=src src//cls src/cls//N2Dpl src/cls/N2Dpl//Marker.cls module.xml;tgzExists=1;tlevel=0;
+
+USER>

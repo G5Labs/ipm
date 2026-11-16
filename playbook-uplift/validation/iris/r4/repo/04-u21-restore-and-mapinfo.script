@@ -1,0 +1,11 @@
+zn "USER"
+write !,"OBS|r4-repo-u21-repair-user|before=",$data(^IPM.Repo.Filesystem.CacheD),"/",$data(^IPM.Repo.Filesystem.CacheI),"/",$data(^IPM.Repo.Filesystem.CacheS),";" if '$data(^IPM.Repo.Filesystem.CacheD) { kill ^IPM.Repo.Filesystem.CacheI, ^IPM.Repo.Filesystem.CacheS } set sc1=##class(Uplift.Repo.Util).Run("repo -fs -n nc-r4-fs -path /tmp/uplift/r4repo/fixtures/",.o) set sc2=##class(Uplift.Repo.Util).Run("repo -n nc-r4-fs -delete",.o) write !,"OBS|r4-repo-u21-repair-user|fsRepoAddOK=",$system.Status.IsOK(sc1),";fsRepoDeleteOK=",$system.Status.IsOK(sc2),";after=",$data(^IPM.Repo.Filesystem.CacheD),"/",$data(^IPM.Repo.Filesystem.CacheI),"/",$data(^IPM.Repo.Filesystem.CacheS),";",!
+zn "NCMAP"
+write !,"OBS|r4-repo-u21-repair-ncmap|before=",$data(^IPM.Repo.Filesystem.CacheD),"/",$data(^IPM.Repo.Filesystem.CacheI),"/",$data(^IPM.Repo.Filesystem.CacheS),";repoDefs=",$data(^IPM.Repo.DefinitionD),";" if '$data(^IPM.Repo.DefinitionD) { kill ^IPM.Repo.Filesystem.CacheD, ^IPM.Repo.Filesystem.CacheI, ^IPM.Repo.Filesystem.CacheS } write "after=",$data(^IPM.Repo.Filesystem.CacheD),"/",$data(^IPM.Repo.Filesystem.CacheI),"/",$data(^IPM.Repo.Filesystem.CacheS),";",!
+do ##class(%IPM.Main).GetMapInfo(.from,.to) write !,"OBS|r4-repo-u21-mapinfo-from-ncmap|mappedFromNCMAP=",$get(from("NCMAP")),";" set s="" set a="" for { set a=$order(to(a)) quit:a=""  set b="" for { set b=$order(to(a,b)) quit:b=""  set s=s_a_">"_b_"," } } write "mappedTo=",s,";",!
+zn "USER"
+do ##class(%IPM.Main).GetMapInfo(.from,.to) write !,"OBS|r4-repo-u21-mapinfo-from-user|mappedFromNCMAP=",$get(from("NCMAP")),";" set s="" set a="" for { set a=$order(to(a)) quit:a=""  set b="" for { set b=$order(to(a,b)) quit:b=""  set s=s_a_">"_b_"," } } write "mappedTo=",s,";"
+do ##class(%IPM.Main).GetListModules("*","zpm",.list) set s="" for i=1:1:list { set s=s_$lg(list(i))_":"_##class(%SYS.Namespace).GetPackageDest($lg(list(i)),"%IPM")_"," } write "zpmNamespaces=",s,";",!
+kill ^UpliftR4Bak
+write !,"OBS|r4-repo-u21-final|userMods=" set id="" for { set id=$order(^IPM.Storage.ModuleD(id),1,d) quit:id=""  write $lg(d,2)," " } write ";userIpmMain=",##class(%Dictionary.CompiledClass).%ExistsId("%IPM.Main"),";bak=",$data(^UpliftR4Bak),";",!
+halt

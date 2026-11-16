@@ -1,0 +1,464 @@
+{
+  "baseline": [
+    39,
+    0
+  ],
+  "controls": [
+    {
+      "name": "init-no-tstart",
+      "description": "the command does not open its transaction (TSTART at Utils/Module.cls#L1195 removed)",
+      "status": "killed",
+      "errors_in": [
+        "inst_step_init",
+        "inst_witness_busy_lock_reports_success",
+        "inst_witness_dev_update_from_registry_rolls_back",
+        "inst_witness_failed_update_repeats_effects"
+      ],
+      "expected_in": [
+        "inst_step_init"
+      ],
+      "counts": [
+        35,
+        4
+      ]
+    },
+    {
+      "name": "guard-ignores-force",
+      "description": "install refuses a newer version with an update package even with -force",
+      "status": "killed",
+      "errors_in": [
+        "inst_step_guard"
+      ],
+      "expected_in": [
+        "inst_step_guard"
+      ],
+      "counts": [
+        38,
+        1
+      ]
+    },
+    {
+      "name": "downgrade-allowed",
+      "description": "the downgrade check is removed (the guard lets an older target through; the older version is written at the manifest step)",
+      "status": "killed",
+      "errors_in": [
+        "inst_step_crash",
+        "inst_step_manifest",
+        "inst_step_phases",
+        "inst_walk_end",
+        "inst_walk_exec_fail",
+        "inst_walk_exec_go",
+        "inst_walk_seed"
+      ],
+      "expected_in": [
+        "inst_step_manifest"
+      ],
+      "counts": [
+        32,
+        7
+      ]
+    },
+    {
+      "name": "manifest-commits-always",
+      "description": "the manifest is committed in every mode, not only developer mode",
+      "status": "killed",
+      "errors_in": [
+        "inst_step_manifest",
+        "inst_witness_busy_lock_reports_success",
+        "inst_witness_dev_update_from_registry_rolls_back",
+        "inst_witness_failed_update_repeats_effects"
+      ],
+      "expected_in": [
+        "inst_step_manifest"
+      ],
+      "counts": [
+        35,
+        4
+      ]
+    },
+    {
+      "name": "force-install-not-seeded",
+      "description": "Activate does not seed the steps of a forced install",
+      "status": "killed",
+      "errors_in": [
+        "inst_step_phases"
+      ],
+      "expected_in": [
+        "inst_step_phases"
+      ],
+      "counts": [
+        38,
+        1
+      ]
+    },
+    {
+      "name": "no-rollback-on-failure",
+      "description": "a failed command keeps the writes of its open transaction",
+      "status": "killed",
+      "errors_in": [
+        "inst_step_phases",
+        "inst_walk_exec_fail",
+        "inst_witness_dev_update_from_registry_rolls_back",
+        "inst_witness_failed_update_repeats_effects"
+      ],
+      "expected_in": [
+        "inst_step_phases"
+      ],
+      "counts": [
+        35,
+        4
+      ]
+    },
+    {
+      "name": "crash-keeps-open-writes",
+      "description": "a halt commits the open transaction (premise P2 broken)",
+      "status": "killed",
+      "errors_in": [
+        "inst_step_crash"
+      ],
+      "expected_in": [
+        "inst_step_crash"
+      ],
+      "counts": [
+        38,
+        1
+      ]
+    },
+    {
+      "name": "seed-step-not-saved",
+      "description": "the seeding walk does not save the seeded record",
+      "status": "killed",
+      "errors_in": [
+        "inst_walk_seed",
+        "inst_witness_dev_install_leaves_steps_due"
+      ],
+      "expected_in": [
+        "inst_walk_seed"
+      ],
+      "counts": [
+        37,
+        2
+      ]
+    },
+    {
+      "name": "seeding-skips-failed-steps",
+      "description": "seeding leaves a step that failed last time as it is",
+      "status": "killed",
+      "errors_in": [
+        "inst_walk_end"
+      ],
+      "expected_in": [
+        "inst_walk_end"
+      ],
+      "counts": [
+        38,
+        1
+      ]
+    },
+    {
+      "name": "flag-not-reset-per-class",
+      "description": "newStepToApply carries over from one class to the next",
+      "status": "killed",
+      "errors_in": [
+        "inst_walk_exec_go"
+      ],
+      "expected_in": [
+        "inst_walk_exec_go"
+      ],
+      "counts": [
+        38,
+        1
+      ]
+    },
+    {
+      "name": "run-test-ignores-status",
+      "description": "the run test checks only TimeStampEnd, not the status of the last run",
+      "status": "killed",
+      "errors_in": [
+        "inst_walk_exec_facts"
+      ],
+      "expected_in": [
+        "inst_walk_exec_facts"
+      ],
+      "counts": [
+        38,
+        1
+      ]
+    },
+    {
+      "name": "mirror-skip-ignored",
+      "description": "primary-only steps run on a non-primary mirror member",
+      "status": "killed",
+      "errors_in": [
+        "inst_walk_exec_go"
+      ],
+      "expected_in": [
+        "inst_walk_exec_go"
+      ],
+      "counts": [
+        38,
+        1
+      ]
+    },
+    {
+      "name": "no-premise-pl",
+      "description": "drop premise PL (the update lock is granted)",
+      "status": "killed",
+      "errors_in": [
+        "inst_step_lock",
+        "inst_witness_busy_lock_reports_success"
+      ],
+      "expected_in": [
+        "inst_step_lock"
+      ],
+      "counts": [
+        37,
+        2
+      ]
+    },
+    {
+      "name": "no-premise-pf5",
+      "description": "drop premise PF5 (the run has the developer mode asked for, or the stored one); the bridge lemma inst_lemma_pf5 that every step lemma uses for the run's mode must fail",
+      "status": "killed",
+      "errors_in": [
+        "inst_lemma_pf5",
+        "inst_witness_dev_update_from_registry_rolls_back"
+      ],
+      "expected_in": [
+        "inst_lemma_pf5"
+      ],
+      "counts": [
+        37,
+        2
+      ]
+    },
+    {
+      "name": "l1-update-ok-unconstrained",
+      "description": "vacuity: L1 without 'an OK update ran every due step' must lose the busy-lock witness (F-INST-1)",
+      "status": "killed",
+      "errors_in": [
+        "inst_ok_update_runs_iff_scheduled",
+        "inst_ok_update_runs_in_walk_order",
+        "inst_update_after_interruption_completes",
+        "inst_witness_busy_lock_reports_success"
+      ],
+      "expected_in": [
+        "inst_witness_busy_lock_reports_success"
+      ],
+      "counts": [
+        35,
+        4
+      ]
+    },
+    {
+      "name": "l1-dev-failure-unconstrained",
+      "description": "vacuity: L1 without 'a developer-mode failure is kept' must lose the F-INST-5 witness",
+      "status": "killed",
+      "errors_in": [
+        "inst_witness_dev_update_from_registry_rolls_back"
+      ],
+      "expected_in": [
+        "inst_witness_dev_update_from_registry_rolls_back"
+      ],
+      "counts": [
+        38,
+        1
+      ]
+    },
+    {
+      "name": "l1-missing-record-not-due-a",
+      "description": "vacuity: L1 where a step with no record is not due must lose the DEC-INST-2 witness",
+      "status": "killed",
+      "errors_in": [
+        "inst_fresh_update_runs_all",
+        "inst_walk_end",
+        "inst_walk_exec_facts",
+        "inst_witness_busy_lock_reports_success",
+        "inst_witness_dev_install_leaves_steps_due",
+        "inst_witness_failed_update_repeats_effects"
+      ],
+      "expected_in": [
+        "inst_witness_dev_install_leaves_steps_due"
+      ],
+      "counts": [
+        33,
+        6
+      ]
+    },
+    {
+      "name": "l1-missing-record-not-due-b",
+      "description": "vacuity: the same L1 change must lose the DEC-INST-5 witness (the retry reruns the step)",
+      "status": "killed",
+      "errors_in": [
+        "inst_fresh_update_runs_all",
+        "inst_walk_end",
+        "inst_walk_exec_facts",
+        "inst_witness_busy_lock_reports_success",
+        "inst_witness_dev_install_leaves_steps_due",
+        "inst_witness_failed_update_repeats_effects"
+      ],
+      "expected_in": [
+        "inst_witness_failed_update_repeats_effects"
+      ],
+      "counts": [
+        33,
+        6
+      ]
+    },
+    {
+      "name": "l1-step-classes-unconstrained",
+      "description": "vacuity: L1 without 'every step class is walked' must lose the F-INST-6 witness",
+      "status": "killed",
+      "errors_in": [
+        "inst_witness_helper_class_hides_steps"
+      ],
+      "expected_in": [
+        "inst_witness_helper_class_hides_steps"
+      ],
+      "counts": [
+        38,
+        1
+      ]
+    },
+    {
+      "name": "l1-class-list-error-accepted",
+      "description": "vacuity: L1 that accepts a failing class list must lose the F-INST-7 witness",
+      "status": "killed",
+      "errors_in": [
+        "inst_witness_class_without_number_fails"
+      ],
+      "expected_in": [
+        "inst_witness_class_without_number_fails"
+      ],
+      "counts": [
+        38,
+        1
+      ]
+    },
+    {
+      "name": "dev-success-reported-failed",
+      "description": "finding 1, reviewer mutant 5: a developer-mode install or load whose phases worked ends Out::Failed",
+      "status": "killed",
+      "errors_in": [
+        "inst_step_phases",
+        "inst_witness_dev_install_leaves_steps_due"
+      ],
+      "expected_in": [
+        "inst_step_phases"
+      ],
+      "counts": [
+        37,
+        2
+      ]
+    },
+    {
+      "name": "phase-failure-reported-ok",
+      "description": "finding 1, converse: a phase that threw ends Out::Ok (passes the old one-way L1 in developer mode)",
+      "status": "killed",
+      "errors_in": [
+        "inst_step_phases"
+      ],
+      "expected_in": [
+        "inst_step_phases"
+      ],
+      "counts": [
+        38,
+        1
+      ]
+    },
+    {
+      "name": "step-failure-reported-ok",
+      "description": "finding 1, converse: an update step that threw ends Out::Ok",
+      "status": "killed",
+      "errors_in": [
+        "inst_walk_exec_fail",
+        "inst_witness_dev_update_from_registry_rolls_back",
+        "inst_witness_failed_update_repeats_effects"
+      ],
+      "expected_in": [
+        "inst_walk_exec_fail"
+      ],
+      "counts": [
+        36,
+        3
+      ]
+    },
+    {
+      "name": "walk-end-reported-failed",
+      "description": "finding 1: a walk that ran every step ends Out::Failed and rolls back (passes the old one-way L1 with a transaction)",
+      "status": "killed",
+      "errors_in": [
+        "inst_walk_end",
+        "inst_witness_dev_install_leaves_steps_due"
+      ],
+      "expected_in": [
+        "inst_walk_end"
+      ],
+      "counts": [
+        37,
+        2
+      ]
+    },
+    {
+      "name": "crash-reports-success",
+      "description": "finding 1: a halted command reports success",
+      "status": "killed",
+      "errors_in": [
+        "inst_step_crash"
+      ],
+      "expected_in": [
+        "inst_step_crash"
+      ],
+      "counts": [
+        38,
+        1
+      ]
+    },
+    {
+      "name": "stored-dev-ignored",
+      "description": "finding 7: with no -dev/-nodev typed, the run ignores the stored DeveloperMode (Utils/Module.cls#L1305); the run's mode then differs from L1 want_dev, which inst_lemma_pf5 (used by every step lemma) states",
+      "status": "killed",
+      "errors_in": [
+        "inst_lemma_pf5"
+      ],
+      "expected_in": [
+        "inst_lemma_pf5"
+      ],
+      "counts": [
+        38,
+        1
+      ]
+    },
+    {
+      "name": "guard-reads-stored-dev",
+      "description": "finding 7: the install/load guard reads the run's developer mode (stored mode included) instead of the DeveloperMode parameter (#L1219)",
+      "status": "killed",
+      "errors_in": [
+        "inst_step_guard"
+      ],
+      "expected_in": [
+        "inst_step_guard"
+      ],
+      "counts": [
+        38,
+        1
+      ]
+    },
+    {
+      "name": "seeding-tests-typed-flag",
+      "description": "finding 7: Activate seeds by the typed -dev flag instead of the module's stored DeveloperMode (Lifecycle/Module.cls#L122)",
+      "status": "killed",
+      "errors_in": [
+        "inst_step_phases"
+      ],
+      "expected_in": [
+        "inst_step_phases"
+      ],
+      "counts": [
+        38,
+        1
+      ]
+    }
+  ],
+  "all_killed_in_expected_place": true
+}

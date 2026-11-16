@@ -1,0 +1,15 @@
+set cfg=##class(%IPM.General.EnvironmentConfig).%Get()
+do ##class(%IPM.Lifecycle.Base).LoadEnvironmentConfig("/tmp/env-ported/a.json;/tmp/env-ported/b.json")
+set a=cfg.GetArg("m","items").%Get(0)
+write !,"OBS EP1 json=",a.%ToJSON(),!
+do ##class(%IPM.Lifecycle.Base).LoadEnvironmentConfig("/tmp/env-ported/c.json;/tmp/env-ported/d.json")
+write "OBS EP2 json=",cfg.GetArg("m","items").%ToJSON(),!
+set ok=1
+try { do ##class(%IPM.Lifecycle.Base).LoadEnvironmentConfig("/tmp/env-ported/a.json;/tmp/env-ported/missing.json") } catch ex { set ok=0 }
+write "OBS EP3 ok=",ok," empty=",cfg.IsEmpty(),!
+do ##class(%IPM.Lifecycle.Base).LoadEnvironmentConfig("/tmp/env-ported/a.json")
+write "OBS EP4 scalar-path=[",cfg.GetArg("m","items","0","x","deeper"),"]",!
+do ##class(%IPM.Lifecycle.Base).LoadEnvironmentConfig("")
+write "OBS EP5 reset.empty=",cfg.IsEmpty(),!
+write "ZV=",$zversion,!,"NATIVE-END",!
+halt

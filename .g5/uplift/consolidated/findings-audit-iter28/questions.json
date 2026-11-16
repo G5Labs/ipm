@@ -1,0 +1,878 @@
+[
+  {
+    "id": "lifecycle.empty-reload-policy",
+    "path": ".g5/ontology/concepts/lifecycle.g5.md",
+    "canonical_text": "Should standalone reload warn or fail when a module has no source root?\n\n- Working assumption: A standalone `reload` of a module with no root says that nothing was loaded; the phase stays silent inside other phase lists.\n- Alternative and implications: Fail the standalone command (stricter for scripts).\n- This assumption guides review; it is not a maintainer decision. An explicit owner policy or an attributable source addressing this exact case would settle it.",
+    "metadata": "- agent\n- uncertain\n- user-facing-behavior\n- Expands: [lifecycle](#lifecycle)\n\nSources: [DEC-SYNC-4](../../../playbook-uplift/decisions/07-09.md); Help: reload \"pulls module source code into the namespace from disk\"; the code's \"For now\" no-op.\n\n\nFindings: [P:F-SYNC-3 \u2014 e2e reproduced](../../../playbook-uplift/BUGS.md#p-f-sync-3). The linked entry qualifies the caller, reader and providers.",
+    "code_and_tests_read": [
+      "src/cls/IPM/Main.cls",
+      "src/cls/IPM/Utils/Module.cls",
+      "src/cls/IPM/Lifecycle/Base.cls"
+    ],
+    "history": "571e04a1 Fix and improve the `generate` command (#1324)\n0492fea3 Add `show` command (#1315)\n5d27e15b Fix 'committed' in history log (#1322)\n7cae0b28 Fix two bugs with deployed code (#1317)",
+    "status": "open; no new maintainer determination",
+    "security_scope": false
+  },
+  {
+    "id": "module.webapp.upgrade.policy",
+    "path": ".g5/ontology/concepts/modules.g5.md",
+    "canonical_text": "Should a higher-version load remove a web application omitted by the new manifest?\n\n- Working assumption: disclose that the application remains; do not promise automatic removal without an ownership rule.\n- Alternatives: remove resources formerly owned by the module, or require an explicit migration. Automatic removal needs ownership and administrator-edit checks; explicit migration leaves cleanup to the author.\n- An owner decision covering dropped resources, administrator changes and later uninstall would settle the policy. C:D26 observed a load, not update.",
+    "metadata": "- agent\n- uncertain\n- user-facing-behavior\n- Expands: [Upgrade behavior](#module.webapp.upgrade)\n\nSources: C:D26; [starting evidence](../../uplift/consolidated/findings-audit-iter28/sealed/.g5/uplift/consolidated/BUGS.md).\n",
+    "code_and_tests_read": [
+      "src/cls/IPM/Storage/Module.cls",
+      "src/cls/IPM/Storage/ModuleSetting/Default.cls",
+      "src/cls/IPM/ResourceProcessor/WebApplication.cls"
+    ],
+    "history": "5d27e15b Fix 'committed' in history log (#1322)\nce1bd00f Fix three ORAS bugs (#1305)\nb34e6a67 Add MAXLEN for all properties and a test to check (#1309)\nacea30ff ORAS repos automatically filter deployed code modules with the current IRIS version (#1231)",
+    "status": "open; no new maintainer determination",
+    "security_scope": false
+  },
+  {
+    "id": "module.webapp.ownership",
+    "path": ".g5/ontology/concepts/modules.g5.md",
+    "canonical_text": "Should install take over an existing web application of the same name, and should uninstall delete one IPM did not create?\n\n- Evidence: `CreateOrUpdateWebApp` updates any existing application and `DeleteWebApp` deletes by name. No changelog, test or discussion addresses applications made outside IPM. The duplicate-name refusal protects only applications another module lists.\n- Working assumption: keep the as-built behavior and disclose it. Alternatives are to refuse install when the application exists and no module lists it, or to record creation and delete only what IPM created. Both change today's reinstall-over-manual-setup path.\n- Register: C:Q15.",
+    "metadata": "- agent\n- uncertain\n- Expands: [Web applications](#module.webapp).\n\nNo authorized policy decision. Register entry C:Q15.\n",
+    "code_and_tests_read": [
+      "src/cls/IPM/Storage/Module.cls",
+      "src/cls/IPM/Storage/ModuleSetting/Default.cls",
+      "src/cls/IPM/ResourceProcessor/WebApplication.cls"
+    ],
+    "history": "5d27e15b Fix 'committed' in history log (#1322)\nce1bd00f Fix three ORAS bugs (#1305)\nb34e6a67 Add MAXLEN for all properties and a test to check (#1309)\nacea30ff ORAS repos automatically filter deployed code modules with the current IRIS version (#1231)",
+    "status": "open; no new maintainer determination",
+    "security_scope": false
+  },
+  {
+    "id": "module.env.failure",
+    "path": ".g5/ontology/concepts/modules.g5.md",
+    "canonical_text": "When one of several `-env` files is missing, malformed or an array, what should the command keep, and how should two arrays merge?\n\n- Provisional answer: as built. The command fails and keeps nothing from any file, and a later array overwrites the earlier one position by position, so it cannot remove items.\n- Alternatives: keep the files loaded before the failing one, or check every file before changing anything; let a later array replace the earlier one.",
+    "metadata": "- agent\n- uncertain\n- user-facing-behavior\n- Expands: [Environment files](#module.env).\n\nSources: the plan's policy row \"A failing environment file\" (no source states the intent); `General/EnvironmentConfig.cls:27-30` (clear on any error), `:118-126` (arrays merged by index). Native U2, U2r, U3-U5. Question C:Q6.\n",
+    "code_and_tests_read": [
+      "src/cls/IPM/Storage/Module.cls",
+      "src/cls/IPM/Storage/ModuleSetting/Default.cls",
+      "src/cls/IPM/ResourceProcessor/WebApplication.cls"
+    ],
+    "history": "5d27e15b Fix 'committed' in history log (#1322)\nce1bd00f Fix three ORAS bugs (#1305)\nb34e6a67 Add MAXLEN for all properties and a test to check (#1309)\nacea30ff ORAS repos automatically filter deployed code modules with the current IRIS version (#1231)",
+    "status": "open; no new maintainer determination",
+    "security_scope": false
+  },
+  {
+    "id": "module.parameter.expressions.brace-policy",
+    "path": ".g5/ontology/concepts/modules.g5.md",
+    "canonical_text": "Should a `$$$macro` expand when the attribute contains no opening brace?\n\n- Evidence: `%Evaluate` returns early on no `{`; native E15/P4 leave the macro literal. The expression documentation lists macros without this gate.\n- Working assumption: keep the observed brace gate until a maintainer chooses otherwise.\n- Alternative: expand macros with or without a brace.\n- Affected claims: parameter evaluation, after-install message, file-copy target and Invoke arguments. Alias C:Q2; parent [module.parameter.expressions](#module.parameter.expressions).",
+    "metadata": "- uncertain\n- agent-provided\n- user-facing-behavior\n- Expands: [expressions](#module.parameter.expressions).\n\nEvidence: C:Q2; Storage/Module.cls:1833-1841; E15/P4; new attr_evaluator.rs.\n",
+    "code_and_tests_read": [
+      "src/cls/IPM/Storage/Module.cls",
+      "src/cls/IPM/Storage/ModuleSetting/Default.cls",
+      "src/cls/IPM/ResourceProcessor/WebApplication.cls"
+    ],
+    "history": "5d27e15b Fix 'committed' in history log (#1322)\nce1bd00f Fix three ORAS bugs (#1305)\nb34e6a67 Add MAXLEN for all properties and a test to check (#1309)\nacea30ff ORAS repos automatically filter deployed code modules with the current IRIS version (#1231)",
+    "status": "open; no new maintainer determination",
+    "security_scope": false
+  },
+  {
+    "id": "module.processor.cpf-effects.policy",
+    "path": ".g5/ontology/concepts/modules.g5.md",
+    "canonical_text": "Must package failure undo instance configuration changes?\n\n- Owner: IPM maintainers and instance administrators; no owner decision was available.\n- Working assumption: database rollback alone gives no such promise. Alternatives are compensating selected changes or refusing them inside package transactions.\n- Depends on: [rollback policy](transactions-and-dev-mode.g5.md#transaction.rollback-scope.policy). A successful native role test settles observation, not this policy.",
+    "metadata": "- agent\n- uncertain\n- Expands: [CPF effects](#module.processor.cpf-effects).\n\nAuthority remains open; source observation and checked alternatives are in the parent. Arbitrary CPF compensation has not been designed or implemented.\n",
+    "code_and_tests_read": [
+      "src/cls/IPM/Storage/Module.cls",
+      "src/cls/IPM/Storage/ModuleSetting/Default.cls",
+      "src/cls/IPM/ResourceProcessor/WebApplication.cls"
+    ],
+    "history": "5d27e15b Fix 'committed' in history log (#1322)\nce1bd00f Fix three ORAS bugs (#1305)\nb34e6a67 Add MAXLEN for all properties and a test to check (#1309)\nacea30ff ORAS repos automatically filter deployed code modules with the current IRIS version (#1231)",
+    "status": "open; no new maintainer determination",
+    "security_scope": false
+  },
+  {
+    "id": "module.system-setting.cleanup-policy",
+    "path": ".g5/ontology/concepts/modules.g5.md",
+    "canonical_text": "Should uninstall keep a legacy SystemSetting value or restore the value that preceded installation?\n\nThe implementation keeps the installed value, and that is the working assumption. Restoring the old value would need to track it and account for later administrator edits; blindly deleting it can remove a setting another user now relies on. The owner must choose this policy (C:Q17).",
+    "metadata": "- agent; uncertain; user-facing-behavior\n- Expands: [Legacy setting](#module.system-setting).\n\nSource/native: S7-10, `SystemSetting.cls::OnPhase` has only Compile writes and no Clean action. This is distinct from CPF external child effects (C:Q12), and no new defect is asserted.\n\n\n- uncertain",
+    "code_and_tests_read": [
+      "src/cls/IPM/Storage/Module.cls",
+      "src/cls/IPM/Storage/ModuleSetting/Default.cls",
+      "src/cls/IPM/ResourceProcessor/WebApplication.cls"
+    ],
+    "history": "5d27e15b Fix 'committed' in history log (#1322)\nce1bd00f Fix three ORAS bugs (#1305)\nb34e6a67 Add MAXLEN for all properties and a test to check (#1309)\nacea30ff ORAS repos automatically filter deployed code modules with the current IRIS version (#1231)",
+    "status": "open; no new maintainer determination",
+    "security_scope": false
+  },
+  {
+    "id": "module.python.cleanup-policy",
+    "path": ".g5/ontology/concepts/modules.g5.md",
+    "canonical_text": "How should IPM remove Python packages without removing a package another module or administrator uses?\n\nThe working assumption preserves the current shared installation on Clean. Tracking package users could permit later removal, but the product TODO does not settle ownership of manually installed or upgraded versions. This needs an owner decision (C:Q18).",
+    "metadata": "- agent; uncertain; user-facing-behavior\n- Expands: [Explicit wheel](#module.python.explicit-wheel).\n\nSource: `PythonWheel.cls::OnPhase` Clean TODO explicitly identifies shared-package risk. Native uninstall retains the local lune 1.6.2 distribution. This is not a new defect claim.\n\n\n- uncertain",
+    "code_and_tests_read": [
+      "src/cls/IPM/Storage/Module.cls",
+      "src/cls/IPM/Storage/ModuleSetting/Default.cls",
+      "src/cls/IPM/ResourceProcessor/WebApplication.cls"
+    ],
+    "history": "5d27e15b Fix 'committed' in history log (#1322)\nce1bd00f Fix three ORAS bugs (#1305)\nb34e6a67 Add MAXLEN for all properties and a test to check (#1309)\nacea30ff ORAS repos automatically filter deployed code modules with the current IRIS version (#1231)",
+    "status": "open; no new maintainer determination",
+    "security_scope": false
+  },
+  {
+    "id": "module.processor.file-copy.unknown-descendants",
+    "path": ".g5/ontology/concepts/modules.g5.md",
+    "canonical_text": "Should FileCopy protect a parent containing an unconfigured descendant with an IRIS.DAT marker, or only configured roots/ancestors and a marker at the exact target? The observed rule is the latter. Tests cover exact unconfigured markers and configured-root ancestors; no inspected human decision settles a recursive search requirement. C:Q22 retains both interpretations.",
+    "metadata": "- agent; unresolved; provisional-as-built\n- Expands: [Protection](#module.processor.file-copy.protection).\n\nSource comments protect database directories including an unconfigured exact marker; unit tests exercise that case without an ancestor scan. The synthetic nested-marker native neighbor and `whole_segment_neighbors` formal witness expose the distinction. No real database-loss claim or accepted recursive policy is inferred. [C:Q22](../../uplift/consolidated/QUESTIONS.md).\n\n\n- uncertain",
+    "code_and_tests_read": [
+      "src/cls/IPM/Storage/Module.cls",
+      "src/cls/IPM/Storage/ModuleSetting/Default.cls",
+      "src/cls/IPM/ResourceProcessor/WebApplication.cls"
+    ],
+    "history": "5d27e15b Fix 'committed' in history log (#1322)\nce1bd00f Fix three ORAS bugs (#1305)\nb34e6a67 Add MAXLEN for all properties and a test to check (#1309)\nacea30ff ORAS repos automatically filter deployed code modules with the current IRIS version (#1231)",
+    "status": "open; no new maintainer determination",
+    "security_scope": true
+  },
+  {
+    "id": "namespace.enable.source-ambiguity-policy",
+    "path": ".g5/ontology/concepts/namespaces.g5.md",
+    "canonical_text": "Which source owns mapped IPM when several namespace records name one code database?\n\n- Working assumption: The source of a mapped namespace is the namespace whose own code database holds the IPM code.\n- Alternative and implications: Report a tie as an error instead of guessing. Either way F-NSP-7 stays a defect.\n- This assumption guides review; it is not a maintainer decision. An explicit owner policy or an attributable source addressing this exact case would settle it.",
+    "metadata": "- agent\n- uncertain\n- user-facing-behavior\n- Expands: [namespace.enable](#namespace.enable)\n\nSources: [DEC-NSP-6](../../../playbook-uplift/decisions/07-09.md); `-map` help and issue #470; \"last by name\" has no source.\n",
+    "code_and_tests_read": [
+      "src/cls/IPM/Main.cls",
+      "src/cls/IPM/Utils/Module.cls",
+      "src/cls/IPM/Lifecycle/Base.cls"
+    ],
+    "history": "571e04a1 Fix and improve the `generate` command (#1324)\n0492fea3 Add `show` command (#1315)\n5d27e15b Fix 'committed' in history log (#1322)\n7cae0b28 Fix two bugs with deployed code (#1317)",
+    "status": "open; no new maintainer determination",
+    "security_scope": false
+  },
+  {
+    "id": "namespace.enable.community-failure-policy",
+    "path": ".g5/ontology/concepts/namespaces.g5.md",
+    "canonical_text": "What status should enable -community return when a component step fails?\n\n- Working assumption: If a step of `enable -community` fails, the command stops and returns that error.\n- Alternative and implications: Run all three steps and return a combined error (also fine); or keep OK and document: F-NSP-11 becomes documentation.\n- This assumption guides review; it is not a maintainer decision. An explicit owner policy or an attributable source addressing this exact case would settle it.",
+    "metadata": "- agent\n- uncertain\n- user-facing-behavior\n- Expands: [namespace.enable](#namespace.enable)\n\nSources: [DEC-NSP-4](../../../playbook-uplift/decisions/07-09.md); Scripts use `zpm \"...\":1` to stop on errors; every other `enable` path returns its error.\n",
+    "code_and_tests_read": [
+      "src/cls/IPM/Main.cls",
+      "src/cls/IPM/Utils/Module.cls",
+      "src/cls/IPM/Lifecycle/Base.cls"
+    ],
+    "history": "571e04a1 Fix and improve the `generate` command (#1324)\n0492fea3 Add `show` command (#1315)\n5d27e15b Fix 'committed' in history log (#1322)\n7cae0b28 Fix two bugs with deployed code (#1317)",
+    "status": "open; no new maintainer determination",
+    "security_scope": false
+  },
+  {
+    "id": "repo.oras.unpublish-platform-policy",
+    "path": ".g5/ontology/concepts/repositories.g5.md",
+    "canonical_text": "Which platform tags should unpublish remove when only a version is named?\n\n- Working assumption: ORAS `unpublish R/M V` deletes the plain tag and every `V__<platform>` tag of that version.\n- Alternative and implications: Require the platform to be named; the plain form must still not fail as \"not found\".\n- This assumption guides review; it is not a maintainer decision. An explicit owner policy or an attributable source addressing this exact case would settle it.",
+    "metadata": "- agent\n- uncertain\n- user-facing-behavior\n- Expands: [repo.oras](#repo.oras)\n\nSources: [DEC-REPO-5](../../../playbook-uplift/decisions/05-06.md); Today a deployed version cannot be unpublished by version at all, which no source intends.\n",
+    "code_and_tests_read": [
+      "src/cls/IPM/Repo/Manager.cls",
+      "src/cls/IPM/Repo/Filesystem/Definition.cls",
+      "src/cls/IPM/Repo/Oras/Definition.cls"
+    ],
+    "history": "ce1bd00f Fix three ORAS bugs (#1305)\nd3815fa3 Multi-byte characters in module.xml parse properly (#1296)\n82ea5166 Improve ORAS error reporting (#1284)\n8fd97c0b Fix namespaced ORAS repos not creating dependency path correctly (#1268)",
+    "status": "open; no new maintainer determination",
+    "security_scope": false
+  },
+  {
+    "id": "repo.oras.credentials-change-policy",
+    "path": ".g5/ontology/concepts/repositories.g5.md",
+    "canonical_text": "Should changing an ORAS registry address clear its stored credentials?\n\n- Working assumption: Changing an ORAS registry's address clears its stored credentials, as for a remote registry.\n- Alternative and implications: Keep and warn (operator only renamed the host): F-REPO-11 becomes a missing warning.\n- This assumption guides review; it is not a maintainer decision. An explicit owner policy or an attributable source addressing this exact case would settle it.",
+    "metadata": "- agent\n- uncertain\n- user-facing-behavior\n- Expands: [repo.oras](#repo.oras)\n\nSources: [DEC-REPO-3](../../../playbook-uplift/decisions/05-06.md); Standard practice (credentials belong to a host); the remote registry already does it (`Remote/Definition.cls#L81-L86`).\n",
+    "code_and_tests_read": [
+      "src/cls/IPM/Repo/Manager.cls",
+      "src/cls/IPM/Repo/Filesystem/Definition.cls",
+      "src/cls/IPM/Repo/Oras/Definition.cls"
+    ],
+    "history": "ce1bd00f Fix three ORAS bugs (#1305)\nd3815fa3 Multi-byte characters in module.xml parse properly (#1296)\n82ea5166 Improve ORAS error reporting (#1284)\n8fd97c0b Fix namespaced ORAS repos not creating dependency path correctly (#1268)",
+    "status": "open; no new maintainer determination",
+    "security_scope": true
+  },
+  {
+    "id": "repo.filesystem.bad-module",
+    "path": ".g5/ontology/concepts/repositories.g5.md",
+    "canonical_text": "Should a module with an invalid name in a filesystem repository's folder block the whole repository?\n\n- Provisional answer: no. Skip it with a warning, like an unreadable manifest, so the other modules stay available.\n- As built: yes. The same failure stops a load's temporary `.modules` repository from being created, which then fails the load after its commit.\n- Alternative: fail every bad manifest, including unreadable ones, so nothing is silently hidden.",
+    "metadata": "- agent\n- uncertain\n- user-facing-behavior\n- Expands: [Filesystem repository](#repo.filesystem).\n\nSources: `Repo/Filesystem/Definition.cls:184-241` (unreadable manifests skipped at `:196-200`; a save error returned at `:234-237` and aggregated at `:170-176`). Native LK1 (skipped), TR7 and Dtxn (blocked). G's attempt 1 for case C29 also found that an unparseable manifest is skipped (`native/make_replay.py:248`). Question C:Q5.\n\nExtension Verus: [owners.rs::add_cache](../../Verus_verification/consolidated/verus/owners.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.\n",
+    "code_and_tests_read": [
+      "src/cls/IPM/Repo/Manager.cls",
+      "src/cls/IPM/Repo/Filesystem/Definition.cls",
+      "src/cls/IPM/Repo/Oras/Definition.cls"
+    ],
+    "history": "ce1bd00f Fix three ORAS bugs (#1305)\nd3815fa3 Multi-byte characters in module.xml parse properly (#1296)\n82ea5166 Improve ORAS error reporting (#1284)\n8fd97c0b Fix namespaced ORAS repos not creating dependency path correctly (#1268)",
+    "status": "open; no new maintainer determination",
+    "security_scope": false
+  },
+  {
+    "id": "repo.oras.integrity.policy",
+    "path": ".g5/ontology/concepts/repositories.g5.md",
+    "canonical_text": "Should an untagged pull always select the highest semantic version, and must a package have exactly one archive layer?\n\n- Owner: registry maintainers and IPM maintainers; no owner decision was available. The method comment supports highest-version intent, while source behavior depends on provider order.\n- Working assumption: expose the mismatch and retain size/digest checking. Alternatives are sorting before selection or requiring a registry ordering contract, plus rejecting ambiguous archives or selecting by declared digest.\n- Proposed repairs are not implemented or proved. Preserve deployed platform tags and compare both a valid single archive and ambiguous multi-layer input before a repair.",
+    "metadata": "- agent\n- uncertain\n- Expands: [ORAS integrity](#repo.oras.integrity).\n\nNo authorized policy decision. The parent states source authority, alternatives, preservation conditions and remaining premises.\n",
+    "code_and_tests_read": [
+      "src/cls/IPM/Repo/Manager.cls",
+      "src/cls/IPM/Repo/Filesystem/Definition.cls",
+      "src/cls/IPM/Repo/Oras/Definition.cls"
+    ],
+    "history": "ce1bd00f Fix three ORAS bugs (#1305)\nd3815fa3 Multi-byte characters in module.xml parse properly (#1296)\n82ea5166 Improve ORAS error reporting (#1284)\n8fd97c0b Fix namespaced ORAS repos not creating dependency path correctly (#1268)",
+    "status": "open; no new maintainer determination",
+    "security_scope": true
+  },
+  {
+    "id": "repo.remote.download.credentials",
+    "path": ".g5/ontology/concepts/repositories.g5.md",
+    "canonical_text": "Should registry credentials be sent to a download URL on a different server?\n\n- Evidence: commit `d6cc4204` switched to the registry-supplied URL to \"fix downloading packages\"; a native provider received the repository's Basic credentials and API key at a different host and port. Elsewhere the maintainers treat credentials as belonging to one host: CHANGELOG 0.10.11 `#1115` stops ORAS credential checks from following redirects \"so credentials are not sent to another host\", and `#649` clears a remote registry's credentials when its URL changes. No source decides the download case.\n- Working assumption: keep following the returned URL, and record the forwarding as suspected defect C:D20. The proposed alternative sends credentials only when the URL's server and port match the repository; a third choice is to refuse such URLs. Either change can break registries that redirect downloads to storage needing the same credentials.\n- Register: C:Q14 and proposal C:S14, revised as C:S14b after the [redirect challenge](#repo.remote.download.redirect).",
+    "metadata": "- agent\n- uncertain\n- Expands: [Remote download](#repo.remote.download).\n\nNo authorized policy decision. Register entries C:Q14 and C:S14; the proposed request is proved only at the abstract request boundary and was not applied.\n",
+    "code_and_tests_read": [
+      "src/cls/IPM/Repo/Manager.cls",
+      "src/cls/IPM/Repo/Filesystem/Definition.cls",
+      "src/cls/IPM/Repo/Oras/Definition.cls"
+    ],
+    "history": "ce1bd00f Fix three ORAS bugs (#1305)\nd3815fa3 Multi-byte characters in module.xml parse properly (#1296)\n82ea5166 Improve ORAS error reporting (#1284)\n8fd97c0b Fix namespaced ORAS repos not creating dependency path correctly (#1268)",
+    "status": "open; no new maintainer determination",
+    "security_scope": true
+  },
+  {
+    "id": "repo.filesystem.concurrent-refresh",
+    "path": ".g5/ontology/concepts/repositories.g5.md",
+    "canonical_text": "Does cache replacement need its explicit lock until the caller's transaction ends?\n\n- Owner: IPM maintainers. The default constructor releases at object close; the deferred constructor is a separate supported mechanism.\n- Working assumption: keep the intended consistent cache and investigate competing refreshes under actual database isolation. Alternatives are deferred release, refusing an outer transaction or demonstrating that existing database locks suffice.\n- No race corruption or repair is established by the observed lock release. [Withdrawal and paired evidence](../../uplift/consolidated/iter2/boundaries/withdrawals.json).",
+    "metadata": "- agent\n- uncertain\n- Expands: [Filesystem cache](#repo.filesystem).\n\nSource owner and constructor binding: [boundary ledger](../../uplift/consolidated/iter2/boundaries/bindings.json). The prior lock correspondence is withdrawn; other cache properties retain their evidence.\n",
+    "code_and_tests_read": [
+      "src/cls/IPM/Repo/Manager.cls",
+      "src/cls/IPM/Repo/Filesystem/Definition.cls",
+      "src/cls/IPM/Repo/Oras/Definition.cls"
+    ],
+    "history": "ce1bd00f Fix three ORAS bugs (#1305)\nd3815fa3 Multi-byte characters in module.xml parse properly (#1296)\n82ea5166 Improve ORAS error reporting (#1284)\n8fd97c0b Fix namespaced ORAS repos not creating dependency path correctly (#1268)",
+    "status": "open; no new maintainer determination",
+    "security_scope": false
+  },
+  {
+    "id": "transaction.flag-sources.dependency-defaults",
+    "path": ".g5/ontology/concepts/transactions-and-dev-mode.g5.md",
+    "canonical_text": "Does a dependency's own `<Defaults>` `NoJournal` apply inside its parent's transaction, so that the dependency's changes escape the parent's normal-mode rollback?\n\n- Provisional answer: yes. A module's `<Defaults>` apply whenever that module is installed, including as a dependency. A `NoJournal` dependency therefore keeps its changes when the parent rolls back, and its history record must survive and say so.\n- Reason: the wiki says flags embedded in `module.xml` are \"applied whenever this module is installed\", and that with `NoJournal` \"changes cannot be rolled back\". These statements are specific to the flags, while the whole-load rollback rule is general.\n- Alternative: the parent's transaction governs every nested load, so a dependency's `<Defaults>` `NoJournal` is ignored, or the dependency is refused, while a parent transaction is open. This keeps [the whole-load rollback](../features/load.g5.md#load.outcome).\n\nUnresolved Q-25: [May an escaped NoJournal dependency remain without its own dependencies?](#transaction.flag-sources.dependency-closure)",
+    "metadata": "- agent\n- uncertain\n- architecture-decision\n- Expands: [Flag sources](#transaction.flag-sources).\n\nSources: new question Q-22 from stage C round 2 finding R2-03. Round 3 finding R3-03 limited it to `NoJournal`, the flag that can escape a parent's rollback, and moved `NoTransaction` to [Q-23](#transaction.flag-sources.dependency-no-transaction). `wiki/00` L147 (whole-load rollback), L149 (`NoTransaction` \"when some modules in the install conflict with an outer wrapping transaction\"), L155 (with `NoJournal`, \"changes cannot be rolled back\"), L175 (`<Defaults>` \"applied whenever this module is installed\"); maintainer doc comment `Utils/Module.cls:1033-1040` (example `<Defaults>` with `NoTransaction`); [load outcome](../features/load.g5.md#load.outcome). No maintainer statement on dependencies inside a parent transaction was found. The provisional answer follows the sources specific to `<Defaults>` and keeps the record-survival rule of [survives rollback](../features/history.g5.md#history.survives-rollback).\n\nObserved (stage C cases M5 and M5N, `20261113T204405Z-stagec2`). In M5 a normal-mode parent fails in Activate, and its dependency's `<Defaults>` set `NoJournal=1`. The parent is rolled back, while the dependency stays installed with its class and `.ZPM` document. No `<ROLLFAIL>` occurs, `$TLEVEL` returns to 0 and the journaling flag is restored. The dependency's history record is lost, because it was journaled and rolled back (D1). M5N, the same without `<Defaults>`, rolls everything back and also loses the dependency record (D1). Code: the dependency's `<Defaults>` are merged under the parent's parameters (`Utils/Module.cls:1166-1169`) and turn journaling off inside the open transaction (`:1191-1193`; premise N-P07). B2 files this as D14, \"confirmed, decision pending\". The model cannot represent this case (`B/model-notes.md`).\n",
+    "code_and_tests_read": [
+      "src/cls/IPM/Main.cls",
+      "src/cls/IPM/Utils/Module.cls",
+      "src/cls/IPM/Lifecycle/Base.cls"
+    ],
+    "history": "571e04a1 Fix and improve the `generate` command (#1324)\n0492fea3 Add `show` command (#1315)\n5d27e15b Fix 'committed' in history log (#1322)\n7cae0b28 Fix two bugs with deployed code (#1317)",
+    "status": "open; no new maintainer determination",
+    "security_scope": false
+  },
+  {
+    "id": "transaction.flag-sources.dependency-no-transaction",
+    "path": ".g5/ontology/concepts/transactions-and-dev-mode.g5.md",
+    "canonical_text": "Should a dependency's own `<Defaults>` `NoTransaction` suppress its parent's transaction?\n\n- Provisional answer: yes. A module that declares `NoTransaction` must not run inside a transaction opened for its parent, so the package change runs without one, and a failure may leave a partial install.\n- Reason: the wiki gives `NoTransaction`'s purpose as modules in the install that \"conflict with an outer wrapping transaction\", and says `<Defaults>` apply \"whenever this module is installed\". Without suppression, the flag of a dependency would have no effect, because the dependency would still run inside the parent's transaction.\n- Alternative: the flag affects only the dependency's own load, so the parent's transaction still wraps it and undoes it on failure. A user whose install contains a conflicting module passes `-DNoTransaction=1` for the whole command.\n\n## Developer mode",
+    "metadata": "- agent\n- uncertain\n- architecture-decision\n- Expands: [Flag sources](#transaction.flag-sources).\n\nSources: new question Q-23 from stage C round 3 finding R3-03. Main source: `wiki/00` L149 (\"Use when some modules in the install conflict with an outer wrapping transaction\"). Also L147 (whole-load rollback), L175 (`<Defaults>` \"applied whenever this module is installed\") and the maintainer doc comment `Utils/Module.cls:1033-1040`, whose example `<Defaults>` sets `NoTransaction`. Checked together with [Q-22](#transaction.flag-sources.dependency-defaults): both provisional answers honor a module's own transaction flags when it is installed as a dependency.\n\nObserved by code reading: a dependency whose `<Defaults>` set only `NoTransaction` skips its own `tstart`, but its writes stay journaled inside the parent's open transaction and are undone with it (`Utils/Module.cls:1191-1196`; premise N-P01). Its no-transaction marker first sets `Committed=1` (`:1226-1228`), and its record is then lost with the parent's rollback (D1). The `NoTransaction` variant of stage C case M5 was not run natively.\n\n\nFindings: [G:D28 \u2014 e2e reproduced](../../Verus_verification/bugs_issues.md#g-d28). The linked entry qualifies the caller, reader and providers.",
+    "code_and_tests_read": [
+      "src/cls/IPM/Main.cls",
+      "src/cls/IPM/Utils/Module.cls",
+      "src/cls/IPM/Lifecycle/Base.cls"
+    ],
+    "history": "571e04a1 Fix and improve the `generate` command (#1324)\n0492fea3 Add `show` command (#1315)\n5d27e15b Fix 'committed' in history log (#1322)\n7cae0b28 Fix two bugs with deployed code (#1317)",
+    "status": "open; no new maintainer determination",
+    "security_scope": false
+  },
+  {
+    "id": "dev-mode.overwrite-guard.force",
+    "path": ".g5/ontology/concepts/transactions-and-dev-mode.g5.md",
+    "canonical_text": "May `-force` lift the developer-mode overwrite guard, and does the guard cover `load`?\n\n- Provisional answer: keep the current scope. The guard covers `install` only, and `-force` does not lift it.\n- Reason: this follows the product as built since the guard was added, and the `-force` help, which speaks only of newer versions without update steps. The wiki's \"Uninstall first, or use `-force`\" conflicts with both, and a maintainer must decide which is meant.\n- Alternative: let `-force` lift the guard as the wiki says, and decide whether `load` is covered.",
+    "metadata": "- agent\n- uncertain\n- user-facing-behavior\n- Expands: [Overwrite guard](#dev-mode.overwrite-guard).\n\nSources: A1 Q-03; `wiki/00` L129 (maintainer-authored, isc-dchui, 2026-05-13); `wiki/05` (names only uninstalling); `-force` help `Main.cls:441`; `Utils/Module.cls:103-114`. The guard has never checked `-force` since it was introduced in commit `d541c5b4` (2022-08-23). Round 1 R1-ONT-05: the wiki line is a conflict for a maintainer, not a documentation error. Not run by B2.\n",
+    "code_and_tests_read": [
+      "src/cls/IPM/Main.cls",
+      "src/cls/IPM/Utils/Module.cls",
+      "src/cls/IPM/Lifecycle/Base.cls"
+    ],
+    "history": "571e04a1 Fix and improve the `generate` command (#1324)\n0492fea3 Add `show` command (#1315)\n5d27e15b Fix 'committed' in history log (#1322)\n7cae0b28 Fix two bugs with deployed code (#1317)",
+    "status": "open; no new maintainer determination",
+    "security_scope": false
+  },
+  {
+    "id": "dev-mode.sticky",
+    "path": ".g5/ontology/concepts/transactions-and-dev-mode.g5.md",
+    "canonical_text": "When a module is already in developer mode, does a plain `load` with neither `-dev` nor `-nodev` keep developer mode?\n\n- Provisional answer: yes, it keeps the stored mode.\n- Reason: the fix this follows stopped plain loads from turning developer mode on. It did not ask plain loads to turn it off, and `-nodev` exists for that.\n- Alternative: a plain load always uses normal mode, following that fix's wording that a module \"should only be DevMode if the -dev flag is included\".",
+    "metadata": "- agent\n- uncertain\n- user-facing-behavior\n- Expands: [Developer mode](#dev-mode).\n\nSources: A1 Q-01; CHANGELOG 0.10.4 (`#892`: \"no longer sets Developer Mode unless -dev flag is set\"); issue #892; commit `f83b207e`. Observed: a load without `-dev` or `-nodev` keeps the stored mode and does not save `Root` or `Repository` (`Utils/Module.cls:1298-1307`, OBS-L3). Affects [load options](../features/load.g5.md#load.options). Native evidence: g8 (plain `load` of a developer-mode module) keeps developer mode, consistent with the provisional answer, and g9 (`-nodev`) turns it off (`20261113T182832Z-cases-dg`).\n",
+    "code_and_tests_read": [
+      "src/cls/IPM/Main.cls",
+      "src/cls/IPM/Utils/Module.cls",
+      "src/cls/IPM/Lifecycle/Base.cls"
+    ],
+    "history": "571e04a1 Fix and improve the `generate` command (#1324)\n0492fea3 Add `show` command (#1315)\n5d27e15b Fix 'committed' in history log (#1322)\n7cae0b28 Fix two bugs with deployed code (#1317)",
+    "status": "open; no new maintainer determination",
+    "security_scope": false
+  },
+  {
+    "id": "transaction.rollback-scope.policy",
+    "path": ".g5/ontology/concepts/transactions-and-dev-mode.g5.md",
+    "canonical_text": "Should a failed package change compensate external effects that the database cannot roll back?\n\n- Evidence: copied files and `module-lock.json` survived native database rollback; arbitrary hooks and remote calls can have further effects.\n- Working assumption: database rollback is the existing boundary; external effects need separate receipts and must be reported.\n- Alternative: add explicit compensating actions for each external writer.\n- Affected claims: load failure atomicity, lock-file location and status, file copy, CPF and history `Committed`.",
+    "metadata": "- uncertain\n- agent-provided\n- user-facing-behavior\n- Expands: [transaction.rollback-scope](#transaction.rollback-scope).\n\nEvidence: Native held-out FileCopy/load receipts in ../../uplift/consolidated/extension/REPORT.md. No product repair applied.\n",
+    "code_and_tests_read": [
+      "src/cls/IPM/Main.cls",
+      "src/cls/IPM/Utils/Module.cls",
+      "src/cls/IPM/Lifecycle/Base.cls"
+    ],
+    "history": "571e04a1 Fix and improve the `generate` command (#1324)\n0492fea3 Add `show` command (#1315)\n5d27e15b Fix 'committed' in history log (#1322)\n7cae0b28 Fix two bugs with deployed code (#1317)",
+    "status": "open; no new maintainer determination",
+    "security_scope": false
+  },
+  {
+    "id": "dev-mode.overwrite-guard.dependency-policy",
+    "path": ".g5/ontology/concepts/transactions-and-dev-mode.g5.md",
+    "canonical_text": "May a parent replace a dependency that is already in developer mode?\n\n- Evidence: Source guard checks only the top-level Install parameter; native N-R05-DEVUP replaces the dependency at another version and clears developer mode. Same-version DEVSAME skips it.\n- Working assumption: Preserve the stated install overwrite guard for dependencies; load scope follows the parent force/load question.\n- Alternative: Allow top-level guard only, with a warning when dependency developer mode is cleared.\n- Affected claims: install refusal, dependency replacement and developer working copy preservation. Alias Q-24.",
+    "metadata": "- uncertain\n- agent-provided\n- user-facing-behavior\n- Expands: [dev-mode.overwrite-guard](#dev-mode.overwrite-guard).\n\nSources: inherited `.g5/Verus_verification/open_questions.md` Q-24, source/native cases named in the block; [extension evidence](../../uplift/consolidated/extension/REPORT.md).\n\n\nFindings: [G:I3 \u2014 e2e reproduced](../../Verus_verification/bugs_issues.md#g-i3). The linked entry qualifies the caller, reader and providers.\n\nFindings: [P:F-INST-9 \u2014 e2e reproduced](../../../playbook-uplift/BUGS.md#p-f-inst-9). The linked entry qualifies the caller, reader and providers.",
+    "code_and_tests_read": [
+      "src/cls/IPM/Main.cls",
+      "src/cls/IPM/Utils/Module.cls",
+      "src/cls/IPM/Lifecycle/Base.cls"
+    ],
+    "history": "571e04a1 Fix and improve the `generate` command (#1324)\n0492fea3 Add `show` command (#1315)\n5d27e15b Fix 'committed' in history log (#1322)\n7cae0b28 Fix two bugs with deployed code (#1317)",
+    "status": "open; no new maintainer determination",
+    "security_scope": false
+  },
+  {
+    "id": "transaction.flag-sources.dependency-closure",
+    "path": ".g5/ontology/concepts/transactions-and-dev-mode.g5.md",
+    "canonical_text": "May an escaped NoJournal dependency remain without its own dependencies?\n\n- Evidence: N-R05-NESTF leaves d1 installed and rolls d2 back because the flat closure loads d2 under parent parameters before d1.\n- Working assumption: Require closure consistency as intent; record the observed violating state rather than assuming a repair.\n- Alternative: Document temporary inconsistency after failure, or use one load-wide transaction mode.\n- Affected claims: dependency satisfaction, mixed-mode rollback and retry. Alias Q-25.",
+    "metadata": "- uncertain\n- agent-provided\n- user-facing-behavior\n- Expands: [transaction.flag-sources.dependency-defaults](#transaction.flag-sources.dependency-defaults).\n\nSources: inherited `.g5/Verus_verification/open_questions.md` Q-25, source/native cases named in the block; [extension evidence](../../uplift/consolidated/extension/REPORT.md).\n\n\nFindings: [G:D21 \u2014 e2e reproduced](../../Verus_verification/bugs_issues.md#g-d21). The linked entry qualifies the caller, reader and providers.",
+    "code_and_tests_read": [
+      "src/cls/IPM/Main.cls",
+      "src/cls/IPM/Utils/Module.cls",
+      "src/cls/IPM/Lifecycle/Base.cls"
+    ],
+    "history": "571e04a1 Fix and improve the `generate` command (#1324)\n0492fea3 Add `show` command (#1315)\n5d27e15b Fix 'committed' in history log (#1322)\n7cae0b28 Fix two bugs with deployed code (#1317)",
+    "status": "open; no new maintainer determination",
+    "security_scope": false
+  },
+  {
+    "id": "version.range.year",
+    "path": ".g5/ontology/concepts/versions.g5.md",
+    "canonical_text": "Should a partial version such as `2024.1` mean exactly `2024.1.0`, as built, while `2024.12` and `1.2` mean a whole minor series?\n\n- Provisional answer: keep the special case for IRIS-style versions, because IPM's tests require `2022.2` to match only `2022.2`.\n- Alternative: one rule for every partial version. Then `2022.2` would also accept `2022.2.1`.",
+    "metadata": "- agent\n- uncertain\n- user-facing-behavior\n- Expands: [Partial versions](#version.range.partial).\n\nSources: `General/SemanticVersionExpression/Range.cls:88-91` (pattern `20NN.N`); tests `Expressions.cls:168-176` (`TestIRISVersions`). Native X35 (`2024.1` is `=2024.1.0`) and X36 (`2024.12` is `>=2024.12.0 <2024.13.0-0`). Question C:Q3.\n",
+    "code_and_tests_read": [
+      "src/cls/IPM/General/SemanticVersionExpression/Range.cls"
+    ],
+    "history": "b34e6a67 Add MAXLEN for all properties and a test to check (#1309)\ndfdda468 Fix dependency resolution bug, semver intersection and bug and have better error message for dependency incompatibilities (#1194)\n02189183 Fix v0.10.5 release blockers (#1016)\n4cace764 BuildDependencyGraph performance enhancements (#975)",
+    "status": "open; no new maintainer determination",
+    "security_scope": false
+  },
+  {
+    "id": "artifact.refresh-policy",
+    "path": ".g5/ontology/features/artifact-download.g5.md",
+    "canonical_text": "When should an existing artifact folder or same-named temporary file be refreshed?\n\n- Owner: IPM maintainers and module authors. The code deliberately reuses a local folder during Activate, but no accepted cache identity or expiry rule was found.\n- Working assumption: preserve observed reuse and disclose that it gives no freshness guarantee. Alternatives are immutable digest-addressed files, explicit refresh, or validating the cached bytes against the selected artifact.\n- This decision affects reproducible installs and exports. Do not remove local/offline reuse as part of an authentication repair.",
+    "metadata": "- agent\n- Expands: [Artifact download](#artifact).\n\nEvidence: local reuse and same-filename native contrasts; [C:Q10](../../uplift/consolidated/QUESTIONS.md). No owner ratification or refresh implementation.\n\n\n- uncertain",
+    "code_and_tests_read": [
+      "src/cls/IPM/ResourceProcessor/ArtifactoryTarball.cls"
+    ],
+    "history": "15093bbf Warn when resource processors target the install directory (#1321)\n92953235 ArtifactoryTarball: download anonymously when no credentials are set (#1263)\n2e4ee368 The `load` command also unpacks to the standard directory (#1147)\n1dde4efc Adding new processor class for artifactory (#932)",
+    "status": "open; no new maintainer determination",
+    "security_scope": true
+  },
+  {
+    "id": "artifact.target-policy",
+    "path": ".g5/ontology/features/artifact-download.g5.md",
+    "canonical_text": "Should artifact copies refuse protected installation folders as FileCopy does?\n\n- Owner: IPM maintainers and instance administrators. The processor calls the shared warning before Activate's copy; it does not call FileCopy's deletion guard. No protected system folder was modified in this run.\n- Working assumption: disclose the warning boundary without promising protection. Alternatives are a common refusal rule, an explicit operator override, or retaining warning-only behavior.\n- Archive path safety, partial copies and compensation remain open. A successful copy under `/tmp` settles none of these policies.",
+    "metadata": "- agent\n- Expands: [Artifact download](#artifact).\n\nEvidence: `ArtifactoryTarball.cls::OnAfterPhase`, `Utils/File.cls::WarnIfInInstallDirectory`; [C:Q11](../../uplift/consolidated/QUESTIONS.md). Only temporary directories were used by the probes.\n\n\n- uncertain",
+    "code_and_tests_read": [
+      "src/cls/IPM/ResourceProcessor/ArtifactoryTarball.cls"
+    ],
+    "history": "15093bbf Warn when resource processors target the install directory (#1321)\n92953235 ArtifactoryTarball: download anonymously when no credentials are set (#1263)\n2e4ee368 The `load` command also unpacks to the standard directory (#1147)\n1dde4efc Adding new processor class for artifactory (#932)",
+    "status": "open; no new maintainer determination",
+    "security_scope": true
+  },
+  {
+    "id": "build.test.outcome.empty.policy",
+    "path": ".g5/ontology/features/build-and-publish.g5.md",
+    "canonical_text": "Should a declared test package with no test classes fail `test` and `verify`?\n\n- Evidence: the source comment calls it \"not an error in itself\" and skips it on purpose. No changelog entry, test or maintainer discussion states what CI users should see.\n- Working assumption: keep the warning and the passing status. The alternative is to fail, or to fail only when a run executes no tests at all. Either alternative changes current green builds whose test package is intentionally empty.\n- Register: C:Q13.",
+    "metadata": "- agent\n- uncertain\n- Expands: [Empty test package](#build.test.outcome.empty).\n\nNo authorized policy decision. Register entry C:Q13 in [QUESTIONS.md](../../uplift/consolidated/QUESTIONS.md).\n",
+    "code_and_tests_read": [
+      "src/cls/IPM/Main.cls",
+      "src/cls/IPM/Utils/Module.cls",
+      "src/cls/IPM/Lifecycle/Base.cls"
+    ],
+    "history": "571e04a1 Fix and improve the `generate` command (#1324)\n0492fea3 Add `show` command (#1315)\n5d27e15b Fix 'committed' in history log (#1322)\n7cae0b28 Fix two bugs with deployed code (#1317)",
+    "status": "open; no new maintainer determination",
+    "security_scope": false
+  },
+  {
+    "id": "build.package.include-refresh.policy",
+    "path": ".g5/ontology/features/build-and-publish.g5.md",
+    "canonical_text": "Should a reloaded manifest that omits IncludeTests keep the previous value or reset it to false?\n\n- Working assumption: preserve the checked behavior and use an explicit false to clear it. Resetting on omission would make a removed declaration disable test packaging, but would change existing reload behavior.\n- Evidence: the XML reader reuses the existing module object, does not reset this scalar field and writes the result back. Native package/extract observations distinguish retention from an explicit false. No owner decision found. Register: C:Q20.",
+    "metadata": "- agent\n- Expands: [Reloaded inclusion field](#build.package.include-refresh).\n\n[Formal alternatives and observed behavior](../../Verus_verification/consolidated/iter10/scope.rs). Neither runtime behavior nor an agent proposal is owner approval.\n\n\n- uncertain",
+    "code_and_tests_read": [
+      "src/cls/IPM/Main.cls",
+      "src/cls/IPM/Utils/Module.cls",
+      "src/cls/IPM/Lifecycle/Base.cls"
+    ],
+    "history": "571e04a1 Fix and improve the `generate` command (#1324)\n0492fea3 Add `show` command (#1315)\n5d27e15b Fix 'committed' in history log (#1322)\n7cae0b28 Fix two bugs with deployed code (#1317)",
+    "status": "open; no new maintainer determination",
+    "security_scope": false
+  },
+  {
+    "id": "deps.lockfile.local-supplier-policy",
+    "path": ".g5/ontology/features/dependencies.g5.md",
+    "canonical_text": "Should a lock file accept a directory-loaded dependency with no registry?\n\n- Working assumption: A needed module loaded from a folder is written to the lock file with an empty registry.\n- Alternative and implications: Fail the command (if a future `ci` needs a registry for every entry): F-DEP-9 changes accordingly.\n- This assumption guides review; it is not a maintainer decision. An explicit owner policy or an attributable source addressing this exact case would settle it.",
+    "metadata": "- agent\n- uncertain\n- user-facing-behavior\n- Expands: [deps.lockfile](#deps.lockfile)\n\nSources: [DEC-DEP-3](../../../playbook-uplift/decisions/03-04.md); The writer already does this for the base module (`LockFile.cls#L74-L78`).\n\n\nFindings: [P:F-DEP-9 \u2014 e2e reproduced](../../../playbook-uplift/BUGS.md#p-f-dep-9). The linked entry qualifies the caller, reader and providers.\n\nSupporting context: issue #962 concerns future lock-file installation; it does not decide local-supplier serialization.",
+    "code_and_tests_read": [
+      "src/cls/IPM/Main.cls",
+      "src/cls/IPM/Utils/Module.cls",
+      "src/cls/IPM/Lifecycle/Base.cls"
+    ],
+    "history": "571e04a1 Fix and improve the `generate` command (#1324)\n0492fea3 Add `show` command (#1315)\n5d27e15b Fix 'committed' in history log (#1322)\n7cae0b28 Fix two bugs with deployed code (#1317)",
+    "status": "open; no new maintainer determination",
+    "security_scope": false
+  },
+  {
+    "id": "devtools.sync.aggregate-status-policy",
+    "path": ".g5/ontology/features/developer-tools.g5.md",
+    "canonical_text": "Should sync without a module name return an error when a module fails?\n\n- Working assumption: `sync` with no module name reports each failure and a summary, then returns OK.\n- Alternative and implications: Return an error when any module fails, like `sync <module>`: a new Low defect.\n- This assumption guides review; it is not a maintainer decision. An explicit owner policy or an attributable source addressing this exact case would settle it.",
+    "metadata": "- agent\n- uncertain\n- user-facing-behavior\n- Expands: [devtools.sync](#devtools.sync)\n\nSources: [DEC-SYNC-3](../../../playbook-uplift/decisions/07-09.md); PR #1205: it \"collects failures without throwing\" (says the loop continues; silent on the final status).\n",
+    "code_and_tests_read": [
+      "src/cls/IPM/Main.cls",
+      "src/cls/IPM/General/Sync/Pipeline.cls",
+      "tests/integration_tests/Test/PM/Integration/Sync.cls"
+    ],
+    "history": "571e04a1 Fix and improve the `generate` command (#1324)\n0492fea3 Add `show` command (#1315)\n5d27e15b Fix 'committed' in history log (#1322)\n04519bf0 Fix tarball load issue and cleanup (#1307)",
+    "status": "open; no new maintainer determination",
+    "security_scope": false
+  },
+  {
+    "id": "devtools.sync.failed-import-policy",
+    "path": ".g5/ontology/features/developer-tools.g5.md",
+    "canonical_text": "Should sync retry a failed compile or reload after its source is reverted?\n\n- Working assumption: Files that a failed `compile`, `load -dev` or `reload` put on the server are re-detected by the next `sync`.\n- Alternative and implications: Retry marks stay sync-only and the docs say \"after a failed compile, run compile again\": F-SYNC-1 becomes documentation.\n- This assumption guides review; it is not a maintainer decision. An explicit owner policy or an attributable source addressing this exact case would settle it.",
+    "metadata": "- agent\n- uncertain\n- user-facing-behavior\n- Expands: [devtools.sync](#devtools.sync)\n\nSources: [DEC-SYNC-1](../../../playbook-uplift/decisions/07-09.md); Sync help \"since the last load/sync\"; issue #1224's expected behaviour for the same symptom inside sync.\n\n\nFindings: [P:F-SYNC-1 \u2014 e2e reproduced](../../../playbook-uplift/BUGS.md#p-f-sync-1). The linked entry qualifies the caller, reader and providers.",
+    "code_and_tests_read": [
+      "src/cls/IPM/Main.cls",
+      "src/cls/IPM/General/Sync/Pipeline.cls",
+      "tests/integration_tests/Test/PM/Integration/Sync.cls"
+    ],
+    "history": "571e04a1 Fix and improve the `generate` command (#1324)\n0492fea3 Add `show` command (#1315)\n5d27e15b Fix 'committed' in history log (#1322)\n04519bf0 Fix tarball load issue and cleanup (#1307)",
+    "status": "open; no new maintainer determination",
+    "security_scope": false
+  },
+  {
+    "id": "devtools.authoring.module-version.file",
+    "path": ".g5/ontology/features/developer-tools.g5.md",
+    "canonical_text": "Should `module-version` also update the `module.xml` file a module was loaded from?\n\n- Provisional answer: no, as built. The command edits the namespace's copy, and source control hooks, when present, take it from there.\n- Alternative: yes for a module loaded in developer mode, whose folder is its working copy.",
+    "metadata": "- agent\n- uncertain\n- user-facing-behavior\n- Expands: [module-version](#devtools.authoring.module-version).\n\nSources: native MV10; `StudioDocument/Module.cls:403-420` rewrites the stored `.ZPM` document only. Question C:Q4.\n\nExtension Verus: [owners.rs::update_version](../../Verus_verification/consolidated/verus/owners.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.\n",
+    "code_and_tests_read": [
+      "src/cls/IPM/Main.cls",
+      "src/cls/IPM/General/Sync/Pipeline.cls",
+      "tests/integration_tests/Test/PM/Integration/Sync.cls"
+    ],
+    "history": "571e04a1 Fix and improve the `generate` command (#1324)\n0492fea3 Add `show` command (#1315)\n5d27e15b Fix 'committed' in history log (#1322)\n04519bf0 Fix tarball load issue and cleanup (#1307)",
+    "status": "open; no new maintainer determination",
+    "security_scope": false
+  },
+  {
+    "id": "devtools.generate.invalid-source",
+    "path": ".g5/ontology/features/developer-tools.g5.md",
+    "canonical_text": "Should `generate` report or refuse a source file that cannot load?\n\nAs built, it skips the file and can produce a manifest without it. The working assumption preserves that behavior; the alternative fails generation or reports each omission so an author can fix it (C:Q16).",
+    "metadata": "- agent; uncertain; user-facing-behavior\n- Expands: [Generated resources](#devtools.generate.resources).\n\nSource: `ReadItems` continues after a failed `$system.OBJ.Load`. C:Q16 is a proposal for owner review; no defect is asserted without an accepted policy.\n\n\n- uncertain",
+    "code_and_tests_read": [
+      "src/cls/IPM/Main.cls",
+      "src/cls/IPM/General/Sync/Pipeline.cls",
+      "tests/integration_tests/Test/PM/Integration/Sync.cls"
+    ],
+    "history": "571e04a1 Fix and improve the `generate` command (#1324)\n0492fea3 Add `show` command (#1315)\n5d27e15b Fix 'committed' in history log (#1322)\n04519bf0 Fix tarball load issue and cleanup (#1307)",
+    "status": "open; no new maintainer determination",
+    "security_scope": false
+  },
+  {
+    "id": "history.record.unlogged-refusals",
+    "path": ".g5/ontology/features/history.g5.md",
+    "canonical_text": "Should IPM record `update`, `reinstall` and `uninstall` attempts it refuses because of their arguments, as it records refused loads and installs?\n\n- Provisional answer: record them. Examples are `update` or `reinstall` of a module that is not installed, and `uninstall` with no name.\n- Reason: [recorded actions](#history.actions) include refused attempts, and the wiki says IPM records every action \"it attempts, whether or not the attempt succeeded\". `install` with no name is already recorded.\n- Alternative: argument refusals are not attempts, because IPM refuses them before the action starts.",
+    "metadata": "- agent\n- uncertain\n- user-facing-behavior\n- Expands: [Record](#history.record).\n\nSources: A1 Q-09; `wiki/09` L18; issue #366 (\"we still want to log failed installations\"). Round 1 R1-ONT-06 changed the provisional answer to \"record them\", following [recorded actions](#history.actions). Observed: `update` refuses `PermitDowngrade` and a module that is not installed before creating a record (`Main.cls:4415-4423`). `uninstall` with no name and `reinstall` of a module that is not installed are refused the same way (`Main.cls:2685-2688`, `:2709-2712`). Not run by B2.\n\n\nFindings: [G:D29 \u2014 e2e reproduced](../../Verus_verification/bugs_issues.md#g-d29). The linked entry qualifies the caller, reader and providers.",
+    "code_and_tests_read": [
+      "src/cls/IPM/General/History.cls",
+      "src/cls/IPM/General/HistoryTemp.cls",
+      "src/cls/IPM/General/AbstractHistory.cls"
+    ],
+    "history": "5d27e15b Fix 'committed' in history log (#1322)\nf522900e Fix 1097: Nested Tests (#1107)\nffba34ec Fix 1057: IPM cleanly uninstalls itself now (#1106)\n2cef3073 feat(history): implement automatic history purge logic (#992)",
+    "status": "open; no new maintainer determination",
+    "security_scope": false
+  },
+  {
+    "id": "history.record.abnormal-end",
+    "path": ".g5/ontology/features/history.g5.md",
+    "canonical_text": "What should `Committed` say on the record of an action that never ended?\n\n- Provisional answer: `Committed` reflects the changes kept, even on an unfinished record. IPM writes it to the permanent record at each commit.\n- Reason: `Committed` \"should reflect whether the action's changes were actually retained\", and the wiki's recipe `-Dcommitted=1 -DSuccess=\"0*\"` is how users find failures that kept changes. A crash that kept changes is that case.\n- Alternative: an empty end time means the outcome is unknown, so readers must not trust `Committed=0` on such a record.",
+    "metadata": "- agent\n- uncertain\n- user-facing-behavior\n- Expands: [Record](#history.record).\n\nSources: A1 Q-08; issue #1237 (\"should reflect whether the action's changes were actually retained\"); `wiki/09` L215-219 (recipe for failures that kept changes), L229-233. Round 1 R1-ONT-02 changed the provisional answer to follow issue #1237, and \"unknown outcome\" is now the alternative.\n\nNative evidence: C4R, a developer-mode load SIGKILLed in Activate after both commits, keeps its module and classes while the permanent record reads `Committed=0`. That deviates from the provisional answer, and the `wiki/09` recipe misses it (`183827Z-cases-c4r`). C2, ended by `$SYSTEM.Process.Terminate`, reads `Committed=1` (`182903Z-cases-c-terminate`). Delay: IRIS rolls back a SIGKILLed process's transaction only after slot cleanup ([load outcome](load.g5.md#load.outcome)). Not run: instance restart (premise P-3). Approximate case B1-C49 (debugger stall between the final commit and its `Committed` mark): the module is fully installed while the record reads `Committed=0`, and after Terminate the record is also finalized (`205218Z-replay-approx-c`; approximate, see `B/native-replay.md` section 5).\n",
+    "code_and_tests_read": [
+      "src/cls/IPM/General/History.cls",
+      "src/cls/IPM/General/HistoryTemp.cls",
+      "src/cls/IPM/General/AbstractHistory.cls"
+    ],
+    "history": "5d27e15b Fix 'committed' in history log (#1322)\nf522900e Fix 1097: Nested Tests (#1107)\nffba34ec Fix 1057: IPM cleanly uninstalls itself now (#1106)\n2cef3073 feat(history): implement automatic history purge logic (#992)",
+    "status": "open; no new maintainer determination",
+    "security_scope": false
+  },
+  {
+    "id": "history.fields.dependency-source",
+    "path": ".g5/ontology/features/history.g5.md",
+    "canonical_text": "How should the log label and show a dependency that IPM pulled from a repository while running a `load` or `update`, and what source does an `update` from a registry store?\n\n- Provisional answer: keep the `load` label for dependencies of `load` and `update`, keep their stored source, and keep the rule that listings show a source only for installs.\n- Reason: the maintainer test for dependency history expects a `load` record for the dependency of a `load`. The original request asks that dependency installs be logged, which this does.\n- Alternative: label them `install` with their source, following the original request's wording \"install (including as a dependency)\". That changes the maintainer test.\n- Alternative: keep the `load` label and show the stored source in listings for any record that has one. That changes the wiki's rule that listings show `n/a` for anything other than install.\n- Alternative: clear the source of records labeled `load`, as the field's description says for loads. This was not chosen, because hiding a real source loses useful history.\n- `update` is not covered by any source. Provisionally it may store its registry, and listings still show `n/a` for it.",
+    "metadata": "- agent\n- uncertain\n- user-facing-behavior\n- Expands: [Fields](#history.fields).\n\nSources: A1 Q-15; `General/AbstractHistory.cls:20-27` (\"For load and uninstall this will be empty\"); `wiki/09` L76; issue #366 (\"install (including as a dependency)\", source \"for install only\"). Reconstruction check R9 asked for one provisional answer. Observed: dependencies of `load` and `update` are labeled `load` but carry a repository source (`Utils/Module.cls:63-69`). The listing shows `n/a` as the source for every record that is not `install`, including a top-level `update` from a registry (`General/History.cls:461-463`, OBS-H7). Round 1 R1-ONT-07: `History.cls` `TestWithDependencies` (L752-770) expects a `load` record for the dependency of a `load`, and the provisional answer now follows it. Native evidence: the A0 dependency record has `Action=load` and `SourceName=ipm-temp-modules-1` (`182759Z-cases-a`). Round 3 R3-09 restored the two draft options, \"show the source in the listing\" and \"clear the source\", as alternatives.\n",
+    "code_and_tests_read": [
+      "src/cls/IPM/General/History.cls",
+      "src/cls/IPM/General/HistoryTemp.cls",
+      "src/cls/IPM/General/AbstractHistory.cls"
+    ],
+    "history": "5d27e15b Fix 'committed' in history log (#1322)\nf522900e Fix 1097: Nested Tests (#1107)\nffba34ec Fix 1057: IPM cleanly uninstalls itself now (#1106)\n2cef3073 feat(history): implement automatic history purge logic (#992)",
+    "status": "open; no new maintainer determination",
+    "security_scope": false
+  },
+  {
+    "id": "history.phases.returned-errors",
+    "path": ".g5/ontology/features/history.g5.md",
+    "canonical_text": "Must every phase that starts also record its end and status, including when an `<Invoke>` returns an error status instead of throwing one?\n\n- Provisional answer: yes. The docs read a phase with no end time as a hang or crash, so an ordinary error must not look like one.\n- Alternative: accept open phases for returned errors and document it.\n\n## Committed and Success",
+    "metadata": "- agent\n- uncertain\n- user-facing-behavior\n- Expands: [Phases](#history.phases).\n\nSources: A1 Q-14; `wiki/09` L161. Confirmed product defect B2 D6: an `<Invoke>` bound to Activate that returns an error leaves the Activate phase open in a finalized error record (`Storage/Module.cls:669-671`; `VV/native/repro/activate-invoke-phase-open.cos`, run ID not listed in the B2 report). Invokes on the default Configure phase finalize Activate correctly (cases A1, A5).\n\n\nFindings: [G:D6 \u2014 e2e reproduced](../../Verus_verification/bugs_issues.md#g-d6). The linked entry qualifies the caller, reader and providers.",
+    "code_and_tests_read": [
+      "src/cls/IPM/General/History.cls",
+      "src/cls/IPM/General/HistoryTemp.cls",
+      "src/cls/IPM/General/AbstractHistory.cls"
+    ],
+    "history": "5d27e15b Fix 'committed' in history log (#1322)\nf522900e Fix 1097: Nested Tests (#1107)\nffba34ec Fix 1057: IPM cleanly uninstalls itself now (#1106)\n2cef3073 feat(history): implement automatic history purge logic (#992)",
+    "status": "open; no new maintainer determination",
+    "security_scope": false
+  },
+  {
+    "id": "history.committed.nested",
+    "path": ".g5/ontology/features/history.g5.md",
+    "canonical_text": "When a caller wraps an IPM command in its own transaction, must the record survive the caller's rollback, and what should `Committed` say?\n\n- Provisional answer: the record survives, because the original request says \"if install rolls back we still need the history\". `Committed` is exact only for actions started outside any caller transaction, because IPM cannot know the caller's later outcome. Record this limit.\n- Reason: no source says whether wrapping IPM in a caller's transaction is supported.\n- Alternative: compare the transaction level at the end with the level at the start, so any commit nested in a caller transaction reads uncommitted.\n- Alternative: treat caller-held transactions as unsupported, so the record may be lost with them.\n\n- Settled observation: the command may return success before the caller later rolls back its module data and permanent history row. The imported model proves this no-trace result under its stated domain. Published caller-transaction use does not decide the independent audit retention policy; the working assumption and alternatives above remain policy proposals.",
+    "metadata": "- agent\n- uncertain\n- architecture-decision\n- Expands: [Committed](#history.committed).\n\nSources: A1 Q-05; issue #366; issue #1237 option 1; PR #1322. Round 1 R1-ONT-01 narrowed this question to caller-held transactions and added record survival. The dependency case is now settled by [survives rollback](#history.survives-rollback) and [committed](#history.committed). The provisional answer keeps the survival rule of issue #366, and it was checked together with those two blocks.\n\nNative evidence: case D1 (`tstart`, `load`, `trollback`) leaves no record. One ID was allocated and no row persisted, although in flight the record read `Committed=1` and `Finalized=1`. That deviates from the provisional answer (`182832Z-cases-dg`, `184230Z-replay-fast`, `184632Z-repro-caller-tx-history-lost`). D0 (`tcommit`) conforms. Premise N-P03, that an inner commit is not durable under an outer rollback, is confirmed (`181129Z-premises`). Installer Invokes that run nested shell commands inside IPM's own load are the same case ([installer](ipm-setup.g5.md#setup.installer)).\n\n\nFindings: [G:D25 \u2014 e2e reproduced](../../Verus_verification/bugs_issues.md#g-d25). The linked entry qualifies the caller, reader and providers.",
+    "code_and_tests_read": [
+      "src/cls/IPM/General/History.cls",
+      "src/cls/IPM/General/HistoryTemp.cls",
+      "src/cls/IPM/General/AbstractHistory.cls"
+    ],
+    "history": "5d27e15b Fix 'committed' in history log (#1322)\nf522900e Fix 1097: Nested Tests (#1107)\nffba34ec Fix 1057: IPM cleanly uninstalls itself now (#1106)\n2cef3073 feat(history): implement automatic history purge logic (#992)",
+    "status": "open; no new maintainer determination",
+    "security_scope": false
+  },
+  {
+    "id": "history.committed.terminal-choice-policy",
+    "path": ".g5/ontology/features/history.g5.md",
+    "canonical_text": "What history outcome is required when an operator commits a stopped load at the terminal?\n\n- Working assumption: Answering \"Commit\" at a crash prompt is an operator error to document.\n- Alternative and implications: Mark the log committed before each region a halt could commit: F-HIST-4 becomes a defect again.\n- This assumption guides review; it is not a maintainer decision. An explicit owner policy or an attributable source addressing this exact case would settle it.",
+    "metadata": "- agent\n- uncertain\n- user-facing-behavior\n- Expands: [history.committed](#history.committed)\n\nSources: [DEC-LOAD-1](../../../playbook-uplift/decisions/00-02.md); It is an IRIS terminal choice; guarding it costs writes on every load.\n",
+    "code_and_tests_read": [
+      "src/cls/IPM/General/History.cls",
+      "src/cls/IPM/General/HistoryTemp.cls",
+      "src/cls/IPM/General/AbstractHistory.cls"
+    ],
+    "history": "5d27e15b Fix 'committed' in history log (#1322)\nf522900e Fix 1097: Nested Tests (#1107)\nffba34ec Fix 1057: IPM cleanly uninstalls itself now (#1106)\n2cef3073 feat(history): implement automatic history purge logic (#992)",
+    "status": "open; no new maintainer determination",
+    "security_scope": false
+  },
+  {
+    "id": "history.read.filter.invalid-column",
+    "path": ".g5/ontology/features/history.g5.md",
+    "canonical_text": "What should happen to a filter on a column such as `Version_Major`, on a column that does not exist, or when the query fails?\n\n- Provisional answer: filters on listed columns, including version parts, must work, and IPM must never silently drop a filter. When `find` cannot run its query, it reports the error instead of showing an empty log.\n- Reason: a dropped filter widens `history delete`, which could then delete a whole namespace's records without `-confirm`. An empty listing with a success status hides the problem.\n- Alternative: refuse an unknown column with an error, or ignore it with a warning and apply the rest.",
+    "metadata": "- agent\n- uncertain\n- user-facing-behavior, security\n- Expands: [Filter](#history.read.filter).\n\nSources: A1 Q-10; `wiki/09` L112. Round 1 R1-ONT-10 added query errors in `find`. Confirmed product defect B2 D2: a column name containing `_` is dropped together with every later filter, so `find` widens (E1, E2, E8), and `history delete -DVersion_Major=99` without `-confirm` deleted every record (E4) (`182845Z-cases-ef`, `184230Z-replay-fast`, `184621Z-repro-history-filter-widened`, `184623Z-repro-history-delete-underscore`). An unknown column gives `find` an empty listing with a success status (E3), but makes `delete` fail with SQLCODE -29 (E7). Observed: `GetHistory` does not check `%SQLCODE` (`General/History.cls:132-150`). Consolidated round 3 (`20261114T032747Z-r3-delete`, ARM64), three seeded records each: `history delete -DVersion_Major=99` deleted all three though none has major 99 (G D2, now on ARM64 with exact identities); `-DSucess=0`, the misspelling used in the command's own help example (`Main.cls:832`), failed with SQLCODE -29 and deleted nothing; `-DPackage=del-b` and `-DSuccess=0` deleted exactly the matching record.\n\n\nFindings: [G:D24 \u2014 e2e reproduced](../../Verus_verification/bugs_issues.md#g-d24). The linked entry qualifies the caller, reader and providers.",
+    "code_and_tests_read": [
+      "src/cls/IPM/General/History.cls",
+      "src/cls/IPM/General/HistoryTemp.cls",
+      "src/cls/IPM/General/AbstractHistory.cls"
+    ],
+    "history": "5d27e15b Fix 'committed' in history log (#1322)\nf522900e Fix 1097: Nested Tests (#1107)\nffba34ec Fix 1057: IPM cleanly uninstalls itself now (#1106)\n2cef3073 feat(history): implement automatic history purge logic (#992)",
+    "status": "open; no new maintainer determination",
+    "security_scope": false
+  },
+  {
+    "id": "history.read.filter.default-modifiers",
+    "path": ".g5/ontology/features/history.g5.md",
+    "canonical_text": "Should the namespace's [default modifiers](../concepts/settings.g5.md#settings.default-modifiers) act as `history` filters?\n\n- Provisional answer: no. Default modifiers are meant for package changes, such as `-DNoTransaction=1`, while `history` filters are explicit requests.\n- Reason: a default such as `NoTransaction` names no history column, so it would break or empty every listing.\n- Alternative: apply them as filters and document it.",
+    "metadata": "- agent\n- uncertain\n- user-facing-behavior\n- Expands: [Filter](#history.read.filter).\n\nSources: new question from A2 OBS-H2; `Main.cls:820` (\"By default, all entries will be affected\"); `Main.cls:617-630` (default-modifiers help). Confirmed as D18, decision pending under this question: stored default modifiers are merged into every command, and `history` reads them as filters (`Main.cls:1067-1069`, `:4136`; `CLI.cls:815-819`). Stage C case H2 (`20261113T204152Z-stagec`): after the product's own example `default-modifiers -set -DNoTransaction=1 -DUpdateSnapshots=1`, `history find` shows no rows with a success status, and `history delete -confirm` fails with SQLCODE -29.\n\n\nFindings: [G:D18 \u2014 e2e reproduced](../../Verus_verification/bugs_issues.md#g-d18). The linked entry qualifies the caller, reader and providers.",
+    "code_and_tests_read": [
+      "src/cls/IPM/General/History.cls",
+      "src/cls/IPM/General/HistoryTemp.cls",
+      "src/cls/IPM/General/AbstractHistory.cls"
+    ],
+    "history": "5d27e15b Fix 'committed' in history log (#1322)\nf522900e Fix 1097: Nested Tests (#1107)\nffba34ec Fix 1057: IPM cleanly uninstalls itself now (#1106)\n2cef3073 feat(history): implement automatic history purge logic (#992)",
+    "status": "open; no new maintainer determination",
+    "security_scope": false
+  },
+  {
+    "id": "history.delete.confirm-with-filter",
+    "path": ".g5/ontology/features/history.g5.md",
+    "canonical_text": "Does `-confirm` together with a filter delete every record, or only the matching ones?\n\n- Provisional answer: only the matching ones. `-confirm` only permits a delete without a filter.\n- Reason: the wiki describes it this way, while the command help says `-confirm` \"will delete all records in the current namespace\".\n- Alternative: follow the command help.",
+    "metadata": "- agent\n- uncertain\n- user-facing-behavior\n- Expands: [Delete](#history.delete).\n\nSources: A1 Q-11; `Main.cls:825`; `wiki/09` L43-44, L187; guard `Main.cls:4165-4167`.\n",
+    "code_and_tests_read": [
+      "src/cls/IPM/General/History.cls",
+      "src/cls/IPM/General/HistoryTemp.cls",
+      "src/cls/IPM/General/AbstractHistory.cls"
+    ],
+    "history": "5d27e15b Fix 'committed' in history log (#1322)\nf522900e Fix 1097: Nested Tests (#1107)\nffba34ec Fix 1057: IPM cleanly uninstalls itself now (#1106)\n2cef3073 feat(history): implement automatic history purge logic (#992)",
+    "status": "open; no new maintainer determination",
+    "security_scope": false
+  },
+  {
+    "id": "history.delete.running-records",
+    "path": ".g5/ontology/features/history.g5.md",
+    "canonical_text": "May `history delete` or the daily [purge](#history.retention) remove the record of an action that is still running, and what should that action's final write do then?\n\n- Provisional answer: a delete or purge may remove any matching record, and the running action must still finish normally whether or not its record comes back.\n- Reason: no source covers this case. Deleting is an explicit user choice, and the log must not make a package change fail.\n- Alternative: skip records of running actions, or always write the final result back.\n\n- As built, deleting an accessible active twin before final persistence leaves the row absent even when Finalize and PersistToTwin return success.\n- A transaction-locked twin has a different checked schedule: delete waits, final persistence runs, the transaction releases its lock, delete completes, then temporary-object close recreates the same ID with its finalized successful result. A successful delete is not cancellation of the remaining writer.\n- The [paired final-reader receipts and Verus schedule contract](../../uplift/consolidated/iter2/boundaries/REPORT.md) refute a general no-resurrection claim. They cover two schedules, not all lock timeouts, interleavings or cross-namespace behavior. The alternatives above remain an owner policy question.",
+    "metadata": "- agent\n- uncertain\n- user-facing-behavior\n- Expands: [Delete](#history.delete).\n\nSources: new question Q-20 from reconstruction check R12; A1 3.4 last row (\"unspecified\"). Observed: `history delete` and the purge are not limited to finalized records (OP-HIST-17, OP-HIST-21, OBS-H12). What the running action's end copy then does depended on premise P-9, which B2 observed as N-P15 (below). Affects [retention](#history.retention). Native evidence (N-P15, `181129Z-premises`): deleting the permanent record of an action before its end copy makes the record disappear completely. The end copy raises nothing and does not recreate it.\n",
+    "code_and_tests_read": [
+      "src/cls/IPM/General/History.cls",
+      "src/cls/IPM/General/HistoryTemp.cls",
+      "src/cls/IPM/General/AbstractHistory.cls"
+    ],
+    "history": "5d27e15b Fix 'committed' in history log (#1322)\nf522900e Fix 1097: Nested Tests (#1107)\nffba34ec Fix 1057: IPM cleanly uninstalls itself now (#1106)\n2cef3073 feat(history): implement automatic history purge logic (#992)",
+    "status": "open; no new maintainer determination",
+    "security_scope": false
+  },
+  {
+    "id": "history.locked.unfinished",
+    "path": ".g5/ontology/features/history.g5.md",
+    "canonical_text": "May IPM finalize, and so lock, the record of an action that never ended?\n\n- Provisional answer: no. A finalized record is one whose action has ended, so a record without an end time stays unfinalized.\n- Reason: a locked record of an unfinished action could never be corrected.\n- Alternative: finalize whenever IPM releases the record, and accept locked records with no end time.",
+    "metadata": "- agent\n- uncertain\n- user-facing-behavior\n- Expands: [Locked](#history.locked).\n\nSources: new question from round 1 R1-ONT-02; this page's definition of Finalized; `wiki/09` L197. Native evidence: case C2, a developer-mode load ended by `$SYSTEM.Process.Terminate`, was finalized by `%OnClose` with no end time and an open Activate phase. It deviates from the provisional answer, and the record can no longer be corrected (`182903Z-cases-c-terminate`). Observed: `PersistToTwin` sets `Finalized` without checking the end time (`General/HistoryTemp.cls:53`).\n",
+    "code_and_tests_read": [
+      "src/cls/IPM/General/History.cls",
+      "src/cls/IPM/General/HistoryTemp.cls",
+      "src/cls/IPM/General/AbstractHistory.cls"
+    ],
+    "history": "5d27e15b Fix 'committed' in history log (#1322)\nf522900e Fix 1097: Nested Tests (#1107)\nffba34ec Fix 1057: IPM cleanly uninstalls itself now (#1106)\n2cef3073 feat(history): implement automatic history purge logic (#992)",
+    "status": "open; no new maintainer determination",
+    "security_scope": false
+  },
+  {
+    "id": "history.retention.effect",
+    "path": ".g5/ontology/features/history.g5.md",
+    "canonical_text": "May a failure of the daily purge stop the user's command?\n\n- Provisional answer: no. The command should still run, which is a proposed change.\n- Reason: no source says a purge failure may block other commands, and the purge is housekeeping the user did not ask for in that command.\n- Alternative: report the purge error and stop, as a signal that retention is broken.",
+    "metadata": "- agent\n- uncertain\n- user-facing-behavior\n- Expands: [Retention](#history.retention).\n\nSources: A1 Q-13. Reconstruction check R10 narrowed it to the failure case, because [retention](#history.retention) already requires deleting old records. Not run by B2: a purge failure (`Main.cls:862-865`, OBS-H12) remains a code reading. Confirmed product defect B2 D5, owned by [settings](../concepts/settings.g5.md#settings): `config delete HistoryRetain` restores the first value ever set, not `0` (case F0; `184628Z-repro-config-delete-retain`; also after `182514Z-suite-test-CLI`).\n",
+    "code_and_tests_read": [
+      "src/cls/IPM/General/History.cls",
+      "src/cls/IPM/General/HistoryTemp.cls",
+      "src/cls/IPM/General/AbstractHistory.cls"
+    ],
+    "history": "5d27e15b Fix 'committed' in history log (#1322)\nf522900e Fix 1097: Nested Tests (#1107)\nffba34ec Fix 1057: IPM cleanly uninstalls itself now (#1106)\n2cef3073 feat(history): implement automatic history purge logic (#992)",
+    "status": "open; no new maintainer determination",
+    "security_scope": false
+  },
+  {
+    "id": "history.keep-on-ipm-uninstall.other-namespaces",
+    "path": ".g5/ontology/features/history.g5.md",
+    "canonical_text": "May uninstalling IPM in one namespace delete the in-progress records of other namespaces?\n\n- Provisional answer: no. History belongs to each namespace.\n- Alternative: accept it, because removing IPM is rare.",
+    "metadata": "- agent\n- uncertain\n- user-facing-behavior\n- Expands: [IPM uninstall](#history.keep-on-ipm-uninstall).\n\nSources: A1 Q-16. Observed: full cleanup kills `^IRIS.Temp.HistoryTempD`, which every namespace shares (`Lifecycle/Module.cls:51`, OBS-H13, P-1). Native evidence: history IRISTEMP rows form one instance-wide store, readable from another namespace (N-P06, N-P17, `181129Z-premises`). A self-uninstall during another namespace's load was not run.\n",
+    "code_and_tests_read": [
+      "src/cls/IPM/General/History.cls",
+      "src/cls/IPM/General/HistoryTemp.cls",
+      "src/cls/IPM/General/AbstractHistory.cls"
+    ],
+    "history": "5d27e15b Fix 'committed' in history log (#1322)\nf522900e Fix 1097: Nested Tests (#1107)\nffba34ec Fix 1057: IPM cleanly uninstalls itself now (#1106)\n2cef3073 feat(history): implement automatic history purge logic (#992)",
+    "status": "open; no new maintainer determination",
+    "security_scope": false
+  },
+  {
+    "id": "history.committed.escaped-dependency",
+    "path": ".g5/ontology/features/history.g5.md",
+    "canonical_text": "Should a parent record count writes kept only by its NoJournal dependency?\n\n- Evidence: The property says any action changes kept. N-R05-M5 leaves child data while top-level marker can remain false and the child row can be lost.\n- Working assumption: Count surviving child writes in the parent outcome; retain the distinction between parent and child records.\n- Alternative: Keep per-activation marker only and rely on independent child records after a repair.\n- Affected claims: Committed truth, record existence and aggregate load outcome. Alias Q-26.",
+    "metadata": "- uncertain\n- agent-provided\n- user-facing-behavior\n- Expands: [history.committed](#history.committed).\n\nSources: inherited `.g5/Verus_verification/open_questions.md` Q-26, source/native cases named in the block; [extension evidence](../../uplift/consolidated/extension/REPORT.md).\n\n\nFindings: [G:D22 \u2014 e2e reproduced](../../Verus_verification/bugs_issues.md#g-d22). The linked entry qualifies the caller, reader and providers.",
+    "code_and_tests_read": [
+      "src/cls/IPM/General/History.cls",
+      "src/cls/IPM/General/HistoryTemp.cls",
+      "src/cls/IPM/General/AbstractHistory.cls"
+    ],
+    "history": "5d27e15b Fix 'committed' in history log (#1322)\nf522900e Fix 1097: Nested Tests (#1107)\nffba34ec Fix 1057: IPM cleanly uninstalls itself now (#1106)\n2cef3073 feat(history): implement automatic history purge logic (#992)",
+    "status": "open; no new maintainer determination",
+    "security_scope": false
+  },
+  {
+    "id": "history.delete.global-errors",
+    "path": ".g5/ontology/features/history.g5.md",
+    "canonical_text": "Must global delete report namespace errors other than missing permission?\n\n- Evidence: DeleteHistoryGlobally catches all exceptions; a native unknown-column comparison distinguishes local failure from global success.\n- Working assumption: Report errors that mean requested deletion was not performed.\n- Alternative: Keep best-effort behavior and explicitly list skipped namespaces and errors.\n- Affected claims: global delete status and namespace scope. Alias Q-27.",
+    "metadata": "- uncertain\n- agent-provided\n- user-facing-behavior\n- Expands: [history.delete](#history.delete).\n\nSources: inherited `.g5/Verus_verification/open_questions.md` Q-27, source/native cases named in the block; [extension evidence](../../uplift/consolidated/extension/REPORT.md).\n\n\nFindings: [G:D23 \u2014 e2e reproduced](../../Verus_verification/bugs_issues.md#g-d23). The linked entry qualifies the caller, reader and providers.",
+    "code_and_tests_read": [
+      "src/cls/IPM/General/History.cls",
+      "src/cls/IPM/General/HistoryTemp.cls",
+      "src/cls/IPM/General/AbstractHistory.cls"
+    ],
+    "history": "5d27e15b Fix 'committed' in history log (#1322)\nf522900e Fix 1097: Nested Tests (#1107)\nffba34ec Fix 1057: IPM cleanly uninstalls itself now (#1106)\n2cef3073 feat(history): implement automatic history purge logic (#992)",
+    "status": "open; no new maintainer determination",
+    "security_scope": false
+  },
+  {
+    "id": "history.read.global-shape",
+    "path": ".g5/ontology/features/history.g5.md",
+    "canonical_text": "Must programmatic global history rows carry their namespace and ID?\n\n- Evidence: CLI output carries namespace; GlobalRecords ROWSPEC omits namespace and ID, and native H10 repeats caller rows.\n- Working assumption: Return identities sufficient for a caller to distinguish colliding namespace-local IDs.\n- Alternative: Keep the legacy row shape and document a separate namespace-aware API.\n- Affected claims: global query scope, identity and details lookup. Alias Q-28.",
+    "metadata": "- uncertain\n- agent-provided\n- user-facing-behavior\n- Expands: [history.read.api](#history.read.api).\n\nSources: inherited `.g5/Verus_verification/open_questions.md` Q-28, source/native cases named in the block; [extension evidence](../../uplift/consolidated/extension/REPORT.md).\n",
+    "code_and_tests_read": [
+      "src/cls/IPM/General/History.cls",
+      "src/cls/IPM/General/HistoryTemp.cls",
+      "src/cls/IPM/General/AbstractHistory.cls"
+    ],
+    "history": "5d27e15b Fix 'committed' in history log (#1322)\nf522900e Fix 1097: Nested Tests (#1107)\nffba34ec Fix 1057: IPM cleanly uninstalls itself now (#1106)\n2cef3073 feat(history): implement automatic history purge logic (#992)",
+    "status": "open; no new maintainer determination",
+    "security_scope": false
+  },
+  {
+    "id": "history.retention.running-policy",
+    "path": ".g5/ontology/features/history.g5.md",
+    "canonical_text": "May automatic retention remove an action that has not ended?\n\n- Evidence: The as-built quoted cutoff deletes nothing. With that defect repaired the filter uses TimeStart only; the Python reader model can then remove active rows.\n- Working assumption: Retain the documented age rule while keeping deletion/finalization races explicit; no repair outcome is claimed.\n- Alternative: Skip active rows and define how killed actions eventually expire.\n- Affected claims: retention fix, active writers and abnormal process ends. Alias Q-29.",
+    "metadata": "- uncertain\n- agent-provided\n- user-facing-behavior\n- Expands: [history.retention](#history.retention).\n\nSources: inherited `.g5/Verus_verification/open_questions.md` Q-29, source/native cases named in the block; [extension evidence](../../uplift/consolidated/extension/REPORT.md).\n",
+    "code_and_tests_read": [
+      "src/cls/IPM/General/History.cls",
+      "src/cls/IPM/General/HistoryTemp.cls",
+      "src/cls/IPM/General/AbstractHistory.cls"
+    ],
+    "history": "5d27e15b Fix 'committed' in history log (#1322)\nf522900e Fix 1097: Nested Tests (#1107)\nffba34ec Fix 1057: IPM cleanly uninstalls itself now (#1106)\n2cef3073 feat(history): implement automatic history purge logic (#992)",
+    "status": "open; no new maintainer determination",
+    "security_scope": false
+  },
+  {
+    "id": "history.survives-rollback.repair-policy",
+    "path": ".g5/ontology/features/history.g5.md",
+    "canonical_text": "Which repair should preserve child history without lying about Committed?\n\n- Evidence: Naive durable rows can mark rolled-back writes committed. The inherited bounded variants distinguish guarded close, before-image ordering, per-activation NoJournal and SIGKILL residuals; mirroring is untested.\n- Working assumption: Keep current survival requirement and report the repair as undecided; no product repair applied.\n- Alternative: Use one load-wide mode plus guarded close and mark ordering, or extend the repair to durably mark escaped child writes.\n- Affected claims: D1 and aliases, caller rollback, crash cuts and mirrored history. Alias Q-30.",
+    "metadata": "- uncertain\n- agent-provided\n- user-facing-behavior\n- Expands: [history.survives-rollback](#history.survives-rollback).\n\nSources: inherited `.g5/Verus_verification/open_questions.md` Q-30, source/native cases named in the block; [extension evidence](../../uplift/consolidated/extension/REPORT.md).\n",
+    "code_and_tests_read": [
+      "src/cls/IPM/General/History.cls",
+      "src/cls/IPM/General/HistoryTemp.cls",
+      "src/cls/IPM/General/AbstractHistory.cls"
+    ],
+    "history": "5d27e15b Fix 'committed' in history log (#1322)\nf522900e Fix 1097: Nested Tests (#1107)\nffba34ec Fix 1057: IPM cleanly uninstalls itself now (#1106)\n2cef3073 feat(history): implement automatic history purge logic (#992)",
+    "status": "open; no new maintainer determination",
+    "security_scope": false
+  },
+  {
+    "id": "history.committed.marking.refusal-policy",
+    "path": ".g5/ontology/features/history.g5.md",
+    "canonical_text": "Should the no-transaction marker run only after every refusal?\n\n- Evidence: LoadNewModule marks before manifest validation; a later refusal can keep no data yet read Committed=1 (G:D12). The property says noncommitted means nothing kept or rolled back.\n- Working assumption: Keep the intent that a no-write refusal is uncommitted; classify the early marker as a defect.\n- Alternative: Declare every no-transaction attempt committed from its start and change the owning I rule explicitly.\n- Affected claims: validation timing, no-transaction history, D12 and requirement refusals. Alias Q-31.",
+    "metadata": "- uncertain\n- agent-provided\n- user-facing-behavior\n- Expands: [history.committed.marking](#history.committed.marking).\n\nSources: inherited `.g5/Verus_verification/open_questions.md` Q-31, source/native cases named in the block; [extension evidence](../../uplift/consolidated/extension/REPORT.md).\n",
+    "code_and_tests_read": [
+      "src/cls/IPM/General/History.cls",
+      "src/cls/IPM/General/HistoryTemp.cls",
+      "src/cls/IPM/General/AbstractHistory.cls"
+    ],
+    "history": "5d27e15b Fix 'committed' in history log (#1322)\nf522900e Fix 1097: Nested Tests (#1107)\nffba34ec Fix 1057: IPM cleanly uninstalls itself now (#1106)\n2cef3073 feat(history): implement automatic history purge logic (#992)",
+    "status": "open; no new maintainer determination",
+    "security_scope": false
+  },
+  {
+    "id": "reinstall.version",
+    "path": ".g5/ontology/features/install.g5.md",
+    "canonical_text": "Does `reinstall` install the version already installed, or the latest available version?\n\n- Provisional answer: the version already installed, as the command summary and its examples say.\n- Alternative: the latest version, as the command description and the wiki say.",
+    "metadata": "- agent\n- uncertain\n- user-facing-behavior\n- Expands: [Reinstall](#reinstall).\n\nSources: A1 conflict 27; summary `Main.cls:448`; examples `Main.cls:455-458`; description `Main.cls:450-451`; `wiki/02` L880; `wiki/01` L40-44. Observed: the code pins the installed version (`Main.cls:2695-2697`). [Iteration 22](../../uplift/consolidated/iter22/HANDOFF.md) also observes a `1.0.0` reinstall while `2.0.0` is available. This establishes the checked as-built choice, not an owner decision between the conflicting descriptions.\n",
+    "code_and_tests_read": [
+      "src/cls/IPM/Main.cls",
+      "src/cls/IPM/Utils/Module.cls",
+      "src/cls/IPM/Lifecycle/Base.cls"
+    ],
+    "history": "571e04a1 Fix and improve the `generate` command (#1324)\n0492fea3 Add `show` command (#1315)\n5d27e15b Fix 'committed' in history log (#1322)\n7cae0b28 Fix two bugs with deployed code (#1317)",
+    "status": "open; no new maintainer determination",
+    "security_scope": false
+  },
+  {
+    "id": "load.refusal.update-required.dev-bypass",
+    "path": ".g5/ontology/features/load.g5.md",
+    "canonical_text": "Should `-dev` also lift the update-required refusal?\n\n- Provisional answer: yes. A maintainer test expects a newer version to install with `-dev`, and the original request asked IPM to point users to `-dev` or `-force`.\n- Reason for doubt: the README and the `-force` help name only `-force`.\n- Alternative: only `-force` lifts it, as the README says.\n- Related: a `-dev` install from a [read-only repository](../concepts/repositories.g5.md#repo.read-only) is checked before developer mode is turned off for it.",
+    "metadata": "- agent\n- uncertain\n- user-facing-behavior\n- Expands: [Update required](#load.refusal.update-required).\n\nSources: A1 Q-02; test `InstallModule.cls` `TestDevMode` (\"succeeds in dev mode and fails otherwise\"); issue #903 by isc-eneil; README L62. Observed: the check skips `-dev` (`Utils/Module.cls:1219`), and a `-dev` install leaves the update steps pending for a later `update`. A read-only repository forces normal mode only after this check (`Utils/Module.cls:1277-1288`). Native evidence: g5 (`load -dev` of 3.x over 2.1.1) loads, consistent with the provisional answer (`182832Z-cases-dg`).\n",
+    "code_and_tests_read": [
+      "src/cls/IPM/Main.cls",
+      "src/cls/IPM/Utils/Module.cls",
+      "src/cls/IPM/Lifecycle/Base.cls"
+    ],
+    "history": "571e04a1 Fix and improve the `generate` command (#1324)\n0492fea3 Add `show` command (#1315)\n5d27e15b Fix 'committed' in history log (#1322)\n7cae0b28 Fix two bugs with deployed code (#1317)",
+    "status": "open; no new maintainer determination",
+    "security_scope": false
+  },
+  {
+    "id": "load.refusal.requirements.timing",
+    "path": ".g5/ontology/features/load.g5.md",
+    "canonical_text": "Must IPM check system requirements before it writes anything, even in developer mode or without a transaction?\n\n- Provisional answer: yes. The manifest docs say requirements are checked \"before module installation\", and a module that fails them was never installable.\n- Reason: keeping changes for debugging is meant for failures of a module that could be installed.\n- Alternative: accept that a refused developer-mode or `-DNoTransaction=1` load keeps its saved manifest, since developer mode keeps what it did.",
+    "metadata": "- agent\n- uncertain\n- user-facing-behavior\n- Expands: [Requirements](#load.refusal.requirements).\n\nSources: A1 Q-17; `wiki/03` L260-261; issue #363 comment by isc-tleavitt. Confirmed as B2 D4, pending this question: refused `-dev`, `-DNoTransaction=1` and `-DNoJournal=1` loads keep the module record, with no classes, and read `Committed=1`. `list-installed` shows the module (cases B2, B3, B4; `182820Z-cases-b`, `184230Z-replay-fast`, `184630Z-repro-sysreq-dev-manifest-left`). B0 and B1 conform. Observed cause: the check runs after the manifest is saved and after the developer-mode first commit (`Utils/Module.cls:1251-1321`, OBS-L10).\n\n\nFindings: [G:D4 \u2014 e2e reproduced](../../Verus_verification/bugs_issues.md#g-d4). The linked entry qualifies the caller, reader and providers.",
+    "code_and_tests_read": [
+      "src/cls/IPM/Main.cls",
+      "src/cls/IPM/Utils/Module.cls",
+      "src/cls/IPM/Lifecycle/Base.cls"
+    ],
+    "history": "571e04a1 Fix and improve the `generate` command (#1324)\n0492fea3 Add `show` command (#1315)\n5d27e15b Fix 'committed' in history log (#1322)\n7cae0b28 Fix two bugs with deployed code (#1317)",
+    "status": "open; no new maintainer determination",
+    "security_scope": false
+  },
+  {
+    "id": "load.dependencies.local-repo.precedence",
+    "path": ".g5/ontology/features/load.g5.md",
+    "canonical_text": "When another repository offers the same version of a dependency as the `.modules` folder, which copy should IPM install?\n\n- Provisional answer: the copy in the older repository, as built. The changelog says ties go to the repository created first.\n- Alternative: the `.modules` copy, because the code that creates the temporary repository says it should be found first and gives it the first sort position.\n- Either way, a higher version wins, wherever it is.",
+    "metadata": "- human-verified\n- uncertain\n- user-facing-behavior\n- Expands: [Local repository](#load.dependencies.local-repo).\n\nSources: CHANGELOG 0.9.x \"Repo check should happen in the order to repo creation, not by repo name\" (HSIEO-9269, HSIEO-9404); comment `General/TempLocalRepoManager.cls:27` and commit `2dc933dd` (temporary repository \"first/last repo to be found\"); `Repo/Manager.cls:150` (ties keyed by repository ID). Consolidated round 1 case TR5: an older filesystem repository and `.modules` both offer `tr5-dep` 1.0.0, and the older repository's copy is installed. TR5b and TR5c: the higher version wins from either side. The temporary repository's sort position never changed a result in these runs (surviving control `create-sort-last`). Native run `20261114T025102Z-r1-temp-repo`; model `Verus_verification/consolidated/models/temp_repo.py`. Question C:Q1 in [consolidated QUESTIONS](../../uplift/consolidated/QUESTIONS.md).\n",
+    "code_and_tests_read": [
+      "src/cls/IPM/Main.cls",
+      "src/cls/IPM/Utils/Module.cls",
+      "src/cls/IPM/Lifecycle/Base.cls"
+    ],
+    "history": "571e04a1 Fix and improve the `generate` command (#1324)\n0492fea3 Add `show` command (#1315)\n5d27e15b Fix 'committed' in history log (#1322)\n7cae0b28 Fix two bugs with deployed code (#1317)",
+    "status": "open; no new maintainer determination",
+    "security_scope": false
+  },
+  {
+    "id": "uninstall.dependents.scoped-policy",
+    "path": ".g5/ontology/features/uninstall.g5.md",
+    "canonical_text": "Should a phase-scoped dependency block uninstall?\n\n- Working assumption: A need declared only for a phase (test, verify) does not block uninstall.\n- Alternative and implications: Count scoped needs: three readers would become defects.\n- This assumption guides review; it is not a maintainer decision. An explicit owner policy or an attributable source addressing this exact case would settle it.",
+    "metadata": "- agent\n- uncertain\n- user-facing-behavior\n- Expands: [uninstall.dependents](#uninstall.dependents)\n\nSources: [DEC-UNIN-3](../../../playbook-uplift/decisions/05-06.md); The question's premise was wrong: uninstall, `show` and `list-dependents` already agree on this (IRIS `r4-repo-unin3-*`).\n",
+    "code_and_tests_read": [
+      "src/cls/IPM/Main.cls",
+      "src/cls/IPM/Utils/Module.cls",
+      "src/cls/IPM/Lifecycle/Base.cls"
+    ],
+    "history": "571e04a1 Fix and improve the `generate` command (#1324)\n0492fea3 Add `show` command (#1315)\n5d27e15b Fix 'committed' in history log (#1322)\n7cae0b28 Fix two bugs with deployed code (#1317)",
+    "status": "open; no new maintainer determination",
+    "security_scope": false
+  },
+  {
+    "id": "uninstall.class-delete-error.policy",
+    "path": ".g5/ontology/features/uninstall.g5.md",
+    "canonical_text": "Should uninstall report an error and keep its metadata when a class cannot be deleted, or warn and remove the metadata as it does now?\n\n- Working assumption: preserve and disclose the checked behavior pending an owner decision. Returning an error would make incomplete removal visible to scripts; retaining metadata would preserve a retry route. Earlier external effects may already have occurred.\n- The source deliberately prints a warning, but no inspected help, test or change rationale settles the intended script status and metadata policy for this refusal. Register: C:Q21.",
+    "metadata": "- agent\n- Expands: [Class deletion error](#uninstall.class-delete-error).\n\n[Scoped comparison](../../Verus_verification/consolidated/iter11/deletion.rs): `refuse_on_error` preserves the successful neighbor for this single class; it is not an implemented product repair or compensation for earlier effects. No owner decision is inferred.\n\n\n- uncertain",
+    "code_and_tests_read": [
+      "src/cls/IPM/Main.cls",
+      "src/cls/IPM/Utils/Module.cls",
+      "src/cls/IPM/Lifecycle/Base.cls"
+    ],
+    "history": "571e04a1 Fix and improve the `generate` command (#1324)\n0492fea3 Add `show` command (#1315)\n5d27e15b Fix 'committed' in history log (#1322)\n7cae0b28 Fix two bugs with deployed code (#1317)",
+    "status": "open; no new maintainer determination",
+    "security_scope": false
+  },
+  {
+    "id": "update.steps.shared-ownership",
+    "path": ".g5/ontology/features/update.g5.md",
+    "canonical_text": "Should two modules be allowed to share an update-step class and method, or should the second registration fail?\n\n- The checked implementation moves the single record's home and retains its completion. One module's uninstall can therefore remove a shared completion record still relevant to another installed module.\n- Working assumption: authors use distinct update packages. Alternatives are to refuse a conflicting home, key records by module, or retain explicit shared owners. Each changes registration and deletion behavior; concurrent writers need a separate check.\n- Evidence: ordinary activation, both step stores and deletion readers in iteration 9. No owner decision is inferred. Register: C:Q19.",
+    "metadata": "- agent\n- Expands: [Step records](#update.steps.records).\n\nObserved sequential sharing is not owner approval. Proposed repairs and cross-module concurrency remain unchecked. [Record contract](../../Verus_verification/consolidated/iter9/ownership.rs).\n\n\n- uncertain",
+    "code_and_tests_read": [
+      "src/cls/IPM/General/Update/VersionBase.cls",
+      "src/cls/IPM/Storage/Module.cls",
+      "tests/integration_tests/Test/PM/Integration/Update.cls"
+    ],
+    "history": "5d27e15b Fix 'committed' in history log (#1322)\nce1bd00f Fix three ORAS bugs (#1305)\nb34e6a67 Add MAXLEN for all properties and a test to check (#1309)\n82ea5166 Improve ORAS error reporting (#1284)",
+    "status": "open; no new maintainer determination",
+    "security_scope": false
+  },
+  {
+    "id": "update.steps.dev-seeding-policy",
+    "path": ".g5/ontology/features/update.g5.md",
+    "canonical_text": "Should a developer-mode install seed update-step records?\n\n- Working assumption: A developer-mode install or load seeds update steps like any install; a later update runs only newer steps.\n- Alternative and implications: Keep \"a dev install leaves all steps due\" (so `load -dev` + update exercises every step): F-INST-8 withdrawn.\n- This assumption guides review; it is not a maintainer decision. An explicit owner policy or an attributable source addressing this exact case would settle it.",
+    "metadata": "- agent\n- uncertain\n- user-facing-behavior\n- Expands: [update.steps](#update.steps)\n\nSources: [DEC-INST-2](../../../playbook-uplift/decisions/03-04.md); Update help: steps run \"from the current version to the newer version\"; `Update.cls#L467` asserts seeded steps do not rerun.\n\n\nFindings: [P:F-INST-8 \u2014 e2e reproduced](../../../playbook-uplift/BUGS.md#p-f-inst-8). The linked entry qualifies the caller, reader and providers.",
+    "code_and_tests_read": [
+      "src/cls/IPM/General/Update/VersionBase.cls",
+      "src/cls/IPM/Storage/Module.cls",
+      "tests/integration_tests/Test/PM/Integration/Update.cls"
+    ],
+    "history": "5d27e15b Fix 'committed' in history log (#1322)\nce1bd00f Fix three ORAS bugs (#1305)\nb34e6a67 Add MAXLEN for all properties and a test to check (#1309)\n82ea5166 Improve ORAS error reporting (#1284)",
+    "status": "open; no new maintainer determination",
+    "security_scope": false
+  },
+  {
+    "id": "update.steps.fresh-seeding-policy",
+    "path": ".g5/ontology/features/update.g5.md",
+    "canonical_text": "Should a dependency first installed by update run its old steps or seed them?\n\n- Working assumption: A module that `update` installs for the first time has its steps seeded, as on a fresh install.\n- Alternative and implications: Run them all (if the new module adopts data an older parent created): F-INST-10 withdrawn.\n- This assumption guides review; it is not a maintainer decision. An explicit owner policy or an attributable source addressing this exact case would settle it.",
+    "metadata": "- agent\n- uncertain\n- user-facing-behavior\n- Expands: [update.steps](#update.steps)\n\nSources: [DEC-INST-8](../../../playbook-uplift/decisions/03-04.md); Update help's \"from the current version\"; issue #550 separates updates from fresh installs.\n\n\nFindings: [P:F-INST-10 \u2014 e2e reproduced](../../../playbook-uplift/BUGS.md#p-f-inst-10). The linked entry qualifies the caller, reader and providers.\n\nSupporting context: CHANGELOG #1128 motivates the alternative, without deciding this fresh-install policy.",
+    "code_and_tests_read": [
+      "src/cls/IPM/General/Update/VersionBase.cls",
+      "src/cls/IPM/Storage/Module.cls",
+      "tests/integration_tests/Test/PM/Integration/Update.cls"
+    ],
+    "history": "5d27e15b Fix 'committed' in history log (#1322)\nce1bd00f Fix three ORAS bugs (#1305)\nb34e6a67 Add MAXLEN for all properties and a test to check (#1309)\n82ea5166 Improve ORAS error reporting (#1284)",
+    "status": "open; no new maintainer determination",
+    "security_scope": false
+  },
+  {
+    "id": "update.steps.busy-policy",
+    "path": ".g5/ontology/features/update.g5.md",
+    "canonical_text": "Should an update whose step lock is busy fail or report success?\n\n- Working assumption: If the update lock is busy, `update` fails with an error that says so; it never reports success.\n- Alternative and implications: Wait longer, then fail: same contract. Only \"keep success\" is ruled out. If it were chosen, F-INST-1 (High) would become a documentation defect.\n- This assumption guides review; it is not a maintainer decision. An explicit owner policy or an attributable source addressing this exact case would settle it.",
+    "metadata": "- agent\n- uncertain\n- user-facing-behavior\n- Expands: [update.steps](#update.steps)\n\nSources: [DEC-INST-6](../../../playbook-uplift/decisions/03-04.md); The PR #887 authors wrote `TestSimultaneousUpdateFails` asserting exactly this (commit `d6d346728`), removed it four days later (`e232e5056`) and put concurrency out of scope; the update help promises the steps run.\n\n\nFindings: [P:F-INST-1 \u2014 e2e reproduced](../../../playbook-uplift/BUGS.md#p-f-inst-1). The linked entry qualifies the caller, reader and providers.",
+    "code_and_tests_read": [
+      "src/cls/IPM/General/Update/VersionBase.cls",
+      "src/cls/IPM/Storage/Module.cls",
+      "tests/integration_tests/Test/PM/Integration/Update.cls"
+    ],
+    "history": "5d27e15b Fix 'committed' in history log (#1322)\nce1bd00f Fix three ORAS bugs (#1305)\nb34e6a67 Add MAXLEN for all properties and a test to check (#1309)\n82ea5166 Improve ORAS error reporting (#1284)",
+    "status": "open; no new maintainer determination",
+    "security_scope": false
+  }
+]

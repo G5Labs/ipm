@@ -1,0 +1,453 @@
+# container: ipm-uplift-iris-repo  image: containers.intersystems.com/intersystems/iris-community:2026.1  at: 2026-11-13T18:31:55Z
+# script: validation/iris/repo/76-oras-checks.script
+
+Node: 2e8609ed30a0, Instance: IRIS
+
+USER>
+
+LOAD 1 
+
+USER>
+
+>>> repo -fs -n nc-repo-f2 -path /tmp/uplift/repo/fixtures/fsrepo-extra/
+
+nc-fs2 1.0.0 @ /tmp/uplift/repo/fixtures/fsrepo-extra/nc-fs2/
+nc-repo-f2
+	Source: 		/tmp/uplift/repo/fixtures/fsrepo-extra/*
+	Enabled?		Yes
+	Available?		Yes
+	Use for Snapshots?	Yes
+	Use for Prereleases?	Yes
+	Is Read-Only?		No
+
+nc-repo-f2
+	Source: 		/tmp/uplift/repo/fixtures/fsrepo-extra/*
+	Enabled?		Yes
+	Available?		Yes
+	Use for Snapshots?	Yes
+	Use for Prereleases?	Yes
+	Is Read-Only?		No
+
+<<< status=OK
+
+>>> repo -o -n nc-repo-o2 -url http://oras:5000 -ns nc-repo-ns2
+
+nc-repo-o2
+	Source: 			http://oras:5000
+	Enabled?			Yes
+	Available?			Yes
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	No
+	Namespace: 			nc-repo-ns2
+
+nc-repo-o2
+	Source: 			http://oras:5000
+	Enabled?			Yes
+	Available?			Yes
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	No
+	Namespace: 			nc-repo-ns2
+
+nc-repo-f2
+	Source: 		/tmp/uplift/repo/fixtures/fsrepo-extra/*
+	Enabled?		Yes
+	Available?		Yes
+	Use for Snapshots?	Yes
+	Use for Prereleases?	Yes
+	Is Read-Only?		No
+
+<<< status=OK
+
+>>> load /tmp/uplift/repo/fixtures/nc-repo-pub/
+
+Building dependency graph...Done.
+[USER|nc-repo-pub]	Initialize START
+[USER|nc-repo-pub]	Initialize SUCCESS
+[USER|nc-repo-pub]	Reload START (/tmp/uplift/repo/fixtures/nc-repo-pub/)
+[USER|nc-repo-pub]	Reload SUCCESS
+[nc-repo-pub]	Module object refreshed.
+[USER|nc-repo-pub]	Validate START
+[USER|nc-repo-pub]	Validate SUCCESS
+[USER|nc-repo-pub]	Compile START
+[USER|nc-repo-pub]	Compile SUCCESS
+[USER|nc-repo-pub]	Activate START
+[USER|nc-repo-pub]	Configure START
+[USER|nc-repo-pub]	Configure SUCCESS
+[USER|nc-repo-pub]	Activate SUCCESS
+<<< status=OK
+
+>>> publish nc-repo-pub -r nc-repo-o2
+
+[USER|nc-repo-pub]	Initialize START
+[USER|nc-repo-pub]	Initialize SUCCESS
+[USER|nc-repo-pub]	Reload START (/tmp/uplift/repo/fixtures/nc-repo-pub/)
+[USER|nc-repo-pub]	Reload SUCCESS
+[nc-repo-pub]	Module object refreshed.
+[USER|nc-repo-pub]	Validate START
+[USER|nc-repo-pub]	Validate SUCCESS
+[USER|nc-repo-pub]	Compile START
+[USER|nc-repo-pub]	Compile SUCCESS
+[USER|nc-repo-pub]	Activate START
+[USER|nc-repo-pub]	Configure START
+[USER|nc-repo-pub]	Configure SUCCESS
+[USER|nc-repo-pub]	Activate SUCCESS
+[USER|nc-repo-pub]	Publish START
+[USER|nc-repo-pub]	Package START
+[USER|nc-repo-pub]	Package SUCCESS
+[USER|nc-repo-pub]	Publish SUCCESS
+<<< status=OK
+
+>>> repo -n nc-repo-o2 -disable
+
+nc-repo-o2
+	Source: 			http://oras:5000
+	Enabled?			No
+	Available?			Yes
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	No
+	Namespace: 			nc-repo-ns2
+
+nc-repo-o2
+	Source: 			http://oras:5000
+	Enabled?			No
+	Available?			Yes
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	No
+	Namespace: 			nc-repo-ns2
+
+nc-repo-f2
+	Source: 		/tmp/uplift/repo/fixtures/fsrepo-extra/*
+	Enabled?		Yes
+	Available?		Yes
+	Use for Snapshots?	Yes
+	Use for Prereleases?	Yes
+	Is Read-Only?		No
+
+<<< status=OK
+
+>>> search
+nc-repo-f2 /tmp/uplift/repo/fixtures/fsrepo-extra/*:
+[32mnc-fs2[0m [39m1.0.0[0m
+
+nc-repo-o2 http://oras:5000:
+[32mnc-repo-pub[0m [39m1.0.0[0m
+<<< status=OK
+
+>>> publish nc-repo-pub -r nc-repo-o2 -only
+
+[USER|nc-repo-pub]	Publish START
+[USER|nc-repo-pub]	Package START
+[USER|nc-repo-pub]	Package SUCCESS
+[USER|nc-repo-pub]	Publish SUCCESS
+<<< status=OK
+
+>>> uninstall nc-repo-pub
+
+[USER|nc-repo-pub]	Clean START
+[USER|nc-repo-pub]	Unconfigure START
+[USER|nc-repo-pub]	Unconfigure SUCCESS
+[USER|nc-repo-pub]	Clean SUCCESS
+<<< status=OK
+
+>>> install nc-repo-pub
+
+[31mERROR![0m 'nc-repo-pub' not found in any repository.
+<<< status=ERROR #5001: 'nc-repo-pub' not found in any repository.
+
+>>> unpublish nc-repo-o2/nc-repo-pub all -force
+
+[31mERROR![0m Repository 'nc-repo-o2' is unavailable.
+<<< status=ERROR #5001: Repository 'nc-repo-o2' is unavailable.
+
+OBS|nc-repo-2-disabled-registry|disable=1;enabledFlag=0;installDisabled.error=ERROR #5001: 'nc-repo-pub' not found in any repository.;installDisabled.status=err;load=1;publishDisabled.status=ok;publishEnabled=1;repoFs=1;repoOras=1;search.listsDisabledRepo=1;search.listsItsModule=1;search.status=ok;tagsAfterFirstPublish=1.0.0;tagsAfterUnpublishDisabled=1.0.0;unpublishDisabled.error=ERROR #5001: Repository 'nc-repo-o2' is unavailable.;unpublishDisabled.status=err;
+
+>>> repo -n nc-repo-o2 -enable
+
+nc-repo-o2
+	Source: 			http://oras:5000
+	Enabled?			Yes
+	Available?			Yes
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	No
+	Namespace: 			nc-repo-ns2
+
+nc-repo-o2
+	Source: 			http://oras:5000
+	Enabled?			Yes
+	Available?			Yes
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	No
+	Namespace: 			nc-repo-ns2
+
+nc-repo-f2
+	Source: 		/tmp/uplift/repo/fixtures/fsrepo-extra/*
+	Enabled?		Yes
+	Available?		Yes
+	Use for Snapshots?	Yes
+	Use for Prereleases?	Yes
+	Is Read-Only?		No
+
+<<< status=OK
+
+>>> unpublish nc-repo-o2/nc-repo-pub all -force
+
+
+Package deleted forcefully without user confirmation
+<<< status=OK
+
+>>> repo -o -n nc-repo-o9 -url http://oras:5000 -ns nc-repo-ns9
+
+nc-repo-o9
+	Source: 			http://oras:5000
+	Enabled?			Yes
+	Available?			Yes
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	No
+	Namespace: 			nc-repo-ns9
+
+nc-repo-o9
+	Source: 			http://oras:5000
+	Enabled?			Yes
+	Available?			Yes
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	No
+	Namespace: 			nc-repo-ns9
+
+<<< status=OK
+
+>>> load /tmp/uplift/repo/fixtures/nc-repo-dpl/
+
+Building dependency graph...Done.
+[USER|nc-repo-dpl]	Initialize START
+[USER|nc-repo-dpl]	Initialize SUCCESS
+[USER|nc-repo-dpl]	Reload START (/tmp/uplift/repo/fixtures/nc-repo-dpl/)
+[USER|nc-repo-dpl]	Reload SUCCESS
+[nc-repo-dpl]	Module object refreshed.
+[USER|nc-repo-dpl]	Validate START
+[USER|nc-repo-dpl]	Validate SUCCESS
+[USER|nc-repo-dpl]	Compile START
+[USER|nc-repo-dpl]	Compile SUCCESS
+[USER|nc-repo-dpl]	Activate START
+[USER|nc-repo-dpl]	Configure START
+[USER|nc-repo-dpl]	Configure SUCCESS
+[USER|nc-repo-dpl]	Activate SUCCESS
+<<< status=OK
+
+>>> publish nc-repo-dpl -r nc-repo-o9 -v
+
+[USER|nc-repo-dpl]	Initialize START
+Skipping preload - directory does not exist.
+[USER|nc-repo-dpl]	Initialize SUCCESS
+[USER|nc-repo-dpl]	Reload START (/tmp/uplift/repo/fixtures/nc-repo-dpl/)
+[USER|nc-repo-dpl]	Reload SUCCESS
+[nc-repo-dpl]	Module object refreshed.
+[USER|nc-repo-dpl]	Validate START
+[USER|nc-repo-dpl]	Validate SUCCESS
+[USER|nc-repo-dpl]	Compile START
+Compilation started on 11/13/2026 18:31:55 with qualifiers 'd-lck'
+Compiling class NCRepoDpl.Main
+Compiling routine NCRepoDpl.Main.1
+Compilation finished successfully in 0.006s.
+
+[USER|nc-repo-dpl]	Compile SUCCESS
+[USER|nc-repo-dpl]	Activate START
+[USER|nc-repo-dpl]	Configure START
+[USER|nc-repo-dpl]	Configure SUCCESS
+Seeding update steps for module = nc-repo-dpl, for version = 1.0.0
+
+[USER|nc-repo-dpl]	Activate SUCCESS
+[USER|nc-repo-dpl]	Publish START
+[USER|nc-repo-dpl]	Package START
+[USER|nc-repo-dpl]	MakeDeployed START
+The following classes are flagged for deployment:
+	NCRepoDpl.Main
+[USER|nc-repo-dpl]	MakeDeployed SUCCESS
+Adding deployed item 'NCRepoDpl.Main.CLS' to project 'nc-repo-dpl__deployed'
+Exported to /usr/irissys/mgr/Temp/dirWiU3MJ/nc-repo-dpl-1.0.0/module.xml
+NCRepoDpl.Main.cls
+Exporting to XML started on 11/13/2026 18:31:55
+Exporting global: ^||%pkg
+Export finished successfully.
+
+Module contents exported to temporary directory:
+	/usr/irissys/mgr/Temp/dirWiU3MJ/nc-repo-dpl-1.0.0/
+
+Module package generated:
+	/usr/irissys/mgr/Temp/dirWiU3MJ/nc-repo-dpl-1.0.0.tgz
+[USER|nc-repo-dpl]	Package SUCCESS
+Publish to: http://oras:5000
+[USER|nc-repo-dpl]	Publish SUCCESS
+<<< status=OK
+
+>>> unpublish nc-repo-o9/nc-repo-dpl 1.0.0 -force
+
+[31mERROR![0m 'nc-repo-dpl' 1.0.0 not found in repo 'nc-repo-o9'.
+<<< status=ERROR #5001: 'nc-repo-dpl' 1.0.0 not found in repo 'nc-repo-o9'.
+
+>>> unpublish nc-repo-o9/nc-repo-dpl all -force
+
+
+Package deleted forcefully without user confirmation
+<<< status=OK
+
+OBS|nc-repo-9-unpublish-deployed-version|load=1;publish.status=ok;repo=1;tagsAfterPublish=1.0.0__2026.1;tagsAfterUnpublishAll=<404>;tagsAfterUnpublishVersion=1.0.0__2026.1;unpublishAll.status=ok;unpublishVersion.error=ERROR #5001: 'nc-repo-dpl' 1.0.0 not found in repo 'nc-repo-o9'.;unpublishVersion.status=err;
+
+>>> uninstall nc-repo-dpl -force
+
+[USER|nc-repo-dpl]	Clean START
+[USER|nc-repo-dpl]	Unconfigure START
+[USER|nc-repo-dpl]	Unconfigure SUCCESS
+[USER|nc-repo-dpl]	Clean SUCCESS
+<<< status=OK
+
+>>> repo -o -n nc-repo-o12 -url http://oras:5000 -ns nc-repo-ns12/sub
+
+nc-repo-o12
+	Source: 			http://oras:5000
+	Enabled?			Yes
+	Available?			Yes
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	No
+	Namespace: 			nc-repo-ns12/sub
+
+nc-repo-o12
+	Source: 			http://oras:5000
+	Enabled?			Yes
+	Available?			Yes
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	No
+	Namespace: 			nc-repo-ns12/sub
+
+<<< status=OK
+
+>>> load /tmp/uplift/repo/fixtures/nc-repo-pub/
+
+Building dependency graph...Done.
+[USER|nc-repo-pub]	Initialize START
+[USER|nc-repo-pub]	Initialize SUCCESS
+[USER|nc-repo-pub]	Reload START (/tmp/uplift/repo/fixtures/nc-repo-pub/)
+[USER|nc-repo-pub]	Reload SUCCESS
+[nc-repo-pub]	Module object refreshed.
+[USER|nc-repo-pub]	Validate START
+[USER|nc-repo-pub]	Validate SUCCESS
+[USER|nc-repo-pub]	Compile START
+[USER|nc-repo-pub]	Compile SUCCESS
+[USER|nc-repo-pub]	Activate START
+[USER|nc-repo-pub]	Configure START
+[USER|nc-repo-pub]	Configure SUCCESS
+[USER|nc-repo-pub]	Activate SUCCESS
+<<< status=OK
+
+>>> publish nc-repo-pub -r nc-repo-o12
+
+[USER|nc-repo-pub]	Initialize START
+[USER|nc-repo-pub]	Initialize SUCCESS
+[USER|nc-repo-pub]	Reload START (/tmp/uplift/repo/fixtures/nc-repo-pub/)
+[USER|nc-repo-pub]	Reload SUCCESS
+[nc-repo-pub]	Module object refreshed.
+[USER|nc-repo-pub]	Validate START
+[USER|nc-repo-pub]	Validate SUCCESS
+[USER|nc-repo-pub]	Compile START
+[USER|nc-repo-pub]	Compile SUCCESS
+[USER|nc-repo-pub]	Activate START
+[USER|nc-repo-pub]	Configure START
+[USER|nc-repo-pub]	Configure SUCCESS
+[USER|nc-repo-pub]	Activate SUCCESS
+[USER|nc-repo-pub]	Publish START
+[USER|nc-repo-pub]	Package START
+[USER|nc-repo-pub]	Package SUCCESS
+[USER|nc-repo-pub]	Publish SUCCESS
+<<< status=OK
+
+>>> repo -n nc-repo-o12 -ns nc-repo-ns12
+
+nc-repo-o12
+	Source: 			http://oras:5000
+	Enabled?			Yes
+	Available?			Yes
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	No
+	Namespace: 			nc-repo-ns12
+
+nc-repo-o12
+	Source: 			http://oras:5000
+	Enabled?			Yes
+	Available?			Yes
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	No
+	Namespace: 			nc-repo-ns12
+
+<<< status=OK
+
+>>> repo -list-modules -n nc-repo-o12
+
+[32msub/nc-repo-pub[0m [39m1.0.0[0m
+<<< status=OK
+
+OBS|nc-repo-12-nested-namespace-name|changeNs=1;list.showsName=1;list.showsNsPrefix=0;list.showsSubPath=1;list.status=ok;load=1;publish=1;repo=1;storedNs=nc-repo-ns12/sub;tags=1.0.0;
+
+>>> repo -n nc-repo-o12 -ns nc-repo-ns12/sub
+
+nc-repo-o12
+	Source: 			http://oras:5000
+	Enabled?			Yes
+	Available?			Yes
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	No
+	Namespace: 			nc-repo-ns12/sub
+
+nc-repo-o12
+	Source: 			http://oras:5000
+	Enabled?			Yes
+	Available?			Yes
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	No
+	Namespace: 			nc-repo-ns12/sub
+
+<<< status=OK
+
+>>> unpublish nc-repo-o12/nc-repo-pub all -force
+
+
+Package deleted forcefully without user confirmation
+<<< status=OK
+
+OBS|nc-repo-12-cleanup|tagsAfterCleanup=<404>;
+
+>>> uninstall nc-repo-pub -force
+
+[USER|nc-repo-pub]	Clean START
+[USER|nc-repo-pub]	Unconfigure START
+[USER|nc-repo-pub]	Unconfigure SUCCESS
+[USER|nc-repo-pub]	Clean SUCCESS
+<<< status=OK
+
+USER>

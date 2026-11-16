@@ -1,0 +1,426 @@
+{
+  "tool_sha256": {
+    "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus": "fc13e79bb3c13d93bc05b37e9b1b6518fde7f4687b3d442ce5c6318c5737c668",
+    "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/vstd.vir": "fb3edb12cec844ce7ac35d4ae34b527fab5168a6335e48bd4c490941a654f040",
+    "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/z3": "edae32f9e37ea4b5bb35310d72f0e352d0dc07626cac4e9e30bc1ea9a5bc8efb",
+    "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/version.json": "f0a81404365498a667e56090c963b20005f6e8b8d4afd7f2b62222f4027c94ed"
+  },
+  "models": [
+    {
+      "model": ".g5/Verus_verification/consolidated/iter5/webapp.rs",
+      "sha256": "5127a6a4ca0d156118b2728bbd0cd6102d954ce2aa18edc9e916b79d02eae90d",
+      "baseline": {
+        "command": [
+          "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus",
+          "/Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/Verus_verification/consolidated/iter5/webapp.rs",
+          "--triggers-mode",
+          "silent"
+        ],
+        "exit": 0,
+        "wall_seconds": 0.2473572909948416,
+        "child_user_seconds": 0.196289,
+        "child_system_seconds": 0.038668999999999995,
+        "peak_child_rss_bytes_cumulative_max": 268468224,
+        "verified": 3,
+        "errors": 0
+      },
+      "controls": [
+        {
+          "command": [
+            "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus",
+            "/Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter5/proofs/controls/webapp/adoption-overwrites-undeclared.rs",
+            "--triggers-mode",
+            "silent"
+          ],
+          "exit": 1,
+          "wall_seconds": 0.22193104098550975,
+          "child_user_seconds": 0.17936599999999997,
+          "child_system_seconds": 0.03170100000000001,
+          "peak_child_rss_bytes_cumulative_max": 269451264,
+          "verified": 1,
+          "errors": 2,
+          "id": "adoption-overwrites-undeclared",
+          "mutation": {
+            "before": "|k: int| if declared.contains_key(k) { declared[k] } else { old[k] }",
+            "after": "|k: int| if declared.contains_key(k) { declared[k] } else { 0 }"
+          },
+          "source": ".g5/uplift/consolidated/iter5/proofs/controls/webapp/adoption-overwrites-undeclared.rs",
+          "assertion_rejected": true
+        },
+        {
+          "command": [
+            "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus",
+            "/Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter5/proofs/controls/webapp/existing-app-not-adopted.rs",
+            "--triggers-mode",
+            "silent"
+          ],
+          "exit": 1,
+          "wall_seconds": 0.20889037498272955,
+          "child_user_seconds": 0.16715500000000005,
+          "child_system_seconds": 0.030561999999999992,
+          "peak_child_rss_bytes_cumulative_max": 269451264,
+          "verified": 2,
+          "errors": 1,
+          "id": "existing-app-not-adopted",
+          "mutation": {
+            "before": "if apps.contains_key(name) { apps.insert(name, merged(apps[name], declared)) }",
+            "after": "if apps.contains_key(name) { apps }"
+          },
+          "source": ".g5/uplift/consolidated/iter5/proofs/controls/webapp/existing-app-not-adopted.rs",
+          "assertion_rejected": true
+        },
+        {
+          "command": [
+            "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus",
+            "/Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter5/proofs/controls/webapp/modify-always-called.rs",
+            "--triggers-mode",
+            "silent"
+          ],
+          "exit": 1,
+          "wall_seconds": 0.21123916600481607,
+          "child_user_seconds": 0.1694279999999999,
+          "child_system_seconds": 0.030797999999999992,
+          "peak_child_rss_bytes_cumulative_max": 269451264,
+          "verified": 2,
+          "errors": 1,
+          "id": "modify-always-called",
+          "mutation": {
+            "before": "exists|k: int| declared.contains_key(k) && (!old.contains_key(k) || old[k] != declared[k])",
+            "after": "true"
+          },
+          "source": ".g5/uplift/consolidated/iter5/proofs/controls/webapp/modify-always-called.rs",
+          "assertion_rejected": true
+        },
+        {
+          "command": [
+            "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus",
+            "/Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter5/proofs/controls/webapp/validate-dispatches.rs",
+            "--triggers-mode",
+            "silent"
+          ],
+          "exit": 1,
+          "wall_seconds": 0.21136087499326095,
+          "child_user_seconds": 0.16925600000000007,
+          "child_system_seconds": 0.031032000000000004,
+          "peak_child_rss_bytes_cumulative_max": 269451264,
+          "verified": 2,
+          "errors": 1,
+          "id": "validate-dispatches",
+          "mutation": {
+            "before": "pub open spec fn validate_dispatches() -> bool { false }",
+            "after": "pub open spec fn validate_dispatches() -> bool { true }"
+          },
+          "source": ".g5/uplift/consolidated/iter5/proofs/controls/webapp/validate-dispatches.rs",
+          "assertion_rejected": true
+        },
+        {
+          "command": [
+            "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus",
+            "/Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter5/proofs/controls/webapp/transaction-keeps-app.rs",
+            "--triggers-mode",
+            "silent"
+          ],
+          "exit": 1,
+          "wall_seconds": 0.21791608299827203,
+          "child_user_seconds": 0.17601599999999995,
+          "child_system_seconds": 0.030449000000000004,
+          "peak_child_rss_bytes_cumulative_max": 269451264,
+          "verified": 2,
+          "errors": 1,
+          "id": "transaction-keeps-app",
+          "mutation": {
+            "before": "if transaction { FailedInstall { apps: before, module_recorded: false } }",
+            "after": "if transaction { FailedInstall { apps: after_activate, module_recorded: false } }"
+          },
+          "source": ".g5/uplift/consolidated/iter5/proofs/controls/webapp/transaction-keeps-app.rs",
+          "assertion_rejected": true
+        },
+        {
+          "command": [
+            "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus",
+            "/Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter5/proofs/controls/webapp/blocked-uninstall-keeps-app.rs",
+            "--triggers-mode",
+            "silent"
+          ],
+          "exit": 1,
+          "wall_seconds": 0.2081356670241803,
+          "child_user_seconds": 0.16656099999999996,
+          "child_system_seconds": 0.030703000000000008,
+          "peak_child_rss_bytes_cumulative_max": 269516800,
+          "verified": 2,
+          "errors": 1,
+          "id": "blocked-uninstall-keeps-app",
+          "mutation": {
+            "before": "let after = match declared_name { Some(n) => apps.remove(n), None => apps };",
+            "after": "let after = if blocked(dependents, force, level) { apps } else { match declared_name { Some(n) => apps.remove(n), None => apps } };"
+          },
+          "source": ".g5/uplift/consolidated/iter5/proofs/controls/webapp/blocked-uninstall-keeps-app.rs",
+          "assertion_rejected": true
+        },
+        {
+          "command": [
+            "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus",
+            "/Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter5/proofs/controls/webapp/blocked-uninstall-fails.rs",
+            "--triggers-mode",
+            "silent"
+          ],
+          "exit": 1,
+          "wall_seconds": 0.21298524999292567,
+          "child_user_seconds": 0.1707970000000001,
+          "child_system_seconds": 0.031115999999999977,
+          "peak_child_rss_bytes_cumulative_max": 269516800,
+          "verified": 2,
+          "errors": 1,
+          "id": "blocked-uninstall-fails",
+          "mutation": {
+            "before": "CleanResult { apps: after, module_kept: blocked(dependents, force, level), ok: true }",
+            "after": "CleanResult { apps: after, module_kept: blocked(dependents, force, level), ok: !blocked(dependents, force, level) }"
+          },
+          "source": ".g5/uplift/consolidated/iter5/proofs/controls/webapp/blocked-uninstall-fails.rs",
+          "assertion_rejected": true
+        },
+        {
+          "command": [
+            "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus",
+            "/Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter5/proofs/controls/webapp/repair-still-deletes.rs",
+            "--triggers-mode",
+            "silent"
+          ],
+          "exit": 1,
+          "wall_seconds": 0.21336900000460446,
+          "child_user_seconds": 0.17109599999999991,
+          "child_system_seconds": 0.031167,
+          "peak_child_rss_bytes_cumulative_max": 269516800,
+          "verified": 2,
+          "errors": 1,
+          "id": "repair-still-deletes",
+          "mutation": {
+            "before": "if blocked(dependents, force, level) { CleanResult { apps, module_kept: true, ok: false } }",
+            "after": "if false { CleanResult { apps, module_kept: true, ok: false } }"
+          },
+          "source": ".g5/uplift/consolidated/iter5/proofs/controls/webapp/repair-still-deletes.rs",
+          "assertion_rejected": true
+        },
+        {
+          "command": [
+            "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus",
+            "/Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter5/proofs/controls/webapp/upgrade-removes-app.rs",
+            "--triggers-mode",
+            "silent"
+          ],
+          "exit": 1,
+          "wall_seconds": 0.22806458300328813,
+          "child_user_seconds": 0.17865799999999998,
+          "child_system_seconds": 0.03392600000000001,
+          "peak_child_rss_bytes_cumulative_max": 269565952,
+          "verified": 2,
+          "errors": 1,
+          "id": "upgrade-removes-app",
+          "mutation": {
+            "before": "pub open spec fn upgrade_drops_declaration(apps: Apps) -> Apps { apps }",
+            "after": "pub open spec fn upgrade_drops_declaration(apps: Apps) -> Apps { Map::empty() }"
+          },
+          "source": ".g5/uplift/consolidated/iter5/proofs/controls/webapp/upgrade-removes-app.rs",
+          "assertion_rejected": true
+        }
+      ]
+    },
+    {
+      "model": ".g5/Verus_verification/consolidated/iter5/entry_forms.rs",
+      "sha256": "c65b1b1bb31209b50f0af6561d3f06e35899d81f71a9df716035a91d9b405ab0",
+      "baseline": {
+        "command": [
+          "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus",
+          "/Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/Verus_verification/consolidated/iter5/entry_forms.rs",
+          "--triggers-mode",
+          "silent"
+        ],
+        "exit": 0,
+        "wall_seconds": 0.2250263339956291,
+        "child_user_seconds": 0.17551400000000017,
+        "child_system_seconds": 0.03774899999999998,
+        "peak_child_rss_bytes_cumulative_max": 269565952,
+        "verified": 1,
+        "errors": 0
+      },
+      "controls": [
+        {
+          "command": [
+            "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus",
+            "/Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter5/proofs/controls/entry_forms/matcher-case-insensitive.rs",
+            "--triggers-mode",
+            "silent"
+          ],
+          "exit": 1,
+          "wall_seconds": 0.2033298340102192,
+          "child_user_seconds": 0.14954500000000004,
+          "child_system_seconds": 0.03298200000000001,
+          "peak_child_rss_bytes_cumulative_max": 269565952,
+          "verified": 0,
+          "errors": 1,
+          "id": "matcher-case-insensitive",
+          "mutation": {
+            "before": "-> bool { body == Spelling::Capitalized }",
+            "after": "-> bool { true }"
+          },
+          "source": ".g5/uplift/consolidated/iter5/proofs/controls/entry_forms/matcher-case-insensitive.rs",
+          "assertion_rejected": true
+        },
+        {
+          "command": [
+            "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus",
+            "/Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter5/proofs/controls/entry_forms/pinned-body-capitalized.rs",
+            "--triggers-mode",
+            "silent"
+          ],
+          "exit": 1,
+          "wall_seconds": 0.18632033301400952,
+          "child_user_seconds": 0.14469999999999983,
+          "child_system_seconds": 0.030054000000000025,
+          "peak_child_rss_bytes_cumulative_max": 269565952,
+          "verified": 0,
+          "errors": 1,
+          "id": "pinned-body-capitalized",
+          "mutation": {
+            "before": "pub open spec fn pinned_body() -> Spelling { Spelling::Lowercase }",
+            "after": "pub open spec fn pinned_body() -> Spelling { Spelling::Capitalized }"
+          },
+          "source": ".g5/uplift/consolidated/iter5/proofs/controls/entry_forms/pinned-body-capitalized.rs",
+          "assertion_rejected": true
+        },
+        {
+          "command": [
+            "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus",
+            "/Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter5/proofs/controls/entry_forms/command-flag-terminates.rs",
+            "--triggers-mode",
+            "silent"
+          ],
+          "exit": 1,
+          "wall_seconds": 0.18888629198772833,
+          "child_user_seconds": 0.14702599999999988,
+          "child_system_seconds": 0.030539999999999956,
+          "peak_child_rss_bytes_cumulative_max": 269565952,
+          "verified": 0,
+          "errors": 1,
+          "id": "command-flag-terminates",
+          "mutation": {
+            "before": "Form::ZpmCommandWithFlag => Outcome { process_exit: 0, continues: true,",
+            "after": "Form::ZpmCommandWithFlag => Outcome { process_exit: 1, continues: false,"
+          },
+          "source": ".g5/uplift/consolidated/iter5/proofs/controls/entry_forms/command-flag-terminates.rs",
+          "assertion_rejected": true
+        },
+        {
+          "command": [
+            "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus",
+            "/Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter5/proofs/controls/entry_forms/plain-shell-terminates.rs",
+            "--triggers-mode",
+            "silent"
+          ],
+          "exit": 1,
+          "wall_seconds": 0.19053970798267983,
+          "child_user_seconds": 0.1474420000000003,
+          "child_system_seconds": 0.033102999999999994,
+          "peak_child_rss_bytes_cumulative_max": 269565952,
+          "verified": 0,
+          "errors": 1,
+          "id": "plain-shell-terminates",
+          "mutation": {
+            "before": "Form::ShellPlain => Outcome { process_exit: 0,",
+            "after": "Form::ShellPlain => Outcome { process_exit: 1,"
+          },
+          "source": ".g5/uplift/consolidated/iter5/proofs/controls/entry_forms/plain-shell-terminates.rs",
+          "assertion_rejected": true
+        }
+      ]
+    },
+    {
+      "model": ".g5/Verus_verification/consolidated/iter5/redirect.rs",
+      "sha256": "0fef5f743b826970a2693ea71adbb02fe56d72654faaf8919ebf43f8e6dce15e",
+      "baseline": {
+        "command": [
+          "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus",
+          "/Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/Verus_verification/consolidated/iter5/redirect.rs",
+          "--triggers-mode",
+          "silent"
+        ],
+        "exit": 0,
+        "wall_seconds": 0.24125849999836646,
+        "child_user_seconds": 0.19278799999999974,
+        "child_system_seconds": 0.03786200000000006,
+        "peak_child_rss_bytes_cumulative_max": 269565952,
+        "verified": 3,
+        "errors": 0
+      },
+      "controls": [
+        {
+          "command": [
+            "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus",
+            "/Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter5/proofs/controls/redirect/redirect-drops-credentials-as-built.rs",
+            "--triggers-mode",
+            "silent"
+          ],
+          "exit": 1,
+          "wall_seconds": 0.2023252910003066,
+          "child_user_seconds": 0.16057000000000032,
+          "child_system_seconds": 0.030704999999999982,
+          "peak_child_rss_bytes_cumulative_max": 269565952,
+          "verified": 2,
+          "errors": 1,
+          "id": "redirect-drops-credentials-as-built",
+          "mutation": {
+            "before": "-> bool {\n    0 <= i < hops.len()\n}",
+            "after": "-> bool {\n    0 <= i < hops.len() && i == 0\n}"
+          },
+          "source": ".g5/uplift/consolidated/iter5/proofs/controls/redirect/redirect-drops-credentials-as-built.rs",
+          "assertion_rejected": true
+        },
+        {
+          "command": [
+            "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus",
+            "/Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter5/proofs/controls/redirect/s14-checks-every-hop.rs",
+            "--triggers-mode",
+            "silent"
+          ],
+          "exit": 1,
+          "wall_seconds": 0.20386662500095554,
+          "child_user_seconds": 0.1621349999999997,
+          "child_system_seconds": 0.030604999999999993,
+          "peak_child_rss_bytes_cumulative_max": 269565952,
+          "verified": 2,
+          "errors": 1,
+          "id": "s14-checks-every-hop",
+          "mutation": {
+            "before": "0 <= i < hops.len() && hops[0] == config",
+            "after": "0 <= i < hops.len() && hops[i] == config"
+          },
+          "source": ".g5/uplift/consolidated/iter5/proofs/controls/redirect/s14-checks-every-hop.rs",
+          "assertion_rejected": true
+        },
+        {
+          "command": [
+            "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus",
+            "/Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter5/proofs/controls/redirect/s14b-checks-first-hop.rs",
+            "--triggers-mode",
+            "silent"
+          ],
+          "exit": 1,
+          "wall_seconds": 0.20941025001229718,
+          "child_user_seconds": 0.16763600000000034,
+          "child_system_seconds": 0.030816999999999983,
+          "peak_child_rss_bytes_cumulative_max": 269565952,
+          "verified": 1,
+          "errors": 2,
+          "id": "s14b-checks-first-hop",
+          "mutation": {
+            "before": "0 <= i < hops.len() && hops[i] == config",
+            "after": "0 <= i < hops.len() && hops[0] == config"
+          },
+          "source": ".g5/uplift/consolidated/iter5/proofs/controls/redirect/s14b-checks-first-hop.rs",
+          "assertion_rejected": true
+        }
+      ]
+    }
+  ],
+  "implementation_proofs": 0
+}

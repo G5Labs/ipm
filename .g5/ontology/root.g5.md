@@ -2,7 +2,9 @@
 
 IPM installs, updates and removes modules in InterSystems IRIS. A module is a package of ObjectScript code, data, files, web applications and Python dependencies, described by a `module.xml` manifest. IPM gets modules from local folders, archives, git repositories or package registries, installs their dependencies, and keeps a log of every change it makes in each namespace.
 
-This ontology states what IPM is meant to do. It was recovered from the README, CHANGELOG, wiki, command help, issues, pull requests and tests of IPM at commit `571e04a1` (tag `v0.10.11-beta.28`). Loading packages and the transaction history log are covered in depth, because they are the scope of the formal verification. Other capabilities are covered at the level a reader needs to find and rebuild them.
+This ontology states what IPM is meant to do. It was recovered from the README, CHANGELOG, wiki, command help, issues, pull requests and tests of IPM at commit `571e04a1` (tag `v0.10.11-beta.28`). Loading packages and transaction history remain the deepest formal scope. Artifact downloads, resource defaults, deployment, requirements and test selection also have scoped contracts, identified in the [iteration 3 evidence index](../uplift/consolidated/iter3/INDEX.json). Test-run outcomes as a CI job sees them, remote registry downloads and sync's recompile step have scoped contracts in the [iteration 4 evidence index](../uplift/consolidated/iter4/INDEX.json). Web application install and removal, blocked uninstall, shell entry forms and registry redirects are added in the [iteration 5 evidence index](../uplift/consolidated/iter5/INDEX.json). Template generation, global-data package round trips, copy refusal, alias actions and empty archive entries gain scoped contracts in the [iteration 6 index](../uplift/consolidated/iter6/INDEX.md). Input producers, processor statuses and summary readers gain scoped contracts in the [iteration 7 index](../uplift/consolidated/iter7/INDEX.md). Generated web apps, registry round trips, catalog/platform selection and explicit Python wheels have scoped contracts in the [iteration 8 index](../uplift/consolidated/iter8/INDEX.md). Other capabilities retain explicit gaps. These recovered commitments remain proposed intent until accepted by their owners.
+
+Package resource ownership and update-step record deletion have [scoped ownership contracts](../uplift/consolidated/iter9/INDEX.md). Returned child-resolution errors and test-directory selection through package extraction have [scoped consumer contracts](../uplift/consolidated/iter10/INDEX.md), with provider and persistence limits recorded beside them.
 
 ## How the parts fit
 
@@ -30,7 +32,7 @@ This ontology states what IPM is meant to do. It was recovered from the README, 
                └─► history log of the namespace (survives rollback)
 ```
 
-A package change runs in one IRIS transaction, so a failure is rolled back. Developer mode (`-dev`) and the `-DNoTransaction` and `-DNoJournal` flags change what a failure keeps, and the history log's `Committed` column reports it.
+A normal package change is intended to roll back its database writes when it fails inside its transaction. Earlier commits and external effects have separate outcomes, described by [load outcomes](features/load.g5.md#load.outcome) and [rollback scope](concepts/transactions-and-dev-mode.g5.md#transaction.rollback-scope). Developer mode (`-dev`) and the `-DNoTransaction` and `-DNoJournal` flags change what a failure keeps, and the history log's `Committed` column reports it.
 
 ## Pages
 
@@ -52,6 +54,7 @@ Features:
 - [Updating](features/update.g5.md) (`update.*`): updating to a newer version and running update steps.
 - [Uninstalling](features/uninstall.g5.md) (`uninstall.*`): removing modules, dependents, `-recurse`, `-all` and removing IPM itself.
 - [Dependency resolution and lock files](features/dependencies.g5.md) (`deps.*`): picking dependency versions, conflicts and `module-lock.json`.
+- [Downloading build artifacts](features/artifact-download.g5.md) (`artifact.*`): authenticated and anonymous Artifactory selection, local reuse, copying and archive error boundaries.
 - [Testing, packaging and publishing](features/build-and-publish.g5.md) (`build.*`): `test`, `package`, `verify`, `publish`, `unpublish` and `makedeployed`.
 - [Developer tools](features/developer-tools.g5.md) (`devtools.*`): `sync`, `generate`, `init`, `arrange`, `module-version` and scripting commands.
 - [Inspecting modules](features/inspection.g5.md) (`inspect`): `search`, `list-installed`, `show`, `info` and similar read-only commands.
@@ -77,7 +80,16 @@ IPM installs, updates and removes modules in an IRIS namespace, together with th
 
 Users run IPM commands in the `zpm` shell or as `zpm "<command>"`. Programs call `%IPM.Main:Shell()`, which returns a status that shows whether the command succeeded.
 
+<a id="ipm.shell.forms"></a>
+[D · ipm.shell.forms]
+
+Only `%IPM.Main:Shell()` lets a script see that a command failed. `Shell(command)` returns the status, and `Shell(command, 1)` also ends the process with exit code 1 on failure.
+
+- The `zpm "<command>"` command form discards the status. Adding `,1` does not pass a flag; the process keeps running and exits 0.
+- As built, the `$zpm("<command>")` function form does not return the status. It runs the command, then fails with `<COMMAND> Function must return a value` whether the command passed or failed (C:D24).
+
 ## Metadata
+
 
 ### ipm
 
@@ -93,4 +105,13 @@ Sources: README L1-6; vendor manual AIPM. Inventory: A1 section 1.
 - user-facing-behavior
 - Expands: [IPM](#ipm).
 
-Sources: `wiki/01` L109-167; CHANGELOG 0.10.9 (`#1186`); CONTRIBUTING L115-156. Inventory: CAT-41; A2 1.1 (`%IPM.Main:Shell`, `ShellInternal`), 1.3 (`ShellScript`, `zpm` command routine). Observed: `Shell` runs the daily [history purge](features/history.g5.md#history.retention) before each command and returns its error without running the command if it fails. The `zpm "<command>"` form discards the status, while the `$$ZPM` function form returns it.
+Sources: `wiki/01` L109-167; CHANGELOG 0.10.9 (`#1186`); CONTRIBUTING L115-156. Inventory: CAT-41; A2 1.1 (`%IPM.Main:Shell`, `ShellInternal`), 1.3 (`ShellScript`, `zpm` command routine). Observed: `Shell` runs the daily [history purge](features/history.g5.md#history.retention) before each command and returns its error without running the command if it fails. The `zpm "<command>"` form discards the status. The function form was meant to return it, but see [entry forms](#ipm.shell.forms): as built it raises an error (corrected in iteration 5).
+- Children: [entry forms](#ipm.shell.forms).
+
+### ipm.shell.forms
+
+- agent
+- user-facing-behavior
+- Expands: [Shell](#ipm.shell).
+
+Direct decision: `Main.cls::Shell` (`pTerminateOnError`), `Main.cls::LanguageExtensions` (the `ZPM` body, lowercase `do ##class(%IPM.Main).Shell(pArgs...) quit` since commit `8eb520fd`, 2025-07-02), `Main.cls::UpdateLanguageExtensions` (builds `%ZLANGF00` by rewriting only lines containing the exact text `Do ##class`, unchanged by that commit). Before `8eb520fd` the same rewrite produced `Quit ##class(...)`. Verus [entry_forms.rs](../Verus_verification/consolidated/iter5/entry_forms.rs) `{function_returns_value,pinned_body,outcome,entry_neighbors}`; controls `matcher-case-insensitive`, `pinned-body-capitalized`, `command-flag-terminates`, `plain-shell-terminates` rejected. Native Z1-Z5 through stdin sessions on a fresh container, including the installed `%ZLANGF00` text. Why the command form ignores `,1` was not traced; only its outcome is claimed.

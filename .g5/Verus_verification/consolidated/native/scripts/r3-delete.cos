@@ -1,0 +1,6 @@
+// Filtered deletes: exact affected identities and an unaffected neighbor. Seeds three records per case.
+set ins="INSERT INTO %IPM_General.History (Action,Package,Version_Major,Version_Minor,Version_Patch,TimeStart,UserName,CommandString,Success,Committed,Finalized) VALUES (?,?,?,0,0,?,'x','seed',?,1,1)"
+set cases=$listbuild($lb("D1","history delete -DVersion_Major=99"),$lb("D2","history delete -DSucess=0"),$lb("D3","history delete -DPackage=del-b"),$lb("D4","history delete -DSuccess=0"))
+for i=1:1:$listlength(cases) { set c=$list(cases,i), id=$list(c,1) do ##class(%IPM.Main).Shell("history delete -confirm") kill ids for p="del-a|1|1","del-b|2|1","del-c|1|0" { set rs=##class(%SQL.Statement).%ExecDirect(,ins,"load",$piece(p,"|"),$piece(p,"|",2),$zdatetime($h,3),$piece(p,"|",3)) set ids($piece(p,"|"))=rs.%ROWID } do ##class(Consolidated.Obs).Run(id,$list(c,2)) set left="" for p="del-a","del-b","del-c" { set left=left_$select(##class(%IPM.General.History).%ExistsId(ids(p)):p_" ",1:"") } write "OBS ",id," left=",$zstrip(left,">W"),! }
+write !,"NATIVE-END",!
+halt

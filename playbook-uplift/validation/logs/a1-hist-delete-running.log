@@ -1,0 +1,45 @@
+# container: ipm-uplift-iris  image: containers.intersystems.com/intersystems/iris-community:2026.1  at: 2026-11-13T23:21:07Z
+# script: validation/iris/r4/hist/05-delete-running.script
+
+Node: 37eecb272560, Instance: IRIS
+
+USER>
+
+LOAD 1 
+
+USER>
+
+SETUP hooks 1
+
+USER>
+
+            set kv("mod:"_m) = mod.VersionString_$select(mod.DeveloperMode:"/dev
+            ^
+", 1:"")
+<INVALID OREF>Observe+8^Uplift.R4.Hist.1
+USER 4f2>
+
+OBS|r4-hist-delete-in-compile-dev-during|cls:R4HWc.Marker=compiled;historyRows=1;historyTempData=1;mod:r4h-wait-compile=1.0.0;row1=id168/load//success:err/committed:0/ended:1/finalized:1/phases:;rowId=168;tlevel=0;tlevelInPhase=;waiting=0;
+
+CMD> history delete -DID=168
+
+Deleted 1 record(s).
+CMD< OK
+
+OBS|r4-hist-delete-in-compile-dev-after-release|cls:R4HWc.Marker=compiled;deleteById=ok;historyRows=0;historyTempData=1;jobGone=1;jobResult=ERROR #5864: User 'irisowner' in process '20196' has 'r4h-wait-compile.ZPM' open for editing. > ERROR #6315: Errors reporting importing XML subelement in file '/tmp/uplift/r4/hist/fixtures/r4h-wait-compile/module.xml' at line '3' offset '41', skipping this item.;mod:r4h-wait-compile=1.0.0;rowExistsAfterDelete=0;rowExistsAfterRelease=0;tlevel=0;
+
+CMD> uninstall r4h-wait-compile -force
+
+[USER|r4h-wait-compile]	Clean START
+[USER|r4h-wait-compile]	Unconfigure START
+[USER|r4h-wait-compile]	Unconfigure SUCCESS
+[USER|r4h-wait-compile]	Clean SUCCESS
+CMD< OK
+
+USER 4f2>
+
+            set kv("mod:"_m) = mod.VersionString_$select(mod.DeveloperMode:"/dev
+            ^
+", 1:"")
+<INVALID OREF>Observe+8^Uplift.R4.Hist.1
+USER 8f2>

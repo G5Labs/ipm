@@ -1,0 +1,23 @@
+set r=##class(%IPM.Repo.Filesystem.Definition).%New(), r.Name="reg3", r.Root="/tmp/c3/reg/", r.Snapshots=1, r.Prereleases=1
+write !,"OBS H.setup buildcache=",$system.Status.IsOK(r.BuildCache(1,0,0))," moniker=",$parameter("%IPM.Repo.Filesystem.Definition","MONIKER")," details=",r.Details,!
+// H1 install from a registry, H2 uninstall, H3 a refused downgrade
+do ##class(Consolidated.Obs).Run("H1","install h-inst")
+set h1=$order(^IPM.General.HistoryD(""),-1) write "OBS H1 id=",h1,!
+do ##class(Consolidated.Obs).Run("H1d","history details "_h1)
+do ##class(Consolidated.Obs).Run("H2","uninstall h-inst")
+set h2=$order(^IPM.General.HistoryD(""),-1) write "OBS H2 id=",h2,!
+do ##class(Consolidated.Obs).Run("H2d","history details "_h2)
+do ##class(Consolidated.Obs).Run("H3a","load /tmp/c3/h-load-2/")
+do ##class(Consolidated.Obs).Run("H3","load /tmp/c3/h-load-1/")
+set h3=$order(^IPM.General.HistoryD(""),-1) write "OBS H3 id=",h3,!
+do ##class(Consolidated.Obs).Run("H3d","history details "_h3_" -phases")
+// H4 an unfinished record (started, never finalized)
+set log=##class(%IPM.General.History).LoadInit("h-running") set h4=log.%Id() write "OBS H4 id=",h4,!
+do ##class(Consolidated.Obs).Run("H4d","history details "_h4)
+do ##class(Consolidated.Obs).Run("H4f","history find -limit 4")
+// H5 details of a missing record
+do ##class(Consolidated.Obs).Run("H5","history details 999999")
+// H6 globally
+do ##class(Consolidated.Obs).Run("H6","history find -globally -limit 1")
+write !,"NATIVE-END",!
+halt

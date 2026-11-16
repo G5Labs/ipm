@@ -1,0 +1,42 @@
+error: assertion failed
+   --> .g5/Verus_verification/consolidated/iter17/model-lane/controls/consume-deletes-persistent-runs.rs:190:9
+    |
+190 |  assert(nested_state(a,b).db==seq![Stored{id:b,run:pass_run(true)},Stored{id:a,run:fail_run(true)}]);
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ assertion failed
+
+error: postcondition not satisfied
+   --> .g5/Verus_verification/consolidated/iter17/model-lane/controls/consume-deletes-persistent-runs.rs:202:2
+    |
+199 | pub proof fn nested_keeps_persistent_child(a:int,b:int)
+    | ------------------------------------------------------- at the end of the function body
+...
+202 |  lookup(nested_state(a,b).db,b)==Some(pass_run(true))
+    |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+note: function body check: not all errors may have been reported; rerun with a higher value for --multiple-errors to find other potential errors in this function
+   --> .g5/Verus_verification/consolidated/iter17/model-lane/controls/consume-deletes-persistent-runs.rs:204:1
+    |
+204 | pub proof fn named_state_frames()
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: postcondition not satisfied
+   --> .g5/Verus_verification/consolidated/iter17/model-lane/controls/consume-deletes-persistent-runs.rs:206:2
+    |
+204 | pub proof fn named_state_frames()
+    | --------------------------------- at the end of the function body
+205 |  ensures pass_state().db==seq![Stored{id:1,run:pass_run(false)}],pass_state().tracked_ids==seq![1int],
+206 |  fail_state().db==seq![Stored{id:1,run:pass_run(false)},Stored{id:2,run:fail_run(false)}],fail_state().tracked_ids==seq![2int],
+    |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: postcondition not satisfied
+   --> .g5/Verus_verification/consolidated/iter17/model-lane/controls/consume-deletes-persistent-runs.rs:207:2
+    |
+204 | pub proof fn named_state_frames()
+    | --------------------------------- at the end of the function body
+...
+207 |  child_state().db==seq![Stored{id:1,run:pass_run(false)},Stored{id:2,run:fail_run(false)},Stored{id:4,run:pass_run(true)}],child_st...
+    |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+verification results:: 33 verified, 3 errors
+error: aborting due to 4 previous errors
+

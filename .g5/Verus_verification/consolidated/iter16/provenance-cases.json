@@ -1,0 +1,199 @@
+{
+  "models": {
+    "provenance.rs": {
+      "wrong-qualified-supplier": [
+        "server:r.repository,root:repo.root",
+        "server:beta(),root:repo.root"
+      ],
+      "wrong-selected-root": [
+        "root:repo.root,package:p",
+        "root:Root::B,package:p"
+      ],
+      "ignore-enabled-filter": [
+        "if !repo.enabled || !w.roots.contains_key(repo.root)",
+        "if false || !w.roots.contains_key(repo.root)"
+      ],
+      "not-found-returns-success": [
+        "None=>Result{ok:false,world:w,assessed:true},Some(q)",
+        "None=>Result{ok:true,world:w,assessed:true},Some(q)"
+      ],
+      "drop-installed-supplier": [
+        "supplier:q.server,root:q.root",
+        "supplier:seq![],root:q.root"
+      ],
+      "wrong-installed-root": [
+        "supplier:q.server,root:q.root",
+        "supplier:q.server,root:Root::B"
+      ],
+      "wrong-code-payload": [
+        "code:Some(q.package.payload)",
+        "code:Some(0)"
+      ],
+      "wrong-history-supplier": [
+        "Action::Install,q.package),q.server,filesystem()",
+        "Action::Install,q.package),beta(),filesystem()"
+      ],
+      "drop-history-moniker": [
+        "q.server,filesystem(),details(q.root)",
+        "q.server,seq![],details(q.root)"
+      ],
+      "wrong-history-root": [
+        "q.server,filesystem(),details(q.root)",
+        "q.server,filesystem(),details(Root::B)"
+      ],
+      "delete-erases-history": [
+        "World{repos:w.repos.remove(name),..w}",
+        "World{repos:w.repos.remove(name),records:Map::empty(),..w}"
+      ],
+      "reconfigure-erases-history": [
+        "World{repos:w.repos.insert(name,Repo{root,enabled}),..w}",
+        "World{repos:w.repos.insert(name,Repo{root,enabled}),records:Map::empty(),..w}"
+      ],
+      "history-reader-looks-up-current-repo": [
+        "Some(r)=>Some(source_view(r)),None=>None",
+        "Some(r)=>if w.repos.contains_key(r.source){Some(source_view(Row{details:details(w.repos[r.source].root),..r}))}else{None},None=>None"
+      ],
+      "show-requires-current-definition": [
+        "Some(m)=>if m.supplier.len()>0{Some(m.supplier)}",
+        "Some(m)=>if m.supplier.len()>0 && w.repos.contains_key(m.supplier){Some(m.supplier)}"
+      ],
+      "list-requires-current-definition": [
+        "Some(m)=>m.supplier==name",
+        "Some(m)=>m.supplier==name && w.repos.contains_key(name)"
+      ],
+      "local-keeps-old-supplier": [
+        "supplier:seq![],root}),code:Some(p.payload)",
+        "supplier:supplier(w),root}),code:Some(p.payload)"
+      ],
+      "local-action-treated-as-install": [
+        "receipt(w.next_id,Action::Load,p),1)",
+        "receipt(w.next_id,Action::Install,p),1)"
+      ],
+      "skip-history-finalization": [
+        "pub open spec fn persist(r:Row)->Row {Row{finalized:true,..r}}",
+        "pub open spec fn persist(r:Row)->Row {Row{finalized:false,..r}}"
+      ],
+      "details-omits-module-pattern": [
+        "root_text(root)+seq![42u8,47,109,111,100,117,108,101,46,120,109,108]",
+        "root_text(root)+seq![42u8]"
+      ],
+      "uninstall-projection-keeps-module": [
+        "pub open spec fn successful_uninstall(w:World)->World {World{module:None,code:None,..w}}",
+        "pub open spec fn successful_uninstall(w:World)->World {World{module:w.module,code:None,..w}}"
+      ],
+      "uninstall-projection-keeps-code": [
+        "pub open spec fn successful_uninstall(w:World)->World {World{module:None,code:None,..w}}",
+        "pub open spec fn successful_uninstall(w:World)->World {World{module:None,code:w.code,..w}}"
+      ],
+      "uninstall-projection-erases-old-history": [
+        "pub open spec fn successful_uninstall(w:World)->World {World{module:None,code:None,..w}}",
+        "pub open spec fn successful_uninstall(w:World)->World {World{module:None,code:None,records:Map::empty(),..w}}"
+      ],
+      "claims-nonfresh-install-is-assessed": [
+        "if !fresh_install(w) {Result{ok:false,world:w,assessed:false}}",
+        "if false {Result{ok:false,world:w,assessed:false}}"
+      ]
+    }
+  },
+  "dependency_controls": {
+    "provenance.rs": {
+      "inherited-source-writer-drops-moniker": {
+        "path": ".g5/Verus_verification/consolidated/verus/history.rs",
+        "old": "Row {source,moniker,details,..r}",
+        "new": "Row {source,moniker:r.moniker,details,..r}"
+      },
+      "inherited-source-reader-ignores-action": {
+        "path": ".g5/Verus_verification/consolidated/verus/history.rs",
+        "old": "r.action == Action::Install",
+        "new": "true"
+      }
+    }
+  },
+  "replay_model": "provenance.rs",
+  "replay": {
+    "prov-missing-status": "b(missing().ok)",
+    "prov-missing-installed": "b(missing().world.module.is_some())",
+    "prov-missing-payload": "payload(missing().world)",
+    "prov-a-payload": "payload(after_a())",
+    "prov-a-supplier": "b(supplier(after_a())==alpha())",
+    "prov-a-root": "b(installed_root(after_a())==Some(Root::A))",
+    "prov-a-version": "b(installed_version(after_a())==version())",
+    "prov-a-show": "b(show_repository(after_a())==Some(alpha()))",
+    "prov-a-list-alpha": "b(listed_for_repository(after_a(),alpha()))",
+    "prov-a-list-beta": "b(listed_for_repository(after_a(),beta()))",
+    "prov-a-history-source": "b(after_a().records[0].source==alpha())",
+    "prov-a-history-moniker": "b(after_a().records[0].moniker==filesystem())",
+    "prov-a-history-details": "b(after_a().records[0].details==details(Root::A))",
+    "prov-a-history-reader": "b(history_has_supplier(after_a(),0,alpha(),Root::A))",
+    "prov-a-history-action": "b(after_a().records[0].action==inherited_history::Action::Install)",
+    "prov-a-history-final": "b(after_a().records[0].ended && after_a().records[0].finalized && after_a().records[0].status==1 && after_a().records[0].committed)",
+    "prov-deleted-config": "b(after_alpha_delete().repos.contains_key(alpha()))",
+    "prov-deleted-show": "b(show_repository(after_alpha_delete())==Some(alpha()))",
+    "prov-deleted-history-a": "b(history_has_supplier(after_alpha_delete(),0,alpha(),Root::A))",
+    "prov-deleted-list-alpha": "b(listed_for_repository(after_alpha_delete(),alpha()))",
+    "prov-recreated-config-c": "b(after_alpha_recreate().repos[alpha()].root==Root::C)",
+    "prov-recreated-payload": "payload(after_alpha_recreate())",
+    "prov-recreated-history-a": "b(history_has_supplier(after_alpha_recreate(),0,alpha(),Root::A))",
+    "prov-c-payload": "payload(after_c())",
+    "prov-c-supplier": "b(supplier(after_c())==alpha())",
+    "prov-c-root": "b(installed_root(after_c())==Some(Root::C))",
+    "prov-c-version": "b(installed_version(after_c())==version())",
+    "prov-c-show": "b(show_repository(after_c())==Some(alpha()))",
+    "prov-c-list-alpha": "b(listed_for_repository(after_c(),alpha()))",
+    "prov-c-list-beta": "b(listed_for_repository(after_c(),beta()))",
+    "prov-c-history-source": "b(after_c().records[1].source==alpha())",
+    "prov-c-history-moniker": "b(after_c().records[1].moniker==filesystem())",
+    "prov-c-history-details": "b(after_c().records[1].details==details(Root::C))",
+    "prov-c-history-reader": "b(history_has_supplier(after_c(),1,alpha(),Root::C))",
+    "prov-c-history-action": "b(after_c().records[1].action==inherited_history::Action::Install)",
+    "prov-c-history-final": "b(after_c().records[1].ended && after_c().records[1].finalized && after_c().records[1].status==1 && after_c().records[1].committed)",
+    "prov-c-history-a": "b(history_has_supplier(after_c(),0,alpha(),Root::A))",
+    "prov-b-payload": "payload(after_beta())",
+    "prov-b-supplier": "b(supplier(after_beta())==beta())",
+    "prov-b-root": "b(installed_root(after_beta())==Some(Root::B))",
+    "prov-b-version": "b(installed_version(after_beta())==version())",
+    "prov-b-show": "b(show_repository(after_beta())==Some(beta()))",
+    "prov-b-list-alpha": "b(listed_for_repository(after_beta(),alpha()))",
+    "prov-b-list-beta": "b(listed_for_repository(after_beta(),beta()))",
+    "prov-b-history-source": "b(after_beta().records[2].source==beta())",
+    "prov-b-history-moniker": "b(after_beta().records[2].moniker==filesystem())",
+    "prov-b-history-details": "b(after_beta().records[2].details==details(Root::B))",
+    "prov-b-history-reader": "b(history_has_supplier(after_beta(),2,beta(),Root::B))",
+    "prov-b-history-action": "b(after_beta().records[2].action==inherited_history::Action::Install)",
+    "prov-b-history-final": "b(after_beta().records[2].ended && after_beta().records[2].finalized && after_beta().records[2].status==1 && after_beta().records[2].committed)",
+    "prov-b-history-c": "b(history_has_supplier(after_beta(),1,alpha(),Root::C))",
+    "prov-b-history-a": "b(history_has_supplier(after_beta(),0,alpha(),Root::A))",
+    "prov-local-payload": "payload(after_local())",
+    "prov-local-supplier-empty": "b(supplier(after_local()).len()==0)",
+    "prov-local-root-a": "b(installed_root(after_local())==Some(Root::A))",
+    "prov-local-show-omitted": "b(show_repository(after_local()).is_none())",
+    "prov-local-list-alpha": "b(listed_for_repository(after_local(),alpha()))",
+    "prov-local-list-beta": "b(listed_for_repository(after_local(),beta()))",
+    "prov-local-history-source-empty": "b(after_local().records[3].source.len()==0)",
+    "prov-local-history-moniker-empty": "b(after_local().records[3].moniker.len()==0)",
+    "prov-local-history-details-empty": "b(after_local().records[3].details.len()==0)",
+    "prov-local-history-action": "b(after_local().records[3].action==inherited_history::Action::Load)",
+    "prov-local-history-reader-na": "b(history_detail(after_local(),3)==Some(SourceView::NotApplicable))",
+    "prov-local-history-b": "b(history_has_supplier(after_local(),2,beta(),Root::B))",
+    "prov-local-history-c": "b(history_has_supplier(after_local(),1,alpha(),Root::C))",
+    "prov-uninstall-a-module": "b(after_a_uninstall().module.is_some())",
+    "prov-uninstall-a-code": "b(after_a_uninstall().code.is_some())",
+    "prov-uninstall-a-history-a": "b(history_has_supplier(after_a_uninstall(),0,alpha(),Root::A))",
+    "prov-uninstall-c-module": "b(after_c_uninstall().module.is_some())",
+    "prov-uninstall-c-code": "b(after_c_uninstall().code.is_some())",
+    "prov-uninstall-c-history-c": "b(history_has_supplier(after_c_uninstall(),1,alpha(),Root::C))"
+  },
+  "replay_prelude": "ordinary_neighbors();local_and_refusal_neighbors();uninstall_projection_neighbors();reader_neighbors();details_literal_neighbors();",
+  "native_expected": {},
+  "scope_notes": [
+    "Successful install applicability requires observed module/code absence. Native successful uninstalls before C and B establish that premise; their projection clears module/code and preserves selected receipts. Existing-installed/no-op behavior is explicitly unassessed (Result.assessed=false); placeholder ok/world values then carry no product prediction.",
+    "Ordinary parsed nonempty qualified filesystem installs of one exact module/fullVersion; unique configured names and stable definitions within each install.",
+    "Native permanent IDs A,C,B,Local map to logical model IDs0,1,2,3. Uninstall and rejected-attempt history rows are omitted from this projection; no raw/temp/permanent ID equality.",
+    "Concrete normalized roots /tmp/iter16/repos/{a,b,c}/, one module folder under each root and Depth1. Generic filesystem normalization, scanning, XML, cache/index, compile/save providers remain explicit boundaries.",
+    "History fields are snapshots stored by SetSource and copied by PersistToTwin. Current Module.Repository is separate; old history alone does not establish present supplier after a local reload.",
+    "Local successful ActionLoad reads source n/a, and its raw source triple is empty; past install receipts remain intact.",
+    "Installed supplier differs from available catalog project Repository metadata. Catalog metadata distinction is source-inspected only in this lane.",
+    "Archive paths are UNASSESSED/UNPURSUED by user instruction; no archive investigation, representation or jobs.",
+    "Previous manifest Repository/projectURL to show assumption corrected before native: Repository XMLPROJECTION=NONE; installed writer supplies configured name."
+  ]
+}

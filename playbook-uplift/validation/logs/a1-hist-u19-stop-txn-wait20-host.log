@@ -1,0 +1,61 @@
+# container: ipm-uplift-iris at: 2026-11-13T23:36:22Z action: graceful iris stop while a txn load waits in Activate (Wait ends by itself after 20 s)
+## docker exec ipm-uplift-iris iris stop IRIS quietly
+rc=0 secs=332
+## container state: running
+IRIS^/usr/irissys^2026.1.0.234.1com^down, last used Fri Nov 13 23:41:53 2026^iris.cpf^1972^52773^0^^IRIS^^^/usr/irissys^1972
+## iris start IRIS
+Using 'iris.cpf' configuration file
+
+Starting Control Process
+Global buffer setting requires attention.  Auto-selected 25% of total memory.
+Allocated 5058MB shared memory
+3993MB global buffers, 399MB routine buffers
+This copy of InterSystems IRIS has been licensed for use exclusively by:
+InterSystems IRIS Community
+Copyright (c) 1986-2026 by InterSystems Corporation
+Any other use is a violation of your license agreement
+Starting IRIS
+
+rc=0
+IRIS^/usr/irissys^2026.1.0.234.1com^running, since Fri Nov 13 23:41:55 2026^iris.cpf^1972^52773^0^ok^IRIS^^^/usr/irissys^1972
+## messages.log since this shutdown
+11/13/26-23:36:22:559 (22046) 0 [Utility.Event] User 'irisowner' shutting down InterSystems IRIS
+11/13/26-23:36:22:577 (21887) 0 [Utility.Event] [SYSTEM MONITOR] System Monitor stopped in %SYS
+11/13/26-23:36:22:588 (22046) 0 [Utility.Event] Notifying Clients
+11/13/26-23:36:22:588 (22046) 0 [Utility.Event] No user shutdown routines to execute
+11/13/26-23:36:22:589 (22046) 0 [Utility.Event] Waiting for open transactions to commit
+
+The following processes still have open transactions:
+Job#  NSpace   Routine     Commands    Globals State    PID      Current device
+  26  USER     Uplift.R<     319003      22285 HANG     22028    /dev/null      
+11/13/26-23:36:34:196 (22046) 0 [Utility.Event] Stopping User Jobs
+11/13/26-23:36:34:204 (22046) 0 [Utility.Event] Stopping Network Servers
+11/13/26-23:36:34:205 (22046) 0 [Utility.Event] Withdrawing from License Domain
+11/13/26-23:36:34:205 (22046) 0 [Utility.Event] Waiting for users to stop
+11/13/26-23:36:34:205 (22046) 0 [Utility.Event] 1 user process(es) remain
+11/13/26-23:41:53:544 (22046) 0 [Generic.Event] 1 user process(es) remain...(repeated 58 times)
+11/13/26-23:41:53:544 (22046) 0 [Generic.Event] Auditing stopped
+11/13/26-23:41:53:545 (22046) 0 [Utility.Event] Stopping Client Networking
+11/13/26-23:41:53:545 (22046) 0 [Utility.Event] Updating Journal File
+11/13/26-23:41:53:569 (22046) 0 [Utility.Event] Journal restore not required at next startup
+11/13/26-23:41:53:569 (22046) 0 [Utility.Event] Transaction rollback not required at next startup
+11/13/26-23:41:53:651 (22046) 0 [Utility.Event] Removing database locks
+11/13/26-23:41:53:654 (22046) 0 [Utility.Event] Waiting for database updates to complete
+11/13/26-23:41:53:654 (22046) 0 [Utility.Event] Database updates complete
+11/13/26-23:41:53:654 (22046) 0 [Utility.Event] Stopping System Jobs
+11/13/26-23:41:53:761 (21712) 0 [Generic.Event] No blocks pending in WIJ file
+11/13/26-23:41:53:780 (22046) 0 [Utility.Event] Shutdown complete
+
+
+
+*** Recovery started at Fri Nov 13 23:41:55 2026
+     Current default directory: /usr/irissys/mgr
+     Log file directory: /usr/irissys/mgr/
+     WIJ file spec: /usr/irissys/mgr/IRIS.WIJ
+Recovering local (/usr/irissys/mgr/IRIS.WIJ) image journal file...
+Starting WIJ recovery for '/usr/irissys/mgr/IRIS.WIJ'.
+  0 blocks pending in this WIJ.
+Exiting with status 3 (Success)
+11/13/26-23:41:55:087 (22837) 0 [Generic.Event] Global buffer setting requires attention.  Auto-selected 25% of total memory.
+11/13/26-23:41:55:147 (22837) 0 [Generic.Event] Allocated 5058MB shared memory
+11/13/26-23:41:55:147 (22837) 0 [Generic.Event] 3993MB global buffers, 399MB routine buffers, 64MB journal buffers, 281MB buffer descriptors, 300MB heap, 5MB ECP, 16MB miscellaneous

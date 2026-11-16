@@ -1,0 +1,2 @@
+set run="" for { set run=$order(^UnitTest.Result(run)) quit:run=""  set suite="" for { set suite=$order(^UnitTest.Result(run,suite)) quit:suite=""  set case="" for { set case=$order(^UnitTest.Result(run,suite,case)) quit:case=""  kill c set m="" for { set m=$order(^UnitTest.Result(run,suite,case,m)) quit:m=""  set a="" for { set a=$order(^UnitTest.Result(run,suite,case,m,a),1,v) quit:a=""  set c(+$lg(v,1))=$get(c(+$lg(v,1)))+1 } } write "UTRES|",run,"|",case,"|pass=",$get(c(1)),"|fail=",$get(c(0)),"|skip=",$get(c(2)),! } } }
+halt

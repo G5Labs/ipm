@@ -1,0 +1,30 @@
+verification results:: 10 verified, 3 errors
+error: postcondition not satisfied
+  --> /var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-formal-jx2pd6dd/model.rs:33:13
+   |
+31 | pub proof fn nojournal_survives_parent_rollback(w:Write,cut:nat)
+   | ---------------------------------------------------------------- at the end of the function body
+32 |     requires !w.journal,w.at < cut,w.depth > 0,w.commit_at.is_none()
+33 |     ensures survived(w,cut)
+   |             ^^^^^^^^^^^^^^^ failed this postcondition
+
+error: postcondition not satisfied
+  --> /var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-formal-jx2pd6dd/model.rs:37:13
+   |
+35 | pub proof fn journaled_child_cannot_survive_uncommitted_parent(w:Write,cut:nat)
+   | ------------------------------------------------------------------------------- at the end of the function body
+36 |     requires w.journal,w.depth>0,w.commit_at.is_none()
+37 |     ensures !survived(w,cut)
+   |             ^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: postcondition not satisfied
+  --> /var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-formal-jx2pd6dd/model.rs:41:13
+   |
+39 | pub proof fn homogeneous_transactional_domain(w:Write,cut:nat,outer_commit:nat)
+   | ------------------------------------------------------------------------------- at the end of the function body
+40 |     requires w.journal,w.depth>0,w.commit_at == Some(outer_commit),w.at < outer_commit
+41 |     ensures survived(w,cut) == (outer_commit < cut)
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: aborting due to 3 previous errors
+

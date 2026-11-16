@@ -1,0 +1,7 @@
+set o="OBS|r4-repo-env-secure-wallet|" set p="" for c="%Wallet.KeyValue","%Wallet.Collection","%Wallet.Secret","%SYS.Wallet.Secret","%SYS.Wallet.Collection" { set p=p_c_"="_##class(%Dictionary.CompiledClass).%ExistsId(c)_";" } write !,o,p
+set m="" set k="" for { set k=$order(^oddCOM("%Wallet.KeyValue","m",k)) quit:k=""  if $extract(k)'="%" { set m=m_k_"," } } write "keyValueMethods=",m,";"
+set m="" set k="" for { set k=$order(^oddCOM("%Wallet.Collection","m",k)) quit:k=""  if $extract(k)'="%" { set m=m_k_"," } } write "collectionMethods=",m,";"
+write "irisSecurityDb=",##class(%SYS.Namespace).GetGlobalDest("%SYS","^IRIS.Wallet"),";"
+write "ipmRepoDefDest=",##class(%SYS.Namespace).GetGlobalDest($namespace,"^IPM.Repo.DefinitionD"),";"
+write "version=",$piece($zv," (Build")," ",$system.Version.GetBuildNumber(),";",!
+halt

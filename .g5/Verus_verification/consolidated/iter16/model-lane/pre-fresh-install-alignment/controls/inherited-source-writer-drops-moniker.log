@@ -1,0 +1,84 @@
+error: postcondition not satisfied
+  --> .g5/Verus_verification/consolidated/iter16/model-lane/controls/inherited-source-writer-drops-moniker/history.rs:23:41
+   |
+21 | pub proof fn source_and_identity_are_preserved(r:Row,s:Seq<u8>,m:Seq<u8>,d:Seq<u8>)
+   | ----------------------------------------------------------------------------------- at the end of the function body
+22 |     ensures set_source(r,s,m,d).id == r.id,set_source(r,s,m,d).namespace == r.namespace,
+23 |         set_source(r,s,m,d).source == s,set_source(r,s,m,d).moniker == m,set_source(r,s,m,d).details == d
+   |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+note: function body check: not all errors may have been reported; rerun with a higher value for --multiple-errors to find other potential errors in this function
+   --> .g5/Verus_verification/consolidated/iter16/model-lane/controls/inherited-source-writer-drops-moniker/model.rs:169:1
+    |
+169 | pub proof fn ordinary_neighbors()
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: postcondition not satisfied
+   --> .g5/Verus_verification/consolidated/iter16/model-lane/controls/inherited-source-writer-drops-moniker/model.rs:173:2
+    |
+169 | pub proof fn ordinary_neighbors()
+    | --------------------------------- at the end of the function body
+...
+173 |  history_has_supplier(after_a(),0,alpha(),Root::A),
+    |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: postcondition not satisfied
+   --> .g5/Verus_verification/consolidated/iter16/model-lane/controls/inherited-source-writer-drops-moniker/model.rs:176:2
+    |
+169 | pub proof fn ordinary_neighbors()
+    | --------------------------------- at the end of the function body
+...
+176 |  history_has_supplier(after_alpha_delete(),0,alpha(),Root::A),
+    |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+note: function body check: not all errors may have been reported; rerun with a higher value for --multiple-errors to find other potential errors in this function
+   --> .g5/Verus_verification/consolidated/iter16/model-lane/controls/inherited-source-writer-drops-moniker/model.rs:189:1
+    |
+189 | pub proof fn local_and_refusal_neighbors()
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: postcondition not satisfied
+   --> .g5/Verus_verification/consolidated/iter16/model-lane/controls/inherited-source-writer-drops-moniker/model.rs:193:2
+    |
+189 | pub proof fn local_and_refusal_neighbors()
+    | ------------------------------------------ at the end of the function body
+...
+193 |  history_has_supplier(after_local(),1,alpha(),Root::C),history_has_supplier(after_local(),2,beta(),Root::B),
+    |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: postcondition not satisfied
+   --> .g5/Verus_verification/consolidated/iter16/model-lane/controls/inherited-source-writer-drops-moniker/model.rs:193:56
+    |
+189 | pub proof fn local_and_refusal_neighbors()
+    | ------------------------------------------ at the end of the function body
+...
+193 |  history_has_supplier(after_local(),1,alpha(),Root::C),history_has_supplier(after_local(),2,beta(),Root::B),
+    |                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+note: function body check: not all errors may have been reported; rerun with a higher value for --multiple-errors to find other potential errors in this function
+   --> .g5/Verus_verification/consolidated/iter16/model-lane/controls/inherited-source-writer-drops-moniker/model.rs:199:1
+    |
+199 | pub proof fn reader_neighbors()
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: postcondition not satisfied
+   --> .g5/Verus_verification/consolidated/iter16/model-lane/controls/inherited-source-writer-drops-moniker/model.rs:201:2
+    |
+199 | pub proof fn reader_neighbors()
+    | ------------------------------- at the end of the function body
+200 |  ensures after_a().records[0].action==Action::Install,after_a().records[0].source==alpha(),
+201 |  after_a().records[0].moniker==filesystem(),after_a().records[0].details==details(Root::A),
+    |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: postcondition not satisfied
+   --> .g5/Verus_verification/consolidated/iter16/model-lane/controls/inherited-source-writer-drops-moniker/model.rs:204:2
+    |
+199 | pub proof fn reader_neighbors()
+    | ------------------------------- at the end of the function body
+...
+204 |  after_c().records[1].moniker==filesystem(),after_c().records[1].details==details(Root::C),
+    |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+verification results:: 18 verified, 4 errors
+error: aborting due to 7 previous errors
+

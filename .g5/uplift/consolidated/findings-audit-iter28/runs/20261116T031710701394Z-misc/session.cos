@@ -1,0 +1,43 @@
+do $system.OBJ.Load("/tmp/Obs.cls","ck-d")
+set r=##class(%IPM.Repo.Filesystem.Definition).%New(), r.Name="reg3", r.Root="/tmp/c3/reg/", r.Snapshots=1, r.Prereleases=1
+write !,"OBS H.setup buildcache=",$system.Status.IsOK(r.BuildCache(1,0,0))," moniker=",$parameter("%IPM.Repo.Filesystem.Definition","MONIKER")," details=",r.Details,!
+// H1 install from a registry, H2 uninstall, H3 a refused downgrade
+do ##class(Consolidated.Obs).Run("H1","install h-inst")
+set h1=$order(^IPM.General.HistoryD(""),-1) write "OBS H1 id=",h1,!
+do ##class(Consolidated.Obs).Run("H1d","history details "_h1)
+do ##class(Consolidated.Obs).Run("H2","uninstall h-inst")
+set h2=$order(^IPM.General.HistoryD(""),-1) write "OBS H2 id=",h2,!
+do ##class(Consolidated.Obs).Run("H2d","history details "_h2)
+do ##class(Consolidated.Obs).Run("H3a","load /tmp/c3/h-load-2/")
+do ##class(Consolidated.Obs).Run("H3","load /tmp/c3/h-load-1/")
+set h3=$order(^IPM.General.HistoryD(""),-1) write "OBS H3 id=",h3,!
+do ##class(Consolidated.Obs).Run("H3d","history details "_h3_" -phases")
+// H4 an unfinished record (started, never finalized)
+set log=##class(%IPM.General.History).LoadInit("h-running") set h4=log.%Id() write "OBS H4 id=",h4,!
+do ##class(Consolidated.Obs).Run("H4d","history details "_h4)
+do ##class(Consolidated.Obs).Run("H4f","history find -limit 4")
+// H5 details of a missing record
+do ##class(Consolidated.Obs).Run("H5","history details 999999")
+// H6 globally
+do ##class(Consolidated.Obs).Run("H6","history find -globally -limit 1")
+write !,"NATIVE-END",!
+set r=##class(%IPM.Repo.Filesystem.Definition).%New(), r.Name="reg3", r.Root="/tmp/c3/reg/", r.Snapshots=1, r.Prereleases=1
+write !,"OBS HB.setup buildcache=",$system.Status.IsOK(r.BuildCache(1,0,0)),!
+do ##class(Consolidated.Obs).Run("HB1","install h-inst")
+set id=$order(^IPM.General.HistoryD(""),-1) write "OBS HB1 id=",id,!
+do ##class(Consolidated.Obs).Run("HB1d","history details "_id_" -phases")
+set total=0 set rs=##class(%SQL.Statement).%ExecDirect(,"SELECT COUNT(*) AS c FROM %IPM_General.History") do rs.%Next() set total=rs.c
+write "OBS HB2 total=",total,!
+do ##class(Consolidated.Obs).Run("HB2","history find -DSucess=""0*""")
+do ##class(Consolidated.Obs).Run("HB3","history find -DSuccess=""0*""")
+write !,"NATIVE-END",!
+do ##class(%File).CreateDirectoryChain("/tmp/audit-overlay-target/")
+set s=##class(%Stream.FileCharacter).%New() set s.Filename="/tmp/audit-overlay-target/sentinel.txt" do s.Write("old"),s.%Save()
+set sc=##class(%IPM.Main).Shell("load /tmp/uplift/overlay")
+write !,"OVERLAY|load|",$system.Status.IsOK(sc),!
+write "OVERLAY|sentinel|",##class(%File).Exists("/tmp/audit-overlay-target/sentinel.txt"),!
+write "OVERLAY|new|",##class(%File).Exists("/tmp/audit-overlay-target/new.txt"),!
+set h=##class(%IPM.General.History).%OpenId(h3) write !,"GUARD-PACKAGE|[",h.Package,"]",!
+set h=##class(%IPM.General.History).%OpenId(h1) write !,"SUCCESS-PACKAGE|[",h.Package,"]",!
+write !,"AUDIT-END",!
+halt

@@ -70,10 +70,19 @@ A record survives any rollback that undoes its action, so failures stay visible 
 
 - Whether a record survives a rollback by the caller's own transaction is open ([nested](#history.committed.nested)).
 
+- As built, a dependency's permanent record inserted inside its parent's transaction can disappear with the parent's rollback (G:D1 = P:F-HIST-1). Its successful result in IRISTEMP, installed data, and permanent row are three separate observations.
+
+- This contradicts the survival requirement; it does not redefine success.
+
+- Unresolved Q-30: [Which repair should preserve child history without lying about Committed?](#history.survives-rollback.repair-policy)
+
 <a id="history.survives-rollback.temp-copy"></a>
 [D · history.survives-rollback.temp-copy]
 
 IPM writes the permanent record when the action starts and keeps the in-progress record in IRISTEMP, which a rollback does not undo. When the action ends, IPM copies the result to the permanent record. For a top-level action started outside any transaction, both writes happen outside the action's transaction, so its rollback cannot undo them.
+
+- Process loss and instance restart differ. In a checked SIGKILL schedule, temporary progress and the initial permanent row remained. After a whole-instance restart, the temporary row was gone and the durable initial permanent row remained unfinished.
+- These observations require the checked IRISTEMP mapping and durable database. They do not establish power-loss durability, replication or every caller-transaction schedule. [Paired native and formal evidence](../../uplift/consolidated/iter2/boundaries/REPORT.md).
 
 <a id="history.fields"></a>
 [I · history.fields]
@@ -90,6 +99,15 @@ Each record holds:
 - `Committed`: whether the action kept changes ([committed](#history.committed)).
 - `CommandString`: the command as typed.
 - `Phases`: the [phase entries](#history.phases).
+
+<a id="history.fields.source-snapshot"></a>
+[D · history.fields.source-snapshot]
+
+For a retained finalized install record, `history details <ID>` reads the saved repository name, type and details. Deleting or reconfiguring that repository later does not replace those fields with its current definition.
+
+- The checked filesystem sequence installs from alpha, reuses alpha for another folder, and then installs from beta. Each permanent record retains the supplier and scan-location details captured for that action; ordinary `show`, repository-filtered lists and actual history output were checked separately.
+- A subsequent local load has an empty source triple, and its details show `n/a` because its action is `load`. Its command string identifies the local path. Older install history remains historical and must not be mistaken for current origin after that reload.
+- The model uses logical record labels mapped to independently captured permanent IDs. It does not equate temporary and permanent IDs, or cover history deletion, caller rollback, concurrency or refused-attempt source records.
 
 <a id="history.fields.dependency-source"></a>
 [Q · history.fields.dependency-source]
@@ -132,10 +150,18 @@ For `load`, `install` and `update`, `Committed` shows whether the action kept an
 - A failure with `-DNoTransaction=1` or `-DNoJournal=1` is committed once the action has started writing.
 - A refusal before anything is written is not committed, in any mode.
 
+- `Committed` describes database writes; it does not promise to undo copied files, lock files, pip effects or CPF changes. The property comment and maintainer history design review settle this field meaning (P DEC-HIST-5).
+
+- Inherited [side-effects question](#history.committed.side-effects) is retained as an alias for that resolved interpretation. After a post-commit error the record can be committed and unsuccessful.
+
+- Unresolved Q-26: [Should a parent record count writes kept only by its NoJournal dependency?](#history.committed.escaped-dependency)
+
 <a id="history.committed.marking"></a>
 [D · history.committed.marking]
 
 IPM sets `Committed` at each commit, or just before the first write when there is no transaction. It does not work it out afterwards from developer mode and the final status.
+
+Unresolved Q-31: [Should the no-transaction marker run only after every refusal?](#history.committed.marking.refusal-policy)
 
 <a id="history.committed.uninstall"></a>
 [I · history.committed.uninstall]
@@ -157,15 +183,25 @@ When a caller wraps an IPM command in its own transaction, must the record survi
 - Alternative: compare the transaction level at the end with the level at the start, so any commit nested in a caller transaction reads uncommitted.
 - Alternative: treat caller-held transactions as unsupported, so the record may be lost with them.
 
+- Settled observation: the command may return success before the caller later rolls back its module data and permanent history row. The imported model proves this no-trace result under its stated domain. Published caller-transaction use does not decide the independent audit retention policy; the working assumption and alternatives above remain policy proposals.
+
 <a id="history.committed.side-effects"></a>
-[Q · history.committed.side-effects]
+[D · history.committed.side-effects]
 
-Does `Committed` cover changes outside the database, such as copied files or pip installs?
+This question is resolved for the field's meaning: `Committed` covers database changes. It makes no filesystem rollback promise.
 
-- Provisional answer: no. It is defined by database commits and by writes outside a transaction.
-- Alternative: also count file and operating-system changes.
+- The property comment and maintainer explanation recorded in P DEC-HIST-5 support this reading; the wiki's “written to disk” wording is broader and needs correction. Filesystem effects remain observable even when this bit is false.
 
 ## Dependencies and namespaces
+
+<a id="history.committed.terminal-choice-policy"></a>
+[Q · history.committed.terminal-choice-policy]
+
+What history outcome is required when an operator commits a stopped load at the terminal?
+
+- Working assumption: Answering "Commit" at a crash prompt is an operator error to document.
+- Alternative and implications: Mark the log committed before each region a halt could commit: F-HIST-4 becomes a defect again.
+- This assumption guides review; it is not a maintainer decision. An explicit owner policy or an attributable source addressing this exact case would settle it.
 
 <a id="history.dependencies"></a>
 [I · history.dependencies]
@@ -173,12 +209,15 @@ Does `Committed` cover changes outside the database, such as copied files or pip
 Installs that IPM starts for dependencies are recorded as their own records, with their own phases.
 
 <a id="history.dependencies.parent-rollback"></a>
-[Q · history.dependencies.parent-rollback]
+[D · history.dependencies.parent-rollback]
 
-What should a dependency's record say when its parent's rollback undoes it? It [survives](#history.survives-rollback) and reads [uncommitted](#history.committed), so the open part is `Success`.
+A dependency's `Success` records its own returned status, even if its parent's later rollback undoes its data. `Committed` describes kept database writes.
 
-- Provisional answer: it keeps the dependency's own `Success`, because `Success` is the status that action returned.
-- Alternative: record the parent's failure on it, so a reader sees that the successful load was undone.
+- The surviving-record requirement remains in [history.survives-rollback](#history.survives-rollback).
+
+- As built, the child can finish successfully and then lose its permanent row with the parent's rollback (G:D1 = P:F-HIST-1). These facts are supported by the property comments, native receipts, and the history design discussion recorded in P DEC-HIST-1.
+
+- Q-06 remains an alias of this resolved meaning; audit retention under a caller's transaction stays [open](#history.committed.nested).
 
 <a id="history.namespace"></a>
 [I · history.namespace]
@@ -210,6 +249,12 @@ The `history` command (alias `log`) reads and manages the log with the actions `
 - Versions are filtered by part, such as `Version_Major`.
 - Filters work the same way for `find` and `delete`.
 
+- As built, `ConstructSQLWhere` walks keys in IRIS collation order and stops at the first absent value or name outside `[A-Za-z][A-Za-z0-9]*`. It keeps earlier predicates and ignores that key and every later one.
+
+- An underscore column such as `Version_Major` can therefore leave no predicate: an unmatched `Version_Major=99` deleted all three seeded identities. A valid `Package=del-b` or `Success=0` deleted only its matches.
+
+- An unknown alphanumeric column raises SQL error; `find` can hide that error behind an empty successful listing while delete throws. These are failures of the rule, not permitted filtering behavior (G:D2).
+
 <a id="history.read.filter.invalid-column"></a>
 [Q · history.read.filter.invalid-column]
 
@@ -233,6 +278,22 @@ Should the namespace's [default modifiers](../concepts/settings.g5.md#settings.d
 
 `history details <id>` shows every field of one record in the current namespace, including full repository details and the raw status. `-phases` adds each phase's timing and status. An unknown ID is an error.
 
+<a id="history.read.status-bytes"></a>
+[D · history.read.status-bytes]
+
+A history summary writes `Success` for a successful status and decoded error text for a failed one. Details selects the stored raw status, as [required](#history.read.details), then makes CR, LF and TAB visible as `<CR>`, `<LF>` and `<TAB>`.
+
+- The checked no-repository failure has a 311-byte encoded status. Its summary is valid UTF-8 error text; its detailed status preserves the stored bytes and is not valid UTF-8. This is a limit on treating raw status output as text, not a reversal of the established raw-status rule or its withdrawn defect.
+- An ordinary failing lifecycle hook supplies a status containing CR, LF and TAB. The displayed detail replaces those three bytes with visible labels. Color enabled or disabled changes ANSI formatting, while the uncolored field retains the same selected content and labels.
+- These observations cover finalized successful and failed records from the checked ordinary installs. Status encoding, error decoding, color configuration and terminal adaptation are provider boundaries; arbitrary messages, unfinished records and general output encodings retain their separate scope.
+
+<a id="history.read.unfinished"></a>
+[I · history.read.unfinished]
+
+A record of an action that has not ended shows its start time without a duration. Its result must read as not finished, not as an error.
+
+- As built, `history find` shows such a record's result as `ERROR #00: (no error description)`. This is a known defect.
+
 <a id="history.read.global"></a>
 [I · history.read.global]
 
@@ -247,6 +308,12 @@ Should the namespace's [default modifiers](../concepts/settings.g5.md#settings.d
 
 Programs can read the log through the SQL table `%IPM_General.History` and the class queries `Records` (current namespace) and `GlobalRecords` (all namespaces).
 
+- The two global readers differ as built. CLI `find -globally` fetches each result in its own namespace, labels that namespace and applies the limit per namespace.
+
+- `GlobalRecordsFetch` fetches each handle in the caller's namespace, so it repeats the caller's rows; its row schema includes neither namespace nor ID. Correct CLI output does not establish programmatic query correctness (G:D20).
+
+- Unresolved Q-28: [Must programmatic global history rows carry their namespace and ID?](#history.read.global-shape)
+
 ## Deleting and keeping records
 
 <a id="history.delete"></a>
@@ -257,6 +324,12 @@ Programs can read the log through the SQL table `%IPM_General.History` and the c
 - Deleting every record in the namespace, with no filter, requires `-confirm`.
 - With `-globally`, it deletes the matching records in every namespace ([no confirmation](#history.delete.global-unfiltered)).
 - `-verbose` shows how many records each namespace lost and which namespaces were skipped for lack of permission.
+
+- The intended exact-selection rule above is violated by the filter parser's stop rule ([filter conditions](#history.read.filter)). Neither the presence of a syntactic filter nor `-confirm` ensures an effective predicate.
+
+- Global delete ignores namespace exceptions in the as-built loop. A valid filter's exact deleted identities remain part of the guarantee.
+
+- Unresolved Q-27: [Must global delete report namespace errors other than missing permission?](#history.delete.global-errors)
 
 <a id="history.delete.confirm-with-filter"></a>
 [Q · history.delete.confirm-with-filter]
@@ -281,6 +354,10 @@ May `history delete` or the daily [purge](#history.retention) remove the record 
 - Reason: no source covers this case. Deleting is an explicit user choice, and the log must not make a package change fail.
 - Alternative: skip records of running actions, or always write the final result back.
 
+- As built, deleting an accessible active twin before final persistence leaves the row absent even when Finalize and PersistToTwin return success.
+- A transaction-locked twin has a different checked schedule: delete waits, final persistence runs, the transaction releases its lock, delete completes, then temporary-object close recreates the same ID with its finalized successful result. A successful delete is not cancellation of the remaining writer.
+- The [paired final-reader receipts and Verus schedule contract](../../uplift/consolidated/iter2/boundaries/REPORT.md) refute a general no-resurrection claim. They cover two schedules, not all lock timeouts, interleavings or cross-namespace behavior. The alternatives above remain an owner policy question.
+
 <a id="history.locked"></a>
 [I · history.locked]
 
@@ -302,6 +379,12 @@ May IPM finalize, and so lock, the record of an action that never ended?
 
 - The purge runs on any IPM command, at most once per calendar day.
 - It applies to every namespace, not just the current one.
+
+- As built, the quoted cutoff can keep an expired row while `SetHistoryLastPurge` advances the daily marker (P:F-HIST-6; native P1–P4). The marker proves an attempt, not successful deletion.
+
+- Preserve record identities when checking retention.
+
+- Unresolved Q-29: [May automatic retention remove an action that has not ended?](#history.retention.running-policy)
 
 <a id="history.retention.effect"></a>
 [Q · history.retention.effect]
@@ -325,7 +408,71 @@ May uninstalling IPM in one namespace delete the in-progress records of other na
 - Provisional answer: no. History belongs to each namespace.
 - Alternative: accept it, because removing IPM is rare.
 
+<a id="history.committed.escaped-dependency"></a>
+[Q · history.committed.escaped-dependency]
+
+Should a parent record count writes kept only by its NoJournal dependency?
+
+- Evidence: The property says any action changes kept. N-R05-M5 leaves child data while top-level marker can remain false and the child row can be lost.
+- Working assumption: Count surviving child writes in the parent outcome; retain the distinction between parent and child records.
+- Alternative: Keep per-activation marker only and rely on independent child records after a repair.
+- Affected claims: Committed truth, record existence and aggregate load outcome. Alias Q-26.
+
+<a id="history.delete.global-errors"></a>
+[Q · history.delete.global-errors]
+
+Must global delete report namespace errors other than missing permission?
+
+- Evidence: DeleteHistoryGlobally catches all exceptions; a native unknown-column comparison distinguishes local failure from global success.
+- Working assumption: Report errors that mean requested deletion was not performed.
+- Alternative: Keep best-effort behavior and explicitly list skipped namespaces and errors.
+- Affected claims: global delete status and namespace scope. Alias Q-27.
+
+<a id="history.read.global-shape"></a>
+[Q · history.read.global-shape]
+
+Must programmatic global history rows carry their namespace and ID?
+
+- Evidence: CLI output carries namespace; GlobalRecords ROWSPEC omits namespace and ID, and native H10 repeats caller rows.
+- Working assumption: Return identities sufficient for a caller to distinguish colliding namespace-local IDs.
+- Alternative: Keep the legacy row shape and document a separate namespace-aware API.
+- Affected claims: global query scope, identity and details lookup. Alias Q-28.
+
+<a id="history.retention.running-policy"></a>
+[Q · history.retention.running-policy]
+
+May automatic retention remove an action that has not ended?
+
+- Evidence: The as-built quoted cutoff deletes nothing. With that defect repaired the filter uses TimeStart only; the Python reader model can then remove active rows.
+- Working assumption: Retain the documented age rule while keeping deletion/finalization races explicit; no repair outcome is claimed.
+- Alternative: Skip active rows and define how killed actions eventually expire.
+- Affected claims: retention fix, active writers and abnormal process ends. Alias Q-29.
+
+<a id="history.survives-rollback.repair-policy"></a>
+[Q · history.survives-rollback.repair-policy]
+
+Which repair should preserve child history without lying about Committed?
+
+- Evidence: Naive durable rows can mark rolled-back writes committed. The inherited bounded variants distinguish guarded close, before-image ordering, per-activation NoJournal and SIGKILL residuals; mirroring is untested.
+- Working assumption: Keep current survival requirement and report the repair as undecided; no product repair applied.
+- Alternative: Use one load-wide mode plus guarded close and mark ordering, or extend the repair to durably mark escaped child writes.
+- Affected claims: D1 and aliases, caller rollback, crash cuts and mirrored history. Alias Q-30.
+
+<a id="history.committed.marking.refusal-policy"></a>
+[Q · history.committed.marking.refusal-policy]
+
+Should the no-transaction marker run only after every refusal?
+
+- Evidence: LoadNewModule marks before manifest validation; a later refusal can keep no data yet read Committed=1 (G:D12). The property says noncommitted means nothing kept or rolled back.
+- Working assumption: Keep the intent that a no-write refusal is uncommitted; classify the early marker as a defect.
+- Alternative: Declare every no-transaction attempt committed from its start and change the owning I rule explicitly.
+- Affected claims: validation timing, no-transaction history, D12 and requirement refusals. Alias Q-31.
+
 ## Metadata
+
+
+
+
 
 Source locators follow the conventions on the [root page](../root.g5.md#how-to-read-this-ontology). Inventory IDs refer to [A1](../../uplift/ipm-verus-20261113/A/intent-inventory.md) (`CAT`, `INT`, `Q`), [A2](../../uplift/ipm-verus-20261113/A/operation-inventory.md) (`OP`, `OBS`, `P`) and the [coverage map](../../uplift/ipm-verus-20261113/A/coverage-map.md). Every block on this page is in the formal scope. Native results of stage B2 phase 1 are cited per block by run, as `<time>-<name>`. The full run ID is `20261113T<time>-<name>` under `.g5/Verus_verification/results/native/`, and the [B2 report](../../uplift/ipm-verus-20261113/B/native-report.md) explains each phase-1 case and defect. Formal (B1) and native evidence per block, with reliance status, is in the [verification coverage map](../../Verus_verification/coverage-map.md). B2 phase 2 and stage C runs are listed in [B/native-replay.md](../../uplift/ipm-verus-20261113/B/native-replay.md) sections 3-7, and defects `D10`-`D20`, `I1` and `I2` in [VV/bugs_issues.md](../../Verus_verification/bugs_issues.md). History classes: `General/AbstractHistory.cls`, `General/HistoryTemp.cls`, `General/History.cls`, `General/HistoryPhase.cls`; tests in `tests/integration_tests/Test/PM/Integration/History.cls`.
 
@@ -337,6 +484,12 @@ Source locators follow the conventions on the [root page](../root.g5.md#how-to-r
 - Children: [actions](#history.actions), [record](#history.record), [survives rollback](#history.survives-rollback), [fields](#history.fields), [phases](#history.phases), [committed](#history.committed), [dependencies](#history.dependencies), [namespace](#history.namespace), [reading](#history.read), [delete](#history.delete), [locked](#history.locked), [retention](#history.retention), [IPM uninstall](#history.keep-on-ipm-uninstall).
 
 Sources: `wiki/09` L14-22; `Main.cls:818-821`; issue #366 by isc-tleavitt ("The user persona here is a user of IPM looking for history on their own instance"); CHANGELOG 0.10.5 (`#578`). Inventory: CAT-42. Test: `TestSimpleHistory`. Future option, not a commitment: issue #366 asked to investigate the IRIS audit database (INT-HIST-17). Nothing implements it.
+
+Findings: [G:D11 — e2e reproduced](../../Verus_verification/bugs_issues.md#g-d11). The linked entry qualifies the caller, reader and providers.
+
+Findings: [G:D12 — e2e reproduced](../../Verus_verification/bugs_issues.md#g-d12). The linked entry qualifies the caller, reader and providers.
+
+Findings: [G:D13 — e2e reproduced](../../Verus_verification/bugs_issues.md#g-d13). The linked entry qualifies the caller, reader and providers.
 
 ### history.actions
 
@@ -364,6 +517,8 @@ Native evidence (B2 phase 1). Process termination splits in two. `$SYSTEM.Proces
 
 Observed: `load` creates its record before checking the path, and `install` before checking for a module name (`Main.cls:2419-2420`, `:2565-2566`). No product test covers an abnormal end.
 
+Findings: [C:D12 — e2e reproduced](../../uplift/consolidated/BUGS.md#c-d12). The linked entry qualifies the caller, reader and providers.
+
 ### history.record.unlogged-refusals
 
 - agent
@@ -372,6 +527,10 @@ Observed: `load` creates its record before checking the path, and `install` befo
 - Expands: [Record](#history.record).
 
 Sources: A1 Q-09; `wiki/09` L18; issue #366 ("we still want to log failed installations"). Round 1 R1-ONT-06 changed the provisional answer to "record them", following [recorded actions](#history.actions). Observed: `update` refuses `PermitDowngrade` and a module that is not installed before creating a record (`Main.cls:4415-4423`). `uninstall` with no name and `reinstall` of a module that is not installed are refused the same way (`Main.cls:2685-2688`, `:2709-2712`). Not run by B2.
+
+Findings audit: [sources, alternatives, implications and settlement gate](../../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#history.record.unlogged-refusals). The recorded assumption is provisional; no new maintainer approval was found.
+
+Findings: [G:D29 — e2e reproduced](../../Verus_verification/bugs_issues.md#g-d29). The linked entry qualifies the caller, reader and providers.
 
 ### history.record.abnormal-end
 
@@ -384,6 +543,8 @@ Sources: A1 Q-08; issue #1237 ("should reflect whether the action's changes were
 
 Native evidence: C4R, a developer-mode load SIGKILLed in Activate after both commits, keeps its module and classes while the permanent record reads `Committed=0`. That deviates from the provisional answer, and the `wiki/09` recipe misses it (`183827Z-cases-c4r`). C2, ended by `$SYSTEM.Process.Terminate`, reads `Committed=1` (`182903Z-cases-c-terminate`). Delay: IRIS rolls back a SIGKILLed process's transaction only after slot cleanup ([load outcome](load.g5.md#load.outcome)). Not run: instance restart (premise P-3). Approximate case B1-C49 (debugger stall between the final commit and its `Committed` mark): the module is fully installed while the record reads `Committed=0`, and after Terminate the record is also finalized (`205218Z-replay-approx-c`; approximate, see `B/native-replay.md` section 5).
 
+Findings audit: [sources, alternatives, implications and settlement gate](../../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#history.record.abnormal-end). The recorded assumption is provisional; no new maintainer approval was found.
+
 ### history.survives-rollback
 
 - human-verified
@@ -395,6 +556,10 @@ Native evidence: C4R, a developer-mode load SIGKILLed in Activate after both com
 Sources: issue #366 by isc-tleavitt ("History should be logged for ... 'install' (including as a dependency)", "if install rolls back we still need the history"); `wiki/09` L18, L22; PR #578 comment by isc-dchui, 2025-11-24. Round 1 R1-ONT-01 widened the rule from the record's own action to any rollback that undoes it. The dependency case was the survival half of Q-06. Inventory: INT-HIST-02, INT-HIST-08; OP-HIST-01, OP-HIST-10, OP-HIST-11. Test: `TestFailingPhases` (a rolled-back top-level load keeps its record).
 
 Native evidence: a top-level normal-mode failure keeps its record (A1 parent record). Confirmed product defect B2 D1: a dependency's record is lost when the parent's transaction rolls back, including the record of a dependency that itself failed. Its ID is allocated but no row persists (cases A1, A2, A3; `182759Z-cases-a`, `184230Z-replay-fast`, `184617Z-repro-dep-history-lost`).
+
+Findings: [G:D1 — e2e reproduced](../../Verus_verification/bugs_issues.md#g-d1). The linked entry qualifies the caller, reader and providers.
+
+Findings: [P:D1 — scoped repair comparison](../../../playbook-uplift/DESIGN-SIMPLIFICATIONS.md#p-d1).
 
 ### history.survives-rollback.temp-copy
 
@@ -416,6 +581,17 @@ Native evidence: the premises behind the decision hold for an ordinary error. IR
 
 Sources: `General/AbstractHistory.cls:11-49` (`:17` placeholder `0.0.0-0`, `:20-27` source empty for load and uninstall); `wiki/09` L63-78 (L70 `<unset>`, L76 source `n/a` for anything other than install), L112 (version parts); issue #366 field list ("for install only"). Reconstruction check R9, R14. Inventory: INT-HIST-04, A1 3.2; OP-HIST-01, OP-HIST-03 to OP-HIST-07, OP-HIST-25. Tests: `TestSimpleHistory`, `TestDevMode`. Observed: `Version` is set from the repository before an install starts. Dependency records carry the parent's command string. Actions started outside the shell record `<unset>` as the command, and namespace default modifiers are not shown in it. A record also has a `Finalized` column that the wiki does not describe. A top-level `update` from a registry stores its source, and listings show `n/a` for it (`Main.cls:2631`, `General/History.cls:461-463`). Round 1 R1-ONT-03 made the `Package` bullet say when it may be empty, a necessary implication of `wiki/09` L69. Confirmed deviation D9: refused loads whose manifest was read (g3, g6, g7) record `Package=""` and version `<unset>`, so `history find -DPackage=update-simple` shows 14 of the 20 rows that name it (R4) (`182832Z-cases-dg`, `184444Z-cases-hr`). Observed cause: the name is set only after the version checks (`Main.cls:2420`, `Utils/Module.cls:1293`).
 
+Extension Verus: [history.rs::set_source](../../Verus_verification/consolidated/verus/history.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
+
+Findings: [G:D9 — e2e reproduced](../../Verus_verification/bugs_issues.md#g-d9). The linked entry qualifies the caller, reader and providers.
+
+### history.fields.source-snapshot
+
+- agent; user-facing-behavior; source-inspected; native-tested; Verus-scoped
+- Expands: [Recorded fields](#history.fields).
+
+[Provenance contract](../../Verus_verification/consolidated/iter16/provenance.rs): `qualified_receipt`, `persist`, `history_row`, `history_detail`, `source_view`, using the unchanged imported history source/finalization/action contracts. The selected supplier produces the snapshot; the final reader consumes saved fields. [Native ID mapping, renderer checks and limits](../../uplift/consolidated/iter16/HANDOFF.md). Dependency/update source policy remains separately open under [dependency source](#history.fields.dependency-source).
+
 ### history.fields.dependency-source
 
 - agent
@@ -424,6 +600,8 @@ Sources: `General/AbstractHistory.cls:11-49` (`:17` placeholder `0.0.0-0`, `:20-
 - Expands: [Fields](#history.fields).
 
 Sources: A1 Q-15; `General/AbstractHistory.cls:20-27` ("For load and uninstall this will be empty"); `wiki/09` L76; issue #366 ("install (including as a dependency)", source "for install only"). Reconstruction check R9 asked for one provisional answer. Observed: dependencies of `load` and `update` are labeled `load` but carry a repository source (`Utils/Module.cls:63-69`). The listing shows `n/a` as the source for every record that is not `install`, including a top-level `update` from a registry (`General/History.cls:461-463`, OBS-H7). Round 1 R1-ONT-07: `History.cls` `TestWithDependencies` (L752-770) expects a `load` record for the dependency of a `load`, and the provisional answer now follows it. Native evidence: the A0 dependency record has `Action=load` and `SourceName=ipm-temp-modules-1` (`182759Z-cases-a`). Round 3 R3-09 restored the two draft options, "show the source in the listing" and "clear the source", as alternatives.
+
+Findings audit: [sources, alternatives, implications and settlement gate](../../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#history.fields.dependency-source). The recorded assumption is provisional; no new maintainer approval was found.
 
 ### history.phases
 
@@ -443,6 +621,10 @@ Sources: `wiki/09` L135-161 ("A phase with no elapsed time never finished"); `Ma
 - Expands: [Phases](#history.phases).
 
 Sources: A1 Q-14; `wiki/09` L161. Confirmed product defect B2 D6: an `<Invoke>` bound to Activate that returns an error leaves the Activate phase open in a finalized error record (`Storage/Module.cls:669-671`; `VV/native/repro/activate-invoke-phase-open.cos`, run ID not listed in the B2 report). Invokes on the default Configure phase finalize Activate correctly (cases A1, A5).
+
+Findings audit: [sources, alternatives, implications and settlement gate](../../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#history.phases.returned-errors). The recorded assumption is provisional; no new maintainer approval was found.
+
+Findings: [G:D6 — e2e reproduced](../../Verus_verification/bugs_issues.md#g-d6). The linked entry qualifies the caller, reader and providers.
 
 ### history.committed
 
@@ -490,6 +672,10 @@ Sources: A1 Q-05; issue #366; issue #1237 option 1; PR #1322. Round 1 R1-ONT-01 
 
 Native evidence: case D1 (`tstart`, `load`, `trollback`) leaves no record. One ID was allocated and no row persisted, although in flight the record read `Committed=1` and `Finalized=1`. That deviates from the provisional answer (`182832Z-cases-dg`, `184230Z-replay-fast`, `184632Z-repro-caller-tx-history-lost`). D0 (`tcommit`) conforms. Premise N-P03, that an inner commit is not durable under an outer rollback, is confirmed (`181129Z-premises`). Installer Invokes that run nested shell commands inside IPM's own load are the same case ([installer](ipm-setup.g5.md#setup.installer)).
 
+Findings audit: [sources, alternatives, implications and settlement gate](../../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#history.committed.nested). The recorded assumption is provisional; no new maintainer approval was found.
+
+Findings: [G:D25 — e2e reproduced](../../Verus_verification/bugs_issues.md#g-d25). The linked entry qualifies the caller, reader and providers.
+
 ### history.committed.side-effects
 
 - agent
@@ -498,6 +684,17 @@ Native evidence: case D1 (`tstart`, `load`, `trollback`) leaves no record. One I
 - Expands: [Committed](#history.committed).
 
 Sources: A1 Q-07; PR #1322 definition. Related: [rollback scope](../concepts/transactions-and-dev-mode.g5.md#transaction.rollback-scope).
+
+### history.committed.terminal-choice-policy
+
+- agent
+- uncertain
+- user-facing-behavior
+- Expands: [history.committed](#history.committed)
+
+Sources: [DEC-LOAD-1](../../../playbook-uplift/decisions/00-02.md); It is an IRIS terminal choice; guarding it costs writes on every load.
+
+Findings audit: [sources, alternatives, implications and settlement gate](../../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#history.committed.terminal-choice-policy). The recorded assumption is provisional; no new maintainer approval was found.
 
 ### history.dependencies
 
@@ -533,7 +730,7 @@ Sources: class doc `General/History.cls:3`; `wiki/09` L20, L169; PR #578 comment
 - user-facing-behavior
 - test-coverage
 - Expands: [History](#history).
-- Children: [find](#history.read.find), [filter](#history.read.filter), [details](#history.read.details), [global](#history.read.global), [API](#history.read.api).
+- Children: [find](#history.read.find), [filter](#history.read.filter), [details](#history.read.details), [unfinished records](#history.read.unfinished), [global](#history.read.global), [API](#history.read.api).
 
 Sources: `Main.cls:818-843`; `wiki/02` L306-349; `wiki/09` L24-50. Inventory: INT-HIST-10; OP-HIST-13 to OP-HIST-16. Test: `TestInvalidHistoryCommands`.
 
@@ -546,6 +743,8 @@ Sources: `Main.cls:818-843`; `wiki/02` L306-349; `wiki/09` L24-50. Inventory: IN
 
 Sources: `Main.cls:822-823`; `wiki/09` L34-38. Inventory: INT-HIST-10; OP-HIST-13, OP-HIST-22. Test, partial: `TestHistoryModifiers` calls `GetHistory` directly, so `-sort` and the default limit are untested. Observed: any `-sort` value other than `asc` sorts newest first.
 
+Extension Verus: [history.rs::selection](../../Verus_verification/consolidated/verus/history.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
+
 ### history.read.filter
 
 - human-provided
@@ -556,6 +755,10 @@ Sources: `Main.cls:822-823`; `wiki/09` L34-38. Inventory: INT-HIST-10; OP-HIST-1
 
 Sources: `Main.cls:829-837` (examples); `wiki/09` L88-112. Inventory: INT-HIST-10; OP-HIST-13, OP-HIST-16, OP-HIST-17. Test, partial: `TestHistoryModifiers` filters by action and package through `GetHistory` directly, without `-D` parsing. Native evidence: E0, E5 and E6 conform, while E1, E2, E4 and E8 deviate (B2 D2). `find` and `delete` differ for an unknown column (E3, E7) ([invalid column](#history.read.filter.invalid-column); `182845Z-cases-ef`). The help example `-DSucess="0*"` (`Main.cls:832`) is misspelled.
 
+Extension Verus: [history.rs::where_prefix](../../Verus_verification/consolidated/verus/history.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
+
+Findings: [G:D2 — e2e reproduced](../../Verus_verification/bugs_issues.md#g-d2). The linked entry qualifies the caller, reader and providers.
+
 ### history.read.filter.invalid-column
 
 - agent
@@ -563,7 +766,11 @@ Sources: `Main.cls:829-837` (examples); `wiki/09` L88-112. Inventory: INT-HIST-1
 - user-facing-behavior, security
 - Expands: [Filter](#history.read.filter).
 
-Sources: A1 Q-10; `wiki/09` L112. Round 1 R1-ONT-10 added query errors in `find`. Confirmed product defect B2 D2: a column name containing `_` is dropped together with every later filter, so `find` widens (E1, E2, E8), and `history delete -DVersion_Major=99` without `-confirm` deleted every record (E4) (`182845Z-cases-ef`, `184230Z-replay-fast`, `184621Z-repro-history-filter-widened`, `184623Z-repro-history-delete-underscore`). An unknown column gives `find` an empty listing with a success status (E3), but makes `delete` fail with SQLCODE -29 (E7). Observed: `GetHistory` does not check `%SQLCODE` (`General/History.cls:132-150`).
+Sources: A1 Q-10; `wiki/09` L112. Round 1 R1-ONT-10 added query errors in `find`. Confirmed product defect B2 D2: a column name containing `_` is dropped together with every later filter, so `find` widens (E1, E2, E8), and `history delete -DVersion_Major=99` without `-confirm` deleted every record (E4) (`182845Z-cases-ef`, `184230Z-replay-fast`, `184621Z-repro-history-filter-widened`, `184623Z-repro-history-delete-underscore`). An unknown column gives `find` an empty listing with a success status (E3), but makes `delete` fail with SQLCODE -29 (E7). Observed: `GetHistory` does not check `%SQLCODE` (`General/History.cls:132-150`). Consolidated round 3 (`20261114T032747Z-r3-delete`, ARM64), three seeded records each: `history delete -DVersion_Major=99` deleted all three though none has major 99 (G D2, now on ARM64 with exact identities); `-DSucess=0`, the misspelling used in the command's own help example (`Main.cls:832`), failed with SQLCODE -29 and deleted nothing; `-DPackage=del-b` and `-DSuccess=0` deleted exactly the matching record.
+
+Findings audit: [sources, alternatives, implications and settlement gate](../../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#history.read.filter.invalid-column). The recorded assumption is provisional; no new maintainer approval was found.
+
+Findings: [G:D24 — e2e reproduced](../../Verus_verification/bugs_issues.md#g-d24). The linked entry qualifies the caller, reader and providers.
 
 ### history.read.filter.default-modifiers
 
@@ -574,6 +781,10 @@ Sources: A1 Q-10; `wiki/09` L112. Round 1 R1-ONT-10 added query errors in `find`
 
 Sources: new question from A2 OBS-H2; `Main.cls:820` ("By default, all entries will be affected"); `Main.cls:617-630` (default-modifiers help). Confirmed as D18, decision pending under this question: stored default modifiers are merged into every command, and `history` reads them as filters (`Main.cls:1067-1069`, `:4136`; `CLI.cls:815-819`). Stage C case H2 (`20261113T204152Z-stagec`): after the product's own example `default-modifiers -set -DNoTransaction=1 -DUpdateSnapshots=1`, `history find` shows no rows with a success status, and `history delete -confirm` fails with SQLCODE -29.
 
+Findings audit: [sources, alternatives, implications and settlement gate](../../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#history.read.filter.default-modifiers). The recorded assumption is provisional; no new maintainer approval was found.
+
+Findings: [G:D18 — e2e reproduced](../../Verus_verification/bugs_issues.md#g-d18). The linked entry qualifies the caller, reader and providers.
+
 ### history.read.details
 
 - human-provided
@@ -581,7 +792,26 @@ Sources: new question from A2 OBS-H2; `Main.cls:820` ("By default, all entries w
 - test-coverage
 - Expands: [Reading](#history.read).
 
-Sources: `Main.cls:824`, `:839`; `wiki/09` L114-161. Inventory: INT-HIST-10; OP-HIST-15. Test: `TestInvalidHistoryCommands` (`details 0` and `details blah` fail). Native evidence: cases R1 and R2 conform (`184444Z-cases-hr`). The raw status follows `wiki/09` L133, so round 1 withdrew B2 D7 (R1-ONT-13).
+Sources: `Main.cls:824`, `:839`; `wiki/09` L114-161. Inventory: INT-HIST-10; OP-HIST-15. Test: `TestInvalidHistoryCommands` (`details 0` and `details blah` fail). Native evidence: cases R1 and R2 conform (`184444Z-cases-hr`). The raw status follows `wiki/09` L133, so round 1 withdrew B2 D7 (R1-ONT-13). Consolidated round 3 (`20261114T032054Z-r3-history.partial-purge-failed`, ARM64): for a failed action the raw status is printed as the stored bytes, which include the internal call stack (H3d); repository details read `reg3 (filesystem): /tmp/c3/reg/*` (H1d); `-phases` lists name, time and result per phase (HB1d, `20261114T032620Z-r3-history-b`); a missing ID reports "No record found with ID 999999" (H5). Model `Verus_verification/consolidated/models/history_display.py`.
+
+Extension Verus: [history.rs::source_shown](../../Verus_verification/consolidated/verus/history.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
+
+### history.read.status-bytes
+
+- agent; user-facing-behavior; source-inspected; native-tested; Verus-scoped
+- Expands: [Details](#history.read.details).
+
+[Status-byte refinement](../../Verus_verification/consolidated/iter23/status_reader.rs) reuses the inherited symbolic raw-versus-decoded reader and adds stored bytes, control-character cleanup, color formatting and consumer observations. [Iteration 23](../../uplift/consolidated/iter23/HANDOFF.md) retains original stdout/stderr bytes, escaped text, provider hex values, finalized record identities and color-on/none comparisons. The established withdrawal of B2 D7/R1-ONT-13 and raw/internal-stack evidence remain unchanged. No new UTF-8 promise is inferred for raw details.
+
+### history.read.unfinished
+
+- agent
+- user-facing-behavior
+- Expands: [Reading](#history.read).
+
+Sources: `wiki/09` L72 ("An entry with no elapsed time either is still running or ended abnormally"); `General/History.cls:439-455` (no duration without an end time), `:474-483` (`$$$ISOK(0)` is false, so the error text of status 0 is shown). Native H4d and H4f: a record started by `LoadInit` and never finalized shows `<T>` without duration, `ERROR #00: (no error description)` and `Uncommitted`. Defect C:D12; related to G I1 (phase display) and G D26 (an unfinished record reads uncommitted).
+
+Extension Verus: [history.rs::success_to_string](../../Verus_verification/consolidated/verus/history.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
 
 ### history.read.global
 
@@ -592,6 +822,8 @@ Sources: `Main.cls:824`, `:839`; `wiki/09` L114-161. Inventory: INT-HIST-10; OP-
 
 Sources: `Main.cls:821`; `wiki/09` L163-171. Inventory: INT-HIST-11; OP-HIST-14. Test: `TestMultipleNamespaces`. Native evidence: `history find -globally` lists a row written in USER-VERIFY under its namespace (stage C case H10, `20261113T204152Z-stagec`).
 
+Extension Verus: [history.rs::cli_global](../../Verus_verification/consolidated/verus/history.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
+
 ### history.read.api
 
 - human-provided
@@ -599,6 +831,10 @@ Sources: `Main.cls:821`; `wiki/09` L163-171. Inventory: INT-HIST-11; OP-HIST-14.
 - Expands: [Reading](#history.read).
 
 Sources: issue #366 ("documented API ... cross-namespace class query wrapper"); `wiki/09` L199-211; `General/History.cls:24-30`, `:232-237`. Inventory: INT-HIST-11; OP-HIST-19, OP-HIST-20. Confirmed product defect D20: the `GlobalRecords` query fetches other namespaces' result sets without switching namespace, so it returns the current namespace's rows once per namespace. It returned 458 rows, twice USER's 229, and none of USER-VERIFY's 173 (stage C case H10, `20261113T204152Z-stagec`). Not run: `Records` declares an ID column it does not return first (OBS-H11). No test.
+
+Extension Verus: [history.rs::programmatic_global](../../Verus_verification/consolidated/verus/history.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
+
+Findings: [G:D20 — e2e reproduced](../../Verus_verification/bugs_issues.md#g-d20). The linked entry qualifies the caller, reader and providers.
 
 ### history.delete
 
@@ -610,6 +846,8 @@ Sources: issue #366 ("documented API ... cross-namespace class query wrapper"); 
 
 Sources: `Main.cls:825`, `:838`; `wiki/09` L187-195. Inventory: INT-HIST-12; OP-HIST-17, OP-HIST-18. Test, partial: `TestMultipleNamespaces` deletes with `-confirm` and `-globally`, never with a filter. Native evidence: E5 (unfiltered, refused) and E6 (filtered, exactly one row deleted) conform. E4 deleted everything (B2 D2) (`182845Z-cases-ef`, `184230Z-replay-fast`). Observed: delete also removes unfinalized records of actions still running ([running records](#history.delete.running-records)). PR #578 review r1816818561 by isc-kiyer asked for deletes scoped by filter.
 
+Extension Verus: [history.rs::delete](../../Verus_verification/consolidated/verus/history.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
+
 ### history.delete.confirm-with-filter
 
 - agent
@@ -618,6 +856,8 @@ Sources: `Main.cls:825`, `:838`; `wiki/09` L187-195. Inventory: INT-HIST-12; OP-
 - Expands: [Delete](#history.delete).
 
 Sources: A1 Q-11; `Main.cls:825`; `wiki/09` L43-44, L187; guard `Main.cls:4165-4167`.
+
+Findings audit: [sources, alternatives, implications and settlement gate](../../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#history.delete.confirm-with-filter). The recorded assumption is provisional; no new maintainer approval was found.
 
 ### history.delete.global-unfiltered
 
@@ -635,6 +875,8 @@ Sources: `wiki/09` L46, L195 ("`-globally` bypasses the `-confirm` requirement, 
 - Expands: [Delete](#history.delete).
 
 Sources: new question Q-20 from reconstruction check R12; A1 3.4 last row ("unspecified"). Observed: `history delete` and the purge are not limited to finalized records (OP-HIST-17, OP-HIST-21, OBS-H12). What the running action's end copy then does depended on premise P-9, which B2 observed as N-P15 (below). Affects [retention](#history.retention). Native evidence (N-P15, `181129Z-premises`): deleting the permanent record of an action before its end copy makes the record disappear completely. The end copy raises nothing and does not recreate it.
+
+Findings audit: [sources, alternatives, implications and settlement gate](../../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#history.delete.running-records). The recorded assumption is provisional; no new maintainer approval was found.
 
 ### history.locked
 
@@ -655,6 +897,8 @@ Sources: `wiki/09` L197; PR #578 reviews r2583818448 by isc-kiyer ("To protect h
 
 Sources: new question from round 1 R1-ONT-02; this page's definition of Finalized; `wiki/09` L197. Native evidence: case C2, a developer-mode load ended by `$SYSTEM.Process.Terminate`, was finalized by `%OnClose` with no end time and an open Activate phase. It deviates from the provisional answer, and the record can no longer be corrected (`182903Z-cases-c-terminate`). Observed: `PersistToTwin` sets `Finalized` without checking the end time (`General/HistoryTemp.cls:53`).
 
+Findings audit: [sources, alternatives, implications and settlement gate](../../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#history.locked.unfinished). The recorded assumption is provisional; no new maintainer approval was found.
+
 ### history.retention
 
 - human-provided
@@ -662,9 +906,13 @@ Sources: new question from round 1 R1-ONT-02; this page's definition of Finalize
 - Expands: [History](#history).
 - Children: [effect](#history.retention.effect).
 
-Sources: `Main.cls:840-842`; `wiki/02` L113; `wiki/09` L173-185; CHANGELOG 0.10.7 (`#992`); issue #977. Inventory: INT-HIST-13; OP-HIST-21, OP-HIST-22. Test: `Unit/CLI.cls` `TestAutoPurgeOldHistory` runs the purge but does not check that anything was deleted, so no coverage tag. Observed: the purge runs only through `%IPM.Main:Shell`, and the retention setting and last-purge date are shared by the whole instance. The opt-in default answers the audit-trail concern raised on PR #578 by isc-dchui, 2025-12-02.
+Sources: `Main.cls:840-842`; `wiki/02` L113; `wiki/09` L173-185; CHANGELOG 0.10.7 (`#992`); issue #977. Inventory: INT-HIST-13; OP-HIST-21, OP-HIST-22. Test: `Unit/CLI.cls` `TestAutoPurgeOldHistory` runs the purge but does not check that anything was deleted, so no coverage tag. Observed: the purge runs only through `%IPM.Main:Shell`, and the retention setting and last-purge date are shared by the whole instance. The opt-in default answers the audit-trail concern raised on PR #578 by isc-dchui, 2025-12-02. Consolidated round 3 (`20261114T032524Z-r3-purge`, ARM64): the first command of the day purges and writes the marker (P1); a later command the same day does not purge (P2); with retention `0` the marker is left as it was (P3). The 2000-01-01 record survived every purge, reproducing P F-HIST-6. Note the stored key is `history_retain` (`Repo/UniversalSettings.cls:46`); `config set HistoryRetain` maps to it.
 
 Confirmed product defect B2 D3: the purge deletes nothing and still records that it ran, so no purge happens that day (case F1; `182845Z-cases-ef`, `184230Z-replay-fast`, `184626Z-repro-autopurge-noop`). In a control, the same cutoff without its embedded quote marks deleted exactly the two old rows (`General/History.cls:172-173`).
+
+Extension Verus: [history.rs::purge](../../Verus_verification/consolidated/verus/history.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
+
+Findings: [G:D3 — e2e reproduced](../../Verus_verification/bugs_issues.md#g-d3). The linked entry qualifies the caller, reader and providers.
 
 ### history.retention.effect
 
@@ -674,6 +922,8 @@ Confirmed product defect B2 D3: the purge deletes nothing and still records that
 - Expands: [Retention](#history.retention).
 
 Sources: A1 Q-13. Reconstruction check R10 narrowed it to the failure case, because [retention](#history.retention) already requires deleting old records. Not run by B2: a purge failure (`Main.cls:862-865`, OBS-H12) remains a code reading. Confirmed product defect B2 D5, owned by [settings](../concepts/settings.g5.md#settings): `config delete HistoryRetain` restores the first value ever set, not `0` (case F0; `184628Z-repro-config-delete-retain`; also after `182514Z-suite-test-CLI`).
+
+Findings audit: [sources, alternatives, implications and settlement gate](../../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#history.retention.effect). The recorded assumption is provisional; no new maintainer approval was found.
 
 ### history.keep-on-ipm-uninstall
 
@@ -692,3 +942,75 @@ Sources: prompt `Main.cls:2735` ("fully remove all modules and IPM metadata (exc
 - Expands: [IPM uninstall](#history.keep-on-ipm-uninstall).
 
 Sources: A1 Q-16. Observed: full cleanup kills `^IRIS.Temp.HistoryTempD`, which every namespace shares (`Lifecycle/Module.cls:51`, OBS-H13, P-1). Native evidence: history IRISTEMP rows form one instance-wide store, readable from another namespace (N-P06, N-P17, `181129Z-premises`). A self-uninstall during another namespace's load was not run.
+
+Findings audit: [sources, alternatives, implications and settlement gate](../../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#history.keep-on-ipm-uninstall.other-namespaces). The recorded assumption is provisional; no new maintainer approval was found.
+
+### history.committed.escaped-dependency
+
+- uncertain
+- agent-provided
+- user-facing-behavior
+- Expands: [history.committed](#history.committed).
+
+Sources: inherited `.g5/Verus_verification/open_questions.md` Q-26, source/native cases named in the block; [extension evidence](../../uplift/consolidated/extension/REPORT.md).
+
+Findings audit: [sources, alternatives, implications and settlement gate](../../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#history.committed.escaped-dependency). The recorded assumption is provisional; no new maintainer approval was found.
+
+Findings: [G:D22 — e2e reproduced](../../Verus_verification/bugs_issues.md#g-d22). The linked entry qualifies the caller, reader and providers.
+
+### history.delete.global-errors
+
+- uncertain
+- agent-provided
+- user-facing-behavior
+- Expands: [history.delete](#history.delete).
+
+Sources: inherited `.g5/Verus_verification/open_questions.md` Q-27, source/native cases named in the block; [extension evidence](../../uplift/consolidated/extension/REPORT.md).
+
+Findings audit: [sources, alternatives, implications and settlement gate](../../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#history.delete.global-errors). The recorded assumption is provisional; no new maintainer approval was found.
+
+Findings: [G:D23 — e2e reproduced](../../Verus_verification/bugs_issues.md#g-d23). The linked entry qualifies the caller, reader and providers.
+
+### history.read.global-shape
+
+- uncertain
+- agent-provided
+- user-facing-behavior
+- Expands: [history.read.api](#history.read.api).
+
+Sources: inherited `.g5/Verus_verification/open_questions.md` Q-28, source/native cases named in the block; [extension evidence](../../uplift/consolidated/extension/REPORT.md).
+
+Findings audit: [sources, alternatives, implications and settlement gate](../../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#history.read.global-shape). The recorded assumption is provisional; no new maintainer approval was found.
+
+### history.retention.running-policy
+
+- uncertain
+- agent-provided
+- user-facing-behavior
+- Expands: [history.retention](#history.retention).
+
+Sources: inherited `.g5/Verus_verification/open_questions.md` Q-29, source/native cases named in the block; [extension evidence](../../uplift/consolidated/extension/REPORT.md).
+
+Findings audit: [sources, alternatives, implications and settlement gate](../../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#history.retention.running-policy). The recorded assumption is provisional; no new maintainer approval was found.
+
+### history.survives-rollback.repair-policy
+
+- uncertain
+- agent-provided
+- user-facing-behavior
+- Expands: [history.survives-rollback](#history.survives-rollback).
+
+Sources: inherited `.g5/Verus_verification/open_questions.md` Q-30, source/native cases named in the block; [extension evidence](../../uplift/consolidated/extension/REPORT.md).
+
+Findings audit: [sources, alternatives, implications and settlement gate](../../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#history.survives-rollback.repair-policy). The recorded assumption is provisional; no new maintainer approval was found.
+
+### history.committed.marking.refusal-policy
+
+- uncertain
+- agent-provided
+- user-facing-behavior
+- Expands: [history.committed.marking](#history.committed.marking).
+
+Sources: inherited `.g5/Verus_verification/open_questions.md` Q-31, source/native cases named in the block; [extension evidence](../../uplift/consolidated/extension/REPORT.md).
+
+Findings audit: [sources, alternatives, implications and settlement gate](../../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#history.committed.marking.refusal-policy). The recorded assumption is provisional; no new maintainer approval was found.

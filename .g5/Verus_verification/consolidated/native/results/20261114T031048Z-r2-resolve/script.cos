@@ -1,0 +1,14 @@
+set r=##class(%IPM.Repo.Filesystem.Definition).%New(), r.Name="reg2", r.Root="/tmp/c2/reg/", r.Snapshots=1, r.Prereleases=1
+write !,"OBS S.setup buildcache=",$system.Status.IsOK(r.BuildCache(1,0,0)),!
+do ##class(Consolidated.Obs).Run("S1","load /tmp/c2/lt/")
+do ##class(Consolidated.Obs).Mod("S1","sv-lt-dep")
+do ##class(Consolidated.Obs).Run("S2","load /tmp/c2/ge/")
+do ##class(Consolidated.Obs).Mod("S2","sv-ge-dep") do ##class(Consolidated.Obs).Mod("S2","sv-ge-main")
+do ##class(Consolidated.Obs).Run("S3","load /tmp/c2/ge2/")
+do ##class(Consolidated.Obs).Mod("S3","sv-ge2-dep")
+do ##class(Consolidated.Obs).Run("S4ab","load /tmp/c2/ab/")
+do ##class(Consolidated.Obs).Mod("S4ab","shared-ab")
+do ##class(Consolidated.Obs).Run("S4ba","load /tmp/c2/ba/")
+do ##class(Consolidated.Obs).Mod("S4ba","shared-ba")
+write !,"NATIVE-END",!
+halt

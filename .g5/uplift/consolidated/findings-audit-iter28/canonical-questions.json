@@ -1,0 +1,247 @@
+[
+  [
+    "module.webapp.ownership",
+    ".g5/ontology/concepts/modules.g5.md",
+    "<a id=\"module.webapp.ownership\"></a>\n[Q \u00b7 module.webapp.ownership]\n\nShould install take over an existing web application of the same name, and should uninstall delete one IPM did not create?\n\n- Evidence: `CreateOrUpdateWebApp` updates any existing application and `DeleteWebApp` deletes by name. No changelog, test or discussion addresses applications made outside IPM. The duplicate-name refusal protects only applications another module lists.\n- Working assumption: keep the as-built behavior and disclose it. Alternatives are to refuse install when the application exists and no module lists it, or to record creation and delete only what IPM created. Both change today's reinstall-over-manual-setup path.\n- Register: C:Q15.\n\n"
+  ],
+  [
+    "module.env.failure",
+    ".g5/ontology/concepts/modules.g5.md",
+    "<a id=\"module.env.failure\"></a>\n[Q \u00b7 module.env.failure]\n\nWhen one of several `-env` files is missing, malformed or an array, what should the command keep, and how should two arrays merge?\n\n- Provisional answer: as built. The command fails and keeps nothing from any file, and a later array overwrites the earlier one position by position, so it cannot remove items.\n- Alternatives: keep the files loaded before the failing one, or check every file before changing anything; let a later array replace the earlier one.\n\n"
+  ],
+  [
+    "module.parameter.expressions.brace-policy",
+    ".g5/ontology/concepts/modules.g5.md",
+    "<a id=\"module.parameter.expressions.brace-policy\"></a>\n[Q \u00b7 module.parameter.expressions.brace-policy]\n\nShould a `$$$macro` expand when the attribute contains no opening brace?\n\n- Evidence: `%Evaluate` returns early on no `{`; native E15/P4 leave the macro literal. The expression documentation lists macros without this gate.\n- Working assumption: keep the observed brace gate until a maintainer chooses otherwise.\n- Alternative: expand macros with or without a brace.\n- Affected claims: parameter evaluation, after-install message, file-copy target and Invoke arguments. Alias C:Q2; parent [module.parameter.expressions](#module.parameter.expressions).\n\n"
+  ],
+  [
+    "module.processor.cpf-effects.policy",
+    ".g5/ontology/concepts/modules.g5.md",
+    "<a id=\"module.processor.cpf-effects.policy\"></a>\n[Q \u00b7 module.processor.cpf-effects.policy]\n\nMust package failure undo instance configuration changes?\n\n- Owner: IPM maintainers and instance administrators; no owner decision was available.\n- Working assumption: database rollback alone gives no such promise. Alternatives are compensating selected changes or refusing them inside package transactions.\n- Depends on: [rollback policy](transactions-and-dev-mode.g5.md#transaction.rollback-scope.policy). A successful native role test settles observation, not this policy.\n\n"
+  ],
+  [
+    "module.system-setting.cleanup-policy",
+    ".g5/ontology/concepts/modules.g5.md",
+    "<a id=\"module.system-setting.cleanup-policy\"></a>\n[Q \u00b7 module.system-setting.cleanup-policy]\n\nShould uninstall keep a legacy SystemSetting value or restore the value that preceded installation?\n\nThe implementation keeps the installed value, and that is the working assumption. Restoring the old value would need to track it and account for later administrator edits; blindly deleting it can remove a setting another user now relies on. The owner must choose this policy (C:Q17).\n\n"
+  ],
+  [
+    "module.python.cleanup-policy",
+    ".g5/ontology/concepts/modules.g5.md",
+    "<a id=\"module.python.cleanup-policy\"></a>\n[Q \u00b7 module.python.cleanup-policy]\n\nHow should IPM remove Python packages without removing a package another module or administrator uses?\n\nThe working assumption preserves the current shared installation on Clean. Tracking package users could permit later removal, but the product TODO does not settle ownership of manually installed or upgraded versions. This needs an owner decision (C:Q18).\n\n"
+  ],
+  [
+    "module.processor.file-copy.unknown-descendants",
+    ".g5/ontology/concepts/modules.g5.md",
+    "<a id=\"module.processor.file-copy.unknown-descendants\"></a>\n[Q \u00b7 module.processor.file-copy.unknown-descendants]\n\nShould FileCopy protect a parent containing an unconfigured descendant with an IRIS.DAT marker, or only configured roots/ancestors and a marker at the exact target? The observed rule is the latter. Tests cover exact unconfigured markers and configured-root ancestors; no inspected human decision settles a recursive search requirement. C:Q22 retains both interpretations.\n\n"
+  ],
+  [
+    "repo.filesystem.bad-module",
+    ".g5/ontology/concepts/repositories.g5.md",
+    "<a id=\"repo.filesystem.bad-module\"></a>\n[Q \u00b7 repo.filesystem.bad-module]\n\nShould a module with an invalid name in a filesystem repository's folder block the whole repository?\n\n- Provisional answer: no. Skip it with a warning, like an unreadable manifest, so the other modules stay available.\n- As built: yes. The same failure stops a load's temporary `.modules` repository from being created, which then fails the load after its commit.\n- Alternative: fail every bad manifest, including unreadable ones, so nothing is silently hidden.\n\n"
+  ],
+  [
+    "repo.oras.integrity.policy",
+    ".g5/ontology/concepts/repositories.g5.md",
+    "<a id=\"repo.oras.integrity.policy\"></a>\n[Q \u00b7 repo.oras.integrity.policy]\n\nShould an untagged pull always select the highest semantic version, and must a package have exactly one archive layer?\n\n- Owner: registry maintainers and IPM maintainers; no owner decision was available. The method comment supports highest-version intent, while source behavior depends on provider order.\n- Working assumption: expose the mismatch and retain size/digest checking. Alternatives are sorting before selection or requiring a registry ordering contract, plus rejecting ambiguous archives or selecting by declared digest.\n- Proposed repairs are not implemented or proved. Preserve deployed platform tags and compare both a valid single archive and ambiguous multi-layer input before a repair.\n\n"
+  ],
+  [
+    "repo.remote.download.credentials",
+    ".g5/ontology/concepts/repositories.g5.md",
+    "<a id=\"repo.remote.download.credentials\"></a>\n[Q \u00b7 repo.remote.download.credentials]\n\nShould registry credentials be sent to a download URL on a different server?\n\n- Evidence: commit `d6cc4204` switched to the registry-supplied URL to \"fix downloading packages\"; a native provider received the repository's Basic credentials and API key at a different host and port. Elsewhere the maintainers treat credentials as belonging to one host: CHANGELOG 0.10.11 `#1115` stops ORAS credential checks from following redirects \"so credentials are not sent to another host\", and `#649` clears a remote registry's credentials when its URL changes. No source decides the download case.\n- Working assumption: keep following the returned URL, and record the forwarding as suspected defect C:D20. The proposed alternative sends credentials only when the URL's server and port match the repository; a third choice is to refuse such URLs. Either change can break registries that redirect downloads to storage needing the same credentials.\n- Register: C:Q14 and proposal C:S14, revised as C:S14b after the [redirect challenge](#repo.remote.download.redirect).\n\n"
+  ],
+  [
+    "repo.filesystem.concurrent-refresh",
+    ".g5/ontology/concepts/repositories.g5.md",
+    "<a id=\"repo.filesystem.concurrent-refresh\"></a>\n[Q \u00b7 repo.filesystem.concurrent-refresh]\n\nDoes cache replacement need its explicit lock until the caller's transaction ends?\n\n- Owner: IPM maintainers. The default constructor releases at object close; the deferred constructor is a separate supported mechanism.\n- Working assumption: keep the intended consistent cache and investigate competing refreshes under actual database isolation. Alternatives are deferred release, refusing an outer transaction or demonstrating that existing database locks suffice.\n- No race corruption or repair is established by the observed lock release. [Withdrawal and paired evidence](../../uplift/consolidated/iter2/boundaries/withdrawals.json).\n\n"
+  ],
+  [
+    "transaction.flag-sources.dependency-defaults",
+    ".g5/ontology/concepts/transactions-and-dev-mode.g5.md",
+    "<a id=\"transaction.flag-sources.dependency-defaults\"></a>\n[Q \u00b7 transaction.flag-sources.dependency-defaults]\n\nDoes a dependency's own `<Defaults>` `NoJournal` apply inside its parent's transaction, so that the dependency's changes escape the parent's normal-mode rollback?\n\n- Provisional answer: yes. A module's `<Defaults>` apply whenever that module is installed, including as a dependency. A `NoJournal` dependency therefore keeps its changes when the parent rolls back, and its history record must survive and say so.\n- Reason: the wiki says flags embedded in `module.xml` are \"applied whenever this module is installed\", and that with `NoJournal` \"changes cannot be rolled back\". These statements are specific to the flags, while the whole-load rollback rule is general.\n- Alternative: the parent's transaction governs every nested load, so a dependency's `<Defaults>` `NoJournal` is ignored, or the dependency is refused, while a parent transaction is open. This keeps [the whole-load rollback](../features/load.g5.md#load.outcome).\n\nUnresolved Q-25: [May an escaped NoJournal dependency remain without its own dependencies?](#transaction.flag-sources.dependency-closure)\n\n"
+  ],
+  [
+    "transaction.flag-sources.dependency-no-transaction",
+    ".g5/ontology/concepts/transactions-and-dev-mode.g5.md",
+    "<a id=\"transaction.flag-sources.dependency-no-transaction\"></a>\n[Q \u00b7 transaction.flag-sources.dependency-no-transaction]\n\nShould a dependency's own `<Defaults>` `NoTransaction` suppress its parent's transaction?\n\n- Provisional answer: yes. A module that declares `NoTransaction` must not run inside a transaction opened for its parent, so the package change runs without one, and a failure may leave a partial install.\n- Reason: the wiki gives `NoTransaction`'s purpose as modules in the install that \"conflict with an outer wrapping transaction\", and says `<Defaults>` apply \"whenever this module is installed\". Without suppression, the flag of a dependency would have no effect, because the dependency would still run inside the parent's transaction.\n- Alternative: the flag affects only the dependency's own load, so the parent's transaction still wraps it and undoes it on failure. A user whose install contains a conflicting module passes `-DNoTransaction=1` for the whole command.\n\n## Developer mode\n\n"
+  ],
+  [
+    "dev-mode.overwrite-guard.force",
+    ".g5/ontology/concepts/transactions-and-dev-mode.g5.md",
+    "<a id=\"dev-mode.overwrite-guard.force\"></a>\n[Q \u00b7 dev-mode.overwrite-guard.force]\n\nMay `-force` lift the developer-mode overwrite guard, and does the guard cover `load`?\n\n- Provisional answer: keep the current scope. The guard covers `install` only, and `-force` does not lift it.\n- Reason: this follows the product as built since the guard was added, and the `-force` help, which speaks only of newer versions without update steps. The wiki's \"Uninstall first, or use `-force`\" conflicts with both, and a maintainer must decide which is meant.\n- Alternative: let `-force` lift the guard as the wiki says, and decide whether `load` is covered.\n\n"
+  ],
+  [
+    "dev-mode.sticky",
+    ".g5/ontology/concepts/transactions-and-dev-mode.g5.md",
+    "<a id=\"dev-mode.sticky\"></a>\n[Q \u00b7 dev-mode.sticky]\n\nWhen a module is already in developer mode, does a plain `load` with neither `-dev` nor `-nodev` keep developer mode?\n\n- Provisional answer: yes, it keeps the stored mode.\n- Reason: the fix this follows stopped plain loads from turning developer mode on. It did not ask plain loads to turn it off, and `-nodev` exists for that.\n- Alternative: a plain load always uses normal mode, following that fix's wording that a module \"should only be DevMode if the -dev flag is included\".\n\n"
+  ],
+  [
+    "transaction.rollback-scope.policy",
+    ".g5/ontology/concepts/transactions-and-dev-mode.g5.md",
+    "<a id=\"transaction.rollback-scope.policy\"></a>\n[Q \u00b7 transaction.rollback-scope.policy]\n\nShould a failed package change compensate external effects that the database cannot roll back?\n\n- Evidence: copied files and `module-lock.json` survived native database rollback; arbitrary hooks and remote calls can have further effects.\n- Working assumption: database rollback is the existing boundary; external effects need separate receipts and must be reported.\n- Alternative: add explicit compensating actions for each external writer.\n- Affected claims: load failure atomicity, lock-file location and status, file copy, CPF and history `Committed`.\n\n"
+  ],
+  [
+    "dev-mode.overwrite-guard.dependency-policy",
+    ".g5/ontology/concepts/transactions-and-dev-mode.g5.md",
+    "<a id=\"dev-mode.overwrite-guard.dependency-policy\"></a>\n[Q \u00b7 dev-mode.overwrite-guard.dependency-policy]\n\nMay a parent replace a dependency that is already in developer mode?\n\n- Evidence: Source guard checks only the top-level Install parameter; native N-R05-DEVUP replaces the dependency at another version and clears developer mode. Same-version DEVSAME skips it.\n- Working assumption: Preserve the stated install overwrite guard for dependencies; load scope follows the parent force/load question.\n- Alternative: Allow top-level guard only, with a warning when dependency developer mode is cleared.\n- Affected claims: install refusal, dependency replacement and developer working copy preservation. Alias Q-24.\n\n"
+  ],
+  [
+    "transaction.flag-sources.dependency-closure",
+    ".g5/ontology/concepts/transactions-and-dev-mode.g5.md",
+    "<a id=\"transaction.flag-sources.dependency-closure\"></a>\n[Q \u00b7 transaction.flag-sources.dependency-closure]\n\nMay an escaped NoJournal dependency remain without its own dependencies?\n\n- Evidence: N-R05-NESTF leaves d1 installed and rolls d2 back because the flat closure loads d2 under parent parameters before d1.\n- Working assumption: Require closure consistency as intent; record the observed violating state rather than assuming a repair.\n- Alternative: Document temporary inconsistency after failure, or use one load-wide transaction mode.\n- Affected claims: dependency satisfaction, mixed-mode rollback and retry. Alias Q-25.\n\n"
+  ],
+  [
+    "version.range.year",
+    ".g5/ontology/concepts/versions.g5.md",
+    "<a id=\"version.range.year\"></a>\n[Q \u00b7 version.range.year]\n\nShould a partial version such as `2024.1` mean exactly `2024.1.0`, as built, while `2024.12` and `1.2` mean a whole minor series?\n\n- Provisional answer: keep the special case for IRIS-style versions, because IPM's tests require `2022.2` to match only `2022.2`.\n- Alternative: one rule for every partial version. Then `2022.2` would also accept `2022.2.1`.\n\n"
+  ],
+  [
+    "artifact.refresh-policy",
+    ".g5/ontology/features/artifact-download.g5.md",
+    "<a id=\"artifact.refresh-policy\"></a>\n[Q \u00b7 artifact.refresh-policy]\n\nWhen should an existing artifact folder or same-named temporary file be refreshed?\n\n- Owner: IPM maintainers and module authors. The code deliberately reuses a local folder during Activate, but no accepted cache identity or expiry rule was found.\n- Working assumption: preserve observed reuse and disclose that it gives no freshness guarantee. Alternatives are immutable digest-addressed files, explicit refresh, or validating the cached bytes against the selected artifact.\n- This decision affects reproducible installs and exports. Do not remove local/offline reuse as part of an authentication repair.\n\n"
+  ],
+  [
+    "artifact.target-policy",
+    ".g5/ontology/features/artifact-download.g5.md",
+    "<a id=\"artifact.target-policy\"></a>\n[Q \u00b7 artifact.target-policy]\n\nShould artifact copies refuse protected installation folders as FileCopy does?\n\n- Owner: IPM maintainers and instance administrators. The processor calls the shared warning before Activate's copy; it does not call FileCopy's deletion guard. No protected system folder was modified in this run.\n- Working assumption: disclose the warning boundary without promising protection. Alternatives are a common refusal rule, an explicit operator override, or retaining warning-only behavior.\n- Archive path safety, partial copies and compensation remain open. A successful copy under `/tmp` settles none of these policies.\n\n"
+  ],
+  [
+    "build.test.outcome.empty.policy",
+    ".g5/ontology/features/build-and-publish.g5.md",
+    "<a id=\"build.test.outcome.empty.policy\"></a>\n[Q \u00b7 build.test.outcome.empty.policy]\n\nShould a declared test package with no test classes fail `test` and `verify`?\n\n- Evidence: the source comment calls it \"not an error in itself\" and skips it on purpose. No changelog entry, test or maintainer discussion states what CI users should see.\n- Working assumption: keep the warning and the passing status. The alternative is to fail, or to fail only when a run executes no tests at all. Either alternative changes current green builds whose test package is intentionally empty.\n- Register: C:Q13.\n\n"
+  ],
+  [
+    "build.package.include-refresh.policy",
+    ".g5/ontology/features/build-and-publish.g5.md",
+    "<a id=\"build.package.include-refresh.policy\"></a>\n[Q \u00b7 build.package.include-refresh.policy]\n\nShould a reloaded manifest that omits IncludeTests keep the previous value or reset it to false?\n\n- Working assumption: preserve the checked behavior and use an explicit false to clear it. Resetting on omission would make a removed declaration disable test packaging, but would change existing reload behavior.\n- Evidence: the XML reader reuses the existing module object, does not reset this scalar field and writes the result back. Native package/extract observations distinguish retention from an explicit false. No owner decision found. Register: C:Q20.\n\n"
+  ],
+  [
+    "devtools.authoring.module-version.file",
+    ".g5/ontology/features/developer-tools.g5.md",
+    "<a id=\"devtools.authoring.module-version.file\"></a>\n[Q \u00b7 devtools.authoring.module-version.file]\n\nShould `module-version` also update the `module.xml` file a module was loaded from?\n\n- Provisional answer: no, as built. The command edits the namespace's copy, and source control hooks, when present, take it from there.\n- Alternative: yes for a module loaded in developer mode, whose folder is its working copy.\n\n"
+  ],
+  [
+    "devtools.generate.invalid-source",
+    ".g5/ontology/features/developer-tools.g5.md",
+    "<a id=\"devtools.generate.invalid-source\"></a>\n[Q \u00b7 devtools.generate.invalid-source]\n\nShould `generate` report or refuse a source file that cannot load?\n\nAs built, it skips the file and can produce a manifest without it. The working assumption preserves that behavior; the alternative fails generation or reports each omission so an author can fix it (C:Q16).\n\n"
+  ],
+  [
+    "history.record.unlogged-refusals",
+    ".g5/ontology/features/history.g5.md",
+    "<a id=\"history.record.unlogged-refusals\"></a>\n[Q \u00b7 history.record.unlogged-refusals]\n\nShould IPM record `update`, `reinstall` and `uninstall` attempts it refuses because of their arguments, as it records refused loads and installs?\n\n- Provisional answer: record them. Examples are `update` or `reinstall` of a module that is not installed, and `uninstall` with no name.\n- Reason: [recorded actions](#history.actions) include refused attempts, and the wiki says IPM records every action \"it attempts, whether or not the attempt succeeded\". `install` with no name is already recorded.\n- Alternative: argument refusals are not attempts, because IPM refuses them before the action starts.\n\n"
+  ],
+  [
+    "history.record.abnormal-end",
+    ".g5/ontology/features/history.g5.md",
+    "<a id=\"history.record.abnormal-end\"></a>\n[Q \u00b7 history.record.abnormal-end]\n\nWhat should `Committed` say on the record of an action that never ended?\n\n- Provisional answer: `Committed` reflects the changes kept, even on an unfinished record. IPM writes it to the permanent record at each commit.\n- Reason: `Committed` \"should reflect whether the action's changes were actually retained\", and the wiki's recipe `-Dcommitted=1 -DSuccess=\"0*\"` is how users find failures that kept changes. A crash that kept changes is that case.\n- Alternative: an empty end time means the outcome is unknown, so readers must not trust `Committed=0` on such a record.\n\n"
+  ],
+  [
+    "history.fields.dependency-source",
+    ".g5/ontology/features/history.g5.md",
+    "<a id=\"history.fields.dependency-source\"></a>\n[Q \u00b7 history.fields.dependency-source]\n\nHow should the log label and show a dependency that IPM pulled from a repository while running a `load` or `update`, and what source does an `update` from a registry store?\n\n- Provisional answer: keep the `load` label for dependencies of `load` and `update`, keep their stored source, and keep the rule that listings show a source only for installs.\n- Reason: the maintainer test for dependency history expects a `load` record for the dependency of a `load`. The original request asks that dependency installs be logged, which this does.\n- Alternative: label them `install` with their source, following the original request's wording \"install (including as a dependency)\". That changes the maintainer test.\n- Alternative: keep the `load` label and show the stored source in listings for any record that has one. That changes the wiki's rule that listings show `n/a` for anything other than install.\n- Alternative: clear the source of records labeled `load`, as the field's description says for loads. This was not chosen, because hiding a real source loses useful history.\n- `update` is not covered by any source. Provisionally it may store its registry, and listings still show `n/a` for it.\n\n"
+  ],
+  [
+    "history.phases.returned-errors",
+    ".g5/ontology/features/history.g5.md",
+    "<a id=\"history.phases.returned-errors\"></a>\n[Q \u00b7 history.phases.returned-errors]\n\nMust every phase that starts also record its end and status, including when an `<Invoke>` returns an error status instead of throwing one?\n\n- Provisional answer: yes. The docs read a phase with no end time as a hang or crash, so an ordinary error must not look like one.\n- Alternative: accept open phases for returned errors and document it.\n\n## Committed and Success\n\n"
+  ],
+  [
+    "history.committed.nested",
+    ".g5/ontology/features/history.g5.md",
+    "<a id=\"history.committed.nested\"></a>\n[Q \u00b7 history.committed.nested]\n\nWhen a caller wraps an IPM command in its own transaction, must the record survive the caller's rollback, and what should `Committed` say?\n\n- Provisional answer: the record survives, because the original request says \"if install rolls back we still need the history\". `Committed` is exact only for actions started outside any caller transaction, because IPM cannot know the caller's later outcome. Record this limit.\n- Reason: no source says whether wrapping IPM in a caller's transaction is supported.\n- Alternative: compare the transaction level at the end with the level at the start, so any commit nested in a caller transaction reads uncommitted.\n- Alternative: treat caller-held transactions as unsupported, so the record may be lost with them.\n\n- Settled observation: the command may return success before the caller later rolls back its module data and permanent history row. The imported model proves this no-trace result under its stated domain. Published caller-transaction use does not decide the independent audit retention policy; the working assumption and alternatives above remain policy proposals.\n\n"
+  ],
+  [
+    "history.read.filter.invalid-column",
+    ".g5/ontology/features/history.g5.md",
+    "<a id=\"history.read.filter.invalid-column\"></a>\n[Q \u00b7 history.read.filter.invalid-column]\n\nWhat should happen to a filter on a column such as `Version_Major`, on a column that does not exist, or when the query fails?\n\n- Provisional answer: filters on listed columns, including version parts, must work, and IPM must never silently drop a filter. When `find` cannot run its query, it reports the error instead of showing an empty log.\n- Reason: a dropped filter widens `history delete`, which could then delete a whole namespace's records without `-confirm`. An empty listing with a success status hides the problem.\n- Alternative: refuse an unknown column with an error, or ignore it with a warning and apply the rest.\n\n"
+  ],
+  [
+    "history.read.filter.default-modifiers",
+    ".g5/ontology/features/history.g5.md",
+    "<a id=\"history.read.filter.default-modifiers\"></a>\n[Q \u00b7 history.read.filter.default-modifiers]\n\nShould the namespace's [default modifiers](../concepts/settings.g5.md#settings.default-modifiers) act as `history` filters?\n\n- Provisional answer: no. Default modifiers are meant for package changes, such as `-DNoTransaction=1`, while `history` filters are explicit requests.\n- Reason: a default such as `NoTransaction` names no history column, so it would break or empty every listing.\n- Alternative: apply them as filters and document it.\n\n"
+  ],
+  [
+    "history.delete.confirm-with-filter",
+    ".g5/ontology/features/history.g5.md",
+    "<a id=\"history.delete.confirm-with-filter\"></a>\n[Q \u00b7 history.delete.confirm-with-filter]\n\nDoes `-confirm` together with a filter delete every record, or only the matching ones?\n\n- Provisional answer: only the matching ones. `-confirm` only permits a delete without a filter.\n- Reason: the wiki describes it this way, while the command help says `-confirm` \"will delete all records in the current namespace\".\n- Alternative: follow the command help.\n\n"
+  ],
+  [
+    "history.delete.running-records",
+    ".g5/ontology/features/history.g5.md",
+    "<a id=\"history.delete.running-records\"></a>\n[Q \u00b7 history.delete.running-records]\n\nMay `history delete` or the daily [purge](#history.retention) remove the record of an action that is still running, and what should that action's final write do then?\n\n- Provisional answer: a delete or purge may remove any matching record, and the running action must still finish normally whether or not its record comes back.\n- Reason: no source covers this case. Deleting is an explicit user choice, and the log must not make a package change fail.\n- Alternative: skip records of running actions, or always write the final result back.\n\n- As built, deleting an accessible active twin before final persistence leaves the row absent even when Finalize and PersistToTwin return success.\n- A transaction-locked twin has a different checked schedule: delete waits, final persistence runs, the transaction releases its lock, delete completes, then temporary-object close recreates the same ID with its finalized successful result. A successful delete is not cancellation of the remaining writer.\n- The [paired final-reader receipts and Verus schedule contract](../../uplift/consolidated/iter2/boundaries/REPORT.md) refute a general no-resurrection claim. They cover two schedules, not all lock timeouts, interleavings or cross-namespace behavior. The alternatives above remain an owner policy question.\n\n"
+  ],
+  [
+    "history.locked.unfinished",
+    ".g5/ontology/features/history.g5.md",
+    "<a id=\"history.locked.unfinished\"></a>\n[Q \u00b7 history.locked.unfinished]\n\nMay IPM finalize, and so lock, the record of an action that never ended?\n\n- Provisional answer: no. A finalized record is one whose action has ended, so a record without an end time stays unfinalized.\n- Reason: a locked record of an unfinished action could never be corrected.\n- Alternative: finalize whenever IPM releases the record, and accept locked records with no end time.\n\n"
+  ],
+  [
+    "history.retention.effect",
+    ".g5/ontology/features/history.g5.md",
+    "<a id=\"history.retention.effect\"></a>\n[Q \u00b7 history.retention.effect]\n\nMay a failure of the daily purge stop the user's command?\n\n- Provisional answer: no. The command should still run, which is a proposed change.\n- Reason: no source says a purge failure may block other commands, and the purge is housekeeping the user did not ask for in that command.\n- Alternative: report the purge error and stop, as a signal that retention is broken.\n\n"
+  ],
+  [
+    "history.keep-on-ipm-uninstall.other-namespaces",
+    ".g5/ontology/features/history.g5.md",
+    "<a id=\"history.keep-on-ipm-uninstall.other-namespaces\"></a>\n[Q \u00b7 history.keep-on-ipm-uninstall.other-namespaces]\n\nMay uninstalling IPM in one namespace delete the in-progress records of other namespaces?\n\n- Provisional answer: no. History belongs to each namespace.\n- Alternative: accept it, because removing IPM is rare.\n\n"
+  ],
+  [
+    "history.committed.escaped-dependency",
+    ".g5/ontology/features/history.g5.md",
+    "<a id=\"history.committed.escaped-dependency\"></a>\n[Q \u00b7 history.committed.escaped-dependency]\n\nShould a parent record count writes kept only by its NoJournal dependency?\n\n- Evidence: The property says any action changes kept. N-R05-M5 leaves child data while top-level marker can remain false and the child row can be lost.\n- Working assumption: Count surviving child writes in the parent outcome; retain the distinction between parent and child records.\n- Alternative: Keep per-activation marker only and rely on independent child records after a repair.\n- Affected claims: Committed truth, record existence and aggregate load outcome. Alias Q-26.\n\n"
+  ],
+  [
+    "history.delete.global-errors",
+    ".g5/ontology/features/history.g5.md",
+    "<a id=\"history.delete.global-errors\"></a>\n[Q \u00b7 history.delete.global-errors]\n\nMust global delete report namespace errors other than missing permission?\n\n- Evidence: DeleteHistoryGlobally catches all exceptions; a native unknown-column comparison distinguishes local failure from global success.\n- Working assumption: Report errors that mean requested deletion was not performed.\n- Alternative: Keep best-effort behavior and explicitly list skipped namespaces and errors.\n- Affected claims: global delete status and namespace scope. Alias Q-27.\n\n"
+  ],
+  [
+    "history.read.global-shape",
+    ".g5/ontology/features/history.g5.md",
+    "<a id=\"history.read.global-shape\"></a>\n[Q \u00b7 history.read.global-shape]\n\nMust programmatic global history rows carry their namespace and ID?\n\n- Evidence: CLI output carries namespace; GlobalRecords ROWSPEC omits namespace and ID, and native H10 repeats caller rows.\n- Working assumption: Return identities sufficient for a caller to distinguish colliding namespace-local IDs.\n- Alternative: Keep the legacy row shape and document a separate namespace-aware API.\n- Affected claims: global query scope, identity and details lookup. Alias Q-28.\n\n"
+  ],
+  [
+    "history.retention.running-policy",
+    ".g5/ontology/features/history.g5.md",
+    "<a id=\"history.retention.running-policy\"></a>\n[Q \u00b7 history.retention.running-policy]\n\nMay automatic retention remove an action that has not ended?\n\n- Evidence: The as-built quoted cutoff deletes nothing. With that defect repaired the filter uses TimeStart only; the Python reader model can then remove active rows.\n- Working assumption: Retain the documented age rule while keeping deletion/finalization races explicit; no repair outcome is claimed.\n- Alternative: Skip active rows and define how killed actions eventually expire.\n- Affected claims: retention fix, active writers and abnormal process ends. Alias Q-29.\n\n"
+  ],
+  [
+    "history.survives-rollback.repair-policy",
+    ".g5/ontology/features/history.g5.md",
+    "<a id=\"history.survives-rollback.repair-policy\"></a>\n[Q \u00b7 history.survives-rollback.repair-policy]\n\nWhich repair should preserve child history without lying about Committed?\n\n- Evidence: Naive durable rows can mark rolled-back writes committed. The inherited bounded variants distinguish guarded close, before-image ordering, per-activation NoJournal and SIGKILL residuals; mirroring is untested.\n- Working assumption: Keep current survival requirement and report the repair as undecided; no product repair applied.\n- Alternative: Use one load-wide mode plus guarded close and mark ordering, or extend the repair to durably mark escaped child writes.\n- Affected claims: D1 and aliases, caller rollback, crash cuts and mirrored history. Alias Q-30.\n\n"
+  ],
+  [
+    "history.committed.marking.refusal-policy",
+    ".g5/ontology/features/history.g5.md",
+    "<a id=\"history.committed.marking.refusal-policy\"></a>\n[Q \u00b7 history.committed.marking.refusal-policy]\n\nShould the no-transaction marker run only after every refusal?\n\n- Evidence: LoadNewModule marks before manifest validation; a later refusal can keep no data yet read Committed=1 (G:D12). The property says noncommitted means nothing kept or rolled back.\n- Working assumption: Keep the intent that a no-write refusal is uncommitted; classify the early marker as a defect.\n- Alternative: Declare every no-transaction attempt committed from its start and change the owning I rule explicitly.\n- Affected claims: validation timing, no-transaction history, D12 and requirement refusals. Alias Q-31.\n\n\n"
+  ],
+  [
+    "reinstall.version",
+    ".g5/ontology/features/install.g5.md",
+    "<a id=\"reinstall.version\"></a>\n[Q \u00b7 reinstall.version]\n\nDoes `reinstall` install the version already installed, or the latest available version?\n\n- Provisional answer: the version already installed, as the command summary and its examples say.\n- Alternative: the latest version, as the command description and the wiki say.\n\n"
+  ],
+  [
+    "load.refusal.update-required.dev-bypass",
+    ".g5/ontology/features/load.g5.md",
+    "<a id=\"load.refusal.update-required.dev-bypass\"></a>\n[Q \u00b7 load.refusal.update-required.dev-bypass]\n\nShould `-dev` also lift the update-required refusal?\n\n- Provisional answer: yes. A maintainer test expects a newer version to install with `-dev`, and the original request asked IPM to point users to `-dev` or `-force`.\n- Reason for doubt: the README and the `-force` help name only `-force`.\n- Alternative: only `-force` lifts it, as the README says.\n- Related: a `-dev` install from a [read-only repository](../concepts/repositories.g5.md#repo.read-only) is checked before developer mode is turned off for it.\n\n"
+  ],
+  [
+    "load.refusal.requirements.timing",
+    ".g5/ontology/features/load.g5.md",
+    "<a id=\"load.refusal.requirements.timing\"></a>\n[Q \u00b7 load.refusal.requirements.timing]\n\nMust IPM check system requirements before it writes anything, even in developer mode or without a transaction?\n\n- Provisional answer: yes. The manifest docs say requirements are checked \"before module installation\", and a module that fails them was never installable.\n- Reason: keeping changes for debugging is meant for failures of a module that could be installed.\n- Alternative: accept that a refused developer-mode or `-DNoTransaction=1` load keeps its saved manifest, since developer mode keeps what it did.\n\n"
+  ],
+  [
+    "load.dependencies.local-repo.precedence",
+    ".g5/ontology/features/load.g5.md",
+    "<a id=\"load.dependencies.local-repo.precedence\"></a>\n[Q \u00b7 load.dependencies.local-repo.precedence]\n\nWhen another repository offers the same version of a dependency as the `.modules` folder, which copy should IPM install?\n\n- Provisional answer: the copy in the older repository, as built. The changelog says ties go to the repository created first.\n- Alternative: the `.modules` copy, because the code that creates the temporary repository says it should be found first and gives it the first sort position.\n- Either way, a higher version wins, wherever it is.\n\n"
+  ],
+  [
+    "uninstall.class-delete-error.policy",
+    ".g5/ontology/features/uninstall.g5.md",
+    "<a id=\"uninstall.class-delete-error.policy\"></a>\n[Q \u00b7 uninstall.class-delete-error.policy]\n\nShould uninstall report an error and keep its metadata when a class cannot be deleted, or warn and remove the metadata as it does now?\n\n- Working assumption: preserve and disclose the checked behavior pending an owner decision. Returning an error would make incomplete removal visible to scripts; retaining metadata would preserve a retry route. Earlier external effects may already have occurred.\n- The source deliberately prints a warning, but no inspected help, test or change rationale settles the intended script status and metadata policy for this refusal. Register: C:Q21.\n\n"
+  ],
+  [
+    "update.steps.shared-ownership",
+    ".g5/ontology/features/update.g5.md",
+    "<a id=\"update.steps.shared-ownership\"></a>\n[Q \u00b7 update.steps.shared-ownership]\n\nShould two modules be allowed to share an update-step class and method, or should the second registration fail?\n\n- The checked implementation moves the single record's home and retains its completion. One module's uninstall can therefore remove a shared completion record still relevant to another installed module.\n- Working assumption: authors use distinct update packages. Alternatives are to refuse a conflicting home, key records by module, or retain explicit shared owners. Each changes registration and deletion behavior; concurrent writers need a separate check.\n- Evidence: ordinary activation, both step stores and deletion readers in iteration 9. No owner decision is inferred. Register: C:Q19.\n\n"
+  ]
+]

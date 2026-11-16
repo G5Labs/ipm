@@ -1,0 +1,329 @@
+--- actual-iter1/.g5/ontology/concepts/modules.g5.md
++++ iter2/.g5/ontology/concepts/modules.g5.md
+@@ -74,7 +74,10 @@
+ <a id="module.parameter.cycles"></a>
+ [I · module.parameter.cycles]
+ 
+-If parameters refer to each other in a loop, IPM reports an error that names the circular reference instead of installing with an unfilled value.
++If parameters refer to each other in a loop, IPM should report an error that names the circular reference instead of installing with an unfilled value.
++
++- This requirement is recovered from the named error and guard in the product, rather than an owner decision. As built, the guard is unreachable: `a=${b}`, `b=${a}` returns unresolved `${a}` without that error. A resolving neighbor, `a=${b}`, `b=ok`, returns `ok`.
++- Using an unresolved value later may raise a regular-expression error. This defect does not satisfy the circular-reference requirement. [Iter 2 native reader](../../uplift/consolidated/iter2/native/receipt.json) and [retained Verus counterexample](../../Verus_verification/consolidated/verus/attr_evaluator.rs) preserve both outcomes.
+ 
+ <a id="module.requirement"></a>
+ [I · module.requirement]
+@@ -118,6 +121,7 @@
+ - Database rollback does not restore either filesystem state. With `KeepOnUninstall`, Clean preserves the target; otherwise Clean removes it.
+ 
+ - Directory overlay rules protect system directories. These cases were checked through both the processor and an actual failing load; no general filesystem compensation is proved.
++- Direct `DoCopy` with a missing source returns an error and creates no copied target file. A successful copy remains after database rollback while a journaled database sentinel disappears; rollback does not turn a failed copy into a successful one. Creating the destination directory and partial operating-system copy errors are separate effects.
+ 
+ <a id="module.placement"></a>
+ [I · module.placement]
+@@ -179,6 +183,23 @@
+ - Alternative: expand macros with or without a brace.
+ - Affected claims: parameter evaluation, after-install message, file-copy target and Invoke arguments. Alias C:Q2; parent [module.parameter.expressions](#module.parameter.expressions).
+ 
++<a id="module.processor.cpf-effects"></a>
++[D · module.processor.cpf-effects]
++
++A CPF processor runs a child command that changes instance configuration. Its exit status and the final configuration must be read separately from database rollback.
++
++- In the disposable IRIS provider, a valid role-creation merge returned success and the role survived rollback, while a journaled sentinel disappeared. An invalid-section neighbor returned error with child exit 7 and created no role.
++- These observations cover one configuration action and one refusal. Other actions, partial failures and settings that need restart remain external premises; exit zero alone does not prove their effect.
++
++<a id="module.processor.cpf-effects.policy"></a>
++[Q · module.processor.cpf-effects.policy]
++
++Must package failure undo instance configuration changes?
++
++- Owner: IPM maintainers and instance administrators; no owner decision was available.
++- Working assumption: database rollback alone gives no such promise. Alternatives are compensating selected changes or refusing them inside package transactions.
++- Depends on: [rollback policy](transactions-and-dev-mode.g5.md#transaction.rollback-scope.policy). A successful native role test settles observation, not this policy.
++
+ ## Metadata
+ 
+ Source locators follow the conventions on the [root page](../root.g5.md#how-to-read-this-ontology). Inventory IDs refer to [A1](../../uplift/ipm-verus-20261113/A/intent-inventory.md) and [A2](../../uplift/ipm-verus-20261113/A/operation-inventory.md). These blocks are outside the formal scope.
+@@ -359,3 +380,20 @@
+ - Expands: [expressions](#module.parameter.expressions).
+ 
+ Evidence: C:Q2; Storage/Module.cls:1833-1841; E15/P4; new attr_evaluator.rs.
++
++### module.processor.cpf-effects
++
++- agent
++- user-facing-behavior
++- Expands: [Processors](#module.processor).
++- Children: [compensation policy](#module.processor.cpf-effects.policy).
++
++Sources: `ResourceProcessor/CPF.cls::GetSourceFile`, `::DoMerge`, `::MergeCPF`; [exact bindings, premises and final readers](../../uplift/consolidated/iter2/boundaries/bindings.json); [native and Verus receipts](../../uplift/consolidated/iter2/boundaries/REPORT.md). Hand translation under explicit provider outcomes; no ObjectScript-body proof.
++
++### module.processor.cpf-effects.policy
++
++- agent
++- uncertain
++- Expands: [CPF effects](#module.processor.cpf-effects).
++
++Authority remains open; source observation and checked alternatives are in the parent. Arbitrary CPF compensation has not been designed or implemented.
+--- actual-iter1/.g5/ontology/concepts/repositories.g5.md
++++ iter2/.g5/ontology/concepts/repositories.g5.md
+@@ -70,7 +70,9 @@
+ 
+ - IPM reads the folder into a cache when the repository is created and when it is refreshed. A refresh replaces the whole cache, so a module whose folder is gone stops being offered.
+ - A `module.xml` that is not a readable manifest is skipped. A readable manifest whose module name is invalid fails the whole refresh, which then changes nothing. Whether one bad module should block the rest is [open](#repo.filesystem.bad-module).
+-- A refresh of an existing repository locks it. While another process holds that lock, the refresh fails after a timeout and changes nothing. Inside a caller's open transaction, the lock stays held until that transaction ends.
++- A refresh of an existing repository locks it. While another process holds that lock, the refresh fails after a timeout and changes nothing.
++- The earlier claim that this explicit lock lasts until a caller's transaction ends was incorrect for the actual constructor. The default lock manager releases it when the refresh method returns, even if an outer transaction remains open. Explicit `%New(0)` keeps it through close until commit; default `%New(1)` releases at close.
++- The cache still needs consistent replacement. How transaction isolation and other writers protect an uncommitted refresh remains [open](#repo.filesystem.concurrent-refresh); the observed release does not authorize a race.
+ 
+ <a id="repo.filesystem.bad-module"></a>
+ [Q · repo.filesystem.bad-module]
+@@ -81,6 +83,41 @@
+ - As built: yes. The same failure stops a load's temporary `.modules` repository from being created, which then fails the load after its commit.
+ - Alternative: fail every bad manifest, including unreadable ones, so nothing is silently hidden.
+ 
++<a id="repo.oras.integrity"></a>
++[D · repo.oras.integrity]
++
++As built, an ORAS pull without a tag selects the last tag supplied by the registry. The helper does not sort that list, despite its comment promising the highest version.
++
++- A disposable provider returning `[2.0.0,1.0.0]` selects `1.0.0`; reversing the order selects `2.0.0`. The separate all-tags listing sorts versions, so it cannot justify the pull helper's ordering.
++- Archive validation skips non-tar layers and compares size and digest with the first tar layer. A later matching tar layer does not rescue an earlier mismatch. The pull path also chooses the first downloaded `*.tgz`; those two choices need not name the same artifact.
++- Failed validation returns an error even if the raw helper assigned a stream. The final `GetModule` reader throws that status instead of returning the stream to the loader. Multiple layers/files, provider order and digest integrity remain distinct premises.
++
++<a id="repo.oras.integrity.policy"></a>
++[Q · repo.oras.integrity.policy]
++
++Should an untagged pull always select the highest semantic version, and must a package have exactly one archive layer?
++
++- Owner: registry maintainers and IPM maintainers; no owner decision was available. The method comment supports highest-version intent, while source behavior depends on provider order.
++- Working assumption: expose the mismatch and retain size/digest checking. Alternatives are sorting before selection or requiring a registry ordering contract, plus rejecting ambiguous archives or selecting by declared digest.
++- Proposed repairs are not implemented or proved. Preserve deployed platform tags and compare both a valid single archive and ambiguous multi-layer input before a repair.
++
++<a id="repo.publish-cache"></a>
++[D · repo.publish-cache]
++
++As built, a retained Remote publishing manager reuses an available client without rechecking Enabled or availability; it also keeps unavailable names suppressed for that object's lifetime. The ORAS publishing manager rereads Enabled and probes on each call.
++
++- In paired native calls using the same retained managers, disabling a repository after success still yielded an available Remote client, while ORAS yielded unavailable. This does not promise a cache lifetime across separate shell commands.
++- An available service may report that deletion is disabled while the manager returns a successful status. Capability, availability and operation status are different results.
++
++<a id="repo.filesystem.concurrent-refresh"></a>
++[Q · repo.filesystem.concurrent-refresh]
++
++Does cache replacement need its explicit lock until the caller's transaction ends?
++
++- Owner: IPM maintainers. The default constructor releases at object close; the deferred constructor is a separate supported mechanism.
++- Working assumption: keep the intended consistent cache and investigate competing refreshes under actual database isolation. Alternatives are deferred release, refusing an outer transaction or demonstrating that existing database locks suffice.
++- No race corruption or repair is established by the observed lock release. [Withdrawal and paired evidence](../../uplift/consolidated/iter2/boundaries/withdrawals.json).
++
+ ## Metadata
+ 
+ Source locators follow the conventions on the [root page](../root.g5.md#how-to-read-this-ontology). Inventory IDs refer to [A1](../../uplift/ipm-verus-20261113/A/intent-inventory.md) and [A2](../../uplift/ipm-verus-20261113/A/operation-inventory.md). Repository search is used by the formal scope through [install](../features/install.g5.md#install) and [dependencies](../features/dependencies.g5.md#deps). The repository internals themselves are outside it.
+@@ -154,7 +191,7 @@
+ 
+ - Children: [bad module](#repo.filesystem.bad-module).
+ 
+-Sources: `Repo/Filesystem/Definition.cls`; `AGENTS.md` test guidance. Inventory: CAT-23. Observed: the folder scan is cached in `^IPM.Repo.Filesystem.CacheD`. Consolidated round 4 (`20261114T033125Z-r4-owners`, ARM64) and model `Verus_verification/consolidated/models/owners.py` (`BuildCache`, `AddCacheItem`, `ScanDirectory`, lock manager): an unreadable `module.xml` is not cached (LK1); a second process holding the repository's lock makes a refresh fail with ERROR #5803 after the timeout (LK2); a refresh drops a removed module (LK3); the lock is released afterwards at transaction level zero (LK4). Inside an outer transaction opened in a method, the lock was still held after the refresh returned (LK5, `20261114T034941Z-r4-lock-depth`; the first LK5 attempt typed `TSTART` at the terminal, which IRIS refuses, and is not evidence). Hidden `.modules` folders are scanned: the same tree fails with `Depth=0` and builds with `Depth=1` (DC0, DC1). Round 1: an invalid name fails the cache build and its save is rolled back (TR7).
++Sources: `Repo/Filesystem/Definition.cls`; `AGENTS.md` test guidance. Inventory: CAT-23. Observed: the folder scan is cached in `^IPM.Repo.Filesystem.CacheD`. Consolidated round 4 (`20261114T033125Z-r4-owners`, ARM64) and model `Verus_verification/consolidated/models/owners.py` (`BuildCache`, `AddCacheItem`, `ScanDirectory`, lock manager): an unreadable `module.xml` is not cached (LK1); a second process holding the repository's lock makes a refresh fail with ERROR #5803 after the timeout (LK2); a refresh drops a removed module (LK3); the lock is released afterwards at transaction level zero (LK4). The inherited LK5 result was interpreted as holding the default refresh lock through an outer transaction. Iter 2's actual constructor and successful refresh pairs contradict that interpretation; the old hand-model theorem remains true only of its incorrect abstraction. The first LK5 terminal `TSTART` attempt was already excluded. [Corrected binding and withdrawal](../../uplift/consolidated/iter2/boundaries/withdrawals.json). Hidden `.modules` folders are scanned: the same tree fails with `Depth=0` and builds with `Depth=1` (DC0, DC1). Round 1: an invalid name fails the cache build and its save is rolled back (TR7).
+ 
+ Extension Verus: [owners.rs::build_cache](../../Verus_verification/consolidated/verus/owners.rs), [owners.rs::lock_class_id](../../Verus_verification/consolidated/verus/owners.rs), [owners.rs::scan](../../Verus_verification/consolidated/verus/owners.rs), [owners.rs::unlock_all](../../Verus_verification/consolidated/verus/owners.rs), [owners.rs::unlock_class_id](../../Verus_verification/consolidated/verus/owners.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
+ 
+@@ -168,3 +205,36 @@
+ Sources: `Repo/Filesystem/Definition.cls:184-241` (unreadable manifests skipped at `:196-200`; a save error returned at `:234-237` and aggregated at `:170-176`). Native LK1 (skipped), TR7 and Dtxn (blocked). G's attempt 1 for case C29 also found that an unparseable manifest is skipped (`native/make_replay.py:248`). Question C:Q5.
+ 
+ Extension Verus: [owners.rs::add_cache](../../Verus_verification/consolidated/verus/owners.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
++
++### repo.oras.integrity
++
++- agent
++- user-facing-behavior, security
++- Expands: [ORAS](#repo.oras).
++- Children: [selection and layer policy](#repo.oras.integrity.policy).
++
++Sources: `Repo/Oras/PackageService.cls::GetLatestTag`, `::GetAllTags`, `::Pull`, `::VerifyModuleHashAndSize`, `::GetModule`; comments and pinned history. [Scoped state/contract and assertions](../../Verus_verification/consolidated/iter2/registry.rs); [actual provider observations](../../uplift/consolidated/iter2/native/receipt.json). These are source-backed observations and a suspected provider-dependent defect, not a registry prevalence claim.
++
++### repo.oras.integrity.policy
++
++- agent
++- uncertain
++- Expands: [ORAS integrity](#repo.oras.integrity).
++
++No authorized policy decision. The parent states source authority, alternatives, preservation conditions and remaining premises.
++
++### repo.publish-cache
++
++- agent
++- user-facing-behavior
++- Expands: [Repository management](#repo.manage).
++
++Sources: `Repo/Remote/PublishManager.cls`, `Repo/Oras/PublishManager.cls`, `General/Singleton.cls`. [State and capability projections](../../Verus_verification/consolidated/iter2/registry.rs); [paired native manager observations](../../uplift/consolidated/iter2/native/receipt.json). Probe transport, manager lifetime and competing configuration writers remain explicit premises.
++
++### repo.filesystem.concurrent-refresh
++
++- agent
++- uncertain
++- Expands: [Filesystem cache](#repo.filesystem).
++
++Source owner and constructor binding: [boundary ledger](../../uplift/consolidated/iter2/boundaries/bindings.json). The prior lock correspondence is withdrawn; other cache properties retain their evidence.
+--- actual-iter1/.g5/ontology/concepts/transactions-and-dev-mode.g5.md
++++ iter2/.g5/ontology/concepts/transactions-and-dev-mode.g5.md
+@@ -27,7 +27,9 @@
+ 
+ - The database-only interpretation of the history bit is source-backed (P DEC-HIST-5). New native FileCopy tests kept a copied file after a failing load rolled its module record back; a deferred-copy neighbor left no file.
+ 
+-- The broader policy question is [external effects](#transaction.rollback-scope.policy); CPF's real merge/rollback behavior remains an explicit environment hypothesis until exercised safely.
++- A direct missing-source copy fails without a copied target file; the successful-copy neighbor leaves its file after database rollback. Directory creation and partial operating-system errors are separate effects.
++- [CPF observations](modules.g5.md#module.processor.cpf-effects) now include a real role-creation merge and an invalid-section neighbor on a disposable provider. Child exit and applied configuration are separate outputs; other CPF effects remain external premises.
++- The broader policy question remains [external effects](#transaction.rollback-scope.policy). These observed outcomes do not ratify compensation policy.
+ 
+ <a id="transaction.opt-out"></a>
+ [I · transaction.opt-out]
+--- actual-iter1/.g5/ontology/features/build-and-publish.g5.md
++++ iter2/.g5/ontology/features/build-and-publish.g5.md
+@@ -60,9 +60,26 @@
+ 
+ `makedeployed <module>` turns resources marked `Deploy="true"` into compiled-only code. `-recurse` does the same for the module's dependencies.
+ 
++<a id="build.publish.partial-effects"></a>
++[D · build.publish.partial-effects]
++
++A failed publish or unpublish does not establish that the registry is unchanged. As built, ORAS writes or deletes tags one at a time; a later failure can follow completed earlier calls.
++
++- ORAS cleanup can fail after the push succeeds. The lifecycle can publish before its optional local version export fails; an in-memory version assignment is not proof that the stored row or manifest was updated.
++- Remote publishing and deletion require credentials and exactly HTTP 200 for success, while ORAS permission probing currently reports enabled before attempting the operation. An HTTP error or other returned error may follow external effects.
++- These source-backed contracts use explicit provider results. Actual multi-tag failure, cleanup errors and postpublication local export have not been exercised end to end in this iteration.
++
++<a id="build.test-output.counts"></a>
++[D · build.test-output.counts]
++
++As built, a failed test method counts as failed even if every assertion passed. A case's nonempty hook error adds one failed method to the summary.
++
++- A blank error category hides the aggregate error message; it does not change a failed status to passed. JSON files contain the full result tree; device JSON always has a summary and selects method details or failures from its detail and verbose settings.
++- `verify` creates its NoJournal load parameter when it creates a fresh VERIFY namespace. Reuse and SkipLoad take other setup paths; the plan does not establish namespace cleanup after errors or all serialized formats.
++
+ ## Metadata
+ 
+-Source locators follow the conventions on the [root page](../root.g5.md#how-to-read-this-ontology). Inventory IDs refer to [A1](../../uplift/ipm-verus-20261113/A/intent-inventory.md) and [A2](../../uplift/ipm-verus-20261113/A/operation-inventory.md). These blocks are outside the formal scope.
++Source locators follow the conventions on the [root page](../root.g5.md#how-to-read-this-ontology). Inventory IDs refer to [A1](../../uplift/ipm-verus-20261113/A/intent-inventory.md) and [A2](../../uplift/ipm-verus-20261113/A/operation-inventory.md). The inherited scope excluded these blocks; iteration 2 adds only the explicitly linked scoped contracts.
+ 
+ ### build
+ 
+@@ -125,3 +142,19 @@
+ - Expands: [Build](#build).
+ 
+ Sources: `Main.cls:189-195`; `wiki/05`; CHANGELOG 0.10.4 (`#815`). Inventory: CAT-34; A2 1.2 row 13.
++
++### build.publish.partial-effects
++
++- agent
++- user-facing-behavior
++- Expands: [Publishing](#build.publish).
++
++Sources: `Repo/Oras/PublishService.cls::PushOras`, `::DeleteTags`, `::PublishModule`; `Repo/Remote/PublishService.cls`; `Lifecycle/Base.cls::%Publish`. [Actual state and scoped assertions](../../Verus_verification/consolidated/iter2/registry.rs); [source review and withheld mappings](../../uplift/consolidated/iter2/inventory/new-binding-review.json). Remote effects are provider inputs, not implementation proofs. Simplification proposal: expose which external stages completed; no compensation design has been accepted.
++
++### build.test-output.counts
++
++- agent
++- user-facing-behavior
++- Expands: [Test output](#build.test-output).
++
++Sources: `Test/Abstract.cls::BuildResultTree`, `::GetSummary`; `Test/JsonOutput.cls`; `Lifecycle/Base.cls::%Verify`. [Verus state and reader projections](../../Verus_verification/consolidated/iter2/readers.rs); [actual seeded native readers](../../uplift/consolidated/iter2/native/receipt.json). Full serialization, namespace lifecycle and all format branches remain open.
+--- actual-iter1/.g5/ontology/features/history.g5.md
++++ iter2/.g5/ontology/features/history.g5.md
+@@ -81,6 +81,9 @@
+ 
+ IPM writes the permanent record when the action starts and keeps the in-progress record in IRISTEMP, which a rollback does not undo. When the action ends, IPM copies the result to the permanent record. For a top-level action started outside any transaction, both writes happen outside the action's transaction, so its rollback cannot undo them.
+ 
++- Process loss and instance restart differ. In a checked SIGKILL schedule, temporary progress and the initial permanent row remained. After a whole-instance restart, the temporary row was gone and the durable initial permanent row remained unfinished.
++- These observations require the checked IRISTEMP mapping and durable database. They do not establish power-loss durability, replication or every caller-transaction schedule. [Paired native and formal evidence](../../uplift/consolidated/iter2/boundaries/REPORT.md).
++
+ <a id="history.fields"></a>
+ [I · history.fields]
+ 
+@@ -324,9 +327,9 @@
+ - Reason: no source covers this case. Deleting is an explicit user choice, and the log must not make a package change fail.
+ - Alternative: skip records of running actions, or always write the final result back.
+ 
+-- Source/observation boundary: an in-memory twin and the database row can differ. A new held-out stale-writer interleaving deleted the twin, then finalized and persisted; persist returned OK and the row stayed absent.
+-- This narrows the prior resurrection hypothesis. It does not establish every concurrent lock schedule.
+-- A dependency row may be protected by the parent's transaction lock; top-level rows do not share that premise. Keep true concurrent and cross-namespace schedules open.
++- As built, deleting an accessible active twin before final persistence leaves the row absent even when Finalize and PersistToTwin return success.
++- A transaction-locked twin has a different checked schedule: delete waits, final persistence runs, the transaction releases its lock, delete completes, then temporary-object close recreates the same ID with its finalized successful result. A successful delete is not cancellation of the remaining writer.
++- The [paired final-reader receipts and Verus schedule contract](../../uplift/consolidated/iter2/boundaries/REPORT.md) refute a general no-resurrection claim. They cover two schedules, not all lock timeouts, interleavings or cross-namespace behavior. The alternatives above remain an owner policy question.
+ 
+ <a id="history.locked"></a>
+ [I · history.locked]
+--- actual-iter1/.g5/ontology/features/inspection.g5.md
++++ iter2/.g5/ontology/features/inspection.g5.md
+@@ -12,15 +12,24 @@
+ - `search` lists modules in all registries, filtered to this platform. `-versions` shows every version.
+ - `list-installed` lists installed modules, optionally as a tree, with Python packages or sorted.
+ - `list-dependents` lists modules that depend on a given module.
+-- `show` shows one installed module's details, resources, dependencies and the modules that require it.
++- `show` shows one installed module's details, resources, dependencies and the modules that require it. It looks up stored `Name` first, then `ExternalName`; if both could match, `Name` wins. Neither match produces an error naming the missing module and namespace.
++- Name and alias lookup use the module datatype's case-insensitive normalization. Native stored-name, alias, uppercase-alias and missing-name neighbors preserve the selected record and version.
+ - `info` and `version` show the IPM environment and version.
+ - `namespace` (`zn`) lists modules by namespace and switches to a namespace.
+ - `orphans` lists items in the namespace's code database that belong to no module.
+ - `help` shows help for the shell or for one command.
+ 
++<a id="inspect.dependents"></a>
++[D · inspect.dependents]
++
++As built, `show` lists only direct, unscoped dependents and hides scoped dependencies from its dependency list. This display is not the complete dependency graph used for removal decisions.
++
++- A missing installed dependency version reads `not installed`; a present version that fails the requested range reads `unsatisfied`.
++- Requirements-file display skips blank lines and lines starting with `#` after trimming. Inline comments remain in the displayed line.
++
+ ## Metadata
+ 
+-Source locators follow the conventions on the [root page](../root.g5.md#how-to-read-this-ontology). Inventory IDs refer to [A1](../../uplift/ipm-verus-20261113/A/intent-inventory.md) and [A2](../../uplift/ipm-verus-20261113/A/operation-inventory.md). This block is outside the formal scope.
++Source locators follow the conventions on the [root page](../root.g5.md#how-to-read-this-ontology). Inventory IDs refer to [A1](../../uplift/ipm-verus-20261113/A/intent-inventory.md) and [A2](../../uplift/ipm-verus-20261113/A/operation-inventory.md). The inherited scope excluded this page; iteration 2 adds only the explicitly linked scoped reader contracts.
+ 
+ ### inspect
+ 
+@@ -31,3 +40,11 @@
+ Sources: `Main.cls:17-27`, `:524-616`, `:683-724`, `:807-816`; CHANGELOG 0.10.11 (`#1019`), 0.10.7 (`#1079`), 0.10.5 (`#950`), 0.10.10 (`#1158`). Inventory: CAT-17, CAT-25; A2 1.2 rows 1, 24-27, 31, 33, 34, 38. Tests: `Show.cls`, `Unit/CLI.cls` `TestSortList`, `ListInstPythonLibrariesTest.cls`. No wiki page covers `show` or `info`.
+ 
+ Extension Verus: [thin_surfaces.rs::inspection_choice](../../Verus_verification/consolidated/verus/thin_surfaces.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
++
++### inspect.dependents
++
++- agent
++- user-facing-behavior
++- Expands: [Inspection](#inspect).
++
++Authority: product method comments and `General/ModuleSummary.cls::GetDirectDependents`, `::GetLines`, `::GetInstalledStatus`, `::ParseRequirements`. [Scoped Verus reader contracts](../../Verus_verification/consolidated/iter2/readers.rs) and [native reader observations](../../uplift/consolidated/iter2/native/receipt.json) distinguish selection and output; SQL ordering, arbitrary formatting and the whole graph remain outside these proofs.
+--- actual-iter1/.g5/ontology/features/uninstall.g5.md
++++ iter2/.g5/ontology/features/uninstall.g5.md
+@@ -31,6 +31,9 @@
+ 
+ `-all` uninstalls every module in the namespace except IPM itself.
+ 
++- As built, without force, a failed module blocks later attempts on dependencies that still need it. With force, IPM removes that failed module from its traversal graph and continues, while retaining the error in its final status.
++- Traversal progress is not proof of removal from the installed-module store. A failed provider can leave resources or its row behind; those final effects must be read separately. [Scoped traversal state and valid neighbor](../../Verus_verification/consolidated/iter2/readers.rs).
++
+ <a id="uninstall.global"></a>
+ [I · uninstall.global]
+ 
+@@ -48,7 +51,7 @@
+ 
+ ## Metadata
+ 
+-Source locators follow the conventions on the [root page](../root.g5.md#how-to-read-this-ontology). Inventory IDs refer to [A1](../../uplift/ipm-verus-20261113/A/intent-inventory.md) and [A2](../../uplift/ipm-verus-20261113/A/operation-inventory.md). Uninstall is in the formal scope only through its history records.
++Source locators follow the conventions on the [root page](../root.g5.md#how-to-read-this-ontology). Inventory IDs refer to [A1](../../uplift/ipm-verus-20261113/A/intent-inventory.md) and [A2](../../uplift/ipm-verus-20261113/A/operation-inventory.md). The inherited uninstall scope covered history records; iteration 2 also models one eligible UninstallAll traversal step.
+ 
+ ### uninstall
+ 
+--- actual-iter1/.g5/ontology/root.g5.md
++++ iter2/.g5/ontology/root.g5.md
+@@ -30,7 +30,7 @@
+                └─► history log of the namespace (survives rollback)
+ ```
+ 
+-A package change runs in one IRIS transaction, so a failure is rolled back. Developer mode (`-dev`) and the `-DNoTransaction` and `-DNoJournal` flags change what a failure keeps, and the history log's `Committed` column reports it.
++A normal package change is intended to roll back its database writes when it fails inside its transaction. Earlier commits and external effects have separate outcomes, described by [load outcomes](features/load.g5.md#load.outcome) and [rollback scope](concepts/transactions-and-dev-mode.g5.md#transaction.rollback-scope). Developer mode (`-dev`) and the `-DNoTransaction` and `-DNoJournal` flags change what a failure keeps, and the history log's `Committed` column reports it.
+ 
+ ## Pages
+ 

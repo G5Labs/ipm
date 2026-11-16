@@ -1,0 +1,95 @@
+# container: ipm-uplift-iris-nsp  image: containers.intersystems.com/intersystems/iris-community:2026.1  at: 2026-11-13T18:25:37Z
+# script: validation/iris/nsp/87-nsp-community.script
+
+Node: 1176f046b99d, Instance: IRIS
+
+USER>
+
+Load of directory started on 11/13/2026 18:25:37
+Loading file /tmp/uplift/nsp/Uplift/Nsp/Cap.cls as cls
+Imported class: Uplift.Nsp.Cap
+Loading file /tmp/uplift/nsp/Uplift/Nsp/Util.cls as cls
+Imported class: Uplift.Nsp.Util
+Loading file /tmp/uplift/nsp/Uplift/Nsp/Ns.cls as cls
+Imported class: Uplift.Nsp.Ns
+Compiling 3 classes
+Compiling class Uplift.Nsp.Cap
+Compiling class Uplift.Nsp.Ns
+Compiling class Uplift.Nsp.Util
+Compiling routine Uplift.Nsp.Cap.1
+Compiling routine Uplift.Nsp.Util.1
+Compiling routine Uplift.Nsp.Ns.1
+Load finished successfully.
+
+LOADED 1
+
+USER>
+
+>>> zpm "enable -community"
+  | 
+  | Version of IPM in current namespace: 
+  | USER> [32mzpm [0m0.10.11-SNAPSHOT
+  | 
+  | RUNNING command: "repo -delete-all"
+  | [31mERROR![0m %DeleteExtent could not delete all instances of '%IPM.Repo.Definition'
+  | [31mError running command "repo -delete-all" - ERROR #5764: %DeleteExtent could not delete all instances of '%IPM.Repo.Definition'[0m
+  | 
+  | RUNNING command: "repo -reset-defaults"
+  | [33mWARNING: Using -password via the CLI is insecure. Use -password-stdin or -password-env.[0m
+  | [31mERROR![0m Failed to acquire read lock on instance of '%IPM.Repo.Remote.Definition'
+  | [31mError running command "repo -reset-defaults" - ERROR #5804: Failed to acquire read lock on instance of '%IPM.Repo.Remote.Definition'[0m
+  | 
+  | RUNNING command: "enable -map -repos -globally"
+  | Version of IPM in current namespace: 
+  | USER> [32mzpm [0m0.10.11-SNAPSHOT
+  | Mapping %IPM package in USER equivalently to %SYS
+  | Mapping %IPM.* routines in USER equivalently to %SYS
+  | Mapping %IPM package in USER equivalently to NCA
+  | Mapping %IPM.* routines in USER equivalently to NCA
+  | Mapping %IPM package in USER equivalently to NCB
+  | Mapping %IPM.* routines in USER equivalently to NCB
+  | Skipping IPM mapping of NCC - IPM already installed.
+  | Skipping IPM mapping of NCD - IPM already installed.
+  | Mapping %IPM package in USER equivalently to NCE
+  | Mapping %IPM.* routines in USER equivalently to NCE
+  | Mapping %IPM package in USER equivalently to NCT
+  | Mapping %IPM.* routines in USER equivalently to NCT
+  | Skipping IPM mapping of USER - IPM already installed.
+  | Skipping repository mapping of %SYS - IPM not mapped from source namespace.
+  | Skipping repository mapping of NCA - IPM repositories found.
+  | Skipping repository mapping of NCB - IPM not mapped from source namespace.
+  | Skipping repository mapping of NCC - IPM not mapped from source namespace.
+  | Skipping repository mapping of NCD - IPM not mapped from source namespace.
+  | Mapping IPM repository in USER equivalently to NCE
+  | Skipping repository mapping of NCT - IPM not mapped from source namespace.
+  | Skipping repository mapping of USER - IPM not mapped from source namespace.
+  | Done.
+  | 
+  | [35mNCC> [0m [32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [35mNCD> [0m [32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [35mUSER> [0m[32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [35m%SYS> [0m[32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [39mInstalled In: [0mUSER 
+  | [35mNCA> [0m [32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [39mInstalled In: [0mUSER 
+  | [35mNCB> [0m [32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [39mInstalled In: [0mNCC 
+  | [35mNCE> [0m [32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [39mInstalled In: [0mUSER 
+  | [35mNCT> [0m [32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [39mInstalled In: [0mUSER 
+  | [31mERROR![0m Failed to acquire read lock on instance of '%IPM.Repo.Remote.Definition'
+  | [31mError running command "enable -map -repos -globally" - ERROR #5804: Failed to acquire read lock on instance of '%IPM.Repo.Remote.Definition'[0m
+<<< status OK
+
+OBS|nc-nsp-N4-community-step-fails|cmdStatus=ok;defaultRegistry=https://pm.community.intersystems.com;deleteAllLine=RUNNING command: "repo -delete-all";errorLine=[31mError running command "repo -delete-all" - ERROR #5764: %DeleteExtent could not delete all instances of '%IPM.Repo.Definition'[0m;lockHeld=1;mapLine=;nctMaps=pkg:USER rtn:USER repoD:-;reposAfter=nc-nsp-stub nc-nsp-user;reposBefore=nc-nsp-stub nc-nsp-user;resetLine=;seconds=42.1;sysMaps=pkg:USER rtn:USER repoD:-;
+
+USER>
+
+Activate 1
+%SYS 
+    for ns = "%SYS", "NCA", "NCB", "NCE", "NCT" { write !, ns, " ", ##class(Upli
+                                                           ^
+ft.Nsp.Util).Maps(ns), " hasIPM:", ##class(Uplift.Nsp.Util).HasIPM(ns) }
+<CLASS DOES NOT EXIST>CleanupMaps+9^Uplift.Nsp.Ns.1 *Uplift.Nsp.Util
+%SYS 3f2>

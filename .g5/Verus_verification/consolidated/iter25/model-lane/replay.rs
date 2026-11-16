@@ -1,0 +1,403 @@
+use vstd::prelude::*;
+#[path="../developer_sources.rs"] pub mod model;
+use model::*;
+verus!{pub proof fn observed_group(){
+lifecycle_staged();constructor_neighbor();layout_neighbor();reader_neighbor();constants_neighbor();
+// reinstall-dev
+
+assert((b(ok(developer())))==1);
+// reinstall-normal-after-dev
+
+assert((b(ok(refused())))==0);
+// reinstall-explicit-dev
+
+assert((b(ok(explicit_developer())))==1);
+// install-normal
+
+assert((b(ok(normal())))==1);
+// install-explicit-normal
+
+assert((b(ok(explicit_normal())))==1);
+// reinstall-explicit-normal-after-dev
+
+assert((b(ok(explicit_refused())))==0);
+// normal-mode
+assert((b(stored_mode(normal_cutpoint(),Case::Implicit)))==0) by(compute);
+assert((b(stored_mode(normal().world,Case::Implicit)))==0);
+// normal-version
+assert((b(stored_version(normal_cutpoint(),Case::Implicit)==one()))==1) by(compute);
+assert((b(stored_version(normal().world,Case::Implicit)==one()))==1);
+// normal-root
+assert((b(stored_root(normal_cutpoint(),Case::Implicit)==root(Case::Implicit)))==1) by(compute);
+assert((b(stored_root(normal().world,Case::Implicit)==root(Case::Implicit)))==1);
+// normal-class-map
+assert((b((resource_mapping(normal_cutpoint(),Case::Implicit)).is_some()))==0) by(compute);
+assert((b((resource_mapping(normal().world,Case::Implicit)).is_some()))==0);
+// normal-module-map
+assert((b((module_mapping(normal_cutpoint(),Case::Implicit)).is_some()))==0) by(compute);
+assert((b((module_mapping(normal().world,Case::Implicit)).is_some()))==0);
+// normal-module-no-folders
+assert((b((normal_cutpoint()).no_folders))==0) by(compute);
+assert((b((normal().world).no_folders))==0);
+// normal-class-map-prefix
+assert((b((resource_mapping(normal_cutpoint(),Case::Implicit)).is_some() && (resource_mapping(normal_cutpoint(),Case::Implicit)).unwrap().len()>0 && (resource_mapping(normal_cutpoint(),Case::Implicit)).unwrap()[0]==8u8))==0) by(compute);
+assert((b((resource_mapping(normal().world,Case::Implicit)).is_some() && (resource_mapping(normal().world,Case::Implicit)).unwrap().len()>0 && (resource_mapping(normal().world,Case::Implicit)).unwrap()[0]==8u8))==0);
+// normal-module-map-prefix
+assert((b((module_mapping(normal_cutpoint(),Case::Implicit)).is_some() && (module_mapping(normal_cutpoint(),Case::Implicit)).unwrap().len()>0 && (module_mapping(normal_cutpoint(),Case::Implicit)).unwrap()[0]==8u8))==0) by(compute);
+assert((b((module_mapping(normal().world,Case::Implicit)).is_some() && (module_mapping(normal().world,Case::Implicit)).unwrap().len()>0 && (module_mapping(normal().world,Case::Implicit)).unwrap()[0]==8u8))==0);
+// normal-class-map-target
+assert((b((resource_mapping(normal_cutpoint(),Case::Implicit))==Some(seq![8u8]+actual_import_directory(Case::Implicit))))==0) by(compute);
+assert((b((resource_mapping(normal().world,Case::Implicit))==Some(seq![8u8]+actual_import_directory(Case::Implicit))))==0);
+// normal-module-map-target
+assert((b((module_mapping(normal_cutpoint(),Case::Implicit))==Some(seq![8u8]+root(Case::Implicit))))==0) by(compute);
+assert((b((module_mapping(normal().world,Case::Implicit))==Some(seq![8u8]+root(Case::Implicit))))==0);
+// normal-processor-directory
+assert((b((processor(normal_cutpoint(),Case::Implicit).unwrap()).directory==cls()))==1) by(compute);
+assert((b((processor(normal().world,Case::Implicit).unwrap()).directory==cls()))==1);
+// normal-directory-defined
+assert((b((processor(normal_cutpoint(),Case::Implicit).unwrap()).directory_defined))==0) by(compute);
+assert((b((processor(normal().world,Case::Implicit).unwrap()).directory_defined))==0);
+// normal-sources-root
+assert((b(module(normal_cutpoint(),Case::Implicit).unwrap().sources_root==src()))==1) by(compute);
+assert((b(module(normal().world,Case::Implicit).unwrap().sources_root==src()))==1);
+// normal-info-directory
+assert((b((source_info(normal_cutpoint(),Case::Implicit).unwrap()).relative==cls()))==1) by(compute);
+assert((b((source_info(normal().world,Case::Implicit).unwrap()).relative==cls()))==1);
+// normal-sync-directory
+assert((b(sync_directory(normal_cutpoint(),Case::Implicit)==expected_sync(Case::Implicit)))==1) by(compute);
+assert((b(sync_directory(normal().world,Case::Implicit)==expected_sync(Case::Implicit)))==1);
+// normal-product-declared-path
+assert((b(declared_relative(normal_cutpoint(),Case::Implicit)==expected_relative(Case::Implicit)))==1) by(compute);
+assert((b(declared_relative(normal().world,Case::Implicit)==expected_relative(Case::Implicit)))==1);
+// normal-info-aware
+assert((b((source_info(normal_cutpoint(),Case::Implicit).unwrap()).aware))==1) by(compute);
+assert((b((source_info(normal().world,Case::Implicit).unwrap()).aware))==1);
+// normal-info-type
+assert((b((source_info(normal_cutpoint(),Case::Implicit).unwrap()).resource_type==cls()))==1) by(compute);
+assert((b((source_info(normal().world,Case::Implicit).unwrap()).resource_type==cls()))==1);
+// normal-info-prefix
+assert((b((source_info(normal_cutpoint(),Case::Implicit).unwrap()).prefix==class_name(Case::Implicit)))==1) by(compute);
+assert((b((source_info(normal().world,Case::Implicit).unwrap()).prefix==class_name(Case::Implicit)))==1);
+// normal-product-path
+assert((b(declared_absolute(normal_cutpoint(),Case::Implicit)==physical_file(Case::Implicit)))==0) by(compute);
+assert((b(declared_absolute(normal().world,Case::Implicit)==physical_file(Case::Implicit)))==0);
+// normal-product-file
+assert((b(file_exists(declared_absolute(normal_cutpoint(),Case::Implicit))))==0) by(compute);
+assert((b(file_exists(declared_absolute(normal().world,Case::Implicit))))==0);
+// dev-mode
+assert((b(stored_mode(dev_cutpoint(),Case::Implicit)))==1) by(compute);
+assert((b(stored_mode(developer().world,Case::Implicit)))==1);
+// dev-version
+assert((b(stored_version(dev_cutpoint(),Case::Implicit)==one()))==1) by(compute);
+assert((b(stored_version(developer().world,Case::Implicit)==one()))==1);
+// dev-root
+assert((b(stored_root(dev_cutpoint(),Case::Implicit)==root(Case::Implicit)))==1) by(compute);
+assert((b(stored_root(developer().world,Case::Implicit)==root(Case::Implicit)))==1);
+// dev-class-map
+assert((b((resource_mapping(dev_cutpoint(),Case::Implicit)).is_some()))==1) by(compute);
+assert((b((resource_mapping(developer().world,Case::Implicit)).is_some()))==1);
+// dev-module-map
+assert((b((module_mapping(dev_cutpoint(),Case::Implicit)).is_some()))==1) by(compute);
+assert((b((module_mapping(developer().world,Case::Implicit)).is_some()))==1);
+// dev-module-no-folders
+assert((b((dev_cutpoint()).no_folders))==1) by(compute);
+assert((b((developer().world).no_folders))==1);
+// dev-class-map-prefix
+assert((b((resource_mapping(dev_cutpoint(),Case::Implicit)).is_some() && (resource_mapping(dev_cutpoint(),Case::Implicit)).unwrap().len()>0 && (resource_mapping(dev_cutpoint(),Case::Implicit)).unwrap()[0]==8u8))==1) by(compute);
+assert((b((resource_mapping(developer().world,Case::Implicit)).is_some() && (resource_mapping(developer().world,Case::Implicit)).unwrap().len()>0 && (resource_mapping(developer().world,Case::Implicit)).unwrap()[0]==8u8))==1);
+// dev-module-map-prefix
+assert((b((module_mapping(dev_cutpoint(),Case::Implicit)).is_some() && (module_mapping(dev_cutpoint(),Case::Implicit)).unwrap().len()>0 && (module_mapping(dev_cutpoint(),Case::Implicit)).unwrap()[0]==8u8))==1) by(compute);
+assert((b((module_mapping(developer().world,Case::Implicit)).is_some() && (module_mapping(developer().world,Case::Implicit)).unwrap().len()>0 && (module_mapping(developer().world,Case::Implicit)).unwrap()[0]==8u8))==1);
+// dev-class-map-target
+assert((b((resource_mapping(dev_cutpoint(),Case::Implicit))==Some(seq![8u8]+actual_import_directory(Case::Implicit))))==1) by(compute);
+assert((b((resource_mapping(developer().world,Case::Implicit))==Some(seq![8u8]+actual_import_directory(Case::Implicit))))==1);
+// dev-module-map-target
+assert((b((module_mapping(dev_cutpoint(),Case::Implicit))==Some(seq![8u8]+root(Case::Implicit))))==1) by(compute);
+assert((b((module_mapping(developer().world,Case::Implicit))==Some(seq![8u8]+root(Case::Implicit))))==1);
+// dev-processor-directory
+assert((b((processor(dev_cutpoint(),Case::Implicit).unwrap()).directory==cls()))==1) by(compute);
+assert((b((processor(developer().world,Case::Implicit).unwrap()).directory==cls()))==1);
+// dev-directory-defined
+assert((b((processor(dev_cutpoint(),Case::Implicit).unwrap()).directory_defined))==0) by(compute);
+assert((b((processor(developer().world,Case::Implicit).unwrap()).directory_defined))==0);
+// dev-sources-root
+assert((b(module(dev_cutpoint(),Case::Implicit).unwrap().sources_root==src()))==1) by(compute);
+assert((b(module(developer().world,Case::Implicit).unwrap().sources_root==src()))==1);
+// dev-info-directory
+assert((b((source_info(dev_cutpoint(),Case::Implicit).unwrap()).relative==cls()))==1) by(compute);
+assert((b((source_info(developer().world,Case::Implicit).unwrap()).relative==cls()))==1);
+// dev-sync-directory
+assert((b(sync_directory(dev_cutpoint(),Case::Implicit)==expected_sync(Case::Implicit)))==1) by(compute);
+assert((b(sync_directory(developer().world,Case::Implicit)==expected_sync(Case::Implicit)))==1);
+// dev-product-declared-path
+assert((b(declared_relative(dev_cutpoint(),Case::Implicit)==expected_relative(Case::Implicit)))==1) by(compute);
+assert((b(declared_relative(developer().world,Case::Implicit)==expected_relative(Case::Implicit)))==1);
+// dev-info-aware
+assert((b((source_info(dev_cutpoint(),Case::Implicit).unwrap()).aware))==1) by(compute);
+assert((b((source_info(developer().world,Case::Implicit).unwrap()).aware))==1);
+// dev-info-type
+assert((b((source_info(dev_cutpoint(),Case::Implicit).unwrap()).resource_type==cls()))==1) by(compute);
+assert((b((source_info(developer().world,Case::Implicit).unwrap()).resource_type==cls()))==1);
+// dev-info-prefix
+assert((b((source_info(dev_cutpoint(),Case::Implicit).unwrap()).prefix==class_name(Case::Implicit)))==1) by(compute);
+assert((b((source_info(developer().world,Case::Implicit).unwrap()).prefix==class_name(Case::Implicit)))==1);
+// dev-product-path
+assert((b(declared_absolute(dev_cutpoint(),Case::Implicit)==physical_file(Case::Implicit)))==0) by(compute);
+assert((b(declared_absolute(developer().world,Case::Implicit)==physical_file(Case::Implicit)))==0);
+// dev-product-file
+assert((b(file_exists(declared_absolute(dev_cutpoint(),Case::Implicit))))==0) by(compute);
+assert((b(file_exists(declared_absolute(developer().world,Case::Implicit))))==0);
+// refused-mode
+assert((b(stored_mode(dev_cutpoint(),Case::Implicit)))==1) by(compute);
+assert((b(stored_mode(refused().world,Case::Implicit)))==1);
+// refused-version
+assert((b(stored_version(dev_cutpoint(),Case::Implicit)==one()))==1) by(compute);
+assert((b(stored_version(refused().world,Case::Implicit)==one()))==1);
+// refused-root
+assert((b(stored_root(dev_cutpoint(),Case::Implicit)==root(Case::Implicit)))==1) by(compute);
+assert((b(stored_root(refused().world,Case::Implicit)==root(Case::Implicit)))==1);
+// refused-class-map
+assert((b((resource_mapping(dev_cutpoint(),Case::Implicit)).is_some()))==1) by(compute);
+assert((b((resource_mapping(refused().world,Case::Implicit)).is_some()))==1);
+// refused-module-map
+assert((b((module_mapping(dev_cutpoint(),Case::Implicit)).is_some()))==1) by(compute);
+assert((b((module_mapping(refused().world,Case::Implicit)).is_some()))==1);
+// refused-module-no-folders
+assert((b((dev_cutpoint()).no_folders))==1) by(compute);
+assert((b((refused().world).no_folders))==1);
+// refused-class-map-prefix
+assert((b((resource_mapping(dev_cutpoint(),Case::Implicit)).is_some() && (resource_mapping(dev_cutpoint(),Case::Implicit)).unwrap().len()>0 && (resource_mapping(dev_cutpoint(),Case::Implicit)).unwrap()[0]==8u8))==1) by(compute);
+assert((b((resource_mapping(refused().world,Case::Implicit)).is_some() && (resource_mapping(refused().world,Case::Implicit)).unwrap().len()>0 && (resource_mapping(refused().world,Case::Implicit)).unwrap()[0]==8u8))==1);
+// refused-module-map-prefix
+assert((b((module_mapping(dev_cutpoint(),Case::Implicit)).is_some() && (module_mapping(dev_cutpoint(),Case::Implicit)).unwrap().len()>0 && (module_mapping(dev_cutpoint(),Case::Implicit)).unwrap()[0]==8u8))==1) by(compute);
+assert((b((module_mapping(refused().world,Case::Implicit)).is_some() && (module_mapping(refused().world,Case::Implicit)).unwrap().len()>0 && (module_mapping(refused().world,Case::Implicit)).unwrap()[0]==8u8))==1);
+// refused-class-map-target
+assert((b((resource_mapping(dev_cutpoint(),Case::Implicit))==Some(seq![8u8]+actual_import_directory(Case::Implicit))))==1) by(compute);
+assert((b((resource_mapping(refused().world,Case::Implicit))==Some(seq![8u8]+actual_import_directory(Case::Implicit))))==1);
+// refused-module-map-target
+assert((b((module_mapping(dev_cutpoint(),Case::Implicit))==Some(seq![8u8]+root(Case::Implicit))))==1) by(compute);
+assert((b((module_mapping(refused().world,Case::Implicit))==Some(seq![8u8]+root(Case::Implicit))))==1);
+// refused-processor-directory
+assert((b((processor(dev_cutpoint(),Case::Implicit).unwrap()).directory==cls()))==1) by(compute);
+assert((b((processor(refused().world,Case::Implicit).unwrap()).directory==cls()))==1);
+// refused-directory-defined
+assert((b((processor(dev_cutpoint(),Case::Implicit).unwrap()).directory_defined))==0) by(compute);
+assert((b((processor(refused().world,Case::Implicit).unwrap()).directory_defined))==0);
+// refused-sources-root
+assert((b(module(dev_cutpoint(),Case::Implicit).unwrap().sources_root==src()))==1) by(compute);
+assert((b(module(refused().world,Case::Implicit).unwrap().sources_root==src()))==1);
+// refused-info-directory
+assert((b((source_info(dev_cutpoint(),Case::Implicit).unwrap()).relative==cls()))==1) by(compute);
+assert((b((source_info(refused().world,Case::Implicit).unwrap()).relative==cls()))==1);
+// refused-sync-directory
+assert((b(sync_directory(dev_cutpoint(),Case::Implicit)==expected_sync(Case::Implicit)))==1) by(compute);
+assert((b(sync_directory(refused().world,Case::Implicit)==expected_sync(Case::Implicit)))==1);
+// refused-product-declared-path
+assert((b(declared_relative(dev_cutpoint(),Case::Implicit)==expected_relative(Case::Implicit)))==1) by(compute);
+assert((b(declared_relative(refused().world,Case::Implicit)==expected_relative(Case::Implicit)))==1);
+// refused-info-aware
+assert((b((source_info(dev_cutpoint(),Case::Implicit).unwrap()).aware))==1) by(compute);
+assert((b((source_info(refused().world,Case::Implicit).unwrap()).aware))==1);
+// refused-info-type
+assert((b((source_info(dev_cutpoint(),Case::Implicit).unwrap()).resource_type==cls()))==1) by(compute);
+assert((b((source_info(refused().world,Case::Implicit).unwrap()).resource_type==cls()))==1);
+// refused-info-prefix
+assert((b((source_info(dev_cutpoint(),Case::Implicit).unwrap()).prefix==class_name(Case::Implicit)))==1) by(compute);
+assert((b((source_info(refused().world,Case::Implicit).unwrap()).prefix==class_name(Case::Implicit)))==1);
+// refused-product-path
+assert((b(declared_absolute(dev_cutpoint(),Case::Implicit)==physical_file(Case::Implicit)))==0) by(compute);
+assert((b(declared_absolute(refused().world,Case::Implicit)==physical_file(Case::Implicit)))==0);
+// refused-product-file
+assert((b(file_exists(declared_absolute(dev_cutpoint(),Case::Implicit))))==0) by(compute);
+assert((b(file_exists(declared_absolute(refused().world,Case::Implicit))))==0);
+// explicit-normal-mode
+assert((b(stored_mode(explicit_normal_cutpoint(),Case::Explicit)))==0) by(compute);
+assert((b(stored_mode(explicit_normal().world,Case::Explicit)))==0);
+// explicit-normal-version
+assert((b(stored_version(explicit_normal_cutpoint(),Case::Explicit)==one()))==1) by(compute);
+assert((b(stored_version(explicit_normal().world,Case::Explicit)==one()))==1);
+// explicit-normal-root
+assert((b(stored_root(explicit_normal_cutpoint(),Case::Explicit)==root(Case::Explicit)))==1) by(compute);
+assert((b(stored_root(explicit_normal().world,Case::Explicit)==root(Case::Explicit)))==1);
+// explicit-normal-class-map
+assert((b((resource_mapping(explicit_normal_cutpoint(),Case::Explicit)).is_some()))==0) by(compute);
+assert((b((resource_mapping(explicit_normal().world,Case::Explicit)).is_some()))==0);
+// explicit-normal-module-map
+assert((b((module_mapping(explicit_normal_cutpoint(),Case::Explicit)).is_some()))==0) by(compute);
+assert((b((module_mapping(explicit_normal().world,Case::Explicit)).is_some()))==0);
+// explicit-normal-module-no-folders
+assert((b((explicit_normal_cutpoint()).no_folders))==1) by(compute);
+assert((b((explicit_normal().world).no_folders))==1);
+// explicit-normal-class-map-prefix
+assert((b((resource_mapping(explicit_normal_cutpoint(),Case::Explicit)).is_some() && (resource_mapping(explicit_normal_cutpoint(),Case::Explicit)).unwrap().len()>0 && (resource_mapping(explicit_normal_cutpoint(),Case::Explicit)).unwrap()[0]==8u8))==0) by(compute);
+assert((b((resource_mapping(explicit_normal().world,Case::Explicit)).is_some() && (resource_mapping(explicit_normal().world,Case::Explicit)).unwrap().len()>0 && (resource_mapping(explicit_normal().world,Case::Explicit)).unwrap()[0]==8u8))==0);
+// explicit-normal-module-map-prefix
+assert((b((module_mapping(explicit_normal_cutpoint(),Case::Explicit)).is_some() && (module_mapping(explicit_normal_cutpoint(),Case::Explicit)).unwrap().len()>0 && (module_mapping(explicit_normal_cutpoint(),Case::Explicit)).unwrap()[0]==8u8))==0) by(compute);
+assert((b((module_mapping(explicit_normal().world,Case::Explicit)).is_some() && (module_mapping(explicit_normal().world,Case::Explicit)).unwrap().len()>0 && (module_mapping(explicit_normal().world,Case::Explicit)).unwrap()[0]==8u8))==0);
+// explicit-normal-class-map-target
+assert((b((resource_mapping(explicit_normal_cutpoint(),Case::Explicit))==Some(seq![8u8]+actual_import_directory(Case::Explicit))))==0) by(compute);
+assert((b((resource_mapping(explicit_normal().world,Case::Explicit))==Some(seq![8u8]+actual_import_directory(Case::Explicit))))==0);
+// explicit-normal-module-map-target
+assert((b((module_mapping(explicit_normal_cutpoint(),Case::Explicit))==Some(seq![8u8]+root(Case::Explicit))))==0) by(compute);
+assert((b((module_mapping(explicit_normal().world,Case::Explicit))==Some(seq![8u8]+root(Case::Explicit))))==0);
+// explicit-normal-processor-directory
+assert((b((processor(explicit_normal_cutpoint(),Case::Explicit).unwrap()).directory==code()))==1) by(compute);
+assert((b((processor(explicit_normal().world,Case::Explicit).unwrap()).directory==code()))==1);
+// explicit-normal-directory-defined
+assert((b((processor(explicit_normal_cutpoint(),Case::Explicit).unwrap()).directory_defined))==1) by(compute);
+assert((b((processor(explicit_normal().world,Case::Explicit).unwrap()).directory_defined))==1);
+// explicit-normal-sources-root
+assert((b(module(explicit_normal_cutpoint(),Case::Explicit).unwrap().sources_root==src()))==1) by(compute);
+assert((b(module(explicit_normal().world,Case::Explicit).unwrap().sources_root==src()))==1);
+// explicit-normal-info-directory
+assert((b((source_info(explicit_normal_cutpoint(),Case::Explicit).unwrap()).relative==code()))==1) by(compute);
+assert((b((source_info(explicit_normal().world,Case::Explicit).unwrap()).relative==code()))==1);
+// explicit-normal-sync-directory
+assert((b(sync_directory(explicit_normal_cutpoint(),Case::Explicit)==expected_sync(Case::Explicit)))==1) by(compute);
+assert((b(sync_directory(explicit_normal().world,Case::Explicit)==expected_sync(Case::Explicit)))==1);
+// explicit-normal-product-declared-path
+assert((b(declared_relative(explicit_normal_cutpoint(),Case::Explicit)==expected_relative(Case::Explicit)))==1) by(compute);
+assert((b(declared_relative(explicit_normal().world,Case::Explicit)==expected_relative(Case::Explicit)))==1);
+// explicit-normal-info-aware
+assert((b((source_info(explicit_normal_cutpoint(),Case::Explicit).unwrap()).aware))==1) by(compute);
+assert((b((source_info(explicit_normal().world,Case::Explicit).unwrap()).aware))==1);
+// explicit-normal-info-type
+assert((b((source_info(explicit_normal_cutpoint(),Case::Explicit).unwrap()).resource_type==cls()))==1) by(compute);
+assert((b((source_info(explicit_normal().world,Case::Explicit).unwrap()).resource_type==cls()))==1);
+// explicit-normal-info-prefix
+assert((b((source_info(explicit_normal_cutpoint(),Case::Explicit).unwrap()).prefix==class_name(Case::Explicit)))==1) by(compute);
+assert((b((source_info(explicit_normal().world,Case::Explicit).unwrap()).prefix==class_name(Case::Explicit)))==1);
+// explicit-normal-product-path
+assert((b(declared_absolute(explicit_normal_cutpoint(),Case::Explicit)==physical_file(Case::Explicit)))==1) by(compute);
+assert((b(declared_absolute(explicit_normal().world,Case::Explicit)==physical_file(Case::Explicit)))==1);
+// explicit-normal-product-file
+assert((b(file_exists(declared_absolute(explicit_normal_cutpoint(),Case::Explicit))))==1) by(compute);
+assert((b(file_exists(declared_absolute(explicit_normal().world,Case::Explicit))))==1);
+// explicit-dev-mode
+assert((b(stored_mode(explicit_dev_cutpoint(),Case::Explicit)))==1) by(compute);
+assert((b(stored_mode(explicit_developer().world,Case::Explicit)))==1);
+// explicit-dev-version
+assert((b(stored_version(explicit_dev_cutpoint(),Case::Explicit)==one()))==1) by(compute);
+assert((b(stored_version(explicit_developer().world,Case::Explicit)==one()))==1);
+// explicit-dev-root
+assert((b(stored_root(explicit_dev_cutpoint(),Case::Explicit)==root(Case::Explicit)))==1) by(compute);
+assert((b(stored_root(explicit_developer().world,Case::Explicit)==root(Case::Explicit)))==1);
+// explicit-dev-class-map
+assert((b((resource_mapping(explicit_dev_cutpoint(),Case::Explicit)).is_some()))==1) by(compute);
+assert((b((resource_mapping(explicit_developer().world,Case::Explicit)).is_some()))==1);
+// explicit-dev-module-map
+assert((b((module_mapping(explicit_dev_cutpoint(),Case::Explicit)).is_some()))==1) by(compute);
+assert((b((module_mapping(explicit_developer().world,Case::Explicit)).is_some()))==1);
+// explicit-dev-module-no-folders
+assert((b((explicit_dev_cutpoint()).no_folders))==1) by(compute);
+assert((b((explicit_developer().world).no_folders))==1);
+// explicit-dev-class-map-prefix
+assert((b((resource_mapping(explicit_dev_cutpoint(),Case::Explicit)).is_some() && (resource_mapping(explicit_dev_cutpoint(),Case::Explicit)).unwrap().len()>0 && (resource_mapping(explicit_dev_cutpoint(),Case::Explicit)).unwrap()[0]==8u8))==1) by(compute);
+assert((b((resource_mapping(explicit_developer().world,Case::Explicit)).is_some() && (resource_mapping(explicit_developer().world,Case::Explicit)).unwrap().len()>0 && (resource_mapping(explicit_developer().world,Case::Explicit)).unwrap()[0]==8u8))==1);
+// explicit-dev-module-map-prefix
+assert((b((module_mapping(explicit_dev_cutpoint(),Case::Explicit)).is_some() && (module_mapping(explicit_dev_cutpoint(),Case::Explicit)).unwrap().len()>0 && (module_mapping(explicit_dev_cutpoint(),Case::Explicit)).unwrap()[0]==8u8))==1) by(compute);
+assert((b((module_mapping(explicit_developer().world,Case::Explicit)).is_some() && (module_mapping(explicit_developer().world,Case::Explicit)).unwrap().len()>0 && (module_mapping(explicit_developer().world,Case::Explicit)).unwrap()[0]==8u8))==1);
+// explicit-dev-class-map-target
+assert((b((resource_mapping(explicit_dev_cutpoint(),Case::Explicit))==Some(seq![8u8]+actual_import_directory(Case::Explicit))))==1) by(compute);
+assert((b((resource_mapping(explicit_developer().world,Case::Explicit))==Some(seq![8u8]+actual_import_directory(Case::Explicit))))==1);
+// explicit-dev-module-map-target
+assert((b((module_mapping(explicit_dev_cutpoint(),Case::Explicit))==Some(seq![8u8]+root(Case::Explicit))))==1) by(compute);
+assert((b((module_mapping(explicit_developer().world,Case::Explicit))==Some(seq![8u8]+root(Case::Explicit))))==1);
+// explicit-dev-processor-directory
+assert((b((processor(explicit_dev_cutpoint(),Case::Explicit).unwrap()).directory==code()))==1) by(compute);
+assert((b((processor(explicit_developer().world,Case::Explicit).unwrap()).directory==code()))==1);
+// explicit-dev-directory-defined
+assert((b((processor(explicit_dev_cutpoint(),Case::Explicit).unwrap()).directory_defined))==1) by(compute);
+assert((b((processor(explicit_developer().world,Case::Explicit).unwrap()).directory_defined))==1);
+// explicit-dev-sources-root
+assert((b(module(explicit_dev_cutpoint(),Case::Explicit).unwrap().sources_root==src()))==1) by(compute);
+assert((b(module(explicit_developer().world,Case::Explicit).unwrap().sources_root==src()))==1);
+// explicit-dev-info-directory
+assert((b((source_info(explicit_dev_cutpoint(),Case::Explicit).unwrap()).relative==code()))==1) by(compute);
+assert((b((source_info(explicit_developer().world,Case::Explicit).unwrap()).relative==code()))==1);
+// explicit-dev-sync-directory
+assert((b(sync_directory(explicit_dev_cutpoint(),Case::Explicit)==expected_sync(Case::Explicit)))==1) by(compute);
+assert((b(sync_directory(explicit_developer().world,Case::Explicit)==expected_sync(Case::Explicit)))==1);
+// explicit-dev-product-declared-path
+assert((b(declared_relative(explicit_dev_cutpoint(),Case::Explicit)==expected_relative(Case::Explicit)))==1) by(compute);
+assert((b(declared_relative(explicit_developer().world,Case::Explicit)==expected_relative(Case::Explicit)))==1);
+// explicit-dev-info-aware
+assert((b((source_info(explicit_dev_cutpoint(),Case::Explicit).unwrap()).aware))==1) by(compute);
+assert((b((source_info(explicit_developer().world,Case::Explicit).unwrap()).aware))==1);
+// explicit-dev-info-type
+assert((b((source_info(explicit_dev_cutpoint(),Case::Explicit).unwrap()).resource_type==cls()))==1) by(compute);
+assert((b((source_info(explicit_developer().world,Case::Explicit).unwrap()).resource_type==cls()))==1);
+// explicit-dev-info-prefix
+assert((b((source_info(explicit_dev_cutpoint(),Case::Explicit).unwrap()).prefix==class_name(Case::Explicit)))==1) by(compute);
+assert((b((source_info(explicit_developer().world,Case::Explicit).unwrap()).prefix==class_name(Case::Explicit)))==1);
+// explicit-dev-product-path
+assert((b(declared_absolute(explicit_dev_cutpoint(),Case::Explicit)==physical_file(Case::Explicit)))==1) by(compute);
+assert((b(declared_absolute(explicit_developer().world,Case::Explicit)==physical_file(Case::Explicit)))==1);
+// explicit-dev-product-file
+assert((b(file_exists(declared_absolute(explicit_dev_cutpoint(),Case::Explicit))))==1) by(compute);
+assert((b(file_exists(declared_absolute(explicit_developer().world,Case::Explicit))))==1);
+// explicit-refused-mode
+assert((b(stored_mode(explicit_dev_cutpoint(),Case::Explicit)))==1) by(compute);
+assert((b(stored_mode(explicit_refused().world,Case::Explicit)))==1);
+// explicit-refused-version
+assert((b(stored_version(explicit_dev_cutpoint(),Case::Explicit)==one()))==1) by(compute);
+assert((b(stored_version(explicit_refused().world,Case::Explicit)==one()))==1);
+// explicit-refused-root
+assert((b(stored_root(explicit_dev_cutpoint(),Case::Explicit)==root(Case::Explicit)))==1) by(compute);
+assert((b(stored_root(explicit_refused().world,Case::Explicit)==root(Case::Explicit)))==1);
+// explicit-refused-class-map
+assert((b((resource_mapping(explicit_dev_cutpoint(),Case::Explicit)).is_some()))==1) by(compute);
+assert((b((resource_mapping(explicit_refused().world,Case::Explicit)).is_some()))==1);
+// explicit-refused-module-map
+assert((b((module_mapping(explicit_dev_cutpoint(),Case::Explicit)).is_some()))==1) by(compute);
+assert((b((module_mapping(explicit_refused().world,Case::Explicit)).is_some()))==1);
+// explicit-refused-module-no-folders
+assert((b((explicit_dev_cutpoint()).no_folders))==1) by(compute);
+assert((b((explicit_refused().world).no_folders))==1);
+// explicit-refused-class-map-prefix
+assert((b((resource_mapping(explicit_dev_cutpoint(),Case::Explicit)).is_some() && (resource_mapping(explicit_dev_cutpoint(),Case::Explicit)).unwrap().len()>0 && (resource_mapping(explicit_dev_cutpoint(),Case::Explicit)).unwrap()[0]==8u8))==1) by(compute);
+assert((b((resource_mapping(explicit_refused().world,Case::Explicit)).is_some() && (resource_mapping(explicit_refused().world,Case::Explicit)).unwrap().len()>0 && (resource_mapping(explicit_refused().world,Case::Explicit)).unwrap()[0]==8u8))==1);
+// explicit-refused-module-map-prefix
+assert((b((module_mapping(explicit_dev_cutpoint(),Case::Explicit)).is_some() && (module_mapping(explicit_dev_cutpoint(),Case::Explicit)).unwrap().len()>0 && (module_mapping(explicit_dev_cutpoint(),Case::Explicit)).unwrap()[0]==8u8))==1) by(compute);
+assert((b((module_mapping(explicit_refused().world,Case::Explicit)).is_some() && (module_mapping(explicit_refused().world,Case::Explicit)).unwrap().len()>0 && (module_mapping(explicit_refused().world,Case::Explicit)).unwrap()[0]==8u8))==1);
+// explicit-refused-class-map-target
+assert((b((resource_mapping(explicit_dev_cutpoint(),Case::Explicit))==Some(seq![8u8]+actual_import_directory(Case::Explicit))))==1) by(compute);
+assert((b((resource_mapping(explicit_refused().world,Case::Explicit))==Some(seq![8u8]+actual_import_directory(Case::Explicit))))==1);
+// explicit-refused-module-map-target
+assert((b((module_mapping(explicit_dev_cutpoint(),Case::Explicit))==Some(seq![8u8]+root(Case::Explicit))))==1) by(compute);
+assert((b((module_mapping(explicit_refused().world,Case::Explicit))==Some(seq![8u8]+root(Case::Explicit))))==1);
+// explicit-refused-processor-directory
+assert((b((processor(explicit_dev_cutpoint(),Case::Explicit).unwrap()).directory==code()))==1) by(compute);
+assert((b((processor(explicit_refused().world,Case::Explicit).unwrap()).directory==code()))==1);
+// explicit-refused-directory-defined
+assert((b((processor(explicit_dev_cutpoint(),Case::Explicit).unwrap()).directory_defined))==1) by(compute);
+assert((b((processor(explicit_refused().world,Case::Explicit).unwrap()).directory_defined))==1);
+// explicit-refused-sources-root
+assert((b(module(explicit_dev_cutpoint(),Case::Explicit).unwrap().sources_root==src()))==1) by(compute);
+assert((b(module(explicit_refused().world,Case::Explicit).unwrap().sources_root==src()))==1);
+// explicit-refused-info-directory
+assert((b((source_info(explicit_dev_cutpoint(),Case::Explicit).unwrap()).relative==code()))==1) by(compute);
+assert((b((source_info(explicit_refused().world,Case::Explicit).unwrap()).relative==code()))==1);
+// explicit-refused-sync-directory
+assert((b(sync_directory(explicit_dev_cutpoint(),Case::Explicit)==expected_sync(Case::Explicit)))==1) by(compute);
+assert((b(sync_directory(explicit_refused().world,Case::Explicit)==expected_sync(Case::Explicit)))==1);
+// explicit-refused-product-declared-path
+assert((b(declared_relative(explicit_dev_cutpoint(),Case::Explicit)==expected_relative(Case::Explicit)))==1) by(compute);
+assert((b(declared_relative(explicit_refused().world,Case::Explicit)==expected_relative(Case::Explicit)))==1);
+// explicit-refused-info-aware
+assert((b((source_info(explicit_dev_cutpoint(),Case::Explicit).unwrap()).aware))==1) by(compute);
+assert((b((source_info(explicit_refused().world,Case::Explicit).unwrap()).aware))==1);
+// explicit-refused-info-type
+assert((b((source_info(explicit_dev_cutpoint(),Case::Explicit).unwrap()).resource_type==cls()))==1) by(compute);
+assert((b((source_info(explicit_refused().world,Case::Explicit).unwrap()).resource_type==cls()))==1);
+// explicit-refused-info-prefix
+assert((b((source_info(explicit_dev_cutpoint(),Case::Explicit).unwrap()).prefix==class_name(Case::Explicit)))==1) by(compute);
+assert((b((source_info(explicit_refused().world,Case::Explicit).unwrap()).prefix==class_name(Case::Explicit)))==1);
+// explicit-refused-product-path
+assert((b(declared_absolute(explicit_dev_cutpoint(),Case::Explicit)==physical_file(Case::Explicit)))==1) by(compute);
+assert((b(declared_absolute(explicit_refused().world,Case::Explicit)==physical_file(Case::Explicit)))==1);
+// explicit-refused-product-file
+assert((b(file_exists(declared_absolute(explicit_dev_cutpoint(),Case::Explicit))))==1) by(compute);
+assert((b(file_exists(declared_absolute(explicit_refused().world,Case::Explicit))))==1);
+}}
+fn main(){}

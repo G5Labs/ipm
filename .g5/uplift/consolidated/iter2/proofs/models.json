@@ -1,0 +1,550 @@
+{
+  "tool_sha256": {
+    "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus": "fc13e79bb3c13d93bc05b37e9b1b6518fde7f4687b3d442ce5c6318c5737c668",
+    "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/vstd.vir": "fb3edb12cec844ce7ac35d4ae34b527fab5168a6335e48bd4c490941a654f040",
+    "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/z3": "edae32f9e37ea4b5bb35310d72f0e352d0dc07626cac4e9e30bc1ea9a5bc8efb",
+    "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/version.json": "f0a81404365498a667e56090c963b20005f6e8b8d4afd7f2b62222f4027c94ed"
+  },
+  "models": [
+    {
+      "model": ".g5/Verus_verification/consolidated/iter2/registry.rs",
+      "sha256": "4072f93d658feac1a86733e00cc13e021d8892e7fb5c04d0c57a1d9a843bfae2",
+      "proof": {
+        "command": [
+          "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus",
+          "/Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/Verus_verification/consolidated/iter2/registry.rs",
+          "--triggers-mode",
+          "silent"
+        ],
+        "exit": 0,
+        "stdout": "verification results:: 14 verified, 0 errors\n",
+        "stderr": "",
+        "seconds": 0.5696
+      },
+      "controls": [
+        {
+          "id": "provider-order-erased",
+          "mutation": {
+            "before": "Some(tags[tags.len()-1])",
+            "after": "Some(tags[0])"
+          },
+          "rejected_at_assertion": true,
+          "command": [
+            "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus",
+            "/var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-iter2-controls-ght66jim/provider-order-erased.rs",
+            "--triggers-mode",
+            "silent"
+          ],
+          "exit": 1,
+          "stdout": "verification results:: 13 verified, 1 errors\n",
+          "stderr": "note: function body check: not all errors may have been reported; rerun with a higher value for --multiple-errors to find other potential errors in this function\n   --> /var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-iter2-controls-ght66jim/provider-order-erased.rs:133:1\n    |\n133 | pub proof fn tag_order_is_a_real_input()\n    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\nerror: postcondition not satisfied\n   --> /var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-iter2-controls-ght66jim/provider-order-erased.rs:134:13\n    |\n133 | pub proof fn tag_order_is_a_real_input()\n    | ---------------------------------------- at the end of the function body\n134 |     ensures last_tag(seq![2int,1]) == Some(1), last_tag(seq![1int,2]) == Some(2),\n    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition\n\nerror: postcondition not satisfied\n   --> /var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-iter2-controls-ght66jim/provider-order-erased.rs:134:48\n    |\n133 | pub proof fn tag_order_is_a_real_input()\n    | ---------------------------------------- at the end of the function body\n134 |     ensures last_tag(seq![2int,1]) == Some(1), last_tag(seq![1int,2]) == Some(2),\n    |                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition\n\nerror: aborting due to 2 previous errors\n\n",
+          "seconds": 0.4883
+        },
+        {
+          "id": "accept-second-tar",
+          "mutation": {
+            "before": "layers[0].size == size && layers[0].digest == digest",
+            "after": "layers[0].size == size && layers[0].digest == digest || verify_layers(layers.drop_first(),size,digest)"
+          },
+          "rejected_at_assertion": true,
+          "command": [
+            "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus",
+            "/var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-iter2-controls-ght66jim/accept-second-tar.rs",
+            "--triggers-mode",
+            "silent"
+          ],
+          "exit": 1,
+          "stdout": "verification results:: 13 verified, 1 errors\n",
+          "stderr": "error: postcondition not satisfied\n   --> /var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-iter2-controls-ght66jim/accept-second-tar.rs:138:13\n    |\n137 | pub proof fn first_tar_controls_integrity()\n    | ------------------------------------------- at the end of the function body\n138 |     ensures !verify_layers(seq![Layer{tar:true,size:2,digest:9},Layer{tar:true,size:1,digest:7}],1,7),\n    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition\n\nerror: aborting due to 1 previous error\n\n",
+          "seconds": 0.4996
+        },
+        {
+          "id": "cached-success-rechecks-enabled",
+          "mutation": {
+            "before": "state:s, available:true, provider_called:false",
+            "after": "state:s, available:enabled, provider_called:false"
+          },
+          "rejected_at_assertion": true,
+          "command": [
+            "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus",
+            "/var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-iter2-controls-ght66jim/cached-success-rechecks-enabled.rs",
+            "--triggers-mode",
+            "silent"
+          ],
+          "exit": 1,
+          "stdout": "verification results:: 13 verified, 1 errors\n",
+          "stderr": "error: postcondition not satisfied\n   --> /var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-iter2-controls-ght66jim/cached-success-rechecks-enabled.rs:143:13\n    |\n142 | pub proof fn cache_changes_operator_observation()\n    | ------------------------------------------------- at the end of the function body\n143 |     ensures remote_cache(ServiceState{available_cached:true,unavailable_cached:false},false,true,false).available,\n    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition\n\nerror: aborting due to 1 previous error\n\n",
+          "seconds": 0.5032
+        },
+        {
+          "id": "cached-failure-reprobes",
+          "mutation": {
+            "before": "state:s, available:false, provider_called:false",
+            "after": "state:s, available:probe, provider_called:false"
+          },
+          "rejected_at_assertion": true,
+          "command": [
+            "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus",
+            "/var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-iter2-controls-ght66jim/cached-failure-reprobes.rs",
+            "--triggers-mode",
+            "silent"
+          ],
+          "exit": 1,
+          "stdout": "verification results:: 13 verified, 1 errors\n",
+          "stderr": "error: postcondition not satisfied\n   --> /var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-iter2-controls-ght66jim/cached-failure-reprobes.rs:145:9\n    |\n142 | pub proof fn cache_changes_operator_observation()\n    | ------------------------------------------------- at the end of the function body\n...\n145 |         !remote_cache(ServiceState{available_cached:false,unavailable_cached:true},true,true,true).available,\n    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition\n\nerror: aborting due to 1 previous error\n\n",
+          "seconds": 0.4767
+        },
+        {
+          "id": "all-auth-denials-are-bad-credentials",
+          "mutation": {
+            "before": "&& configured && probe == Probe::Rejected",
+            "after": "&& configured"
+          },
+          "rejected_at_assertion": true,
+          "command": [
+            "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus",
+            "/var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-iter2-controls-ght66jim/all-auth-denials-are-bad-credentials.rs",
+            "--triggers-mode",
+            "silent"
+          ],
+          "exit": 1,
+          "stdout": "verification results:: 13 verified, 1 errors\n",
+          "stderr": "error: postcondition not satisfied\n   --> /var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-iter2-controls-ght66jim/all-auth-denials-are-bad-credentials.rs:157:13\n    |\n156 | pub proof fn permission_is_not_bad_credentials()\n    | ------------------------------------------------ at the end of the function body\n157 |     ensures !rejected_credentials(403,true,Probe::Accepted), rejected_credentials(403,true,Probe::Rejected),\n    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition\n\nerror: aborting due to 1 previous error\n\n",
+          "seconds": 0.5063
+        },
+        {
+          "id": "401-is-always-suppressed",
+          "mutation": {
+            "before": "&& !rejected",
+            "after": ""
+          },
+          "rejected_at_assertion": true,
+          "command": [
+            "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus",
+            "/var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-iter2-controls-ght66jim/401-is-always-suppressed.rs",
+            "--triggers-mode",
+            "silent"
+          ],
+          "exit": 1,
+          "stdout": "verification results:: 13 verified, 1 errors\n",
+          "stderr": "error: postcondition not satisfied\n   --> /var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-iter2-controls-ght66jim/401-is-always-suppressed.rs:158:51\n    |\n156 | pub proof fn permission_is_not_bad_credentials()\n    | ------------------------------------------------ at the end of the function body\n157 |     ensures !rejected_credentials(403,true,Probe::Accepted), rejected_credentials(403,true,Probe::Rejected),\n158 |         suppress_listing_failure(true,403,false), !suppress_listing_failure(true,403,true),\n    |                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition\n\nerror: aborting due to 1 previous error\n\n",
+          "seconds": 0.5057
+        },
+        {
+          "id": "token-realm-not-needed",
+          "mutation": {
+            "before": "if !realm || !transport",
+            "after": "if !transport"
+          },
+          "rejected_at_assertion": true,
+          "command": [
+            "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus",
+            "/var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-iter2-controls-ght66jim/token-realm-not-needed.rs",
+            "--triggers-mode",
+            "silent"
+          ],
+          "exit": 1,
+          "stdout": "verification results:: 13 verified, 1 errors\n",
+          "stderr": "error: postcondition not satisfied\n   --> /var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-iter2-controls-ght66jim/token-realm-not-needed.rs:153:9\n    |\n148 | pub proof fn auth_is_three_valued()\n    | ----------------------------------- at the end of the function body\n...\n153 |         token_probe(false,true,200) == Probe::Unknown,\n    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition\n\nerror: aborting due to 1 previous error\n\n",
+          "seconds": 0.4954
+        },
+        {
+          "id": "configured-credentials-always",
+          "mutation": {
+            "before": "user || pass || token",
+            "after": "true"
+          },
+          "rejected_at_assertion": true,
+          "command": [
+            "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus",
+            "/var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-iter2-controls-ght66jim/configured-credentials-always.rs",
+            "--triggers-mode",
+            "silent"
+          ],
+          "exit": 1,
+          "stdout": "verification results:: 13 verified, 1 errors\n",
+          "stderr": "error: postcondition not satisfied\n   --> /var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-iter2-controls-ght66jim/configured-credentials-always.rs:120:40\n    |\n116 | pub proof fn manifest_and_platform_guards()\n    | ------------------------------------------- at the end of the function body\n...\n120 |         credentials(true,false,false), !credentials(false,false,false), !basic_credentials(true,false,false,false),\n    |                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition\n\nerror: aborting due to 1 previous error\n\n",
+          "seconds": 0.4822
+        },
+        {
+          "id": "basic-user-alone",
+          "mutation": {
+            "before": "(user && pass) || (token && basic)",
+            "after": "user || (token && basic)"
+          },
+          "rejected_at_assertion": true,
+          "command": [
+            "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus",
+            "/var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-iter2-controls-ght66jim/basic-user-alone.rs",
+            "--triggers-mode",
+            "silent"
+          ],
+          "exit": 1,
+          "stdout": "verification results:: 13 verified, 1 errors\n",
+          "stderr": "error: postcondition not satisfied\n   --> /var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-iter2-controls-ght66jim/basic-user-alone.rs:120:73\n    |\n116 | pub proof fn manifest_and_platform_guards()\n    | ------------------------------------------- at the end of the function body\n...\n120 |         credentials(true,false,false), !credentials(false,false,false), !basic_credentials(true,false,false,false),\n    |                                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition\n\nerror: aborting due to 1 previous error\n\n",
+          "seconds": 0.4883
+        },
+        {
+          "id": "empty-manifest-accepted",
+          "mutation": {
+            "before": "has_xml && trimmed_nonempty",
+            "after": "has_xml"
+          },
+          "rejected_at_assertion": true,
+          "command": [
+            "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus",
+            "/var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-iter2-controls-ght66jim/empty-manifest-accepted.rs",
+            "--triggers-mode",
+            "silent"
+          ],
+          "exit": 1,
+          "stdout": "verification results:: 13 verified, 1 errors\n",
+          "stderr": "error: postcondition not satisfied\n   --> /var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-iter2-controls-ght66jim/empty-manifest-accepted.rs:117:72\n    |\n116 | pub proof fn manifest_and_platform_guards()\n    | ------------------------------------------- at the end of the function body\n117 |     ensures !module_manifest(false,false), module_manifest(true,true), !module_manifest(true,false),\n    |                                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition\n\nerror: aborting due to 1 previous error\n\n",
+          "seconds": 0.4949
+        },
+        {
+          "id": "empty-taglist-exists",
+          "mutation": {
+            "before": "provider_tags.len() > 0",
+            "after": "provider_tags.len() >= 0"
+          },
+          "rejected_at_assertion": true,
+          "command": [
+            "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus",
+            "/var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-iter2-controls-ght66jim/empty-taglist-exists.rs",
+            "--triggers-mode",
+            "silent"
+          ],
+          "exit": 1,
+          "stdout": "verification results:: 13 verified, 1 errors\n",
+          "stderr": "error: postcondition not satisfied\n   --> /var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-iter2-controls-ght66jim/empty-taglist-exists.rs:118:9\n    |\n116 | pub proof fn manifest_and_platform_guards()\n    | ------------------------------------------- at the end of the function body\n117 |     ensures !module_manifest(false,false), module_manifest(true,true), !module_manifest(true,false),\n118 |         !has_module(Seq::<int>::empty()), has_module(seq![1int]),\n    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition\n\nerror: aborting due to 1 previous error\n\n",
+          "seconds": 0.5026
+        },
+        {
+          "id": "missing-platform-admitted",
+          "mutation": {
+            "before": "!deployed || platform_nonempty",
+            "after": "true"
+          },
+          "rejected_at_assertion": true,
+          "command": [
+            "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus",
+            "/var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-iter2-controls-ght66jim/missing-platform-admitted.rs",
+            "--triggers-mode",
+            "silent"
+          ],
+          "exit": 1,
+          "stdout": "verification results:: 13 verified, 1 errors\n",
+          "stderr": "error: postcondition not satisfied\n   --> /var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-iter2-controls-ght66jim/missing-platform-admitted.rs:119:36\n    |\n116 | pub proof fn manifest_and_platform_guards()\n    | ------------------------------------------- at the end of the function body\n...\n119 |         tag_admitted(false,false), !tag_admitted(true,false), tag_admitted(true,true),\n    |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition\n\nerror: aborting due to 1 previous error\n\n",
+          "seconds": 0.4898
+        },
+        {
+          "id": "false-capability-is-error",
+          "mutation": {
+            "before": "status_ok:available && !provider_threw",
+            "after": "status_ok:available && !provider_threw && provider_enabled"
+          },
+          "rejected_at_assertion": true,
+          "command": [
+            "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus",
+            "/var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-iter2-controls-ght66jim/false-capability-is-error.rs",
+            "--triggers-mode",
+            "silent"
+          ],
+          "exit": 1,
+          "stdout": "verification results:: 13 verified, 1 errors\n",
+          "stderr": "error: postcondition not satisfied\n   --> /var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-iter2-controls-ght66jim/false-capability-is-error.rs:124:9\n    |\n116 | pub proof fn manifest_and_platform_guards()\n    | ------------------------------------------- at the end of the function body\n...\n124 |         capability(true,false,false).status_ok, !capability(true,false,false).enabled,\n    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition\n\nerror: aborting due to 1 previous error\n\n",
+          "seconds": 0.4866
+        },
+        {
+          "id": "remote-publish-accepts201",
+          "mutation": {
+            "before": "remote_authorized(user,password,token) && export_ok && transport_ok && status == 200",
+            "after": "remote_authorized(user,password,token) && export_ok && transport_ok && (status == 200 || status == 201)"
+          },
+          "rejected_at_assertion": true,
+          "command": [
+            "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus",
+            "/var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-iter2-controls-ght66jim/remote-publish-accepts201.rs",
+            "--triggers-mode",
+            "silent"
+          ],
+          "exit": 1,
+          "stdout": "verification results:: 13 verified, 1 errors\n",
+          "stderr": "error: postcondition not satisfied\n   --> /var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-iter2-controls-ght66jim/remote-publish-accepts201.rs:162:60\n    |\n161 | pub proof fn remote_exact_status_contract()\n    | ------------------------------------------- at the end of the function body\n162 |     ensures remote_publish(true,true,false,true,true,200), !remote_publish(true,true,false,true,true,201),\n    |                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition\n\nerror: aborting due to 1 previous error\n\n",
+          "seconds": 0.4939
+        },
+        {
+          "id": "false-hash-clears-stream",
+          "mutation": {
+            "before": "stream_set: directory_ok && provider_ok && archive_found && link_ok",
+            "after": "stream_set: directory_ok && provider_ok && archive_found && link_ok && hash_ok"
+          },
+          "rejected_at_assertion": true,
+          "command": [
+            "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus",
+            "/var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-iter2-controls-ght66jim/false-hash-clears-stream.rs",
+            "--triggers-mode",
+            "silent"
+          ],
+          "exit": 1,
+          "stdout": "verification results:: 13 verified, 1 errors\n",
+          "stderr": "error: postcondition not satisfied\n   --> /var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-iter2-controls-ght66jim/false-hash-clears-stream.rs:168:13\n    |\n167 | pub proof fn failed_hash_keeps_downloaded_stream()\n    | -------------------------------------------------- at the end of the function body\n168 |     ensures pull(true,true,true,true,false).stream_set, !pull(true,true,true,true,false).status_ok,\n    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition\n\nerror: aborting due to 1 previous error\n\n",
+          "seconds": 0.4967
+        },
+        {
+          "id": "failed-command-compensates-registry",
+          "mutation": {
+            "before": "remote_written:called && provider_written, version_assigned_in_memory:called",
+            "after": "remote_written:called && provider_written && local_export_ok, version_assigned_in_memory:called"
+          },
+          "rejected_at_assertion": true,
+          "command": [
+            "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus",
+            "/var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-iter2-controls-ght66jim/failed-command-compensates-registry.rs",
+            "--triggers-mode",
+            "silent"
+          ],
+          "exit": 1,
+          "stdout": "verification results:: 13 verified, 1 errors\n",
+          "stderr": "error: postcondition not satisfied\n   --> /var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-iter2-controls-ght66jim/failed-command-compensates-registry.rs:172:13\n    |\n171 | pub proof fn post_publish_failure_is_not_compensation()\n    | ------------------------------------------------------- at the end of the function body\n172 |     ensures publish_lifecycle(true,true,true,true,true,true,true,true,false).remote_written,\n    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition\n\nerror: aborting due to 1 previous error\n\n",
+          "seconds": 0.5166
+        },
+        {
+          "id": "failed-provider-has-no-effects",
+          "mutation": {
+            "before": "remote_written:called && provider_written, version_assigned_in_memory:called",
+            "after": "remote_written:called && provider_written && provider_ok, version_assigned_in_memory:called"
+          },
+          "rejected_at_assertion": true,
+          "command": [
+            "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus",
+            "/var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-iter2-controls-ght66jim/failed-provider-has-no-effects.rs",
+            "--triggers-mode",
+            "silent"
+          ],
+          "exit": 1,
+          "stdout": "verification results:: 13 verified, 1 errors\n",
+          "stderr": "error: postcondition not satisfied\n   --> /var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-iter2-controls-ght66jim/failed-provider-has-no-effects.rs:128:13\n    |\n127 | pub proof fn failed_provider_may_have_written()\n    | ----------------------------------------------- at the end of the function body\n128 |     ensures publish_lifecycle(true,true,true,true,true,false,true,true,true).remote_written,\n    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition\n\nerror: aborting due to 1 previous error\n\n",
+          "seconds": 0.4839
+        },
+        {
+          "id": "deletion-removes-all-tags",
+          "mutation": {
+            "before": "delete_prefix(store,tags,(completed-1) as nat).remove(tags[completed-1])",
+            "after": "delete_prefix(store,tags,(completed-1) as nat).remove(tags[completed-1]).remove(tags[tags.len()-1])"
+          },
+          "rejected_at_assertion": true,
+          "command": [
+            "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus",
+            "/var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-iter2-controls-ght66jim/deletion-removes-all-tags.rs",
+            "--triggers-mode",
+            "silent"
+          ],
+          "exit": 1,
+          "stdout": "verification results:: 13 verified, 1 errors\n",
+          "stderr": "error: postcondition not satisfied\n   --> /var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-iter2-controls-ght66jim/deletion-removes-all-tags.rs:183:9\n    |\n179 | pub proof fn partial_remote_effects()\n    | ------------------------------------- at the end of the function body\n...\n183 |         delete_prefix(Map::<int,int>::empty().insert(1,7).insert(2,7),seq![1int,2],1).contains_pair(2,7)\n    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition\n\nerror: aborting due to 1 previous error\n\n",
+          "seconds": 0.4869
+        }
+      ]
+    },
+    {
+      "model": ".g5/Verus_verification/consolidated/iter2/readers.rs",
+      "sha256": "ff4f867f9fa36322b9886a4a32fb8b65808ba0b1fc4abfaaae11383c7a7d7015",
+      "proof": {
+        "command": [
+          "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus",
+          "/Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/Verus_verification/consolidated/iter2/readers.rs",
+          "--triggers-mode",
+          "silent"
+        ],
+        "exit": 0,
+        "stdout": "verification results:: 10 verified, 0 errors\n",
+        "stderr": "",
+        "seconds": 0.5312
+      },
+      "controls": [
+        {
+          "id": "show-includes-scoped-dependents",
+          "mutation": {
+            "before": "deps[0].target == target && !deps[0].scoped",
+            "after": "deps[0].target == target"
+          },
+          "rejected_at_assertion": true,
+          "command": [
+            "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus",
+            "/var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-iter2-controls-ght66jim/show-includes-scoped-dependents.rs",
+            "--triggers-mode",
+            "silent"
+          ],
+          "exit": 1,
+          "stdout": "verification results:: 9 verified, 1 errors\n",
+          "stderr": "error: postcondition not satisfied\n  --> /var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-iter2-controls-ght66jim/show-includes-scoped-dependents.rs:70:13\n   |\n69 | pub proof fn scoped_dependents_are_not_displayed()\n   | -------------------------------------------------- at the end of the function body\n70 |     ensures direct_dependents(seq![Dependency{name:1,scoped:true,target:7},Dependency{name:2,scoped:false,target:7}],7) == seq![2int],\n   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition\n\nerror: aborting due to 1 previous error\n\n",
+          "seconds": 0.4772
+        },
+        {
+          "id": "missing-version-is-satisfied",
+          "mutation": {
+            "before": "if !nonempty_version { Installed::Missing }",
+            "after": "if !nonempty_version { Installed::Satisfied }"
+          },
+          "rejected_at_assertion": true,
+          "command": [
+            "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus",
+            "/var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-iter2-controls-ght66jim/missing-version-is-satisfied.rs",
+            "--triggers-mode",
+            "silent"
+          ],
+          "exit": 1,
+          "stdout": "verification results:: 9 verified, 1 errors\n",
+          "stderr": "error: postcondition not satisfied\n  --> /var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-iter2-controls-ght66jim/missing-version-is-satisfied.rs:71:9\n   |\n69 | pub proof fn scoped_dependents_are_not_displayed()\n   | -------------------------------------------------- at the end of the function body\n70 |     ensures direct_dependents(seq![Dependency{name:1,scoped:true,target:7},Dependency{name:2,scoped:false,target:7}],7) == seq![2int],\n71 |         installed_status(false,false) == Installed::Missing,\n   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition\n\nerror: aborting due to 1 previous error\n\n",
+          "seconds": 0.4423
+        },
+        {
+          "id": "requirements-keep-comments",
+          "mutation": {
+            "before": "lines[0].blank_after_trim || lines[0].comment_after_trim",
+            "after": "lines[0].blank_after_trim"
+          },
+          "rejected_at_assertion": true,
+          "command": [
+            "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus",
+            "/var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-iter2-controls-ght66jim/requirements-keep-comments.rs",
+            "--triggers-mode",
+            "silent"
+          ],
+          "exit": 1,
+          "stdout": "verification results:: 9 verified, 1 errors\n",
+          "stderr": "error: postcondition not satisfied\n  --> /var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-iter2-controls-ght66jim/requirements-keep-comments.rs:76:13\n   |\n75 |   pub proof fn requirement_comments_are_line_based()\n   |   -------------------------------------------------- at the end of the function body\n76 |       ensures requirements(seq![RequirementLine{blank_after_trim:false,comment_after_trim:true,text:1},\n   |  _____________^\n77 | |         RequirementLine{blank_after_trim:false,comment_after_trim:false,text:2}]) == seq![2int]\n   | |_______________________________________________________________________________________________^ failed this postcondition\n\nerror: aborting due to 1 previous error\n\n",
+          "seconds": 0.4472
+        },
+        {
+          "id": "method-error-inferred-from-assertions",
+          "mutation": {
+            "before": "if methods[0].passed {0nat}else{1}",
+            "after": "if methods[0].failed_assertions == 0 {0nat}else{1}"
+          },
+          "rejected_at_assertion": true,
+          "command": [
+            "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus",
+            "/var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-iter2-controls-ght66jim/method-error-inferred-from-assertions.rs",
+            "--triggers-mode",
+            "silent"
+          ],
+          "exit": 1,
+          "stdout": "verification results:: 9 verified, 1 errors\n",
+          "stderr": "error: postcondition not satisfied\n  --> /var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-iter2-controls-ght66jim/method-error-inferred-from-assertions.rs:80:13\n   |\n79 | pub proof fn nonassert_failure_remains_a_failure()\n   | -------------------------------------------------- at the end of the function body\n80 |     ensures count_methods(seq![Method{passed:false,passed_assertions:1,failed_assertions:0}],false).failed_methods == 1,\n   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition\n\nerror: aborting due to 1 previous error\n\n",
+          "seconds": 0.4862
+        },
+        {
+          "id": "ignore-case-hook-error",
+          "mutation": {
+            "before": "Count{methods:if case_error {1nat}else{0}",
+            "after": "Count{methods:0nat"
+          },
+          "rejected_at_assertion": true,
+          "command": [
+            "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus",
+            "/var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-iter2-controls-ght66jim/ignore-case-hook-error.rs",
+            "--triggers-mode",
+            "silent"
+          ],
+          "exit": 1,
+          "stdout": "verification results:: 9 verified, 1 errors\n",
+          "stderr": "error: postcondition not satisfied\n  --> /var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-iter2-controls-ght66jim/ignore-case-hook-error.rs:81:9\n   |\n79 | pub proof fn nonassert_failure_remains_a_failure()\n   | -------------------------------------------------- at the end of the function body\n80 |     ensures count_methods(seq![Method{passed:false,passed_assertions:1,failed_assertions:0}],false).failed_methods == 1,\n81 |         count_methods(seq![Method{passed:true,passed_assertions:1,failed_assertions:0}],true).methods == 2,\n   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition\n\nerror: aborting due to 1 previous error\n\n",
+          "seconds": 0.4695
+        },
+        {
+          "id": "json-file-is-summary",
+          "mutation": {
+            "before": "full_tree:true,summary:false",
+            "after": "full_tree:false,summary:true"
+          },
+          "rejected_at_assertion": true,
+          "command": [
+            "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus",
+            "/var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-iter2-controls-ght66jim/json-file-is-summary.rs",
+            "--triggers-mode",
+            "silent"
+          ],
+          "exit": 1,
+          "stdout": "verification results:: 9 verified, 1 errors\n",
+          "stderr": "error: postcondition not satisfied\n  --> /var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-iter2-controls-ght66jim/json-file-is-summary.rs:87:13\n   |\n86 | pub proof fn file_and_device_have_different_contracts()\n   | ------------------------------------------------------- at the end of the function body\n87 |     ensures json_file().full_tree && !json_file().summary,\n   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition\n\nerror: aborting due to 1 previous error\n\n",
+          "seconds": 0.4425
+        },
+        {
+          "id": "quiet-device-includes-all",
+          "mutation": {
+            "before": "all_methods:show_detail && verbose",
+            "after": "all_methods:show_detail"
+          },
+          "rejected_at_assertion": true,
+          "command": [
+            "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus",
+            "/var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-iter2-controls-ght66jim/quiet-device-includes-all.rs",
+            "--triggers-mode",
+            "silent"
+          ],
+          "exit": 1,
+          "stdout": "verification results:: 9 verified, 1 errors\n",
+          "stderr": "error: postcondition not satisfied\n  --> /var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-iter2-controls-ght66jim/quiet-device-includes-all.rs:89:9\n   |\n86 | pub proof fn file_and_device_have_different_contracts()\n   | ------------------------------------------------------- at the end of the function body\n...\n89 |         json_device(true,false).failures && !json_device(true,false).all_methods,\n   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition\n\nerror: aborting due to 1 previous error\n\n",
+          "seconds": 0.4568
+        },
+        {
+          "id": "verify-skip-still-loads",
+          "mutation": {
+            "before": "load:!current && !(skip && exists)",
+            "after": "load:!current"
+          },
+          "rejected_at_assertion": true,
+          "command": [
+            "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus",
+            "/var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-iter2-controls-ght66jim/verify-skip-still-loads.rs",
+            "--triggers-mode",
+            "silent"
+          ],
+          "exit": 1,
+          "stdout": "verification results:: 9 verified, 1 errors\n",
+          "stderr": "error: postcondition not satisfied\n  --> /var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-iter2-controls-ght66jim/verify-skip-still-loads.rs:96:9\n   |\n92 | pub proof fn verify_reuse_is_not_fresh_setup()\n   | ---------------------------------------------- at the end of the function body\n...\n96 |         !verify_plan(false,false,true,true).load,\n   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition\n\nerror: aborting due to 1 previous error\n\n",
+          "seconds": 0.4682
+        },
+        {
+          "id": "test-prefix-is-exact-name",
+          "mutation": {
+            "before": "prefix(package,requested) || prefix(requested,package)",
+            "after": "package == requested"
+          },
+          "rejected_at_assertion": true,
+          "command": [
+            "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus",
+            "/var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-iter2-controls-ght66jim/test-prefix-is-exact-name.rs",
+            "--triggers-mode",
+            "silent"
+          ],
+          "exit": 1,
+          "stdout": "verification results:: 9 verified, 1 errors\n",
+          "stderr": "error: postcondition not satisfied\n   --> /var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-iter2-controls-ght66jim/test-prefix-is-exact-name.rs:101:13\n    |\n101 | ...es test_selected(seq![65int],seq![65int,66],true),\n    |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition\n...\n104 | ...seq![65int,66].take(1) =~= seq![65int]); assert(seq![66int].take(1) =~= seq![66int]); assert(seq![65int].take(1) =~= seq![65int]); assert(se...\n    |                                                                                                                                       ------ at the end of the function body\n\nerror: aborting due to 1 previous error\n\n",
+          "seconds": 0.4553
+        },
+        {
+          "id": "force-masks-error",
+          "mutation": {
+            "before": "status_ok:is_ipm || provider_ok",
+            "after": "status_ok:is_ipm || provider_ok || force"
+          },
+          "rejected_at_assertion": true,
+          "command": [
+            "/Users/ziniuw/.cache/g5-verification/0.2026.09.27.3cf1832/verus-arm64-macos/verus",
+            "/var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-iter2-controls-ght66jim/force-masks-error.rs",
+            "--triggers-mode",
+            "silent"
+          ],
+          "exit": 1,
+          "stdout": "verification results:: 9 verified, 1 errors\n",
+          "stderr": "error: postcondition not satisfied\n   --> /var/folders/6m/hcldwlsj4k72ml4b0s9d5fqr0000gn/T/ipm-iter2-controls-ght66jim/force-masks-error.rs:108:9\n    |\n105 | pub proof fn force_does_not_turn_failure_into_removal()\n    | ------------------------------------------------------- at the end of the function body\n...\n108 |         !uninstall_all_step(false,true,false,true).status_ok,\n    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition\n\nerror: aborting due to 1 previous error\n\n",
+          "seconds": 0.4735
+        }
+      ]
+    }
+  ]
+}

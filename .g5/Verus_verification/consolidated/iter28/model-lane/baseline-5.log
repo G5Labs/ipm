@@ -1,0 +1,87 @@
+note: recommendation not met
+  --> /Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/Verus_verification/consolidated/iter28/script.rs:64:17
+   |
+64 |  else{line_item(s.subrange(start,end))+lines(s,end+1)}
+   |                 ^^^^^^^^^^^^^^^^^^^^^
+   |
+  --> seq.rs:1090:12
+   |
+   = note: recommendation not met
+
+error: could not prove termination
+  --> /Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/Verus_verification/consolidated/iter28/script.rs:64:40
+   |
+64 |  else{line_item(s.subrange(start,end))+lines(s,end+1)}
+   |                                        ^^^^^^^^^^^^^^
+
+note: recommendation not met
+  --> /Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/Verus_verification/consolidated/iter28/script.rs:64:40
+   |
+59 |  recommends 0<=start<=s.len()
+   |             ----------------- recommendation not met
+...
+64 |  else{line_item(s.subrange(start,end))+lines(s,end+1)}
+   |                                        ^^^^^^^^^^^^^^
+
+error: could not prove termination
+  --> /Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/Verus_verification/consolidated/iter28/script.rs:67:42
+   |
+67 |  if n==0{-1}else if s[n-1]=='.'{n-1}else{dot(s,n-1)}
+   |                                          ^^^^^^^^^^
+
+note: function body check: not all errors may have been reported; rerun with a higher value for --multiple-errors to find other potential errors in this function
+   --> /Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/Verus_verification/consolidated/iter28/script.rs:226:1
+    |
+226 | pub proof fn execution_neighbor()
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: postcondition not satisfied
+   --> /Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/Verus_verification/consolidated/iter28/script.rs:227:62
+    |
+226 | pub proof fn execution_neighbor()
+    | --------------------------------- at the end of the function body
+227 |  ensures ok(execute(initial(),seq![first(),last()],0,false)),setting_value(execute(initial(),seq![first(),last()],0,false).world)==202,
+    |                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: postcondition not satisfied
+   --> /Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/Verus_verification/consolidated/iter28/script.rs:229:2
+    |
+226 | pub proof fn execution_neighbor()
+    | --------------------------------- at the end of the function body
+...
+229 |  !last_listed(execute(initial(),seq![first(),unknown(),last()],0,false)),
+    |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: postcondition not satisfied
+   --> /Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/Verus_verification/consolidated/iter28/script.rs:237:2
+    |
+235 | pub proof fn dry_execution_neighbor()
+    | ------------------------------------- at the end of the function body
+236 |  ensures ok(execute(initial(),seq![first(),unknown(),last()],0,true)),setting_value(execute(initial(),seq![first(),unknown(),last()...
+237 |  last_listed(execute(initial(),seq![first(),unknown(),last()],0,true)),execute(initial(),seq![first(),unknown(),last()],0,true).att...
+    |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+note: function body check: not all errors may have been reported; rerun with a higher value for --multiple-errors to find other potential errors in this function
+   --> /Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/Verus_verification/consolidated/iter28/script.rs:242:1
+    |
+242 | pub proof fn runtime_neighbor()
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: postcondition not satisfied
+   --> /Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/Verus_verification/consolidated/iter28/script.rs:246:2
+    |
+242 | pub proof fn runtime_neighbor()
+    | ------------------------------- at the end of the function body
+...
+246 |  !last_listed(execute(initial(),seq![first(),fault(),last()],0,false))
+    |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: assertion failed
+   --> /Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/Verus_verification/consolidated/iter28/script.rs:249:9
+    |
+249 |  assert(shell(initial(),fault()).world.calls==1);assert(shell(initial(),fault()).error==Some(Error::Runtime));
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ assertion failed
+
+verification results:: 18 verified, 5 errors
+error: aborting due to 7 previous errors
+

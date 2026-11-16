@@ -1,0 +1,134 @@
+{
+ "when": "20261114T030028Z",
+ "families": [
+  {
+   "family": "partial-compile",
+   "runs": [
+    "20261114T030000Z-r1-two-resources"
+   ],
+   "fields_compared": 31,
+   "as_built_matches": true,
+   "mismatches": [],
+   "variants": {
+    "compiled-means-usable": {
+     "member": null,
+     "wrong": "projection: a compiled-class descriptor means the class runs",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "R2notxn",
+       "field": "cls.TwoResNotxn.B",
+       "wrong": "def:1 compiled:1 runs:1",
+       "observed": [
+        "def:1 compiled:1 runs:err"
+       ]
+      },
+      {
+       "case": "R2dev",
+       "field": "cls.TwoResDev.B",
+       "wrong": "def:1 compiled:1 runs:1",
+       "observed": [
+        "def:1 compiled:1 runs:err"
+       ]
+      }
+     ]
+    },
+    "everything-rolls-back": {
+     "member": null,
+     "wrong": "impossibly broad rollback: every mode removes both classes on failure",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "R2notxn",
+       "field": "mod.tworec-notxn",
+       "wrong": "absent",
+       "observed": [
+        "present version=1.0.0 repo= desc= dev=0"
+       ]
+      },
+      {
+       "case": "R2notxn",
+       "field": "hist.tworec-notxn",
+       "wrong": "action:load success:0 committed:0 finalized:1",
+       "observed": [
+        "action:load success:0 committed:1 finalized:1"
+       ]
+      },
+      {
+       "case": "R2notxn",
+       "field": "cls.TwoResNotxn.A",
+       "wrong": "def:0 compiled:0 runs:0",
+       "observed": [
+        "def:1 compiled:1 runs:1"
+       ]
+      }
+     ]
+    },
+    "stop-at-first-error": {
+     "member": null,
+     "wrong": "compilation stops before the remaining resources (A missing)",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "R2notxn",
+       "field": "cls.TwoResNotxn.A",
+       "wrong": "def:1 compiled:0 runs:0",
+       "observed": [
+        "def:1 compiled:1 runs:1"
+       ]
+      },
+      {
+       "case": "R2dev",
+       "field": "cls.TwoResDev.A",
+       "wrong": "def:1 compiled:0 runs:0",
+       "observed": [
+        "def:1 compiled:1 runs:1"
+       ]
+      }
+     ]
+    },
+    "txn-keeps-first": {
+     "member": null,
+     "wrong": "transactional mode keeps the class that compiled",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "R2txn",
+       "field": "mod.tworec-txn",
+       "wrong": "present version=1.0.0 repo= desc= dev=0",
+       "observed": [
+        "absent"
+       ]
+      },
+      {
+       "case": "R2txn",
+       "field": "cls.TwoResTxn.A",
+       "wrong": "def:1 compiled:1 runs:1",
+       "observed": [
+        "def:0 compiled:0 runs:0"
+       ]
+      }
+     ]
+    }
+   },
+   "contract": [
+    {
+     "name": "a failed load leaves either every resource usable or none (atomic resource set)",
+     "holds": false,
+     "expected": false,
+     "as_expected": true,
+     "ids": [
+      "G:D4-family",
+      "P:F-NSP-12-family"
+     ],
+     "detail": [
+      "R2notxn",
+      "R2dev"
+     ]
+    }
+   ],
+   "members": {},
+   "source_sha256": "2bfc9f33ffaa92d649b8f12ae3e43f417924600690cd34933bd1a18c148805c5"
+  }
+ ]
+}

@@ -1,0 +1,231 @@
+[
+  {
+    "name": "dev-no-setcommitted",
+    "description": "the developer-mode commit does not mark the log committed",
+    "old": "        let t2 = Row { committed: true, ..t };",
+    "new": "        let t2 = t;",
+    "expect": [
+      "inv_manifest"
+    ]
+  },
+  {
+    "name": "no-rollback-on-failure",
+    "description": "the failure path keeps the open level's writes",
+    "old": "    let rolled = if s.snaps.len() > kk { s.snaps[kk as int] } else { s.db };",
+    "new": "    let rolled = s.db;",
+    "expect": [
+      "inv_dep",
+      "inv_activate",
+      "inv_guard"
+    ]
+  },
+  {
+    "name": "finalize-overwrites-committed",
+    "description": "Finalize(error) clears Committed",
+    "old": "    let t = Row { ok: false, ended: true, ..s.temp };\n    L2 { db: Db { top_row: t, ..db2 }",
+    "new": "    let t = Row { ok: false, ended: true, committed: false, ..s.temp };\n    L2 { db: Db { top_row: t, ..db2 }",
+    "expect": [
+      "inv_dep",
+      "inv_activate"
+    ]
+  },
+  {
+    "name": "commit-before-activate",
+    "description": "a transactional load commits its level before Activate",
+    "old": "    if s.cfg.mode == Mode::Dev { L2 { snaps: s.snaps.drop_last(), pc: Pc::Activate, ..s } }   // TCOMMIT #L1338",
+    "new": "    if s.cfg.mode != Mode::NoTxn { L2 { snaps: s.snaps.drop_last(), pc: Pc::Activate, ..s } }   // TCOMMIT #L1338",
+    "expect": [
+      "inv_deps_done"
+    ]
+  },
+  {
+    "name": "crash-commits",
+    "description": "a crash keeps the open level (P2 broken in the environment)",
+    "old": "             else if s.snaps.len() > 0 && r == Res::Rollback { s.snaps[0] } else { closed };",
+    "new": "             else { closed };",
+    "expect": [
+      "inv_crash"
+    ]
+  },
+  {
+    "name": "drop-p3",
+    "description": "drop premise P3",
+    "old": "pub open spec fn p3(s: L2, c: Choice) -> bool { !(s.pc == Pc::Window && crash_res(s, c) is Some) }",
+    "new": "pub open spec fn p3(s: L2, c: Choice) -> bool { true }",
+    "expect": [
+      "g_step_refines"
+    ]
+  },
+  {
+    "name": "drop-pc",
+    "description": "drop premise PC",
+    "old": "pub open spec fn pc_premise(s: L2, c: Choice) -> bool { s.cfg.fix || !(s.cfg.mode == Mode::Dev && s.pc is Deps && crash_res(s, c) is Some) }",
+    "new": "pub open spec fn pc_premise(s: L2, c: Choice) -> bool { true }",
+    "expect": [
+      "g_step_refines"
+    ]
+  },
+  {
+    "name": "drop-pd",
+    "description": "drop premise PD for the strict contract",
+    "old": "    s.cfg.fix || !(uses_txn(s.cfg.mode) && s.snaps.len() > k(s.cfg) && (",
+    "new": "    true || !(uses_txn(s.cfg.mode) && s.snaps.len() > k(s.cfg) && (",
+    "expect": [
+      "g_step_refines"
+    ]
+  },
+  {
+    "name": "drop-p1-crash",
+    "description": "allow a crash inside a caller transaction",
+    "old": "pub open spec fn p1c(s: L2, c: Choice) -> bool { p1(s) && (crash_res(s, c) is Some ==> s.cfg.caller == Caller::NoCaller) }",
+    "new": "pub open spec fn p1c(s: L2, c: Choice) -> bool { p1(s) }",
+    "expect": [
+      "g_step_refines"
+    ]
+  },
+  {
+    "name": "fix-without-dev-persist",
+    "description": "the fix does not persist the twin after the developer-mode commit",
+    "old": "        let db2 = if s.cfg.fix { Db { top_row: t2, ..db1 } } else { db1 };",
+    "new": "        let db2 = db1;",
+    "expect": [
+      "inv_manifest",
+      "inv_crash",
+      "g_dev_crash_honest_when_fixed"
+    ]
+  },
+  {
+    "name": "fix-without-repersist",
+    "description": "the fix does not re-persist dependency rows after the rollback",
+    "old": "    let db2 = if s.cfg.fix { Db { dep_rows: merge_fix(rolled.dep_rows, s.pend, rolled.deps, s.cfg.vers), ..rolled } } else { rolled };",
+    "new": "    let db2 = rolled;",
+    "expect": [
+      "g_dependency_records_kept_when_fixed"
+    ]
+  },
+  {
+    "name": "step-touches-other",
+    "description": "a step changes an unrelated module",
+    "old": "    let db = Db { top_row: init_row(), ..s.db };\n    L2 { db: db, snaps: if uses_txn",
+    "new": "    let db = Db { top_row: init_row(), other: s.db.other.insert(0, 0), ..s.db };\n    L2 { db: db, snaps: if uses_txn",
+    "expect": [
+      "inv_init"
+    ]
+  },
+  {
+    "name": "caller-rollback-keeps-db",
+    "description": "a caller rollback keeps the command's writes",
+    "old": "    let db = if s.cfg.caller == Caller::CallerRollsBack { s.snaps[0] } else { s.db };",
+    "new": "    let db = s.db;",
+    "expect": [
+      "g_caller_rollback_leaves_no_trace"
+    ]
+  },
+  {
+    "name": "l1-without-commit-soundness",
+    "description": "vacuity: L1 without 'Committed = 0 means nothing kept'",
+    "old": "    &&& (!a.d.top_row.committed ==> unchanged(a))                                         // Committed = 0: nothing kept\n",
+    "new": "",
+    "expect": [
+      "g_dev_crash_dishonest_unless_fixed",
+      "g_window_crash_dishonest",
+      "g_operator_commit_dishonest"
+    ]
+  },
+  {
+    "name": "l1-strict-equals-weak",
+    "description": "vacuity: strict L1 without the dependency record rule",
+    "old": "    honest(a) && (forall|j: int| 0 <= j < a.began && j < n(a.cfg) ==> a.d.dep_rows[j].exists)",
+    "new": "    honest(a)",
+    "expect": [
+      "g_dependency_records_lost_unless_fixed"
+    ]
+  },
+  {
+    "name": "fix-keeps-logged-committed",
+    "description": "the first version of the fix: re-persisted dependency rows keep the Committed value logged before the rollback",
+    "old": "Seq::new(a.len(), |j: int| if p[j].exists { Row { committed: deps[j] == Some(vers[j]), ..p[j] } } else { a[j] })",
+    "new": "Seq::new(a.len(), |j: int| if p[j].exists { p[j] } else { a[j] })",
+    "expect": [
+      "inv_dep",
+      "inv_activate",
+      "inv_crash",
+      "lemma_honest_merge"
+    ]
+  },
+  {
+    "name": "instance-crash-runs-onclose",
+    "description": "environment: an instance crash closes objects like a process crash",
+    "old": "    let db = if kind == Kind::Instance { if s.snaps.len() > 0 { s.snaps[0] } else { s.db } }",
+    "new": "    let db = if kind == Kind::Instance { if s.snaps.len() > 0 { s.snaps[0] } else { closed } }",
+    "expect": [
+      "g_instance_crash_dishonest_unless_fixed"
+    ]
+  },
+  {
+    "name": "instance-crash-keeps-iristemp",
+    "description": "environment: an instance crash keeps IRISTEMP",
+    "old": "         pend: if kind == Kind::Instance { nothing(n(s.cfg)) } else { s.pend },",
+    "new": "         pend: s.pend,",
+    "expect": [
+      "g_instance_crash_loses_pending",
+      "inv_instance_crash"
+    ]
+  },
+  {
+    "name": "fix-without-notxn-persist",
+    "description": "the fix does not save the twin when a no-transaction load sets Committed",
+    "old": "        L2 { db: if s.cfg.fix { Db { top_row: t, ..s.db } } else { s.db }, temp: t, pc: Pc::Manifest, ..s }",
+    "new": "        L2 { db: s.db, temp: t, pc: Pc::Manifest, ..s }",
+    "expect": [
+      "inv_guard",
+      "g_instance_crash_honest_when_fixed"
+    ]
+  },
+  {
+    "name": "drop-pi",
+    "description": "drop premise PI",
+    "old": "pub open spec fn pi(s: L2, c: Choice) -> bool { c != Choice::InstanceCrash || instance_safe(s) }",
+    "new": "pub open spec fn pi(s: L2, c: Choice) -> bool { true }",
+    "expect": [
+      "g_step_refines"
+    ]
+  },
+  {
+    "name": "drop-pi-dep",
+    "description": "drop premise PI-dep",
+    "old": "    !(c == Choice::InstanceCrash && s.began > 0) && !(c == Choice::Reconcile && s.lost_temp && s.began > 0)",
+    "new": "    true",
+    "expect": [
+      "g_step_refines"
+    ]
+  },
+  {
+    "name": "ok-recorded-as-failure",
+    "description": "reviewer mutant: a successful developer-mode or no-transaction load records failure",
+    "old": "        else { ok_end(s) }\n    } else { fail_end(s) }",
+    "new": "        else { fail_end(s) }\n    } else { fail_end(s) }",
+    "expect": [
+      "inv_activate"
+    ]
+  },
+  {
+    "name": "crash-records-success",
+    "description": "reviewer mutant: a crash records Success = OK",
+    "old": "    let closed = Db { top_row: s.temp, ..s.db };\n    let db = if kind",
+    "new": "    let closed = Db { top_row: Row { ok: true, ..s.temp }, ..s.db };\n    let db = if kind",
+    "expect": [
+      "inv_crash",
+      "inv_instance_crash"
+    ]
+  },
+  {
+    "name": "dep-failure-recorded-as-success",
+    "description": "a failed dependency load records success",
+    "old": "            let row = dep_row(false, kept, true);\n            fail_end(",
+    "new": "            let row = dep_row(true, kept, true);\n            fail_end(",
+    "expect": [
+      "inv_dep"
+    ]
+  }
+]

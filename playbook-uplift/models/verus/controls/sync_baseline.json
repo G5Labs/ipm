@@ -1,0 +1,218 @@
+[
+  {
+    "name": "sync-no-markfailed",
+    "description": "a failed sync sets no retry mark (MarkFailed dropped)",
+    "old": "failed: f.failed || f.hash is Some, ..f }",
+    "new": "failed: f.failed, ..f }",
+    "expect": [
+      "sync_lemma_sync"
+    ]
+  },
+  {
+    "name": "sync-ignores-retry-marks",
+    "description": "ComputeChanges pass 3 dropped: a file with a retry mark is not forced through",
+    "old": "    f.owned && (f.hash != Some(f.disk) || f.failed || (run_tests && f.pending))",
+    "new": "    f.owned && (f.hash != Some(f.disk) || (run_tests && f.pending))",
+    "expect": [
+      "sync_lemma_sync"
+    ]
+  },
+  {
+    "name": "sync-commit-without-load",
+    "description": "a successful sync commits the new hash without loading the file",
+    "old": "        F { server: Some(f.disk), hash: Some(f.disk), failed: false,",
+    "new": "        F { hash: Some(f.disk), failed: false,",
+    "expect": [
+      "sync_lemma_sync"
+    ]
+  },
+  {
+    "name": "compile-stamps-on-failure",
+    "description": "the dev-mode compile records baselines even when it fails",
+    "old": "    if ok && !skip { stamp_all(m1) } else { m1 }",
+    "new": "    if !skip { stamp_all(m1) } else { m1 }",
+    "expect": [
+      "sync_lemma_compile"
+    ]
+  },
+  {
+    "name": "reload-drops-server-copy",
+    "description": "reload removes the server copy instead of loading the disk bytes",
+    "old": "if m.files[p].owned { F { server: Some(m.files[p].disk), ..m.files[p] } } else { m.files[p] }), ..m } }",
+    "new": "if m.files[p].owned { F { server: None, ..m.files[p] } } else { m.files[p] }), ..m } }",
+    "expect": [
+      "sync_lemma_reload"
+    ]
+  },
+  {
+    "name": "edit-updates-baseline",
+    "description": "an edit on disk also rewrites the stored baseline",
+    "old": "M { files: m.files.insert(p, F { disk: b, ..m.files[p] }), ..m }",
+    "new": "M { files: m.files.insert(p, F { disk: b, hash: Some(b), ..m.files[p] }), ..m }",
+    "expect": [
+      "sync_lemma_edit"
+    ]
+  },
+  {
+    "name": "no-premise-out",
+    "description": "drop defect premise OUT (F-SYNC-1) for compile and load",
+    "old": "    !(ok && !skip) ==> forall |p: int| #[trigger] m.files.dom().contains(p) && m.files[p].owned && (ok || loaded.contains(p))\n        && m.files[p].hash is Some && !m.files[p].failed ==> m.files[p].hash == Some(m.files[p].disk)",
+    "new": "    true",
+    "expect": [
+      "sync_lemma_compile"
+    ]
+  },
+  {
+    "name": "no-premise-out-reload",
+    "description": "drop defect premise OUT (F-SYNC-1) for reload",
+    "old": "    m.dev ==> forall |p: int| #[trigger] m.files.dom().contains(p) && m.files[p].owned\n        && m.files[p].hash is Some && !m.files[p].failed ==> m.files[p].hash == Some(m.files[p].disk)",
+    "new": "    true",
+    "expect": [
+      "sync_lemma_reload"
+    ]
+  },
+  {
+    "name": "no-premise-base",
+    "description": "drop defect premise BASE (F-SYNC-2)",
+    "old": "    m.dev && !has_baseline(m) ==> forall |p: int| #[trigger] m.files.dom().contains(p) && m.files[p].owned\n        ==> m.files[p].server == Some(m.files[p].disk)",
+    "new": "    true",
+    "expect": [
+      "sync_lemma_sync"
+    ]
+  },
+  {
+    "name": "l1-sync-no-success-rule",
+    "description": "vacuity: L1 sync without 'success leaves server = disk' must lose the F-SYNC-1 witness",
+    "old": "    &&& ok ==> forall |p: int| #[trigger] b.dom().contains(p) && b[p].owned ==> b[p].server == Some(b[p].disk)\n",
+    "new": "",
+    "expect": [
+      "sync_witness_failed_compile_then_revert"
+    ]
+  },
+  {
+    "name": "l1-sync-server-present",
+    "description": "vacuity: L1 sync that only asks for a server copy must lose the F-SYNC-2 witness",
+    "old": "b[p].owned ==> b[p].server == Some(b[p].disk)\n}",
+    "new": "b[p].owned ==> b[p].server is Some\n}",
+    "expect": [
+      "sync_witness_first_sync_absorbs_edit"
+    ]
+  },
+  {
+    "name": "l1-sync-success-on-loaded-only",
+    "description": "vacuity: L1 sync that checks only files whose baseline changed must lose the reload witness",
+    "old": "b[p].owned ==> b[p].server == Some(b[p].disk)\n}",
+    "new": "b[p].owned && b[p].server != a[p].server ==> b[p].server == Some(b[p].disk)\n}",
+    "expect": [
+      "sync_witness_reload_then_revert"
+    ]
+  },
+  {
+    "name": "l1-sync-success-allows-old-copy",
+    "description": "vacuity: L1 sync success that also allows the old server copy must lose the -skip-sync witness",
+    "old": "b[p].owned ==> b[p].server == Some(b[p].disk)\n}",
+    "new": "b[p].owned ==> b[p].server == Some(b[p].disk) || b[p].server == a[p].server\n}",
+    "expect": [
+      "sync_witness_skip_sync_load_then_revert"
+    ]
+  },
+  {
+    "name": "commit-keeps-retry-mark",
+    "description": "CommitChanges leaves SyncFailed set",
+    "old": "        F { server: Some(f.disk), hash: Some(f.disk), failed: false,",
+    "new": "        F { server: Some(f.disk), hash: Some(f.disk), failed: f.failed,",
+    "expect": [
+      "sync_lemma_success_effects"
+    ]
+  },
+  {
+    "name": "failed-sync-rewrites-baseline",
+    "description": "a failed sync writes the new hash",
+    "old": "F { server: if was_loaded { Some(f.disk) } else { f.server }, failed: f.failed || f.hash is Some, ..f }",
+    "new": "F { server: if was_loaded { Some(f.disk) } else { f.server }, hash: Some(f.disk), failed: f.failed || f.hash is Some, ..f }",
+    "expect": [
+      "sync_lemma_failed_sync_effects"
+    ]
+  },
+  {
+    "name": "stamp-clears-marks",
+    "description": "StampModule clears retry marks",
+    "old": "M { files: Map::new(m.files.dom(), |p: int| F { hash: Some(m.files[p].disk), ..m.files[p] }), ..m }",
+    "new": "M { files: Map::new(m.files.dom(), |p: int| F { hash: Some(m.files[p].disk), failed: false, ..m.files[p] }), ..m }",
+    "expect": [
+      "sync_lemma_stamp_frame"
+    ]
+  },
+  {
+    "name": "first-sync-loads",
+    "description": "a sync with no baseline loads the files instead of only stamping",
+    "old": "    else if !has_baseline(m) { stamp_all(m) }",
+    "new": "    else if !has_baseline(m) { stamp_all(reload(m)) }",
+    "expect": [
+      "sync_lemma_first_sync"
+    ]
+  },
+  {
+    "name": "reload-stamps",
+    "description": "reload records baselines",
+    "old": "    else { M { files: Map::new(m.files.dom(), |p: int|\n                   if m.files[p].owned { F { server: Some(m.files[p].disk), ..m.files[p] } } else { m.files[p] }), ..m } }",
+    "new": "    else { M { files: Map::new(m.files.dom(), |p: int|\n                   if m.files[p].owned { F { server: Some(m.files[p].disk), hash: Some(m.files[p].disk), ..m.files[p] } } else { m.files[p] }), ..m } }",
+    "expect": [
+      "sync_lemma_reload_effects"
+    ]
+  },
+  {
+    "name": "no-mark-test-pending",
+    "description": "MarkTestPending dropped",
+    "old": "pending: if run_tests { false } else { f.pending || f.test }, ..f }",
+    "new": "pending: if run_tests { false } else { f.pending }, ..f }",
+    "expect": [
+      "sync_lemma_test_marks"
+    ]
+  },
+  {
+    "name": "sync-worked-reports-failure",
+    "description": "finding 1: a sync whose loads, compile and tests worked reports failure",
+    "old": "    else { ok && (!run_tests || tests_ok) }",
+    "new": "    else { false }",
+    "expect": [
+      "sync_lemma_sync"
+    ]
+  },
+  {
+    "name": "sync-test-failure-reports-success",
+    "description": "finding 1: a failing test no longer fails the sync command (SYNC-B31)",
+    "old": "    else { ok && (!run_tests || tests_ok) }",
+    "new": "    else { ok }",
+    "expect": [
+      "sync_lemma_sync"
+    ]
+  },
+  {
+    "name": "sync-compile-failure-reports-success",
+    "description": "finding 1: a failed load or compile reports success",
+    "old": "    else { ok && (!run_tests || tests_ok) }",
+    "new": "    else { !run_tests || tests_ok }",
+    "expect": [
+      "sync_lemma_sync"
+    ]
+  },
+  {
+    "name": "sync-nothing-to-sync-reports-failure",
+    "description": "finding 1: a sync with nothing to apply reports failure",
+    "old": "    else if !has_baseline(m) || !any_detected(m, run_tests) { true }",
+    "new": "    else if !has_baseline(m) { true } else if !any_detected(m, run_tests) { false }",
+    "expect": [
+      "sync_lemma_sync"
+    ]
+  },
+  {
+    "name": "sync-not-dev-reports-success",
+    "description": "finding 1: a sync refused for a module not in developer mode reports success (SYNC-B1)",
+    "old": "    if !m.dev { false }\n    else if !has_baseline(m)",
+    "new": "    if !m.dev { true }\n    else if !has_baseline(m)",
+    "expect": [
+      "sync_lemma_sync"
+    ]
+  }
+]

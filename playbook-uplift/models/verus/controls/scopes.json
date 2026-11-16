@@ -1,0 +1,93 @@
+[
+  {
+    "name": "reload-ignores-scope",
+    "description": "Reload loads every resource, scoped or not",
+    "old": "let loads = (p == Ph::Reload && in_scope(r, l)) || in_current(r, p);",
+    "new": "let loads = p == Ph::Reload || in_current(r, p);",
+    "expect": [
+      "res_present_one"
+    ]
+  },
+  {
+    "name": "own-phase-not-compiled",
+    "description": "a scoped resource is not compiled in its own phase",
+    "old": "    } else if in_current(r, p) && st1.loaded {",
+    "new": "    } else if false {",
+    "expect": [
+      "res_present_one"
+    ]
+  },
+  {
+    "name": "generated-loaded",
+    "description": "a generated resource is loaded from source",
+    "old": "    let st1 = if loads && !r.generated {",
+    "new": "    let st1 = if loads {",
+    "expect": [
+      "res_present_one"
+    ]
+  },
+  {
+    "name": "scope-ignores-phase-list",
+    "description": "IsInScope ignores the command's phase list",
+    "old": "pub open spec fn in_scope(r: Res, l: Seq<Ph>) -> bool { r.scope == Scope::NoScope || l.contains(scope_phase(r.scope)) }",
+    "new": "pub open spec fn in_scope(r: Res, l: Seq<Ph>) -> bool { true }",
+    "expect": [
+      "res_present_one"
+    ]
+  },
+  {
+    "name": "verify-runs-test-phase",
+    "description": "the verify command's phase list includes Test",
+    "old": "        Cmd::VerifyCmd => base().push(Ph::Package).push(Ph::Verify),",
+    "new": "        Cmd::VerifyCmd => base().push(Ph::Test).push(Ph::Package).push(Ph::Verify),",
+    "expect": [
+      "res_witness_verify_skips_test_scoped",
+      "lemma_contains_facts"
+    ]
+  },
+  {
+    "name": "export-ignores-manifest",
+    "description": "packaging ignores the manifest's IncludeTests",
+    "old": "    let inc = match param { Some(b) => b, None => manifest };",
+    "new": "    let inc = match param { Some(b) => b, None => false };",
+    "expect": [
+      "res_export"
+    ]
+  },
+  {
+    "name": "explicit-param-cannot-drop",
+    "description": "an explicit IncludeTests=0 cannot drop the manifest's tests",
+    "old": "    let inc = match param { Some(b) => b, None => manifest };",
+    "new": "    let inc = match param { Some(b) => b || manifest, None => manifest };",
+    "expect": [
+      "res_witness_explicit_zero_overrides_manifest"
+    ]
+  },
+  {
+    "name": "l1-ignores-generated",
+    "description": "vacuity: L1 without the generated rule",
+    "old": "pub open spec fn l1_present(r: Res, c: Cmd) -> bool { !r.generated && l1_compiled(r, c) }",
+    "new": "pub open spec fn l1_present(r: Res, c: Cmd) -> bool { l1_compiled(r, c) }",
+    "expect": [
+      "res_present_one"
+    ]
+  },
+  {
+    "name": "generated-never-compiled",
+    "description": "the earlier modelling error: a generated resource is never compiled",
+    "old": "(st1.loaded || r.generated) {",
+    "new": "st1.loaded {",
+    "expect": [
+      "res_present_one"
+    ]
+  },
+  {
+    "name": "export-includes-generated",
+    "description": "packaging exports generated resources",
+    "old": " && !rs[j].generated)",
+    "new": ")",
+    "expect": [
+      "res_export"
+    ]
+  }
+]

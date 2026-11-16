@@ -1,0 +1,19 @@
+write "ZV=",$zversion,!
+set doc=##class(%Dictionary.CompiledMethod).%OpenId("%Library.File||CopyDir") write !,"PROVIDER|CopyDir|",doc.FormalSpec,!,doc.Description,!
+set doc=##class(%Dictionary.CompiledMethod).%OpenId("%Studio.Project||Check") write !,"PROVIDER|ProjectCheck|",doc.Description,!
+set loadsc=$system.OBJ.Load("/tmp/g5-iter3/Defaults.cls","ck") write !,"LOAD|Defaults|",$system.Status.IsOK(loadsc),!
+set loadsc=$system.OBJ.Load("/tmp/g5-iter3/Requirements.cls","ck") write !,"LOAD|Requirements|",$system.Status.IsOK(loadsc),!
+set loadsc=$system.OBJ.Load("/tmp/g5-iter3/FailDocument.cls","ck") write !,"LOAD|FailDocument|",$system.Status.IsOK(loadsc),!
+set loadsc=$system.OBJ.Load("/tmp/g5-iter3/Probe.cls","ck") write !,"LOAD|Probe|",$system.Status.IsOK(loadsc),!
+do ##class(Consolidated.Iter3.Probe).ArtifactSelection()
+do ##class(Consolidated.Iter3.Probe).ArtifactHTTP()
+do ##class(Consolidated.Iter3.Probe).ArtifactLifecycle()
+do ##class(Consolidated.Iter3.Probe).Defaults()
+do ##class(Consolidated.Iter3.Probe).Requirements()
+do ##class(Consolidated.Iter3.Probe).Public()
+do ##class(Consolidated.Iter3.Probe).ExportFailure()
+do ##class(Consolidated.Iter3.Probe).DeploymentAndSearch()
+do ##class(Consolidated.Iter3.Probe).ProjectReaders()
+do ##class(Consolidated.Iter3.Probe).ArchiveBoundary()
+write !,"ITER3-NATIVE-END",!
+halt

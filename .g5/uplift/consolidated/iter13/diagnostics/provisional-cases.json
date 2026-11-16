@@ -1,0 +1,122 @@
+{
+  "models": {
+    "batch.rs": {
+      "rollback-failed-prefix": [
+        "Scan{state:s,ok:false,marked:Set::empty()}",
+        "Scan{state:empty(),ok:false,marked:Set::empty()}"
+      ],
+      "accept-missing-target": [
+        "else if !existing.contains(targets[0])",
+        "else if false"
+      ],
+      "preview-writes": [
+        "let next=if preview{s}else{S{cfg:s.cfg.insert(targets[0]),..s}};",
+        "let next=S{cfg:s.cfg.insert(targets[0]),..s};"
+      ],
+      "activate-on-failure": [
+        "let activate=scan.ok && !preview",
+        "let activate=!preview"
+      ],
+      "retry-needs-new-rows": [
+        "rest.marked.insert(targets[0])",
+        "if s.cfg.contains(targets[0]){rest.marked}else{rest.marked.insert(targets[0])}"
+      ],
+      "publish-only-requested": [
+        "S{active:s.cfg,..s}",
+        "S{active:s.active.union(marked),..s}"
+      ]
+    }
+  },
+  "session": [
+    "do $system.OBJ.Load(\"/tmp/iter13/Batch.cls\",\"ck\")",
+    "do ##class(Iter13.Batch).Run()"
+  ],
+  "replay_model": "batch.rs",
+  "replay": {
+    "late-bad": "b(late().ok)",
+    "retry": "b(retry().ok)",
+    "valid": "b(other().ok)",
+    "preview-pkg": "b(preview_bad().state.cfg.contains(3))",
+    "preview-rtn": "b(preview_bad().state.cfg.contains(3))",
+    "preview-active": "b(preview_bad().state.active.contains(3))",
+    "preview-callable": "b(preview_bad().state.active.contains(3))",
+    "preview-shell": "b(preview_bad().state.active.contains(3))",
+    "preview-exception": "b(!preview_bad().state.active.contains(3))",
+    "first-bad-pkg": "b(first_bad().state.cfg.contains(2))",
+    "first-bad-rtn": "b(first_bad().state.cfg.contains(2))",
+    "first-bad-active": "b(first_bad().state.active.contains(2))",
+    "first-bad-callable": "b(first_bad().state.active.contains(2))",
+    "first-bad-shell": "b(first_bad().state.active.contains(2))",
+    "first-bad-exception": "b(!first_bad().state.active.contains(2))",
+    "stranded-pkg": "b(late().state.cfg.contains(1))",
+    "stranded-rtn": "b(late().state.cfg.contains(1))",
+    "stranded-active": "b(late().state.active.contains(1))",
+    "stranded-callable": "b(late().state.active.contains(1))",
+    "stranded-shell": "b(late().state.active.contains(1))",
+    "stranded-exception": "b(!late().state.active.contains(1))",
+    "retry-pkg": "b(retry().state.cfg.contains(1))",
+    "retry-rtn": "b(retry().state.cfg.contains(1))",
+    "retry-active": "b(retry().state.active.contains(1))",
+    "retry-callable": "b(retry().state.active.contains(1))",
+    "retry-shell": "b(retry().state.active.contains(1))",
+    "retry-exception": "b(!retry().state.active.contains(1))",
+    "pending-other-pkg": "b(late().state.cfg.contains(1))",
+    "pending-other-rtn": "b(late().state.cfg.contains(1))",
+    "pending-other-active": "b(late().state.active.contains(1))",
+    "pending-other-callable": "b(late().state.active.contains(1))",
+    "pending-other-shell": "b(late().state.active.contains(1))",
+    "pending-other-exception": "b(!late().state.active.contains(1))",
+    "valid-pkg": "b(other().state.cfg.contains(4))",
+    "valid-rtn": "b(other().state.cfg.contains(4))",
+    "valid-active": "b(other().state.active.contains(4))",
+    "valid-callable": "b(other().state.active.contains(4))",
+    "valid-shell": "b(other().state.active.contains(4))",
+    "valid-exception": "b(!other().state.active.contains(4))",
+    "after-other-pkg": "b(other().state.cfg.contains(1))",
+    "after-other-rtn": "b(other().state.cfg.contains(1))",
+    "after-other-active": "b(other().state.active.contains(1))",
+    "after-other-callable": "b(other().state.active.contains(1))",
+    "after-other-shell": "b(other().state.active.contains(1))",
+    "after-other-exception": "b(!other().state.active.contains(1))",
+    "preview": "b(preview_bad().ok)",
+    "first-bad": "b(first_bad().ok)",
+    "late-other": "b(late().ok)",
+    "preview-final-pkg": "b(preview_bad().state.cfg.contains(3))",
+    "preview-final-rtn": "b(preview_bad().state.cfg.contains(3))",
+    "preview-final-active": "b(preview_bad().state.active.contains(3))",
+    "first-final-pkg": "b(first_bad().state.cfg.contains(2))",
+    "first-final-rtn": "b(first_bad().state.cfg.contains(2))",
+    "first-final-active": "b(first_bad().state.active.contains(2))"
+  },
+  "replay_prelude": "selected_neighbors();\n",
+  "native_expected": {
+    "preview-tlevel": 0,
+    "first-bad-tlevel": 0,
+    "late-bad-tlevel": 0,
+    "late-other-tlevel": 0,
+    "retry-tlevel": 0,
+    "valid-tlevel": 0,
+    "empty-ITER13P-pkg": 0,
+    "empty-ITER13P-rtn": 0,
+    "empty-ITER13P-active": 0,
+    "empty-ITER13F-pkg": 0,
+    "empty-ITER13F-rtn": 0,
+    "empty-ITER13F-active": 0,
+    "empty-ITER13L-pkg": 0,
+    "empty-ITER13L-rtn": 0,
+    "empty-ITER13L-active": 0,
+    "empty-ITER13U-pkg": 0,
+    "empty-ITER13U-rtn": 0,
+    "empty-ITER13U-active": 0,
+    "empty-ITER13V-pkg": 0,
+    "empty-ITER13V-rtn": 0,
+    "empty-ITER13V-active": 0,
+    "preview-done": 1,
+    "first-bad-done": 1,
+    "stranded-done": 1,
+    "retry-done": 1,
+    "pending-other-done": 1,
+    "valid-done": 1,
+    "after-other-done": 1
+  }
+}

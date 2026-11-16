@@ -1,0 +1,10 @@
+--- a/src/cls/IPM/Utils/Module.cls	2026-11-06 16:03:47
++++ b/src/cls/IPM/Utils/Module.cls	2026-11-13 14:19:09
+@@ -1346,6 +1346,7 @@
+         set tSC = ##class(%IPM.Storage.Module).ExecutePhases(tModuleName, $listbuild(lifeCyclePhase), 1, .params, pLog)
+         if $$$ISOK(tSC) && 'tDeveloperMode && tUseTransactions {
+             tcommit
++            if $get(^UpliftCrashAt)="after-commit" { halt }
+             if $isobject(pLog) {
+                 do pLog.SetCommitted()
+             }

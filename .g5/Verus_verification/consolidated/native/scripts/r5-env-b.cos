@@ -1,0 +1,11 @@
+// Premise check: does a multi-process compile hide the in-process configuration from an objectgenerator?
+set cfg=##class(%IPM.General.EnvironmentConfig).%Get()
+do ##class(%IPM.Lifecycle.Base).LoadEnvironmentConfig("/tmp/c5/a.json")
+write !,"OBS M0 greeting=",cfg.GetArg("envmod","greeting"),!
+set sc=$system.OBJ.Compile("EnvMod.Gen","ck-d/multicompile=1") write "OBS M1 multi=",$system.Status.IsOK(sc)," gen=[",##class(EnvMod.Gen).Val(),"]",!
+set sc=$system.OBJ.Compile("EnvMod.Gen","ck-d/multicompile=0") write "OBS M2 single=",$system.Status.IsOK(sc)," gen=[",##class(EnvMod.Gen).Val(),"]",!
+kill items set items("EnvMod.Gen.CLS")=""
+set sc=##class(%IPM.Utils.LegacyCompat).UpdateSuperclassAndCompile(.items,"ck-d") write "OBS M3 ipm=",$system.Status.IsOK(sc)," gen=[",##class(EnvMod.Gen).Val(),"]",!
+do cfg.Clear() set sc=##class(%IPM.Utils.LegacyCompat).UpdateSuperclassAndCompile(.items,"ck-d") write "OBS M4 ipm.empty=",$system.Status.IsOK(sc)," gen=[",##class(EnvMod.Gen).Val(),"]",!
+write !,"NATIVE-END",!
+halt

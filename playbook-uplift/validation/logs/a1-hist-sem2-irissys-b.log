@@ -1,0 +1,46 @@
+# container: ipm-uplift-iris  image: containers.intersystems.com/intersystems/iris-community:2026.1  at: 2026-11-13T23:20:18Z
+# script: validation/iris/r4/hist/04-sem2-irissys-b.script
+
+Node: 37eecb272560, Instance: IRIS
+
+USER>
+
+LOAD 1 
+
+USER>
+
+OBS|r4-hist-sem2-noop|code=set x : 1;entriesScanned=5375;irissysCodeChanged=;macroEvalClassNow=0;
+
+threw
+
+OBS|r4-hist-sem2-evaluate-macro-fails|code=try { set x : ##class(%IPM.Utils.Module).%EvaluateMacro("#{$$$ISERR}") } catch e { write !,"threw",! };entriesScanned=5375;irissysCodeChanged=;macroEvalClassNow=10;
+
+OBS|r4-hist-sem2-evaluate-macro|code=set x : ##class(%IPM.Utils.Module).%EvaluateMacro("#{$$$AutheCache}");entriesScanned=5375;irissysCodeChanged=;macroEvalClassNow=0;
+
+[31mWARNING: The {$dbrole}/${dbrole} expression is deprecated. Please contact package developer to use {$globalsDbRole} instead.[0m
+Building dependency graph...Done.
+[USER|rest-demo]	Initialize START
+[USER|rest-demo]	Initialize SUCCESS
+[USER|rest-demo]	Reload START (/home/irisowner/zpm/tests/integration_tests/Test/PM/Integration/_data/rest-app/)
+[USER|rest-demo]	Reload SUCCESS
+[rest-demo]	Module object refreshed.
+[USER|rest-demo]	Validate START
+[USER|rest-demo]	Validate SUCCESS
+[USER|rest-demo]	Compile START
+[USER|rest-demo]	Compile SUCCESS
+[USER|rest-demo]	Activate START
+[USER|rest-demo]	Configure START
+[USER|rest-demo]	Configure SUCCESS
+[USER|rest-demo]	Activate SUCCESS
+Module installed successfully!
+
+OBS|r4-hist-sem2-load-rest-app|code=do ##class(%IPM.Main).Shell("load /home/irisowner/zpm/tests/integration_tests/Test/PM/Integration/_data/rest-app/");entriesScanned=5375;irissysCodeChanged=;macroEvalClassNow=0;
+
+[31mWARNING: The {$dbrole}/${dbrole} expression is deprecated. Please contact package developer to use {$globalsDbRole} instead.[0m
+[USER|rest-demo]	Clean START
+[USER|rest-demo]	Unconfigure START
+[USER|rest-demo]	Unconfigure SUCCESS
+[USER|rest-demo]	Clean SUCCESS
+OBS|r4-hist-sem2-uninstall-rest-app|code=do ##class(%IPM.Main).Shell("uninstall rest-demo");entriesScanned=5375;irissysCodeChanged=;macroEvalClassNow=0;
+
+USER>

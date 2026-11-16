@@ -1,0 +1,6 @@
+set sc=$system.OBJ.LoadDir("/tmp/uplift/r4/hist/Uplift/","ck-d",.err,1) write !,"LOAD ",$system.Status.IsOK(sc)," ",$system.Status.GetErrorText(sc),!
+do ##class(Uplift.R4.Hist).Setup()
+do ##class(Uplift.R4.Hist).DelDep("txn")
+hang 3
+kill kv do ##class(Uplift.R4.Hist).Observe("delete-dep-row-txn-later", "", 0, .kv)
+halt

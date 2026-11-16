@@ -1,0 +1,38 @@
+
+Node: 65454c4a22aa, Instance: IRIS
+
+USER>
+
+USER>
+
+CMD HB1 load /tmp/c5h/hb-2beta/
+
+Building dependency graph...Done.
+[USER|hb-pre]	Initialize START
+[USER|hb-pre]	Initialize SUCCESS
+[USER|hb-pre]	Reload START (/tmp/c5h/hb-2beta/)
+[USER|hb-pre]	Reload SUCCESS
+[hb-pre]	Module object refreshed.
+[USER|hb-pre]	Validate START
+[USER|hb-pre]	Validate SUCCESS
+[USER|hb-pre]	Compile START
+[USER|hb-pre]	Compile SUCCESS
+[USER|hb-pre]	Activate START
+[USER|hb-pre]	Configure START
+[USER|hb-pre]	Configure SUCCESS
+[USER|hb-pre]	Activate SUCCESS
+OBS HB1 status=OK
+OBS HB1 tlevel.before=0 tlevel.after=0
+
+FOR c="HB1|load /tmp/c5h/hb-2beta/","HB2|load /tmp/c5h/hb-1rc/","HR1|load /tmp/c
+5h/hr-2/","HR2|load /tmp/c5h/hr-1/","HM1|load /tmp/c5h/hm-2beta/","HM2|load /tmp
+/c5h/hm-1/" { SET id=$PIECE(c,"|") DO ##CLASS(Consolidated.Obs).Run(id,$PIECE(c,
+"|",2)) DO ##CLASS(Consolidated.Obs).Mod(id,$SELECT(id["HB":"hb-pre",id["HR":"hb
+        ^
+-rel",1:"hb-mix"])) }
+<SYNTAX>
+USER>
+
+NATIVE-END
+
+USER>

@@ -1,0 +1,36 @@
+verification results:: 3 verified, 4 errors
+error: postcondition not satisfied
+  --> .g5/Verus_verification/consolidated/iter14/model-lane/final-controls/unix-wrapper-disables-overlay.rs:92:2
+   |
+87 | pub proof fn protected_directory_copy_preserves(files:Files,target:Path,rs:Seq<Path>)
+   | ------------------------------------------------------------------------------------- at the end of the function body
+...
+92 |  copy(files,SourceKind::Directory,false,target,rs).payload
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: postcondition not satisfied
+  --> .g5/Verus_verification/consolidated/iter14/model-lane/final-controls/unix-wrapper-disables-overlay.rs:98:2
+   |
+94 | pub proof fn unix_copy_preserves_unrelated(files:Files,delete_matching:bool)
+   | ---------------------------------------------------------------------------- at the end of the function body
+...
+98 |  unix_copy(files,unix_args(delete_matching)).payload
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: postcondition not satisfied
+   --> .g5/Verus_verification/consolidated/iter14/model-lane/final-controls/unix-wrapper-disables-overlay.rs:104:2
+    |
+100 | pub proof fn request_is_distinct_from_clearing()
+    | ------------------------------------------------ at the end of the function body
+...
+104 |  unix_args(true).overlay_existing,unix_args(true).delete_matching,
+    |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: assertion failed
+   --> .g5/Verus_verification/consolidated/iter14/model-lane/final-controls/unix-wrapper-disables-overlay.rs:131:39
+    |
+131 |  assert(ordinary_loaded().dir);assert(ordinary_loaded().payload);assert(ordinary_loaded().sentinel);
+    |                                       ^^^^^^^^^^^^^^^^^^^^^^^^^ assertion failed
+
+error: aborting due to 4 previous errors
+

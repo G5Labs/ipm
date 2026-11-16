@@ -1,0 +1,37 @@
+verification results:: 8 verified, 1 errors
+note: function body check: not all errors may have been reported; rerun with a higher value for --multiple-errors to find other potential errors in this function
+  --> .g5/Verus_verification/consolidated/iter10/native/packaging/proof-attempts/omit-path-readdition-sticky-final.rs:96:1
+   |
+96 | pub proof fn selected_file_keeps_payload(r:Resource,phases:Seq<Phase>,s:Map<Text,Text>,f:Text)
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: postcondition not satisfied
+  --> .g5/Verus_verification/consolidated/iter10/native/packaging/proof-attempts/omit-path-readdition-sticky-final.rs:98:10
+   |
+96 | pub proof fn selected_file_keeps_payload(r:Resource,phases:Seq<Phase>,s:Map<Text,Text>,f:Text)
+   | ---------------------------------------------------------------------------------------------- at the end of the function body
+97 |  requires path_name(r.name),has_scope(phases,r.declared),has_scope(phases,r.phase),s.contains_key(f),prefix(directory_prefix(r.name),f)
+98 |  ensures copied(r,phases,s).contains_key(f),copied(r,phases,s)[f]==s[f]
+   |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+note: recommendation not met
+  --> .g5/Verus_verification/consolidated/iter10/native/packaging/proof-attempts/omit-path-readdition-sticky-final.rs:98:45
+   |
+98 |  ensures copied(r,phases,s).contains_key(f),copied(r,phases,s)[f]==s[f]
+   |                                             ^^^^^^^^^^^^^^^^^^^^^
+   |
+  --> map.rs:87:12
+   |
+   = note: recommendation not met
+
+error: postcondition not satisfied
+  --> .g5/Verus_verification/consolidated/iter10/native/packaging/proof-attempts/omit-path-readdition-sticky-final.rs:98:45
+   |
+96 | pub proof fn selected_file_keeps_payload(r:Resource,phases:Seq<Phase>,s:Map<Text,Text>,f:Text)
+   | ---------------------------------------------------------------------------------------------- at the end of the function body
+97 |  requires path_name(r.name),has_scope(phases,r.declared),has_scope(phases,r.phase),s.contains_key(f),prefix(directory_prefix(r.name),f)
+98 |  ensures copied(r,phases,s).contains_key(f),copied(r,phases,s)[f]==s[f]
+   |                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: aborting due to 2 previous errors
+

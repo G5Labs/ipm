@@ -1,0 +1,7 @@
+# Iteration 7 trust and open boundaries
+
+Verus verifies hand-written specifications with no assume/admit/external_body. Direct ObjectScript implementation proofs: 0. Raw delimiter text is modeled as character sequences. Parameter placeholders are parsed tokens with ordinary case-normalized names in supplied collation order; regex matching and literal/escape conversion are explicit premises, not proved parsers.
+
+CSP normalized paths and empty/nonempty properties are interned identities. Web-app statuses depend on real provider return values; native probes use an absent target role to obtain a real Modify error; a future namespace name was accepted and that initial failed expectation is retained. No provider compensation is promised. CORS syntax acceptance is a provider predicate on the split origin, while the caller's order, early stop and status are proved. Native validation does not trace each provider call; call counts remain source/spec evidence.
+
+Reload root choice, env-before-root ordering, known-key membership and hash-empty guard are derived here. Filesystem, environment loader, row open/save and IRIS namespace restoration are dependency contracts validated only on the named schedules. General XML reader/writer conformance and generation of JWT/file-copy declarations remain open. The frozen sample's absent-hash wording was corrected to computed-hash skip vs supplied-empty error; the original wording is retained in the ledger. Proof units are not semantic case counts.

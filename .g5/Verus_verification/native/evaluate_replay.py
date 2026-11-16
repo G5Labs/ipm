@@ -8,6 +8,7 @@ session) and RUN_DIR/raw.log. For each case and field it records two comparisons
   l2: observed vs l2_predicted (does the as-built model predict the product?)
   l1: observed vs l1_permitted (does the product satisfy the contract?)
 Values are normalized to the driver's vocabulary: 1/0, OK/ERR/ZERO/OPEN, <none>.
+A before.modules.* state that contradicts the case's installed_before makes the case INCOMPLETE (setup_failed).
 """
 import glob, hashlib, json, os, re, sys
 from datetime import datetime, timezone
@@ -84,6 +85,35 @@ def slot_changed(o, slot):
 
 def slot_unchanged(o, slot):
     return not slot_changed(o, slot)
+
+
+def precondition_bad(inputs, o):
+    """before.modules.<slot>.* fields that contradict the case's installed_before ("absent", "<version> " or
+    "<version> (developer mode)"). A wrong start state makes every "unchanged" or "as before" clause compare
+    against the wrong baseline."""
+    want = {"top": (inputs.get("installed_before") or {}).get("top")}
+    for i, d in enumerate(inputs.get("dependencies", [])):
+        want[f"dep{i + 1}"] = d.get("installed_before")
+    bad = []
+    for slot, w in want.items():
+        if w is None:
+            continue
+        pre = f"before.modules.{slot}."
+        m = re.fullmatch(r"(\S+)\s*(\(developer mode\))?\s*", w)
+        if w == "absent":
+            exp = {"manifest_present": "0"}
+        elif m:
+            exp = {"manifest_present": "1", "version": m.group(1), "developer_mode": "1" if m.group(2) else "0"}
+        else:
+            bad.append(pre + "installed_before unparsed")
+            continue
+        for k, v in exp.items():
+            ov = o.get(pre + k)
+            if k == "version" and ov is not None:
+                ov = ov.replace("+snapshot", "")
+            if ov != v:
+                bad.append(pre + k)
+    return bad
 
 
 def slot_installed(o, slot, ver, dev):
@@ -249,6 +279,7 @@ def main(argv):
             if harness["harness.end.rc"] != want:
                 harness_bad.append("harness.end.rc")
         setup_bad = [k for k, v in o.items() if re.match(r"setup\d+\.ok$", k) and v != "1"]
+        setup_bad += precondition_bad(case["inputs"], o)
         # The command must have reached IPM (at least the top log's History ID was allocated);
         # otherwise every absence check (no row, no module) would pass vacuously.
         if not re.fullmatch(r"[1-9][0-9]*", o.get("x.ids_allocated", "")):

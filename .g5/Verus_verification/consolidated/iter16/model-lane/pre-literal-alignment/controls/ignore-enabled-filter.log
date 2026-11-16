@@ -1,0 +1,39 @@
+error: postcondition not satisfied
+   --> .g5/Verus_verification/consolidated/iter16/model-lane/controls/ignore-enabled-filter.rs:138:10
+    |
+137 |   pub proof fn selection_binds_supplier(w:World,r:Request)
+    |   -------------------------------------------------------- at the end of the function body
+138 |    ensures match select(w,r) {Some(q)=>w.repos.contains_key(r.repository) &&
+    |  __________^
+139 | |   w.repos[r.repository].enabled && q.server==r.repository && q.root==w.repos[r.repository].root &&
+140 | |   w.roots.contains_key(q.root) && q.package==w.roots[q.root] && q.package.name==r.name && q.package.version==r.version,
+141 | |   None=>true}
+    | |_____________^ failed this postcondition
+
+note: function body check: not all errors may have been reported; rerun with a higher value for --multiple-errors to find other potential errors in this function
+   --> .g5/Verus_verification/consolidated/iter16/model-lane/controls/ignore-enabled-filter.rs:189:1
+    |
+189 | pub proof fn local_and_refusal_neighbors()
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: postcondition not satisfied
+   --> .g5/Verus_verification/consolidated/iter16/model-lane/controls/ignore-enabled-filter.rs:196:2
+    |
+189 | pub proof fn local_and_refusal_neighbors()
+    | ------------------------------------------ at the end of the function body
+...
+196 |  !disabled().ok,disabled().world.module==None,payload(disabled().world)==0,
+    |  ^^^^^^^^^^^^^^ failed this postcondition
+
+error: postcondition not satisfied
+   --> .g5/Verus_verification/consolidated/iter16/model-lane/controls/ignore-enabled-filter.rs:196:17
+    |
+189 | pub proof fn local_and_refusal_neighbors()
+    | ------------------------------------------ at the end of the function body
+...
+196 |  !disabled().ok,disabled().world.module==None,payload(disabled().world)==0,
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+verification results:: 20 verified, 2 errors
+error: aborting due to 3 previous errors
+

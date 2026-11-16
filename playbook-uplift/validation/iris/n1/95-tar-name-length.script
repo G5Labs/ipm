@@ -1,0 +1,6 @@
+set root="/tmp/n1tar/" do ##class(%File).RemoveDirectoryTree(root) set src=root_"src/wheels/" do ##class(%File).CreateDirectoryChain(src)
+for len=98,99,100 { set n=$translate($justify("",len-4)," ","a")_".whl", names(len)=n, f=##class(%Stream.FileCharacter).%New(), f.Filename=src_n do f.Write("x") do f.%Save() kill f }
+set sc=##class(%IPM.General.Archive).Create(root_"src/",root_"out.tgz") write !,"CREATE ",sc,!
+set sc=##class(%IPM.General.Archive).Extract(root_"out.tgz",root_"dst/") write !,"EXTRACT ",sc,!
+set out="" for len=98,99,100 { set out=out_"name"_len_"Extracted="_##class(%File).Exists(root_"dst/wheels/"_names(len))_";" } set n99=$extract(names(100),1,99) write !,"OBS|nc-suite-tar-name-100-truncated|",out,"truncated99CharFileExists=",##class(%File).Exists(root_"dst/wheels/"_n99),";",!
+halt

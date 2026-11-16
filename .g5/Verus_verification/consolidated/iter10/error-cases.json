@@ -1,0 +1,63 @@
+{
+  "models": {
+    "errors.rs": {
+      "hook-error-leaks-children": [
+        "Resolution{ok:false,children:Set::empty()}",
+        "Resolution{ok:false,children:enumerated}"
+      ],
+      "clean-propagates-status": [
+        "Outcome{ok:true,state:State{module:false",
+        "Outcome{ok:r.ok,state:State{module:false"
+      ],
+      "clean-deletes-unresolved": [
+        "code:s.code.difference(r.children)",
+        "code:s.code.difference(enumerated)"
+      ],
+      "clean-keeps-module": [
+        "State{module:false,manifest:false",
+        "State{module:s.module,manifest:false"
+      ],
+      "clean-keeps-manifest": [
+        "module:false,manifest:false",
+        "module:false,manifest:s.manifest"
+      ],
+      "package-swallows-error": [
+        "Outcome{ok:r.ok,state:s}",
+        "Outcome{ok:true,state:s}"
+      ],
+      "repair-ignores-error": [
+        "if !r.ok{Outcome",
+        "if false{Outcome"
+      ]
+    }
+  },
+  "session": [
+    "do $system.OBJ.Load(\"/tmp/iter10/Fault.cls\",\"ck\")",
+    "do $system.OBJ.Load(\"/tmp/iter10/ErrorProbe.cls\",\"ck\")",
+    "do ##class(Iter10.ErrorProbe).Run()"
+  ],
+  "replay_model": "all.rs",
+  "replay": {
+    "resolve-ok": "error::b(error::resolve(set![71int],true).ok)",
+    "resolve-child": "error::b(error::resolve(set![71int],true).children.contains(71))",
+    "resolve-fail": "error::b(error::resolve(set![71int],false).ok)",
+    "resolve-empty": "error::b(error::resolve(set![71int],false).children.is_empty())",
+    "error-package": "error::b(error::package(error::before(),set![71int],false).ok)",
+    "error-uninstall": "error::b(error::uninstall(error::before(),set![71int],false).ok)",
+    "error-module": "error::b(error::uninstall(error::before(),set![71int],false).state.module)",
+    "error-manifest": "error::b(error::uninstall(error::before(),set![71int],false).state.manifest)",
+    "error-code": "error::b(error::uninstall(error::before(),set![71int],false).state.code.contains(71))",
+    "valid-package": "error::b(error::package(error::before(),set![71int],true).ok)",
+    "valid-uninstall": "error::b(error::uninstall(error::before(),set![71int],true).ok)",
+    "valid-module": "error::b(error::uninstall(error::before(),set![71int],true).state.module)",
+    "valid-code": "error::b(error::uninstall(error::before(),set![71int],true).state.code.contains(71))"
+  },
+  "native_expected": {
+    "error-load": 1,
+    "resolve-hook": 1,
+    "package-hook": 1,
+    "uninstall-hook": 1,
+    "error-call": 1,
+    "valid-reload": 1
+  }
+}

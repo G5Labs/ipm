@@ -1,0 +1,563 @@
+{
+  "product_pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+  "counting": "Rows are canonical owner blocks. Groups W1-W3 are work packages chosen from product evidence; R rows repair now-public cases. kind=discovery means the distinction was absent from the canonical ontology, consolidated registers and both historical foundations (alias check in BUGS.md); public_overlap names published cases the row also answers. Implementation proofs: 0.",
+  "rows": [
+    {
+      "group": "W1 CI test-run outcome",
+      "kind": "discovery",
+      "owner": ".g5/ontology/features/build-and-publish.g5.md#build.test.outcome",
+      "public_overlap": [
+        "I3F05 (two-processor aggregation)"
+      ],
+      "direct": [
+        [
+          "src/cls/IPM/ResourceProcessor/Test.cls",
+          "OnPhase"
+        ],
+        [
+          "src/cls/IPM/ResourceProcessor/Test.cls",
+          "ReportTestResults"
+        ],
+        [
+          "src/cls/IPM/Test/Manager.cls",
+          "GetAllTestsStatus"
+        ]
+      ],
+      "reader": [
+        [
+          "src/cls/IPM/Lifecycle/Base.cls",
+          "%Test"
+        ],
+        [
+          "src/cls/IPM/Storage/Module.cls",
+          "ExecutePhases"
+        ],
+        [
+          "src/cls/IPM/Test/Manager.cls",
+          "OutputFailures"
+        ],
+        [
+          "src/cls/IPM/Test/Abstract.cls",
+          "BuildResultTree"
+        ]
+      ],
+      "verus": [
+        ".g5/Verus_verification/consolidated/iter4/test_outcome.rs::failures",
+        ".g5/Verus_verification/consolidated/iter4/test_outcome.rs::resource_ok",
+        ".g5/Verus_verification/consolidated/iter4/test_outcome.rs::all_ok",
+        ".g5/Verus_verification/consolidated/iter4/test_outcome.rs::lifecycle_invoked",
+        ".g5/Verus_verification/consolidated/iter4/test_outcome.rs::report_written",
+        ".g5/Verus_verification/consolidated/iter4/test_outcome.rs::outcome_neighbors"
+      ],
+      "controls": [
+        "test_outcome/method-error-not-counted",
+        "test_outcome/case-error-not-counted",
+        "test_outcome/extension-not-checked",
+        "test_outcome/lifecycle-stops-at-first-failure"
+      ],
+      "native": [
+        "T1-default",
+        "T5-bad-extension",
+        "T6-json-file"
+      ]
+    },
+    {
+      "group": "W1 CI test-run outcome",
+      "kind": "discovery",
+      "owner": ".g5/ontology/features/build-and-publish.g5.md#build.test.outcome.not-fatal",
+      "direct": [
+        [
+          "src/cls/IPM/ResourceProcessor/Test.cls",
+          "ReportTestResults"
+        ]
+      ],
+      "reader": [
+        [
+          "src/cls/IPM/Main.cls",
+          "Shell"
+        ]
+      ],
+      "verus": [
+        ".g5/Verus_verification/consolidated/iter4/test_outcome.rs::resource_ok"
+      ],
+      "controls": [
+        "test_outcome/not-fatal-still-fails"
+      ],
+      "native": [
+        "T2-not-fatal",
+        "exit:E4-not-fatal-terminate"
+      ]
+    },
+    {
+      "group": "W1 CI test-run outcome",
+      "kind": "discovery",
+      "owner": ".g5/ontology/features/build-and-publish.g5.md#build.test.outcome.empty",
+      "direct": [
+        [
+          "src/cls/IPM/ResourceProcessor/Test.cls",
+          "OnPhase"
+        ]
+      ],
+      "reader": [
+        [
+          "src/cls/IPM/Test/Manager.cls",
+          "LoadTestDirectory"
+        ]
+      ],
+      "verus": [
+        ".g5/Verus_verification/consolidated/iter4/test_outcome.rs::load_fails",
+        ".g5/Verus_verification/consolidated/iter4/test_outcome.rs::ran"
+      ],
+      "controls": [
+        "test_outcome/empty-package-fails",
+        "test_outcome/missing-suite-dir-skipped"
+      ],
+      "native": [
+        "T1-default",
+        "T4-empty-only"
+      ],
+      "question": "C:Q13"
+    },
+    {
+      "group": "W1 CI test-run outcome",
+      "kind": "discovery",
+      "owner": ".g5/ontology/features/build-and-publish.g5.md#build.test.outcome.exit",
+      "direct": [
+        [
+          "src/cls/IPM/Main.cls",
+          "Shell"
+        ]
+      ],
+      "reader": [
+        [
+          "src/cls/IPM/Main.cls",
+          "LanguageExtensions"
+        ]
+      ],
+      "verus": [
+        ".g5/Verus_verification/consolidated/iter4/test_outcome.rs::exit_code"
+      ],
+      "controls": [
+        "test_outcome/exit-ignores-terminate-flag"
+      ],
+      "native": [
+        "exit:E1-fail-terminate",
+        "exit:E2-pass-terminate",
+        "exit:E3-fail-no-terminate"
+      ]
+    },
+    {
+      "group": "W1 CI test-run outcome",
+      "kind": "repair",
+      "owner": ".g5/ontology/features/build-and-publish.g5.md#build.test.outcome.nested",
+      "public_overlap": [
+        "I2E09",
+        "I3F02"
+      ],
+      "direct": [
+        [
+          "src/cls/IPM/Test/Manager.cls",
+          "GetAllTestsStatus"
+        ],
+        [
+          "src/cls/IPM/Test/Manager.cls",
+          "OutputFailures"
+        ],
+        [
+          "src/cls/IPM/Test/Manager.cls",
+          "SaveResult"
+        ]
+      ],
+      "reader": [
+        [
+          "src/cls/IPM/ResourceProcessor/Test.cls",
+          "OnPhase"
+        ],
+        [
+          "src/cls/IPM/ResourceProcessor/Test.cls",
+          "OnSyncRunTests"
+        ]
+      ],
+      "verus": [
+        ".g5/Verus_verification/consolidated/iter4/test_outcome.rs::get_all_status",
+        ".g5/Verus_verification/consolidated/iter4/test_outcome.rs::displayed_lines",
+        ".g5/Verus_verification/consolidated/iter4/test_outcome.rs::lemma_nested_keeps_parent",
+        ".g5/Verus_verification/consolidated/iter4/test_outcome.rs::lemma_suffix_ignores_prefix",
+        ".g5/Verus_verification/consolidated/iter4/test_outcome.rs::accumulator_neighbors"
+      ],
+      "controls": [
+        "test_outcome/nested-clears-parent",
+        "test_outcome/nested-counts-parent-slots",
+        "test_outcome/display-includes-start-slot"
+      ],
+      "native": [
+        "A1-nested-fail",
+        "A2-parent-after",
+        "A3-top-both",
+        "A4-nested-pass",
+        "D1-display-from-1",
+        "D2-display-gap",
+        "D3-display-one-slot"
+      ]
+    },
+    {
+      "group": "W2 remote registry install",
+      "kind": "discovery",
+      "owner": ".g5/ontology/concepts/repositories.g5.md#repo.remote.download",
+      "direct": [
+        [
+          "src/cls/IPM/Repo/Remote/PackageService.cls",
+          "GetModule"
+        ],
+        [
+          "src/cls/IPM/Repo/Http/PackageService.cls",
+          "GetHttpRequest"
+        ]
+      ],
+      "reader": [
+        [
+          "src/cls/IPM/Utils/Module.cls",
+          "LoadModuleReference"
+        ]
+      ],
+      "verus": [
+        ".g5/Verus_verification/consolidated/iter4/registry.rs::metadata_request",
+        ".g5/Verus_verification/consolidated/iter4/registry.rs::bytes_request",
+        ".g5/Verus_verification/consolidated/iter4/registry.rs::repaired_bytes_request",
+        ".g5/Verus_verification/consolidated/iter4/registry.rs::lemma_cross_origin_carries_credentials"
+      ],
+      "controls": [
+        "registry/bytes-sent-to-configured-origin",
+        "registry/bytes-drop-credentials-as-built",
+        "registry/repair-still-forwards"
+      ],
+      "native": [
+        "R-cross",
+        "R-same"
+      ],
+      "defect": "C:D20",
+      "question": "C:Q14",
+      "proposal": "C:S14"
+    },
+    {
+      "group": "W2 remote registry install",
+      "kind": "discovery",
+      "owner": ".g5/ontology/concepts/repositories.g5.md#repo.remote.download.integrity",
+      "direct": [
+        [
+          "src/cls/IPM/Repo/Remote/PackageService.cls",
+          "GetModule"
+        ]
+      ],
+      "reader": [
+        [
+          "src/cls/IPM/Utils/Module.cls",
+          "LoadModuleReference"
+        ],
+        [
+          "src/cls/IPM/General/Archive.cls",
+          "Extract"
+        ]
+      ],
+      "verus": [
+        ".g5/Verus_verification/consolidated/iter4/registry.rs::integrity_ok",
+        ".g5/Verus_verification/consolidated/iter4/registry.rs::get_module",
+        ".g5/Verus_verification/consolidated/iter4/registry.rs::install",
+        ".g5/Verus_verification/consolidated/iter4/registry.rs::registry_neighbors"
+      ],
+      "controls": [
+        "registry/hash-compared-case-insensitively",
+        "registry/empty-hash-rejected",
+        "registry/mismatch-sends-analytics",
+        "registry/junk-refused-at-download",
+        "registry/bytes-failure-reports-status"
+      ],
+      "native": [
+        "R-mismatch",
+        "R-upper",
+        "R-nohash",
+        "R-dl404",
+        "R-meta404",
+        "I1-install-good",
+        "I2-install-bad",
+        "I3-install-junk"
+      ],
+      "defect": "C:D22",
+      "proposal": "C:S16"
+    },
+    {
+      "group": "W2 remote registry install",
+      "kind": "discovery",
+      "owner": ".g5/ontology/concepts/repositories.g5.md#repo.remote.download.token",
+      "public_overlap": [
+        "I3F11 (token after SHA1)"
+      ],
+      "direct": [
+        [
+          "src/cls/IPM/Repo/Remote/PackageService.cls",
+          "GetModule"
+        ]
+      ],
+      "reader": [
+        [
+          "src/cls/IPM/Repo/Remote/PackageService.cls",
+          "SendAnalyticsToRegistry"
+        ]
+      ],
+      "verus": [
+        ".g5/Verus_verification/consolidated/iter4/registry.rs::token_stored"
+      ],
+      "controls": [
+        "registry/token-stored-before-integrity"
+      ],
+      "native": [
+        "R-same",
+        "R-mismatch",
+        "R-analytics"
+      ]
+    },
+    {
+      "group": "W2 remote registry install",
+      "kind": "stronger-proof",
+      "owner": ".g5/ontology/features/artifact-download.g5.md#artifact.archive-admission",
+      "inherited": "C:D18",
+      "direct": [
+        [
+          "src/cls/IPM/General/Archive.cls",
+          "Extract"
+        ]
+      ],
+      "reader": [
+        [
+          "src/cls/IPM/Utils/Module.cls",
+          "LoadModuleReference"
+        ]
+      ],
+      "verus": [
+        ".g5/Verus_verification/consolidated/iter4/registry.rs::install"
+      ],
+      "controls": [
+        "registry/junk-refused-at-download"
+      ],
+      "native": [
+        "I3-install-junk"
+      ]
+    },
+    {
+      "group": "W3 developer sync loop",
+      "kind": "repair",
+      "owner": ".g5/ontology/features/developer-tools.g5.md#devtools.sync.compile-after-resolve",
+      "public_overlap": [
+        "I3F20"
+      ],
+      "direct": [
+        [
+          "src/cls/IPM/General/Sync/Pipeline.cls",
+          "SyncCompile"
+        ]
+      ],
+      "reader": [
+        [
+          "src/cls/IPM/General/Sync/Pipeline.cls",
+          "Run"
+        ],
+        [
+          "src/cls/IPM/General/Sync/Pipeline.cls",
+          "SyncDispatchProcessors"
+        ],
+        [
+          "src/cls/IPM/General/Sync/Summary.cls",
+          "AddWarning"
+        ]
+      ],
+      "verus": [
+        ".g5/Verus_verification/consolidated/iter4/sync_compile.rs::sync_compile",
+        ".g5/Verus_verification/consolidated/iter4/sync_compile.rs::sync_compile_neighbors"
+      ],
+      "controls": [
+        "sync_compile/resolution-failure-fails-step",
+        "sync_compile/compile-called-without-survivors",
+        "sync_compile/unresolved-resource-still-compiled",
+        "sync_compile/warning-always-retained",
+        "sync_compile/undefined-class-compiled",
+        "sync_compile/project-resource-warned"
+      ],
+      "native": [
+        "Y1-survivor",
+        "Y2-none-left"
+      ]
+    },
+    {
+      "group": "W3 developer sync loop",
+      "kind": "discovery",
+      "owner": ".g5/ontology/features/developer-tools.g5.md#devtools.sync.test-stop",
+      "direct": [
+        [
+          "src/cls/IPM/General/Sync/Pipeline.cls",
+          "SyncRunTests"
+        ]
+      ],
+      "reader": [
+        [
+          "src/cls/IPM/Lifecycle/Base.cls",
+          "%Test"
+        ]
+      ],
+      "verus": [
+        ".g5/Verus_verification/consolidated/iter4/test_outcome.rs::sync_invoked",
+        ".g5/Verus_verification/consolidated/iter4/test_outcome.rs::lifecycle_invoked"
+      ],
+      "controls": [
+        "test_outcome/sync-runs-all-resources"
+      ],
+      "native": [],
+      "limit": "Sync side source-only."
+    },
+    {
+      "group": "W3 developer sync loop",
+      "kind": "repair",
+      "owner": ".g5/ontology/features/developer-tools.g5.md#devtools.sync.test-paths",
+      "public_overlap": [
+        "I2C04"
+      ],
+      "direct": [
+        [
+          "src/cls/IPM/ResourceProcessor/Test.cls",
+          "RelPathToClassName"
+        ]
+      ],
+      "reader": [
+        [
+          "src/cls/IPM/ResourceProcessor/Test.cls",
+          "OnSync"
+        ]
+      ],
+      "verus": [
+        ".g5/Verus_verification/consolidated/iter4/repairs4.rs::package_rel_path",
+        ".g5/Verus_verification/consolidated/iter4/repairs4.rs::rel_path_neighbors"
+      ],
+      "controls": [
+        "repairs4/outside-path-returns-empty",
+        "repairs4/prefix-requires-boundary"
+      ],
+      "native": [
+        "C-tests/unit/SyncTest/Tests/Trivial.cls",
+        "C-other/SyncTest/Tests/Trivial.cls",
+        "C-tests/unitX/A/B.cls"
+      ],
+      "defect": "C:D21",
+      "proposal": "C:S15"
+    },
+    {
+      "group": "R public repairs",
+      "kind": "repair",
+      "owner": ".g5/ontology/concepts/modules.g5.md#module.deployed",
+      "public_overlap": [
+        "I2E14"
+      ],
+      "direct": [
+        [
+          "src/cls/IPM/Lifecycle/Base.cls",
+          "DEPLOYBYDEFAULT"
+        ],
+        [
+          "src/cls/IPM/Lifecycle/DeployedModule.cls",
+          "DEPLOYBYDEFAULT"
+        ]
+      ],
+      "reader": [
+        [
+          "src/cls/IPM/Lifecycle/Base.cls",
+          "Deploy\",\"Parameter"
+        ]
+      ],
+      "verus": [
+        ".g5/Verus_verification/consolidated/iter4/repairs4.rs::deploy_by_default",
+        ".g5/Verus_verification/consolidated/iter4/repairs4.rs::deploy",
+        ".g5/Verus_verification/consolidated/iter4/repairs4.rs::deploy_neighbors"
+      ],
+      "controls": [
+        "repairs4/lifecycle-defaults-swapped",
+        "repairs4/explicit-false-ignored",
+        "repairs4/explicit-overrides-class-parameter"
+      ],
+      "native": [
+        "P-Base",
+        "P-Module",
+        "P-DeployedModule"
+      ]
+    },
+    {
+      "group": "R public repairs",
+      "kind": "repair",
+      "owner": ".g5/ontology/features/build-and-publish.g5.md#build.test.selection",
+      "public_overlap": [
+        "I2E07 (domain qualification)"
+      ],
+      "direct": [
+        [
+          "src/cls/IPM/ResourceProcessor/Test.cls",
+          "TestsShouldRun"
+        ],
+        [
+          "src/cls/IPM/ResourceProcessor/Test.cls",
+          "Property Phase"
+        ]
+      ],
+      "reader": [
+        [
+          "src/cls/IPM/DataType/ListOfOptions.cls",
+          "IsValid"
+        ]
+      ],
+      "verus": [
+        ".g5/Verus_verification/consolidated/iter4/repairs4.rs::admitted",
+        ".g5/Verus_verification/consolidated/iter4/repairs4.rs::phase_enabled",
+        ".g5/Verus_verification/consolidated/iter4/repairs4.rs::lemma_admitted_agree",
+        ".g5/Verus_verification/consolidated/iter4/repairs4.rs::phase_neighbors"
+      ],
+      "controls": [
+        "repairs4/stored-phase-folded",
+        "repairs4/request-not-lowercased"
+      ],
+      "native": [
+        "P-stored-test",
+        "P-stored-TEST"
+      ]
+    },
+    {
+      "group": "R public repairs",
+      "kind": "repair",
+      "owner": ".g5/ontology/concepts/repositories.g5.md#repo.search-order",
+      "public_overlap": [
+        "I2E21"
+      ],
+      "direct": [
+        [
+          "src/cls/IPM/Repo/SearchCriteria.cls",
+          "KeywordsSet"
+        ]
+      ],
+      "reader": [
+        [
+          "src/cls/IPM/Repo/Manager.cls",
+          "SearchRepositoriesForModule"
+        ]
+      ],
+      "verus": [
+        ".g5/Verus_verification/consolidated/iter4/repairs4.rs::keywords",
+        ".g5/Verus_verification/consolidated/iter4/repairs4.rs::visits_filesystem",
+        ".g5/Verus_verification/consolidated/iter4/repairs4.rs::criteria_name",
+        ".g5/Verus_verification/consolidated/iter4/repairs4.rs::keyword_neighbors"
+      ],
+      "controls": [
+        "repairs4/empty-tokens-kept",
+        "repairs4/dollar-list-not-filtered",
+        "repairs4/object-filtered",
+        "repairs4/keywords-ignored-at-gate"
+      ],
+      "native": [],
+      "limit": "Token rule source-only; no new native case."
+    }
+  ]
+}

@@ -1,0 +1,256 @@
+# container: ipm-uplift-iris-nsp  image: containers.intersystems.com/intersystems/iris-community:2026.1  at: 2026-11-13T18:33:56Z
+# script: validation/iris/nsp/94-sync-checks.script
+
+Node: 1176f046b99d, Instance: IRIS
+
+USER>
+
+Load of directory started on 11/13/2026 18:33:56
+Loading file /tmp/uplift/nsp/Uplift/Nsp/Res.cls as cls
+Imported class: Uplift.Nsp.Res
+Loading file /tmp/uplift/nsp/Uplift/Nsp/Fresh.cls as cls
+Imported class: Uplift.Nsp.Fresh
+Loading file /tmp/uplift/nsp/Uplift/Nsp/Util.cls as cls
+Imported class: Uplift.Nsp.Util
+Loading file /tmp/uplift/nsp/Uplift/Nsp/Sync.cls as cls
+Imported class: Uplift.Nsp.Sync
+Loading file /tmp/uplift/nsp/Uplift/Nsp/Ns.cls as cls
+Imported class: Uplift.Nsp.Ns
+Loading file /tmp/uplift/nsp/Uplift/Nsp/Cap.cls as cls
+Imported class: Uplift.Nsp.Cap
+Compiling 6 classes
+Compiling class Uplift.Nsp.Fresh
+Compiling class Uplift.Nsp.Sync
+Compiling class Uplift.Nsp.Cap
+Compiling class Uplift.Nsp.Res
+Compiling class Uplift.Nsp.Ns
+Compiling class Uplift.Nsp.Util
+Compiling routine Uplift.Nsp.Fresh.1
+Compiling routine Uplift.Nsp.Cap.1
+Compiling routine Uplift.Nsp.Res.1
+Compiling routine Uplift.Nsp.Util.1
+Compiling routine Uplift.Nsp.Sync.1
+Compiling routine Uplift.Nsp.Ns.1
+Load finished successfully.
+
+LOADED 1
+
+USER>
+
+>>> zpm "load /tmp/nc-sync/ -dev"
+  | 
+  | Building dependency graph...Done.
+  | [USER|sync-test]	Initialize START
+  | Compilation started on 11/13/2026 18:33:57
+  | Compiling class SyncBoot.Boot
+  | Compiling routine SyncBoot.Boot.1
+  | Compilation finished successfully in 0.007s.
+  | 
+  | [USER|sync-test]	Initialize SUCCESS
+  | [USER|sync-test]	Reload START (/tmp/nc-sync/)
+  | [USER|sync-test]	Reload SUCCESS
+  | [sync-test]	Module object refreshed.
+  | [USER|sync-test]	Validate START
+  | [USER|sync-test]	Validate SUCCESS
+  | [USER|sync-test]	Compile START
+  | [USER|sync-test]	Compile SUCCESS
+  | [USER|sync-test]	Activate START
+  | [USER|sync-test]	Configure START
+  | [USER|sync-test]	Configure SUCCESS
+  | [USER|sync-test]	Activate SUCCESS
+<<< status OK
+
+>>> zpm "compile sync-test"
+<<< status ERROR ERROR #5373: Class 'NcMissing.Base', used by 'SyncTest.SuperClass:superclass', does not exist
+  > ERROR #5030: An error occurred while compiling class 'SyncTest.SubClass'
+
+>>> zpm "sync sync-test -verbose"
+  | 
+  | [USER|sync-test]	Sync START
+  | [sync-test] Scanned 10 file(s) across 6 director(ies) in 0.00s
+  | [sync-test] Tracking 14 path(s) across 9 resource(s)
+  | [sync-test] Nothing to sync.
+  | [sync-test] 1 resource(s) skipped (no sync support): /static/
+  |   Use `reload sync-test` to apply changes to those resources.
+  | [sync-test] Sync done in 0.45s
+  | [USER|sync-test]	Sync SUCCESS
+<<< status OK
+
+OBS|nc-sync-N18-compile-fail-revert|brokenShaDiffers=1;compile=err:ERROR #5373: Class 'NcMissing.Base', used by 'SyncTest.SuperClass:superclass', does not exist  > ERROR #5030: An error occurred while compiling class 'SyncTes;loadDev=ok;nothingToSync=1;restoredExactBytes=1;rowAfterCompile=hash:a5f640cc47 syncFailed:0 testPending:0;rowAfterLoad=hash:a5f640cc47 syncFailed:0 testPending:0;rowAfterSync=hash:a5f640cc47 syncFailed:0 testPending:0;stateAfterCompile=defined;stateAfterSync=defined;superAfterCompile=NcMissing.Base;superAfterSync=NcMissing.Base;sync=ok;updatedLine=;valueAfterLoad=original;valueAfterSync=original;
+
+USER>
+
+>>> zpm "uninstall sync-test -force"
+<<< status OK
+
+>>> zpm "load /tmp/nc-sync/ -dev -skip-sync"
+  | 
+  | Building dependency graph...Done.
+  | [USER|sync-test]	Initialize START
+  | Compilation started on 11/13/2026 18:33:59
+  | Compiling class SyncBoot.Boot
+  | Compiling routine SyncBoot.Boot.1
+  | Compilation finished successfully in 0.003s.
+  | 
+  | [USER|sync-test]	Initialize SUCCESS
+  | [USER|sync-test]	Reload START (/tmp/nc-sync/)
+  | [USER|sync-test]	Reload SUCCESS
+  | [sync-test]	Module object refreshed.
+  | [USER|sync-test]	Validate START
+  | [USER|sync-test]	Validate SUCCESS
+  | [USER|sync-test]	Compile START
+  | [USER|sync-test]	Compile SUCCESS
+  | [USER|sync-test]	Activate START
+  | [USER|sync-test]	Configure START
+  | [USER|sync-test]	Configure SUCCESS
+  | [USER|sync-test]	Activate SUCCESS
+<<< status OK
+
+>>> zpm "sync sync-test -verbose"
+  | 
+  | [USER|sync-test]	Sync START
+  | [sync-test] Baseline established. Run sync again to detect changes.
+  | [USER|sync-test]	Sync SUCCESS
+<<< status OK
+
+>>> zpm "sync sync-test -verbose"
+  | 
+  | [USER|sync-test]	Sync START
+  | [sync-test] Scanned 10 file(s) across 6 director(ies) in 0.00s
+  | [sync-test] Tracking 14 path(s) across 9 resource(s)
+  | [sync-test] Nothing to sync.
+  | [sync-test] 1 resource(s) skipped (no sync support): /static/
+  |   Use `reload sync-test` to apply changes to those resources.
+  | [sync-test] Sync done in 0.27s
+  | [USER|sync-test]	Sync SUCCESS
+<<< status OK
+
+OBS|nc-sync-N19-skip-sync-first-sync|diskHasEdited=1;hasBaseline=0;loadDevSkipSync=ok;sync1=ok;sync1Baseline=1;sync2=ok;sync2Nothing=1;valueAfterSync1=original;valueAfterSync2=original;
+
+USER>
+
+>>> zpm "uninstall sync-test -force"
+<<< status OK
+
+>>> zpm "load /tmp/nc-sync/ -dev"
+<<< status OK
+
+>>> zpm "load /tmp/nc-sdep-c/ -dev"
+<<< status OK
+
+>>> zpm "sync"
+  | 
+  | [USER|sync-test]	Sync START
+  | [sync-test]	Sync FAILURE
+  | ERROR #5373: Class 'NcMissing.Base', used by 'SyncTest.SuperClass:superclass', does not exist
+  | [USER|sync-dep-c]	Sync START
+  |   Updated: src/cls/SyncDepC/Base.cls
+  | [sync-dep-c] Sync complete: 1 file(s) updated.
+  | [sync-dep-c] Sync done in 0.04s
+  | [USER|sync-dep-c]	Sync SUCCESS
+  | 
+  | ================================================================
+  | Sync Summary
+  | ================================================================
+  | Modules checked:  2  (sync-test, sync-dep-c)
+  | Modules updated:  1
+  |   sync-test   ERROR
+  |   sync-dep-c   1 file
+  | Errors:    sync-test
+  | ================================================================
+<<< status OK
+
+>>> zpm "sync sync-test"
+<<< status ERROR ERROR #5373: Class 'NcMissing.Base', used by 'SyncTest.SuperClass:superclass', does not exist
+
+OBS|nc-sync-N20-sync-all-one-fails|depCValue=c-edited;errorLine=ERROR #5373: Class 'NcMissing.Base', used by 'SyncTest.SuperClass:superclass', does not exist;loads=ok / ok;summaryLine=[USER/sync-test]Sync START;syncAll=ok;syncOne=err:ERROR #5373: Class 'NcMissing.Base', used by 'SyncTest.SuperClass:superclass', does not exist;syncTestRow=hash:a5f640cc47 syncFailed:1 testPending:0;
+
+USER>
+
+>>> zpm "uninstall sync-test -force"
+<<< status OK
+
+>>> zpm "uninstall sync-dep-c -force"
+<<< status OK
+
+>>> zpm "load /tmp/nc-reload-c/"
+<<< status OK
+
+>>> zpm "reload sync-dep-c"
+  | 
+  | [USER|sync-dep-c]	Initialize START
+  | [USER|sync-dep-c]	Initialize SUCCESS
+  | [USER|sync-dep-c]	Reload START (/tmp/nc-reload-c/)
+  | [USER|sync-dep-c]	Reload SUCCESS
+  | [sync-dep-c]	Module object refreshed.
+<<< status OK
+
+OBS|nc-sync-N21-reload-non-dev|load=ok;record=1.0.0;reload=ok;reloadLine=[USER/sync-dep-c]Reload START (/tmp/nc-reload-c/);serverSourceHasReloaded=0;value=c-original;
+
+>>> zpm "uninstall sync-dep-c"
+<<< status OK
+
+USER>
+
+>>> zpm "load /tmp/nc-sync/ -dev"
+<<< status OK
+
+>>> zpm "sync sync-test"
+  | 
+  | [USER|sync-test]	Sync START
+  | [sync-test]	Sync FAILURE
+  | [31mERROR![0m Class 'NcMissing.Base', used by 'SyncTest.SuperClass:superclass', does not exist
+<<< status ERROR ERROR #5373: Class 'NcMissing.Base', used by 'SyncTest.SuperClass:superclass', does not exist
+
+>>> zpm "compile sync-test"
+<<< status OK
+
+>>> zpm "sync sync-test -verbose"
+  | 
+  | [USER|sync-test]	Sync START
+  | [sync-test] Scanned 10 file(s) across 6 director(ies) in 0.00s
+  | [sync-test] Tracking 14 path(s) across 9 resource(s)
+  | [sync-test] Retrying 1 file(s) from a previous failed sync.
+  | [sync-test] Dispatching to 1 resource(s)
+  | Load started on 11/13/2026 18:34:04
+  | Loading file /tmp/nc-sync/src/cls/SyncTest/SuperClass.cls as udl
+  | Compiling class SyncTest.SuperClass
+  | Compiling routine SyncTest.SuperClass.1
+  | Load finished successfully.
+  | 
+  | Compilation started on 11/13/2026 18:34:04 with qualifiers 'dcku'
+  | Class SyncBoot.Boot is up-to-date.
+  | Class SyncPkg.Alone is up-to-date.
+  | Class SyncTest.Consumer is up-to-date.
+  | Class SyncTest.Deletable is up-to-date.
+  | Class SyncTest.SubClass is up-to-date.
+  | Class SyncTest.SuperClass is up-to-date.
+  | Class SyncTest.XmlClass is up-to-date.
+  | Compilation finished successfully in 0.001s.
+  | 
+  |   Updated: src/cls/SyncTest/SuperClass.cls
+  | [sync-test] Sync complete: 1 file(s) updated.
+  | [sync-test] 1 resource(s) skipped (no sync support): /static/
+  |   Use `reload sync-test` to apply changes to those resources.
+  | [sync-test] Sync done in 0.41s
+  | [USER|sync-test]	Sync SUCCESS
+<<< status OK
+
+>>> zpm "sync sync-test -verbose"
+  | 
+  | [USER|sync-test]	Sync START
+  | [sync-test] Scanned 10 file(s) across 6 director(ies) in 0.00s
+  | [sync-test] Tracking 14 path(s) across 9 resource(s)
+  | [sync-test] Nothing to sync.
+  | [sync-test] 1 resource(s) skipped (no sync support): /static/
+  |   Use `reload sync-test` to apply changes to those resources.
+  | [sync-test] Sync done in 0.25s
+  | [USER|sync-test]	Sync SUCCESS
+<<< status OK
+
+OBS|nc-sync-N22-retry-mark-after-compile|brokenSync=err:ERROR #5373: Class 'NcMissing.Base', used by 'SyncTest.SuperClass:superclass', does not exist;compile=ok;loadDev=ok;retryLine=[sync-test] Retrying 1 file(s) from a previous failed sync.;rowAfterCompile=hash:1e296a57d9 syncFailed:1 testPending:0;rowAfterFailedSync=hash:a5f640cc47 syncFailed:1 testPending:0;rowAfterSync=hash:1e296a57d9 syncFailed:0 testPending:0;sync=ok;syncAgainNothing=1;updatedLine=Updated: src/cls/SyncTest/SuperClass.cls;valueAfterCompile=fixed;
+
+>>> zpm "uninstall sync-test -force"
+<<< status OK
+
+USER>

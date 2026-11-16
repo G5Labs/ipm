@@ -1,0 +1,367 @@
+{
+  "models": {
+    "snapshot_dependencies.rs": {
+      "snapshot-never": [
+        "inherited_semver::snapshot(inherited_semver::v(v))",
+        "false"
+      ],
+      "snapshot-always": [
+        "inherited_semver::snapshot(inherited_semver::v(v))",
+        "true"
+      ],
+      "snapshot-case-sensitive": [
+        "inherited_semver::snapshot(inherited_semver::v(v))",
+        "inherited_semver::v(v).build==seq!['s','n','a','p','s','h','o','t']"
+      ],
+      "snapshot-uses-prerelease": [
+        "inherited_semver::snapshot(inherited_semver::v(v))",
+        "inherited_semver::v(v).pre==seq!['s','n','a','p','s','h','o','t']"
+      ],
+      "default-refresh-off": [
+        "match c.snapshots{Some(v)=>v,None=>true}",
+        "match c.snapshots{Some(v)=>v,None=>false}"
+      ],
+      "shallow-override-ignored": [
+        "match c.snapshots{Some(v)=>v,None=>true}",
+        "true"
+      ],
+      "permit-override-ignored": [
+        "permit_downgrade:c.permit_downgrade",
+        "permit_downgrade:false"
+      ],
+      "request-from-source-name": [
+        "run(w,w.parent.dependency_version,params(c))",
+        "run(w,if w.source.name==name(Case::Snapshot){snap()}else{one()},params(c))"
+      ],
+      "parent-version-hardcoded": [
+        "parent_requested:w.parent.version",
+        "parent_requested:one()"
+      ],
+      "ignore-installed-name": [
+        "m.name==w.parent.dependency_name && satisfies",
+        "true && satisfies"
+      ],
+      "ignore-installed-membership": [
+        "satisfies(m.version,exact(request)) && (prior.len()",
+        "true && (prior.len()"
+      ],
+      "ignore-prior-version": [
+        "(prior.len()==0 || prior==m.version)",
+        "true"
+      ],
+      "ignore-snapshot-force": [
+        "!(is_snapshot(m.version) && p.force_snapshots)",
+        "true"
+      ],
+      "force-reloads-release": [
+        "!(is_snapshot(m.version) && p.force_snapshots)",
+        "!p.force_snapshots"
+      ],
+      "omit-generated-lower": [
+        "if !p.ignore_installed && !p.permit_downgrade",
+        "if false"
+      ],
+      "ignore-permit-downgrade": [
+        "if !p.ignore_installed && !p.permit_downgrade",
+        "if !p.ignore_installed"
+      ],
+      "lower-from-parent-version": [
+        "lower(m.version),true,false",
+        "lower(w.parent.version),true,false"
+      ],
+      "exact-drops-build": [
+        "seq![inherited_semver::expand(v)]",
+        "seq![inherited_semver::expand(one())]"
+      ],
+      "reuse-node-has-alpha": [
+        "Node{name:m.name,repository:seq![],version:m.version}",
+        "Node{name:m.name,repository:alpha(),version:m.version}"
+      ],
+      "overlap-error-still-searches": [
+        "inherited_semver::ExprAnd::NoOverlap=>Graph{node:None,error:Some(Error::NoOverlap)}",
+        "inherited_semver::ExprAnd::NoOverlap=>searched(w,exact(request))"
+      ],
+      "flat-loses-repository": [
+        "Node{name:n.name,repository:n.repository,version:n.version}",
+        "Node{name:n.name,repository:seq![],version:n.version}"
+      ],
+      "flat-loses-version": [
+        "Node{name:n.name,repository:n.repository,version:n.version}",
+        "Node{name:n.name,repository:n.repository,version:seq![]}"
+      ],
+      "consumer-loads-empty-sentinel": [
+        "if n.repository.len()==0{w}",
+        "if n.repository.len()==0{successful_load(w,w.source)}"
+      ],
+      "consumer-skips-qualified-load": [
+        "Some(d)=>successful_load(w,d)",
+        "Some(d)=>w"
+      ],
+      "writer-keeps-old-code": [
+        "root:source.root,code:source.code",
+        "root:source.root,code:w.installed.unwrap().code"
+      ],
+      "writer-erases-build": [
+        "Installed{name:source.name,version:source.version",
+        "Installed{name:source.name,version:one()"
+      ],
+      "writer-erases-root": [
+        "root:source.root,code:source.code",
+        "root:seq![],code:source.code"
+      ],
+      "parent-reads-physical-code": [
+        "if w.parent.target==m.code.class{Some(m.code.who)}",
+        "if w.parent.target==m.code.class{Some(w.source.code.who)}"
+      ],
+      "root-reader-uses-source": [
+        "pub open spec fn installed_root(w:World)->Text {match w.installed{None=>seq![],Some(m)=>m.root}}",
+        "pub open spec fn installed_root(w:World)->Text {w.source.root}"
+      ],
+      "supplier-reader-uses-source": [
+        "pub open spec fn installed_repository(w:World)->Text {match w.installed{None=>seq![],Some(m)=>m.repository}}",
+        "pub open spec fn installed_repository(w:World)->Text {w.source.repository}"
+      ]
+    }
+  },
+  "dependency_controls": {},
+  "control_functions": {
+    "snapshot_dependencies.rs": {
+      "snapshot-never": "classification_neighbor",
+      "snapshot-always": "classification_neighbor",
+      "snapshot-case-sensitive": "classification_neighbor",
+      "snapshot-uses-prerelease": "classification_neighbor",
+      "default-refresh-off": "request_neighbor",
+      "shallow-override-ignored": "request_neighbor",
+      "permit-override-ignored": "request_neighbor",
+      "request-from-source-name": "request_neighbor",
+      "parent-version-hardcoded": "request_neighbor",
+      "ignore-installed-name": "reuse_neighbor",
+      "ignore-installed-membership": "reuse_neighbor",
+      "ignore-prior-version": "reuse_neighbor",
+      "ignore-snapshot-force": "reuse_neighbor",
+      "force-reloads-release": "reuse_neighbor",
+      "omit-generated-lower": "decision_neighbor",
+      "ignore-permit-downgrade": "decision_neighbor",
+      "lower-from-parent-version": "decision_neighbor",
+      "exact-drops-build": "intersection_neighbor",
+      "reuse-node-has-alpha": "decision_neighbor",
+      "overlap-error-still-searches": "decision_neighbor",
+      "flat-loses-repository": "flat_neighbor",
+      "flat-loses-version": "flat_neighbor",
+      "consumer-loads-empty-sentinel": "load_neighbor",
+      "consumer-skips-qualified-load": "load_neighbor",
+      "writer-keeps-old-code": "load_neighbor",
+      "writer-erases-build": "load_neighbor",
+      "writer-erases-root": "load_neighbor",
+      "parent-reads-physical-code": "load_neighbor",
+      "root-reader-uses-source": "reader_neighbor",
+      "supplier-reader-uses-source": "reader_neighbor"
+    }
+  },
+  "control_options": [
+    "--multiple-errors",
+    "0"
+  ],
+  "control_isolation_helper": "model-lane/isolate_witness.py",
+  "control_isolation_function": "isolate",
+  "replay_model": "snapshot_dependencies.rs",
+  "replay_grouped": true,
+  "replay": {
+    "shallow-snap": "b(ok(shallow()))",
+    "default-snap": "b(ok(default_snapshot()))",
+    "permit-snap": "b(ok(permitted()))",
+    "default-release": "b(ok(default_release()))",
+    "semver-build": "b(inherited_semver::parse(snap()).build==seq!['s','n','a','p','s','h','o','t'])",
+    "semver-snapshot": "b(is_snapshot(snap()))",
+    "semver-exact-satisfied": "b(satisfies(snap(),exact(snap())))",
+    "semver-lower-satisfied": "b(satisfies(snap(),lower(snap())))",
+    "semver-and-rejected": "b(inherited_semver::expr_and(exact(snap()),lower(snap()),true,false) is NoOverlap)",
+    "initial-snap-dep-present": "b((initial(Case::Snapshot)).installed.is_some() && installed_name(initial(Case::Snapshot))==name(Case::Snapshot))",
+    "initial-snap-dep-version": "b(installed_version(initial(Case::Snapshot))==required(Case::Snapshot))",
+    "initial-snap-dep-snapshot": "b(is_snapshot(installed_version(initial(Case::Snapshot))))",
+    "initial-snap-dep-build": "b(inherited_semver::parse(installed_version(initial(Case::Snapshot))).build==inherited_semver::parse(required(Case::Snapshot)).build)",
+    "initial-snap-dep-supplier": "b(installed_repository(initial(Case::Snapshot))==alpha())",
+    "initial-snap-dep-root": "b(installed_root(initial(Case::Snapshot))==root(Case::Snapshot))",
+    "initial-snap-dep-code": "b((initial(Case::Snapshot)).installed.is_some() && (initial(Case::Snapshot)).installed.unwrap().code.class==class(Case::Snapshot))",
+    "initial-snap-dep-payload": "dep_payload(initial(Case::Snapshot)).unwrap()",
+    "initial-snap-parent-dep-version": "b((initial(Case::Snapshot)).parent.dependency_version==required(Case::Snapshot))",
+    "initial-snap-parent-payload": "parent_payload(initial(Case::Snapshot)).unwrap()",
+    "initial-release-dep-present": "b((initial(Case::Release)).installed.is_some() && installed_name(initial(Case::Release))==name(Case::Release))",
+    "initial-release-dep-version": "b(installed_version(initial(Case::Release))==required(Case::Release))",
+    "initial-release-dep-snapshot": "b(is_snapshot(installed_version(initial(Case::Release))))",
+    "initial-release-dep-build": "b(inherited_semver::parse(installed_version(initial(Case::Release))).build==inherited_semver::parse(required(Case::Release)).build)",
+    "initial-release-dep-supplier": "b(installed_repository(initial(Case::Release))==alpha())",
+    "initial-release-dep-root": "b(installed_root(initial(Case::Release))==root(Case::Release))",
+    "initial-release-dep-code": "b((initial(Case::Release)).installed.is_some() && (initial(Case::Release)).installed.unwrap().code.class==class(Case::Release))",
+    "initial-release-dep-payload": "dep_payload(initial(Case::Release)).unwrap()",
+    "initial-release-parent-dep-version": "b((initial(Case::Release)).parent.dependency_version==required(Case::Release))",
+    "initial-release-parent-payload": "parent_payload(initial(Case::Release)).unwrap()",
+    "changed-snap-dep-present": "b((changed(Case::Snapshot)).installed.is_some() && installed_name(changed(Case::Snapshot))==name(Case::Snapshot))",
+    "changed-snap-dep-version": "b(installed_version(changed(Case::Snapshot))==required(Case::Snapshot))",
+    "changed-snap-dep-snapshot": "b(is_snapshot(installed_version(changed(Case::Snapshot))))",
+    "changed-snap-dep-build": "b(inherited_semver::parse(installed_version(changed(Case::Snapshot))).build==inherited_semver::parse(required(Case::Snapshot)).build)",
+    "changed-snap-dep-supplier": "b(installed_repository(changed(Case::Snapshot))==alpha())",
+    "changed-snap-dep-root": "b(installed_root(changed(Case::Snapshot))==root(Case::Snapshot))",
+    "changed-snap-dep-code": "b((changed(Case::Snapshot)).installed.is_some() && (changed(Case::Snapshot)).installed.unwrap().code.class==class(Case::Snapshot))",
+    "changed-snap-dep-payload": "dep_payload(changed(Case::Snapshot)).unwrap()",
+    "changed-snap-parent-dep-version": "b((changed(Case::Snapshot)).parent.dependency_version==required(Case::Snapshot))",
+    "changed-snap-parent-payload": "parent_payload(changed(Case::Snapshot)).unwrap()",
+    "changed-release-dep-present": "b((changed(Case::Release)).installed.is_some() && installed_name(changed(Case::Release))==name(Case::Release))",
+    "changed-release-dep-version": "b(installed_version(changed(Case::Release))==required(Case::Release))",
+    "changed-release-dep-snapshot": "b(is_snapshot(installed_version(changed(Case::Release))))",
+    "changed-release-dep-build": "b(inherited_semver::parse(installed_version(changed(Case::Release))).build==inherited_semver::parse(required(Case::Release)).build)",
+    "changed-release-dep-supplier": "b(installed_repository(changed(Case::Release))==alpha())",
+    "changed-release-dep-root": "b(installed_root(changed(Case::Release))==root(Case::Release))",
+    "changed-release-dep-code": "b((changed(Case::Release)).installed.is_some() && (changed(Case::Release)).installed.unwrap().code.class==class(Case::Release))",
+    "changed-release-dep-payload": "dep_payload(changed(Case::Release)).unwrap()",
+    "changed-release-parent-dep-version": "b((changed(Case::Release)).parent.dependency_version==required(Case::Release))",
+    "changed-release-parent-payload": "parent_payload(changed(Case::Release)).unwrap()",
+    "shallow-snap-dep-present": "b((shallow().world).installed.is_some() && installed_name(shallow().world)==name(Case::Snapshot))",
+    "shallow-snap-dep-version": "b(installed_version(shallow().world)==required(Case::Snapshot))",
+    "shallow-snap-dep-snapshot": "b(is_snapshot(installed_version(shallow().world)))",
+    "shallow-snap-dep-build": "b(inherited_semver::parse(installed_version(shallow().world)).build==inherited_semver::parse(required(Case::Snapshot)).build)",
+    "shallow-snap-dep-supplier": "b(installed_repository(shallow().world)==alpha())",
+    "shallow-snap-dep-root": "b(installed_root(shallow().world)==root(Case::Snapshot))",
+    "shallow-snap-dep-code": "b((shallow().world).installed.is_some() && (shallow().world).installed.unwrap().code.class==class(Case::Snapshot))",
+    "shallow-snap-dep-payload": "dep_payload(shallow().world).unwrap()",
+    "shallow-snap-parent-dep-version": "b((shallow().world).parent.dependency_version==required(Case::Snapshot))",
+    "shallow-snap-parent-payload": "parent_payload(shallow().world).unwrap()",
+    "default-snap-dep-present": "b((default_snapshot().world).installed.is_some() && installed_name(default_snapshot().world)==name(Case::Snapshot))",
+    "default-snap-dep-version": "b(installed_version(default_snapshot().world)==required(Case::Snapshot))",
+    "default-snap-dep-snapshot": "b(is_snapshot(installed_version(default_snapshot().world)))",
+    "default-snap-dep-build": "b(inherited_semver::parse(installed_version(default_snapshot().world)).build==inherited_semver::parse(required(Case::Snapshot)).build)",
+    "default-snap-dep-supplier": "b(installed_repository(default_snapshot().world)==alpha())",
+    "default-snap-dep-root": "b(installed_root(default_snapshot().world)==root(Case::Snapshot))",
+    "default-snap-dep-code": "b((default_snapshot().world).installed.is_some() && (default_snapshot().world).installed.unwrap().code.class==class(Case::Snapshot))",
+    "default-snap-dep-payload": "dep_payload(default_snapshot().world).unwrap()",
+    "default-snap-parent-dep-version": "b((default_snapshot().world).parent.dependency_version==required(Case::Snapshot))",
+    "default-snap-parent-payload": "parent_payload(default_snapshot().world).unwrap()",
+    "permit-snap-dep-present": "b((permitted().world).installed.is_some() && installed_name(permitted().world)==name(Case::Snapshot))",
+    "permit-snap-dep-version": "b(installed_version(permitted().world)==required(Case::Snapshot))",
+    "permit-snap-dep-snapshot": "b(is_snapshot(installed_version(permitted().world)))",
+    "permit-snap-dep-build": "b(inherited_semver::parse(installed_version(permitted().world)).build==inherited_semver::parse(required(Case::Snapshot)).build)",
+    "permit-snap-dep-supplier": "b(installed_repository(permitted().world)==alpha())",
+    "permit-snap-dep-root": "b(installed_root(permitted().world)==root(Case::Snapshot))",
+    "permit-snap-dep-code": "b((permitted().world).installed.is_some() && (permitted().world).installed.unwrap().code.class==class(Case::Snapshot))",
+    "permit-snap-dep-payload": "dep_payload(permitted().world).unwrap()",
+    "permit-snap-parent-dep-version": "b((permitted().world).parent.dependency_version==required(Case::Snapshot))",
+    "permit-snap-parent-payload": "parent_payload(permitted().world).unwrap()",
+    "default-release-dep-present": "b((default_release().world).installed.is_some() && installed_name(default_release().world)==name(Case::Release))",
+    "default-release-dep-version": "b(installed_version(default_release().world)==required(Case::Release))",
+    "default-release-dep-snapshot": "b(is_snapshot(installed_version(default_release().world)))",
+    "default-release-dep-build": "b(inherited_semver::parse(installed_version(default_release().world)).build==inherited_semver::parse(required(Case::Release)).build)",
+    "default-release-dep-supplier": "b(installed_repository(default_release().world)==alpha())",
+    "default-release-dep-root": "b(installed_root(default_release().world)==root(Case::Release))",
+    "default-release-dep-code": "b((default_release().world).installed.is_some() && (default_release().world).installed.unwrap().code.class==class(Case::Release))",
+    "default-release-dep-payload": "dep_payload(default_release().world).unwrap()",
+    "default-release-parent-dep-version": "b((default_release().world).parent.dependency_version==required(Case::Release))",
+    "default-release-parent-payload": "parent_payload(default_release().world).unwrap()",
+    "physical-snap-two": "b(changed(Case::Snapshot).source.code.who==2)",
+    "physical-release-two": "b(changed(Case::Release).source.code.who==2)",
+    "snap-no-force-status": "b(graph_ok(no_force()))",
+    "snap-no-force-entry": "b((no_force()).node.is_some())",
+    "snap-no-force-reuse": "b((no_force()).node.unwrap().repository.len()==0)",
+    "snap-no-force-alpha": "b((no_force()).node.unwrap().repository==alpha())",
+    "snap-no-force-version": "b((no_force()).node.unwrap().version==required(Case::Snapshot))",
+    "snap-no-force-flat-reuse": "b(flat_selected(no_force())[0].repository.len()==0)",
+    "snap-no-force-flat-alpha": "b(flat_selected(no_force())[0].repository==alpha())",
+    "snap-no-force-flat-version": "b(flat_selected(no_force())[0].version==required(Case::Snapshot))",
+    "snap-no-force-flat-count": "flat_selected(no_force()).len() as int",
+    "snap-force-status": "b(graph_ok(force()))",
+    "snap-force-entry": "b((force()).node.is_some())",
+    "snap-force-permit-status": "b(graph_ok(force_permit()))",
+    "snap-force-permit-entry": "b((force_permit()).node.is_some())",
+    "snap-force-permit-reuse": "b((force_permit()).node.unwrap().repository.len()==0)",
+    "snap-force-permit-alpha": "b((force_permit()).node.unwrap().repository==alpha())",
+    "snap-force-permit-version": "b((force_permit()).node.unwrap().version==required(Case::Snapshot))",
+    "snap-force-permit-flat-reuse": "b(flat_selected(force_permit())[0].repository.len()==0)",
+    "snap-force-permit-flat-alpha": "b(flat_selected(force_permit())[0].repository==alpha())",
+    "snap-force-permit-flat-version": "b(flat_selected(force_permit())[0].version==required(Case::Snapshot))",
+    "snap-force-permit-flat-count": "flat_selected(force_permit()).len() as int",
+    "release-force-status": "b(graph_ok(release_force()))",
+    "release-force-entry": "b((release_force()).node.is_some())",
+    "release-force-reuse": "b((release_force()).node.unwrap().repository.len()==0)",
+    "release-force-alpha": "b((release_force()).node.unwrap().repository==alpha())",
+    "release-force-version": "b((release_force()).node.unwrap().version==required(Case::Release))",
+    "release-force-flat-reuse": "b(flat_selected(release_force())[0].repository.len()==0)",
+    "release-force-flat-alpha": "b(flat_selected(release_force())[0].repository==alpha())",
+    "release-force-flat-version": "b(flat_selected(release_force())[0].version==required(Case::Release))",
+    "release-force-flat-count": "flat_selected(release_force()).len() as int"
+  },
+  "replay_prelude": "lifecycle_staged();literal_fields();literal_membership();classification_neighbor();decision_neighbor();flat_neighbor();",
+  "native_expected": {
+    "semver-parse": 1,
+    "semver-exact-parse": 1,
+    "semver-lower-parse": 1,
+    "repo-clear": 1,
+    "repo-alpha": 1,
+    "install-snap": 1,
+    "initial-snap-parent-present": 1,
+    "initial-snap-parent-version": 1,
+    "initial-snap-parent-dep-count": 1,
+    "initial-snap-parent-code": 1,
+    "show-dep-initial-snap": 1,
+    "show-parent-initial-snap": 1,
+    "install-release": 1,
+    "initial-release-parent-present": 1,
+    "initial-release-parent-version": 1,
+    "initial-release-parent-dep-count": 1,
+    "initial-release-parent-code": 1,
+    "show-dep-initial-release": 1,
+    "show-parent-initial-release": 1,
+    "copy-snap": 1,
+    "copy-release": 1,
+    "changed-snap-parent-present": 1,
+    "changed-snap-parent-version": 1,
+    "changed-snap-parent-dep-count": 1,
+    "changed-snap-parent-code": 1,
+    "show-dep-changed-snap": 1,
+    "show-parent-changed-snap": 1,
+    "changed-release-parent-present": 1,
+    "changed-release-parent-version": 1,
+    "changed-release-parent-dep-count": 1,
+    "changed-release-parent-code": 1,
+    "show-dep-changed-release": 1,
+    "show-parent-changed-release": 1,
+    "shallow-snap-parent-present": 1,
+    "shallow-snap-parent-version": 1,
+    "shallow-snap-parent-dep-count": 1,
+    "shallow-snap-parent-code": 1,
+    "show-dep-shallow-snap": 1,
+    "show-parent-shallow-snap": 1,
+    "default-snap-parent-present": 1,
+    "default-snap-parent-version": 1,
+    "default-snap-parent-dep-count": 1,
+    "default-snap-parent-code": 1,
+    "show-dep-default-snap": 1,
+    "show-parent-default-snap": 1,
+    "permit-snap-parent-present": 1,
+    "permit-snap-parent-version": 1,
+    "permit-snap-parent-dep-count": 1,
+    "permit-snap-parent-code": 1,
+    "show-dep-permit-snap": 1,
+    "show-parent-permit-snap": 1,
+    "default-release-parent-present": 1,
+    "default-release-parent-version": 1,
+    "default-release-parent-dep-count": 1,
+    "default-release-parent-code": 1,
+    "show-dep-default-release": 1,
+    "show-parent-default-release": 1,
+    "final-tlevel": 0,
+    "cli-default-overlap-error": 1,
+    "cli-shallow-dep-reload": 0,
+    "cli-permit-dep-reload": 1,
+    "cli-permit-dep-compile": 1,
+    "cli-release-dep-reload": 0
+  },
+  "native_receipt": ".g5/uplift/consolidated/iter24/native/20261115T234149601861Z/observations.json",
+  "scope_notes": [
+    "One exact dependency and stable manifest/version; code-only physical edit.",
+    "Stored parent reference is the request producer; collection count/SQL/XML/class providers independently qualified.",
+    "Default snapshot failure derives installed-version lower bound plus unchanged inherited AND, not a supplied failure flag.",
+    "Selected flat reference only, not entire graph/sort/count.",
+    "Same-full-version or fresh successful directory effect only; selected_load_domain is a scope annotation, not a production guard.",
+    "Whole top-level parent load/status/reporting, other constraints/errors and concurrency remain unassessed.",
+    "Private evaluator inputs never accessed; excluded delivery boundaries remain unassessed/unpursued."
+  ]
+}

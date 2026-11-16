@@ -1,0 +1,4245 @@
+{
+ "when": "20261114T035035Z",
+ "families": [
+  {
+   "family": "attribute-evaluator",
+   "runs": [
+    "20261114T025636Z-r1-evaluator",
+    "20261114T025551Z-r1-eval-postcommit"
+   ],
+   "fields_compared": 74,
+   "as_built_matches": true,
+   "mismatches": [],
+   "variants": {
+    "regex-escape-dollar": {
+     "member": "Utils/Module.cls::%RegExReplace",
+     "wrong": "escapes $ in the value, so a value with $ is substituted literally",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "E18",
+       "field": "error",
+       "wrong": "<not produced>",
+       "observed": [
+        "<REGULAR EXPRESSION>"
+       ]
+      },
+      {
+       "case": "E35",
+       "field": "error",
+       "wrong": "<not produced>",
+       "observed": [
+        "<REGULAR EXPRESSION>"
+       ]
+      },
+      {
+       "case": "E32",
+       "field": "error",
+       "wrong": "<not produced>",
+       "observed": [
+        "<REGULAR EXPRESSION>"
+       ]
+      }
+     ]
+    },
+    "regex-case-sensitive": {
+     "member": "Utils/Module.cls::%RegExReplace",
+     "wrong": "matches names case-sensitively",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "E04",
+       "field": "value",
+       "wrong": "{$NAMESPACE}",
+       "observed": [
+        "USER"
+       ]
+      },
+      {
+       "case": "E28",
+       "field": "value",
+       "wrong": "USER-{$NAMESPACELOWER}",
+       "observed": [
+        "USER-user"
+       ]
+      }
+     ]
+    },
+    "regex-literal-name": {
+     "member": "Utils/Module.cls::%RegExReplace",
+     "wrong": "treats the parameter name literally (no regex)",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "E21",
+       "field": "value",
+       "wrong": "{$axb}",
+       "observed": [
+        "DOT"
+       ]
+      }
+     ]
+    },
+    "regex-dollar-brace-only": {
+     "member": "Utils/Module.cls::%RegExReplace",
+     "wrong": "supports only ${name}",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "E02",
+       "field": "value",
+       "wrong": "{$namespace}",
+       "observed": [
+        "USER"
+       ]
+      },
+      {
+       "case": "E04",
+       "field": "value",
+       "wrong": "{$NAMESPACE}",
+       "observed": [
+        "USER"
+       ]
+      },
+      {
+       "case": "E05",
+       "field": "value",
+       "wrong": "{$namespaceLower}",
+       "observed": [
+        "user"
+       ]
+      }
+     ]
+    },
+    "sysexpr-no-lower": {
+     "member": "Utils/Module.cls::%EvaluateSystemExpression",
+     "wrong": "has no namespaceLower",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "E05",
+       "field": "value",
+       "wrong": "{$namespaceLower}",
+       "observed": [
+        "user"
+       ]
+      },
+      {
+       "case": "E28",
+       "field": "value",
+       "wrong": "USER-{$NAMESPACELOWER}",
+       "observed": [
+        "USER-user"
+       ]
+      }
+     ]
+    },
+    "sysexpr-mgr-is-install": {
+     "member": "Utils/Module.cls::%EvaluateSystemExpression",
+     "wrong": "mgrDir resolves to the install directory",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "E23",
+       "field": "value",
+       "wrong": "/usr/irissys/",
+       "observed": [
+        "/usr/irissys/mgr/"
+       ]
+      }
+     ]
+    },
+    "macro-skip": {
+     "member": "Utils/Module.cls::%EvaluateMacro",
+     "wrong": "does not expand $$$ macros",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "E12",
+       "field": "value",
+       "wrong": "",
+       "observed": [
+        "1"
+       ]
+      },
+      {
+       "case": "E16",
+       "field": "value",
+       "wrong": "{$x} $$$OK",
+       "observed": [
+        "{$x} 1"
+       ]
+      },
+      {
+       "case": "E17",
+       "field": "value",
+       "wrong": "$$$NoSuchMacroXyz {}",
+       "observed": [
+        " {}"
+       ]
+      }
+     ]
+    },
+    "macro-undefined-kept": {
+     "member": "Utils/Module.cls::%EvaluateMacro",
+     "wrong": "keeps an undefined macro as text",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "E17",
+       "field": "value",
+       "wrong": "$$$NoSuchMacroXyz {}",
+       "observed": [
+        " {}"
+       ]
+      }
+     ]
+    },
+    "macrohelper-swallow": {
+     "member": "Utils/Module.cls::EvaluateMacroHelper",
+     "wrong": "a macro that does not compile yields empty, no error",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "P2txn",
+       "field": "status",
+       "wrong": "OK",
+       "observed": [
+        "ERR"
+       ]
+      },
+      {
+       "case": "P2txn",
+       "field": "error",
+       "wrong": "<not produced>",
+       "observed": [
+        "ERROR #5475: Error compiling routine: %IPM.Generated.MacroEval.  Errors:  %IPM.Generated.MacroEval.cls"
+       ]
+      },
+      {
+       "case": "P2txn",
+       "field": "log.aftermsg",
+       "wrong": "Done {x} ",
+       "observed": [
+        "none"
+       ]
+      }
+     ]
+    },
+    "macrohelper-delete-on-error": {
+     "member": "Utils/Module.cls::EvaluateMacroHelper",
+     "wrong": "removes the generated class even when compilation fails",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "P2txn",
+       "field": "macroclass",
+       "wrong": "0",
+       "observed": [
+        "1"
+       ]
+      }
+     ]
+    },
+    "params-no-override": {
+     "member": "Storage/ModuleSetting/Default.cls::GetCustomParameters",
+     "wrong": "command parameters do not override defaults",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "E07",
+       "field": "value",
+       "wrong": "hello",
+       "observed": [
+        "hi"
+       ]
+      }
+     ]
+    },
+    "evalattr-skip": {
+     "member": "Storage/ModuleSetting/Default.cls::EvaluateAttribute",
+     "wrong": "does not substitute custom parameters",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "E06",
+       "field": "value",
+       "wrong": "${greeting} world",
+       "observed": [
+        "hello world"
+       ]
+      },
+      {
+       "case": "E09",
+       "field": "value",
+       "wrong": "{$packagename}-{$version}",
+       "observed": [
+        "evalmod-1.2.3"
+       ]
+      },
+      {
+       "case": "E18",
+       "field": "error",
+       "wrong": "<not produced>",
+       "observed": [
+        "<REGULAR EXPRESSION>"
+       ]
+      }
+     ]
+    },
+    "resolve-single-pass": {
+     "member": "Storage/ModuleSetting/Default.cls::ResolvePlaceholders",
+     "wrong": "one substitution pass only",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "E19",
+       "field": "value",
+       "wrong": "<not produced>",
+       "observed": [
+        "USER"
+       ]
+      },
+      {
+       "case": "E22",
+       "field": "value",
+       "wrong": "<not produced>",
+       "observed": [
+        "hellox"
+       ]
+      },
+      {
+       "case": "E31",
+       "field": "x",
+       "wrong": "${z} y=end",
+       "observed": [
+        "end y=end"
+       ]
+      }
+     ]
+    },
+    "resolve-raises-on-cycle": {
+     "member": "Storage/ModuleSetting/Default.cls::ResolvePlaceholders",
+     "wrong": "raises the circular-reference error its code names (intended reading)",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "E02",
+       "field": "value",
+       "wrong": "<not produced>",
+       "observed": [
+        "USER"
+       ]
+      },
+      {
+       "case": "E03",
+       "field": "value",
+       "wrong": "<not produced>",
+       "observed": [
+        "USER"
+       ]
+      },
+      {
+       "case": "E04",
+       "field": "value",
+       "wrong": "<not produced>",
+       "observed": [
+        "USER"
+       ]
+      }
+     ]
+    },
+    "resolve-no-system-fallback": {
+     "member": "Storage/ModuleSetting/Default.cls::ResolvePlaceholders",
+     "wrong": "does not resolve system expressions inside parameter values",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "E19",
+       "field": "value",
+       "wrong": "<not produced>",
+       "observed": [
+        "USER"
+       ]
+      }
+     ]
+    },
+    "evaluate-no-early-return": {
+     "member": "Storage/Module.cls::%Evaluate",
+     "wrong": "expands macros even without \"{\"",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "E15",
+       "field": "value",
+       "wrong": "1 no brace",
+       "observed": [
+        "$$$OK no brace"
+       ]
+      },
+      {
+       "case": "P4",
+       "field": "log.aftermsg",
+       "wrong": "Done 1",
+       "observed": [
+        "Done $$$OK"
+       ]
+      }
+     ]
+    },
+    "evaluate-defaults-override-builtins": {
+     "member": "Storage/Module.cls::%Evaluate",
+     "wrong": "a default named version overrides the module version",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "E09",
+       "field": "value",
+       "wrong": "evalmod-9.9.9",
+       "observed": [
+        "evalmod-1.2.3"
+       ]
+      },
+      {
+       "case": "E20",
+       "field": "value",
+       "wrong": "9.9.9",
+       "observed": [
+        "1.2.3"
+       ]
+      }
+     ]
+    },
+    "evaluate-no-name": {
+     "member": "Storage/Module.cls::%Evaluate",
+     "wrong": "does not replace {name}",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "E08",
+       "field": "value",
+       "wrong": "{name}/{NAME}",
+       "observed": [
+        "evalmod/evalmod"
+       ]
+      },
+      {
+       "case": "P1",
+       "field": "log.aftermsg",
+       "wrong": "Done USER {name}",
+       "observed": [
+        "Done USER pc-ok"
+       ]
+      }
+     ]
+    },
+    "expr-error-propagates": {
+     "member": "Storage/Module.cls::%EvaluateExpression",
+     "wrong": "an expression error propagates",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "E13",
+       "field": "value",
+       "wrong": "<not produced>",
+       "observed": [
+        ""
+       ]
+      },
+      {
+       "case": "E14",
+       "field": "value",
+       "wrong": "<not produced>",
+       "observed": [
+        ""
+       ]
+      }
+     ]
+    },
+    "expr-no-strip": {
+     "member": "Storage/Module.cls::%EvaluateExpression",
+     "wrong": "does not strip leading blanks",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "E11",
+       "field": "value",
+       "wrong": "",
+       "observed": [
+        "3"
+       ]
+      }
+     ]
+    },
+    "aftermsg-raw": {
+     "member": null,
+     "wrong": "prints the message unevaluated",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "P1",
+       "field": "log.aftermsg",
+       "wrong": "Done {$namespace} {name}",
+       "observed": [
+        "Done USER pc-ok"
+       ]
+      },
+      {
+       "case": "P2txn",
+       "field": "status",
+       "wrong": "OK",
+       "observed": [
+        "ERR"
+       ]
+      },
+      {
+       "case": "P2txn",
+       "field": "error",
+       "wrong": "<not produced>",
+       "observed": [
+        "ERROR #5475: Error compiling routine: %IPM.Generated.MacroEval.  Errors:  %IPM.Generated.MacroEval.cls"
+       ]
+      }
+     ]
+    },
+    "aftermsg-guarded": {
+     "member": null,
+     "wrong": "an evaluation error is caught and the load succeeds",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "P2txn",
+       "field": "status",
+       "wrong": "OK",
+       "observed": [
+        "ERR"
+       ]
+      },
+      {
+       "case": "P2txn",
+       "field": "error",
+       "wrong": "<not produced>",
+       "observed": [
+        "ERROR #5475: Error compiling routine: %IPM.Generated.MacroEval.  Errors:  %IPM.Generated.MacroEval.cls"
+       ]
+      },
+      {
+       "case": "P2txn",
+       "field": "hist.pc-bad-txn",
+       "wrong": "action:load success:1 committed:1 finalized:1",
+       "observed": [
+        "action:load success:0 committed:1 finalized:1"
+       ]
+      }
+     ]
+    },
+    "aftermsg-before-commit": {
+     "member": null,
+     "wrong": "the message is evaluated before the final commit, so its failure removes the module",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "P2txn",
+       "field": "mod.pc-bad-txn",
+       "wrong": "absent",
+       "observed": [
+        "present version=1.0.0 repo= desc= dev=0"
+       ]
+      },
+      {
+       "case": "P2txn",
+       "field": "hist.pc-bad-txn",
+       "wrong": "action:load success:0 committed:0 finalized:1",
+       "observed": [
+        "action:load success:0 committed:1 finalized:1"
+       ]
+      },
+      {
+       "case": "P2notxn",
+       "field": "mod.pc-bad-notxn",
+       "wrong": "absent",
+       "observed": [
+        "present version=1.0.0 repo= desc= dev=0"
+       ]
+      }
+     ]
+    }
+   },
+   "contract": [
+    {
+     "name": "a circular placeholder reference raises the error the code names",
+     "holds": false,
+     "expected": false,
+     "as_expected": true,
+     "ids": [
+      "C:D3"
+     ],
+     "detail": "0 a=${a} b=${a}"
+    },
+    {
+     "name": "a parameter value containing $ is substituted literally",
+     "holds": false,
+     "expected": false,
+     "as_expected": true,
+     "ids": [
+      "C:D4"
+     ],
+     "detail": "<REGULAR EXPRESSION>"
+    },
+    {
+     "name": "a failed after-install message does not report a committed load as failed",
+     "holds": false,
+     "expected": false,
+     "as_expected": true,
+     "ids": [
+      "P:F-LOAD-4",
+      "G:D13 family"
+     ],
+     "detail": ""
+    }
+   ],
+   "members": {
+    "Utils/Module.cls::%RegExReplace": {
+     "slice": "Utils/Module.cls:2804-2815",
+     "fn": "regex_replace",
+     "behavior": "case-insensitive {$n}/${n} replacement; name is a regex; only backslash escaped in the value (E04, E21, E18, E32)",
+     "fn_present": true,
+     "variants_rejected": [
+      "regex-escape-dollar",
+      "regex-case-sensitive",
+      "regex-literal-name",
+      "regex-dollar-brace-only"
+     ],
+     "credited": true
+    },
+    "Utils/Module.cls::%EvaluateSystemExpression": {
+     "slice": "Utils/Module.cls:2697-2744",
+     "fn": "system_expression",
+     "behavior": "namespace, namespaceLower, mgrDir, ... substitution (E02-E05, E23)",
+     "fn_present": true,
+     "variants_rejected": [
+      "sysexpr-no-lower",
+      "sysexpr-mgr-is-install"
+     ],
+     "credited": true
+    },
+    "Utils/Module.cls::%EvaluateMacro": {
+     "slice": "Utils/Module.cls:2746-2759",
+     "fn": "evaluate_macro",
+     "behavior": "$$$name replaced by its value, undefined -> empty (E12, E16, E17)",
+     "fn_present": true,
+     "variants_rejected": [
+      "macro-skip",
+      "macro-undefined-kept"
+     ],
+     "credited": true
+    },
+    "Utils/Module.cls::EvaluateMacroHelper": {
+     "slice": "Utils/Module.cls:2763-2785",
+     "fn": "macro_helper",
+     "behavior": "compiles %IPM.Generated.MacroEval; a compile error throws and leaves the class (P2)",
+     "fn_present": true,
+     "variants_rejected": [
+      "macrohelper-swallow",
+      "macrohelper-delete-on-error"
+     ],
+     "credited": true
+    },
+    "Storage/ModuleSetting/Default.cls::GetCustomParameters": {
+     "slice": "Storage/ModuleSetting/Default.cls:14-31",
+     "fn": "custom_parameters",
+     "behavior": "module defaults, overridden by command parameters of the same name (E06, E07)",
+     "fn_present": true,
+     "variants_rejected": [
+      "params-no-override"
+     ],
+     "credited": true
+    },
+    "Storage/ModuleSetting/Default.cls::EvaluateAttribute": {
+     "slice": "Storage/ModuleSetting/Default.cls:47-58",
+     "fn": "evaluate_attribute",
+     "behavior": "applies every custom parameter to the attribute (E06, E22)",
+     "fn_present": true,
+     "variants_rejected": [
+      "evalattr-skip"
+     ],
+     "credited": true
+    },
+    "Storage/ModuleSetting/Default.cls::ResolvePlaceholders": {
+     "slice": "Storage/ModuleSetting/Default.cls:63-117",
+     "fn": "resolve_placeholders",
+     "behavior": "fixed point over parameters, local first then system expression; never raises on a cycle (E19, E22, E30, E31, E36)",
+     "fn_present": true,
+     "variants_rejected": [
+      "resolve-single-pass",
+      "resolve-raises-on-cycle",
+      "resolve-no-system-fallback"
+     ],
+     "credited": true
+    },
+    "Storage/Module.cls::%Evaluate": {
+     "slice": "Storage/Module.cls:1833-1870",
+     "fn": "evaluate",
+     "behavior": "returns the value unchanged without \"{\"; built-ins override defaults; {name}; #{expr} (E15, E20, E08, E10)",
+     "fn_present": true,
+     "variants_rejected": [
+      "evaluate-no-early-return",
+      "evaluate-defaults-override-builtins",
+      "evaluate-no-name"
+     ],
+     "credited": true
+    },
+    "Storage/Module.cls::%EvaluateExpression": {
+     "slice": "Storage/Module.cls:1885-1894",
+     "fn": "evaluate_expression",
+     "behavior": "strips leading blanks; an error yields empty (E11, E13, E14)",
+     "fn_present": true,
+     "variants_rejected": [
+      "expr-error-propagates",
+      "expr-no-strip"
+     ],
+     "credited": true
+    }
+   },
+   "source_sha256": "97c7711de1df97a108bfbc3f159bc0fbeb24cf5bfccc19d44ec6ad1c2a448227"
+  },
+  {
+   "family": "environment-config",
+   "runs": [
+    "20261114T033831Z-r5-env",
+    "20261114T033908Z-r5-env-b"
+   ],
+   "fields_compared": 37,
+   "as_built_matches": true,
+   "mismatches": [],
+   "variants": {
+    "load-keeps-on-error": {
+     "member": "General/EnvironmentConfig.cls::Load",
+     "wrong": "a failing file keeps what earlier files loaded",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "U3",
+       "field": "ok",
+       "wrong": "0 empty=0 greeting=first x=1 y= list=1,2,3, k=",
+       "observed": [
+        "0 empty=1 greeting= x= y= list= k="
+       ]
+      },
+      {
+       "case": "U4",
+       "field": "ok",
+       "wrong": "0 empty=0 greeting=first x=1 y= list=1,2,3, k=",
+       "observed": [
+        "0 empty=1 greeting= x= y= list= k="
+       ]
+      },
+      {
+       "case": "U5",
+       "field": "ok",
+       "wrong": "0 empty=0 greeting=first x=1 y= list=1,2,3, k=",
+       "observed": [
+        "0 empty=1 greeting= x= y= list= k="
+       ]
+      }
+     ]
+    },
+    "load-array-accepted": {
+     "member": "General/EnvironmentConfig.cls::Load",
+     "wrong": "a JSON array is merged",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "U5",
+       "field": "ok",
+       "wrong": "1 empty=0 greeting=first x=1 y= list=1,2,3, k=",
+       "observed": [
+        "0 empty=1 greeting= x= y= list= k="
+       ]
+      },
+      {
+       "case": "U5",
+       "field": "error",
+       "wrong": "<not produced>",
+       "observed": [
+        "ERROR #5001: Invalid configuration file. Expected a JSON object, not a JSON array"
+       ]
+      }
+     ]
+    },
+    "getarg-error-on-scalar": {
+     "member": "General/EnvironmentConfig.cls::GetArg",
+     "wrong": "a scalar on the path is returned",
+     "rejected": false,
+     "rejected_by": []
+    },
+    "evaluate-literal-value": {
+     "member": "General/EnvironmentConfig.cls::%EvaluateHelper",
+     "wrong": "the variable value is inserted literally (intended reading)",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "U7",
+       "field": "v",
+       "wrong": "hello u=[] list0=hello d1=a$1b bs=a\\b",
+       "observed": [
+        "hello u=[] list0=hello d1=aCONS_DOLLARb bs=ab"
+       ]
+      },
+      {
+       "case": "U8",
+       "field": "ok",
+       "wrong": "1 empty=0 greeting= x= y= list= k=",
+       "observed": [
+        "0 empty=1 greeting= x= y= list= k="
+       ]
+      },
+      {
+       "case": "U8",
+       "field": "error",
+       "wrong": "<not produced>",
+       "observed": [
+        "ERROR #5002: ObjectScript error: <REGULAR EXPRESSION>ReplaceFirst+3^%Regex.Matcher.1"
+       ]
+      }
+     ]
+    },
+    "evaluate-no-recursion": {
+     "member": "General/EnvironmentConfig.cls::%EvaluateHelper",
+     "wrong": "values inside arrays are not filled",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "U7.setup",
+       "field": "ok",
+       "wrong": "1 empty=0 greeting= x= y= list=${CONS_VAR}, k=",
+       "observed": [
+        "1 empty=0 greeting= x= y= list=hello, k="
+       ]
+      },
+      {
+       "case": "U7",
+       "field": "v",
+       "wrong": "hello u=[] list0=${CONS_VAR} d1=aCONS_DOLLARb bs=ab",
+       "observed": [
+        "hello u=[] list0=hello d1=aCONS_DOLLARb bs=ab"
+       ]
+      }
+     ]
+    },
+    "clear-noop": {
+     "member": "General/EnvironmentConfig.cls::Clear",
+     "wrong": "clear keeps the values",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "U3",
+       "field": "ok",
+       "wrong": "0 empty=0 greeting=first x=1 y=2 list=1,2,3, k=",
+       "observed": [
+        "0 empty=1 greeting= x= y= list= k="
+       ]
+      },
+      {
+       "case": "U4",
+       "field": "ok",
+       "wrong": "0 empty=0 greeting=first x=1 y=2 list=1,2,3, k=",
+       "observed": [
+        "0 empty=1 greeting= x= y= list= k="
+       ]
+      },
+      {
+       "case": "U5",
+       "field": "ok",
+       "wrong": "0 empty=0 greeting=first x=1 y=2 list=1,2,3, k=",
+       "observed": [
+        "0 empty=1 greeting= x= y= list= k="
+       ]
+      }
+     ]
+    },
+    "isempty-always-true": {
+     "member": "General/EnvironmentConfig.cls::IsEmpty",
+     "wrong": "always reports empty",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "U1",
+       "field": "ok",
+       "wrong": "1 empty=1 greeting=first x=1 y= list=1,2,3, k=",
+       "observed": [
+        "1 empty=0 greeting=first x=1 y= list=1,2,3, k="
+       ]
+      },
+      {
+       "case": "U2",
+       "field": "ok",
+       "wrong": "1 empty=1 greeting=second x=1 y=2 list=9,2,3, k=",
+       "observed": [
+        "1 empty=0 greeting=second x=1 y=2 list=9,2,3, k="
+       ]
+      },
+      {
+       "case": "U2r",
+       "field": "ok",
+       "wrong": "1 empty=1 greeting=first x=1 y=2 list=1,2,3, k=",
+       "observed": [
+        "1 empty=0 greeting=first x=1 y=2 list=1,2,3, k="
+       ]
+      }
+     ]
+    },
+    "merge-arrays-replace": {
+     "member": "General/EnvironmentConfig.cls::MergeDynamicObjects",
+     "wrong": "a later array replaces the earlier one",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "U2",
+       "field": "ok",
+       "wrong": "1 empty=0 greeting=second x=1 y=2 list=9, k=",
+       "observed": [
+        "1 empty=0 greeting=second x=1 y=2 list=9,2,3, k="
+       ]
+      }
+     ]
+    },
+    "merge-objects-replace": {
+     "member": "General/EnvironmentConfig.cls::MergeDynamicObjects",
+     "wrong": "a later object replaces the earlier one",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "U2",
+       "field": "ok",
+       "wrong": "1 empty=0 greeting=second x= y=2 list=9, k=",
+       "observed": [
+        "1 empty=0 greeting=second x=1 y=2 list=9,2,3, k="
+       ]
+      },
+      {
+       "case": "U2r",
+       "field": "ok",
+       "wrong": "1 empty=0 greeting=first x=1 y= list=1,2,3, k=",
+       "observed": [
+        "1 empty=0 greeting=first x=1 y=2 list=1,2,3, k="
+       ]
+      },
+      {
+       "case": "U6",
+       "field": "ok",
+       "wrong": "1 empty=0 greeting= x= y= list= k=object",
+       "observed": [
+        "0 empty=1 greeting= x= y= list= k="
+       ]
+      }
+     ]
+    },
+    "merge-object-onto-scalar-ok": {
+     "member": "General/EnvironmentConfig.cls::MergeDynamicObjects",
+     "wrong": "an object replaces an earlier scalar",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "U6",
+       "field": "ok",
+       "wrong": "1 empty=0 greeting= x= y= list= k=object",
+       "observed": [
+        "0 empty=1 greeting= x= y= list= k="
+       ]
+      },
+      {
+       "case": "U6",
+       "field": "error",
+       "wrong": "<not produced>",
+       "observed": [
+        "ERROR #5001: Invalid arguments. Expected two dynamic objects. Got 5 and 9@%Library.DynamicObject"
+       ]
+      }
+     ]
+    },
+    "lec-no-clear": {
+     "member": "Lifecycle/Base.cls::LoadEnvironmentConfig",
+     "wrong": "files are merged onto what the previous call loaded",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "U7.setup",
+       "field": "ok",
+       "wrong": "1 empty=0 greeting= x= y= list=hello, k=5",
+       "observed": [
+        "1 empty=0 greeting= x= y= list=hello, k="
+       ]
+      }
+     ]
+    },
+    "lec-no-trim": {
+     "member": "Lifecycle/Base.cls::LoadEnvironmentConfig",
+     "wrong": "paths are not trimmed",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "U2r",
+       "field": "ok",
+       "wrong": "0 empty=1 greeting= x= y= list= k=",
+       "observed": [
+        "1 empty=0 greeting=first x=1 y=2 list=1,2,3, k="
+       ]
+      }
+     ]
+    },
+    "compile-always-multi": {
+     "member": "Utils/LegacyCompat.cls::UpdateSuperclassAndCompile",
+     "wrong": "always compiles in several processes",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "S3",
+       "field": "gen",
+       "wrong": "[] last=[second]",
+       "observed": [
+        "[second] last=[second]"
+       ]
+      },
+      {
+       "case": "S4",
+       "field": "gen",
+       "wrong": "[]",
+       "observed": [
+        "[second]"
+       ]
+      },
+      {
+       "case": "M3",
+       "field": "ipm",
+       "wrong": "1 gen=[]",
+       "observed": [
+        "1 gen=[first]"
+       ]
+      }
+     ]
+    },
+    "singleton-new-each-get": {
+     "member": "General/Singleton.cls::%Get",
+     "wrong": "every %Get returns a new instance",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "S1",
+       "field": "records",
+       "wrong": "[][][]",
+       "observed": [
+        "[first][][]"
+       ]
+      },
+      {
+       "case": "S3",
+       "field": "gen",
+       "wrong": "[second] last=[]",
+       "observed": [
+        "[second] last=[second]"
+       ]
+      }
+     ]
+    }
+   },
+   "contract": [
+    {
+     "name": "an OS variable value is inserted literally",
+     "holds": false,
+     "expected": false,
+     "as_expected": true,
+     "ids": [
+      "C:D14"
+     ],
+     "detail": "hello u=[] list0=hello d1=aCONS_DOLLARb bs=ab"
+    },
+    {
+     "name": "a failing second file keeps the first file's values (one of the plan's policy alternatives)",
+     "holds": false,
+     "expected": false,
+     "as_expected": true,
+     "ids": [
+      "C:Q6"
+     ],
+     "detail": "0 empty=1 greeting= x= y= list= k="
+    },
+    {
+     "name": "a later command in the same shell session sees the earlier -env values",
+     "holds": false,
+     "expected": false,
+     "as_expected": true,
+     "ids": [
+      "plan: environment row"
+     ],
+     "detail": "[first][][]"
+    }
+   ],
+   "members": {
+    "General/EnvironmentConfig.cls::Load": {
+     "slice": "General/EnvironmentConfig.cls:9-32",
+     "fn": "load",
+     "behavior": "missing, malformed or array file raises and clears everything loaded before (U3-U5)",
+     "fn_present": true,
+     "variants_rejected": [
+      "load-keeps-on-error",
+      "load-array-accepted"
+     ],
+     "credited": true
+    },
+    "General/EnvironmentConfig.cls::GetArg": {
+     "slice": "General/EnvironmentConfig.cls:35-48",
+     "fn": "get_arg",
+     "behavior": "nested lookup; a non-object on the path gives empty (U9)",
+     "fn_present": true,
+     "variants_rejected": [],
+     "credited": false
+    },
+    "General/EnvironmentConfig.cls::%EvaluateHelper": {
+     "slice": "General/EnvironmentConfig.cls:59-90",
+     "fn": "evaluate_helper",
+     "behavior": "${VAR} from the OS environment, recursively; value inserted as ICU replacement text (U7, U8)",
+     "fn_present": true,
+     "variants_rejected": [
+      "evaluate-literal-value",
+      "evaluate-no-recursion"
+     ],
+     "credited": true
+    },
+    "General/EnvironmentConfig.cls::Clear": {
+     "slice": "General/EnvironmentConfig.cls:92-96",
+     "fn": "clear",
+     "behavior": "resets to empty (U2r, U3)",
+     "fn_present": true,
+     "variants_rejected": [
+      "clear-noop"
+     ],
+     "credited": true
+    },
+    "General/EnvironmentConfig.cls::IsEmpty": {
+     "slice": "General/EnvironmentConfig.cls:98-101",
+     "fn": "is_empty",
+     "behavior": "decides the single-process compile (M3, M4)",
+     "fn_present": true,
+     "variants_rejected": [
+      "isempty-always-true"
+     ],
+     "credited": true
+    },
+    "General/EnvironmentConfig.cls::MergeDynamicObjects": {
+     "slice": "General/EnvironmentConfig.cls:105-129",
+     "fn": "merge",
+     "behavior": "deep merge, arrays by index, scalar replaces object, object onto scalar fails (U2, U6)",
+     "fn_present": true,
+     "variants_rejected": [
+      "merge-arrays-replace",
+      "merge-objects-replace",
+      "merge-object-onto-scalar-ok"
+     ],
+     "credited": true
+    },
+    "Lifecycle/Base.cls::LoadEnvironmentConfig": {
+     "slice": "Lifecycle/Base.cls:2188-2200",
+     "fn": "load_environment_config",
+     "behavior": "clears, then loads each ;-separated file in order, trimmed (U2r, S1)",
+     "fn_present": true,
+     "variants_rejected": [
+      "lec-no-clear",
+      "lec-no-trim"
+     ],
+     "credited": true
+    },
+    "Utils/LegacyCompat.cls::UpdateSuperclassAndCompile": {
+     "slice": "Utils/LegacyCompat.cls:36-41",
+     "fn": "compile_list",
+     "behavior": "compiles in one process while a configuration is loaded, so generators see it (M3, M4, S3)",
+     "fn_present": true,
+     "variants_rejected": [
+      "compile-always-multi"
+     ],
+     "credited": true
+    },
+    "General/Singleton.cls::%Get": {
+     "slice": "General/Singleton.cls:36-127",
+     "fn": "singleton_get",
+     "behavior": "the same in-process instance while referenced, so Configure reads what Reload loaded (S1, U10, U11)",
+     "fn_present": true,
+     "variants_rejected": [
+      "singleton-new-each-get"
+     ],
+     "credited": true
+    }
+   },
+   "source_sha256": "e10fcf0ca31ad1d3e507ee0e7fd436d6dd5deed67c7df38cd0d2f29c48986c8c"
+  },
+  {
+   "family": "history-records-and-display",
+   "runs": [
+    "20261114T032054Z-r3-history.partial-purge-failed",
+    "20261114T032524Z-r3-purge",
+    "20261114T032620Z-r3-history-b",
+    "20261114T032747Z-r3-delete"
+   ],
+   "fields_compared": 82,
+   "as_built_matches": true,
+   "mismatches": [],
+   "variants": {
+    "install-action-load": {
+     "member": "General/AbstractHistory.cls::InstallInit",
+     "wrong": "install recorded as load",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "H1d",
+       "field": "d.Action",
+       "wrong": "load",
+       "observed": [
+        "install"
+       ]
+      },
+      {
+       "case": "H1d",
+       "field": "d.Source",
+       "wrong": "n/a",
+       "observed": [
+        "reg3 (filesystem): /tmp/c3/reg/*"
+       ]
+      },
+      {
+       "case": "HB1d",
+       "field": "d.Action",
+       "wrong": "load",
+       "observed": [
+        "install"
+       ]
+      }
+     ]
+    },
+    "uninstall-action-install": {
+     "member": "General/AbstractHistory.cls::UninstallInit",
+     "wrong": "uninstall recorded as install",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "H2d",
+       "field": "d.Action",
+       "wrong": "install",
+       "observed": [
+        "uninstall"
+       ]
+      },
+      {
+       "case": "H2d",
+       "field": "d.Source",
+       "wrong": "<no source set>",
+       "observed": [
+        "n/a"
+       ]
+      },
+      {
+       "case": "H4f",
+       "field": "lines",
+       "wrong": "Namespace: USER|ID Action Package Version UserName Time Success Committed CommandString Source|19 load h-running <unset> irisowner <T> ERROR #00: (no error description) Uncommitted <unset> n/a|18 load  <unset> irisowner <T> (<n> sec) ERROR #5001: Cannot downgrade h-load from version 2.0.0 to 1.0.0. To downgrade a module, you must first run the uninstall command. Then, run the install or load command with the desired module version. Uncommitted load /tmp/c3/h-load-1/ n/a|17 load h-load v2.0.0 irisowner <T> (<n> sec) Success Committed load /tmp/c3/h-load-2/ n/a|16 install h-inst v1.0.0 irisowner <T> (<n> sec) Success Committed uninstall h-inst <no source set>",
+       "observed": [
+        "Namespace: USER|ID Action Package Version UserName Time Success Committed CommandString Source|19 load h-running <unset> irisowner <T> ERROR #00: (no error description) Uncommitted <unset> n/a|18 load  <unset> irisowner <T> (<n> sec) ERROR #5001: Cannot downgrade h-load from version 2.0.0 to 1.0.0. To downgrade a module, you must first run the uninstall command. Then, run the install or load command with the desired module version. Uncommitted load /tmp/c3/h-load-1/ n/a|17 load h-load v2.0.0 irisowner <T> (<n> sec) Success Committed load /tmp/c3/h-load-2/ n/a|16 uninstall h-inst v1.0.0 irisowner <T> (<n> sec) Success Committed uninstall h-inst n/a"
+       ]
+      }
+     ]
+    },
+    "source-not-recorded": {
+     "member": "General/AbstractHistory.cls::SetSource",
+     "wrong": "the repository is not recorded",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "H1d",
+       "field": "d.Source",
+       "wrong": "<no source set>",
+       "observed": [
+        "reg3 (filesystem): /tmp/c3/reg/*"
+       ]
+      },
+      {
+       "case": "HB1d",
+       "field": "d.Source",
+       "wrong": "<no source set>",
+       "observed": [
+        "reg3 (filesystem): /tmp/c3/reg/*"
+       ]
+      }
+     ]
+    },
+    "source-no-details": {
+     "member": "General/AbstractHistory.cls::SetSource",
+     "wrong": "only the repository name is recorded",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "H1d",
+       "field": "d.Source",
+       "wrong": "reg3 (): ",
+       "observed": [
+        "reg3 (filesystem): /tmp/c3/reg/*"
+       ]
+      },
+      {
+       "case": "HB1d",
+       "field": "d.Source",
+       "wrong": "reg3 (): ",
+       "observed": [
+        "reg3 (filesystem): /tmp/c3/reg/*"
+       ]
+      }
+     ]
+    },
+    "version-placeholder-shown": {
+     "member": "General/History.cls::VersionToString",
+     "wrong": "the placeholder prints as v0.0.0-0",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "H3d",
+       "field": "d.Version",
+       "wrong": "v0.0.0-0",
+       "observed": [
+        "<unset>"
+       ]
+      },
+      {
+       "case": "H4d",
+       "field": "d.Version",
+       "wrong": "v0.0.0-0",
+       "observed": [
+        "<unset>"
+       ]
+      },
+      {
+       "case": "H4f",
+       "field": "lines",
+       "wrong": "Namespace: USER|ID Action Package Version UserName Time Success Committed CommandString Source|19 load h-running v0.0.0-0 irisowner <T> ERROR #00: (no error description) Uncommitted <unset> n/a|18 load  v0.0.0-0 irisowner <T> (<n> sec) ERROR #5001: Cannot downgrade h-load from version 2.0.0 to 1.0.0. To downgrade a module, you must first run the uninstall command. Then, run the install or load command with the desired module version. Uncommitted load /tmp/c3/h-load-1/ n/a|17 load h-load v2.0.0 irisowner <T> (<n> sec) Success Committed load /tmp/c3/h-load-2/ n/a|16 uninstall h-inst v1.0.0 irisowner <T> (<n> sec) Success Committed uninstall h-inst n/a",
+       "observed": [
+        "Namespace: USER|ID Action Package Version UserName Time Success Committed CommandString Source|19 load h-running <unset> irisowner <T> ERROR #00: (no error description) Uncommitted <unset> n/a|18 load  <unset> irisowner <T> (<n> sec) ERROR #5001: Cannot downgrade h-load from version 2.0.0 to 1.0.0. To downgrade a module, you must first run the uninstall command. Then, run the install or load command with the desired module version. Uncommitted load /tmp/c3/h-load-1/ n/a|17 load h-load v2.0.0 irisowner <T> (<n> sec) Success Committed load /tmp/c3/h-load-2/ n/a|16 uninstall h-inst v1.0.0 irisowner <T> (<n> sec) Success Committed uninstall h-inst n/a"
+       ]
+      }
+     ]
+    },
+    "time-open-zero": {
+     "member": "General/History.cls::TimeToString",
+     "wrong": "an unfinished record shows (0 sec)",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "H4f",
+       "field": "lines",
+       "wrong": "Namespace: USER|ID Action Package Version UserName Time Success Committed CommandString Source|19 load h-running <unset> irisowner <T> (<n> sec) ERROR #00: (no error description) Uncommitted <unset> n/a|18 load  <unset> irisowner <T> (<n> sec) ERROR #5001: Cannot downgrade h-load from version 2.0.0 to 1.0.0. To downgrade a module, you must first run the uninstall command. Then, run the install or load command with the desired module version. Uncommitted load /tmp/c3/h-load-1/ n/a|17 load h-load v2.0.0 irisowner <T> (<n> sec) Success Committed load /tmp/c3/h-load-2/ n/a|16 uninstall h-inst v1.0.0 irisowner <T> (<n> sec) Success Committed uninstall h-inst n/a",
+       "observed": [
+        "Namespace: USER|ID Action Package Version UserName Time Success Committed CommandString Source|19 load h-running <unset> irisowner <T> ERROR #00: (no error description) Uncommitted <unset> n/a|18 load  <unset> irisowner <T> (<n> sec) ERROR #5001: Cannot downgrade h-load from version 2.0.0 to 1.0.0. To downgrade a module, you must first run the uninstall command. Then, run the install or load command with the desired module version. Uncommitted load /tmp/c3/h-load-1/ n/a|17 load h-load v2.0.0 irisowner <T> (<n> sec) Success Committed load /tmp/c3/h-load-2/ n/a|16 uninstall h-inst v1.0.0 irisowner <T> (<n> sec) Success Committed uninstall h-inst n/a"
+       ]
+      },
+      {
+       "case": "H6",
+       "field": "lines",
+       "wrong": "Namespace: USER|ID Action Package Version UserName Time Success Committed CommandString Source|19 load h-running <unset> irisowner <T> (<n> sec) ERROR #00: (no error description) Uncommitted <unset> n/a",
+       "observed": [
+        "Namespace: USER|ID Action Package Version UserName Time Success Committed CommandString Source|19 load h-running <unset> irisowner <T> ERROR #00: (no error description) Uncommitted <unset> n/a"
+       ]
+      }
+     ]
+    },
+    "source-all-actions": {
+     "member": "General/History.cls::SourceToString",
+     "wrong": "non-install records show their (empty) source",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "H2d",
+       "field": "d.Source",
+       "wrong": "<no source set>",
+       "observed": [
+        "n/a"
+       ]
+      },
+      {
+       "case": "H3d",
+       "field": "d.Source",
+       "wrong": "<no source set>",
+       "observed": [
+        "n/a"
+       ]
+      },
+      {
+       "case": "H4d",
+       "field": "d.Source",
+       "wrong": "<no source set>",
+       "observed": [
+        "n/a"
+       ]
+      }
+     ]
+    },
+    "success-detail-text": {
+     "member": "General/History.cls::SuccessToString",
+     "wrong": "details print the error text (intended reading)",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "H1d",
+       "field": "d.Success",
+       "wrong": "Success",
+       "observed": [
+        "1"
+       ]
+      },
+      {
+       "case": "H2d",
+       "field": "d.Success",
+       "wrong": "Success",
+       "observed": [
+        "1"
+       ]
+      },
+      {
+       "case": "H3d",
+       "field": "d.Success",
+       "wrong": "ERROR #5001: Cannot downgrade h-load from version 2.0.0 to 1.0.0. To downgrade a module, you must first run the uninstall command. Then, run the install or load command with the desired module version.",
+       "observed": [
+        "<status>"
+       ]
+      }
+     ]
+    },
+    "success-unfinished-blank": {
+     "member": "General/History.cls::SuccessToString",
+     "wrong": "an unfinished record shows an empty result (intended reading)",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "H4f",
+       "field": "lines",
+       "wrong": "Namespace: USER|ID Action Package Version UserName Time Success Committed CommandString Source|19 load h-running <unset> irisowner <T>  Uncommitted <unset> n/a|18 load  <unset> irisowner <T> (<n> sec) ERROR #5001: Cannot downgrade h-load from version 2.0.0 to 1.0.0. To downgrade a module, you must first run the uninstall command. Then, run the install or load command with the desired module version. Uncommitted load /tmp/c3/h-load-1/ n/a|17 load h-load v2.0.0 irisowner <T> (<n> sec) Success Committed load /tmp/c3/h-load-2/ n/a|16 uninstall h-inst v1.0.0 irisowner <T> (<n> sec) Success Committed uninstall h-inst n/a",
+       "observed": [
+        "Namespace: USER|ID Action Package Version UserName Time Success Committed CommandString Source|19 load h-running <unset> irisowner <T> ERROR #00: (no error description) Uncommitted <unset> n/a|18 load  <unset> irisowner <T> (<n> sec) ERROR #5001: Cannot downgrade h-load from version 2.0.0 to 1.0.0. To downgrade a module, you must first run the uninstall command. Then, run the install or load command with the desired module version. Uncommitted load /tmp/c3/h-load-1/ n/a|17 load h-load v2.0.0 irisowner <T> (<n> sec) Success Committed load /tmp/c3/h-load-2/ n/a|16 uninstall h-inst v1.0.0 irisowner <T> (<n> sec) Success Committed uninstall h-inst n/a"
+       ]
+      },
+      {
+       "case": "H6",
+       "field": "lines",
+       "wrong": "Namespace: USER|ID Action Package Version UserName Time Success Committed CommandString Source|19 load h-running <unset> irisowner <T>  Uncommitted <unset> n/a",
+       "observed": [
+        "Namespace: USER|ID Action Package Version UserName Time Success Committed CommandString Source|19 load h-running <unset> irisowner <T> ERROR #00: (no error description) Uncommitted <unset> n/a"
+       ]
+      }
+     ]
+    },
+    "committed-yes-no": {
+     "member": "General/History.cls::CommittedToString",
+     "wrong": "prints yes/no",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "H1d",
+       "field": "d.Committed",
+       "wrong": "yes",
+       "observed": [
+        "Committed"
+       ]
+      },
+      {
+       "case": "H2d",
+       "field": "d.Committed",
+       "wrong": "yes",
+       "observed": [
+        "Committed"
+       ]
+      },
+      {
+       "case": "H3d",
+       "field": "d.Committed",
+       "wrong": "no",
+       "observed": [
+        "Uncommitted"
+       ]
+      }
+     ]
+    },
+    "columns-raw-values": {
+     "member": "General/History.cls::ShowColumns",
+     "wrong": "columns print stored values without the formatters",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "H1d",
+       "field": "d.Version",
+       "wrong": "1.0.0",
+       "observed": [
+        "v1.0.0"
+       ]
+      },
+      {
+       "case": "H1d",
+       "field": "d.Time",
+       "wrong": "<T>",
+       "observed": [
+        "Started At <T>; Ended At <T>"
+       ]
+      },
+      {
+       "case": "H1d",
+       "field": "d.Success",
+       "wrong": "OK",
+       "observed": [
+        "1"
+       ]
+      }
+     ]
+    },
+    "phases-hidden": {
+     "member": "General/History.cls::ShowPhases",
+     "wrong": "phase rows are not printed",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "HB1d",
+       "field": "d.Phases",
+       "wrong": "",
+       "observed": [
+        "Initialize <T> (<n> sec) Success|Reload <T> (<n> sec) Success|Validate <T> (<n> sec) Success|Compile <T> (<n> sec) Success|Activate <T> (<n> sec) Success"
+       ]
+      }
+     ]
+    },
+    "details-missing-silent": {
+     "member": "General/History.cls::DisplayOneRecord",
+     "wrong": "a missing ID prints nothing",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "H5",
+       "field": "status",
+       "wrong": "OK",
+       "observed": [
+        "ERR"
+       ]
+      },
+      {
+       "case": "H5",
+       "field": "error",
+       "wrong": "<not produced>",
+       "observed": [
+        "ERROR #5001: No record found with ID 999999. Use `history find` command to show all entries. "
+       ]
+      }
+     ]
+    },
+    "find-no-header": {
+     "member": "General/History.cls::DisplayQueryResult",
+     "wrong": "no namespace or header line",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "H4f",
+       "field": "lines",
+       "wrong": "19 load h-running <unset> irisowner <T> ERROR #00: (no error description) Uncommitted <unset> n/a|18 load  <unset> irisowner <T> (<n> sec) ERROR #5001: Cannot downgrade h-load from version 2.0.0 to 1.0.0. To downgrade a module, you must first run the uninstall command. Then, run the install or load command with the desired module version. Uncommitted load /tmp/c3/h-load-1/ n/a|17 load h-load v2.0.0 irisowner <T> (<n> sec) Success Committed load /tmp/c3/h-load-2/ n/a|16 uninstall h-inst v1.0.0 irisowner <T> (<n> sec) Success Committed uninstall h-inst n/a",
+       "observed": [
+        "Namespace: USER|ID Action Package Version UserName Time Success Committed CommandString Source|19 load h-running <unset> irisowner <T> ERROR #00: (no error description) Uncommitted <unset> n/a|18 load  <unset> irisowner <T> (<n> sec) ERROR #5001: Cannot downgrade h-load from version 2.0.0 to 1.0.0. To downgrade a module, you must first run the uninstall command. Then, run the install or load command with the desired module version. Uncommitted load /tmp/c3/h-load-1/ n/a|17 load h-load v2.0.0 irisowner <T> (<n> sec) Success Committed load /tmp/c3/h-load-2/ n/a|16 uninstall h-inst v1.0.0 irisowner <T> (<n> sec) Success Committed uninstall h-inst n/a"
+       ]
+      },
+      {
+       "case": "H6",
+       "field": "lines",
+       "wrong": "19 load h-running <unset> irisowner <T> ERROR #00: (no error description) Uncommitted <unset> n/a",
+       "observed": [
+        "Namespace: USER|ID Action Package Version UserName Time Success Committed CommandString Source|19 load h-running <unset> irisowner <T> ERROR #00: (no error description) Uncommitted <unset> n/a"
+       ]
+      }
+     ]
+    },
+    "marker-never-set": {
+     "member": "General/History.cls::SetHistoryLastPurge",
+     "wrong": "the marker is not written, so every command purges",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "P1",
+       "field": "old",
+       "wrong": "1 recent=1 marker=other",
+       "observed": [
+        "1 recent=1 marker=today"
+       ]
+      },
+      {
+       "case": "P2",
+       "field": "old",
+       "wrong": "1 marker=other",
+       "observed": [
+        "1 marker=today"
+       ]
+      },
+      {
+       "case": "P4",
+       "field": "old",
+       "wrong": "1 marker=other",
+       "observed": [
+        "1 marker=today"
+       ]
+      }
+     ]
+    }
+   },
+   "contract": [
+    {
+     "name": "a filter that matches no record deletes nothing",
+     "holds": false,
+     "expected": false,
+     "as_expected": true,
+     "ids": [
+      "G:D2"
+     ],
+     "detail": ""
+    },
+    {
+     "name": "an unfinished record does not read as an error (wiki: no elapsed time means running or ended abnormally)",
+     "holds": false,
+     "expected": false,
+     "as_expected": true,
+     "ids": [
+      "C:D12",
+      "G:I1"
+     ],
+     "detail": "19 load h-running <unset> irisowner <T> ERROR #00: (no error description) Uncommitted <unset> n/a"
+    },
+    {
+     "name": "history details shows a failed action's message readably",
+     "holds": false,
+     "expected": false,
+     "as_expected": true,
+     "ids": [
+      "G:B2-D7 withdrawn: raw status is documented"
+     ],
+     "detail": "<status>"
+    }
+   ],
+   "members": {
+    "General/AbstractHistory.cls::InstallInit": {
+     "slice": "General/AbstractHistory.cls:65-68",
+     "fn": "install_init",
+     "behavior": "install records action install (H1)",
+     "fn_present": true,
+     "variants_rejected": [
+      "install-action-load"
+     ],
+     "credited": true
+    },
+    "General/AbstractHistory.cls::UninstallInit": {
+     "slice": "General/AbstractHistory.cls:76-79",
+     "fn": "uninstall_init",
+     "behavior": "uninstall records action uninstall (H2)",
+     "fn_present": true,
+     "variants_rejected": [
+      "uninstall-action-install"
+     ],
+     "credited": true
+    },
+    "General/AbstractHistory.cls::SetSource": {
+     "slice": "General/AbstractHistory.cls:86-97",
+     "fn": "set_source",
+     "behavior": "records repository name, moniker and details (H1)",
+     "fn_present": true,
+     "variants_rejected": [
+      "source-not-recorded",
+      "source-no-details"
+     ],
+     "credited": true
+    },
+    "General/History.cls::VersionToString": {
+     "slice": "General/History.cls:425-437",
+     "fn": "version_to_string",
+     "behavior": "placeholder 0.0.0-0 shows <unset>; otherwise v<version> (H3, H4)",
+     "fn_present": true,
+     "variants_rejected": [
+      "version-placeholder-shown"
+     ],
+     "credited": true
+    },
+    "General/History.cls::TimeToString": {
+     "slice": "General/History.cls:439-455",
+     "fn": "time_to_string",
+     "behavior": "no end time shows the start only; details show both (H4)",
+     "fn_present": true,
+     "variants_rejected": [
+      "time-open-zero"
+     ],
+     "credited": true
+    },
+    "General/History.cls::SourceToString": {
+     "slice": "General/History.cls:457-472",
+     "fn": "source_to_string",
+     "behavior": "n/a unless install; details add moniker and details (H1, H2)",
+     "fn_present": true,
+     "variants_rejected": [
+      "source-all-actions"
+     ],
+     "credited": true
+    },
+    "General/History.cls::SuccessToString": {
+     "slice": "General/History.cls:474-483",
+     "fn": "success_to_string",
+     "behavior": "details print the raw status; one line prints Success or the error text, ERROR #00 for an unfinished record (H3, H4)",
+     "fn_present": true,
+     "variants_rejected": [
+      "success-detail-text",
+      "success-unfinished-blank"
+     ],
+     "credited": true
+    },
+    "General/History.cls::CommittedToString": {
+     "slice": "General/History.cls:485-490",
+     "fn": "committed_to_string",
+     "behavior": "Committed or Uncommitted (H3, H4)",
+     "fn_present": true,
+     "variants_rejected": [
+      "committed-yes-no"
+     ],
+     "credited": true
+    },
+    "General/History.cls::ShowColumns": {
+     "slice": "General/History.cls:334-382",
+     "fn": "show_columns",
+     "behavior": "ten columns in fixed order, through the *ToString formatters (H1d)",
+     "fn_present": true,
+     "variants_rejected": [
+      "columns-raw-values"
+     ],
+     "credited": true
+    },
+    "General/History.cls::ShowPhases": {
+     "slice": "General/History.cls:384-423",
+     "fn": "show_phases",
+     "behavior": "phase name, time and result per phase (HB1d)",
+     "fn_present": true,
+     "variants_rejected": [
+      "phases-hidden"
+     ],
+     "credited": true
+    },
+    "General/History.cls::DisplayOneRecord": {
+     "slice": "General/History.cls:319-329",
+     "fn": "display_one_record",
+     "behavior": "details of one ID; a missing ID is an error (H5)",
+     "fn_present": true,
+     "variants_rejected": [
+      "details-missing-silent"
+     ],
+     "credited": true
+    },
+    "General/History.cls::DisplayQueryResult": {
+     "slice": "General/History.cls:492-516",
+     "fn": "display_query_result",
+     "behavior": "namespace and header once, then one line per record (H4f, H6)",
+     "fn_present": true,
+     "variants_rejected": [
+      "find-no-header"
+     ],
+     "credited": true
+    },
+    "General/History.cls::SetHistoryLastPurge": {
+     "slice": "General/History.cls:183-189",
+     "fn": "set_last_purge",
+     "behavior": "marks today after a purge, so later commands skip it (P1, P2, P4)",
+     "fn_present": true,
+     "variants_rejected": [
+      "marker-never-set"
+     ],
+     "credited": true
+    }
+   },
+   "source_sha256": "34d383fb873f393a32e63c87cba6c62f5d54f9d9ac061a30f1f940d85e90e048"
+  },
+  {
+   "family": "owners-outside-load",
+   "runs": [
+    "20261114T033125Z-r4-owners",
+    "20261114T030608Z-r2-semver",
+    "20261114T025102Z-r1-temp-repo",
+    "20261114T025551Z-r1-eval-postcommit",
+    "20261114T034941Z-r4-lock-depth"
+   ],
+   "fields_compared": 66,
+   "as_built_matches": true,
+   "mismatches": [],
+   "variants": {
+    "mv-unchanged-skips": {
+     "member": "Main.cls::ModuleVersion",
+     "wrong": "an unchanged version is skipped with OK (the unreachable branch; intended reading)",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "MV5",
+       "field": "status",
+       "wrong": "OK",
+       "observed": [
+        "ERR"
+       ]
+      },
+      {
+       "case": "MV5",
+       "field": "error",
+       "wrong": "<not produced>",
+       "observed": [
+        "ERROR #5001: Cannot set version to 1.0.1-rc.1+b7 as it is not strictly higher than the current version 1.0.1-rc.1+b7 (Use -force to override)  Note: when either version has a nonempty prerelease value, and differ from the other by major.minor.patch, neither version is considered strictly higher than the other.        See https://github.com/npm/node-semver?tab=readme-ov-file#prerelease-tags for more information."
+       ]
+      }
+     ]
+    },
+    "mv-force-ignored": {
+     "member": "Main.cls::ModuleVersion",
+     "wrong": "-force does not allow a lower version",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "MV3",
+       "field": "status",
+       "wrong": "ERR",
+       "observed": [
+        "OK"
+       ]
+      },
+      {
+       "case": "MV3",
+       "field": "mv",
+       "wrong": "1.3.0 doc=1.3.0",
+       "observed": [
+        "1.0.0 doc=1.0.0"
+       ]
+      },
+      {
+       "case": "MV4",
+       "field": "mv",
+       "wrong": "1.3.1-rc.1+b7 doc=1.3.1-rc.1+b7",
+       "observed": [
+        "1.0.1-rc.1+b7 doc=1.0.1-rc.1+b7"
+       ]
+      }
+     ]
+    },
+    "mv-no-validation": {
+     "member": "Main.cls::ModuleVersion",
+     "wrong": "an invalid version string is accepted",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "MV7",
+       "field": "error",
+       "wrong": "ERROR #5001: Cannot set version to 1.0.0 as it is not strictly higher than the current version 1.0.1-rc.1+b7 (Use -force to override)  Note: when either version has a nonempty prerelease value, and differ from the other by major.minor.patch, neither version is considered strictly higher than the other.        See https://github.com/npm/node-semver?tab=readme-ov-file#prerelease-tags for more information.",
+       "observed": [
+        "ERROR #5001: Invalid version string: 01.0.0"
+       ]
+      }
+     ]
+    },
+    "mv-modifiers-ignored": {
+     "member": "Main.cls::ModuleVersion",
+     "wrong": "-prerelease and -build are ignored",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "MV4",
+       "field": "mv",
+       "wrong": "1.0.1 doc=1.0.1",
+       "observed": [
+        "1.0.1-rc.1+b7 doc=1.0.1-rc.1+b7"
+       ]
+      },
+      {
+       "case": "MV5",
+       "field": "error",
+       "wrong": "ERROR #5001: Cannot set version to 1.0.1 as it is not strictly higher than the current version 1.0.1 (Use -force to override)  Note: when either version has a nonempty prerelease value, and differ from the other by major.minor.patch, neither version is considered strictly higher than the other.        See https://github.com/npm/node-semver?tab=readme-ov-file#prerelease-tags for more information.",
+       "observed": [
+        "ERROR #5001: Cannot set version to 1.0.1-rc.1+b7 as it is not strictly higher than the current version 1.0.1-rc.1+b7 (Use -force to override)  Note: when either version has a nonempty prerelease value, and differ from the other by major.minor.patch, neither version is considered strictly higher than the other.        See https://github.com/npm/node-semver?tab=readme-ov-file#prerelease-tags for more information."
+       ]
+      },
+      {
+       "case": "MV5",
+       "field": "mv",
+       "wrong": "1.0.1 doc=1.0.1",
+       "observed": [
+        "1.0.1-rc.1+b7 doc=1.0.1-rc.1+b7"
+       ]
+      }
+     ]
+    },
+    "bump-major-keeps-minor": {
+     "member": "General/SemanticVersion.cls::WithBumpMajor",
+     "wrong": "major bump keeps minor",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "B1",
+       "field": "major",
+       "wrong": "2.2.0 minor=1.3.0 patch=1.2.4 pre=1.2.3-rc.1+b build=1.2.3-beta+x nobuild=1.2.3-beta",
+       "observed": [
+        "2.0.0 minor=1.3.0 patch=1.2.4 pre=1.2.3-rc.1+b build=1.2.3-beta+x nobuild=1.2.3-beta"
+       ]
+      }
+     ]
+    },
+    "bump-minor-keeps-patch": {
+     "member": "General/SemanticVersion.cls::WithBumpMinor",
+     "wrong": "minor bump keeps patch",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "MV1",
+       "field": "mv",
+       "wrong": "1.3.3 doc=1.3.3",
+       "observed": [
+        "1.3.0 doc=1.3.0"
+       ]
+      },
+      {
+       "case": "MV2",
+       "field": "error",
+       "wrong": "ERROR #5001: Cannot set version to 1.0.0 as it is not strictly higher than the current version 1.3.3 (Use -force to override)  Note: when either version has a nonempty prerelease value, and differ from the other by major.minor.patch, neither version is considered strictly higher than the other.        See https://github.com/npm/node-semver?tab=readme-ov-file#prerelease-tags for more information.",
+       "observed": [
+        "ERROR #5001: Cannot set version to 1.0.0 as it is not strictly higher than the current version 1.3.0 (Use -force to override)  Note: when either version has a nonempty prerelease value, and differ from the other by major.minor.patch, neither version is considered strictly higher than the other.        See https://github.com/npm/node-semver?tab=readme-ov-file#prerelease-tags for more information."
+       ]
+      },
+      {
+       "case": "MV2",
+       "field": "mv",
+       "wrong": "1.3.3 doc=1.3.3",
+       "observed": [
+        "1.3.0 doc=1.3.0"
+       ]
+      }
+     ]
+    },
+    "bump-patch-keeps-prerelease": {
+     "member": "General/SemanticVersion.cls::WithBumpPatch",
+     "wrong": "patch bump keeps the prerelease",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "B1",
+       "field": "major",
+       "wrong": "2.0.0 minor=1.3.0 patch=1.2.4-beta pre=1.2.3-rc.1+b build=1.2.3-beta+x nobuild=1.2.3-beta",
+       "observed": [
+        "2.0.0 minor=1.3.0 patch=1.2.4 pre=1.2.3-rc.1+b build=1.2.3-beta+x nobuild=1.2.3-beta"
+       ]
+      }
+     ]
+    },
+    "withpre-drops-build": {
+     "member": "General/SemanticVersion.cls::WithPrerelease",
+     "wrong": "setting a prerelease drops the build",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "B1",
+       "field": "major",
+       "wrong": "2.0.0 minor=1.3.0 patch=1.2.4 pre=1.2.3-rc.1 build=1.2.3-beta+x nobuild=1.2.3-beta",
+       "observed": [
+        "2.0.0 minor=1.3.0 patch=1.2.4 pre=1.2.3-rc.1+b build=1.2.3-beta+x nobuild=1.2.3-beta"
+       ]
+      }
+     ]
+    },
+    "withbuild-drops-pre": {
+     "member": "General/SemanticVersion.cls::WithBuild",
+     "wrong": "setting a build drops the prerelease",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "MV4",
+       "field": "mv",
+       "wrong": "1.0.1+b7 doc=1.0.1+b7",
+       "observed": [
+        "1.0.1-rc.1+b7 doc=1.0.1-rc.1+b7"
+       ]
+      },
+      {
+       "case": "MV5",
+       "field": "error",
+       "wrong": "ERROR #5001: Cannot set version to 1.0.1+b7 as it is not strictly higher than the current version 1.0.1+b7 (Use -force to override)  Note: when either version has a nonempty prerelease value, and differ from the other by major.minor.patch, neither version is considered strictly higher than the other.        See https://github.com/npm/node-semver?tab=readme-ov-file#prerelease-tags for more information.",
+       "observed": [
+        "ERROR #5001: Cannot set version to 1.0.1-rc.1+b7 as it is not strictly higher than the current version 1.0.1-rc.1+b7 (Use -force to override)  Note: when either version has a nonempty prerelease value, and differ from the other by major.minor.patch, neither version is considered strictly higher than the other.        See https://github.com/npm/node-semver?tab=readme-ov-file#prerelease-tags for more information."
+       ]
+      },
+      {
+       "case": "MV5",
+       "field": "mv",
+       "wrong": "1.0.1+b7 doc=1.0.1+b7",
+       "observed": [
+        "1.0.1-rc.1+b7 doc=1.0.1-rc.1+b7"
+       ]
+      }
+     ]
+    },
+    "updateversion-noop": {
+     "member": "StudioDocument/Module.cls::UpdateVersion",
+     "wrong": "the stored manifest keeps the old version",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "MV1",
+       "field": "mv",
+       "wrong": "1.3.0 doc=1.2.3",
+       "observed": [
+        "1.3.0 doc=1.3.0"
+       ]
+      },
+      {
+       "case": "MV2",
+       "field": "mv",
+       "wrong": "1.3.0 doc=1.2.3",
+       "observed": [
+        "1.3.0 doc=1.3.0"
+       ]
+      },
+      {
+       "case": "MV3",
+       "field": "mv",
+       "wrong": "1.0.0 doc=1.2.3",
+       "observed": [
+        "1.0.0 doc=1.0.0"
+       ]
+      }
+     ]
+    },
+    "updateversion-writes-file": {
+     "member": "StudioDocument/Module.cls::UpdateVersion",
+     "wrong": "module.xml on disk is rewritten too",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "MV10",
+       "field": "file",
+       "wrong": "2.0.0",
+       "observed": [
+        "1.2.3"
+       ]
+      }
+     ]
+    },
+    "buildcache-no-lock": {
+     "member": "Repo/Filesystem/Definition.cls::BuildCache",
+     "wrong": "a refresh does not lock the repository",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "LK2",
+       "field": "build",
+       "wrong": "1 waited=short tlevel=0",
+       "observed": [
+        "0 waited=timeout tlevel=0"
+       ]
+      },
+      {
+       "case": "LK2",
+       "field": "error",
+       "wrong": "<not produced>",
+       "observed": [
+        "ERROR #5803: Failed to acquire exclusive lock on instance of '2:%IPM.Repo.Filesystem.Definition'"
+       ]
+      },
+      {
+       "case": "LK5",
+       "field": "build",
+       "wrong": "1 tlevel.inside=1 lockable=1",
+       "observed": [
+        "1 tlevel.inside=1 lockable=0"
+       ]
+      }
+     ]
+    },
+    "buildcache-no-purge": {
+     "member": "Repo/Filesystem/Definition.cls::BuildCache",
+     "wrong": "a refresh keeps entries for removed modules",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "LK3",
+       "field": "build",
+       "wrong": "1 cached=lk-a lk-b tlevel=0",
+       "observed": [
+        "1 cached=lk-a tlevel=0"
+       ]
+      }
+     ]
+    },
+    "buildcache-keeps-save-on-failure": {
+     "member": "Repo/Filesystem/Definition.cls::BuildCache",
+     "wrong": "a failed build keeps the saved repository row",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "TR7",
+       "field": "repos.count",
+       "wrong": "1",
+       "observed": [
+        "0"
+       ]
+      }
+     ]
+    },
+    "addcache-malformed-fails": {
+     "member": "Repo/Filesystem/Definition.cls::AddCacheItem",
+     "wrong": "an unparseable manifest fails the build",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "LK1",
+       "field": "build",
+       "wrong": "0 cached=",
+       "observed": [
+        "1 cached=lk-a lk-b"
+       ]
+      },
+      {
+       "case": "LK3",
+       "field": "build",
+       "wrong": "0 cached= tlevel=0",
+       "observed": [
+        "1 cached=lk-a tlevel=0"
+       ]
+      },
+      {
+       "case": "LK5",
+       "field": "build",
+       "wrong": "0 tlevel.inside=1 lockable=0",
+       "observed": [
+        "1 tlevel.inside=1 lockable=0"
+       ]
+      }
+     ]
+    },
+    "addcache-invalid-name-skipped": {
+     "member": "Repo/Filesystem/Definition.cls::AddCacheItem",
+     "wrong": "an invalid name is skipped like an unparseable manifest",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "DC0",
+       "field": "buildcache",
+       "wrong": "1",
+       "observed": [
+        "0"
+       ]
+      },
+      {
+       "case": "TR7",
+       "field": "status",
+       "wrong": "OK",
+       "observed": [
+        "ERR"
+       ]
+      },
+      {
+       "case": "TR7",
+       "field": "repos.count",
+       "wrong": "1",
+       "observed": [
+        "0"
+       ]
+      }
+     ]
+    },
+    "scan-ignores-depth": {
+     "member": "Repo/Filesystem/Definition.cls::ScanDirectory",
+     "wrong": "Depth is ignored",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "DC1",
+       "field": "buildcache",
+       "wrong": "0",
+       "observed": [
+        "1"
+       ]
+      },
+      {
+       "case": "D.setup",
+       "field": "buildcache",
+       "wrong": "0",
+       "observed": [
+        "1"
+       ]
+      }
+     ]
+    },
+    "lock-released-inside-transaction": {
+     "member": null,
+     "wrong": "a refresh inside an open outer transaction releases the lock before that transaction ends",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "LK5",
+       "field": "build",
+       "wrong": "1 tlevel.inside=1 lockable=1",
+       "observed": [
+        "1 tlevel.inside=1 lockable=0"
+       ]
+      }
+     ]
+    },
+    "lockclassid-noop": {
+     "member": "Utils/LockManager.cls::LockClassId",
+     "wrong": "no lock is taken",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "LK2",
+       "field": "build",
+       "wrong": "1 waited=short tlevel=0",
+       "observed": [
+        "0 waited=timeout tlevel=0"
+       ]
+      },
+      {
+       "case": "LK2",
+       "field": "error",
+       "wrong": "<not produced>",
+       "observed": [
+        "ERROR #5803: Failed to acquire exclusive lock on instance of '2:%IPM.Repo.Filesystem.Definition'"
+       ]
+      },
+      {
+       "case": "LK5",
+       "field": "build",
+       "wrong": "1 tlevel.inside=1 lockable=1",
+       "observed": [
+        "1 tlevel.inside=1 lockable=0"
+       ]
+      }
+     ]
+    },
+    "unlockclassid-noop": {
+     "member": "Utils/LockManager.cls::UnlockClassId",
+     "wrong": "the object lock is not released",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "LK4",
+       "field": "lockable",
+       "wrong": "0",
+       "observed": [
+        "1"
+       ]
+      }
+     ]
+    },
+    "unlockall-names-only": {
+     "member": "Utils/LockManager.cls::UnlockAll",
+     "wrong": "only name locks are released, object locks are kept",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "LK4",
+       "field": "lockable",
+       "wrong": "0",
+       "observed": [
+        "1"
+       ]
+      }
+     ]
+    },
+    "zlang-overwrite": {
+     "member": "Main.cls::UpdateLanguageExtensionsOne",
+     "wrong": "the routine is replaced, user lines lost",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "LE1",
+       "field": "zlang",
+       "wrong": "%ZLANGC00=starts:1,user:0 %ZLANGF00=starts:1,user:0",
+       "observed": [
+        "%ZLANGC00=starts:1,user:1 %ZLANGF00=starts:1,user:0"
+       ]
+      },
+      {
+       "case": "LE2",
+       "field": "zlang",
+       "wrong": "%ZLANGC00=starts:1,user:0 %ZLANGF00=starts:1,user:0",
+       "observed": [
+        "%ZLANGC00=starts:1,user:1 %ZLANGF00=starts:1,user:0"
+       ]
+      }
+     ]
+    },
+    "zlang-append-always": {
+     "member": "Main.cls::UpdateLanguageExtensionsOne",
+     "wrong": "the block is appended on every run",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "LE1",
+       "field": "zlang",
+       "wrong": "%ZLANGC00=starts:2,user:1 %ZLANGF00=starts:1,user:0",
+       "observed": [
+        "%ZLANGC00=starts:1,user:1 %ZLANGF00=starts:1,user:0"
+       ]
+      },
+      {
+       "case": "LE2",
+       "field": "zlang",
+       "wrong": "%ZLANGC00=starts:3,user:1 %ZLANGF00=starts:1,user:0",
+       "observed": [
+        "%ZLANGC00=starts:1,user:1 %ZLANGF00=starts:1,user:0"
+       ]
+      }
+     ]
+    }
+   },
+   "contract": [
+    {
+     "name": "module-version with the current version reports it unchanged (the code has a branch for it)",
+     "holds": false,
+     "expected": false,
+     "as_expected": true,
+     "ids": [
+      "C:D13"
+     ],
+     "detail": "ERROR #5001: Cannot set version to 1.0.1-rc.1+b7 as it is not strictly higher than the current version 1.0.1-rc.1+b7 (Use -force to override)  Note: when either version has a nonempty prerelease value, and differ from the other by major.minor.patch, neither version is considered strictly higher than the other.        See https://github.com/npm/node-semver?tab=readme-ov-file#prerelease-tags for more information."
+    },
+    {
+     "name": "module-version updates the module.xml it was loaded from",
+     "holds": false,
+     "expected": false,
+     "as_expected": true,
+     "ids": [
+      "C:Q4"
+     ],
+     "detail": "1.2.3"
+    }
+   ],
+   "members": {
+    "Main.cls::ModuleVersion": {
+     "slice": "Main.cls:4011-4098",
+     "fn": "module_version",
+     "behavior": "new version from bump/explicit/modifiers; refused unless strictly higher; validated; saved and manifest rewritten in one transaction (MV1-MV9)",
+     "fn_present": true,
+     "variants_rejected": [
+      "mv-unchanged-skips",
+      "mv-force-ignored",
+      "mv-no-validation",
+      "mv-modifiers-ignored"
+     ],
+     "credited": true
+    },
+    "General/SemanticVersion.cls::WithBumpMajor": {
+     "slice": "General/SemanticVersion.cls:212-221",
+     "fn": "with_bump",
+     "behavior": "major+1, minor and patch 0, no prerelease or build (MV8, B1)",
+     "fn_present": true,
+     "variants_rejected": [
+      "bump-major-keeps-minor"
+     ],
+     "credited": true
+    },
+    "General/SemanticVersion.cls::WithBumpMinor": {
+     "slice": "General/SemanticVersion.cls:223-232",
+     "fn": "with_bump",
+     "behavior": "minor+1, patch 0 (MV1, B1)",
+     "fn_present": true,
+     "variants_rejected": [
+      "bump-minor-keeps-patch"
+     ],
+     "credited": true
+    },
+    "General/SemanticVersion.cls::WithBumpPatch": {
+     "slice": "General/SemanticVersion.cls:234-243",
+     "fn": "with_bump",
+     "behavior": "patch+1, prerelease and build cleared (MV4, B1)",
+     "fn_present": true,
+     "variants_rejected": [
+      "bump-patch-keeps-prerelease"
+     ],
+     "credited": true
+    },
+    "General/SemanticVersion.cls::WithPrerelease": {
+     "slice": "General/SemanticVersion.cls:245-254",
+     "fn": "with_prerelease",
+     "behavior": "replaces the prerelease, keeps the build (B1)",
+     "fn_present": true,
+     "variants_rejected": [
+      "withpre-drops-build"
+     ],
+     "credited": true
+    },
+    "General/SemanticVersion.cls::WithBuild": {
+     "slice": "General/SemanticVersion.cls:256-265",
+     "fn": "with_build",
+     "behavior": "replaces the build, keeps the prerelease (MV4, B1)",
+     "fn_present": true,
+     "variants_rejected": [
+      "withbuild-drops-pre"
+     ],
+     "credited": true
+    },
+    "StudioDocument/Module.cls::UpdateVersion": {
+     "slice": "StudioDocument/Module.cls:403-420",
+     "fn": "update_version",
+     "behavior": "rewrites <Version> of the stored .ZPM document; the file on disk is untouched (MV, MV10)",
+     "fn_present": true,
+     "variants_rejected": [
+      "updateversion-noop",
+      "updateversion-writes-file"
+     ],
+     "credited": true
+    },
+    "Repo/Filesystem/Definition.cls::BuildCache": {
+     "slice": "Repo/Filesystem/Definition.cls:117-182",
+     "fn": "build_cache",
+     "behavior": "locks an existing repository, purges and rebuilds its cache in one transaction; any failure rolls back (LK2, LK3, TR7)",
+     "fn_present": true,
+     "variants_rejected": [
+      "buildcache-no-lock",
+      "buildcache-no-purge",
+      "buildcache-keeps-save-on-failure"
+     ],
+     "credited": true
+    },
+    "Repo/Filesystem/Definition.cls::AddCacheItem": {
+     "slice": "Repo/Filesystem/Definition.cls:184-241",
+     "fn": "add_cache_item",
+     "behavior": "an unparseable manifest is skipped; a manifest whose save fails (invalid name) fails the build (LK1, TR7)",
+     "fn_present": true,
+     "variants_rejected": [
+      "addcache-malformed-fails",
+      "addcache-invalid-name-skipped"
+     ],
+     "credited": true
+    },
+    "Repo/Filesystem/Definition.cls::ScanDirectory": {
+     "slice": "Repo/Filesystem/Definition.cls:313-357",
+     "fn": "scan_directory",
+     "behavior": "Depth limits how far below the root manifests are found, hidden .modules folders included (DC0 fails, DC1 and D.setup build)",
+     "fn_present": true,
+     "variants_rejected": [
+      "scan-ignores-depth"
+     ],
+     "credited": true
+    },
+    "Utils/LockManager.cls::LockClassId": {
+     "slice": "Utils/LockManager.cls:67-79",
+     "fn": "lock_class_id",
+     "behavior": "takes the object lock; another holder makes it fail after the timeout (LK2)",
+     "fn_present": true,
+     "variants_rejected": [
+      "lockclassid-noop"
+     ],
+     "credited": true
+    },
+    "Utils/LockManager.cls::UnlockClassId": {
+     "slice": "Utils/LockManager.cls:81-92",
+     "fn": "unlock_class_id",
+     "behavior": "releases a held object lock (LK4)",
+     "fn_present": true,
+     "variants_rejected": [
+      "unlockclassid-noop"
+     ],
+     "credited": true
+    },
+    "Utils/LockManager.cls::UnlockAll": {
+     "slice": "Utils/LockManager.cls:94-141",
+     "fn": "unlock_all",
+     "behavior": "releases every held name and object lock (LK4)",
+     "fn_present": true,
+     "variants_rejected": [
+      "unlockall-names-only"
+     ],
+     "credited": true
+    },
+    "Main.cls::UpdateLanguageExtensionsOne": {
+     "slice": "Main.cls:3420-3462",
+     "fn": "zlang_one",
+     "behavior": "replaces only the generated block, keeps user lines, appends the block once if absent (LE1, LE2, LE3)",
+     "fn_present": true,
+     "variants_rejected": [
+      "zlang-overwrite",
+      "zlang-append-always"
+     ],
+     "credited": true
+    }
+   },
+   "source_sha256": "a7399abd9f500cdc9ea735a68fd9bc49250b25b7eb6641d725ef9e1645143cae"
+  },
+  {
+   "family": "partial-compile",
+   "runs": [
+    "20261114T030000Z-r1-two-resources"
+   ],
+   "fields_compared": 31,
+   "as_built_matches": true,
+   "mismatches": [],
+   "variants": {
+    "compiled-means-usable": {
+     "member": null,
+     "wrong": "projection: a compiled-class descriptor means the class runs",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "R2notxn",
+       "field": "cls.TwoResNotxn.B",
+       "wrong": "def:1 compiled:1 runs:1",
+       "observed": [
+        "def:1 compiled:1 runs:err"
+       ]
+      },
+      {
+       "case": "R2dev",
+       "field": "cls.TwoResDev.B",
+       "wrong": "def:1 compiled:1 runs:1",
+       "observed": [
+        "def:1 compiled:1 runs:err"
+       ]
+      }
+     ]
+    },
+    "everything-rolls-back": {
+     "member": null,
+     "wrong": "impossibly broad rollback: every mode removes both classes on failure",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "R2notxn",
+       "field": "mod.tworec-notxn",
+       "wrong": "absent",
+       "observed": [
+        "present version=1.0.0 repo= desc= dev=0"
+       ]
+      },
+      {
+       "case": "R2notxn",
+       "field": "hist.tworec-notxn",
+       "wrong": "action:load success:0 committed:0 finalized:1",
+       "observed": [
+        "action:load success:0 committed:1 finalized:1"
+       ]
+      },
+      {
+       "case": "R2notxn",
+       "field": "cls.TwoResNotxn.A",
+       "wrong": "def:0 compiled:0 runs:0",
+       "observed": [
+        "def:1 compiled:1 runs:1"
+       ]
+      }
+     ]
+    },
+    "stop-at-first-error": {
+     "member": null,
+     "wrong": "compilation stops before the remaining resources (A missing)",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "R2notxn",
+       "field": "cls.TwoResNotxn.A",
+       "wrong": "def:1 compiled:0 runs:0",
+       "observed": [
+        "def:1 compiled:1 runs:1"
+       ]
+      },
+      {
+       "case": "R2dev",
+       "field": "cls.TwoResDev.A",
+       "wrong": "def:1 compiled:0 runs:0",
+       "observed": [
+        "def:1 compiled:1 runs:1"
+       ]
+      }
+     ]
+    },
+    "txn-keeps-first": {
+     "member": null,
+     "wrong": "transactional mode keeps the class that compiled",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "R2txn",
+       "field": "mod.tworec-txn",
+       "wrong": "present version=1.0.0 repo= desc= dev=0",
+       "observed": [
+        "absent"
+       ]
+      },
+      {
+       "case": "R2txn",
+       "field": "cls.TwoResTxn.A",
+       "wrong": "def:1 compiled:1 runs:1",
+       "observed": [
+        "def:0 compiled:0 runs:0"
+       ]
+      }
+     ]
+    }
+   },
+   "contract": [
+    {
+     "name": "a failed load leaves either every resource usable or none (atomic resource set)",
+     "holds": false,
+     "expected": false,
+     "as_expected": true,
+     "ids": [
+      "G:D4-family",
+      "P:F-NSP-12-family"
+     ],
+     "detail": [
+      "R2notxn",
+      "R2dev"
+     ]
+    }
+   ],
+   "members": {},
+   "source_sha256": "4000e3a16cecab9897be56dd1da54232ed07a548f513ebc0a5acf2a59db31cb1"
+  },
+  {
+   "family": "semantic-versions",
+   "runs": [
+    "20261114T030608Z-r2-semver",
+    "20261114T031048Z-r2-resolve",
+    "20261114T031514Z-r2-resolve-order",
+    "20261114T034428Z-r5-heldback",
+    "20261114T034751Z-r2-semver-addendum"
+   ],
+   "fields_compared": 168,
+   "as_built_matches": true,
+   "mismatches": [],
+   "variants": {
+    "parse-build-hyphen-correct": {
+     "member": "General/SemanticVersion.cls::FromString",
+     "wrong": "a hyphen inside build metadata stays in the build",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "V9",
+       "field": "parse",
+       "wrong": "1|2|3||build-x str=1.2.3+build-x snap=0 valid=1",
+       "observed": [
+        "1|2|3|x|build-x str=1.2.3-x+build-x snap=0 valid=1"
+       ]
+      },
+      {
+       "case": "X3",
+       "field": "res",
+       "wrong": "=1.2.3 sat=0000000001000000001",
+       "observed": [
+        "=1.2.3 sat=0000000001000000000"
+       ]
+      },
+      {
+       "case": "X4",
+       "field": "res",
+       "wrong": "=1.2.3 sat=0000000001000000001",
+       "observed": [
+        "=1.2.3 sat=0000000001000000000"
+       ]
+      }
+     ]
+    },
+    "parse-four-parts-patch": {
+     "member": "General/SemanticVersion.cls::FromString",
+     "wrong": "a fourth dotted part is dropped instead of becoming build",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "V4",
+       "field": "parse",
+       "wrong": "1|2|3|| str=1.2.3 snap=0 valid=1",
+       "observed": [
+        "1|2|3||4 str=1.2.3+4 snap=0 valid=1"
+       ]
+      }
+     ]
+    },
+    "validate-allow-leading-zero": {
+     "member": "General/SemanticVersion.cls::%OnValidateObject",
+     "wrong": "leading zeros accepted",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "V11",
+       "field": "parse",
+       "wrong": "01|2|3|| str=01.2.3 snap=0 valid=1",
+       "observed": [
+        "01|2|3|| str=01.2.3 snap=0 valid=0"
+       ]
+      },
+      {
+       "case": "V12",
+       "field": "parse",
+       "wrong": "1|2|3|01| str=1.2.3-01 snap=0 valid=1",
+       "observed": [
+        "1|2|3|01| str=1.2.3-01 snap=0 valid=0"
+       ]
+      }
+     ]
+    },
+    "snapshot-case-sensitive": {
+     "member": "General/SemanticVersion.cls::IsSnapshot",
+     "wrong": "only lower-case snapshot",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "V8",
+       "field": "parse",
+       "wrong": "1|2|3||SNAPSHOT str=1.2.3+SNAPSHOT snap=0 valid=1",
+       "observed": [
+        "1|2|3||SNAPSHOT str=1.2.3+SNAPSHOT snap=1 valid=1"
+       ]
+      }
+     ]
+    },
+    "follows-prerelease-total": {
+     "member": "General/SemanticVersion.cls::Follows",
+     "wrong": "prereleases of different versions compare by version (total order)",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "F0.10",
+       "field": "row",
+       "wrong": "11111111100011",
+       "observed": [
+        "00000001100000"
+       ]
+      },
+      {
+       "case": "X9",
+       "field": "res",
+       "wrong": ">=1.0.0 <2.0.0-0 sat=0000011111100000001",
+       "observed": [
+        ">=1.0.0 <2.0.0-0 sat=0000011011100000000"
+       ]
+      },
+      {
+       "case": "X10",
+       "field": "res",
+       "wrong": ">=1.2.0 <1.3.0-0 sat=0000000011000000001",
+       "observed": [
+        ">=1.2.0 <1.3.0-0 sat=0000000011000000000"
+       ]
+      }
+     ]
+    },
+    "follows-snapshot-equal": {
+     "member": "General/SemanticVersion.cls::Follows",
+     "wrong": "a +snapshot build is equal to its release",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "F0.8",
+       "field": "row",
+       "wrong": "11111110000011",
+       "observed": [
+        "11111110100011"
+       ]
+      }
+     ]
+    },
+    "follows-postrelease-ignored": {
+     "member": "General/SemanticVersion.cls::Follows",
+     "wrong": "the SemVerPostRelease setting is ignored",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "F1.1",
+       "field": "row",
+       "wrong": "00000000000011",
+       "observed": [
+        "00000001100011"
+       ]
+      },
+      {
+       "case": "F1.2",
+       "field": "row",
+       "wrong": "10000000000011",
+       "observed": [
+        "10000001100011"
+       ]
+      },
+      {
+       "case": "F1.3",
+       "field": "row",
+       "wrong": "11000000000011",
+       "observed": [
+        "11000001100011"
+       ]
+      }
+     ]
+    },
+    "dot-string-compare": {
+     "member": "General/SemanticVersion.cls::CompareDotSeparatedStrings",
+     "wrong": "identifiers compared as plain strings",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "F0.5",
+       "field": "row",
+       "wrong": "11110100000011",
+       "observed": [
+        "11110000000011"
+       ]
+      },
+      {
+       "case": "F0.6",
+       "field": "row",
+       "wrong": "11110000000011",
+       "observed": [
+        "11111000000011"
+       ]
+      },
+      {
+       "case": "F1.5",
+       "field": "row",
+       "wrong": "11110101100011",
+       "observed": [
+        "11110001100011"
+       ]
+      }
+     ]
+    },
+    "dot-longer-is-lower": {
+     "member": "General/SemanticVersion.cls::CompareDotSeparatedStrings",
+     "wrong": "a longer identifier list ranks lower",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "F0.1",
+       "field": "row",
+       "wrong": "01100000000011",
+       "observed": [
+        "00000000000011"
+       ]
+      },
+      {
+       "case": "F0.2",
+       "field": "row",
+       "wrong": "00000000000011",
+       "observed": [
+        "10000000000011"
+       ]
+      },
+      {
+       "case": "F0.3",
+       "field": "row",
+       "wrong": "01000000000011",
+       "observed": [
+        "11000000000011"
+       ]
+      }
+     ]
+    },
+    "tostring-no-build": {
+     "member": "General/SemanticVersion.cls::ToString",
+     "wrong": "build metadata omitted",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "V4",
+       "field": "parse",
+       "wrong": "1|2|3||4 str=1.2.3 snap=0 valid=1",
+       "observed": [
+        "1|2|3||4 str=1.2.3+4 snap=0 valid=1"
+       ]
+      },
+      {
+       "case": "V6",
+       "field": "parse",
+       "wrong": "1|2|3|beta.1|b.2 str=1.2.3-beta.1 snap=0 valid=1",
+       "observed": [
+        "1|2|3|beta.1|b.2 str=1.2.3-beta.1+b.2 snap=0 valid=1"
+       ]
+      },
+      {
+       "case": "V7",
+       "field": "parse",
+       "wrong": "1|2|3||snapshot str=1.2.3 snap=1 valid=1",
+       "observed": [
+        "1|2|3||snapshot str=1.2.3+snapshot snap=1 valid=1"
+       ]
+      }
+     ]
+    },
+    "cmp-single-char-op": {
+     "member": "General/SemanticVersionExpression/Comparator.cls::FromString",
+     "wrong": "only the first operator character is read",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "X6",
+       "field": "res",
+       "wrong": ">1.2.3 sat=0000000000111111110",
+       "observed": [
+        ">=1.2.3 sat=0000000001111111110"
+       ]
+      },
+      {
+       "case": "X8",
+       "field": "res",
+       "wrong": "<1.2.3 sat=1111111110000000001",
+       "observed": [
+        "<=1.2.3 sat=1111111111000000001"
+       ]
+      },
+      {
+       "case": "X9",
+       "field": "res",
+       "wrong": ">1.0.0 <2.0.0-0 sat=0000000011100000000",
+       "observed": [
+        ">=1.0.0 <2.0.0-0 sat=0000011011100000000"
+       ]
+      }
+     ]
+    },
+    "cmp-exact-ignores-prerelease": {
+     "member": "General/SemanticVersionExpression/Comparator.cls::Evaluate",
+     "wrong": "=1.0.0-beta matches any 1.0.0",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "X3",
+       "field": "res",
+       "wrong": "=1.2.3 sat=0000000001000000001",
+       "observed": [
+        "=1.2.3 sat=0000000001000000000"
+       ]
+      },
+      {
+       "case": "X4",
+       "field": "res",
+       "wrong": "=1.2.3 sat=0000000001000000001",
+       "observed": [
+        "=1.2.3 sat=0000000001000000000"
+       ]
+      },
+      {
+       "case": "X6",
+       "field": "res",
+       "wrong": ">=1.2.3 sat=0000000001111111111",
+       "observed": [
+        ">=1.2.3 sat=0000000001111111110"
+       ]
+      }
+     ]
+    },
+    "cmp-build-kept": {
+     "member": "General/SemanticVersionExpression/Comparator.cls::Evaluate",
+     "wrong": "build metadata kept when comparing, so <1.0.1 rejects 1.0.0+snapshot... ordering by snapshot",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "Y1",
+       "field": "res",
+       "wrong": "<1.0.0 sat=1111101000000000000",
+       "observed": [
+        "<1.0.0 sat=1111100000000000000"
+       ]
+      }
+     ]
+    },
+    "cmp-postrelease-not-equal": {
+     "member": "General/SemanticVersionExpression/Comparator.cls::Evaluate",
+     "wrong": "with SemVerPostRelease, >=1.0.0 rejects 1.0.0-alpha",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "C2",
+       "field": "sat",
+       "wrong": "1110011000000000000",
+       "observed": [
+        "1111111000000000000"
+       ]
+      }
+     ]
+    },
+    "cmp-resolved-no-eq": {
+     "member": "General/SemanticVersionExpression/Comparator.cls::ToResolvedString",
+     "wrong": "the = operator is not printed",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "X3",
+       "field": "res",
+       "wrong": "1.2.3 sat=0000000001000000000",
+       "observed": [
+        "=1.2.3 sat=0000000001000000000"
+       ]
+      },
+      {
+       "case": "X4",
+       "field": "res",
+       "wrong": "1.2.3 sat=0000000001000000000",
+       "observed": [
+        "=1.2.3 sat=0000000001000000000"
+       ]
+      },
+      {
+       "case": "X34",
+       "field": "err",
+       "wrong": "ERROR #5001: Exact version matches do not agree: 1.0.0 and 2.0.0",
+       "observed": [
+        "ERROR #5001: Exact version matches do not agree: =1.0.0 and =2.0.0"
+       ]
+      }
+     ]
+    },
+    "range-partial-keeps-operator": {
+     "member": "General/SemanticVersionExpression/Range.cls::FromString",
+     "wrong": "node-semver: >=1.2 means >=1.2.0 and <2 means <2.0.0-0 (intended reading)",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "X26",
+       "field": "res",
+       "wrong": ">=1.2.0 sat=0000000011111111111",
+       "observed": [
+        ">=1.2.0 <1.3.0-0 sat=0000000011000000000"
+       ]
+      },
+      {
+       "case": "X27",
+       "field": "res",
+       "wrong": "<2.0.0-0 sat=1110011011100000000",
+       "observed": [
+        ">=2.0.0 <3.0.0-0 sat=0000000000001100000"
+       ]
+      },
+      {
+       "case": "X28",
+       "field": "res",
+       "wrong": ">=1.3.0 sat=0000000000111111110",
+       "observed": [
+        ">=1.2.0 <1.3.0-0 sat=0000000011000000000"
+       ]
+      }
+     ]
+    },
+    "range-caret-major": {
+     "member": "General/SemanticVersionExpression/Range.cls::FromString",
+     "wrong": "node-semver caret: ^1.2 means >=1.2.0 <2.0.0-0 (intended reading)",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "X20",
+       "field": "res",
+       "wrong": ">=1.2.0 <2.0.0-0 sat=0000000011100000000",
+       "observed": [
+        ">=1.2.0 <1.3.0-0 sat=0000000011000000000"
+       ]
+      }
+     ]
+    },
+    "range-year-as-x": {
+     "member": "General/SemanticVersionExpression/Range.cls::FromString",
+     "wrong": "2024.1 is an x-range like 2024.12",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "X35",
+       "field": "res",
+       "wrong": ">=2024.1.0 <2024.2.0-0 sat=0000000000000001100",
+       "observed": [
+        "=2024.1.0 sat=0000000000000001000"
+       ]
+      }
+     ]
+    },
+    "range-hyphen-max-inclusive-partial": {
+     "member": "General/SemanticVersionExpression/Range.cls::FromString",
+     "wrong": "a partial upper bound in a hyphen range is inclusive",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "X24",
+       "field": "res",
+       "wrong": ">=1.0.0 <=2.0.0 sat=0000011111111000001",
+       "observed": [
+        ">=1.0.0 <3.0.0 sat=0000011111111100001"
+       ]
+      },
+      {
+       "case": "X25",
+       "field": "res",
+       "wrong": ">=1.2.0 <=2.5.0 sat=0000000011111100001",
+       "observed": [
+        ">=1.2.0 <2.6.0 sat=0000000011111100001"
+       ]
+      }
+     ]
+    },
+    "range-any-comparator": {
+     "member": "General/SemanticVersionExpression/Range.cls::InRange",
+     "wrong": "one comparator suffices",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "X9",
+       "field": "res",
+       "wrong": ">=1.0.0 <2.0.0-0 sat=1110011111111111111",
+       "observed": [
+        ">=1.0.0 <2.0.0-0 sat=0000011011100000000"
+       ]
+      },
+      {
+       "case": "X10",
+       "field": "res",
+       "wrong": ">=1.2.0 <1.3.0-0 sat=1110011011111111111",
+       "observed": [
+        ">=1.2.0 <1.3.0-0 sat=0000000011000000000"
+       ]
+      },
+      {
+       "case": "X11",
+       "field": "res",
+       "wrong": ">=1.0.0 <2.0.0-0 sat=1110011111111111111",
+       "observed": [
+        ">=1.0.0 <2.0.0-0 sat=0000011011100000000"
+       ]
+      }
+     ]
+    },
+    "intersect-exact-ignores-bounds": {
+     "member": "General/SemanticVersionExpression/Range.cls::Intersect",
+     "wrong": "an exact version is returned without checking the bounds",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "B2",
+       "field": "err",
+       "wrong": "<not produced>",
+       "observed": [
+        "ERROR #5001: No overlapping versions in AND operation for =1.0.0 and >=2.0.0"
+       ]
+      },
+      {
+       "case": "B3",
+       "field": "err",
+       "wrong": "<not produced>",
+       "observed": [
+        "ERROR #5001: No overlapping versions in AND operation for >=2.0.0 and =1.0.0"
+       ]
+      }
+     ]
+    },
+    "intersect-last-wins-tie": {
+     "member": "General/SemanticVersionExpression/Range.cls::Intersect",
+     "wrong": "on equal bounds the later one is kept",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "A1",
+       "field": "res",
+       "wrong": ">=1.0.0 <2.0.0 expr=>=1.0.0 <2.0.0 sat=0000011111110000001",
+       "observed": [
+        ">=1.0.0 <2.0.0-0 expr=>=1.0.0 <2.0.0-0 sat=0000011011100000000"
+       ]
+      },
+      {
+       "case": "A2",
+       "field": "res",
+       "wrong": ">=1.0.0 <2.0.0-0 expr=>=1.0.0 <2.0.0-0 sat=0000011011100000000",
+       "observed": [
+        ">=1.0.0 <2.0.0 expr=>=1.0.0 <2.0.0 sat=0000011111110000001"
+       ]
+      },
+      {
+       "case": "A3",
+       "field": "res",
+       "wrong": ">=1.0.0 expr=>=1.0.0 sat=0000011111111111111",
+       "observed": [
+        ">=1.0.0-beta expr=>=1.0.0-beta sat=0000111011101111110"
+       ]
+      }
+     ]
+    },
+    "group-eq-as-lower": {
+     "member": "General/SemanticVersionExpression/Range.cls::GroupComparators",
+     "wrong": "= treated as a lower bound",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "X34",
+       "field": "err",
+       "wrong": "<not produced>",
+       "observed": [
+        "ERROR #5001: Exact version matches do not agree: =1.0.0 and =2.0.0"
+       ]
+      },
+      {
+       "case": "A5",
+       "field": "err",
+       "wrong": "<not produced>",
+       "observed": [
+        "ERROR #5001: Exact version matches do not agree: =1.0.0 and =2.0.0"
+       ]
+      },
+      {
+       "case": "B2",
+       "field": "err",
+       "wrong": "<not produced>",
+       "observed": [
+        "ERROR #5001: No overlapping versions in AND operation for =1.0.0 and >=2.0.0"
+       ]
+      }
+     ]
+    },
+    "compare-prerelease-aware": {
+     "member": "General/SemanticVersionExpression/Range.cls::CompareVersions",
+     "wrong": "bounds compared with prerelease precedence (commutative intersection)",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "A2",
+       "field": "res",
+       "wrong": ">=1.0.0 <2.0.0-0 expr=>=1.0.0 <2.0.0-0 sat=0000011011100000000",
+       "observed": [
+        ">=1.0.0 <2.0.0 expr=>=1.0.0 <2.0.0 sat=0000011111110000001"
+       ]
+      },
+      {
+       "case": "A3",
+       "field": "res",
+       "wrong": ">=1.0.0 expr=>=1.0.0 sat=0000011111111111111",
+       "observed": [
+        ">=1.0.0-beta expr=>=1.0.0-beta sat=0000111011101111110"
+       ]
+      },
+      {
+       "case": "S4ab",
+       "field": "status",
+       "wrong": "OK",
+       "observed": [
+        "ERR"
+       ]
+      }
+     ]
+    },
+    "valid-strict-equal-ok": {
+     "member": "General/SemanticVersionExpression/Range.cls::IsIntersectionValid",
+     "wrong": ">X with <=X is accepted",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "A11",
+       "field": "err",
+       "wrong": "<not produced>",
+       "observed": [
+        "ERROR #5001: No overlapping versions in AND operation for >1.0.0 and <=1.0.0"
+       ]
+      }
+     ]
+    },
+    "range-resolved-comma": {
+     "member": "General/SemanticVersionExpression/Range.cls::ToResolvedString",
+     "wrong": "comparators joined by a comma",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "X9",
+       "field": "res",
+       "wrong": ">=1.0.0,<2.0.0-0 sat=0000011011100000000",
+       "observed": [
+        ">=1.0.0 <2.0.0-0 sat=0000011011100000000"
+       ]
+      },
+      {
+       "case": "X10",
+       "field": "res",
+       "wrong": ">=1.2.0,<1.3.0-0 sat=0000000011000000000",
+       "observed": [
+        ">=1.2.0 <1.3.0-0 sat=0000000011000000000"
+       ]
+      },
+      {
+       "case": "X11",
+       "field": "res",
+       "wrong": ">=1.0.0,<2.0.0-0 sat=0000011011100000000",
+       "observed": [
+        ">=1.0.0 <2.0.0-0 sat=0000011011100000000"
+       ]
+      }
+     ]
+    },
+    "expr-and-as-or": {
+     "member": "General/SemanticVersionExpression.cls::ExpressionSet",
+     "wrong": "&& treated as ||",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "X32",
+       "field": "res",
+       "wrong": "(>=1.0.0) || (<2.0.0) sat=1111111111111111111",
+       "observed": [
+        ">=1.0.0 <2.0.0 sat=0000011111110000001"
+       ]
+      },
+      {
+       "case": "X33",
+       "field": "err",
+       "wrong": "<not produced>",
+       "observed": [
+        "ERROR #5001: No overlapping versions in && operation for %1 and %2"
+       ]
+      },
+      {
+       "case": "X34",
+       "field": "err",
+       "wrong": "<not produced>",
+       "observed": [
+        "ERROR #5001: Exact version matches do not agree: =1.0.0 and =2.0.0"
+       ]
+      }
+     ]
+    },
+    "expr-conflict-message-filled": {
+     "member": "General/SemanticVersionExpression.cls::ExpressionSet",
+     "wrong": "the && conflict message names the two ranges",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "X33",
+       "field": "err",
+       "wrong": "ERROR #5001: No overlapping versions in && operation for >=2.0.0 and <1.0.0",
+       "observed": [
+        "ERROR #5001: No overlapping versions in && operation for %1 and %2"
+       ]
+      }
+     ]
+    },
+    "expr-empty-none": {
+     "member": "General/SemanticVersionExpression.cls::IsSatisfiedBy",
+     "wrong": "an empty expression accepts nothing",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "X1",
+       "field": "res",
+       "wrong": " sat=0000000000000000000",
+       "observed": [
+        " sat=1111111111111111111"
+       ]
+      },
+      {
+       "case": "X2",
+       "field": "res",
+       "wrong": " sat=0000000000000000000",
+       "observed": [
+        " sat=1111111111111111111"
+       ]
+      }
+     ]
+    },
+    "and-intersect-error-wrapped": {
+     "member": "General/SemanticVersionExpression.cls::And",
+     "wrong": "disagreeing exact versions report the AND conflict message",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "A5",
+       "field": "err",
+       "wrong": "ERROR #5001: No overlapping versions in AND operation for =1.0.0 and =2.0.0",
+       "observed": [
+        "ERROR #5001: Exact version matches do not agree: =1.0.0 and =2.0.0"
+       ]
+      }
+     ]
+    },
+    "and-empty-left-keeps-empty": {
+     "member": "General/SemanticVersionExpression.cls::And",
+     "wrong": "an empty left side stays empty",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "A8",
+       "field": "res",
+       "wrong": " expr= sat=1111111111111111111",
+       "observed": [
+        ">=1.0.0 expr=>=1.0.0 sat=0000011111111111111"
+       ]
+      }
+     ]
+    },
+    "expr-resolved-no-parens": {
+     "member": "General/SemanticVersionExpression.cls::ToResolvedString",
+     "wrong": "options not parenthesized",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "X31",
+       "field": "res",
+       "wrong": ">=1.0.0 <2.0.0 || >=3.0.0 sat=0000011111110011111",
+       "observed": [
+        "(>=1.0.0 <2.0.0) || (>=3.0.0) sat=0000011111110011111"
+       ]
+      },
+      {
+       "case": "X39",
+       "field": "res",
+       "wrong": "=1.0.0 || =2.0.0 sat=0000011000001000000",
+       "observed": [
+        "(=1.0.0) || (=2.0.0) sat=0000011000001000000"
+       ]
+      },
+      {
+       "case": "A10",
+       "field": "res",
+       "wrong": ">=1.5.0 <2.0.0-0 || >=3.0.0 <4.0.0-0 expr=>=1.5.0 <2.0.0-0 || >=3.0.0 <4.0.0-0 sat=0000000000000010000",
+       "observed": [
+        "(>=1.5.0 <2.0.0-0) || (>=3.0.0 <4.0.0-0) expr=(>=1.5.0 <2.0.0-0) || (>=3.0.0 <4.0.0-0) sat=0000000000000010000"
+       ]
+      }
+     ]
+    }
+   },
+   "contract": [
+    {
+     "name": "<2 accepts versions below 2.0.0 (node-semver, which the range code cites)",
+     "holds": false,
+     "expected": false,
+     "as_expected": true,
+     "ids": [
+      "C:D6"
+     ],
+     "detail": ">=2.0.0 <3.0.0-0 sat=0000000000001100000"
+    },
+    {
+     "name": "^1.2 accepts 1.x from 1.2.0 (node-semver caret text quoted in the code)",
+     "holds": false,
+     "expected": false,
+     "as_expected": true,
+     "ids": [
+      "C:D7"
+     ],
+     "detail": ">=1.2.0 <1.3.0-0 sat=0000000011000000000"
+    },
+    {
+     "name": "combining two requirements does not depend on their order",
+     "holds": false,
+     "expected": false,
+     "as_expected": true,
+     "ids": [
+      "C:D8"
+     ],
+     "detail": [
+      [
+       1,
+       2
+      ],
+      [
+       3,
+       4
+      ]
+     ]
+    },
+    {
+     "name": "build metadata containing a hyphen stays build metadata (SemVer 2.0.0 item 10)",
+     "holds": false,
+     "expected": false,
+     "as_expected": true,
+     "ids": [
+      "C:D9"
+     ],
+     "detail": "1|2|3|x|build-x str=1.2.3-x+build-x snap=0 valid=1"
+    },
+    {
+     "name": "a dependency declared <2 is installed below 2.0.0",
+     "holds": false,
+     "expected": false,
+     "as_expected": true,
+     "ids": [
+      "C:D6"
+     ],
+     "detail": "present version=2.5.0 repo=reg2 desc=2.5.0 dev=0"
+    },
+    {
+     "name": "whether a satisfiable diamond installs does not depend on dependency names",
+     "holds": false,
+     "expected": false,
+     "as_expected": true,
+     "ids": [
+      "C:D8"
+     ],
+     "detail": "S4ab=ERR S5=OK"
+    },
+    {
+     "name": "loading a lower version is refused (load.refusal.downgrade)",
+     "holds": false,
+     "expected": false,
+     "as_expected": true,
+     "ids": [
+      "C:D15"
+     ],
+     "detail": "present version=1.0.0-rc repo= desc= dev=0"
+    }
+   ],
+   "members": {
+    "General/SemanticVersion.cls::FromString": {
+     "slice": "General/SemanticVersion.cls:33-54",
+     "fn": "sv_from_string",
+     "behavior": "parts from a version string; a hyphen inside build metadata becomes a prerelease (V9)",
+     "fn_present": true,
+     "variants_rejected": [
+      "parse-build-hyphen-correct",
+      "parse-four-parts-patch"
+     ],
+     "credited": true
+    },
+    "General/SemanticVersion.cls::%OnValidateObject": {
+     "slice": "General/SemanticVersion.cls:75-96",
+     "fn": "sv_validate",
+     "behavior": "leading zeros rejected in numbers and numeric prerelease identifiers (V11, V12)",
+     "fn_present": true,
+     "variants_rejected": [
+      "validate-allow-leading-zero"
+     ],
+     "credited": true
+    },
+    "General/SemanticVersion.cls::IsSnapshot": {
+     "slice": "General/SemanticVersion.cls:98-101",
+     "fn": "is_snapshot",
+     "behavior": "build \"snapshot\" in any case (V7, V8)",
+     "fn_present": true,
+     "variants_rejected": [
+      "snapshot-case-sensitive"
+     ],
+     "credited": true
+    },
+    "General/SemanticVersion.cls::Follows": {
+     "slice": "General/SemanticVersion.cls:123-172",
+     "fn": "follows",
+     "behavior": "ordering incl. prerelease incomparability across versions, snapshot earlier, post-release mode (F)",
+     "fn_present": true,
+     "variants_rejected": [
+      "follows-prerelease-total",
+      "follows-snapshot-equal",
+      "follows-postrelease-ignored"
+     ],
+     "credited": true
+    },
+    "General/SemanticVersion.cls::CompareDotSeparatedStrings": {
+     "slice": "General/SemanticVersion.cls:175-205",
+     "fn": "compare_dot",
+     "behavior": "identifier precedence: numbers numerically and before words (F rows 5, 6, 13, 14)",
+     "fn_present": true,
+     "variants_rejected": [
+      "dot-string-compare",
+      "dot-longer-is-lower"
+     ],
+     "credited": true
+    },
+    "General/SemanticVersion.cls::ToString": {
+     "slice": "General/SemanticVersion.cls:16-23",
+     "fn": "sv_to_string",
+     "behavior": "canonical text incl. prerelease and build (V)",
+     "fn_present": true,
+     "variants_rejected": [
+      "tostring-no-build"
+     ],
+     "credited": true
+    },
+    "General/SemanticVersionExpression/Comparator.cls::FromString": {
+     "slice": "General/SemanticVersionExpression/Comparator.cls:31-75",
+     "fn": "cmp_from_string",
+     "behavior": "one- and two-character operators; error names the remaining text (X41)",
+     "fn_present": true,
+     "variants_rejected": [
+      "cmp-single-char-op"
+     ],
+     "credited": true
+    },
+    "General/SemanticVersionExpression/Comparator.cls::Evaluate": {
+     "slice": "General/SemanticVersionExpression/Comparator.cls:77-121",
+     "fn": "cmp_evaluate",
+     "behavior": "exact match incl. prerelease; build ignored for < >; post-release equality (X, C)",
+     "fn_present": true,
+     "variants_rejected": [
+      "cmp-exact-ignores-prerelease",
+      "cmp-build-kept",
+      "cmp-postrelease-not-equal"
+     ],
+     "credited": true
+    },
+    "General/SemanticVersionExpression/Comparator.cls::ToResolvedString": {
+     "slice": "General/SemanticVersionExpression/Comparator.cls:21-29",
+     "fn": "cmp_resolved",
+     "behavior": "operator always printed (=1.2.3)",
+     "fn_present": true,
+     "variants_rejected": [
+      "cmp-resolved-no-eq"
+     ],
+     "credited": true
+    },
+    "General/SemanticVersionExpression/Range.cls::FromString": {
+     "slice": "General/SemanticVersionExpression/Range.cls:31-205",
+     "fn": "range_from_string",
+     "behavior": "hyphen, x, tilde, caret ranges; an operator on a partial version is dropped (X26-X29); 20NN.N exact (X35)",
+     "fn_present": true,
+     "variants_rejected": [
+      "range-partial-keeps-operator",
+      "range-caret-major",
+      "range-year-as-x",
+      "range-hyphen-max-inclusive-partial"
+     ],
+     "credited": true
+    },
+    "General/SemanticVersionExpression/Range.cls::InRange": {
+     "slice": "General/SemanticVersionExpression/Range.cls:207-217",
+     "fn": "range_in",
+     "behavior": "every comparator must hold (X30)",
+     "fn_present": true,
+     "variants_rejected": [
+      "range-any-comparator"
+     ],
+     "credited": true
+    },
+    "General/SemanticVersionExpression/Range.cls::Intersect": {
+     "slice": "General/SemanticVersionExpression/Range.cls:228-326",
+     "fn": "range_intersect",
+     "behavior": "exact versions must agree; tightest bounds kept, first wins a prerelease-only tie (A1-A4)",
+     "fn_present": true,
+     "variants_rejected": [
+      "intersect-exact-ignores-bounds",
+      "intersect-last-wins-tie"
+     ],
+     "credited": true
+    },
+    "General/SemanticVersionExpression/Range.cls::GroupComparators": {
+     "slice": "General/SemanticVersionExpression/Range.cls:329-345",
+     "fn": "group_comparators",
+     "behavior": "= kept apart from bounds (A7)",
+     "fn_present": true,
+     "variants_rejected": [
+      "group-eq-as-lower"
+     ],
+     "credited": true
+    },
+    "General/SemanticVersionExpression/Range.cls::CompareVersions": {
+     "slice": "General/SemanticVersionExpression/Range.cls:349-389",
+     "fn": "compare_versions",
+     "behavior": "bounds compared ignoring prerelease (A3/A4 order dependence)",
+     "fn_present": true,
+     "variants_rejected": [
+      "compare-prerelease-aware"
+     ],
+     "credited": true
+    },
+    "General/SemanticVersionExpression/Range.cls::IsIntersectionValid": {
+     "slice": "General/SemanticVersionExpression/Range.cls:392-415",
+     "fn": "intersection_valid",
+     "behavior": ">X with <=X empty; >=X with <=X allowed (A11, A12)",
+     "fn_present": true,
+     "variants_rejected": [
+      "valid-strict-equal-ok"
+     ],
+     "credited": true
+    },
+    "General/SemanticVersionExpression/Range.cls::ToResolvedString": {
+     "slice": "General/SemanticVersionExpression/Range.cls:21-29",
+     "fn": "range_resolved",
+     "behavior": "comparators joined by a space",
+     "fn_present": true,
+     "variants_rejected": [
+      "range-resolved-comma"
+     ],
+     "credited": true
+    },
+    "General/SemanticVersionExpression.cls::ExpressionSet": {
+     "slice": "General/SemanticVersionExpression.cls:19-68",
+     "fn": "expression_set",
+     "behavior": "&& intersects, || unions, mixing refused; && conflict message keeps literal %1 %2 (X31-X34, X42)",
+     "fn_present": true,
+     "variants_rejected": [
+      "expr-and-as-or",
+      "expr-conflict-message-filled"
+     ],
+     "credited": true
+    },
+    "General/SemanticVersionExpression.cls::IsSatisfiedBy": {
+     "slice": "General/SemanticVersionExpression.cls:106-117",
+     "fn": "expr_satisfied",
+     "behavior": "empty expression accepts every version (X1, X2)",
+     "fn_present": true,
+     "variants_rejected": [
+      "expr-empty-none"
+     ],
+     "credited": true
+    },
+    "General/SemanticVersionExpression.cls::And": {
+     "slice": "General/SemanticVersionExpression.cls:129-166",
+     "fn": "expr_and",
+     "behavior": "pairwise intersection of options; conflict message (A5-A12)",
+     "fn_present": true,
+     "variants_rejected": [
+      "and-intersect-error-wrapped",
+      "and-empty-left-keeps-empty"
+     ],
+     "credited": true
+    },
+    "General/SemanticVersionExpression.cls::ToResolvedString": {
+     "slice": "General/SemanticVersionExpression.cls:75-91",
+     "fn": "expr_resolved",
+     "behavior": "options in parentheses joined by ||",
+     "fn_present": true,
+     "variants_rejected": [
+      "expr-resolved-no-parens"
+     ],
+     "credited": true
+    }
+   },
+   "source_sha256": "686f6ef752bf79250c44a2a230fdf29585f141fb4b44f5a81b7a841f71183df8"
+  },
+  {
+   "family": "temp-repo-and-search-order",
+   "runs": [
+    "20261114T025102Z-r1-temp-repo",
+    "20261114T025551Z-r1-eval-postcommit"
+   ],
+   "fields_compared": 116,
+   "as_built_matches": true,
+   "mismatches": [],
+   "variants": {
+    "skip-ignores-existing-root": {
+     "member": "General/TempLocalRepoManager.cls::SkipCreate",
+     "wrong": "tries to create a temporary repository on a root another repository already has (the unique Root index then fails it)",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "TR4",
+       "field": "status",
+       "wrong": "ERR",
+       "observed": [
+        "OK"
+       ]
+      },
+      {
+       "case": "TR4",
+       "field": "log.cleanup_failed",
+       "wrong": "ipm-temp-modules-1",
+       "observed": [
+        "none"
+       ]
+      },
+      {
+       "case": "TR5",
+       "field": "repo.reg5",
+       "wrong": "id:6 sort:2 root:/tmp/c1/reg5/",
+       "observed": [
+        "id:5 sort:2 root:/tmp/c1/reg5/"
+       ]
+      }
+     ]
+    },
+    "skip-ignores-missing-dir": {
+     "member": "General/TempLocalRepoManager.cls::SkipCreate",
+     "wrong": "creates (and removes) an empty repository for a missing folder; expected to survive: no fixture observes it",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "TR3",
+       "field": "repo.ipm-temp-modules-1",
+       "wrong": "id:4 sort:2 root:/tmp/c1/elsewhere/",
+       "observed": [
+        "id:2 sort:2 root:/tmp/c1/elsewhere/"
+       ]
+      },
+      {
+       "case": "TR4",
+       "field": "repo.keepme",
+       "wrong": "id:7 sort:2 root:/tmp/c1/tr4/.modules/",
+       "observed": [
+        "id:4 sort:2 root:/tmp/c1/tr4/.modules/"
+       ]
+      },
+      {
+       "case": "TR5",
+       "field": "repo.reg5",
+       "wrong": "id:9 sort:2 root:/tmp/c1/reg5/",
+       "observed": [
+        "id:5 sort:2 root:/tmp/c1/reg5/"
+       ]
+      }
+     ]
+    },
+    "create-always-first-name": {
+     "member": "General/TempLocalRepoManager.cls::Create",
+     "wrong": "always names the repository ipm-temp-modules-1",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "TR3",
+       "field": "status",
+       "wrong": "ERR",
+       "observed": [
+        "OK"
+       ]
+      },
+      {
+       "case": "TR3",
+       "field": "log.cleanup_failed",
+       "wrong": "ipm-temp-modules-1",
+       "observed": [
+        "none"
+       ]
+      },
+      {
+       "case": "TR3",
+       "field": "mod.tr3-dep",
+       "wrong": "absent",
+       "observed": [
+        "present version=1.0.0 repo=ipm-temp-modules-2 desc=from-dotmodules dev=0"
+       ]
+      }
+     ]
+    },
+    "create-sort-last": {
+     "member": "General/TempLocalRepoManager.cls::Create",
+     "wrong": "ignores useFirst (sort 1000); expected to survive: sort order never decides a result",
+     "rejected": false,
+     "rejected_by": []
+    },
+    "onnew-no-cleanup-in-catch": {
+     "member": "General/TempLocalRepoManager.cls::%OnNew",
+     "wrong": "does not call CleanUp when Create fails",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "TR7",
+       "field": "log.cleanup_failed",
+       "wrong": "none",
+       "observed": [
+        "ipm-temp-modules-1"
+       ]
+      },
+      {
+       "case": "Dtxn",
+       "field": "log.cleanup_failed",
+       "wrong": "none",
+       "observed": [
+        "ipm-temp-modules-1"
+       ]
+      },
+      {
+       "case": "Ddev",
+       "field": "log.cleanup_failed",
+       "wrong": "none",
+       "observed": [
+        "ipm-temp-modules-1"
+       ]
+      }
+     ]
+    },
+    "onnew-ok-on-failure": {
+     "member": "General/TempLocalRepoManager.cls::%OnNew",
+     "wrong": "returns OK after a Create failure, so a manager object exists",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "TR7",
+       "field": "error",
+       "wrong": "<not produced>",
+       "observed": [
+        "ERROR #5002: ObjectScript error: <INVALID OREF>LoadInternal+83^%IPM.Main.1"
+       ]
+      },
+      {
+       "case": "TR7",
+       "field": "log.cleanup_failed",
+       "wrong": "ipm-temp-modules-1,ipm-temp-modules-1",
+       "observed": [
+        "ipm-temp-modules-1"
+       ]
+      },
+      {
+       "case": "TR7",
+       "field": "hist.tr7-main",
+       "wrong": "action:load success:1 committed:1 finalized:1",
+       "observed": [
+        "action:load success:0 committed:1 finalized:1"
+       ]
+      }
+     ]
+    },
+    "cleanup-noop": {
+     "member": "General/TempLocalRepoManager.cls::CleanUp",
+     "wrong": "never deletes the repository",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "TR2",
+       "field": "repos.count",
+       "wrong": "1",
+       "observed": [
+        "0"
+       ]
+      },
+      {
+       "case": "TR3",
+       "field": "repos.count",
+       "wrong": "3",
+       "observed": [
+        "1"
+       ]
+      },
+      {
+       "case": "TR4",
+       "field": "repos.count",
+       "wrong": "3",
+       "observed": [
+        "1"
+       ]
+      }
+     ]
+    },
+    "cleanup-quiet": {
+     "member": "General/TempLocalRepoManager.cls::CleanUp",
+     "wrong": "reports no message when the delete fails",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "TR7",
+       "field": "log.cleanup_failed",
+       "wrong": "none",
+       "observed": [
+        "ipm-temp-modules-1"
+       ]
+      },
+      {
+       "case": "Dtxn",
+       "field": "log.cleanup_failed",
+       "wrong": "none",
+       "observed": [
+        "ipm-temp-modules-1"
+       ]
+      },
+      {
+       "case": "Ddev",
+       "field": "log.cleanup_failed",
+       "wrong": "none",
+       "observed": [
+        "ipm-temp-modules-1"
+       ]
+      }
+     ]
+    },
+    "search-tie-by-sortorder": {
+     "member": "Repo/Manager.cls::SearchRepositoriesForModule",
+     "wrong": "breaks version ties by repository sort order (the temporary repository first)",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "TR5",
+       "field": "mod.tr5-dep",
+       "wrong": "present version=1.0.0 repo=ipm-temp-modules-1 desc=from-dotmodules dev=0",
+       "observed": [
+        "present version=1.0.0 repo=reg5 desc=from-registry dev=0"
+       ]
+      }
+     ]
+    },
+    "search-first-repo": {
+     "member": "Repo/Manager.cls::SearchRepositoriesForModule",
+     "wrong": "takes the first repository (by sort order) that has any satisfying version",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "TR5",
+       "field": "mod.tr5-dep",
+       "wrong": "present version=1.0.0 repo=ipm-temp-modules-1 desc=from-dotmodules dev=0",
+       "observed": [
+        "present version=1.0.0 repo=reg5 desc=from-registry dev=0"
+       ]
+      },
+      {
+       "case": "TR5c",
+       "field": "mod.tr5c-dep",
+       "wrong": "present version=1.0.0 repo=ipm-temp-modules-1 desc=from-dotmodules dev=0",
+       "observed": [
+        "present version=1.1.0 repo=reg5 desc=from-registry dev=0"
+       ]
+      }
+     ]
+    },
+    "search-lowest-version": {
+     "member": "Repo/Manager.cls::SearchRepositoriesForModule",
+     "wrong": "orders versions ascending",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "TR5b",
+       "field": "mod.tr5b-dep",
+       "wrong": "present version=1.0.0 repo=reg5 desc=from-registry dev=0",
+       "observed": [
+        "present version=1.1.0 repo=ipm-temp-modules-1 desc=from-dotmodules dev=0"
+       ]
+      },
+      {
+       "case": "TR5c",
+       "field": "mod.tr5c-dep",
+       "wrong": "present version=1.0.0 repo=ipm-temp-modules-1 desc=from-dotmodules dev=0",
+       "observed": [
+        "present version=1.1.0 repo=reg5 desc=from-registry dev=0"
+       ]
+      }
+     ]
+    },
+    "lmr-guarded-cleanup": {
+     "member": "Utils/Module.cls::LoadModuleReference",
+     "wrong": "the dependency path guards CleanUp, so the dependency load succeeds",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "Dtxn",
+       "field": "status",
+       "wrong": "OK",
+       "observed": [
+        "ERR"
+       ]
+      },
+      {
+       "case": "Dtxn",
+       "field": "error",
+       "wrong": "<not produced>",
+       "observed": [
+        "ERROR #5002: ObjectScript error: <INVALID OREF>LoadModuleReference+80^%IPM.Utils.Module.1"
+       ]
+      },
+      {
+       "case": "Dtxn",
+       "field": "mod.dd-parent-txn",
+       "wrong": "present version=1.0.0 repo= desc= dev=0",
+       "observed": [
+        "absent"
+       ]
+      }
+     ]
+    },
+    "lmr-failure-keeps-dependency": {
+     "member": "Utils/Module.cls::LoadModuleReference",
+     "wrong": "the failed dependency stays installed (no parent rollback)",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "Dtxn",
+       "field": "mod.dd-dep-txn",
+       "wrong": "present version=1.0.0 repo=regd desc= dev=0",
+       "observed": [
+        "absent"
+       ]
+      },
+      {
+       "case": "Ddev",
+       "field": "mod.dd-dep-dev",
+       "wrong": "present version=1.0.0 repo=regd desc= dev=0",
+       "observed": [
+        "absent"
+       ]
+      }
+     ]
+    },
+    "loadinternal-guarded-cleanup": {
+     "member": "Main.cls::LoadInternal",
+     "wrong": "skips CleanUp when the manager is missing, so the load succeeds",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "TR7",
+       "field": "status",
+       "wrong": "OK",
+       "observed": [
+        "ERR"
+       ]
+      },
+      {
+       "case": "TR7",
+       "field": "error",
+       "wrong": "<not produced>",
+       "observed": [
+        "ERROR #5002: ObjectScript error: <INVALID OREF>LoadInternal+83^%IPM.Main.1"
+       ]
+      },
+      {
+       "case": "TR7",
+       "field": "hist.tr7-main",
+       "wrong": "action:load success:1 committed:1 finalized:1",
+       "observed": [
+        "action:load success:0 committed:1 finalized:1"
+       ]
+      }
+     ]
+    },
+    "late-error-rolls-back": {
+     "member": "Main.cls::LoadInternal",
+     "wrong": "an error after the commit removes the module",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "TR7",
+       "field": "mod.tr7-main",
+       "wrong": "absent",
+       "observed": [
+        "present version=1.0.0 repo= desc= dev=0"
+       ]
+      }
+     ]
+    },
+    "late-error-reports-success": {
+     "member": "Main.cls::LoadInternal",
+     "wrong": "an error after the commit is reported as success",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "TR7",
+       "field": "status",
+       "wrong": "OK",
+       "observed": [
+        "ERR"
+       ]
+      },
+      {
+       "case": "TR7",
+       "field": "error",
+       "wrong": "<not produced>",
+       "observed": [
+        "ERROR #5002: ObjectScript error: <INVALID OREF>LoadInternal+83^%IPM.Main.1"
+       ]
+      }
+     ]
+    }
+   },
+   "contract": [
+    {
+     "name": "a load leaves no temporary repository registered",
+     "holds": true,
+     "expected": true,
+     "as_expected": true,
+     "ids": [
+      "C:R1-1"
+     ],
+     "detail": []
+    },
+    {
+     "name": "a load keeps repositories it did not create",
+     "holds": true,
+     "expected": true,
+     "as_expected": true,
+     "ids": [
+      "C:R1-2"
+     ],
+     "detail": ""
+    },
+    {
+     "name": "the .modules copy wins over an equal version elsewhere (TempLocalRepoManager comment intent)",
+     "holds": false,
+     "expected": false,
+     "as_expected": true,
+     "ids": [
+      "C:D1"
+     ],
+     "detail": "present version=1.0.0 repo=reg5 desc=from-registry dev=0"
+    },
+    {
+     "name": "an error status means the module was not installed",
+     "holds": false,
+     "expected": false,
+     "as_expected": true,
+     "ids": [
+      "G:D13",
+      "P:F-LOAD-4 family"
+     ],
+     "detail": "TR7 status=ERR present version=1.0.0 repo= desc= dev=0"
+    },
+    {
+     "name": "a cleanup-failure message names a repository that still exists",
+     "holds": false,
+     "expected": false,
+     "as_expected": true,
+     "ids": [
+      "C:D2"
+     ],
+     "detail": "ipm-temp-modules-1"
+    }
+   ],
+   "members": {
+    "General/TempLocalRepoManager.cls::SkipCreate": {
+     "slice": "General/TempLocalRepoManager.cls:33-47",
+     "fn": "skip_create",
+     "behavior": "no temporary repository when another repository already has the .modules root (TR4)",
+     "fn_present": true,
+     "variants_rejected": [
+      "skip-ignores-existing-root",
+      "skip-ignores-missing-dir"
+     ],
+     "credited": true
+    },
+    "General/TempLocalRepoManager.cls::Create": {
+     "slice": "General/TempLocalRepoManager.cls:13-31",
+     "fn": "create",
+     "behavior": "first free ipm-temp-modules-N name; BuildCache failure leaves no row (TR3, TR7)",
+     "fn_present": true,
+     "variants_rejected": [
+      "create-always-first-name"
+     ],
+     "credited": true
+    },
+    "General/TempLocalRepoManager.cls::%OnNew": {
+     "slice": "General/TempLocalRepoManager.cls:49-71",
+     "fn": "on_new",
+     "behavior": "creation failure runs CleanUp and returns an error, so %New yields no object (TR7)",
+     "fn_present": true,
+     "variants_rejected": [
+      "onnew-no-cleanup-in-catch",
+      "onnew-ok-on-failure"
+     ],
+     "credited": true
+    },
+    "General/TempLocalRepoManager.cls::CleanUp": {
+     "slice": "General/TempLocalRepoManager.cls:73-85",
+     "fn": "cleanup",
+     "behavior": "deletes the repository it created; reports a failure for a row already rolled back (TR2, TR7)",
+     "fn_present": true,
+     "variants_rejected": [
+      "cleanup-noop",
+      "cleanup-quiet"
+     ],
+     "credited": true
+    },
+    "Repo/Manager.cls::SearchRepositoriesForModule": {
+     "slice": "Repo/Manager.cls:55-192",
+     "fn": "search",
+     "behavior": "candidates ordered by version descending, then repository ID ascending; first wins (TR5, TR5b, TR5c)",
+     "fn_present": true,
+     "variants_rejected": [
+      "search-tie-by-sortorder",
+      "search-first-repo",
+      "search-lowest-version"
+     ],
+     "credited": true
+    },
+    "Utils/Module.cls::LoadModuleReference": {
+     "slice": "Utils/Module.cls:135-140",
+     "fn": "load_internal",
+     "behavior": "dependency-level temporary repository (useFirst=0); CleanUp on an empty reference fails the dependency inside the parent transaction (Dtxn, Ddev)",
+     "fn_present": true,
+     "variants_rejected": [
+      "lmr-guarded-cleanup",
+      "lmr-failure-keeps-dependency"
+     ],
+     "credited": true
+    },
+    "Main.cls::LoadInternal": {
+     "slice": "Main.cls:2525-2532",
+     "fn": "load_internal",
+     "behavior": "temporary repository around LoadNewModule; unguarded CleanUp after the commit (TR7)",
+     "fn_present": true,
+     "variants_rejected": [
+      "loadinternal-guarded-cleanup",
+      "late-error-rolls-back",
+      "late-error-reports-success"
+     ],
+     "credited": true
+    }
+   },
+   "source_sha256": "bc9547b34a4bce3830ee95d3977cbfb56729be606aab1074096b2292942c33d1"
+  }
+ ]
+}

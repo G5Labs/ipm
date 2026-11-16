@@ -1,0 +1,35 @@
+error: postcondition not satisfied
+   --> .g5/Verus_verification/consolidated/iter17/model-lane/controls/explicit-file-index-ignored.rs:187:2
+    |
+183 | pub proof fn symbolic_order_neighbors(a:int,b:int)
+    | -------------------------------------------------- at the end of the function body
+...
+187 |  file_index(nested_state(a,b),Some(a))==Some(a),
+    |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: postcondition not satisfied
+   --> .g5/Verus_verification/consolidated/iter17/model-lane/controls/explicit-file-index-ignored.rs:197:10
+    |
+197 |  ensures export_file(w,device_index(w))==snapshot(w,device_index(w))
+    |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+198 | {match device_index(w){Some(i)=>{},None=>{}}}
+    |  ------------------------------------------- at the end of the function body
+
+error: postcondition not satisfied
+   --> .g5/Verus_verification/consolidated/iter17/model-lane/controls/explicit-file-index-ignored.rs:226:68
+    |
+224 | pub proof fn nested_identity_neighbors()
+    | ---------------------------------------- at the end of the function body
+225 |  ensures nested().file==Some(Snapshot{id:4,tree:decode(pass_run(true))}),
+226 |  nested().device==Some(Snapshot{id:3,tree:decode(fail_run(true))}),forwarded().file==nested().device,
+    |                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: function body check: Resource limit (rlimit) exceeded; consider rerunning with --profile for more details
+   --> .g5/Verus_verification/consolidated/iter17/model-lane/controls/explicit-file-index-ignored.rs:224:1
+    |
+224 | pub proof fn nested_identity_neighbors()
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+verification results:: 33 verified, 3 errors
+error: aborting due to 4 previous errors
+

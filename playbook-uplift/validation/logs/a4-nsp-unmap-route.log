@@ -1,0 +1,70 @@
+# container: ipm-uplift-iris-nsp  image: containers.intersystems.com/intersystems/iris-community:2026.1  at: 2026-11-13T23:24:47Z
+# script: validation/iris/r4/nsp/a4-nsp-unmap-route.script
+
+Node: 1176f046b99d, Instance: IRIS
+
+USER>
+
+Load of directory started on 11/13/2026 23:24:47
+Loading file /tmp/uplift/r4nsp/Uplift/R4Nsp/Probe.cls as cls
+Imported class: Uplift.R4Nsp.Probe
+Compiling class Uplift.R4Nsp.Probe
+Compiling routine Uplift.R4Nsp.Probe.1
+Load finished successfully.
+
+LOADED 1
+
+USER>
+
+>>> zpm "enable -map -ns NCR4P"
+  | 
+  | Version of IPM in current namespace: 
+  | USER> [32mzpm [0m0.10.11-SNAPSHOT
+  | Mapping %IPM package in USER equivalently to NCR4P
+  | Mapping %IPM.* routines in USER equivalently to NCR4P
+  | Done.
+  | 
+  | [35mNCC> [0m               [32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [35mNCD> [0m               [32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [35mNCFRESH3> [0m          [32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [35mNCX> [0m               [32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [35mUSER> [0m              [32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [35mUSER-VERIFY> [0m       [32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [35m%SYS> [0m              [32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [39mInstalled In: [0mUSER-VERIFY 
+  | [35mNCA> [0m               [32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [39mInstalled In: [0mUSER-VERIFY 
+  | [35mNCB> [0m               [32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [39mInstalled In: [0mUSER-VERIFY 
+  | [35mNCE> [0m               [32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [39mInstalled In: [0mUSER-VERIFY 
+  | [35mNCM1> [0m              [32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [39mInstalled In: [0mUSER-VERIFY 
+  | [35mNCM2> [0m              [32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [39mInstalled In: [0mUSER-VERIFY 
+  | [35mNCM3> [0m              [32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [39mInstalled In: [0mUSER-VERIFY 
+  | [35mNCM4> [0m              [32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [39mInstalled In: [0mUSER-VERIFY 
+  | [35mNCM5> [0m              [32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [39mInstalled In: [0mUSER-VERIFY 
+  | [35mNCM6> [0m              [32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [39mInstalled In: [0mUSER-VERIFY 
+  | [35mNCR4P> [0m             [32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [39mInstalled In: [0mUSER-VERIFY 
+  | [35mNCT> [0m               [32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [39mInstalled In: [0mUSER-VERIFY 
+  | [35mUSER-VERIFY-VERIFY> [0m[32mzpm[0m [39m0.10.11-SNAPSHOT[0m
+  | [39mInstalled In: [0mUSER-VERIFY 
+<<< status OK
+
+>>> zpm "unmap -ns NCR4P"
+  | 
+  | Will attempt to unmap IPM package, routines, and repository settings from: NCR4P
+  | Unmapping repository settings from NCR4P (mapped from USER-VERIFY)
+  | Unmapping IPM package and routines from NCR4P (mapped from USER-VERIFY)
+<<< status OK
+
+OBS|r4-nsp-unmap-then-install-guard|cleanup=ok;enableStatus=ok;guardAfterUnmap=err:ERROR #5001: Cannot install 'zpm' in namespace 'NCR4P' because it is mapped from namespace 'USER-VERIFY'.;guardCallable=1;hasIPMAfterUnmap=1;mapsAfterCleanup=pkg:- rtn:- repoD:-;mapsAfterEnable=pkg:USER rtn:USER repoD:-;mapsAfterUnmap=pkg:- rtn:USER repoD:-;mk=ok;unmapStatus=ok;
+
+USER>

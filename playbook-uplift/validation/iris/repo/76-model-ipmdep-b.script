@@ -1,0 +1,5 @@
+do $System.OBJ.Load("/home/irisowner/zpm/preload/cls/IPM/Installer.cls","ck")
+set sc=##class(IPM.Installer).setup("/home/irisowner/zpm/",3) write !,"SETUP ",$system.Status.IsOK(sc),!
+set sc=$system.OBJ.LoadDir("/tmp/uplift/repo/cls/","ck-d",.err,1) write !,"LOAD ",$system.Status.IsOK(sc)," ",$system.Status.GetErrorText(sc),!
+do ##class(Uplift.Repo.Model).IpmDepAfterReinstall()
+halt

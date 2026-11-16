@@ -1,0 +1,250 @@
+{
+  "created_utc": "2026-11-14T15:26:17.373809+00:00",
+  "method": "Only question columns were read before answers. Answers use current canonical I/D/Q rules and their named child links; no original scores/reasons used. Model-layer questions deliberately require actual model evidence rather than inferring proof from ontology.",
+  "ontology_sha256": {
+    ".g5/ontology/root.g5.md": "b08126754ea0bf7c30f534255eb3aafc1617b5007b03651a41e8955be276a26b",
+    ".g5/ontology/features/install.g5.md": "6843fcd94725e6951a180833bf5af347cec74f4515173c16a37530734fd232a8",
+    ".g5/ontology/features/developer-tools.g5.md": "a1f04d8f2a23100f0add6282103ebf8d1c924b41bda2f6a1606b61a15992b08e",
+    ".g5/ontology/features/build-and-publish.g5.md": "abc43d85dc3dd63cbe5c2f4376a6b99f3bbb0550bc6f54784f4c60b081095e09",
+    ".g5/ontology/features/dependencies.g5.md": "f30f9fc2d87b8f6dc910bd3e0f975e17177a5027a6948e8c2bcf483b47f78062",
+    ".g5/ontology/features/update.g5.md": "4f5eaac15ba36a09f7f273ee6ccb5d95256ed45878042f007fc9b7690a00fe11",
+    ".g5/ontology/features/ipm-setup.g5.md": "3461b079eda494765467a6a31797322753a503b288e7350ba2b30c8f9e9e6acb",
+    ".g5/ontology/features/history.g5.md": "fc76a8eefc7dbc86844c039928b0fd2748c75689d633207c312638ed967ec1f5",
+    ".g5/ontology/features/inspection.g5.md": "3e25f3ea4fc152b82683c6ac5ec3430a5f56b9348f21fa153b9836343f4f2ffc",
+    ".g5/ontology/features/uninstall.g5.md": "ca02dc9f800144aa2c5de337daf526db89bdb7fa075b7347d7d1eeabf3860fe6",
+    ".g5/ontology/features/load.g5.md": "8ea08a779771cb6a5d3dacbd3dcb20659227494f31c999b229f248d24a8560e5",
+    ".g5/ontology/concepts/namespaces.g5.md": "5d8ca12b3a216923852421580dd06dad0f521cf5d760d205104e1e2c4cd56787",
+    ".g5/ontology/concepts/repositories.g5.md": "e2af565e60c300b0a5c6320dad17ba77ae0762e00f577ed3ee6cb523560d0290",
+    ".g5/ontology/concepts/versions.g5.md": "ff3e5842e7e915101aff8c98bfceecc9450477df9b57fe037934c815b5f37d3a",
+    ".g5/ontology/concepts/modules.g5.md": "787fc4e306f0518d0a1d2eb741a0e667e02eb7f50d29ff39ebb7c2a5fa1a8f48",
+    ".g5/ontology/concepts/lifecycle.g5.md": "4bca36c5b96b24ed2046679ba8129b27fea733c9f4ad2ee50e683af876088c90",
+    ".g5/ontology/concepts/settings.g5.md": "41ff8b1979c16b1232a09e0eeb91f7e7ce7ed18bb03f73ac9bef153c129d8662",
+    ".g5/ontology/concepts/transactions-and-dev-mode.g5.md": "ca6dd80195cdfc577e4466a021973cbafd1a9c1d528203f6f8b4b0a6abbe7183"
+  },
+  "answers": [
+    {
+      "id": "L2",
+      "layer": "Ontology",
+      "question": "Can we distinguish the child\u2019s own success, its data and its missing audit row?",
+      "owning_ids": [
+        "history.dependencies.parent-rollback",
+        "history.survives-rollback",
+        "history.committed"
+      ],
+      "answer_from_canonical_rules": "The intended child record survives, keeps child Success provisionally and reads uncommitted when parent undoes it. Missing native audit row is not stated beside these rules; one needs metadata to know the as-built defect.",
+      "assessment": "partial"
+    },
+    {
+      "id": "L3",
+      "layer": "Ontology",
+      "question": "Is loss on caller rollback a product fact or an approved policy?",
+      "owning_ids": [
+        "history.committed.nested"
+      ],
+      "answer_from_canonical_rules": "Caller rollback policy is explicitly provisional with alternatives; it is not owner-approved policy. The as-built lost-row observation is not stated in the Q itself.",
+      "assessment": "partial"
+    },
+    {
+      "id": "L4",
+      "layer": "Model",
+      "question": "Can the model distinguish two child modes under the same parent?",
+      "owning_ids": [
+        "transaction.flag-sources.dependency-defaults",
+        "transaction.flag-sources.dependency-no-transaction"
+      ],
+      "answer_from_canonical_rules": "Ontology distinguishes child flags and normal parent behavior but cannot establish a Verus model input or theorem domain.",
+      "assessment": "model-evidence-required"
+    },
+    {
+      "id": "L5",
+      "layer": "Model",
+      "question": "Does the surviving write set follow the position of a process cut?",
+      "owning_ids": [
+        "load.outcome",
+        "load.outcome.dev"
+      ],
+      "answer_from_canonical_rules": "Rule distinguishes mode and developer commit stage, but exact process cut write prefix and journal mode sequence require an actual model symbol.",
+      "assessment": "model-evidence-required"
+    },
+    {
+      "id": "L7",
+      "layer": "Ontology",
+      "question": "Is the late failure visible beside the normal rollback rule?",
+      "owning_ids": [
+        "load.status.after-commit",
+        "load.outcome"
+      ],
+      "answer_from_canonical_rules": "Owning late-status rule says postcommit cleanup/message/history failure may report error while load is kept, but normal rollback table does not link the exception beside its row.",
+      "assessment": "partial"
+    },
+    {
+      "id": "L7",
+      "layer": "Model",
+      "question": "Is the error outcome reachable after a successful final commit?",
+      "owning_ids": [
+        "load.status.after-commit"
+      ],
+      "answer_from_canonical_rules": "Owning rule describes late failure but does not establish reachability in formal state machine.",
+      "assessment": "model-evidence-required"
+    },
+    {
+      "id": "L8",
+      "layer": "Model",
+      "question": "Does a whole-instance restart get its own persistence semantics?",
+      "owning_ids": [
+        "history.record",
+        "history.survives-rollback.temp-copy"
+      ],
+      "answer_from_canonical_rules": "IRISTEMP and end copy stated; whole-instance restart semantics are not expressed by a dedicated owning case. Model evidence required.",
+      "assessment": "model-evidence-required"
+    },
+    {
+      "id": "L9",
+      "layer": "Model",
+      "question": "Would a plausible, wrong history-filter parser pass the same tests?",
+      "owning_ids": [
+        "history.read.filter.invalid-column"
+      ],
+      "answer_from_canonical_rules": "Required filters and unknown-column uncertainty are stated. A parser mutant outcome cannot be established from ontology prose.",
+      "assessment": "model-evidence-required"
+    },
+    {
+      "id": "L12",
+      "layer": "Ontology",
+      "question": "Does a permitted delete always win against an in-progress writer?",
+      "owning_ids": [
+        "history.delete.running-records"
+      ],
+      "answer_from_canonical_rules": "No: Q explicitly allows deletion and normal completion whether or not record returns. It leaves final-writer/delete outcome unresolved.",
+      "assessment": "sufficient-open-question"
+    },
+    {
+      "id": "L13",
+      "layer": "Ontology",
+      "question": "What does the history bit promise about files?",
+      "owning_ids": [
+        "history.committed.side-effects",
+        "transaction.rollback-scope"
+      ],
+      "answer_from_canonical_rules": "Open policy with working assumption DB-only; filesystem effects can survive independently. It does not promise all files restored or Committed bit accounts for them.",
+      "assessment": "sufficient-open-question"
+    },
+    {
+      "id": "B2",
+      "layer": "Model",
+      "question": "Does rejecting a graph prove there is no legal version assignment?",
+      "owning_ids": [
+        "deps.conflict",
+        "version.range.combine"
+      ],
+      "answer_from_canonical_rules": "Intended conflict means no common satisfying version, but ordering defect is explicit in version.range.combine. This does not establish completeness of formal graph rejection.",
+      "assessment": "model-evidence-required"
+    },
+    {
+      "id": "B5",
+      "layer": "Model",
+      "question": "Can one namespace verify isolation between two namespaces?",
+      "owning_ids": [
+        "history.namespace"
+      ],
+      "answer_from_canonical_rules": "IDs scoped per namespace and separate logs are stated; one namespace model cannot establish a two-namespace comparison.",
+      "assessment": "model-evidence-required"
+    },
+    {
+      "id": "B7",
+      "layer": "Ontology",
+      "question": "Can the retry obligation be applied after an exact-byte revert?",
+      "owning_ids": [
+        "devtools.sync.retry"
+      ],
+      "answer_from_canonical_rules": "Rule says failed sync is retried but omits the exact-byte-revert exception/observed defect. A reader cannot predict this case from rule alone.",
+      "assessment": "missing-condition"
+    },
+    {
+      "id": "L1",
+      "layer": "Model",
+      "question": "Does the first developer commit change the outcome of a later failure?",
+      "owning_ids": [
+        "load.outcome.dev",
+        "load.outcome.dev.early-failure"
+      ],
+      "answer_from_canonical_rules": "Rules distinguish before versus after first developer commit; proof of actual represented transition needs formal model.",
+      "assessment": "model-evidence-required"
+    },
+    {
+      "id": "L3",
+      "layer": "Model",
+      "question": "Do we distinguish the caller\u2019s later rollback from the action\u2019s own successful return?",
+      "owning_ids": [
+        "history.committed.nested"
+      ],
+      "answer_from_canonical_rules": "Caller later rollback explicitly differs from command return; formal caller state and outcome proof not established by prose.",
+      "assessment": "model-evidence-required"
+    },
+    {
+      "id": "L6",
+      "layer": "Model",
+      "question": "Does a claim about prior versions and dependency count match its quantified domain?",
+      "owning_ids": [
+        "load.core",
+        "load.outcome"
+      ],
+      "answer_from_canonical_rules": "No bound on dependency count or prior namespaces appears in operator rule; actual model theorem quantified domain must be read.",
+      "assessment": "model-evidence-required"
+    },
+    {
+      "id": "B6",
+      "layer": "Ontology",
+      "question": "Is the difference between an ordinary load and the Test phase explicit?",
+      "owning_ids": [
+        "build.test",
+        "module.resource.scope",
+        "deps"
+      ],
+      "answer_from_canonical_rules": "Test-scoped resources/dependencies run only in Test, distinct from ordinary load phases.",
+      "assessment": "sufficient"
+    },
+    {
+      "id": "L4",
+      "layer": "Ontology",
+      "question": "Does \u201cnormal load rolls back its dependencies\u201d distinguish child defaults from parent flags?",
+      "owning_ids": [
+        "load.outcome",
+        "transaction.flag-sources.dependency-defaults",
+        "transaction.flag-sources.dependency-no-transaction"
+      ],
+      "answer_from_canonical_rules": "Yes: load.outcome links both child-default questions. Child NoJournal escapes parent journal rollback as working assumption; NoTransaction suppression is separate policy uncertainty.",
+      "assessment": "sufficient-open-question"
+    },
+    {
+      "id": "L9",
+      "layer": "Ontology",
+      "question": "Will a reader know that the order of filter keys can change which records are deleted?",
+      "owning_ids": [
+        "history.read.filter",
+        "history.read.filter.invalid-column"
+      ],
+      "answer_from_canonical_rules": "No rule states lexicographic traversal stops at first invalid key, so valid keys before/after it have different effects. User cannot infer filter order deletion from owning statement.",
+      "assessment": "missing-condition"
+    },
+    {
+      "id": "L11",
+      "layer": "Ontology",
+      "question": "Are the global CLI view and programmatic query identified separately?",
+      "owning_ids": [
+        "history.read.global",
+        "history.read.api"
+      ],
+      "answer_from_canonical_rules": "CLI globally and programmatic GlobalRecords are named separately, but differing namespace selection/limits/row shape semantics are not stated in owning rules.",
+      "assessment": "partial"
+    }
+  ],
+  "summary": {
+    "ontology_rows": 10,
+    "model_rows": 10,
+    "ontology_sufficient_or_explicitly_open": 4,
+    "ontology_partial": 4,
+    "ontology_missing_condition": 2,
+    "model_rows_requiring_actual_model": 10
+  }
+}

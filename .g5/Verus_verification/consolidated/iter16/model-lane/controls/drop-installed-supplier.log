@@ -1,0 +1,36 @@
+error: postcondition not satisfied
+   --> .g5/Verus_verification/consolidated/iter16/model-lane/controls/drop-installed-supplier.rs:167:3
+    |
+164 | pub proof fn successful_install_binds_receipt(w:World,r:Request)
+    | ---------------------------------------------------------------- at the end of the function body
+...
+167 |   supplier(install(w,r).world)==r.repository,
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+note: function body check: not all errors may have been reported; rerun with a higher value for --multiple-errors to find other potential errors in this function
+   --> .g5/Verus_verification/consolidated/iter16/model-lane/controls/drop-installed-supplier.rs:180:1
+    |
+180 | pub proof fn ordinary_neighbors()
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: postcondition not satisfied
+   --> .g5/Verus_verification/consolidated/iter16/model-lane/controls/drop-installed-supplier.rs:182:24
+    |
+180 | pub proof fn ordinary_neighbors()
+    | --------------------------------- at the end of the function body
+181 |  ensures install(initial(),request(alpha())).ok,install(initial(),request(beta())).ok,
+182 |  payload(after_a())==1,supplier(after_a())==alpha(),installed_root(after_a())==Some(Root::A),
+    |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: postcondition not satisfied
+   --> .g5/Verus_verification/consolidated/iter16/model-lane/controls/drop-installed-supplier.rs:183:2
+    |
+180 | pub proof fn ordinary_neighbors()
+    | --------------------------------- at the end of the function body
+...
+183 |  show_repository(after_a())==Some(alpha()),listed_for_repository(after_a(),alpha()),!listed_for_repository(after_a(),beta()),
+    |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+verification results:: 21 verified, 2 errors
+error: aborting due to 3 previous errors
+

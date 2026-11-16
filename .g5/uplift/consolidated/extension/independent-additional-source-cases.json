@@ -1,0 +1,39 @@
+{
+  "created_utc": "2026-11-14T15:20:24.863660+00:00",
+  "before_native": true,
+  "source_sha256": {
+    "src/cls/IPM/ResourceProcessor/Test.cls": "2d87e35639f574775d4ef5cce91439a1c505eb9b76c6df0b1a40f2158f60efe1",
+    "src/cls/IPM/Repo/Oras/PackageService.cls": "cc5d1aa4ed289c786304cbc68e0c0e4542beb343a34d1cd930a491dc817802bc"
+  },
+  "cases": [
+    {
+      "id": "HELD-ORAS-CHALLENGE",
+      "inputs": [
+        200,
+        "401+WWW-Authenticate",
+        "401-without-header",
+        403
+      ],
+      "prediction": [
+        true,
+        true,
+        false,
+        false
+      ],
+      "source": "Repo.Oras.PackageService.IsAvailable",
+      "premise": "HTTP request succeeds, URL has no path; adapter availability is not authentication or package pull success"
+    },
+    {
+      "id": "HELD-REPORT-COMPOSE",
+      "inputs": [
+        "outputfile .json plus unknown summary format"
+      ],
+      "prediction": {
+        "status": "ERR",
+        "json_file": true
+      },
+      "source": "ResourceProcessor.Test.ReportTestResults",
+      "premise": "JsonOutput.ToFile succeeds; file output occurs before summary format validity check"
+    }
+  ]
+}

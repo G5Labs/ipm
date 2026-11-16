@@ -1,0 +1,3 @@
+zn "NCMAP"
+set rows=0,id="" for { set id=$order(^IPM.Repo.DefinitionD(id)) quit:id=""  set rows=rows+1 } write !,"OBS|r4-repo-u21-tidy-ncmap|repoRows=",rows,";before=",$data(^IPM.Repo.DefinitionD),"/",$data(^IPM.Repo.Filesystem.CacheD),"/",$data(^IPM.Repo.Filesystem.CacheI),"/",$data(^IPM.Repo.Filesystem.CacheS),";" if rows=0 { kill ^IPM.Repo.DefinitionD,^IPM.Repo.DefinitionI,^IPM.Repo.Filesystem.CacheD,^IPM.Repo.Filesystem.CacheI,^IPM.Repo.Filesystem.CacheS } write "after=",$data(^IPM.Repo.DefinitionD),"/",$data(^IPM.Repo.Filesystem.CacheD),"/",$data(^IPM.Repo.Filesystem.CacheI),"/",$data(^IPM.Repo.Filesystem.CacheS),";listOK=",$system.Status.IsOK(##class(%IPM.Main).Shell("list")),";",!
+halt

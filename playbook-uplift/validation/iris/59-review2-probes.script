@@ -1,0 +1,17 @@
+do ##class(Uplift.Probe.Scenario).Reset()
+do ##class(%IPM.Main).Shell("load /home/irisowner/zpm/tests/integration_tests/Test/PM/Integration/_data/simplest-module/1.0.0/")
+set before=##class(%SQL.Statement).%ExecDirect(,"SELECT COUNT(*) AS n FROM %IPM_General.History") do before.%Next() set nb=before.%Get("n")
+set sc=##class(%IPM.Main).Shell("history delete")
+set after=##class(%SQL.Statement).%ExecDirect(,"SELECT COUNT(*) AS n FROM %IPM_General.History") do after.%Next() set na=after.%Get("n")
+write !,"OBS|ipm-history-delete-needs-confirm|status=",$select($system.Status.IsOK(sc):"ok",1:"err"),";error=",$translate($extract($system.Status.GetErrorText(sc),1,120),";|=",",/:"),";rowsBefore=",nb,";rowsAfter=",na,";",!
+do ##class(Uplift.Probe.Scenario).Reset()
+kill ^UpliftCaller
+tstart
+set ^UpliftCaller="caller-write-before-load"
+set sc=##class(%IPM.Main).Shell("load /tmp/uplift/fixtures/up-res-fail/")
+set tlAfter=$tlevel, kept=$get(^UpliftCaller)
+tcommit
+write !,"OBS|ipm-load-keeps-caller-work|loadStatus=",$select($system.Status.IsOK(sc):"ok",1:"err"),";tlevelAfterLoad=",tlAfter,";callerWriteAfterLoad=",kept,";callerWriteAfterCommit=",$get(^UpliftCaller),";modInstalled=",##class(%IPM.Storage.Module).NameExists("up-res-fail"),";",!
+kill ^UpliftCaller
+do ##class(Uplift.Probe.Scenario).Reset()
+halt

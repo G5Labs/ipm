@@ -1,0 +1,35 @@
+set p("NameSpace")="USER"
+write ##class(Security.Applications).Create("/iter7probe",.p),!
+kill p set p("MatchRoles")=":ITER7-ABSENT-ROLE"
+set sc=##class(Security.Applications).Modify("/iter7probe",.p) write "MATCH|",$system.Status.GetErrorText(sc),!
+kill p set p("Timeout")="not-a-number"
+set sc=##class(Security.Applications).Modify("/iter7probe",.p) write "TIMEOUT|",$system.Status.GetErrorText(sc),!
+kill p set p("AutheEnabled")="not-a-number"
+set sc=##class(Security.Applications).Modify("/iter7probe",.p) write "AUTH|",$system.Status.GetErrorText(sc),!
+halt
+
+
+Node: cc704995cecc, Instance: IRIS
+
+%SYS>
+
+%SYS>
+1
+
+%SYS>
+
+%SYS>
+MATCH|ERROR #879: Target role ITER7-ABSENT-ROLE does not exist.
+
+%SYS>
+
+%SYS>
+TIMEOUT|ERROR #7207: Datatype value 'not-a-number' is not a valid number
+  > ERROR #5802: Datatype validation failed on property 'Security.Applications:Timeout', with value equal to "not-a-number"
+
+%SYS>
+
+%SYS>
+AUTH|
+
+%SYS>

@@ -1,0 +1,2212 @@
+
+General/Archive.cls::Extract src/cls/IPM/General/Archive.cls:38-75
+ClassMethod Extract(
+	pArchiveFileName As %String,
+	pTargetDirectory As %String,
+	Output pOutput) As %Status
+{
+    set tSC = $$$OK
+    try {
+        kill pOutput
+        set pOutput = 0
+        if ($get(pArchiveFileName) = "") {
+            set tSC = $$$ERROR($$$GeneralError,"Archive filename not specified.")
+            quit
+        }
+        if ($get(pTargetDirectory) = "") {
+            set tSC = $$$ERROR($$$GeneralError,"Target directory not specified.")
+            quit
+        }
+        if '##class(%File).DirectoryExists(pTargetDirectory) {
+            set tSC = ##class(%IPM.Utils.File).CreateDirectoryChain(pTargetDirectory)
+            if $$$ISERR(tSC) {
+                quit
+            }
+        }
+        if $isobject(pArchiveFileName),pArchiveFileName.%IsA("%Stream.Object") {
+            set tStream = ##class(%Stream.FileBinary).%New()
+            set tStream.Filename = ##class(%File).TempFilename("tgz")
+            do tStream.CopyFromAndSave(pArchiveFileName)
+            set tStream2 = ##class(%Stream.FileBinaryGzip).%New()
+            set tStream2.Filename = tStream.Filename
+            set extracted = ##class(%IPM.Utils.FileBinaryTar).ExtractStream(tStream2, pTargetDirectory)
+        } else {
+            set extracted = ##class(%IPM.Utils.FileBinaryTar).ExtractFile(pArchiveFileName, 1, pTargetDirectory)
+        }
+    } catch e {
+        set tSC = e.AsStatus()
+    }
+    quit tSC
+}
+
+Lifecycle/Base.cls::%Export src/cls/IPM/Lifecycle/Base.cls:1283-1408
+Method %Export(
+	ByRef pParams,
+	ByRef pTargetDirectory As %String,
+	Output pDependencyGraph) As %Status
+{
+    set tSC = $$$OK
+    try {
+        set tVerbose = $get(pParams("Verbose"))
+        merge tParams = pParams
+
+        kill pDependencyGraph
+        if ($get(pTargetDirectory) = "") {
+            set pTargetDirectory = $$$lcase(..Module.Name_"-"_..Module.VersionString)
+            set pTargetDirectory = ##class(%File).NormalizeDirectory(pTargetDirectory, ##class(%IPM.Utils.File).CreateTempDirectory(##class(%SYS.System).TempDirectory()))
+        }
+
+        if '##class(%File).DirectoryExists(pTargetDirectory) {
+            set tSC = ##class(%IPM.Utils.File).CreateDirectoryChain(pTargetDirectory)
+            if $$$ISERR(tSC) {
+                quit
+            }
+        }
+
+        set tExportDependencies = $get(pParams("ExportDependencies"), ..#EXPORTDEPENDENCIES)
+        set phaseList = ..PhaseList
+        if $get(pParams("IncludeTests"), ..Module.IncludeTests) {
+            if '$listfind(phaseList, "Test") {
+                set phaseList = phaseList_$listbuild("Test")
+            }
+            if '$listfind(phaseList, "Verify") {
+                set phaseList = phaseList_$listbuild("Verify")
+            }
+        }
+        set tSC = ..Module.GetResolvedReferences(.tResourceArray, tExportDependencies, phaseList, .pDependencyGraph)
+        if $$$ISERR(tSC) {
+            quit
+        }
+
+        // First pass: if we're exporting dependencies, build an array of modules from which we are deriving things.
+        if tExportDependencies {
+            set tModuleName = ""
+            for {
+                set tModuleName = $order(tResourceArray(tModuleName))
+                quit:(tModuleName="")
+                set tFullResourceName = ""
+                for {
+                    set tFullResourceName = $order(tResourceArray(tModuleName, tFullResourceName))
+                    quit:(tFullResourceName="")
+
+                    set tExt = $piece(tFullResourceName,".",*)
+                    set tName = $piece(tFullResourceName,".",1,*-1)
+                    if ($$$ucase(tExt) = "ZPM") {
+                        if (tName '= ..Module.Name) {
+                            set pDependencyGraph(tName,"Location") = ".modules/m"_$increment(dependencyCount)_"/"
+                        }
+                    }
+                }
+            }
+        }
+
+        set tModuleName = ""
+        set exportPythonDependencies = $get(pParams("ExportPythonDependencies"), 0)
+        for {
+            set tModuleName = $order(tResourceArray(tModuleName))
+            if (tModuleName = "") {
+                quit
+            }
+            if exportPythonDependencies {
+                set tModule = ##class(%IPM.Storage.Module).NameOpen(tModuleName)
+                do ..ExportPythonDependencies(tModule, .pParams)
+                // Recalculate resource array to pick up any python dependencies added during export
+                $$$ThrowOnError(..Module.GetResolvedReferences(.tResourceArray,tExportDependencies,phaseList,.pDependencyGraph))
+            }
+            kill tSingleModuleArray
+            merge tSingleModuleArray = tResourceArray(tModuleName)
+
+            // Deployed items for each module + dependency should be exported as a studio project to a designated directory
+            set tDeployedProjectName = ##class(%IPM.Utils.Module).GetDeployedProjectName(tModuleName)
+            set tDeployedProject = ##class(%Studio.Project).%OpenId(tDeployedProjectName)
+            if '$isobject(tDeployedProject) {
+                set tDeployedProject = ##class(%Studio.Project).%New()
+                set tDeployedProject.Name = tDeployedProjectName
+            }
+            do tDeployedProject.Items.Clear()
+            set tParams($$$DeployedProjectIndex) = tDeployedProject
+
+            do ..ExportSingleModule(.tSingleModuleArray, pTargetDirectory, .pDependencyGraph, .tParams, tVerbose)
+
+            // Validate the deployed project once, now that all its items have been added
+            // (%IPM.ResourceProcessor.Default.Document skips the per-item check for this reason).
+            $$$ThrowOnError(tDeployedProject.Check())
+
+            // Export the deployed project for this module to the target directory, if it's non-empty
+            if tDeployedProject.Items.Count() > 0 {
+                // Intentionally not calling .%Save() on the project; we don't want to persist it.
+                set tDeployTargetDirectory = pTargetDirectory _ $get(pDependencyGraph(tModuleName, "Location"))
+                set tDeployedProjectPath = ##class(%IPM.Utils.Module).GetDeployedProjectPath(tDeployTargetDirectory)
+                $$$ThrowOnError(tDeployedProject.DeployToFile(tDeployedProjectPath, $select(tVerbose:"d",1:"-d")_"/createdirs"))
+            }
+        }
+
+        /// Always keep these files
+        set staticFiles = $listbuild(
+            "readme.md",
+            "changelog.md",
+            "license",
+            "requirements.txt",
+        )
+        set tRes = ##class(%File).FileSetFunc(..Module.Root)
+        while tRes.%Next() {
+            continue:tRes.Type'="F"
+            continue:'$listfind(staticFiles,$$$LOWER(tRes.ItemName))
+            set tSourcePath = tRes.Name
+            set tExportPath = ##class(%File).NormalizeFilename(tRes.ItemName, pTargetDirectory)
+            set tGood = ##class(%File).CopyFile(tSourcePath, tExportPath,1,.tReturn)
+            if 'tGood {
+                set tSC = $$$ERROR($$$GeneralError,$$$FormatText("Error copying file '%1' to '%2': %3",tSourcePath,tExportPath,tReturn))
+                quit
+            }
+            write:tVerbose !,tSourcePath," -> ",tExportPath
+        }
+    } catch e {
+        set tSC = e.AsStatus()
+    }
+    quit tSC
+}
+
+Lifecycle/Base.cls::%MakeDeployed src/cls/IPM/Lifecycle/Base.cls:1825-1921
+Method %MakeDeployed(ByRef pParams) As %Status
+{
+    set tSC = $$$OK
+    try {
+        set tDev = ..Module.DeveloperMode
+        set tVerbose = $get(pParams("Verbose"))
+
+        // If the recurse parameter is set, then this lifecycle method should recursively deploy all of the
+        // module's dependencies marked for deployment
+        set tLockedDependencies = $get(pParams("Recurse"),0) // Indicates whether entire dependency graph should be traversed and deployed
+
+        if tDev && tVerbose {
+            write !,"Module is in developer mode; will only report what WOULD be deployed unless packaging, in which case items WILL be deployed."
+        }
+
+        // Default implementation: see which resources are expicitly flagged with Deploy = true.
+        // Build an array of those, then mark them as deployed.
+        $$$ThrowOnError(..Module.GetResolvedReferences(.tResourceArray,tLockedDependencies,..PhaseList,.pDependencyGraph))
+
+        set tModuleKey = ""
+        for {
+            set tModuleKey = $order(tResourceArray(tModuleKey))
+            quit:(tModuleKey="")
+            set tResourceKey = ""
+            for {
+                set tResourceKey = $order(tResourceArray(tModuleKey, tResourceKey))
+                quit:(tResourceKey="")
+
+                // Skip file resources - these are handled separately;
+                // "deployment" is the responsibility of resource processor classes.
+                if ($extract(tResourceKey) = "/") {
+                    continue
+                }
+
+                kill tResourceInfo
+                merge tResourceInfo = tResourceArray(tModuleKey, tResourceKey)
+                // TODO: Refactor tResourceInfo to be an object.
+                set tResourceInfo("Name") = tResourceKey
+                set tSC = ..OnDetermineResourceDeployability(.pParams,.tResourceInfo,.tDeploy)
+                $$$ThrowOnError(tSC)
+
+                // Where deployment means something for another type, its resource processor
+                // handles it in OnBeforePhase/OnAfterPhase.
+                set tExt = $$$ucase($piece(tResourceKey,".",*))
+                if tDeploy && ##class(%IPM.Utils.Module).IsDeployableType(tExt) {
+                    if (tExt = "CLS") {
+                        set tDeployClassArray($piece(tResourceKey,".",1,*-1)) = ""
+                    } else {
+                        set tDeployRtnArray(tResourceKey) = ""
+                    }
+                }
+            }
+        }
+        if ($data(tDeployRtnArray) || $data(tDeployClassArray)) {
+            set ..HasDeployedResources = 1
+            set ..Module.Deployed = 1
+            if '$isobject(..Module.SystemRequirements) {
+                set ..Module.SystemRequirements = ##class(%IPM.Storage.SystemRequirements).%New()
+            }
+            set ..Module.SystemRequirements.VersionString = $$$CurrentPlatformVersion
+            $$$ThrowOnError(..Module.%Save())
+            if $data(tDeployClassArray) {
+                if (tVerbose) {
+                    set tClass = ""
+                    write !,"The following classes are flagged for deployment:"
+                    for {
+                        set tClass = $order(tDeployClassArray(tClass))
+                        quit:tClass=""
+                        write !,$char(9),tClass
+                    }
+                }
+                $$$ThrowOnError($system.OBJ.MakeClassDeployed(.tDeployClassArray))
+            }
+            if $data(tDeployRtnArray) {
+                if (tVerbose) {
+                    write !,"The following routines are flagged for deployment:"
+                }
+                set tRtn = ""
+                for {
+                    set tRtn = $order(tDeployRtnArray(tRtn))
+                    quit:tRtn=""
+                    if tVerbose {
+                        write !,$char(9),tRtn
+                    }
+                    if 'tDev {
+                        $$$ThrowOnError(##class(%Routine).Delete(tRtn,2))
+                    }
+                }
+            }
+        } elseif tVerbose {
+            write !,"No routines or classes to deploy."
+        }
+    } catch e {
+        set tSC = e.AsStatus()
+    }
+    quit tSC
+}
+
+Lifecycle/Base.cls::ExportSingleModule src/cls/IPM/Lifecycle/Base.cls:2030-2145
+Method ExportSingleModule(
+	ByRef pResourceArray,
+	ByRef pTargetDirectory As %String,
+	ByRef pDependencyGraph,
+	ByRef pParams,
+	pVerbose As %Boolean = 0)
+{
+    merge tParams = pParams
+    set exportPythonDependencies = $get(tParams("ExportPythonDependencies"), 0)
+
+    set tFullResourceName = ""
+    for {
+        set tFullResourceName = $order(pResourceArray(tFullResourceName),1,tSrcModule)
+        if (tFullResourceName = "") {
+            quit
+        }
+
+        if $get(pResourceArray(tFullResourceName,"Generated")) continue
+
+        set tName = $piece(tFullResourceName,".",1,*-1)
+        set tExt = $piece(tFullResourceName,".",*)
+        if '$data(pResourceArray(tFullResourceName,"RelativePath"),tRelativePath) {
+            set tRelativePath = ..GetResourceRelativePath(tName,tExt)
+        }
+
+        // Set full path for exporting module.xml
+        if (tExt = "ZPM") && (tName '= ..Module.Name) {
+            set tRelativePath = pDependencyGraph(tName,"Location")_tRelativePath
+        } elseif (tSrcModule '= "") && (tSrcModule '= ..Module.Name) {
+            set tRelativePath = pDependencyGraph(tSrcModule,"Location")_tRelativePath
+        }
+        set tFullPath = ##class(%File).NormalizeFilename(pTargetDirectory_tRelativePath)
+        set tFullPath = ##class(%File).NormalizeFilenameWithSpaces(tFullPath)
+
+        // Set path for exporting resource
+        if ($extract(tName_tExt) = "/") {
+            set tRelativePath = tFullResourceName
+        }
+        set tNode = tSrcModule
+        if (tExt = "ZPM") {
+            set tNode = tName
+        }
+        set pParams("ModuleExportPath") = pTargetDirectory_$get(pDependencyGraph(tNode, "Location"))_tRelativePath
+
+        #dim tProcessor As %IPM.ResourceProcessor.Abstract
+        if $data(pResourceArray(tFullResourceName,"Processor"),tProcessor) && $isobject(tProcessor) {
+            // If this is a python resource but -export-python-deps was not specified, skip this resource
+            if 'exportPythonDependencies && (tProcessor.%ClassName(1) = "%IPM.ResourceProcessor.PythonWheel") continue
+            kill tItemParams
+            merge tItemParams = pResourceArray(tFullResourceName)
+            set tItemHandled = 0
+            set tSC = tProcessor.OnExportItem(tFullPath,tFullResourceName,.tItemParams,.pParams,.tItemHandled)
+            $$$ThrowOnError(tSC)
+            if tItemHandled {
+                continue
+            }
+        }
+        if ($extract(tFullResourceName) = "/") {
+            // Resources with paths are relative to the module root and are simply copied to the export directory.
+            set tModule = ##class(%IPM.Storage.Module).NameOpen(tSrcModule,,.tSC)
+            $$$ThrowOnError(tSC)
+
+            if (tModule.Root = "") {
+                set tSC = $$$ERROR($$$GeneralError,$$$FormatText("No module root configured for '%1'",tSrcModule))
+                $$$ThrowOnError(tSC)
+            }
+
+            if '##class(%File).DirectoryExists(tModule.Root) {
+                set tSC = $$$ERROR($$$GeneralError,$$$FormatText("Directory %2, listed as root for module '%1', does not exist.",tSrcModule,tModule.Root))
+                $$$ThrowOnError(tSC)
+            }
+
+            set tSourcePath = ##class(%File).NormalizeFilename(tModule.Root_tFullResourceName)
+            set tSourcePath = ##class(%File).NormalizeFilenameWithSpaces(tSourcePath)
+            set tExportPath = ##class(%File).NormalizeFilename(tFullPath_tFullResourceName)
+            set tExportPath = ##class(%File).NormalizeFilenameWithSpaces(tExportPath)
+            set tSC = $$$OK
+            set tDirectory = ##class(%File).GetDirectory(tExportPath,1)
+            if '##class(%File).DirectoryExists(tDirectory) {
+                $$$ThrowOnError(##class(%IPM.Utils.File).CreateDirectoryChain(tDirectory))
+                write:pVerbose !,"Created ",tDirectory
+            }
+            if ##class(%File).DirectoryExists(tSourcePath) {
+                // NOTE: Does not overlay directories.
+                set tSourcePath = ##class(%File).NormalizeDirectory(tSourcePath)
+                set tExportPath = ##class(%File).NormalizeDirectory(tExportPath)
+                set tSC = ##class(%IPM.Utils.File).CopyDir(tSourcePath,tExportPath, , pVerbose)
+                $$$ThrowOnError(tSC)
+                write:pVerbose !,tSourcePath," -> ",tExportPath
+            } elseif ##class(%File).Exists(tSourcePath) {
+                set tGood = ##class(%File).CopyFile(tSourcePath,tExportPath,1,.tReturn)
+                if 'tGood {
+                    set tSC = $$$ERROR($$$GeneralError,$$$FormatText("Error copying file '%1' to '%2': %3",tSourcePath,tExportPath,tReturn))
+                    $$$ThrowOnError(tSC)
+                }
+                write:pVerbose !,tSourcePath," -> ",tExportPath
+            }
+        } elseif (tExt = "CLS") || (tExt = "DFI") || (tExt = "PRJ") || ($zconvert($extract(tFullPath,$length(tFullPath)-2,*),"l")="xml") || (##class(%RoutineMgr).UserType(tFullResourceName)) {
+            if '##class(%File).Exists(tFullPath) {
+                $$$ThrowOnError(##class(%IPM.Utils.File).CreateDirectoryChain(##class(%File).GetDirectory(tFullPath)))
+            }
+            set tSC = $$Export^%occXMLExport(tFullPath,"-d /diffexport/createdirs",tFullResourceName)
+            $$$ThrowOnError(tSC)
+            if pVerbose {
+                write !,"Exported to ",tFullPath
+            }
+        } else {
+            set tSC = $$Export^%apiRTN(tFullResourceName,tFullPath,"","WNSK\UTF8\","-d /diffexport/createdirs")
+            $$$ThrowOnError(tSC)
+            if pVerbose {
+                write !,"Exported to ",tFullPath
+            }
+        }
+        $$$ThrowOnError(tSC)
+    }
+}
+
+Lifecycle/Base.cls::OnDetermineResourceDeployability src/cls/IPM/Lifecycle/Base.cls:1939-1968
+Method OnDetermineResourceDeployability(
+	ByRef pParams,
+	ByRef pResourceInfo,
+	Output pDeploy As %Boolean) As %Status
+{
+    set tSC = $$$OK
+    try {
+        if $data(pParams("Deploy","Parameter"),tDeployParameter)#2 && (tDeployParameter '= "") {
+            if ($zconvert($piece(pResourceInfo("Name"),".",*), "U") = "CLS") {
+                set tClass = $piece(pResourceInfo("Name"),".",1,*-1)
+                if $$$comClassDefined(tClass) && $$$defMemberDefined(tClass,$$$cCLASSparameter,tDeployParameter) {
+                    // e.g., HSDEPLOY, HSAADEPLOY
+                    // This overrides the per-resource setting if defined, including if false.
+                    set pDeploy = ($parameter(tClass,tDeployParameter) = 1)
+                    quit
+                }
+            }
+        }
+
+        // Note: if the Deploy setting is missing from the module manifest, pResourceInfo("Deploy") will be defined as ""
+        if $get(pResourceInfo("Deploy")) = "" {
+            set pDeploy = ..#DEPLOYBYDEFAULT
+        } else {
+            set pDeploy = pResourceInfo("Deploy")
+        }
+    } catch e {
+        set tSC = e.AsStatus()
+    }
+    quit tSC
+}
+
+Repo/Manager.cls::SearchRepositoriesForModule src/cls/IPM/Repo/Manager.cls:55-192
+Method SearchRepositoriesForModule(
+	pSearchCriteria As %IPM.Repo.SearchCriteria,
+	Output pResults As %Library.ListOfObjects(ELEMENTTYPE="%IPM.Storage.QualifiedModuleInfo"),
+	pForceRemoteRepo As %Boolean = 0,
+	Output pPlatformFilteredResults As %Library.ListOfObjects(ELEMENTTYPE="%IPM.Storage.ModuleInfo")) As %Status
+{
+    set tSC = $$$OK
+    set pResults = ##class(%Library.ListOfObjects).%New()
+    set pPlatformFilteredResults = ##class(%Library.ListOfObjects).%New()
+    try {
+        set registry = pSearchCriteria.Registry
+        set pSearchCriteria.Name = $$$lcase(pSearchCriteria.Name)
+        set tRes = ##class(%SQL.Statement).%ExecDirect(,
+            "select ID from %IPM_Repo.Definition "_
+            "where Enabled = 1 "_
+            "and (? is null or Name = ?) order by %IPM_Repo.Definition_SortOrder(ID)",
+            registry,registry)
+        if (tRes.%SQLCODE < 0) {
+            set tSC = $$$ERROR($$$SQLCode,tRes.%SQLCODE,tRes.%Message)
+            quit
+        }
+        set currentPlatform = $$$CurrentPlatformVersion
+        while (tRes.%Next(.tSC)) {
+            if $$$ISERR(tSC) {
+                quit
+            }
+            set repoID = tRes.%Get("ID")
+            set tServer = ##class(%IPM.Repo.Definition).%OpenId(repoID,,.tSC)
+            if $$$ISERR(tSC) {
+                quit
+            }
+
+            // Only remote repositories support keywords, for now.
+            if (pSearchCriteria.Keywords.Count() > 0) && tServer.%IsA("%IPM.Repo.Filesystem.Definition") {
+                continue
+            }
+
+            // A repo whose credentials were rejected stays skipped for the rest of the command
+            if $data($$$RepoLookupState(tServer.Name, "skip")) {
+                continue
+            }
+
+            #dim tClientCriteria As %IPM.Repo.SearchCriteria
+            set tClientCriteria = pSearchCriteria.%ConstructClone(1)
+            set tPrereleases = pSearchCriteria.IncludePrerelease
+            if (tPrereleases = "") {
+                set tPrereleases = tServer.Prereleases
+            }
+            set tSnapshots = pSearchCriteria.IncludeSnapshots
+            if (tSnapshots = "") {
+                set tSnapshots = tServer.Snapshots
+            }
+            set tClientCriteria.IncludePrerelease = tPrereleases
+            set tClientCriteria.IncludeSnapshots = tSnapshots
+            try {
+                // A repo can also fail its availability check, e.g. one with a configuration error
+                set tClient = ..CheckServiceCache(tServer.Name,.tAvailable)
+                if tAvailable {
+                    set tServerResults = tClient.ListModules(tClientCriteria)
+                }
+            } catch e {
+                // System errors, such as Ctrl+C, stop the search
+                if e.%IsA("%Exception.SystemException") {
+                    throw e
+                }
+                if '$data($$$RepoLookupState(tServer.Name, "warned")) {
+                    write !, $$$FormattedLine($$$Yellow, "WARNING: " _ ##class(%IPM.Main).ErrorText(e.AsStatus()))
+                }
+                // Install and update search again for each dependency, so a shell command warns once per repo
+                if $data($$$RepoLookupState) {
+                    set $$$RepoLookupState(tServer.Name, "warned") = ""
+                    if e.%IsA("%IPM.Repo.Oras.HttpException") && e.CredentialsRejected {
+                        set $$$RepoLookupState(tServer.Name, "skip") = ""
+                    }
+                }
+                continue
+            }
+            if 'tAvailable {
+                continue
+            }
+            for i=1:1:tServerResults.Count() {
+                set item = tServerResults.GetAt(i)
+                if 'item.IsCompatibleWithPlatform(currentPlatform) {
+                    do pPlatformFilteredResults.Insert(item)
+                    continue
+                }
+                // Record which platform's artifact this result refers to; callers need it to build
+                // the tag. Left empty for repositories that don't report platforms, and for
+                // artifacts that aren't platform-specific at all.
+                if item.Deployed && (item.PlatformVersions.Find(currentPlatform) > 0) {
+                    set item.PlatformVersion = currentPlatform
+                }
+                // Sorting versions
+                set versions(+item.Version.Major, +item.Version.Minor, +item.Version.Patch, " "_item.Version.Patch_"_"_item.Version.Prerelease, repoID, tServer.Name) = item
+            }
+        }
+        set major = ""
+        // Sorting direction for prereleases/postreleases. Only set once outside of the whole loop.
+        set subDirection = $select(+##class(%IPM.Repo.UniversalSettings).GetValue("SemVerPostRelease"): -1, 1: 1)
+        for {
+            set major = $order(versions(major), -1)
+            quit:major=""
+            set minor = ""
+            for  {
+                set minor = $order(versions(major, minor), -1)
+                quit:minor=""
+                set patch = ""
+                for  {
+                    set patch = $order(versions(major, minor, patch), -1)
+                    quit:patch=""
+                    set sub = ""
+                    for  {
+                        set sub = $order(versions(major, minor, patch, sub), subDirection)
+                        quit:sub=""
+                        set repoOrder = ""
+                        for {
+                            set repoOrder = $order(versions(major, minor, patch, sub, repoOrder), 1)
+                            quit:repoOrder=""
+                            set name = ""
+                            for {
+                                set name = $order(versions(major, minor, patch, sub, repoOrder, name), 1, item)
+                                quit:name=""
+                                do pResults.Insert(##class(%IPM.Storage.QualifiedModuleInfo).%New(name, item))
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    } catch e {
+        if (e.Name["ZSOAP") && $data(%objlasterror) {
+            set tSC = %objlasterror
+        } else {
+            set tSC = e.AsStatus()
+        }
+    }
+    quit tSC
+}
+
+Repo/UniversalSettings.cls::GetDefaultValue src/cls/IPM/Repo/UniversalSettings.cls:158-164
+ClassMethod GetDefaultValue(indx As %String = "") As %String
+{
+    new $namespace
+    return:(indx="") ""
+    set $namespace = "%SYS"
+    return $get(^IPM.settings(indx,"default"))
+}
+
+Repo/UniversalSettings.cls::GetTestReportFormat src/cls/IPM/Repo/UniversalSettings.cls:235-238
+ClassMethod GetTestReportFormat() As %String
+{
+    return ..GetValue(..#TestReportFormat)
+}
+
+Repo/UniversalSettings.cls::GetValue src/cls/IPM/Repo/UniversalSettings.cls:150-156
+ClassMethod GetValue(indx As %String = "") As %String
+{
+    new $namespace
+    return:(indx="") ""
+    set $namespace = "%SYS"
+    return $get(^IPM.settings(indx))
+}
+
+Repo/UniversalSettings.cls::SetTestReportFormat src/cls/IPM/Repo/UniversalSettings.cls:225-233
+ClassMethod SetTestReportFormat(
+	val As %String,
+	overwrite As %Boolean = 1) As %Status
+{
+    if val '= "" && ('$listfind($listfromstring(##class(%IPM.Test.Abstract).#VALIDFORMATS), $zconvert(val, "l"))) {
+        return $$$ERROR($$$GeneralError, "Unknown format '"_val_"'. Valid formats: "_##class(%IPM.Test.Abstract).#VALIDFORMATS)
+    }
+    return ..SetValue(..#TestReportFormat, val, overwrite)
+}
+
+Repo/UniversalSettings.cls::SetValue src/cls/IPM/Repo/UniversalSettings.cls:166-182
+ClassMethod SetValue(
+	indx As %String = "",
+	val As %String = "",
+	overwrite As %Boolean = 1) As %Status
+{
+    if '$get(overwrite, 1) && (..GetValue(indx) '= "") {
+        return $$$OK
+    }
+    return:(indx="") ""
+    new $namespace
+    set $namespace = "%SYS"
+    set ^IPM.settings(indx) = val
+    if ($data(^IPM.settings(indx,"default"))=0) {
+        set ^IPM.settings(indx,"default") = val
+    }
+    return $$$OK
+}
+
+ResourceProcessor/Abstract.cls::%OnNew src/cls/IPM/ResourceProcessor/Abstract.cls:19-25
+Method %OnNew(pResourceReference As %IPM.Storage.ResourceReference) As %Status [ Private, ServerOnly = 1 ]
+{
+    set ..ResourceReference = pResourceReference
+    do ..CopyAttributes()
+    do ..ApplyDefaults()
+    quit $$$OK
+}
+
+ResourceProcessor/Abstract.cls::ApplyDefaults src/cls/IPM/ResourceProcessor/Abstract.cls:72-95
+Method ApplyDefaults()
+{
+    set tDefaults = ..ResourceReference.Module.Defaults
+    for tDefaultIndex = 1:1:tDefaults.Count() {
+        set tDefault = tDefaults.GetAt(tDefaultIndex)
+        if tDefault.%IsA("%IPM.Storage.ModuleSetting.ProcessorDefault") {
+            #dim tDefault As %IPM.Storage.ModuleSetting.ProcessorDefault
+            set tThisClass = $classname()
+            set tFullClass = $$$DefaultProcessorPackageDot_tDefault.Class
+            if (tThisClass = tDefault.Class) || (tThisClass = tFullClass) {
+                set tSatisfiesConditions = 1
+                for tIndex = 1:1:tDefault.Conditions.Count() {
+                    set tSatisfiesConditions = tSatisfiesConditions && ..SatisfiesCondition(tDefault.Conditions.GetAt(tIndex))
+                    if 'tSatisfiesConditions {
+                        quit
+                    }
+                }
+                if tSatisfiesConditions {
+                    do ..CopyDefaultAttributes(tDefault)
+                }
+            }
+        }
+    }
+}
+
+ResourceProcessor/Abstract.cls::CopyAttributes src/cls/IPM/ResourceProcessor/Abstract.cls:37-70
+Method CopyAttributes() [ CodeMode = objectgenerator, Private ]
+{
+    set tSC = $$$OK
+    try {
+        set tAttributes = $listfromstring(%parameter("ATTRIBUTES"))
+        set tPtr = 0
+        while $listnext(tAttributes,tPtr,tAttribute) {
+            if $$$comMemberDefined(%compiledclass.Name,$$$cCLASSproperty,tAttribute) {
+                if '$zname(tAttribute,6) {
+                    set tMsg = $$$FormatText("Invalid property in ATTRIBUTES list: '%1'",tAttribute)
+                    $$$ThrowStatus($$$ERROR($$$GeneralError,tMsg))
+                }
+                set tProps = $listfromstring($$$defMemberKeyGet(%compiledclass.Name,$$$cCLASSproperty,tAttribute,$$$cPROPaliases))
+                set tProps = tProps _ $listbuild(tAttribute)
+                set tPtr1 = 0
+                while $listnext(tProps, tPtr1, tAttribute) {
+                    do %code.WriteLine(" Set tIsDefined = ..ResourceReference.Attributes.IsDefined("""_tAttribute_""")")
+                    do %code.WriteLine(" If tIsDefined {")
+                    do %code.Write("  Set .."_tAttribute_" = ")
+                    set tDataType = $$$comMemberKeyGet(%compiledclass.Name,$$$cCLASSproperty,tAttribute,$$$cPROPruntimetype)
+                    set tAttrValue = "..%Evaluate(..ResourceReference.Attributes.GetAt("""_tAttribute_"""))"
+                    do %code.WriteLine("$Select($$$comMemberDefined($classname(),$$$cCLASSmethod,"""_tAttribute_"XSDToLogical""):$classmethod($classname(),"""_tAttribute_"XSDToLogical"","_tAttrValue_"),1:"_tAttrValue_")")
+                    do %code.WriteLine(" }")
+                }
+            }
+        }
+
+        // Always generate something, to avoid <METHOD DOES NOT EXIST>
+        do %code.WriteLine(" Quit")
+    } catch e {
+        set tSC = e.AsStatus()
+    }
+    quit tSC
+}
+
+ResourceProcessor/Abstract.cls::CopyDefaultAttributes src/cls/IPM/ResourceProcessor/Abstract.cls:98-126
+Method CopyDefaultAttributes(pSource As %IPM.Storage.ModuleSetting.ProcessorDefault) [ CodeMode = objectgenerator, Private ]
+{
+    set tSC = $$$OK
+    try {
+        set tAttributes = $listfromstring(%parameter("ATTRIBUTES"))
+        set tPtr = 0
+        while $listnext(tAttributes,tPtr,tAttribute) {
+            if $$$comMemberDefined(%compiledclass.Name,$$$cCLASSproperty,tAttribute) {
+                if '$zname(tAttribute,6) {
+                    set tMsg = $$$FormatText("Invalid property in ATTRIBUTES list: '%1'",tAttribute)
+                    $$$ThrowStatus($$$ERROR($$$GeneralError,tMsg))
+                }
+                do %code.WriteLine(" Set tIsDefined = pSource.Attributes.IsDefined("""_tAttribute_""") && '..ResourceReference.Attributes.IsDefined("""_tAttribute_""")")
+                do %code.WriteLine(" If tIsDefined {")
+                do %code.Write("  Set .."_tAttribute_" = ")
+                set tDataType = $$$comMemberKeyGet(%compiledclass.Name,$$$cCLASSproperty,tAttribute,$$$cPROPruntimetype)
+                set tAttrValue = "..%Evaluate(pSource.Attributes.GetAt("""_tAttribute_"""))"
+                do %code.WriteLine("$Select($$$comMemberDefined($classname(),$$$cCLASSmethod,"""_tAttribute_"XSDToLogical""):$classmethod($classname(),"""_tAttribute_"XSDToLogical"","_tAttrValue_"),1:"_tAttrValue_")")
+                do %code.WriteLine(" }")
+            }
+        }
+
+        // Always generate something, to avoid <METHOD DOES NOT EXIST>
+        do %code.WriteLine(" Quit")
+    } catch e {
+        set tSC = e.AsStatus()
+    }
+    quit tSC
+}
+
+ResourceProcessor/Abstract.cls::SatisfiesCondition src/cls/IPM/ResourceProcessor/Abstract.cls:128-140
+Method SatisfiesCondition(pCondition As %IPM.Storage.ModuleSetting.ProcessorDefault.Condition) As %Boolean
+{
+    set tValue = $property($this, pCondition.Attribute)
+    quit $case(pCondition.Operator,
+        "eq":(tValue = pCondition.Value),
+        "neq":(tValue '= pCondition.Value),
+        "gt":(tValue > pCondition.Value),
+        "lt":(tValue < pCondition.Value),
+        "gte":(tValue >= pCondition.Value),
+        "lte":(tValue <= pCondition.Value),
+        "contains":(tValue [ pCondition.Value),
+        :(tValue = pCondition.Value))
+}
+
+ResourceProcessor/Abstract.cls::SetParams src/cls/IPM/ResourceProcessor/Abstract.cls:27-35
+Method SetParams(ByRef pParams) As %Status
+{
+    if ($data(pParams)) {
+        merge ..Params = pParams
+        do ..CopyAttributes()
+        do ..ApplyDefaults()
+    }
+    return $$$OK
+}
+
+ResourceProcessor/ArtifactoryTarball.cls::DownloadArtifact src/cls/IPM/ResourceProcessor/ArtifactoryTarball.cls:105-172
+Method DownloadArtifact(ByRef params) [ Internal, Private ]
+{
+    set developerMode = $get(params("DeveloperMode"), ..ResourceReference.Module.DeveloperMode)
+    set verbose  = $get(params("Verbose"),0)
+    set downloadDirectory = ##class(%File).NormalizeDirectory(..ResourceReference.Module.Root_..ResourceReference.Name)
+
+    set server = $system.Util.GetEnviron("ARTI_SERVER")
+    // %Net.HttpRequest uses 443 when the port is empty
+    set port = $system.Util.GetEnviron("ARTI_PORT")
+    set aqlURL = $system.Util.GetEnviron("ARTI_AQL_URL")
+    if (aqlURL = "") {
+        set aqlURL = "/artifactory/api/search/aql"
+    }
+    set username = $system.Util.GetEnviron("ARTI_USERNAME")
+    set password = $system.Util.GetEnviron("ARTI_PASSWORD")
+    set bearerToken = $system.Util.GetEnviron("ARTI_TOKEN")
+    set hasCredentials = (bearerToken '= "") || ((username '= "") && (password '= ""))
+
+    if (server = "") {
+        if (developerMode) {
+            write !, $$$FormattedLine($$$Yellow, "WARNING: ARTI_SERVER was not provided, skipping downloading artifact.")
+            quit
+        }
+        $$$ThrowStatus($$$ERROR($$$GeneralError,"ARTI_SERVER must be provided to download an artifact"))
+    }
+    if (verbose) {
+        write !, "Start retrieving artifact..."
+    }
+
+    set tempFile = ##class(%File).TempFilename(,,.errorCode)
+    if (errorCode < 0) {
+        $$$ThrowStatus($$$ERROR($$$GeneralError, "Unable to create temporary directory, system error code: "_errorCode))
+    }
+    // In Windows: C:\Windows\TEMP\GZGWGAs0
+    // In Unix: /tmp/filJeBjAr
+    set OSTempDir = $piece(tempFile,$$$SLASH,1,*-1)
+
+    // create a subdir for the resource identified by its Name, e.g.: /tmp/ui/hs-app-hub/package/
+    // SubDirectoryName does normalization as well
+    set PMTempDir = ##class(%File).SubDirectoryName(OSTempDir, ..ResourceReference.Name, 1)
+
+    if (hasCredentials) {
+        set artifactPath = ..GetArtifactPath(server, port, aqlURL, username, password, bearerToken, ..Filter, verbose)
+        set artifactName = ..RetrieveArtifact(server, port, artifactPath, PMTempDir, verbose)
+    } else {
+        try {
+            set artifactPath = ..GetArtifactPathAnonymous(server, port, ..Filter, verbose)
+            set artifactName = ..RetrieveArtifact(server, port, artifactPath, PMTempDir, verbose)
+        } catch ex {
+            if ('developerMode) {
+                throw ex
+            }
+            write !, $$$FormattedLine($$$Yellow, "WARNING: Anonymous download failed, skipping downloading artifact: "_ex.DisplayString())
+            return
+        }
+    }
+
+    // Unpack artifact in temp location (so that if anything goes wrong, the true destination does not get affected)
+    // and copy artifact to destination
+    set artifactTarPath = ##class(%File).NormalizeFilename(artifactName, PMTempDir)
+    if (verbose) {
+        write !, "Going to extract contents from "_artifactTarPath_" to "_downloadDirectory
+    }
+    $$$ThrowOnError(##class(%IPM.General.Archive).Extract(artifactTarPath, downloadDirectory))
+    if (verbose) {
+        write !, "Extract Succeeded."
+    }
+}
+
+ResourceProcessor/ArtifactoryTarball.cls::GetArtifactPath src/cls/IPM/ResourceProcessor/ArtifactoryTarball.cls:184-251
+ClassMethod GetArtifactPath(
+	artifactServer As %String,
+	artifactPort As %String,
+	aqlURL As %String,
+	username As %String,
+	password As %String,
+	bearerToken As %String,
+	filter As %String,
+	verbose As %Boolean = 0) As %String [ Internal ]
+{
+    set httpRequest = ##class(%Net.HttpRequest).%New()
+    set httpRequest.Https = 1
+    set httpRequest.SSLConfiguration = ##class(%IPM.Utils.Module).CreateAndGetSSLConfig()
+    set httpRequest.Server = artifactServer
+    set httpRequest.Port = artifactPort
+    // Token auth gets priority over basic auth
+    if (bearerToken '= "") {
+        do httpRequest.SetHeader("Authorization", "Bearer "_bearerToken)
+        if (verbose) {
+            write !, "Using token auth in HTTP request"
+        }
+    } else {
+        set httpRequest.Username = username
+        set httpRequest.Password = password
+        if (verbose) {
+            write !, "Using basic auth in HTTP request"
+        }
+    }
+
+    set body = "items.find("_filter_").sort({""$desc"": [""updated""]})"
+    if (verbose) {
+        // {}.%FromJSON(filter).%ToJSON() does not change the contents of the filter but does normalize its whitespace to make it easier for readability in verbose mode
+        set body = "items.find("_{}.%FromJSON(filter).%ToJSON()_").sort({""$desc"": [""updated""]})"
+        write !, "Going to POST with the following query to retrieve info of qualified artifacts: "
+        write !, body
+    }
+    do httpRequest.EntityBody.Write(body)
+    do httpRequest.ContentTypeSet("text/plain")
+    $$$ThrowOnError(httpRequest.Send("POST", aqlURL))
+    set responseData = httpRequest.HttpResponse.Data
+    set responseDataStr = responseData.Read(,.readStatus)
+    $$$ThrowOnError(readStatus)
+    $$$ThrowOnError(responseData.Rewind())
+    if (httpRequest.HttpResponse.StatusCode = 404) {
+        $$$ThrowStatus($$$ERROR($$$GeneralError, "Artifact not found at the designated location. It could be due to the fact that resource being removed or incorrect server, port or POST url."))
+    } elseif (httpRequest.HttpResponse.StatusCode '= 200) {
+        // Query syntax error will be a bad request and displayed here
+        $$$ThrowStatus($$$ERROR($$$GeneralError, "The following error occurred while retrieving artifact info: " _ responseDataStr))
+    }
+
+    #dim jsonObj As %Library.DynamicAbstractObject
+    set jsonObj = ##class(%Library.DynamicAbstractObject).%FromJSON(responseData)
+    #dim results As %Library.DynamicArray
+    set results = jsonObj.%Get("results")
+    if (results.%Size() > 1) && (verbose) {
+        write !, results.%Size()_" valid artifacts found matching the filtered criteria. Choosing the one most recently updated."
+    }
+    set resultArtifact = results.%Get(0, "")
+    if (resultArtifact = "") {
+        $$$ThrowStatus($$$ERROR($$$GeneralError, "No valid artifact was found based on the query parameters"))
+    }
+    set artifactPath = "artifactory/"_resultArtifact.%Get("repo")_"/"_resultArtifact.%Get("path")_"/"_resultArtifact.%Get("name")
+    if (verbose) {
+        write !, "Valid artifact found at: "_artifactPath
+    }
+
+    return artifactPath
+}
+
+ResourceProcessor/ArtifactoryTarball.cls::HasProperties src/cls/IPM/ResourceProcessor/ArtifactoryTarball.cls:427-447
+ClassMethod HasProperties(
+	actual As %DynamicObject,
+	expected As %DynamicObject) As %Boolean [ Internal, Private ]
+{
+    set iterator = expected.%GetIterator()
+    while iterator.%GetNext(.key, .expectedValue) {
+        set values = $select($isobject(actual): actual.%Get(key), 1: "")
+        if '$isobject(values) {
+            return 0
+        }
+        set found = 0
+        set valueIterator = values.%GetIterator()
+        while 'found && valueIterator.%GetNext(, .value) {
+            set found = (value = expectedValue)
+        }
+        if 'found {
+            return 0
+        }
+    }
+    return 1
+}
+
+ResourceProcessor/ArtifactoryTarball.cls::MatchesCondition src/cls/IPM/ResourceProcessor/ArtifactoryTarball.cls:414-425
+ClassMethod MatchesCondition(
+	value As %String,
+	condition As %DynamicObject) As %Boolean [ Internal, Private ]
+{
+    if (condition = "") {
+        return 1
+    }
+    if 'condition.isPattern {
+        return (value = condition.value)
+    }
+    return ..WildcardMatch(value, condition.value)
+}
+
+ResourceProcessor/ArtifactoryTarball.cls::OnAfterPhase src/cls/IPM/ResourceProcessor/ArtifactoryTarball.cls:25-71
+Method OnAfterPhase(
+	phase As %String,
+	ByRef params) As %Status
+{
+    #dim ex As %Exception.AbstractException
+    set sc = $$$OK
+    try {
+        if (phase = "Activate") {
+            set verbose  = $get(params("Verbose"),0)
+            // If install directory exists, use that
+            // Else, download from artifactory
+            set downloadDirectory = ##class(%File).NormalizeDirectory(..ResourceReference.Module.Root_..ResourceReference.Name)
+            if '##class(%File).DirectoryExists(downloadDirectory) {
+                if (verbose) {
+                    write !, "No artifact found in "_downloadDirectory_", will now download it from artifactory."
+                }
+                do ..DownloadArtifact(.params)
+            } else {
+                if (verbose) {
+                    write !, "Artifact found in "_downloadDirectory_". Will use that instead of downloading a new one."
+                }
+            }
+            // Check that an artifact was downloaded in DownloadArtifact(). If so, copy contents over to the final destination
+            if ##class(%File).DirectoryExists(downloadDirectory) {
+                // copy everything from /<module root>/<resource name>/ into the final destination
+                // overwrite existing files if there are any in destination dir
+                if (verbose) {
+                    write !, "Going to copy extracted contents from "_downloadDirectory_" to "_..InstallDirectory
+                    if ##class(%File).DirectoryExists(..InstallDirectory) {
+                        write !, $$$FormattedLine($$$Yellow, "WARNING: "_..InstallDirectory_" has contents which will be overwritten by this action.")
+                    }
+                }
+                do ##class(%IPM.Utils.File).WarnIfInInstallDirectory(..InstallDirectory, ..ResourceReference)
+                // Copy contents over with pDeleteBeforeCopy = 1
+                if '##class(%File).CopyDir(downloadDirectory, ..InstallDirectory, 1, , 1) {
+                    $$$ThrowStatus($$$ERROR($$$GeneralError, "Failed to copy to directory: "_..InstallDirectory))
+                }
+                if (verbose) {
+                    write !, "Copy Succeeded."
+                }
+            }
+        }
+    } catch ex {
+        set sc = ex.AsStatus()
+    }
+    quit sc
+}
+
+ResourceProcessor/ArtifactoryTarball.cls::OnExportItem src/cls/IPM/ResourceProcessor/ArtifactoryTarball.cls:73-101
+Method OnExportItem(
+	fullExportPath As %String,
+	itemName As %String,
+	ByRef itemParams,
+	ByRef params,
+	Output itemHandled As %Boolean = 0) As %Status
+{
+    set sc = $$$OK
+    try {
+        do ..DownloadArtifact(.params)
+        set downloadDirectory = ##class(%File).NormalizeDirectory(..ResourceReference.Module.Root_..ResourceReference.Name)
+        set exportPath = params("ModuleExportPath")
+        set verbose  = $get(params("Verbose"),0)
+        if (verbose) {
+            write !, "Going to copy extracted contents from "_downloadDirectory_" to "_exportPath
+        }
+        // Copy contents over to package directory with pDeleteBeforeCopy = 1
+        if '##class(%File).CopyDir(downloadDirectory, exportPath, 1, , 1) {
+            $$$ThrowStatus($$$ERROR($$$GeneralError, "Failed to copy to directory: "_exportPath))
+        }
+        set itemHandled = 1
+        if (verbose) {
+            write !, "Copy Succeeded."
+        }
+    } catch (ex) {
+        set sc = ex.AsStatus()
+    }
+    return sc
+}
+
+ResourceProcessor/ArtifactoryTarball.cls::ParseAnonymousFilter src/cls/IPM/ResourceProcessor/ArtifactoryTarball.cls:323-348
+ClassMethod ParseAnonymousFilter(filter As %String) As %DynamicObject [ Internal ]
+{
+    set criteria = {"repo": "", "properties": {}}
+    set filterObject = $select(filter = "": {}, 1: {}.%FromJSON(filter))
+    set iterator = filterObject.%GetIterator()
+    while iterator.%GetNext(.key, .condition) {
+        if (key = "repo") {
+            set criteria.repo = ..ParseCondition(key, condition, 0)
+        } elseif (key = "name") || (key = "path") {
+            set value = ..ParseCondition(key, condition, 1, .isPattern)
+            do criteria.%Set(key, {"value": (value), "isPattern": (isPattern)})
+        } elseif (key = "type") {
+            if (..ParseCondition(key, condition, 0) '= "file") {
+                do ..ThrowUnsupportedFilter(key)
+            }
+        } elseif ($extract(key) = "@") {
+            do criteria.properties.%Set($extract(key, 2, *), ..ParseCondition(key, condition, 0))
+        } else {
+            do ..ThrowUnsupportedFilter(key)
+        }
+    }
+    if (criteria.name = "") && (criteria.properties.%Size() = 0) {
+        $$$ThrowStatus($$$ERROR($$$GeneralError, "Without credentials, the filter must specify a name or a @property"))
+    }
+    return criteria
+}
+
+ResourceProcessor/ArtifactoryTarball.cls::ParseCondition src/cls/IPM/ResourceProcessor/ArtifactoryTarball.cls:352-376
+ClassMethod ParseCondition(
+	key As %String,
+	condition,
+	allowMatch As %Boolean,
+	Output isPattern As %Boolean) As %String [ Internal, Private ]
+{
+    set isPattern = 0
+    if '$isobject(condition) {
+        return condition
+    }
+    if 'condition.%IsA("%Library.DynamicObject") || (condition.%Size() '= 1) {
+        do ..ThrowUnsupportedFilter(key)
+    }
+    set operator = condition.%GetIterator()
+    do operator.%GetNext(.name, .value)
+    if $isobject(value) {
+        do ..ThrowUnsupportedFilter(key)
+    }
+    if (name = "$match") && allowMatch {
+        set isPattern = 1
+    } elseif (name '= "$eq") {
+        do ..ThrowUnsupportedFilter(key)
+    }
+    return value
+}
+
+ResourceProcessor/ArtifactoryTarball.cls::RetrieveArtifact src/cls/IPM/ResourceProcessor/ArtifactoryTarball.cls:473-523
+ClassMethod RetrieveArtifact(
+	artifactServer As %String,
+	artifactPort As %String,
+	artifactPath As %String,
+	downloadDirectory As %String,
+	verbose As %Boolean = 0) As %String [ Internal ]
+{
+    set httpRequest = ##class(%Net.HttpRequest).%New()
+    set httpRequest.Https = 1
+    set httpRequest.SSLConfiguration = ##class(%IPM.Utils.Module).CreateAndGetSSLConfig()
+    set httpRequest.Server = artifactServer
+    set httpRequest.Port = artifactPort
+
+    if verbose {
+        write !, "Start retrieving artifact at https://"_artifactServer_$select(artifactPort = "": "", 1: ":"_artifactPort)_"/"_artifactPath
+    }
+    $$$ThrowOnError(httpRequest.Get(artifactPath))
+
+    set responseData = httpRequest.HttpResponse.Data
+    set responseDataStr = responseData.Read(,.readStatus)
+    $$$ThrowOnError(readStatus)
+    $$$ThrowOnError(responseData.Rewind())
+    if (httpRequest.HttpResponse.StatusCode = 404) {
+        $$$ThrowStatus($$$ERROR($$$GeneralError, "Artifact does not exist at: " _ artifactPath))
+    } elseif (httpRequest.HttpResponse.StatusCode '= 200) {
+        $$$ThrowStatus($$$ERROR($$$GeneralError, "The following error occurred while retrieving artifact: " _ responseDataStr))
+    }
+
+    set artifactName = httpRequest.HttpResponse.Headers("X-ARTIFACTORY-FILENAME")
+    if verbose {
+        write !, "Found: " _ artifactName
+    }
+
+    // Create directory if it doesn't exist
+    if '##class(%File).DirectoryExists(downloadDirectory) {
+        $$$ThrowOnError(##class(%IPM.Utils.File).CreateDirectoryChain(downloadDirectory))
+    }
+
+    set localPath = ##class(%File).NormalizeFilename(artifactName, downloadDirectory)
+    if '##class(%File).Exists(localPath) {
+        if verbose {
+            write !, "Saving to " _ localPath
+        }
+
+        set stream = ##class(%FileBinaryStream).%New()
+        set stream.Filename = localPath
+        $$$ThrowOnError(stream.CopyFromAndSave(responseData))
+    }
+
+    return artifactName
+}
+
+ResourceProcessor/ArtifactoryTarball.cls::SelectNewestArtifact src/cls/IPM/ResourceProcessor/ArtifactoryTarball.cls:385-412
+ClassMethod SelectNewestArtifact(
+	results As %DynamicArray,
+	criteria As %DynamicObject) As %String [ Internal ]
+{
+    set artifactPath = ""
+    set newestUpdated = ""
+    set iterator = results.%GetIterator()
+    while iterator.%GetNext(, .result) {
+        // e.g. /my-ui/-/my-ui-1.2.3.tgz
+        set fullPath = result.path
+        set name = $piece(fullPath, "/", *)
+        set folder = $piece(fullPath, "/", 2, *-1)
+        if (criteria.repo '= "") && (result.repo '= criteria.repo) {
+            continue
+        }
+        if '..MatchesCondition(name, criteria.name) || '..MatchesCondition($select(folder = "": ".", 1: folder), criteria.path) {
+            continue
+        }
+        if '..HasProperties(result.properties, criteria.properties) {
+            continue
+        }
+        if (artifactPath = "") || (result.lastUpdated ] newestUpdated) {
+            set newestUpdated = result.lastUpdated
+            set artifactPath = "artifactory/"_result.repo_"/"_$select(folder = "": "", 1: folder_"/")_name
+        }
+    }
+    return artifactPath
+}
+
+ResourceProcessor/ArtifactoryTarball.cls::WildcardMatch src/cls/IPM/ResourceProcessor/ArtifactoryTarball.cls:450-468
+ClassMethod WildcardMatch(
+	value As %String,
+	pattern As %String) As %Boolean [ Internal ]
+{
+    set regex = ""
+    for i = 1:1:$length(pattern) {
+        set char = $extract(pattern, i)
+        if (char = "*") {
+            set regex = regex_".*"
+        } elseif (char = "?") {
+            set regex = regex_"."
+        } elseif (char?1AN) {
+            set regex = regex_char
+        } else {
+            set regex = regex_"\"_char
+        }
+    }
+    return $match(value, regex)
+}
+
+ResourceProcessor/Default/Document.cls::LoadFromDeployedProject src/cls/IPM/ResourceProcessor/Default/Document.cls:216-247
+Method LoadFromDeployedProject(verbose As %Boolean) As %Boolean [ Private ]
+{
+    // Extension is the type of the documents a resource holds, so it is "cls" for a PKG
+    set deployable = ($extract(..ResourceReference.Name) = "/") || ##class(%IPM.Utils.Module).IsDeployableType(..Extension)
+    if '..ResourceReference.Deploy || 'deployable || ..ResourceReference.Generated || ..ResourceReference.Preload {
+        return 0
+    }
+    set projectPath = ##class(%IPM.Utils.Module).GetDeployedProjectPath(..ResourceReference.Module.Root)
+    if '##class(%IPM.Utils.File).Exists(projectPath) {
+        return 0
+    }
+    if verbose {
+        write !, "Loading deployed resource from Studio project: "_..ResourceReference.Name
+    }
+    set ..CompileFromProject = 1
+    // Mark deployed so Compile skips source compilation of Deploy=true
+    // resources. Persisted because the module is reopened from the
+    // database between here and Compile.
+    if '..ResourceReference.Module.Deployed {
+        set ..ResourceReference.Module.Deployed = 1
+        $$$ThrowOnError(..ResourceReference.Module.%Save())
+    }
+    if '$data($$$DeployedProjectInstalled(projectPath)) {
+        set sc = ##class(%Studio.Project).InstallFromFile(projectPath, "<none>")
+        if $$$ISERR(sc) {
+            set message = $$$FormatText("Failed to install deployed code from '%1'", projectPath)
+            $$$ThrowStatus($$$EMBEDSC($$$ERROR($$$GeneralError, message), sc))
+        }
+        set $$$DeployedProjectInstalled(projectPath) = ""
+    }
+    return 1
+}
+
+ResourceProcessor/Default/Document.cls::OnExportDeployedItem src/cls/IPM/ResourceProcessor/Default/Document.cls:296-325
+Method OnExportDeployedItem(
+	pFullExportPath As %String,
+	pItemName As %String,
+	ByRef pItemParams,
+	ByRef pParams,
+	Output pItemHandled As %Boolean = 0) As %Status
+{
+    set tSC = $$$OK
+    try {
+        set tVerbose = $get(pParams("Verbose"),0)
+        set tDeveloperMode = $get(pParams("DeveloperMode"),0)
+        if (tDeveloperMode || ('..ResourceReference.Deploy)) {
+            // Only export deployed items if they are marked for deploy, we are in a non-developer-mode context
+            quit
+        }
+        quit:'##class(%IPM.Utils.Module).IsDeployableType($piece(pItemName, ".", *))
+        if $data(pParams($$$DeployedProjectIndex), deployedProject) {
+            if tVerbose {
+                write !, $$$FormatText("Adding deployed item '%1' to project '%2'", pItemName, deployedProject.Name)
+            }
+            // Skip the per-item project check; the caller checks the project once after all
+            // deployed items have been added.
+            $$$ThrowOnError(##class(%IPM.Storage.Module).AddItemToProject(deployedProject, pItemName, 0))
+            set pItemHandled = 1
+        }
+    } catch e {
+        set tSC = e.AsStatus()
+    }
+    quit tSC
+}
+
+ResourceProcessor/Default/Document.cls::OnExportItem src/cls/IPM/ResourceProcessor/Default/Document.cls:249-294
+Method OnExportItem(
+	pFullExportPath As %String,
+	pItemName As %String,
+	ByRef pItemParams,
+	ByRef pParams,
+	Output pItemHandled As %Boolean = 0) As %Status
+{
+    set tSC = ..OnExportDeployedItem(pFullExportPath, pItemName, .pItemParams, .pParams, .pItemHandled)
+    set tSC = $$$OK
+    if pItemHandled || $$$ISERR(tSC) {
+        quit tSC
+    }
+    set tSC = $$$OK
+    set tExportFlags = "-d /diffexport/createdirs"_..ExportFlags
+    set tVerbose = $get(pParams("Verbose"),0)
+    try {
+        if (..Format = "UDL") {
+            // This is tailored toward support of "Other" documents exported in UDL format.
+            if ##class(%Atelier.v1.Utils.General).ValidateDocName(pItemName,.tSC,.tCategory) {
+                // Ensure directory containing file exists, and attempt to create it if not.
+                if ($extract(pFullExportPath) = """") {
+                    // Avoid issues with the path being quoted. (These mess up GetDirectory().)
+                    set pFullExportPath = $extract(pFullExportPath,2,*-1)
+                }
+
+                set tTargetDirectory = ##class(%Library.File).GetDirectory(pFullExportPath)
+                if '##class(%Library.File).DirectoryExists(tTargetDirectory) {
+                    $$$ThrowOnError(##class(%IPM.Utils.File).CreateDirectoryChain(tTargetDirectory))
+                }
+
+                $$$ThrowOnError($system.OBJ.ExportUDL(pItemName,pFullExportPath,tExportFlags))
+            }
+            set pItemHandled = 1
+        } elseif (..Format = "XML") {
+            $$$ThrowOnError($system.OBJ.Export(pItemName,pFullExportPath,tExportFlags))
+            set pItemHandled = 1
+        } elseif (..Format = "%RO") {
+            set tSC = $$Export^%apiRTN(pItemName,pFullExportPath,"Save for Source Control","WNSK\UTF8\",tExportFlags)
+            set pItemHandled = 1
+        }
+        write:tVerbose !,"Exporting '",pItemName,"' to '",pFullExportPath,"'"
+    } catch e {
+        set tSC = e.AsStatus()
+    }
+    quit tSC
+}
+
+ResourceProcessor/Default/Document.cls::OnPhase src/cls/IPM/ResourceProcessor/Default/Document.cls:59-211
+Method OnPhase(
+	pPhase As %String,
+	ByRef pParams,
+	Output pResourceHandled As %Boolean = 0) As %Status
+{
+    set tSC = $$$OK
+    set pResourceHandled = 0
+    try {
+        set tVerbose = $get(pParams("Verbose"),0)
+        set tDeveloperMode = $get(pParams("DeveloperMode"),0)
+        set tName = $piece(..ResourceReference.Name,".",1,*-1)
+        set tRoot = ##class(%File).NormalizeDirectory(..ResourceReference.Module.SourcesRoot, ..ResourceReference.Module.Root)
+        set tInScope = ..ResourceReference.IsInScope(pPhase,.tInCurrentPhase)
+        if (..Directory'="") {
+            set ..DirectoryDefined = 1
+        }
+        if ((pPhase = "Reload") && tInScope) || tInCurrentPhase {
+            set tCatDirectory = ""
+            set tCatDirectory = tCatDirectory _ $listbuild(..Directory)
+            if (..Directory="rtn") {
+                // Ensure backward compatibility. In v0.7.0 and earlier, the default directory was "mac" for routines
+                set tCatDirectory = tCatDirectory _ $listbuild("mac")
+            }
+            if ('..DirectoryDefined) {
+                if (..Directory="mac") {
+                    set tCatDirectory = tCatDirectory _ $listbuild("rtn")
+                }
+                if (..Directory'="") {
+                    set tCatDirectory = tCatDirectory _ $listbuild("")
+                }
+            }
+            set tListNames = ""
+            set tListNames = tListNames _ $listbuild(tName)
+            set tListNames = tListNames _ $listbuild($translate(tName, "%", "_"))
+            set tListNames = tListNames _ $listbuild($translate(tName, "_", ""))
+            set tListNames = tListNames _ $listbuild($translate(tName, "%", ""))
+            // Reload already created mappings; this covers test- and verify-scoped resources
+            if '$get(pParams("NoMapping"),0) {
+                $$$ThrowOnError(..OnConfigureMappings(.pParams))
+            }
+            if ..LoadFromDeployedProject(tVerbose) {
+                return $$$OK
+            }
+            set ptrn = 0
+            while $listnext(tListNames, ptrn, tName) {
+                set tSourcesPrefix = $char($parameter("%IPM.ExtensionBase.SourceControl.Interface","NOPREFIXCHARCODE"))
+
+                if ..ResourceReference.Generated {
+                    set pResourceHandled = 1
+                    quit
+                }
+
+                if '..ResourceReference.Generated {
+                    set tSubDirectory = $select(..ResourceReference.Preload:"preload/",1:"")
+                    set tResourceDirectory = ##class(%File).NormalizeDirectory(tRoot_"/"_tSubDirectory)
+                    if ('##class(%File).DirectoryExists(tResourceDirectory)) {
+                        quit
+                    }
+                    set ptr = 0
+                    set tResourceCatDirectory = ##class(%File).NormalizeDirectory(tResourceDirectory)
+                    while $listnext(tCatDirectory, ptr, tDirectory) {
+                        set tResourceCatDirectory = ##class(%File).NormalizeDirectory(tResourceDirectory _ tDirectory)
+                        if (##class(%File).DirectoryExists(tResourceCatDirectory)) {
+                            quit
+                        }
+                    }
+                    if ##class(%File).DirectoryExists(tResourceCatDirectory) {
+                        set tResourceDirectory = tResourceCatDirectory
+                    }
+
+                    if tDeveloperMode && (..Extension '= "") && (tName '= "") {
+                        set ^Sources(..Extension,tName_..#NAMEPOSTFIX) = tSourcesPrefix _ tResourceDirectory
+                    }
+
+                    if '..ResourceReference.Preload {
+                        for allowPercentSymbol = 0, 1 {
+                            set tFileExtension = ""
+                            set identifiers = ..FilenameTranslateIdentifier
+                            set associators = ..FilenameTranslateAssociator
+                            if allowPercentSymbol {
+                                set pos = $find(identifiers, "%") - 1
+                                if pos {
+                                    set $extract(identifiers, pos) = ""
+                                    set $extract(associators, pos) = ""
+                                }
+                            }
+                            set tResourcePath = ##class(%File).NormalizeFilename(tResourceDirectory _ tSubDirectory _ $translate(tName, identifiers, associators))
+                            if '..LoadAsDirectory {
+                                // For user document types (generally), dynamilly support both the resource and filename extension
+                                // e.g., for lookup tables, both .xml and .lut are supported regardless of configuration in module.xml.
+                                // Generally, FilenameExtension SHOULD be specified (for the sake of embedded source control integration if nothing else),
+                                // but this makes IPM less picky about reasonable things users might do.
+                                set tItemFileExtension = $$$lcase("." _ $piece(..ResourceReference.Name, ".", *))
+                                set tFileExtension =  $$$lcase("." _ ..FilenameExtension)
+                                for tFileExtension = tFileExtension,tItemFileExtension {
+                                    quit:##class(%IPM.Utils.File).Exists(tResourcePath _ tFileExtension)
+                                }
+
+                                set tResourcePath = tResourcePath _ tFileExtension
+
+                                if ($$$lcase(tFileExtension)'=".xml")&&('##class(%IPM.Utils.File).Exists(tResourcePath)) {
+                                    set tResourcePathXML = tResourcePath
+                                    set $piece(tResourcePath, ".", *) = "xml"
+                                    if (##class(%IPM.Utils.File).Exists(tResourcePathXML)) {
+                                        set tResourcePath = tResourcePathXML
+                                        set ..Format = "XML"
+                                    }
+                                }
+
+                                if ($$$lcase(tFileExtension)=".mac")&&('##class(%IPM.Utils.File).Exists(tResourcePath)) {
+                                    set tResourcePathRTN = tResourcePath
+                                    set $piece(tResourcePathRTN, ".", *) = "rtn"
+                                    if (##class(%IPM.Utils.File).Exists(tResourcePathRTN)) {
+                                        set tResourcePath = tResourcePathRTN
+                                    }
+                                }
+                            }
+                            if ##class(%IPM.Utils.File).Exists(.tResourcePath) {
+                                set tSC = $$$OK
+                                quit
+                            }
+                            set tSC = $$$ERROR($$$GeneralError, "Resource path '" _ tResourcePath _ "' not found")
+                        }
+                        if $$$ISERR(tSC) continue
+
+                        $$$ThrowOnError(..OnLoad(tResourcePath,tVerbose,tInCurrentPhase,.tLoadedList,.pParams))
+
+                        set tSC = ##class(%IPM.Storage.LoadedResource).TrackResourceNames(..ResourceReference.Module.Name,..ResourceReference.UniqueName,tLoadedList)
+                        $$$ThrowOnError(tSC)
+                    }
+                }
+                set pResourceHandled = 1
+                set tSC = $$$OK
+                quit
+            }
+        } elseif (pPhase = "Compile") {
+            if tInScope && (..ResourceReference.Scope '= "") && '..ResourceReference.Generated && '..ResourceReference.Preload {
+                // A scoped resource may not be loaded yet. Its own phase installs its scoped dependencies, then loads and compiles it.
+                // Generated and preloaded resources are never loaded there, so they compile here as usual.
+                set pResourceHandled = 1
+            } elseif tInScope {
+                // If Compile is false, indicate that the resource's compilation phase has already been handled and nothing special should happen.
+                set pResourceHandled = '..Compile
+            } else {
+                // If out of scope, nothing should happen.
+                set pResourceHandled = 1
+            }
+        }
+    } catch e {
+        set tSC = e.AsStatus()
+    }
+    quit tSC
+}
+
+ResourceProcessor/Test.cls::%OnValidateObject src/cls/IPM/ResourceProcessor/Test.cls:615-621
+Method %OnValidateObject() As %Status [ Private, ServerOnly = 1 ]
+{
+    if ((..Package = "") && (..Class = "")) || ((..Package '= "") && (..Class '= "")) {
+        return $$$ERROR($$$GeneralError, "EXACTLY ONE of 'Package' or 'Class' attributes must be specified")
+    }
+    quit $$$OK
+}
+
+ResourceProcessor/Test.cls::OwnsClassName src/cls/IPM/ResourceProcessor/Test.cls:401-413
+Method OwnsClassName(className As %String) As %Boolean
+{
+    if className = "" {
+        quit 0
+    }
+    if ..Class '= "" {
+        quit (className = ..Class)
+    }
+    if ..Package = "" {
+        quit 0
+    }
+    quit (className = ..Package) || ($extract(className, 1, $length(..Package) + 1) = (..Package _ "."))
+}
+
+ResourceProcessor/Test.cls::TestsShouldRun src/cls/IPM/ResourceProcessor/Test.cls:65-91
+Method TestsShouldRun(
+	pPhase As %String,
+	ByRef pParams) As %Boolean
+{
+    set tPathMatch = 1
+    set tTestPath = ""
+    if (..Package '= "") {
+        if $data(pParams("UnitTest","Suite"),tTestSuite)#2 {
+            set tTestPath = $translate(tTestSuite,"/\","..")
+        } elseif $data(pParams("UnitTest","Case"),tTestCase)#2 {
+            set tTestPath = tTestCase
+        }
+    }
+    if (tTestPath '= "") {
+        if (..Package '= "") {
+            if $length(tTestPath) > $length(..Package) {
+                set tPathMatch = ($extract(tTestPath,1,$length(..Package)) = ..Package)
+            } else {
+                set tPathMatch = ($extract(..Package,1,$length(tTestPath)) = tTestPath)
+            }
+        } elseif (..Class '= "") {
+            // No action needed, the pParams are ignored for this case so tPatchMatch
+            // always equals 1
+        }
+    }
+    quit tPathMatch && ($listfind(..Phase,$zconvert(pPhase,"L")) > 0)
+}
+
+Storage/InvokeReference.cls::OnAfterPhase src/cls/IPM/Storage/InvokeReference.cls:66-75
+Method OnAfterPhase(
+	pPhase As %String,
+	ByRef pParams) As %Status
+{
+    set tPhase = $select(..CustomPhase'="":..CustomPhase,1:..Phase)
+    if (pPhase '= tPhase) || ("After" '= ..When) {
+        quit $$$OK
+    }
+    quit ..doInvoke(.pParams)
+}
+
+Storage/InvokeReference.cls::OnBeforePhase src/cls/IPM/Storage/InvokeReference.cls:55-64
+Method OnBeforePhase(
+	pPhase As %String,
+	ByRef pParams) As %Status
+{
+    set tPhase = $select(..CustomPhase'="":..CustomPhase,1:..Phase)
+    if (pPhase '= tPhase) || ("Before" '= ..When) {
+        quit $$$OK
+    }
+    quit ..doInvoke(.pParams)
+}
+
+Storage/InvokeReference.cls::doInvoke src/cls/IPM/Storage/InvokeReference.cls:77-94
+Method doInvoke(ByRef pParams) As %Status
+{
+    set tSC = $$$OK
+    do ..GetArgsArray(.pParams, .args)
+    try {
+        // By default, with no CheckStatus property set, check status iff return type is %Status
+        // In deprecated behavior, CheckStatus=1 means check status regardless of type and CheckStatus=0 means do not check anything
+        set rettype = $$$comMemberKeyGetO(origin,..Class,$$$cCLASSmethod,..Method,$$$cMETHreturntype)
+        if (rettype="%Library.Status" || ..CheckStatus) && (..CheckStatus'=0) {
+            set tSC = $classmethod(..Class, ..Method, args...)
+        } else {
+            do $classmethod(..Class, ..Method, args...)
+        }
+    } catch ex {
+        set tSC = ex.AsStatus()
+    }
+    quit tSC
+}
+
+Storage/Module.cls::%OnValidateObject src/cls/IPM/Storage/Module.cls:1510-1591
+Method %OnValidateObject() As %Status [ Private, ServerOnly = 1 ]
+{
+    set tSC = $$$OK
+    try {
+        // Ensure packaging property is set to the correct value.
+        // This validation only runs if the lifecycle class exists.
+        if (..LifecycleClass '= "") && $$$comClassDefined(..LifecycleClass) {
+            set tBaseClass = "%IPM.Lifecycle.Base"
+            set legacyBaseClass = "%ZPM.PackageManager.Developer.Lifecycle.Base"
+            if '$classmethod(..LifecycleClass,"%Extends",tBaseClass) && '$classmethod(..LifecycleClass,"%Extends",legacyBaseClass) {
+                set tSC = $$$ERROR($$$GeneralError,$$$FormatText("Invalid lifecycle class '%1' - must extend %2",..LifecycleClass,tBaseClass))
+                quit
+            }
+            set tPackaging = $parameter(..LifecycleClass,"PACKAGING")
+            if (..Packaging = "") {
+                set ..Packaging = tPackaging
+            } elseif (..Packaging '= tPackaging) {
+                set tSC = $$$ERROR($$$GeneralError,$$$FormatText("Module's packaging is set to '%1', but lifecycle class '%2' has packaging '%3'.",..Packaging,..LifecycleClass,tPackaging))
+                quit
+            }
+        } elseif (..LifecycleClass = "") && (..Packaging '= "") {
+              set ..LifecycleClass = $case(..Packaging,"application": "Application", : "Module")
+        } elseif (..Packaging = "") {
+            // Default to "module"
+            set ..Packaging = "module"
+        }
+
+        // Can have only one NamespaceConfig module setting.
+        set tNSConfigCount = 0
+        set tDefaultCount = ..Defaults.Count()
+        for tDefaultIndex=1:1:tDefaultCount {
+            set tDefault = ..Defaults.GetAt(tDefaultIndex)
+            if tDefault.%IsA("%IPM.Storage.ModuleSetting.NamespaceConfig") {
+                set tNSConfigCount = tNSConfigCount + 1
+            }
+        }
+        if (tNSConfigCount > 1) {
+            set tSC = $$$ERROR($$$GeneralError,$$$FormatText("Only one NamespaceConfig may be specified per module."))
+            quit
+        }
+
+        set tSC = $$$OK
+        set orderedResourceList = ..GetOrderedResourceList()
+        set tKey = ""
+        for {
+            set tResource = orderedResourceList.GetNext(.tKey)
+            quit:(tKey="")
+
+            // If it hasn't been saved yet (to account for module renames)...
+            if (tResource.%Id() = "") && (tResource.UniqueName '= "") {
+                // ... see if some other resource exists with the same name.
+                if ##class(%IPM.Storage.ResourceReference).ResourceNameExists(tResource.UniqueName,.tResourceId) {
+                    set tOtherResource = ##class(%IPM.Storage.ResourceReference).%OpenId(tResourceId,,.tSC)
+                    if $$$ISERR(tSC) {
+                        quit
+                    }
+                    if (tResource.Name = tResource.UniqueName) {
+                        // Common case: classes, packages, include files, etc.
+                        set tMsg = $$$FormatText("Resource '%1' is already defined as part of module '%2'; cannot also be listed in module '%3'",tResource.Name,tOtherResource.Module.Name,..Name)
+                    } else {
+                        // Handle the case where resources with different names are uniquely identified the same way.
+                        set tResourceName = tResource.Name_" ("_tResource.UniqueName_")"
+                        set tMsg = $$$FormatText("Resource '%1' is already defined as part of module '%2' as '%4'; cannot also be listed in module '%3'",tResourceName,tOtherResource.Module.Name,..Name,tOtherResource.Name)
+                    }
+                    set tSC = $$$ERROR($$$GeneralError,tMsg)
+                    quit
+                }
+            }
+            if $$$ISERR(tSC) {
+                quit
+            }
+        }
+        set query = "SELECT COUNT(*) AS Conflict FROM %IPM_Storage.ModuleItem WHERE Name = ? AND Name <> ?"
+        set rs = ##class(%SQL.Statement).%ExecDirect(,query, ..ExternalName, ..Name)
+        if rs.%Next() && (rs.%Get("Conflict") > 0) {
+            $$$ThrowStatus($$$ERROR($$$GeneralError,$$$FormatText("External name '%1' conflicts with the real name of another module", ..ExternalName)))
+        }
+    } catch e {
+        set tSC = e.AsStatus()
+    }
+    quit tSC
+}
+
+Storage/Module.cls::AddItemToProject src/cls/IPM/Storage/Module.cls:1772-1793
+ClassMethod AddItemToProject(
+	tProject As %Studio.Project,
+	pResourceName As %String,
+	pCheck As %Boolean = 1) As %Status [ Internal ]
+{
+    set tSC = $$$OK
+    try {
+        set tName = $piece(pResourceName,".",1,*-1)
+        set tExt = $piece(pResourceName,".",*)
+        if ((tExt = "MAC") || (tExt = "INT")) && '##class(%Library.Routine).Exists(pResourceName) {
+            do tProject.AddItem(tName_".OBJ")
+        } else {
+            do tProject.AddItem(pResourceName)
+        }
+        if pCheck {
+            $$$ThrowOnError(tProject.Check())
+        }
+    } catch e {
+        set tSC = e.AsStatus()
+    }
+    quit tSC
+}
+
+Storage/Module.cls::CheckSystemRequirements src/cls/IPM/Storage/Module.cls:337-354
+ClassMethod CheckSystemRequirements(pModuleName As %String) As %Status
+{
+    set tSC = $$$OK
+    try {
+        set pModuleName = $$$lcase(pModuleName)
+        set tModule = ..NameOpen(pModuleName,,.tSC)
+        if '$isobject(tModule) {
+            $$$ThrowStatus($$$ERROR($$$GeneralError, "Module '"_pModuleName_"' not found."))
+        }
+        $$$ThrowOnError(tSC)
+        if ($isobject(tModule.SystemRequirements)) {
+            $$$ThrowOnError(tModule.SystemRequirements.CheckRequirements())
+        }
+    } catch ex {
+        set tSC = ex.AsStatus()
+    }
+    return tSC
+}
+
+Storage/Module.cls::ExecutePhases src/cls/IPM/Storage/Module.cls:447-720
+ClassMethod ExecutePhases(
+	pModuleName As %String,
+	pPhases As %List,
+	pIsComplete As %Boolean = 0,
+	ByRef pParams,
+	pLog As %IPM.General.AbstractHistory = "") As %Status
+{
+    set tSC = $$$OK
+    try {
+        set tVerbose = $get(pParams("Verbose"),0)
+        set tModule = ..NameOpen(pModuleName,,.tSC)
+        if '$isobject(tModule) {
+            set tModule = ..ExternalNameOpen(pModuleName,,.tSC)
+        }
+        if '$isobject(tModule) {
+            $$$ThrowStatus($$$ERROR($$$GeneralError, $$$FormatText("Module '%1' not found.", pModuleName)))
+        }
+        $$$ThrowOnError(tSC)
+
+        // Regardless of whether the module was opened by name or external name, we want to use the name for the rest of the method.
+        set pModuleName = tModule.Name
+
+        // Ensure we reload and reinitialize transient properties.
+        // For example, prevents reuse of a previous OverrideLifecycleClass if the module object is in memory in the caller.
+        set tSC = tModule.%Reload()
+        $$$ThrowOnError(tSC)
+
+        // Allow per-command customization of root directory
+        // Useful primarily for non-module packaging installation
+        if $data(pParams("RootDirectory"),tRoot) {
+            set tModule.Root = tRoot
+        }
+
+        // Permit override of lifecycle class as either a class name or a file containing a lifecycle class (and possibly other bundled/related resources)
+        if $data(pParams("LifecycleObject"), tLifeCycle) # 2 {
+            set tModule.Lifecycle = tLifeCycle
+        } elseif $data(pParams("Lifecycle"),tLifecycle) && ($get(tLifecycle) '= "") {
+            if $$$comClassDefined(tLifecycle) {
+                set tModule.OverrideLifecycleClass = tLifecycle
+            } elseif $$$comClassDefined($$$DefaultLifecyclePackageDot_tLifecycle) {
+                set tModule.OverrideLifecycleClass = $$$DefaultLifecyclePackageDot_tLifecycle
+            } elseif ##class(%Library.File).Exists(tLifecycle) {
+                set tSC = $system.OBJ.Load(tLifecycle,"k"_$select(tVerbose:"d",1:"-d"),,.tLoadedList)
+                $$$ThrowOnError(tSC)
+                set tSC = ##class(%IPM.Utils.LegacyCompat).UpdateSuperclassAndCompile(.tLoadedList)
+                $$$ThrowOnError(tSC)
+                set tLoadedList = $listfromstring(tLoadedList)
+                set tLifecycleClassFound = 0
+                set tPointer = 0
+                while $listnext(tLoadedList,tPointer,tLoadedItem) {
+                    set tClass = $piece(tLoadedItem,".cls",1,*-1)
+                    if (tClass '= "") && $$$comClassDefined(tClass) && $classmethod(tClass,"%Extends",$$$DefaultLifecyclePackageDot_"Base") {
+                        set tLifecycleClassFound = 1
+                        set tModule.OverrideLifecycleClass = tClass
+                    }
+                }
+                if 'tLifecycleClassFound {
+                    set tSC = $$$ERROR($$$GeneralError,$$$FormatText("File '%1' did not contain a valid lifecycle class.",tLifecycle))
+                    $$$ThrowStatus(tSC)
+                }
+            } else {
+                set tSC = $$$ERROR($$$GeneralError,$$$FormatText("'%1' is neither a valid filename nor a valid lifecycle class name.",tLifecycle))
+                $$$ThrowStatus(tSC)
+            }
+
+            // Note: this is used later if the module object is reloaded.
+            set tOverrideClass = $classname(tModule.Lifecycle)
+            if tVerbose {
+                write !,"Using lifecycle class ",tOverrideClass,"; override class is "_tModule.OverrideLifecycleClass
+            }
+        }
+
+        set tLifecycle = tModule.Lifecycle
+
+        if pIsComplete {
+            set tPhases = tLifecycle.GetCompletePhases(pPhases)
+        } else {
+            set tPhases = $listbuild(##class(%IPM.Lifecycle.Base).MatchSinglePhase($listtostring(pPhases)))
+        }
+
+        // Lifecycle-provided default parameters
+        do tLifecycle.GetDefaultParameters(.tParams, tPhases)
+
+        // Module manifest Defaults/Parameter default parameters
+        do tModule.GetDefaultParameters(.tModuleParams)
+        merge tParams = tModuleParams
+
+        // Overwrite with actual specified parameters
+        merge tParams = pParams
+
+        // Move back to pParams
+        kill pParams
+        merge pParams = tParams
+
+        // Report timing subject to parameter; overall timing if only one phase has yet been tracked in context
+        // (e.g., set up in multithreaded load) and more than one phase is to be executed.
+        set tTiming = $get(pParams("Timing"),0)
+        set tOverallTiming = tTiming && ($listlength(tPhases) > 1)
+
+        // Execute resolved phases in sequence
+        set tLifecycle.PhaseList = tPhases
+        set tPointer = 0
+        set tFullStart = $zhorolog
+        do tModule.GetCustomPhases(.tCustomPhases)
+        while $listnext(tPhases,tPointer,tOnePhase) {
+            set tIsCustomPhase = $data(tCustomPhases($$$lcase(tOnePhase)), tNormalizedPhaseName) # 2
+            if tIsCustomPhase {
+                set tOnePhase = tNormalizedPhaseName
+            }
+            set tStart = $zhorolog
+            if tOnePhase="*" {
+                kill tModule,tLifecycle
+                set tModule = ..NameOpen(pModuleName,,.tSC)
+                $$$ThrowOnError(tSC)
+                if ($get(tOverrideClass) '= "") {
+                    set tModule.OverrideLifecycleClass = tOverrideClass
+                }
+                set tLifecycle = tModule.Lifecycle
+                set tLifecycle.PhaseList = tPhases
+                write !,"["_tModule.DisplayName_"]",$char(9),"Module object refreshed."
+                continue
+            }
+            // history logging for phases
+            if pLog '= "" {
+                do pLog.InitPhase(tOnePhase)
+            }
+
+            set tSC = $$$OK
+            try {
+                write !,"["_$namespace_"|"_tModule.DisplayName_"]",$char(9),tOnePhase," START"
+                // for the reload phase, print root from which module is being loaded
+                if tOnePhase = "Reload" {
+                    write " ("_tModule.Root_")"
+                }
+
+                // Notify source control (no-op if not configured)
+                set tSC = ##class(%IPM.ExtensionBase.SourceControl.Interface).%OnBeforePhase(tModule,tOnePhase,.pParams)
+                $$$ThrowOnError(tSC)
+                $$$ThrowOnError(tLifecycle.OnBeforeResourceProcessing(tOnePhase, .pParams))
+                // Notify resource processors
+                set orderedResourceList = tModule.GetOrderedResourceList()
+                set tKey = ""
+                for {
+                    #dim tResource As %IPM.Storage.ResourceReference
+                    set tResource = orderedResourceList.GetNext(.tKey)
+                    if (tKey = "") {
+                        quit
+                    }
+                    if $isobject(tResource.Processor) && tResource.IsInScope(tOnePhase) {
+                        do tResource.Processor.SetParams(.pParams)
+                        set tSC = $method(tResource.Processor,"OnBeforePhase",tOnePhase,.pParams)
+                        $$$ThrowOnError(tSC)
+                    }
+                }
+
+                #; Call Invoke Methods Before Phase
+                set tKey = ""
+                for {
+                    set tInvoke = tModule.Invokes.GetNext(.tKey)
+                    quit:(tKey = "")
+                    set tSC = tInvoke.OnBeforePhase(tOnePhase,.pParams)
+                    quit:$$$ISERR(tSC)
+                }
+                quit:$$$ISERR(tSC)
+
+                if tIsCustomPhase {
+                    set tKey = ""
+                    for {
+                        set tResource = orderedResourceList.GetNext(.tKey)
+                        if tKey = "" {
+                            quit
+                        }
+                        set tProcessor = tResource.Processor
+                        // %IsA() only returns true if the class is the "primary" superclass, while %Extends() works for other superclasses (such as mixins).
+                        if $isobject(tProcessor) && tProcessor.%Extends("%IPM.ResourceProcessor.CustomPhaseMixin") && tResource.IsInScope(tOnePhase) {
+                            $$$ThrowOnError(tProcessor.OnCustomPhase(tOnePhase, .pParams))
+                        }
+                    }
+                } else {
+                    // Lifecycle before / (phase) / after
+                    new $$$DeployedProjectInstalled
+                    $$$ThrowOnError(tLifecycle.OnBeforePhase(tOnePhase,.pParams))
+
+                    // Self-uninstall: Finalize history before Clean phase deletes IPM's own classes
+                    set isSelfUninstall = (tOnePhase = "Clean") && (tModule.Name = $$$IPMModuleName)
+                    if isSelfUninstall && $isobject(pLog) {
+                        // Log the Clean phase completion and finalize now
+                        do pLog.FinalizePhase(tOnePhase, $$$OK)
+                        set tSC = pLog.Finalize($$$OK)
+                        $$$ThrowOnError(tSC)
+                        // Explicitly persist to twin while History classes still exist
+                        $$$ThrowOnError(pLog.PersistToTwin())
+                        // Delete the temp record immediately to prevent %OnClose() from trying to reload it later
+                        $$$ThrowOnError(pLog.%DeleteId(pLog.%Id()))
+                        // Clear the log object reference so it's not used again
+                        set pLog = ""
+                    }
+
+                    $$$ThrowOnError($method(tLifecycle,"%"_tOnePhase,.pParams))
+
+                    // Self-uninstall: After Clean deletes IPM's own classes, skip all post-phase callbacks
+                    if isSelfUninstall {
+                        // Print success message before skipping
+                        write !,"["_$namespace_"|"_tModule.DisplayName_"]",$char(9),tOnePhase," SUCCESS"
+                        if tTiming {
+                            write " ("_($zhorolog-tStart)_" s)"
+                        }
+                        // Skip all post-phase processing - classes have been deleted
+                        continue
+                    }
+
+                    $$$ThrowOnError(tLifecycle.OnAfterPhase(tOnePhase,.pParams))
+                }
+
+                #; Call Invoke Methods After Phase
+                set tKey = ""
+                for {
+                    set tInvoke = tModule.Invokes.GetNext(.tKey)
+                    if (tKey = "") || '$isobject(tInvoke) {
+                        quit // '$IsObject can happen reasonably after namespace changes
+                    }
+                    set tSC = tInvoke.OnAfterPhase(tOnePhase,.pParams)
+                    quit:$$$ISERR(tSC)
+                }
+                quit:$$$ISERR(tSC)
+
+                // Notify resource processors
+                set orderedResourceList = tModule.GetOrderedResourceList()
+                set tKey=""
+                for {
+                    set tResource = orderedResourceList.GetNext(.tKey)
+                    if (tKey = "") {
+                        quit
+                    }
+                    if $isobject(tResource.Processor) && tResource.IsInScope(tOnePhase) {
+                        do tResource.Processor.SetParams(.pParams)
+                        set tSC = $method(tResource.Processor,"OnAfterPhase",tOnePhase,.pParams)
+                        $$$ThrowOnError(tSC)
+                    }
+                }
+                ///Works after resource processing
+                $$$ThrowOnError(tLifecycle.OnAfterResourceProcessing(tOnePhase, .pParams))
+                // Notify source control (no-op if not configured)
+                set tSC = ##class(%IPM.ExtensionBase.SourceControl.Interface).%OnAfterPhase(tModule,tOnePhase,.pParams)
+                $$$ThrowOnError(tSC)
+            } catch e {
+                set tSC = e.AsStatus()
+                if pLog '= "" {
+                    do pLog.FinalizePhase(tOnePhase, e.AsStatus())
+                }
+            }
+
+            if $$$ISERR(tSC) {
+                write !,"["_tModule.DisplayName_"]",$char(9),tOnePhase," FAILURE"
+            } else {
+                write !,"["_$namespace_"|"_tModule.DisplayName_"]",$char(9),tOnePhase," SUCCESS"
+            }
+            if tTiming {
+                write " ("_($zhorolog-tStart)_" s)"
+            }
+            $$$ThrowOnError(tSC)
+
+            if pLog '= "" {
+                do pLog.FinalizePhase(tOnePhase, $$$OK)
+            }
+        }
+        if tOverallTiming {
+            write !,"["_tModule.DisplayName_"]",$char(9),"(total time: ",($zhorolog-tFullStart)," s)"
+        }
+    } catch e {
+        set tSC = e.AsStatus()
+    }
+    quit tSC
+}
+
+Storage/Module.cls::GetOrderedResourceList src/cls/IPM/Storage/Module.cls:277-322
+Method GetOrderedResourceList() As %ListOfObjects
+{
+    set nonDocumentResourceList = ##class(%ListOfObjects).%New()
+    set tKey = ""
+    for {
+        set tResource = ..Resources.GetNext(.tKey)
+        quit:tKey=""
+        // Ignore any Document resources that start with a '/' (e.g. /inc) as they refer to a directory and can be processed in any order
+        if (($isobject(tResource.Processor)) && (tResource.Processor.%Extends("%IPM.ResourceProcessor.Default.Document")) && ($extract(tResource.Name) '= "/")) {
+            // Strip extension from resource name as that caused improper sorting (i.e. MyPackage.MyClass.CLS gets sorted before MyPackage.PKG)
+            set tResourceName = $piece(tResource.Name,".",1,*-1)
+            if ($get(documentResourceList(tResourceName)) = "") {
+                set documentResourceList(tResourceName) = ##class(%ListOfObjects).%New()
+            }
+            do documentResourceList(tResourceName).Insert(tResource)
+        }
+        else {
+            do nonDocumentResourceList.Insert(tResource)
+        }
+    }
+    set orderedResourceList = ##class(%ListOfObjects).%New()
+
+    // Combine all objects into one larger list
+    // First document resources
+    set tKey = ""
+    for {
+        set tKey = $order(documentResourceList(tKey))
+        quit:tKey=""
+        set tResourceList = documentResourceList(tKey)
+        set tKey2 = ""
+        for {
+            set tResource = tResourceList.GetNext(.tKey2)
+            quit:tKey2=""
+            do orderedResourceList.Insert(tResource)
+        }
+    }
+    // Then non-document resources
+    set tKey = ""
+    for {
+        set tResource = nonDocumentResourceList.GetNext(.tKey)
+        quit:tKey=""
+        do orderedResourceList.Insert(tResource)
+    }
+
+    return orderedResourceList
+}
+
+Storage/Module.cls::GetStudioProject src/cls/IPM/Storage/Module.cls:1695-1765
+Method GetStudioProject(
+	Output pProject As %Studio.Project,
+	pDeployedCode As %Boolean = "",
+	pDefaultDeployedValue As %Boolean = "",
+	pProjectSuffix As %String = "") As %Status
+{
+    set tSC = $$$OK
+    try {
+        set tProjectName = $replace(..DisplayName,".","_")_$case(pProjectSuffix,"":"",:"_"_pProjectSuffix)
+        if ##class(%Studio.Project).%ExistsId(tProjectName) {
+            set pProject = ##class(%Studio.Project).%OpenId(tProjectName,,.tSC)
+            $$$ThrowOnError(tSC)
+        } else {
+            set pProject = ##class(%Studio.Project).%New()
+            set pProject.Name = tProjectName
+        }
+
+        do pProject.Items.Clear()
+
+        if (pDeployedCode = 0) {
+            // Include module manifest in project with non-deployed code. Caller will call once with pDeployedCode = 1,
+            // once with pDeployedCode = 0 to get separate Studio projects; only want this in one of them.
+            do pProject.AddItem(..Name_".ZPM")
+        }
+
+        set orderedResourceList = ..GetOrderedResourceList()
+        set tResourceKey = ""
+        for {
+            #dim tResource As %IPM.Storage.ResourceReference
+            set tResource = orderedResourceList.GetNext(.tResourceKey)
+            if (tResourceKey = "") {
+                quit
+            }
+
+            if (pDeployedCode '= "") {
+                if (tResource.Deploy '= "") && (tResource.Deploy '= pDeployedCode) {
+                    continue
+                }
+                if (tResource.Deploy = "") && (pDefaultDeployedValue '= pDeployedCode) {
+                    continue
+                }
+            }
+
+            if $isobject(tResource.Processor) {
+                do tResource.Processor.OnGetStudioProject(pProject,.handled)
+                continue:handled
+            }
+
+            kill tResourceArray
+            $$$ThrowOnError(tResource.ResolveChildren(.tResourceArray))
+
+            set tChildResourceKey = ""
+            for {
+                set tChildResourceKey = $order(tResourceArray(tChildResourceKey))
+                if (tChildResourceKey = "") {
+                    quit
+                }
+
+                // Add object code for deployed items, since source is unavailable.
+                // Skip the per-item project check; it validates the whole project each time. One
+                // check after all items are added covers the same ground far more cheaply.
+                $$$ThrowOnError(..AddItemToProject(pProject,tChildResourceKey,0))
+            }
+        }
+        $$$ThrowOnError(pProject.Check())
+        $$$ThrowOnError(pProject.%Save())
+    } catch e {
+        set tSC = e.AsStatus()
+    }
+    quit tSC
+}
+
+Storage/SystemRequirements.cls::CheckHealth src/cls/IPM/Storage/SystemRequirements.cls:72-83
+Method CheckHealth() As %Status
+{
+    set tIsHealthInstance = ..IsHealthInstance()
+    if ..Health && 'tIsHealthInstance {
+        set msg = "The module requires InterSystems IRIS for Health, HealthConnect, or HealthShare. Current system is not compatible."
+        return $$$ERROR($$$GeneralError, msg)
+    } elseif ..Health = 0 && tIsHealthInstance {
+        set msg = "The module cannot be installed on InterSystems IRIS for Health, HealthConnect, or HealthShare. Current system is not compatible."
+        return $$$ERROR($$$GeneralError, msg)
+    }
+    return $$$OK
+}
+
+Storage/SystemRequirements.cls::CheckInteroperability src/cls/IPM/Storage/SystemRequirements.cls:62-70
+Method CheckInteroperability() As %Status
+{
+    set tInteroperabilityRequired = $case(..Interoperability, "enabled":1, :0) || ..Health
+    set tInteroperabilityEnabled = ..IsInteroperabilityEnabled()
+    if tInteroperabilityRequired && ('tInteroperabilityEnabled) {
+        return $$$ERROR($$$GeneralError, "This module requires an interoperability-enabled namespace. "_$namespace_" is not interoperability-enabled.")
+    }
+    return $$$OK
+}
+
+Storage/SystemRequirements.cls::CheckRequirements src/cls/IPM/Storage/SystemRequirements.cls:32-42
+Method CheckRequirements() As %Status
+{
+    set tSC = $$$OK
+    set tSC = $system.Status.AppendStatus(tSC,..CheckVersion())
+    set tSC = $system.Status.AppendStatus(tSC,..CheckInteroperability())
+    set tSC = $system.Status.AppendStatus(tSC,..CheckHealth())
+    set tSC = $system.Status.AppendStatus(tSC,..CheckIPMVersion())
+    set tSC = $system.Status.AppendStatus(tSC,..CheckPythonVersion())
+    set tSC = $system.Status.AppendStatus(tSC,..CheckSYSNamespace())
+    return tSC
+}
+
+Storage/SystemRequirements.cls::CheckSYSNamespace src/cls/IPM/Storage/SystemRequirements.cls:133-139
+Method CheckSYSNamespace() As %Status
+{
+    if ..SYSNamespace && ($namespace'="%SYS") {
+        return $$$ERROR($$$GeneralError, "The module requires the %SYS namespace. Current namespace is "_$namespace)
+    }
+    return $$$OK
+}
+
+Utils/FileBinaryTar.cls::ExtractFile src/cls/IPM/Utils/FileBinaryTar.cls:136-151
+ClassMethod ExtractFile(
+	aFileName As %String = "",
+	Gzip As %Boolean = 1,
+	pTargetDirectory As %String) As FileBinaryTar
+{
+    if (aFileName = "") {
+        return $$$ERROR($$$GeneralError, "Filename not specified")
+    }
+    if Gzip {
+        set fileStream=##class(%Stream.FileBinaryGzip).%New()
+    } else {
+        set fileStream=##class(%Stream.FileBinary).%New()
+    }
+    set fileStream.Filename=aFileName
+    return ..ExtractStream(fileStream, pTargetDirectory)
+}
+
+Utils/FileBinaryTar.cls::ExtractStream src/cls/IPM/Utils/FileBinaryTar.cls:197-273
+ClassMethod ExtractStream(
+	aFileStream As %Stream.Object,
+	pTargetDirectory As %String) As FileBinaryTar
+{
+    #dim tFile As FileBinaryTar
+    set blockSize = ..#BLOCKSIZE
+    set result=..%New()
+    while 'aFileStream.AtEnd {
+        set tFile=..%New()
+        set longLink4Name=""
+        set longLink4Link=""
+        do {
+            set repeat=0
+            set tHeader=aFileStream.Read(blockSize)
+            do tFile.ParseHeader(tHeader)
+            if tFile.name="./" {
+                set repeat=1
+                continue
+            }
+            if ($extract(tFile.name, 1, 2) = "./") {
+                set tFile.name = $extract(tFile.name, 3, *)
+            }
+            quit:tFile.name=""
+            set $extract(tHeader, 149, 156) = $justify("", 8)
+            set chksumExpected = $zcrc(tHeader, 0)
+            set chksum = $$oct2dec^%Wmdc(+tFile.chksum)
+            if (chksumExpected'=chksum) {
+                throw ##class(%Exception.General).%New("Checksum mismatch: "_chksumExpected_":"_chksum)
+            }
+            set fileSize=tFile.size
+            set typeFlag=tFile.typeflag
+            // GNU long name (L) and long link (K) headers, or a pax extended header (x), describe the next entry
+            if (typeFlag="L") || (typeFlag="K") || (typeFlag="x") {
+                set readBlocks=fileSize \ blockSize
+                set:fileSize#blockSize>0 readBlocks=readBlocks + 1
+                set longLink=aFileStream.Read(readBlocks * blockSize)
+                if (typeFlag="x") {
+                    do ..ParsePaxRecords($extract(longLink, 1, fileSize), .longLink4Name, .longLink4Link)
+                } else {
+                    set longLink=$zstrip(longLink,"<>",$char(0,32))
+                    set:(typeFlag="L") longLink4Name=longLink
+                    set:(typeFlag="K") longLink4Link=longLink
+                }
+                set repeat=1
+                continue
+            }
+            set repeat=0
+            set:longLink4Name'="" tFile.name=longLink4Name
+            set:longLink4Link'="" tFile.linkname=longLink4Link
+        } while repeat
+        set fileName=tFile.name
+        quit:fileName=""
+        if ( (tFile.typeflag'="g") && (tFile.typeflag=5) ) {
+            // save directory
+            do tFile.ExtractTo(pTargetDirectory)
+        }
+
+        set readBlocks=fileSize \ blockSize
+        set:fileSize#blockSize>0 readBlocks=readBlocks + 1
+        set tFile.fileData=##class(%Stream.FileBinary).%New()
+        for tPos=1:1:readBlocks {
+            set tData=aFileStream.Read(blockSize)
+            if (tPos=readBlocks)&&(fileSize#blockSize>0) {
+                set tData=$extract(tData, 1, fileSize#blockSize)
+            }
+            do tFile.fileData.Write(tData)
+        }
+        if (fileSize'=tFile.fileData.Size) {
+            throw ##class(%Exception.General).%New("File size mismatch: "_fileSize_":"_tFile.fileData.Size)
+        }
+        if tFile.typeflag'="g" {
+            // save file
+            do tFile.ExtractTo(pTargetDirectory)
+        }
+    }
+    return result
+}
+
+Utils/FileBinaryTar.cls::ParseHeader src/cls/IPM/Utils/FileBinaryTar.cls:323-342
+Method ParseHeader(aHeaderData As %String) As %Status [ CodeMode = objectgenerator, Internal ]
+{
+    set tProps=%class.Properties
+    set tPropKey = ""
+    for {
+        set tProp = %class.Properties.GetNext(.tPropKey)
+        quit:(tPropKey = "")
+        continue:"Header"'=tProp.Parameters.GetAt("CAPTION")
+        set tProps(tProp.SequenceNumber)=tProp
+    }
+    set tPropKey = "", tPos = 0
+    for {
+        set tPropKey = $order(tProps(tPropKey),1,tProp)
+        quit:tPropKey=""
+        set tLen = tProp.Parameters.GetAt("MAXLEN")
+        do %code.WriteLine($char(9)_"Set i%"_tProp.Name_" = $zstrip($extract(aHeaderData, "_$increment(tPos)_", "_$increment(tPos, tLen - 1)_"), ""<>"", $c(0,32))")
+        do:tProp.Name="typeflag" %code.WriteLine($char(9)_"Set:i%"_tProp.Name_"=$c(0) i%"_tProp.Name_" = 0")
+    }
+    return $$$OK
+}

@@ -1,0 +1,177 @@
+[
+  {
+    "id": "L2",
+    "question": "Can we distinguish the child\u2019s own success, its data and its missing audit row?",
+    "answer": "The child keeps its own Success meaning. Its data may roll back and the permanent row may disappear as built, violating the surviving-record requirement.",
+    "owning_blocks": {
+      "history.dependencies.parent-rollback": {
+        "path": ".g5/ontology/features/history.g5.md",
+        "text": "A dependency's `Success` records its own returned status, even if its parent's later rollback undoes its data. `Committed` describes kept database writes.\n\n- The surviving-record requirement remains in [history.survives-rollback](#history.survives-rollback).\n\n- As built, the child can finish successfully and then lose its permanent row with the parent's rollback (G:D1 = P:F-HIST-1). These facts are supported by the property comments, native receipts, and the history design discussion recorded in P DEC-HIST-1.\n\n- Q-06 remains an alias of this resolved meaning; audit retention under a caller's transaction stays [open](#history.committed.nested).",
+        "sha256": "475b8566ca9592a90a2f4d6433cc51f74410b5bf4642d71b71681e44afea93bf"
+      },
+      "history.survives-rollback": {
+        "path": ".g5/ontology/features/history.g5.md",
+        "text": "A record survives any rollback that undoes its action, so failures stay visible afterwards. This includes a parent load's rollback of a dependency it loaded.\n\n- Whether a record survives a rollback by the caller's own transaction is open ([nested](#history.committed.nested)).\n\n- As built, a dependency's permanent record inserted inside its parent's transaction can disappear with the parent's rollback (G:D1 = P:F-HIST-1). Its successful result in IRISTEMP, installed data, and permanent row are three separate observations.\n\n- This contradicts the survival requirement; it does not redefine success.\n\n- Unresolved Q-30: [Which repair should preserve child history without lying about Committed?](#history.survives-rollback.repair-policy)",
+        "sha256": "d45760a0251170ede7c28b0e1ff816a38c2e9ac7ee5f71fcda6b000fcb178fa6"
+      }
+    },
+    "status": "answerable with stated uncertainty; no model inference"
+  },
+  {
+    "id": "L3",
+    "question": "Is loss on caller rollback a product fact or an approved policy?",
+    "answer": "Loss of caller-held transaction data/history after a later caller rollback is a product fact; independent audit retention is still an unapproved policy choice with explicit alternatives.",
+    "owning_blocks": {
+      "history.committed.nested": {
+        "path": ".g5/ontology/features/history.g5.md",
+        "text": "When a caller wraps an IPM command in its own transaction, must the record survive the caller's rollback, and what should `Committed` say?\n\n- Provisional answer: the record survives, because the original request says \"if install rolls back we still need the history\". `Committed` is exact only for actions started outside any caller transaction, because IPM cannot know the caller's later outcome. Record this limit.\n- Reason: no source says whether wrapping IPM in a caller's transaction is supported.\n- Alternative: compare the transaction level at the end with the level at the start, so any commit nested in a caller transaction reads uncommitted.\n- Alternative: treat caller-held transactions as unsupported, so the record may be lost with them.\n\n- Settled observation: the command may return success before the caller later rolls back its module data and permanent history row. The imported model proves this no-trace result under its stated domain. Published caller-transaction use does not decide the independent audit retention policy; the working assumption and alternatives above remain policy proposals.",
+        "sha256": "a2c065a0c40e558869dbd0acd6998ee008388071e03ede042af38ad9dcc68289"
+      }
+    },
+    "status": "answerable with stated uncertainty; no model inference"
+  },
+  {
+    "id": "L7",
+    "question": "Is the late failure visible beside the normal rollback rule?",
+    "answer": "The normal rollback table applies before final commit. Message or cleanup failure afterwards returns error with module kept and committed history; success and brace-free macro are distinct neighbors.",
+    "owning_blocks": {
+      "load.outcome": {
+        "path": ".g5/ontology/features/load.g5.md",
+        "text": "What a failed load keeps depends on how it ran.\n\n| How the load ran | What a failure keeps |\n|---|---|\n| Normal mode, in a transaction | No module data. The whole load, including dependencies loaded for it, is rolled back. |\n| Developer mode, in a transaction | Depends on when it fails. See [developer-mode commits](#load.outcome.dev). |\n| `-DNoTransaction=1` or `-DNoJournal=1` | Everything written before the failure. |\n\n- A [refusal](#load.refusal) keeps no module data in any mode. The requirements check is the open exception.\n- A process that dies mid-load ends like a failure at that point. The open transaction is rolled back, so the table applies, and with `-DNoTransaction=1` or `-DNoJournal=1` nothing is rolled back and the namespace may be left inconsistent.\n- Whether a dependency's own `<Defaults>` transaction flags change this is open: `NoJournal` ([dependency defaults](../concepts/transactions-and-dev-mode.g5.md#transaction.flag-sources.dependency-defaults)) and `NoTransaction` ([dependency NoTransaction](../concepts/transactions-and-dev-mode.g5.md#transaction.flag-sources.dependency-no-transaction)).\n- Files and other changes outside the database follow the [rollback scope](../concepts/transactions-and-dev-mode.g5.md#transaction.rollback-scope).\n- The [history record](history.g5.md#history.committed) shows whether anything was kept. After a dying process, see [record](history.g5.md#history.record).\n\n- This rollback rule applies to database writes made before the final commit, with journaling enabled. A failed after-install message or cleanup after that commit returns an error with the module kept ([late errors](#load.status.after-commit)).\n- Child flags are resolved separately on each activation. An absent parent key permits the child's own default; a defined parent value, including zero, wins.\n- Child `NoTransaction` skips its own `TSTART` and leaves an existing parent transaction open. Child `NoJournal` can make its writes survive parent rollback. Their intended policy stays in the linked child questions.\n- Class descriptors and usable code are separate outcomes. After two-resource compile failure, ordinary rollback removes both classes.\n- Without transactions, or after the developer commit, both descriptors may remain while only the first class runs. This relies on the observed IRIS compiler behavior, not on a proof of the compiler.",
+        "sha256": "ca19f5889739841bee078f246be7aef9186f742b7be8cc5665a2001a3f55ceca"
+      },
+      "load.status": {
+        "path": ".g5/ontology/features/load.g5.md",
+        "text": "A load's result tells the caller whether the load took effect. Success means the module and its dependencies are installed and every phase finished.\n\n- An error means the module data was not kept, as described in [what a failed load keeps](#load.outcome).\n\n- As built, an error can also follow the final commit. The caller must read the stored module and committed history result separately from status ([late errors](#load.status.after-commit)); a successful message and a brace-free macro are distinct valid neighbors.",
+        "sha256": "c46bbf0f6f1914d468a35bda0fbcc7f0126bf81547f1ec36eb25d79fd9076ac0"
+      },
+      "load.status.after-commit": {
+        "path": ".g5/ontology/features/load.g5.md",
+        "text": "Some work runs after the final commit, so it cannot undo the load. A failure there must not report the kept load as failed.\n\n- This work is: removing the temporary repository, printing the [after-install message](#load.after-install-message), and finishing the history record.\n- As built, a failure in this work returns an error although the module stays installed and its history record reads committed. This is a known defect.\n- Inside a parent's load, the same failure in a dependency fails the dependency. The parent then rolls back as [a failed load](#load.outcome): fully in normal mode, and back to its first commit in developer mode.",
+        "sha256": "ab93648d3103f92c83f478eba289a4f2b2fc52bc32c53ca60a578cc75f555197"
+      }
+    },
+    "status": "answerable with stated uncertainty; no model inference"
+  },
+  {
+    "id": "L12",
+    "question": "Does a permitted delete always win against an in-progress writer?",
+    "answer": "Delete does not have a universal win guarantee: top-level and parent-transaction-locked child rows differ. Held-out stale writer deletion stayed absent; other concurrent schedules and retention policy remain open.",
+    "owning_blocks": {
+      "history.delete.running-records": {
+        "path": ".g5/ontology/features/history.g5.md",
+        "text": "May `history delete` or the daily [purge](#history.retention) remove the record of an action that is still running, and what should that action's final write do then?\n\n- Provisional answer: a delete or purge may remove any matching record, and the running action must still finish normally whether or not its record comes back.\n- Reason: no source covers this case. Deleting is an explicit user choice, and the log must not make a package change fail.\n- Alternative: skip records of running actions, or always write the final result back.\n\n- Source/observation boundary: an in-memory twin and the database row can differ. A new held-out stale-writer interleaving deleted the twin, then finalized and persisted; persist returned OK and the row stayed absent.\n- This narrows the prior resurrection hypothesis. It does not establish every concurrent lock schedule.\n- A dependency row may be protected by the parent's transaction lock; top-level rows do not share that premise. Keep true concurrent and cross-namespace schedules open.",
+        "sha256": "fe05855616ab79746a2c05b365621be3d7d4ab2b39db4dba2db7b02800b63ec2"
+      }
+    },
+    "status": "answerable with stated uncertainty; no model inference"
+  },
+  {
+    "id": "L13",
+    "question": "What does the history bit promise about files?",
+    "answer": "Committed describes database writes, not filesystem rollback. Copies and lock files can remain; compensation of external effects is a separate open policy.",
+    "owning_blocks": {
+      "history.committed": {
+        "path": ".g5/ontology/features/history.g5.md",
+        "text": "For `load`, `install` and `update`, `Committed` shows whether the action kept any changes, either by a commit or by writing outside a transaction. An uncommitted action wrote nothing or was rolled back.\n\n- A successful action is committed, unless a parent load's rollback later undoes it. A dependency undone that way reads uncommitted.\n- A failure rolled back in full is not committed. This includes a developer-mode failure before its [first commit](load.g5.md#load.outcome.dev.early-failure).\n- A developer-mode failure after its first commit is committed.\n- A failure with `-DNoTransaction=1` or `-DNoJournal=1` is committed once the action has started writing.\n- A refusal before anything is written is not committed, in any mode.\n\n- `Committed` describes database writes; it does not promise to undo copied files, lock files, pip effects or CPF changes. The property comment and maintainer history design review settle this field meaning (P DEC-HIST-5).\n\n- Inherited [side-effects question](#history.committed.side-effects) is retained as an alias for that resolved interpretation. After a post-commit error the record can be committed and unsuccessful.\n\n- Unresolved Q-26: [Should a parent record count writes kept only by its NoJournal dependency?](#history.committed.escaped-dependency)",
+        "sha256": "26e78b612340230b9740de077b6fc0615b61d304946ccc37642ac1a5508e3694"
+      },
+      "transaction.rollback-scope": {
+        "path": ".g5/ontology/concepts/transactions-and-dev-mode.g5.md",
+        "text": "A database rollback undoes journaled writes in its transaction. It does not undo filesystem copies, lock files, CPF effects, pip installs or remote calls.\n\n- The database-only interpretation of the history bit is source-backed (P DEC-HIST-5). New native FileCopy tests kept a copied file after a failing load rolled its module record back; a deferred-copy neighbor left no file.\n\n- The broader policy question is [external effects](#transaction.rollback-scope.policy); CPF's real merge/rollback behavior remains an explicit environment hypothesis until exercised safely.",
+        "sha256": "8c1b892ce07b67e351212441d877f7cc7f4fcc617daccdc770739ef6950be78d"
+      }
+    },
+    "status": "answerable with stated uncertainty; no model inference"
+  },
+  {
+    "id": "B7",
+    "question": "Can the retry obligation be applied after an exact-byte revert?",
+    "answer": "A failed sync with an existing baseline sets SyncFailed and is retried even after exact-byte revert. A failed compile/load/reload outside sync can change server code without that mark; reverting to baseline can then hide the change (OUT premise/F-SYNC-1). Tests fail after successful sync hash commit and do not undo it.",
+    "owning_blocks": {
+      "devtools.sync": {
+        "path": ".g5/ontology/features/developer-tools.g5.md",
+        "text": "`sync [<module>]` brings changed files from disk into developer-mode modules without a full reload. It finds files changed since the last load or sync by their hash and recompiles only what is out of date.\n\n- With no module, it syncs every developer-mode module in dependency order.\n- `-delete` also removes items whose files were deleted, and `-test` runs test classes that changed.\n- `load -skip-sync` leaves recording the hashes to the next `sync`.\n\n- A failed sync with an existing baseline keeps its retry mark. The next sync retries that file even if its bytes equal the stored baseline.\n\n- A failed compile, load or reload outside sync can change server code without setting that mark. Reverting to exact baseline bytes can then make sync report nothing to do while the server keeps the edited code; this is the separate outside-sync premise and P:F-SYNC-1.\n\n- A test failure after successful sync activation happens after hash commit and does not undo it.",
+        "sha256": "071b45097ade1cfd30276360886c77e02569d547b210fef68213def485df2f8f"
+      },
+      "devtools.sync.retry": {
+        "path": ".g5/ontology/features/developer-tools.g5.md",
+        "text": "If a file fails to sync, the next `sync` tries it again. With an existing baseline, `SyncFailed` keeps it selected even after an exact-byte revert.\n\nA compile, load or reload outside sync follows the distinct [outside-sync condition](#devtools.sync); it may not set a retry mark.",
+        "sha256": "954dedf3c29d22478b4a9b7a6037b5499beec0758175abaf13705b8df2f3de6f"
+      }
+    },
+    "status": "answerable with stated uncertainty; no model inference"
+  },
+  {
+    "id": "B6",
+    "question": "Is the difference between an ordinary load and the Test phase explicit?",
+    "answer": "Ordinary activation omits test-scoped resources; Test phase includes its resources/dependencies.",
+    "owning_blocks": {
+      "module.resource.scope": {
+        "path": ".g5/ontology/concepts/modules.g5.md",
+        "text": "A resource with `Scope=\"test\"` stays out of ordinary installs. It loads and compiles in the Test phase, and packaging leaves it out unless tests are included.",
+        "sha256": "253231cf95535bc3e9a738745439cfbdc9aecf1dbb05f0dfbbb95eb280fdd655"
+      },
+      "build.test": {
+        "path": ".g5/ontology/features/build-and-publish.g5.md",
+        "text": "`test <module>` runs the module's unit tests in the current namespace. Test-scoped resources and dependencies load for this phase only.",
+        "sha256": "da7799295a0f6748ae933802d38c515a3057dae72b9c546278db0109272e748b"
+      }
+    },
+    "status": "answerable with stated uncertainty; no model inference"
+  },
+  {
+    "id": "L4",
+    "question": "Does \u201cnormal load rolls back its dependencies\u201d distinguish child defaults from parent flags?",
+    "answer": "Each activation merges flags by key; defined parent value including zero wins. Absent parent allows child NoJournal to escape rollback; child NoTransaction leaves an open parent transaction intact. Desired policy remains a child Q.",
+    "owning_blocks": {
+      "transaction.flag-sources": {
+        "path": ".g5/ontology/concepts/transactions-and-dev-mode.g5.md",
+        "text": "These flags can come from the command line, from the namespace's [default modifiers](settings.g5.md#settings.default-modifiers) or from the module's own `<Defaults>`. A value given on the command line wins over the other two.\n\n- How a dependency's own `<Defaults>` interact with its parent's transaction is open for `NoJournal` ([dependency defaults](#transaction.flag-sources.dependency-defaults)) and for `NoTransaction` ([dependency NoTransaction](#transaction.flag-sources.dependency-no-transaction)).\n\n- The effective values are merged by key at each `LoadNewModule` activation. A parent parameter that exists, even zero, overrides the child's default.\n\n- If it is absent, the child's own value applies. Child `NoTransaction` does not cancel an already-open parent transaction; child `NoJournal` disables process journaling during that activation and can escape rollback.\n\n- These are settled source/native facts; the linked questions ask whether to preserve that policy.",
+        "sha256": "e5443a4fb044ec252aaec0dde64bffb63fd55410b8e7c20d211e66f357de2d49"
+      },
+      "load.outcome": {
+        "path": ".g5/ontology/features/load.g5.md",
+        "text": "What a failed load keeps depends on how it ran.\n\n| How the load ran | What a failure keeps |\n|---|---|\n| Normal mode, in a transaction | No module data. The whole load, including dependencies loaded for it, is rolled back. |\n| Developer mode, in a transaction | Depends on when it fails. See [developer-mode commits](#load.outcome.dev). |\n| `-DNoTransaction=1` or `-DNoJournal=1` | Everything written before the failure. |\n\n- A [refusal](#load.refusal) keeps no module data in any mode. The requirements check is the open exception.\n- A process that dies mid-load ends like a failure at that point. The open transaction is rolled back, so the table applies, and with `-DNoTransaction=1` or `-DNoJournal=1` nothing is rolled back and the namespace may be left inconsistent.\n- Whether a dependency's own `<Defaults>` transaction flags change this is open: `NoJournal` ([dependency defaults](../concepts/transactions-and-dev-mode.g5.md#transaction.flag-sources.dependency-defaults)) and `NoTransaction` ([dependency NoTransaction](../concepts/transactions-and-dev-mode.g5.md#transaction.flag-sources.dependency-no-transaction)).\n- Files and other changes outside the database follow the [rollback scope](../concepts/transactions-and-dev-mode.g5.md#transaction.rollback-scope).\n- The [history record](history.g5.md#history.committed) shows whether anything was kept. After a dying process, see [record](history.g5.md#history.record).\n\n- This rollback rule applies to database writes made before the final commit, with journaling enabled. A failed after-install message or cleanup after that commit returns an error with the module kept ([late errors](#load.status.after-commit)).\n- Child flags are resolved separately on each activation. An absent parent key permits the child's own default; a defined parent value, including zero, wins.\n- Child `NoTransaction` skips its own `TSTART` and leaves an existing parent transaction open. Child `NoJournal` can make its writes survive parent rollback. Their intended policy stays in the linked child questions.\n- Class descriptors and usable code are separate outcomes. After two-resource compile failure, ordinary rollback removes both classes.\n- Without transactions, or after the developer commit, both descriptors may remain while only the first class runs. This relies on the observed IRIS compiler behavior, not on a proof of the compiler.",
+        "sha256": "ca19f5889739841bee078f246be7aef9186f742b7be8cc5665a2001a3f55ceca"
+      }
+    },
+    "status": "answerable with stated uncertainty; no model inference"
+  },
+  {
+    "id": "L9",
+    "question": "Will a reader know that the order of filter keys can change which records are deleted?",
+    "answer": "Keys are walked in IRIS collation order. The first invalid/absent key stops parsing; earlier predicates remain and all later keys are ignored. An underscore-only filter can delete every seeded row.",
+    "owning_blocks": {
+      "history.read.filter": {
+        "path": ".g5/ontology/features/history.g5.md",
+        "text": "`-D<column>=<value>` filters records, and several filters must all match.\n\n- A value can use `*` as a wildcard, or start with `>`, `>=`, `<`, `<=` or `<>`.\n- `history schema` lists the columns that can be filtered.\n- Versions are filtered by part, such as `Version_Major`.\n- Filters work the same way for `find` and `delete`.\n\n- As built, `ConstructSQLWhere` walks keys in IRIS collation order and stops at the first absent value or name outside `[A-Za-z][A-Za-z0-9]*`. It keeps earlier predicates and ignores that key and every later one.\n\n- An underscore column such as `Version_Major` can therefore leave no predicate: an unmatched `Version_Major=99` deleted all three seeded identities. A valid `Package=del-b` or `Success=0` deleted only its matches.\n\n- An unknown alphanumeric column raises SQL error; `find` can hide that error behind an empty successful listing while delete throws. These are failures of the rule, not permitted filtering behavior (G:D2).",
+        "sha256": "e32da85c1bc7d9b9a386831252fe68fb3fc954b5c022ea7b8367e8c4e22e18cf"
+      },
+      "history.delete": {
+        "path": ".g5/ontology/features/history.g5.md",
+        "text": "`history delete` deletes the records that match its filters.\n\n- Deleting every record in the namespace, with no filter, requires `-confirm`.\n- With `-globally`, it deletes the matching records in every namespace ([no confirmation](#history.delete.global-unfiltered)).\n- `-verbose` shows how many records each namespace lost and which namespaces were skipped for lack of permission.\n\n- The intended exact-selection rule above is violated by the filter parser's stop rule ([filter conditions](#history.read.filter)). Neither the presence of a syntactic filter nor `-confirm` ensures an effective predicate.\n\n- Global delete ignores namespace exceptions in the as-built loop. A valid filter's exact deleted identities remain part of the guarantee.\n\n- Unresolved Q-27: [Must global delete report namespace errors other than missing permission?](#history.delete.global-errors)",
+        "sha256": "bbe6a171fbccd9d005d296cc2b356f6eb6fdc5c78bca52761f3630af13c86d63"
+      }
+    },
+    "status": "answerable with stated uncertainty; no model inference"
+  },
+  {
+    "id": "L11",
+    "question": "Are the global CLI view and programmatic query identified separately?",
+    "answer": "CLI fetches in each namespace with namespace labels and per-namespace limit. GlobalRecordsFetch repeats caller rows and lacks namespace/ID in row schema; their correctness is distinct.",
+    "owning_blocks": {
+      "history.read.global": {
+        "path": ".g5/ontology/features/history.g5.md",
+        "text": "`-globally` reads every namespace on the instance and groups the records by namespace.\n\n- Namespaces without IPM add no records.\n- `-limit` applies to each namespace, not to the total.\n- `history details` always reads the current namespace.",
+        "sha256": "adbe8012bcbaa35f81ae05deb7863d6e00ea3472fb0acea75d01a36693c7bcdd"
+      },
+      "history.read.api": {
+        "path": ".g5/ontology/features/history.g5.md",
+        "text": "Programs can read the log through the SQL table `%IPM_General.History` and the class queries `Records` (current namespace) and `GlobalRecords` (all namespaces).\n\n- The two global readers differ as built. CLI `find -globally` fetches each result in its own namespace, labels that namespace and applies the limit per namespace.\n\n- `GlobalRecordsFetch` fetches each handle in the caller's namespace, so it repeats the caller's rows; its row schema includes neither namespace nor ID. Correct CLI output does not establish programmatic query correctness (G:D20).\n\n- Unresolved Q-28: [Must programmatic global history rows carry their namespace and ID?](#history.read.global-shape)",
+        "sha256": "e4b309e6b27f46b5a00bdc3faeb5c42ac17781661cbeabc98c8c6743c84724d0"
+      }
+    },
+    "status": "answerable with stated uncertainty; no model inference"
+  }
+]

@@ -1,0 +1,27 @@
+verification results:: 2 verified, 2 errors
+error: postcondition not satisfied
+  --> /Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter11/proofs/controls/shared_steps.rs/all-complete-due.rs:60:10
+   |
+58 | pub proof fn completed_success_is_not_due(s:State,j:int,m:int)
+   | -------------------------------------------------------------- at the end of the function body
+59 |  requires s.row.is_some(),s.row.unwrap().complete,s.row.unwrap().ok,!s.locks.contains(m)
+60 |  ensures !begin(s,j,m,false).state.runs[j].due
+   |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+note: recommendation not met
+  --> /Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter11/proofs/controls/shared_steps.rs/all-complete-due.rs:60:11
+   |
+15 |  recommends !s.runs.contains_key(job)
+   |             ------------------------- recommendation not met
+...
+60 |  ensures !begin(s,j,m,false).state.runs[j].due
+   |           ^^^^^^^^^^^^^^^^^^
+
+error: assertion failed
+  --> /Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter11/proofs/controls/shared_steps.rs/all-complete-due.rs:71:9
+   |
+71 |  assert(serial().count==1);assert(serial().value==1);assert(serial().row.unwrap().home==2);
+   |         ^^^^^^^^^^^^^^^^^ assertion failed
+
+error: aborting due to 2 previous errors
+

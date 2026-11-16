@@ -1,0 +1,122 @@
+{
+  "models": {
+    "lockfile.rs": {
+      "invert-edge-polarity": [
+        "Edge{dependency:name,dependent:parents[0]}",
+        "Edge{dependency:parents[0],dependent:name}"
+      ],
+      "ignore-dependency-edges": [
+        "if blocked(edges,n,remaining)",
+        "if false"
+      ],
+      "reset-cursor-after-removal": [
+        "walk(remove(remaining,n),edges,n,",
+        "walk(remove(remaining,n),edges,0,"
+      ],
+      "omit-flat-result": [
+        "names:seq![n]+rest.names",
+        "names:rest.names"
+      ],
+      "use-reference-version": [
+        "let m=installed[r.name];",
+        "let m=Module{version:r.version,..installed[r.name]};"
+      ],
+      "use-reference-repository": [
+        "let m=installed[r.name];",
+        "let m=Module{repository:r.repository,..installed[r.name]};"
+      ],
+      "lose-installed-requirements": [
+        "let m=installed[r.name];",
+        "let m=Module{requirements:Map::empty(),..installed[r.name]};"
+      ],
+      "wrong-dependency-key": [
+        "doc.dependencies.insert(r.name,m)",
+        "doc.dependencies.insert(r.name+1,m)"
+      ],
+      "duplicate-json-entry": [
+        "seq![natural_keys[0]]+tail",
+        "seq![natural_keys[0],natural_keys[0]]+tail"
+      ],
+      "reverse-json-key-order": [
+        "seq![natural_keys[0]]+tail",
+        "tail+seq![natural_keys[0]]"
+      ],
+      "omit-base-repository": [
+        "if base_repo==0{doc}",
+        "if true{doc}"
+      ],
+      "leak-password-field": [
+        "set![Field::Type,Field::SortOrder,Field::ReadOnly]",
+        "set![Field::Type,Field::SortOrder,Field::ReadOnly,Field::Password]"
+      ],
+      "omit-public-url": [
+        "RepoKind::Remote=>common.insert(Field::Url)",
+        "RepoKind::Remote=>common"
+      ],
+      "accept-unknown-repository": [
+        "if !repos.contains_key(name){Document{ok:false,..doc}}",
+        "if !repos.contains_key(name){doc}"
+      ]
+    }
+  },
+  "session": [
+    "do $system.OBJ.Load(\"/tmp/iter12/LockProbe.cls\",\"ck\")",
+    "do ##class(Iter12.LockProbe).Run()"
+  ],
+  "replay_model": "lockfile.rs",
+  "replay": {
+    "lf-k-count": "k_doc().dependencies.dom().len() as int",
+    "lf-k-order": "b(json_keys(seq![1int,2,3,5],k_doc())==seq![1int,2,3,5])",
+    "lf-k-versions": "b(k_doc().dependencies[1].version==installed()[1].version && k_doc().dependencies[3].version==installed()[3].version)",
+    "lf-k-repos": "k_doc().repositories.dom().len() as int",
+    "lf-k-requirement": "b(k_doc().dependencies[3].requirements[1]==11)",
+    "lf-k-base-root": "b(k_doc().repositories[10][Field::Root]==100)",
+    "lf-k-flat": "b(flatten(k_rows(),32).names==seq![1int,2,3,5])",
+    "lf-k-flat-count": "flatten(k_rows(),32).names.len() as int",
+    "lf-duplicate-count": "duplicate_doc().dependencies.dom().len() as int",
+    "lf-duplicate-order": "b(json_keys(seq![1int,2,3,5],duplicate_doc())==seq![1int,2,3,5])",
+    "lf-duplicate-versions": "b(duplicate_doc().dependencies[1].version==installed()[1].version && duplicate_doc().dependencies[3].version==installed()[3].version)",
+    "lf-duplicate-repos": "duplicate_doc().repositories.dom().len() as int",
+    "lf-duplicate-installed": "b(duplicate_doc().dependencies[1].version==1)",
+    "lf-l-count": "l_doc().dependencies.dom().len() as int",
+    "lf-l-order": "b(json_keys(seq![1int,2,3,4,5,6],l_doc())==seq![1int,2,3,4,5,6])",
+    "lf-l-versions": "b(l_doc().dependencies[1].version==installed()[1].version && l_doc().dependencies[6].version==installed()[6].version)",
+    "lf-l-repos": "l_doc().repositories.dom().len() as int",
+    "lf-l-flat": "b(flatten(l_rows(),64).names==seq![1int,2,3,4,5,6])",
+    "lf-l-flat-count": "flatten(l_rows(),64).names.len() as int",
+    "lf-reverse-count": "reverse_doc().dependencies.dom().len() as int",
+    "lf-reverse-order": "b(json_keys(seq![1int,2],reverse_doc())==seq![1int,2])",
+    "lf-reverse-versions": "b(reverse_doc().dependencies[1].version==reverse_store()[1].version && reverse_doc().dependencies[2].version==reverse_store()[2].version)",
+    "lf-reverse-repos": "reverse_doc().repositories.dom().len() as int",
+    "lf-reverse-topological": "b(json_keys(seq![1int,2],reverse_doc())==flatten(reverse_rows(),8).names)",
+    "lf-reverse-flat": "b(flatten(reverse_rows(),8).names==seq![2int,1])",
+    "lf-reverse-flat-count": "flatten(reverse_rows(),8).names.len() as int",
+    "lf-cursor": "b(flatten(cursor_rows(),24).names==seq![2int,3,4,1])",
+    "lf-cursor-consumed": "b(flatten(cursor_rows(),24).remaining.len()==0)",
+    "lf-credential-count": "credential_doc().repositories.dom().len() as int",
+    "lf-credential-url": "b(credential_doc().repositories[40][Field::Url]==80)",
+    "lf-credential-username": "b(credential_doc().repositories[40].contains_key(Field::Username))",
+    "lf-credential-password": "b(credential_doc().repositories[40].contains_key(Field::Password))",
+    "lf-credential-token": "b(credential_doc().repositories[40].contains_key(Field::Token))",
+    "lf-missing-repo": "b(!add_repo(empty(),99,repos()).ok)"
+  },
+  "replay_prelude": "reveal_with_fuel(write_dependencies,8);reveal_with_fuel(refs,8);reveal_with_fuel(json_keys,8);\nassert(flatten(k_rows(),32).names==seq![1int,2,3,5]) by (compute);\nassert(flatten(l_rows(),64).names==seq![1int,2,3,4,5,6]) by (compute);\nassert(flatten(reverse_rows(),8).names==seq![2int,1]) by (compute);\nassert(flatten(cursor_rows(),24).names==seq![2int,3,4,1]) by (compute);\nwriter_neighbors();\nassert(flatten(cursor_rows(),24).remaining.len()==0) by (compute);\n",
+  "native_expected": {
+    "lf-delete-repos": 1,
+    "lf-base-repo": 1,
+    "lf-edge-repo": 1,
+    "lf-k-install": 1,
+    "lf-l-install": 1,
+    "lf-order-repo": 1,
+    "lf-order-install": 1,
+    "lf-k-file": 1,
+    "lf-k-schema": 1,
+    "lf-l-file": 1,
+    "lf-l-schema": 1,
+    "lf-duplicate-file": 1,
+    "lf-duplicate-schema": 1,
+    "lf-reverse-file": 1,
+    "lf-reverse-schema": 1,
+    "lf-credential-marker": 0
+  }
+}

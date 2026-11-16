@@ -1,0 +1,474 @@
+{
+ "when": "20261114T034017Z",
+ "families": [
+  {
+   "family": "environment-config",
+   "runs": [
+    "20261114T033831Z-r5-env",
+    "20261114T033908Z-r5-env-b"
+   ],
+   "fields_compared": 37,
+   "as_built_matches": true,
+   "mismatches": [],
+   "variants": {
+    "load-keeps-on-error": {
+     "member": "General/EnvironmentConfig.cls::Load",
+     "wrong": "a failing file keeps what earlier files loaded",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "U3",
+       "field": "ok",
+       "wrong": "0 empty=0 greeting=first x=1 y= list=1,2,3, k=",
+       "observed": [
+        "0 empty=1 greeting= x= y= list= k="
+       ]
+      },
+      {
+       "case": "U4",
+       "field": "ok",
+       "wrong": "0 empty=0 greeting=first x=1 y= list=1,2,3, k=",
+       "observed": [
+        "0 empty=1 greeting= x= y= list= k="
+       ]
+      },
+      {
+       "case": "U5",
+       "field": "ok",
+       "wrong": "0 empty=0 greeting=first x=1 y= list=1,2,3, k=",
+       "observed": [
+        "0 empty=1 greeting= x= y= list= k="
+       ]
+      }
+     ]
+    },
+    "load-array-accepted": {
+     "member": "General/EnvironmentConfig.cls::Load",
+     "wrong": "a JSON array is merged",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "U5",
+       "field": "ok",
+       "wrong": "1 empty=0 greeting=first x=1 y= list=1,2,3, k=",
+       "observed": [
+        "0 empty=1 greeting= x= y= list= k="
+       ]
+      },
+      {
+       "case": "U5",
+       "field": "error",
+       "wrong": "<not produced>",
+       "observed": [
+        "ERROR #5001: Invalid configuration file. Expected a JSON object, not a JSON array"
+       ]
+      }
+     ]
+    },
+    "getarg-error-on-scalar": {
+     "member": "General/EnvironmentConfig.cls::GetArg",
+     "wrong": "a scalar on the path is returned",
+     "rejected": false,
+     "rejected_by": []
+    },
+    "evaluate-literal-value": {
+     "member": "General/EnvironmentConfig.cls::%EvaluateHelper",
+     "wrong": "the variable value is inserted literally (intended reading)",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "U7",
+       "field": "v",
+       "wrong": "hello u=[] list0=hello d1=a$1b bs=a\\b",
+       "observed": [
+        "hello u=[] list0=hello d1=aCONS_DOLLARb bs=ab"
+       ]
+      },
+      {
+       "case": "U8",
+       "field": "ok",
+       "wrong": "1 empty=0 greeting= x= y= list= k=",
+       "observed": [
+        "0 empty=1 greeting= x= y= list= k="
+       ]
+      },
+      {
+       "case": "U8",
+       "field": "error",
+       "wrong": "<not produced>",
+       "observed": [
+        "ERROR #5002: ObjectScript error: <REGULAR EXPRESSION>ReplaceFirst+3^%Regex.Matcher.1"
+       ]
+      }
+     ]
+    },
+    "evaluate-no-recursion": {
+     "member": "General/EnvironmentConfig.cls::%EvaluateHelper",
+     "wrong": "values inside arrays are not filled",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "U7.setup",
+       "field": "ok",
+       "wrong": "1 empty=0 greeting= x= y= list=${CONS_VAR}, k=",
+       "observed": [
+        "1 empty=0 greeting= x= y= list=hello, k="
+       ]
+      },
+      {
+       "case": "U7",
+       "field": "v",
+       "wrong": "hello u=[] list0=${CONS_VAR} d1=aCONS_DOLLARb bs=ab",
+       "observed": [
+        "hello u=[] list0=hello d1=aCONS_DOLLARb bs=ab"
+       ]
+      }
+     ]
+    },
+    "clear-noop": {
+     "member": "General/EnvironmentConfig.cls::Clear",
+     "wrong": "clear keeps the values",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "U3",
+       "field": "ok",
+       "wrong": "0 empty=0 greeting=first x=1 y=2 list=1,2,3, k=",
+       "observed": [
+        "0 empty=1 greeting= x= y= list= k="
+       ]
+      },
+      {
+       "case": "U4",
+       "field": "ok",
+       "wrong": "0 empty=0 greeting=first x=1 y=2 list=1,2,3, k=",
+       "observed": [
+        "0 empty=1 greeting= x= y= list= k="
+       ]
+      },
+      {
+       "case": "U5",
+       "field": "ok",
+       "wrong": "0 empty=0 greeting=first x=1 y=2 list=1,2,3, k=",
+       "observed": [
+        "0 empty=1 greeting= x= y= list= k="
+       ]
+      }
+     ]
+    },
+    "isempty-always-true": {
+     "member": "General/EnvironmentConfig.cls::IsEmpty",
+     "wrong": "always reports empty",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "U1",
+       "field": "ok",
+       "wrong": "1 empty=1 greeting=first x=1 y= list=1,2,3, k=",
+       "observed": [
+        "1 empty=0 greeting=first x=1 y= list=1,2,3, k="
+       ]
+      },
+      {
+       "case": "U2",
+       "field": "ok",
+       "wrong": "1 empty=1 greeting=second x=1 y=2 list=9,2,3, k=",
+       "observed": [
+        "1 empty=0 greeting=second x=1 y=2 list=9,2,3, k="
+       ]
+      },
+      {
+       "case": "U2r",
+       "field": "ok",
+       "wrong": "1 empty=1 greeting=first x=1 y=2 list=1,2,3, k=",
+       "observed": [
+        "1 empty=0 greeting=first x=1 y=2 list=1,2,3, k="
+       ]
+      }
+     ]
+    },
+    "merge-arrays-replace": {
+     "member": "General/EnvironmentConfig.cls::MergeDynamicObjects",
+     "wrong": "a later array replaces the earlier one",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "U2",
+       "field": "ok",
+       "wrong": "1 empty=0 greeting=second x=1 y=2 list=9, k=",
+       "observed": [
+        "1 empty=0 greeting=second x=1 y=2 list=9,2,3, k="
+       ]
+      }
+     ]
+    },
+    "merge-objects-replace": {
+     "member": "General/EnvironmentConfig.cls::MergeDynamicObjects",
+     "wrong": "a later object replaces the earlier one",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "U2",
+       "field": "ok",
+       "wrong": "1 empty=0 greeting=second x= y=2 list=9, k=",
+       "observed": [
+        "1 empty=0 greeting=second x=1 y=2 list=9,2,3, k="
+       ]
+      },
+      {
+       "case": "U2r",
+       "field": "ok",
+       "wrong": "1 empty=0 greeting=first x=1 y= list=1,2,3, k=",
+       "observed": [
+        "1 empty=0 greeting=first x=1 y=2 list=1,2,3, k="
+       ]
+      },
+      {
+       "case": "U6",
+       "field": "ok",
+       "wrong": "1 empty=0 greeting= x= y= list= k=object",
+       "observed": [
+        "0 empty=1 greeting= x= y= list= k="
+       ]
+      }
+     ]
+    },
+    "merge-object-onto-scalar-ok": {
+     "member": "General/EnvironmentConfig.cls::MergeDynamicObjects",
+     "wrong": "an object replaces an earlier scalar",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "U6",
+       "field": "ok",
+       "wrong": "1 empty=0 greeting= x= y= list= k=object",
+       "observed": [
+        "0 empty=1 greeting= x= y= list= k="
+       ]
+      },
+      {
+       "case": "U6",
+       "field": "error",
+       "wrong": "<not produced>",
+       "observed": [
+        "ERROR #5001: Invalid arguments. Expected two dynamic objects. Got 5 and 9@%Library.DynamicObject"
+       ]
+      }
+     ]
+    },
+    "lec-no-clear": {
+     "member": "Lifecycle/Base.cls::LoadEnvironmentConfig",
+     "wrong": "files are merged onto what the previous call loaded",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "U7.setup",
+       "field": "ok",
+       "wrong": "1 empty=0 greeting= x= y= list=hello, k=5",
+       "observed": [
+        "1 empty=0 greeting= x= y= list=hello, k="
+       ]
+      }
+     ]
+    },
+    "lec-no-trim": {
+     "member": "Lifecycle/Base.cls::LoadEnvironmentConfig",
+     "wrong": "paths are not trimmed",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "U2r",
+       "field": "ok",
+       "wrong": "0 empty=1 greeting= x= y= list= k=",
+       "observed": [
+        "1 empty=0 greeting=first x=1 y=2 list=1,2,3, k="
+       ]
+      }
+     ]
+    },
+    "compile-always-multi": {
+     "member": "Utils/LegacyCompat.cls::UpdateSuperclassAndCompile",
+     "wrong": "always compiles in several processes",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "S3",
+       "field": "gen",
+       "wrong": "[] last=[second]",
+       "observed": [
+        "[second] last=[second]"
+       ]
+      },
+      {
+       "case": "S4",
+       "field": "gen",
+       "wrong": "[]",
+       "observed": [
+        "[second]"
+       ]
+      },
+      {
+       "case": "M3",
+       "field": "ipm",
+       "wrong": "1 gen=[]",
+       "observed": [
+        "1 gen=[first]"
+       ]
+      }
+     ]
+    },
+    "singleton-new-each-get": {
+     "member": "General/Singleton.cls::%Get",
+     "wrong": "every %Get returns a new instance",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "S1",
+       "field": "records",
+       "wrong": "[][][]",
+       "observed": [
+        "[first][][]"
+       ]
+      },
+      {
+       "case": "S3",
+       "field": "gen",
+       "wrong": "[second] last=[]",
+       "observed": [
+        "[second] last=[second]"
+       ]
+      }
+     ]
+    }
+   },
+   "contract": [
+    {
+     "name": "an OS variable value is inserted literally",
+     "holds": false,
+     "expected": false,
+     "as_expected": true,
+     "ids": [
+      "C:D14"
+     ],
+     "detail": "hello u=[] list0=hello d1=aCONS_DOLLARb bs=ab"
+    },
+    {
+     "name": "a failing second file keeps the first file's values (one of the plan's policy alternatives)",
+     "holds": false,
+     "expected": false,
+     "as_expected": true,
+     "ids": [
+      "C:Q6"
+     ],
+     "detail": "0 empty=1 greeting= x= y= list= k="
+    },
+    {
+     "name": "a later command in the same shell session sees the earlier -env values",
+     "holds": false,
+     "expected": false,
+     "as_expected": true,
+     "ids": [
+      "plan: environment row"
+     ],
+     "detail": "[first][][]"
+    }
+   ],
+   "members": {
+    "General/EnvironmentConfig.cls::Load": {
+     "slice": "General/EnvironmentConfig.cls:9-33",
+     "fn": "load",
+     "behavior": "missing, malformed or array file raises and clears everything loaded before (U3-U5)",
+     "fn_present": true,
+     "variants_rejected": [
+      "load-keeps-on-error",
+      "load-array-accepted"
+     ],
+     "credited": true
+    },
+    "General/EnvironmentConfig.cls::GetArg": {
+     "slice": "General/EnvironmentConfig.cls:35-51",
+     "fn": "get_arg",
+     "behavior": "nested lookup; a non-object on the path gives empty (U9)",
+     "fn_present": true,
+     "variants_rejected": [],
+     "credited": false
+    },
+    "General/EnvironmentConfig.cls::%EvaluateHelper": {
+     "slice": "General/EnvironmentConfig.cls:59-90",
+     "fn": "evaluate_helper",
+     "behavior": "${VAR} from the OS environment, recursively; value inserted as ICU replacement text (U7, U8)",
+     "fn_present": true,
+     "variants_rejected": [
+      "evaluate-literal-value",
+      "evaluate-no-recursion"
+     ],
+     "credited": true
+    },
+    "General/EnvironmentConfig.cls::Clear": {
+     "slice": "General/EnvironmentConfig.cls:92-96",
+     "fn": "clear",
+     "behavior": "resets to empty (U2r, U3)",
+     "fn_present": true,
+     "variants_rejected": [
+      "clear-noop"
+     ],
+     "credited": true
+    },
+    "General/EnvironmentConfig.cls::IsEmpty": {
+     "slice": "General/EnvironmentConfig.cls:98-101",
+     "fn": "is_empty",
+     "behavior": "decides the single-process compile (M3, M4)",
+     "fn_present": true,
+     "variants_rejected": [
+      "isempty-always-true"
+     ],
+     "credited": true
+    },
+    "General/EnvironmentConfig.cls::MergeDynamicObjects": {
+     "slice": "General/EnvironmentConfig.cls:105-129",
+     "fn": "merge",
+     "behavior": "deep merge, arrays by index, scalar replaces object, object onto scalar fails (U2, U6)",
+     "fn_present": true,
+     "variants_rejected": [
+      "merge-arrays-replace",
+      "merge-objects-replace",
+      "merge-object-onto-scalar-ok"
+     ],
+     "credited": true
+    },
+    "Lifecycle/Base.cls::LoadEnvironmentConfig": {
+     "slice": "Lifecycle/Base.cls:2188-2200",
+     "fn": "load_environment_config",
+     "behavior": "clears, then loads each ;-separated file in order, trimmed (U2r, S1)",
+     "fn_present": true,
+     "variants_rejected": [
+      "lec-no-clear",
+      "lec-no-trim"
+     ],
+     "credited": true
+    },
+    "Utils/LegacyCompat.cls::UpdateSuperclassAndCompile": {
+     "slice": "Utils/LegacyCompat.cls:36-41",
+     "fn": "compile_list",
+     "behavior": "compiles in one process while a configuration is loaded, so generators see it (M3, M4, S3)",
+     "fn_present": true,
+     "variants_rejected": [
+      "compile-always-multi"
+     ],
+     "credited": true
+    },
+    "General/Singleton.cls::%Get": {
+     "slice": "General/Singleton.cls:36-131",
+     "fn": "singleton_get",
+     "behavior": "the same in-process instance while referenced, so Configure reads what Reload loaded (S1, U10, U11)",
+     "fn_present": true,
+     "variants_rejected": [
+      "singleton-new-each-get"
+     ],
+     "credited": true
+    }
+   },
+   "source_sha256": "c7dee0b94c940d4bbf9b2eed7ba8087ac005d4eab2d69bbd25291af4a73a5cd7"
+  }
+ ]
+}

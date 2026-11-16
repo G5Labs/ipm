@@ -1,0 +1,558 @@
+{
+ "when": "20261114T025915Z",
+ "families": [
+  {
+   "family": "temp-repo-and-search-order",
+   "runs": [
+    "20261114T025102Z-r1-temp-repo",
+    "20261114T025551Z-r1-eval-postcommit"
+   ],
+   "fields_compared": 116,
+   "as_built_matches": true,
+   "mismatches": [],
+   "variants": {
+    "skip-ignores-existing-root": {
+     "member": "General/TempLocalRepoManager.cls::SkipCreate",
+     "wrong": "creates a temporary repository even when another repository has that root",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "TR5",
+       "field": "repo.reg5",
+       "wrong": "id:6 sort:2 root:/tmp/c1/reg5/",
+       "observed": [
+        "id:5 sort:2 root:/tmp/c1/reg5/"
+       ]
+      },
+      {
+       "case": "TR5c",
+       "field": "repo.reg5",
+       "wrong": "id:6 sort:2 root:/tmp/c1/reg5/",
+       "observed": [
+        "id:5 sort:2 root:/tmp/c1/reg5/"
+       ]
+      },
+      {
+       "case": "Dtxn",
+       "field": "repo.regd",
+       "wrong": "id:12 sort:2 root:/tmp/c1e/regd/",
+       "observed": [
+        "id:11 sort:2 root:/tmp/c1e/regd/"
+       ]
+      }
+     ]
+    },
+    "skip-ignores-missing-dir": {
+     "member": "General/TempLocalRepoManager.cls::SkipCreate",
+     "wrong": "creates (and removes) an empty repository for a missing folder; expected to survive: no fixture observes it",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "TR3",
+       "field": "repo.ipm-temp-modules-1",
+       "wrong": "id:4 sort:2 root:/tmp/c1/elsewhere/",
+       "observed": [
+        "id:2 sort:2 root:/tmp/c1/elsewhere/"
+       ]
+      },
+      {
+       "case": "TR4",
+       "field": "repo.keepme",
+       "wrong": "id:7 sort:2 root:/tmp/c1/tr4/.modules/",
+       "observed": [
+        "id:4 sort:2 root:/tmp/c1/tr4/.modules/"
+       ]
+      },
+      {
+       "case": "TR5",
+       "field": "repo.reg5",
+       "wrong": "id:9 sort:2 root:/tmp/c1/reg5/",
+       "observed": [
+        "id:5 sort:2 root:/tmp/c1/reg5/"
+       ]
+      }
+     ]
+    },
+    "create-always-first-name": {
+     "member": "General/TempLocalRepoManager.cls::Create",
+     "wrong": "always names the repository ipm-temp-modules-1",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "TR3",
+       "field": "status",
+       "wrong": "ERR",
+       "observed": [
+        "OK"
+       ]
+      },
+      {
+       "case": "TR3",
+       "field": "log.cleanup_failed",
+       "wrong": "ipm-temp-modules-1",
+       "observed": [
+        "none"
+       ]
+      },
+      {
+       "case": "TR3",
+       "field": "mod.tr3-dep",
+       "wrong": "absent",
+       "observed": [
+        "present version=1.0.0 repo=ipm-temp-modules-2 desc=from-dotmodules dev=0"
+       ]
+      }
+     ]
+    },
+    "create-sort-last": {
+     "member": "General/TempLocalRepoManager.cls::Create",
+     "wrong": "ignores useFirst (sort 1000); expected to survive: sort order never decides a result",
+     "rejected": false,
+     "rejected_by": []
+    },
+    "onnew-no-cleanup-in-catch": {
+     "member": "General/TempLocalRepoManager.cls::%OnNew",
+     "wrong": "does not call CleanUp when Create fails",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "TR7",
+       "field": "log.cleanup_failed",
+       "wrong": "none",
+       "observed": [
+        "ipm-temp-modules-1"
+       ]
+      },
+      {
+       "case": "Dtxn",
+       "field": "log.cleanup_failed",
+       "wrong": "none",
+       "observed": [
+        "ipm-temp-modules-1"
+       ]
+      },
+      {
+       "case": "Ddev",
+       "field": "log.cleanup_failed",
+       "wrong": "none",
+       "observed": [
+        "ipm-temp-modules-1"
+       ]
+      }
+     ]
+    },
+    "onnew-ok-on-failure": {
+     "member": "General/TempLocalRepoManager.cls::%OnNew",
+     "wrong": "returns OK after a Create failure, so a manager object exists",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "TR7",
+       "field": "error",
+       "wrong": "<not produced>",
+       "observed": [
+        "ERROR #5002: ObjectScript error: <INVALID OREF>LoadInternal+83^%IPM.Main.1"
+       ]
+      },
+      {
+       "case": "TR7",
+       "field": "log.cleanup_failed",
+       "wrong": "ipm-temp-modules-1,ipm-temp-modules-1",
+       "observed": [
+        "ipm-temp-modules-1"
+       ]
+      },
+      {
+       "case": "TR7",
+       "field": "hist.tr7-main",
+       "wrong": "action:load success:1 committed:1 finalized:1",
+       "observed": [
+        "action:load success:0 committed:1 finalized:1"
+       ]
+      }
+     ]
+    },
+    "cleanup-noop": {
+     "member": "General/TempLocalRepoManager.cls::CleanUp",
+     "wrong": "never deletes the repository",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "TR2",
+       "field": "repos.count",
+       "wrong": "1",
+       "observed": [
+        "0"
+       ]
+      },
+      {
+       "case": "TR3",
+       "field": "repos.count",
+       "wrong": "3",
+       "observed": [
+        "1"
+       ]
+      },
+      {
+       "case": "TR4",
+       "field": "repos.count",
+       "wrong": "3",
+       "observed": [
+        "1"
+       ]
+      }
+     ]
+    },
+    "cleanup-quiet": {
+     "member": "General/TempLocalRepoManager.cls::CleanUp",
+     "wrong": "reports no message when the delete fails",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "TR7",
+       "field": "log.cleanup_failed",
+       "wrong": "none",
+       "observed": [
+        "ipm-temp-modules-1"
+       ]
+      },
+      {
+       "case": "Dtxn",
+       "field": "log.cleanup_failed",
+       "wrong": "none",
+       "observed": [
+        "ipm-temp-modules-1"
+       ]
+      },
+      {
+       "case": "Ddev",
+       "field": "log.cleanup_failed",
+       "wrong": "none",
+       "observed": [
+        "ipm-temp-modules-1"
+       ]
+      }
+     ]
+    },
+    "search-tie-by-sortorder": {
+     "member": "Repo/Manager.cls::SearchRepositoriesForModule",
+     "wrong": "breaks version ties by repository sort order (the temporary repository first)",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "TR5",
+       "field": "mod.tr5-dep",
+       "wrong": "present version=1.0.0 repo=ipm-temp-modules-1 desc=from-dotmodules dev=0",
+       "observed": [
+        "present version=1.0.0 repo=reg5 desc=from-registry dev=0"
+       ]
+      }
+     ]
+    },
+    "search-first-repo": {
+     "member": "Repo/Manager.cls::SearchRepositoriesForModule",
+     "wrong": "takes the first repository (by sort order) that has any satisfying version",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "TR5",
+       "field": "mod.tr5-dep",
+       "wrong": "present version=1.0.0 repo=ipm-temp-modules-1 desc=from-dotmodules dev=0",
+       "observed": [
+        "present version=1.0.0 repo=reg5 desc=from-registry dev=0"
+       ]
+      },
+      {
+       "case": "TR5c",
+       "field": "mod.tr5c-dep",
+       "wrong": "present version=1.0.0 repo=ipm-temp-modules-1 desc=from-dotmodules dev=0",
+       "observed": [
+        "present version=1.1.0 repo=reg5 desc=from-registry dev=0"
+       ]
+      }
+     ]
+    },
+    "search-lowest-version": {
+     "member": "Repo/Manager.cls::SearchRepositoriesForModule",
+     "wrong": "orders versions ascending",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "TR5b",
+       "field": "mod.tr5b-dep",
+       "wrong": "present version=1.0.0 repo=reg5 desc=from-registry dev=0",
+       "observed": [
+        "present version=1.1.0 repo=ipm-temp-modules-1 desc=from-dotmodules dev=0"
+       ]
+      },
+      {
+       "case": "TR5c",
+       "field": "mod.tr5c-dep",
+       "wrong": "present version=1.0.0 repo=ipm-temp-modules-1 desc=from-dotmodules dev=0",
+       "observed": [
+        "present version=1.1.0 repo=reg5 desc=from-registry dev=0"
+       ]
+      }
+     ]
+    },
+    "lmr-guarded-cleanup": {
+     "member": "Utils/Module.cls::LoadModuleReference",
+     "wrong": "the dependency path guards CleanUp, so the dependency load succeeds",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "Dtxn",
+       "field": "status",
+       "wrong": "OK",
+       "observed": [
+        "ERR"
+       ]
+      },
+      {
+       "case": "Dtxn",
+       "field": "error",
+       "wrong": "<not produced>",
+       "observed": [
+        "ERROR #5002: ObjectScript error: <INVALID OREF>LoadModuleReference+80^%IPM.Utils.Module.1"
+       ]
+      },
+      {
+       "case": "Dtxn",
+       "field": "mod.dd-parent-txn",
+       "wrong": "present version=1.0.0 repo= desc= dev=0",
+       "observed": [
+        "absent"
+       ]
+      }
+     ]
+    },
+    "lmr-failure-keeps-dependency": {
+     "member": "Utils/Module.cls::LoadModuleReference",
+     "wrong": "the failed dependency stays installed (no parent rollback)",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "Dtxn",
+       "field": "mod.dd-dep-txn",
+       "wrong": "present version=1.0.0 repo=regd desc= dev=0",
+       "observed": [
+        "absent"
+       ]
+      },
+      {
+       "case": "Ddev",
+       "field": "mod.dd-dep-dev",
+       "wrong": "present version=1.0.0 repo=regd desc= dev=0",
+       "observed": [
+        "absent"
+       ]
+      }
+     ]
+    },
+    "loadinternal-guarded-cleanup": {
+     "member": "Main.cls::LoadInternal",
+     "wrong": "skips CleanUp when the manager is missing, so the load succeeds",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "TR7",
+       "field": "status",
+       "wrong": "OK",
+       "observed": [
+        "ERR"
+       ]
+      },
+      {
+       "case": "TR7",
+       "field": "error",
+       "wrong": "<not produced>",
+       "observed": [
+        "ERROR #5002: ObjectScript error: <INVALID OREF>LoadInternal+83^%IPM.Main.1"
+       ]
+      },
+      {
+       "case": "TR7",
+       "field": "hist.tr7-main",
+       "wrong": "action:load success:1 committed:1 finalized:1",
+       "observed": [
+        "action:load success:0 committed:1 finalized:1"
+       ]
+      }
+     ]
+    },
+    "late-error-rolls-back": {
+     "member": "Main.cls::LoadInternal",
+     "wrong": "an error after the commit removes the module",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "TR7",
+       "field": "mod.tr7-main",
+       "wrong": "absent",
+       "observed": [
+        "present version=1.0.0 repo= desc= dev=0"
+       ]
+      }
+     ]
+    },
+    "late-error-reports-success": {
+     "member": "Main.cls::LoadInternal",
+     "wrong": "an error after the commit is reported as success",
+     "rejected": true,
+     "rejected_by": [
+      {
+       "case": "TR7",
+       "field": "status",
+       "wrong": "OK",
+       "observed": [
+        "ERR"
+       ]
+      },
+      {
+       "case": "TR7",
+       "field": "error",
+       "wrong": "<not produced>",
+       "observed": [
+        "ERROR #5002: ObjectScript error: <INVALID OREF>LoadInternal+83^%IPM.Main.1"
+       ]
+      }
+     ]
+    }
+   },
+   "contract": [
+    {
+     "name": "a load leaves no temporary repository registered",
+     "holds": true,
+     "expected": true,
+     "as_expected": true,
+     "ids": [
+      "C:R1-1"
+     ],
+     "detail": []
+    },
+    {
+     "name": "a load keeps repositories it did not create",
+     "holds": true,
+     "expected": true,
+     "as_expected": true,
+     "ids": [
+      "C:R1-2"
+     ],
+     "detail": ""
+    },
+    {
+     "name": "the .modules copy wins over an equal version elsewhere (TempLocalRepoManager comment intent)",
+     "holds": false,
+     "expected": false,
+     "as_expected": true,
+     "ids": [
+      "C:D1"
+     ],
+     "detail": "present version=1.0.0 repo=reg5 desc=from-registry dev=0"
+    },
+    {
+     "name": "an error status means the module was not installed",
+     "holds": false,
+     "expected": false,
+     "as_expected": true,
+     "ids": [
+      "G:D13",
+      "P:F-LOAD-4 family"
+     ],
+     "detail": "TR7 status=ERR present version=1.0.0 repo= desc= dev=0"
+    },
+    {
+     "name": "a cleanup-failure message names a repository that still exists",
+     "holds": false,
+     "expected": false,
+     "as_expected": true,
+     "ids": [
+      "C:D2"
+     ],
+     "detail": "ipm-temp-modules-1"
+    }
+   ],
+   "members": {
+    "General/TempLocalRepoManager.cls::SkipCreate": {
+     "slice": "General/TempLocalRepoManager.cls:33-47",
+     "fn": "skip_create",
+     "behavior": "no temporary repository when another repository already has the .modules root (TR4)",
+     "fn_present": true,
+     "variants_rejected": [
+      "skip-ignores-existing-root",
+      "skip-ignores-missing-dir"
+     ],
+     "credited": true
+    },
+    "General/TempLocalRepoManager.cls::Create": {
+     "slice": "General/TempLocalRepoManager.cls:13-31",
+     "fn": "create",
+     "behavior": "first free ipm-temp-modules-N name; BuildCache failure leaves no row (TR3, TR7)",
+     "fn_present": true,
+     "variants_rejected": [
+      "create-always-first-name"
+     ],
+     "credited": true
+    },
+    "General/TempLocalRepoManager.cls::%OnNew": {
+     "slice": "General/TempLocalRepoManager.cls:49-71",
+     "fn": "on_new",
+     "behavior": "creation failure runs CleanUp and returns an error, so %New yields no object (TR7)",
+     "fn_present": true,
+     "variants_rejected": [
+      "onnew-no-cleanup-in-catch",
+      "onnew-ok-on-failure"
+     ],
+     "credited": true
+    },
+    "General/TempLocalRepoManager.cls::CleanUp": {
+     "slice": "General/TempLocalRepoManager.cls:73-85",
+     "fn": "cleanup",
+     "behavior": "deletes the repository it created; reports a failure for a row already rolled back (TR2, TR7)",
+     "fn_present": true,
+     "variants_rejected": [
+      "cleanup-noop",
+      "cleanup-quiet"
+     ],
+     "credited": true
+    },
+    "Repo/Manager.cls::SearchRepositoriesForModule": {
+     "slice": "Repo/Manager.cls:55-192",
+     "fn": "search",
+     "behavior": "candidates ordered by version descending, then repository ID ascending; first wins (TR5, TR5b, TR5c)",
+     "fn_present": true,
+     "variants_rejected": [
+      "search-tie-by-sortorder",
+      "search-first-repo",
+      "search-lowest-version"
+     ],
+     "credited": true
+    },
+    "Utils/Module.cls::LoadModuleReference": {
+     "slice": "Utils/Module.cls:135-140",
+     "fn": "load_internal",
+     "behavior": "dependency-level temporary repository (useFirst=0); CleanUp on an empty reference fails the dependency inside the parent transaction (Dtxn, Ddev)",
+     "fn_present": true,
+     "variants_rejected": [
+      "lmr-guarded-cleanup",
+      "lmr-failure-keeps-dependency"
+     ],
+     "credited": true
+    },
+    "Main.cls::LoadInternal": {
+     "slice": "Main.cls:2525-2532",
+     "fn": "load_internal",
+     "behavior": "temporary repository around LoadNewModule; unguarded CleanUp after the commit (TR7)",
+     "fn_present": true,
+     "variants_rejected": [
+      "loadinternal-guarded-cleanup",
+      "late-error-rolls-back",
+      "late-error-reports-success"
+     ],
+     "credited": true
+    }
+   },
+   "source_sha256": "2f8fd380a2772c0cd415ec1e4e987bc338db105815d81c4c3d88c5bb78a84704"
+  }
+ ]
+}

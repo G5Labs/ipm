@@ -1,0 +1,248 @@
+{
+  "models": {
+    "temporal.rs": {
+      "physical-edit-rebuilds-cache": [
+        "World{current:p::Scenario{directories:w.current.directories.insert(active(),disk(v)),..w.current},..w}",
+        "{let next=p::Scenario{directories:w.current.directories.insert(active(),disk(v)),..w.current};World{current:next,cache:p::build(next),..w}}"
+      ],
+      "physical-edit-keeps-old-manifest": [
+        "directories:w.current.directories.insert(active(),disk(v))",
+        "directories:w.current.directories.insert(active(),disk(Version::One))"
+      ],
+      "physical-edit-clears-runtime": [
+        "World{current:p::Scenario{directories:w.current.directories.insert(active(),disk(v)),..w.current},..w}",
+        "World{current:p::Scenario{directories:w.current.directories.insert(active(),disk(v)),..w.current},module:None,..w}"
+      ],
+      "physical-v2-code-remains-v1": [
+        "payload:match v{Version::One=>101,Version::Two=>202}",
+        "payload:match v{Version::One=>101,Version::Two=>101}"
+      ],
+      "loader-uses-cached-version": [
+        "version:actual.manifest.version",
+        "version:r.manifest.version"
+      ],
+      "loader-uses-cached-description": [
+        "description:actual.manifest.marker",
+        "description:r.manifest.marker"
+      ],
+      "loader-revalidates-request-counterfactual": [
+        "if !eligible_actual(w,r){",
+        "if !eligible_actual(w,r) || w.current.directories[r.subdir].manifest.version!=r.key.version{"
+      ],
+      "service-manifest-reads-live-source": [
+        "Some(v)=>p::service_manifest(w.cache,cache_key(w,v))",
+        "Some(v)=>Some(w.current.directories[active()].manifest)"
+      ],
+      "refused-request-falls-back-to-v2": [
+        "None=>Outcome{world:w,selected:None,ok:false,assessed:true}",
+        "None=>Outcome{world:actual_directory_load(w,selected_row(w,Version::Two).unwrap()),selected:Some(Version::Two),ok:true,assessed:true}"
+      ],
+      "refused-request-returns-success": [
+        "None=>Outcome{world:w,selected:None,ok:false,assessed:true}",
+        "None=>Outcome{world:w,selected:None,ok:true,assessed:true}"
+      ],
+      "refused-request-clears-installed": [
+        "None=>Outcome{world:w,selected:None,ok:false,assessed:true}",
+        "None=>Outcome{world:World{module:None,..w},selected:None,ok:false,assessed:true}"
+      ],
+      "reconfigure-keeps-old-cache": [
+        "World{cache:p::build(w.current),..w}",
+        "World{cache:w.cache,..w}"
+      ],
+      "reconfigure-builds-old-physical-fixture": [
+        "World{cache:p::build(w.current),..w}",
+        "World{cache:p::build(source(Version::One)),..w}"
+      ],
+      "reconfigure-retains-old-key": [
+        "World{cache:p::build(w.current),..w}",
+        "{let next=p::build(w.current);World{cache:p::Build{cache:p::Cache{rows:next.cache.rows.insert(cache_key(w,Version::One),w.cache.cache.rows[cache_key(w,Version::One)]),..next.cache},..next},..w}}"
+      ],
+      "reconfigure-clears-runtime": [
+        "World{cache:p::build(w.current),..w}",
+        "World{cache:p::build(w.current),module:None,..w}"
+      ],
+      "request-match-compares-selected-not-installed": [
+        "match o.world.module{Some(m)=>m.version==version(v),None=>false}",
+        "o.selected==Some(v)"
+      ],
+      "search-ignores-exact-version": [
+        "selected_row(w,v).is_some()",
+        "offered(w).is_some()"
+      ],
+      "show-reads-cached-version": [
+        "m.name==package_name() && m.version==version(v)",
+        "m.name==package_name() && service_version(w)==rank(v)"
+      ],
+      "selected-version-reports-live-version": [
+        "selected:decode(r.key.version),ok:true",
+        "selected:decode(w.current.directories[r.subdir].manifest.version),ok:true"
+      ]
+    }
+  },
+  "dependency_controls": {},
+  "control_functions": {
+    "temporal.rs": {
+      "physical-edit-rebuilds-cache": "snapshot_neighbor",
+      "physical-edit-keeps-old-manifest": "snapshot_neighbor",
+      "physical-edit-clears-runtime": "snapshot_neighbor",
+      "physical-v2-code-remains-v1": "stale_neighbor",
+      "loader-uses-cached-version": "stale_neighbor",
+      "loader-uses-cached-description": "stale_neighbor",
+      "loader-revalidates-request-counterfactual": "stale_neighbor",
+      "service-manifest-reads-live-source": "snapshot_neighbor",
+      "refused-request-falls-back-to-v2": "refresh_neighbor",
+      "refused-request-returns-success": "refresh_neighbor",
+      "refused-request-clears-installed": "refresh_neighbor",
+      "reconfigure-keeps-old-cache": "refresh_neighbor",
+      "reconfigure-builds-old-physical-fixture": "refresh_neighbor",
+      "reconfigure-retains-old-key": "refresh_neighbor",
+      "reconfigure-clears-runtime": "refresh_neighbor",
+      "request-match-compares-selected-not-installed": "stale_neighbor",
+      "search-ignores-exact-version": "readers_neighbor",
+      "show-reads-cached-version": "readers_neighbor",
+      "selected-version-reports-live-version": "stale_neighbor"
+    }
+  },
+  "control_options": [
+    "--multiple-errors",
+    "0"
+  ],
+  "replay_model": "temporal.rs",
+  "replay_grouped": true,
+  "replay": {
+    "stable-requested-version-preserved": "b(requested_version_preserved(stable_one(),Version::One))",
+    "stale-requested-version-preserved": "b(requested_version_preserved(stale_one(),Version::One))",
+    "new-requested-version-preserved": "b(requested_version_preserved(new_two(),Version::Two))",
+    "initial-cache-version": "cache_version(initial())",
+    "initial-cache-manifest-version": "cache_manifest_version(initial())",
+    "initial-cache-marker": "cache_marker(initial())",
+    "initial-cache-directory": "b(match cache_row(initial()){Some(r)=>r.subdir==active(),None=>false})",
+    "initial-cache-count": "initial().cache.cache.rows.dom().len()",
+    "initial-service-version": "service_version(initial())",
+    "initial-service-marker": "service_marker(initial())",
+    "initial-service-directory": "b(service_directory(initial())==Some(root()+active()+p::slash()))",
+    "initial-physical-version": "physical_version(initial())",
+    "initial-physical-marker": "physical_marker(initial())",
+    "initial-search-v1": "b(listed_version(initial(),Version::One))",
+    "initial-search-v2": "b(listed_version(initial(),Version::Two))",
+    "stale-cache-version": "cache_version(after_edit())",
+    "stale-cache-manifest-version": "cache_manifest_version(after_edit())",
+    "stale-cache-marker": "cache_marker(after_edit())",
+    "stale-cache-directory": "b(match cache_row(after_edit()){Some(r)=>r.subdir==active(),None=>false})",
+    "stale-cache-count": "after_edit().cache.cache.rows.dom().len()",
+    "stale-service-version": "service_version(after_edit())",
+    "stale-service-marker": "service_marker(after_edit())",
+    "stale-service-directory": "b(service_directory(after_edit())==Some(root()+active()+p::slash()))",
+    "stale-physical-version": "physical_version(after_edit())",
+    "stale-physical-marker": "physical_marker(after_edit())",
+    "stale-search-v1": "b(listed_version(after_edit(),Version::One))",
+    "stale-search-v2": "b(listed_version(after_edit(),Version::Two))",
+    "refreshed-cache-version": "cache_version(after_refresh())",
+    "refreshed-cache-manifest-version": "cache_manifest_version(after_refresh())",
+    "refreshed-cache-marker": "cache_marker(after_refresh())",
+    "refreshed-cache-directory": "b(match cache_row(after_refresh()){Some(r)=>r.subdir==active(),None=>false})",
+    "refreshed-cache-count": "after_refresh().cache.cache.rows.dom().len()",
+    "refreshed-service-version": "service_version(after_refresh())",
+    "refreshed-service-marker": "service_marker(after_refresh())",
+    "refreshed-service-directory": "b(service_directory(after_refresh())==Some(root()+active()+p::slash()))",
+    "refreshed-physical-version": "physical_version(after_refresh())",
+    "refreshed-physical-marker": "physical_marker(after_refresh())",
+    "refreshed-search-v1": "b(listed_version(after_refresh(),Version::One))",
+    "refreshed-search-v2": "b(listed_version(after_refresh(),Version::Two))",
+    "stable-installed": "b(stable_one().world.module.is_some())",
+    "stable-installed-version": "installed_version(stable_one().world)",
+    "stable-installed-marker": "installed_marker(stable_one().world)",
+    "stable-installed-description-exact": "b(match stable_one().world.module{Some(m)=>m.description==p::source_a(),None=>false})",
+    "stable-installed-root": "b(installed_root(stable_one().world)==Some(root()+active()+p::slash()))",
+    "stable-installed-supplier": "b(supplier(stable_one().world)==repository())",
+    "stable-payload": "payload(stable_one().world)",
+    "stable-show-v1": "b(shown_version(stable_one().world,Version::One))",
+    "stable-show-v2": "b(shown_version(stable_one().world,Version::Two))",
+    "stale-installed": "b(stale_one().world.module.is_some())",
+    "stale-installed-version": "installed_version(stale_one().world)",
+    "stale-installed-marker": "installed_marker(stale_one().world)",
+    "stale-installed-description-exact": "b(match stale_one().world.module{Some(m)=>m.description==p::source_b(),None=>false})",
+    "stale-installed-root": "b(installed_root(stale_one().world)==Some(root()+active()+p::slash()))",
+    "stale-installed-supplier": "b(supplier(stale_one().world)==repository())",
+    "stale-payload": "payload(stale_one().world)",
+    "stale-show-v1": "b(shown_version(stale_one().world,Version::One))",
+    "stale-show-v2": "b(shown_version(stale_one().world,Version::Two))",
+    "refused-installed": "b(refused_one().world.module.is_some())",
+    "refused-installed-version": "installed_version(refused_one().world)",
+    "refused-installed-marker": "installed_marker(refused_one().world)",
+    "refused-installed-description-exact": "b(match refused_one().world.module{Some(m)=>m.description==p::source_b(),None=>false})",
+    "refused-installed-root": "b(installed_root(refused_one().world)==Some(root()+active()+p::slash()))",
+    "refused-installed-supplier": "b(supplier(refused_one().world)==repository())",
+    "refused-payload": "payload(refused_one().world)",
+    "refused-show-v1": "b(shown_version(refused_one().world,Version::One))",
+    "refused-show-v2": "b(shown_version(refused_one().world,Version::Two))",
+    "new-installed": "b(new_two().world.module.is_some())",
+    "new-installed-version": "installed_version(new_two().world)",
+    "new-installed-marker": "installed_marker(new_two().world)",
+    "new-installed-description-exact": "b(match new_two().world.module{Some(m)=>m.description==p::source_b(),None=>false})",
+    "new-installed-root": "b(installed_root(new_two().world)==Some(root()+active()+p::slash()))",
+    "new-installed-supplier": "b(supplier(new_two().world)==repository())",
+    "new-payload": "payload(new_two().world)",
+    "new-show-v1": "b(shown_version(new_two().world,Version::One))",
+    "new-show-v2": "b(shown_version(new_two().world,Version::Two))",
+    "install-stable": "b(stable_one().ok)",
+    "install-stale": "b(stale_one().ok)",
+    "install-old-after-refresh": "b(refused_one().ok)",
+    "install-new-after-refresh": "b(new_two().ok)",
+    "edited-installed": "b(after_edit().module.is_some())",
+    "edited-installed-version": "installed_version(after_edit())",
+    "edited-installed-marker": "installed_marker(after_edit())",
+    "edited-installed-description-exact": "b(match after_edit().module{Some(m)=>m.description==p::source_a(),None=>false})",
+    "edited-installed-root": "b(installed_root(after_edit())==Some(root()+active()+p::slash()))",
+    "edited-installed-supplier": "b(supplier(after_edit())==repository())",
+    "edited-payload": "payload(after_edit())",
+    "edited-show-v1": "b(shown_version(after_edit(),Version::One))",
+    "edited-show-v2": "b(shown_version(after_edit(),Version::Two))"
+  },
+  "replay_prelude": "snapshot_neighbor();stable_neighbor();stale_neighbor();refresh_neighbor();readers_neighbor();reveal_with_fuel(p::materialize,2);reveal_with_fuel(p::fold,2);assert(version(Version::One)!=version(Version::Two)) by(compute);",
+  "native_expected": {
+    "driver-compile": 1,
+    "repo-clear": 1,
+    "repo-create": 1,
+    "initial-definition": 1,
+    "initial-repo-root": 1,
+    "initial-service-cache-equal": 1,
+    "search-initial": 1,
+    "stable-code": 1,
+    "show-stable": 1,
+    "replace-manifest": 1,
+    "replace-code": 1,
+    "stale-definition": 1,
+    "stale-repo-root": 1,
+    "stale-service-cache-equal": 1,
+    "search-stale": 1,
+    "stale-code": 1,
+    "show-stale": 1,
+    "repo-reconfigure": 1,
+    "refreshed-definition": 1,
+    "refreshed-repo-root": 1,
+    "refreshed-service-cache-equal": 1,
+    "search-refreshed": 1,
+    "refused-code": 1,
+    "show-refused": 1,
+    "new-code": 1,
+    "show-new": 1,
+    "final-tlevel": 0,
+    "refused-not-found": 1,
+    "edited-code": 1,
+    "show-edited": 1
+  },
+  "scope_notes": [
+    "Single-root/name/one-cache-row filesystem exact plain1/2 request domain. Current physical source is distinct from the saved cache snapshot. Generic parsers/version ranges/sort/SQL mechanics are provider ports, not newly proved.",
+    "Normal file replacement changes current valid manifest/code but does not invoke cache rebuild or runtime compilation. Ordinary same-root same-name repo configuration invokes fresh purge/build; no general cache lifetime/concurrency/failed-I/O guarantee.",
+    "Directory selection reuses unchanged19 key/cache/manifest/directory readers. Actual directory load reads current physical manifest/code even when cached version differs. Old19 stable_selected_source remains unchanged and is explicitly false for the stale witness.",
+    "Successful load/save/compile/configure providers; no UpdatePackage/dependencies/dependent constraints/dev/force. Typed plain1/2 nondecreasing actual versions only; other guards, failures and partial effects are unassessed.",
+    "Refused absent cached key frames only selected cache/current-directory/installed-code projection, not allDB/history or external effects.",
+    "Code payload derives from the selected physical Disk, not a final outcome flag. Installed record/payload is a successful-provider bundle; native method availability and real callable payload are independently observed.",
+    "Search alias is one-row exact root/name/version matching projection, not a general semver query/order proof. Show reads current saved module version rather than cache metadata. Whole XML equality and raw status/provider prerequisites stay independent native gates.",
+    "Requested-version-preserved compares actual installed module version, not the selected cache key. First3aliases are actual1/0/1 equality observations; normative request-match interpretation belongs to canonical/register owner, not an invented repair.",
+    "All19 local controls use four direct-definition focused selectors with cached same-source positives and full positive baseline. No proof-lemma calls/broadcasts in negative witnesses; no imported dependency mutations or new trusted declarations.",
+    "Grouped replay uses one observation proof containing all actual-field assertions under a common prelude. Archive boundary remains strictly UNASSESSED/UNPURSUED; only permitted manifest/directory method ranges were read, never adjacent excluded method.",
+    "Final native explicitly reads the edited runtime before stale install: physical2/cache1 but installed1/payload101 and show1. This directly qualifies the conditional file-writer runtime frame; intermediate copies/concurrent readers remain unassessed."
+  ]
+}

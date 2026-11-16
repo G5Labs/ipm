@@ -1,0 +1,7 @@
+do ##class(Uplift.Probe.Scenario).Reset()
+set sc=##class(%IPM.Main).Shell("load /tmp/uplift/fixtures/up-msg-fail/")
+set m=##class(%IPM.Storage.Module).NameOpen("up-msg-fail")
+set rs=##class(%SQL.Statement).%ExecDirect(,"SELECT TOP 1 Committed, Success, TimeEnd FROM %IPM_General.History ORDER BY ID DESC") do rs.%Next()
+write !,"OBS|ipm-post-commit-message-fails|cmdStatus=",$select($system.Status.IsOK(sc):"ok",1:"err"),";cmdError=",$translate($extract($system.Status.GetErrorText(sc),1,160),";|=",",/:"),";modInstalled=",$isobject(m),";cls=",##class(%Dictionary.CompiledClass).%ExistsId("UpParent.Hooks"),";rowCommitted=",rs.%Get("Committed"),";rowSuccessOK=",$system.Status.IsOK(rs.%Get("Success")),";rowEnded=",(rs.%Get("TimeEnd")'=""),";",!
+do ##class(Uplift.Probe.Scenario).Reset()
+halt

@@ -1,0 +1,519 @@
+# container: ipm-uplift-iris-repo  image: containers.intersystems.com/intersystems/iris-community:2026.1  at: 2026-11-13T19:36:13Z
+# script: validation/iris/repo/75-model-checks.script
+
+Node: 2e8609ed30a0, Instance: IRIS
+
+USER>
+
+LOAD 1 
+
+USER>
+
+>>> load /tmp/uplift/repo/fixtures/nc-web-dep/
+
+Building dependency graph...Done.
+[USER|nc-web-dep]	Initialize START
+[USER|nc-web-dep]	Initialize SUCCESS
+[USER|nc-web-dep]	Reload START (/tmp/uplift/repo/fixtures/nc-web-dep/)
+[USER|nc-web-dep]	Reload SUCCESS
+[nc-web-dep]	Module object refreshed.
+[USER|nc-web-dep]	Validate START
+[USER|nc-web-dep]	Validate SUCCESS
+[USER|nc-web-dep]	Compile START
+[USER|nc-web-dep]	Compile SUCCESS
+[USER|nc-web-dep]	Activate START
+[USER|nc-web-dep]	Configure START
+[USER|nc-web-dep]	Configure SUCCESS
+[USER|nc-web-dep]	Activate SUCCESS
+<<< status=OK
+
+>>> load /tmp/uplift/repo/fixtures/nc-rec-top/
+
+Building dependency graph...Done.
+[USER|nc-rec-top]	Initialize START
+[USER|nc-rec-top]	Initialize SUCCESS
+[USER|nc-rec-top]	Reload START (/tmp/uplift/repo/fixtures/nc-rec-top/)
+[USER|nc-rec-top]	Reload SUCCESS
+[nc-rec-top]	Module object refreshed.
+[USER|nc-rec-top]	Validate START
+[USER|nc-rec-top]	Validate SUCCESS
+[USER|nc-rec-top]	Compile START
+[USER|nc-rec-top]	Compile SUCCESS
+[USER|nc-rec-top]	Activate START
+[USER|nc-rec-top]	Configure START
+[USER|nc-rec-top]	Configure SUCCESS
+[USER|nc-rec-top]	Activate SUCCESS
+<<< status=OK
+
+>>> load /tmp/uplift/repo/fixtures/nc-rec-other/
+
+Building dependency graph...Done.
+[USER|nc-rec-other]	Initialize START
+[USER|nc-rec-other]	Initialize SUCCESS
+[USER|nc-rec-other]	Reload START (/tmp/uplift/repo/fixtures/nc-rec-other/)
+[USER|nc-rec-other]	Reload SUCCESS
+[nc-rec-other]	Module object refreshed.
+[USER|nc-rec-other]	Validate START
+[USER|nc-rec-other]	Validate SUCCESS
+[USER|nc-rec-other]	Compile START
+[USER|nc-rec-other]	Compile SUCCESS
+[USER|nc-rec-other]	Activate START
+[USER|nc-rec-other]	Configure START
+[USER|nc-rec-other]	Configure SUCCESS
+[USER|nc-rec-other]	Activate SUCCESS
+<<< status=OK
+
+>>> uninstall nc-rec-top -r
+
+[USER|nc-rec-top]	Clean START
+[USER|nc-rec-top]	Unconfigure START
+[USER|nc-rec-top]	Unconfigure SUCCESS
+[USER|nc-web-dep]	Clean START
+[USER|nc-web-dep]	Clean SKIPPED - required by 1 other module. (nc-rec-other)
+[USER|nc-web-dep]	Clean SUCCESS
+[USER|nc-rec-top]	Clean SUCCESS
+<<< status=OK
+
+OBS|nc-repo-model-unin-recurse-skipped-dep|depClass=compiled;depInstalled=1;historyRowsAdded=2;lastHistoryDep=uninstall/success;lastHistoryTop=uninstall/success;loadDep=1;loadOther=1;loadTop=1;otherInstalled=1;printedSkipped=1;status=ok;topClass=absent;topInstalled=0;webAfter=0;webBefore=1;
+
+>>> uninstall nc-rec-other -force
+
+[USER|nc-rec-other]	Clean START
+[USER|nc-rec-other]	Unconfigure START
+[USER|nc-rec-other]	Unconfigure SUCCESS
+[USER|nc-rec-other]	Clean SUCCESS
+<<< status=OK
+
+>>> uninstall nc-web-dep -force
+
+[USER|nc-web-dep]	Clean START
+[USER|nc-web-dep]	Unconfigure START
+[USER|nc-web-dep]	Unconfigure SUCCESS
+[USER|nc-web-dep]	Clean SUCCESS
+<<< status=OK
+
+>>> load /tmp/uplift/repo/fixtures/nc-web-dep/
+
+Building dependency graph...Done.
+[USER|nc-web-dep]	Initialize START
+[USER|nc-web-dep]	Initialize SUCCESS
+[USER|nc-web-dep]	Reload START (/tmp/uplift/repo/fixtures/nc-web-dep/)
+[USER|nc-web-dep]	Reload SUCCESS
+[nc-web-dep]	Module object refreshed.
+[USER|nc-web-dep]	Validate START
+[USER|nc-web-dep]	Validate SUCCESS
+[USER|nc-web-dep]	Compile START
+[USER|nc-web-dep]	Compile SUCCESS
+[USER|nc-web-dep]	Activate START
+[USER|nc-web-dep]	Configure START
+[USER|nc-web-dep]	Configure SUCCESS
+[USER|nc-web-dep]	Activate SUCCESS
+<<< status=OK
+
+>>> load /tmp/uplift/repo/fixtures/nc-rec-top/
+
+Building dependency graph...Done.
+[USER|nc-rec-top]	Initialize START
+[USER|nc-rec-top]	Initialize SUCCESS
+[USER|nc-rec-top]	Reload START (/tmp/uplift/repo/fixtures/nc-rec-top/)
+[USER|nc-rec-top]	Reload SUCCESS
+[nc-rec-top]	Module object refreshed.
+[USER|nc-rec-top]	Validate START
+[USER|nc-rec-top]	Validate SUCCESS
+[USER|nc-rec-top]	Compile START
+[USER|nc-rec-top]	Compile SUCCESS
+[USER|nc-rec-top]	Activate START
+[USER|nc-rec-top]	Configure START
+[USER|nc-rec-top]	Configure SUCCESS
+[USER|nc-rec-top]	Activate SUCCESS
+<<< status=OK
+
+>>> uninstall nc-rec-top -r
+
+[USER|nc-rec-top]	Clean START
+[USER|nc-rec-top]	Unconfigure START
+[USER|nc-rec-top]	Unconfigure SUCCESS
+[USER|nc-web-dep]	Clean START
+[USER|nc-web-dep]	Unconfigure START
+[USER|nc-web-dep]	Unconfigure SUCCESS
+[USER|nc-web-dep]	Clean SUCCESS
+[USER|nc-rec-top]	Clean SUCCESS
+<<< status=OK
+
+OBS|nc-repo-model-unin-recurse-removed-dep|depClass=absent;depInstalled=0;depStreamAfter=1;depStreamBefore=1;historyRowsAdded=2;lastHistoryDep=uninstall/success;listInstalledHasDep=0;loadDep=1;loadTop=1;status=ok;topInstalled=0;topStreamAfter=0;topStreamBefore=1;webAfter=0;webBefore=1;
+
+>>> load /tmp/uplift/repo/fixtures/nc-repo-pub/
+
+Building dependency graph...Done.
+[USER|nc-repo-pub]	Initialize START
+[USER|nc-repo-pub]	Initialize SUCCESS
+[USER|nc-repo-pub]	Reload START (/tmp/uplift/repo/fixtures/nc-repo-pub/)
+[USER|nc-repo-pub]	Reload SUCCESS
+[nc-repo-pub]	Module object refreshed.
+[USER|nc-repo-pub]	Validate START
+[USER|nc-repo-pub]	Validate SUCCESS
+[USER|nc-repo-pub]	Compile START
+[USER|nc-repo-pub]	Compile SUCCESS
+[USER|nc-repo-pub]	Activate START
+[USER|nc-repo-pub]	Configure START
+[USER|nc-repo-pub]	Configure SUCCESS
+[USER|nc-repo-pub]	Activate SUCCESS
+<<< status=OK
+
+>>> repo -r -n nc-pm-a -url http://127.0.0.1:91/
+
+nc-pm-a
+	Source: 			http://127.0.0.1:91/
+	Enabled?			Yes
+	Available?			No
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	No
+
+nc-pm-a
+	Source: 			http://127.0.0.1:91/
+	Enabled?			Yes
+	Available?			No
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	No
+
+<<< status=OK
+
+>>> repo -r -n nc-pm-b -url http://127.0.0.1:92/ -publish 1
+
+nc-pm-b
+	Source: 			http://127.0.0.1:92/
+	Enabled?			Yes
+	Available?			No
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	Yes
+
+nc-pm-b
+	Source: 			http://127.0.0.1:92/
+	Enabled?			Yes
+	Available?			No
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	Yes
+
+nc-pm-a
+	Source: 			http://127.0.0.1:91/
+	Enabled?			Yes
+	Available?			No
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	No
+
+<<< status=OK
+
+>>> publish nc-repo-pub -v -only
+
+[USER|nc-repo-pub]	Publish START
+[USER|nc-repo-pub]	Package START
+Exporting 'NCRepoPub.Hello.CLS' to '/usr/irissys/mgr/Temp/dir1mxjKj/nc-repo-pub-1.0.0/src/cls/NCRepoPub/Hello.cls'
+Exported to /usr/irissys/mgr/Temp/dir1mxjKj/nc-repo-pub-1.0.0/module.xml
+Module contents exported to temporary directory:
+	/usr/irissys/mgr/Temp/dir1mxjKj/nc-repo-pub-1.0.0/
+
+Module package generated:
+	/usr/irissys/mgr/Temp/dir1mxjKj/nc-repo-pub-1.0.0.tgz
+[USER|nc-repo-pub]	Package SUCCESS
+Publish to: http://127.0.0.1:91/
+[nc-repo-pub]	Publish FAILURE
+[31mERROR![0m Publishing module, authorization required.
+<<< status=ERROR #5001: Publishing module, authorization required.
+
+>>> repo -r -n nc-pm-a -url http://127.0.0.1:91/ -token t
+
+[33mWARNING: Using -token via the CLI is insecure. Use -token-env.[0m
+nc-pm-a
+	Source: 			http://127.0.0.1:91/
+	Enabled?			Yes
+	Available?			No
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	No
+	Token: 				<set>
+	Token Auth Method: 		apiKey
+
+nc-pm-a
+	Source: 			http://127.0.0.1:91/
+	Enabled?			Yes
+	Available?			No
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	No
+	Token: 				<set>
+	Token Auth Method: 		apiKey
+
+<<< status=OK
+
+>>> repo -r -n nc-pm-b -url http://127.0.0.1:92/ -publish 1
+
+nc-pm-b
+	Source: 			http://127.0.0.1:92/
+	Enabled?			Yes
+	Available?			No
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	Yes
+
+nc-pm-b
+	Source: 			http://127.0.0.1:92/
+	Enabled?			Yes
+	Available?			No
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	Yes
+
+nc-pm-a
+	Source: 			http://127.0.0.1:91/
+	Enabled?			Yes
+	Available?			No
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	No
+	Token: 				<set>
+	Token Auth Method: 		apiKey
+
+<<< status=OK
+
+>>> repo -r -n nc-pm-a -url http://127.0.0.1:91/
+
+nc-pm-a
+	Source: 			http://127.0.0.1:91/
+	Enabled?			Yes
+	Available?			No
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	No
+
+nc-pm-a
+	Source: 			http://127.0.0.1:91/
+	Enabled?			Yes
+	Available?			No
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	No
+
+<<< status=OK
+
+>>> repo -o -n nc-pm-o -url http://127.0.0.1:93 -publish 1
+
+nc-pm-o
+	Source: 			http://127.0.0.1:93
+	Enabled?			Yes
+	Available?			No
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	Yes
+
+nc-pm-o
+	Source: 			http://127.0.0.1:93
+	Enabled?			Yes
+	Available?			No
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	Yes
+
+nc-pm-a
+	Source: 			http://127.0.0.1:91/
+	Enabled?			Yes
+	Available?			No
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	No
+
+<<< status=OK
+
+>>> repo -r -n nc-pm-c1 -url http://127.0.0.1:94/ -publish 1
+
+nc-pm-c1
+	Source: 			http://127.0.0.1:94/
+	Enabled?			Yes
+	Available?			No
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	Yes
+
+nc-pm-c1
+	Source: 			http://127.0.0.1:94/
+	Enabled?			Yes
+	Available?			No
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	Yes
+
+<<< status=OK
+
+>>> repo -r -n nc-pm-c2 -url http://127.0.0.1:95/ -publish 1
+
+nc-pm-c2
+	Source: 			http://127.0.0.1:95/
+	Enabled?			Yes
+	Available?			No
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	Yes
+
+nc-pm-c2
+	Source: 			http://127.0.0.1:95/
+	Enabled?			Yes
+	Available?			No
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	Yes
+
+nc-pm-c1
+	Source: 			http://127.0.0.1:94/
+	Enabled?			Yes
+	Available?			No
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	No
+
+<<< status=OK
+
+>>> repo -r -n nc-pm-c3 -url http://127.0.0.1:96/ -publish 1
+
+nc-pm-c3
+	Source: 			http://127.0.0.1:96/
+	Enabled?			Yes
+	Available?			No
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	Yes
+
+nc-pm-c3
+	Source: 			http://127.0.0.1:96/
+	Enabled?			Yes
+	Available?			No
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	Yes
+
+nc-pm-c2
+	Source: 			http://127.0.0.1:95/
+	Enabled?			Yes
+	Available?			No
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	No
+
+nc-pm-c1
+	Source: 			http://127.0.0.1:94/
+	Enabled?			Yes
+	Available?			No
+	Use for Snapshots?		Yes
+	Use for Prereleases?		Yes
+	Is Read-Only?			No
+	Default Deployment Registry? 	No
+
+<<< status=OK
+
+>>> uninstall nc-repo-pub -force
+
+[USER|nc-repo-pub]	Clean START
+[USER|nc-repo-pub]	Unconfigure START
+[USER|nc-repo-pub]	Unconfigure SUCCESS
+[USER|nc-repo-pub]	Clean SUCCESS
+<<< status=OK
+
+OBS|nc-repo-model-publish-row-order|c1.a=1;c1.aFlag=[];c1.b=1;c1.bFlag=[1];c1.pick=nc-pm-a;c1.publishTo91=1;c1.publishTo92=0;c1.remoteRows=nc-pm-a:999 nc-pm-b:1;c2.a=1;c2.b=1;c2.pick=nc-pm-a;c2.remoteRows=nc-pm-a:2 nc-pm-b:1;c3.a=1;c3.o=1;c3.orasRows=nc-pm-o:1;c3.pick=nc-pm-o;c4.c1=1;c4.c2=1;c4.c3.status=ok;c4.flags=[][][1];c4.pick=nc-pm-c1;c4.remoteRows=nc-pm-c1:999 nc-pm-c2:999 nc-pm-c3:1;load=1;
+
+>>> config delete PublishTimeout
+
+Value for "PublishTimeout" succesfully reset to default
+
+<<< status=OK
+
+>>> config set PublishTimeout 7
+
+Key "PublishTimeout" succesfully updated
+
+<<< status=OK
+
+>>> config delete PublishTimeout
+
+Value for "PublishTimeout" succesfully reset to default
+
+<<< status=OK
+
+>>> config set ColorScheme none
+
+Key "ColorScheme" succesfully updated
+
+<<< status=OK
+
+>>> config delete ColorScheme
+
+Value for "ColorScheme" succesfully reset to default
+
+<<< status=OK
+
+OBS|nc-repo-model-config-delete|s.afterDelete=/;s.afterSet=none/;s.delete=1;s.fresh=/;s.set=1;u.afterDelete1=/;u.afterDelete2=/;u.afterSet7=7/;u.delete1=1;u.delete2=1;u.fresh=<undef>/<undef>;u.restored=<undef>/<undef>;u.set7=1;
+
+>>> default-modifiers -set -DNcA=1
+
+Successfully updated default modifiers!
+
+<<< status=OK
+
+>>> default-modifiers -set -DNcB=2
+
+Successfully updated default modifiers!
+
+<<< status=OK
+
+>>> default-modifiers -get
+
+
+[4mAvailable default modifiers:[0m
+
+-DNcA=1
+-DNcB=2
+-Dzpm.NcA=1
+-Dzpm.NcB=2
+
+<<< status=OK
+
+>>> default-modifiers -set -DNcA=3
+
+Successfully updated default modifiers!
+
+<<< status=OK
+
+>>> default-modifiers -delete
+
+Successfully deleted default modifiers!
+
+<<< status=OK
+
+OBS|nc-repo-model-default-modifiers-merge|afterDelete=0;afterOverwrite=NcA:3 NcB:2 zpm:2;afterTwoSets=NcA:1 NcB:2 zpm:2;delete=1;getListsA=1;getListsB=1;set1=1;set2=1;set3=1;
+
+USER>

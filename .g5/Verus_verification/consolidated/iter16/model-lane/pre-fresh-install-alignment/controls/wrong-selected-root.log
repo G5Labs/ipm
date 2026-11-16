@@ -1,0 +1,72 @@
+error: postcondition not satisfied
+   --> .g5/Verus_verification/consolidated/iter16/model-lane/controls/wrong-selected-root.rs:138:10
+    |
+137 |   pub proof fn selection_binds_supplier(w:World,r:Request)
+    |   -------------------------------------------------------- at the end of the function body
+138 |    ensures match select(w,r) {Some(q)=>w.repos.contains_key(r.repository) &&
+    |  __________^
+139 | |   w.repos[r.repository].enabled && q.server==r.repository && q.root==w.repos[r.repository].root &&
+140 | |   w.roots.contains_key(q.root) && q.package==w.roots[q.root] && q.package.name==r.name && q.package.version==r.version,
+141 | |   None=>true}
+    | |_____________^ failed this postcondition
+
+note: function body check: not all errors may have been reported; rerun with a higher value for --multiple-errors to find other potential errors in this function
+   --> .g5/Verus_verification/consolidated/iter16/model-lane/controls/wrong-selected-root.rs:169:1
+    |
+169 | pub proof fn ordinary_neighbors()
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: postcondition not satisfied
+   --> .g5/Verus_verification/consolidated/iter16/model-lane/controls/wrong-selected-root.rs:171:53
+    |
+169 | pub proof fn ordinary_neighbors()
+    | --------------------------------- at the end of the function body
+170 |  ensures install(initial(),request(alpha())).ok,install(initial(),request(beta())).ok,
+171 |  payload(after_a())==1,supplier(after_a())==alpha(),installed_root(after_a())==Some(Root::A),
+    |                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: postcondition not satisfied
+   --> .g5/Verus_verification/consolidated/iter16/model-lane/controls/wrong-selected-root.rs:173:2
+    |
+169 | pub proof fn ordinary_neighbors()
+    | --------------------------------- at the end of the function body
+...
+173 |  history_has_supplier(after_a(),0,alpha(),Root::A),
+    |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: postcondition not satisfied
+   --> .g5/Verus_verification/consolidated/iter16/model-lane/controls/wrong-selected-root.rs:193:2
+    |
+189 | pub proof fn local_and_refusal_neighbors()
+    | ------------------------------------------ at the end of the function body
+...
+193 |  history_has_supplier(after_local(),1,alpha(),Root::C),history_has_supplier(after_local(),2,beta(),Root::B),
+    |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+note: function body check: not all errors may have been reported; rerun with a higher value for --multiple-errors to find other potential errors in this function
+   --> .g5/Verus_verification/consolidated/iter16/model-lane/controls/wrong-selected-root.rs:199:1
+    |
+199 | pub proof fn reader_neighbors()
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: postcondition not satisfied
+   --> .g5/Verus_verification/consolidated/iter16/model-lane/controls/wrong-selected-root.rs:201:45
+    |
+199 | pub proof fn reader_neighbors()
+    | ------------------------------- at the end of the function body
+200 |  ensures after_a().records[0].action==Action::Install,after_a().records[0].source==alpha(),
+201 |  after_a().records[0].moniker==filesystem(),after_a().records[0].details==details(Root::A),
+    |                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: postcondition not satisfied
+   --> .g5/Verus_verification/consolidated/iter16/model-lane/controls/wrong-selected-root.rs:204:45
+    |
+199 | pub proof fn reader_neighbors()
+    | ------------------------------- at the end of the function body
+...
+204 |  after_c().records[1].moniker==filesystem(),after_c().records[1].details==details(Root::C),
+    |                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+verification results:: 18 verified, 4 errors
+error: aborting due to 6 previous errors
+

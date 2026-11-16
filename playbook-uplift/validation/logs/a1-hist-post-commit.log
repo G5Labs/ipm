@@ -1,0 +1,83 @@
+# container: ipm-uplift-iris  image: containers.intersystems.com/intersystems/iris-community:2026.1  at: 2026-11-13T23:18:37Z
+# script: validation/iris/r4/hist/01-post-commit.script
+
+Node: 37eecb272560, Instance: IRIS
+
+USER>
+
+LOAD 1 
+
+USER>
+
+SETUP hooks 1
+
+CMD> repo -n r4hist -fs -path /tmp/uplift/r4/hist/fixtures/repo/
+
+r4h-dep-wait 1.0.0 @ /tmp/uplift/r4/hist/fixtures/repo/r4h-dep-wait/
+r4hist
+	Source: 		/tmp/uplift/r4/hist/fixtures/repo/*
+	Enabled?		Yes
+	Available?		Yes
+	Use for Snapshots?	Yes
+	Use for Prereleases?	Yes
+	Is Read-Only?		No
+
+uplift
+	Source: 		/tmp/uplift/fixtures/repo/*
+	Enabled?		Yes
+	Available?		Yes
+	Use for Snapshots?	Yes
+	Use for Prereleases?	Yes
+	Is Read-Only?		No
+
+r4hist
+	Source: 		/tmp/uplift/r4/hist/fixtures/repo/*
+	Enabled?		Yes
+	Available?		Yes
+	Use for Snapshots?	Yes
+	Use for Prereleases?	Yes
+	Is Read-Only?		No
+
+CMD< OK
+
+USER>
+
+OBS|r4-hist-macro-probe-iserr|evalMacro=throws:ERROR #5475: Error compiling routine: %IPM.Generated.MacroEval. Errors: %IPM.Generated.MacroEval.cls ERROR: %IPM.Generated.MacroEval.1(4) : MPP5611 : Function macro missing arguments: 'ISERR' TEXT: Quit $$$ISERR;moduleEvaluate=ok:Installed $$$ISERR;text=Installed $$$ISERR;tlevel=0;
+
+OBS|r4-hist-macro-probe-undefined|evalMacro=ok:Installed;moduleEvaluate=ok:Installed $$$NoSuchMacroR4h;text=Installed $$$NoSuchMacroR4h;tlevel=0;
+
+OBS|r4-hist-macro-probe-expr|evalMacro=ok:Installed #{1/0};moduleEvaluate=ok:Installed;text=Installed #{1/0};tlevel=0;
+
+USER>
+
+CMD> load /tmp/uplift/r4/hist/fixtures/r4h-msg/
+
+Building dependency graph...Done.
+[USER|r4h-msg]	Initialize START
+[USER|r4h-msg]	Initialize SUCCESS
+[USER|r4h-msg]	Reload START (/tmp/uplift/r4/hist/fixtures/r4h-msg/)
+[USER|r4h-msg]	Reload SUCCESS
+[r4h-msg]	Module object refreshed.
+[USER|r4h-msg]	Validate START
+[USER|r4h-msg]	Validate SUCCESS
+[USER|r4h-msg]	Compile START
+[USER|r4h-msg]	Compile SUCCESS
+[USER|r4h-msg]	Activate START
+[USER|r4h-msg]	Configure START
+[USER|r4h-msg]	Configure SUCCESS
+[USER|r4h-msg]	Activate SUCCESS
+Installed $$$ISERR
+
+CMD< OK
+
+OBS|r4-hist-post-commit-throw-txn|cls:R4HMsg.Marker=compiled;cmdStatus=ok;historyRows=1;historyTempData=1;mod:r4h-msg=1.0.0;row1=id155/load/r4h-msg/success:ok/committed:1/ended:1/finalized:1/phases:Initialize:ok Reload:ok Validate:ok Compile:ok Activate:ok;tlevel=0;
+
+CMD> uninstall r4h-msg -force
+
+[USER|r4h-msg]	Clean START
+[USER|r4h-msg]	Unconfigure START
+[USER|r4h-msg]	Unconfigure SUCCESS
+[USER|r4h-msg]	Clean SUCCESS
+CMD< OK
+
+USER>

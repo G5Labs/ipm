@@ -1,0 +1,291 @@
+{
+  "models": {
+    "status_reader.rs": {
+      "finalize-stores-decoded": [
+        "projection:inherited_history::finalize(r.projection,tag(s)),status:s",
+        "projection:inherited_history::finalize(r.projection,tag(s)),status:Status{raw:s.error_text,..s}"
+      ],
+      "finalize-does-not-end": [
+        "projection:inherited_history::finalize(r.projection,tag(s)),status:s",
+        "projection:inherited_history::Row{ended:false,..inherited_history::finalize(r.projection,tag(s))},status:s"
+      ],
+      "finalize-commits-error": [
+        "projection:inherited_history::finalize(r.projection,tag(s)),status:s",
+        "projection:inherited_history::Row{committed:true,..inherited_history::finalize(r.projection,tag(s))},status:s"
+      ],
+      "persist-drops-raw": [
+        "projection:inherited_history::Row{finalized:true,..r.projection},..r",
+        "projection:inherited_history::Row{finalized:true,..r.projection},status:Status{raw:seq![],..r.status},..r"
+      ],
+      "persist-not-finalized": [
+        "Row{finalized:true,..r.projection}",
+        "Row{finalized:false,..r.projection}"
+      ],
+      "details-decodes": [
+        "inherited_history::Text::Raw(_)=>s.raw",
+        "inherited_history::Text::Raw(_)=>s.error_text"
+      ],
+      "error-summary-uses-raw": [
+        "inherited_history::Text::Error00|inherited_history::Text::Error=>s.error_text",
+        "inherited_history::Text::Error00|inherited_history::Text::Error=>s.raw"
+      ],
+      "success-summary-uses-raw": [
+        "inherited_history::Text::Success=>success()",
+        "inherited_history::Text::Success=>s.raw"
+      ],
+      "reader-ignores-detail": [
+        "success_to_string(tag(r.status),detail)",
+        "success_to_string(tag(r.status),false)"
+      ],
+      "summary-forces-success": [
+        "success_to_string(tag(r.status),detail)",
+        "success_to_string(if detail{tag(r.status)}else{1},detail)"
+      ],
+      "cleanup-cr-label-swapped": [
+        "replace_all(b,13,styled(cr(),color,Style::Dim))",
+        "replace_all(b,13,styled(lf(),color,Style::Dim))"
+      ],
+      "cleanup-skips-lf": [
+        ")),10,styled(lf(),color,Style::Dim))",
+        ")),12,styled(lf(),color,Style::Dim))"
+      ],
+      "cleanup-skips-tab": [
+        ")),9,styled(tab(),color,Style::Dim))",
+        ")),8,styled(tab(),color,Style::Dim))"
+      ],
+      "cleanup-erases-high-byte": [
+        "else{seq![b[i as int]]})+replace_from",
+        "else{if b[i as int]>=128{seq![]}else{seq![b[i as int]]}})+replace_from"
+      ],
+      "cleanup-token-style-wrong": [
+        "replace_all(b,13,styled(cr(),color,Style::Dim))",
+        "replace_all(b,13,styled(cr(),color,Style::Default))"
+      ],
+      "format-forces-color": [
+        "if color{prefix(style)+b+reset()}else{b}",
+        "if true{prefix(style)+b+reset()}else{b}"
+      ],
+      "format-omits-reset": [
+        "prefix(style)+b+reset()",
+        "prefix(style)+b"
+      ],
+      "format-default-color-wrong": [
+        "Style::Default=>seq![27u8,91,51,57,109]",
+        "Style::Default=>seq![27u8,91,51,49,109]"
+      ],
+      "format-label-style-wrong": [
+        "styled(success(),color,Style::Dim)+seq![58u8,32]",
+        "styled(success(),color,Style::Default)+seq![58u8,32]"
+      ],
+      "color-ignores-class-absence": [
+        "class_present && setting!=seq![110u8,111,110,101]",
+        "true && setting!=seq![110u8,111,110,101]"
+      ],
+      "color-disables-empty-setting": [
+        "class_present && setting!=seq![110u8,111,110,101]",
+        "class_present && setting.len()>0 && setting!=seq![110u8,111,110,101]"
+      ],
+      "color-ignores-none-setting": [
+        "class_present && setting!=seq![110u8,111,110,101]",
+        "class_present"
+      ],
+      "utf8-accepts-isolated-continuation": [
+        "else if x<128{valid_from",
+        "else if x<192{valid_from"
+      ],
+      "utf8-accepts-overlong": [
+        "else if 194<=x && x<=223",
+        "else if 192<=x && x<=223"
+      ],
+      "utf8-accepts-surrogate": [
+        "x==237{valid_from(b,i+1,2,128u8,159u8)}",
+        "x==237{valid_from(b,i+1,2,128u8,191u8)}"
+      ],
+      "utf8-accepts-out-of-range": [
+        "x==244{valid_from(b,i+1,3,128u8,143u8)}",
+        "x==244{valid_from(b,i+1,3,128u8,191u8)}"
+      ],
+      "utf8-accepts-truncation": [
+        "if i>=b.len(){pending==0}",
+        "if i>=b.len(){true}"
+      ]
+    }
+  },
+  "control_functions": {
+    "status_reader.rs": {
+      "finalize-stores-decoded": "producer_neighbor",
+      "finalize-does-not-end": "producer_neighbor",
+      "finalize-commits-error": "producer_neighbor",
+      "persist-drops-raw": "producer_neighbor",
+      "persist-not-finalized": "producer_neighbor",
+      "details-decodes": "branch_neighbor",
+      "error-summary-uses-raw": "branch_neighbor",
+      "success-summary-uses-raw": "branch_neighbor",
+      "reader-ignores-detail": "branch_neighbor",
+      "summary-forces-success": "branch_neighbor",
+      "cleanup-cr-label-swapped": "cleanup_neighbor",
+      "cleanup-skips-lf": "cleanup_neighbor",
+      "cleanup-skips-tab": "cleanup_neighbor",
+      "cleanup-erases-high-byte": "cleanup_neighbor",
+      "cleanup-token-style-wrong": "cleanup_neighbor",
+      "format-forces-color": "format_neighbor",
+      "format-omits-reset": "format_neighbor",
+      "format-default-color-wrong": "format_neighbor",
+      "format-label-style-wrong": "format_neighbor",
+      "color-ignores-class-absence": "format_neighbor",
+      "color-disables-empty-setting": "format_neighbor",
+      "color-ignores-none-setting": "format_neighbor",
+      "utf8-accepts-isolated-continuation": "utf8_neighbor",
+      "utf8-accepts-overlong": "utf8_neighbor",
+      "utf8-accepts-surrogate": "utf8_neighbor",
+      "utf8-accepts-out-of-range": "utf8_neighbor",
+      "utf8-accepts-truncation": "utf8_neighbor"
+    }
+  },
+  "control_options": [
+    "--multiple-errors",
+    "0"
+  ],
+  "replay_grouped": true,
+  "replay": {
+    "good-detail-status-utf8": "b(utf8(plain_value(Case::Good,true)))",
+    "controls-detail-status-utf8": "b(utf8(plain_value(Case::Controls,true)))",
+    "bad-detail-status-utf8": "b(utf8(plain_value(Case::Bad,true)))",
+    "good-record-is-ok": "b(record(Case::Good).status.is_ok)",
+    "good-record-ended": "b(record(Case::Good).projection.ended)",
+    "good-record-finalized": "b(record(Case::Good).projection.finalized)",
+    "good-raw-length": "status(Case::Good).raw.len() as int",
+    "good-color-on": "b(color_scheme(true,seq![]))",
+    "good-stored-raw-utf8": "b(utf8(status(Case::Good).raw))",
+    "good-decoded-utf8": "b(utf8(status(Case::Good).error_text))",
+    "good-raw-has-cr": "b(has_byte(status(Case::Good).raw,13u8))",
+    "good-raw-has-lf": "b(has_byte(status(Case::Good).raw,10u8))",
+    "good-raw-has-tab": "b(has_byte(status(Case::Good).raw,9u8))",
+    "good-detail-equals-cleaned-raw": "b(plain_value(Case::Good,true)==observed_status(Case::Good))",
+    "good-detail-exact-format": "b(configured_detail(Case::Good,true,seq![])==observed_detail(Case::Good,true))",
+    "good-summary-has-status": "b(configured_summary(Case::Good,true,seq![])==observed_summary(Case::Good,true))",
+    "good-detail-status-length": "plain_value(Case::Good,true).len() as int",
+    "good-emitted-status-line-length": "configured_detail(Case::Good,true,seq![]).len() as int",
+    "good-has-ansi": "b(has_ansi(configured_detail(Case::Good,true,seq![])))",
+    "good-none-detail-status-utf8": "b(utf8(plain_value(Case::Good,true)))",
+    "good-none-detail-equals-cleaned-raw": "b(plain_value(Case::Good,true)==observed_status(Case::Good))",
+    "good-none-detail-exact-format": "b(configured_detail(Case::Good,true,seq![110u8,111,110,101])==observed_detail(Case::Good,false))",
+    "good-none-summary-has-status": "b(configured_summary(Case::Good,true,seq![110u8,111,110,101])==observed_summary(Case::Good,false))",
+    "good-none-detail-status-length": "plain_value(Case::Good,true).len() as int",
+    "good-none-emitted-status-line-length": "configured_detail(Case::Good,true,seq![110u8,111,110,101]).len() as int",
+    "good-none-has-ansi": "b(has_ansi(configured_detail(Case::Good,true,seq![110u8,111,110,101])))",
+    "controls-record-is-ok": "b(record(Case::Controls).status.is_ok)",
+    "controls-record-ended": "b(record(Case::Controls).projection.ended)",
+    "controls-record-finalized": "b(record(Case::Controls).projection.finalized)",
+    "controls-raw-length": "status(Case::Controls).raw.len() as int",
+    "controls-color-on": "b(color_scheme(true,seq![]))",
+    "controls-stored-raw-utf8": "b(utf8(status(Case::Controls).raw))",
+    "controls-decoded-utf8": "b(utf8(status(Case::Controls).error_text))",
+    "controls-raw-has-cr": "b(has_byte(status(Case::Controls).raw,13u8))",
+    "controls-raw-has-lf": "b(has_byte(status(Case::Controls).raw,10u8))",
+    "controls-raw-has-tab": "b(has_byte(status(Case::Controls).raw,9u8))",
+    "controls-detail-equals-cleaned-raw": "b(plain_value(Case::Controls,true)==observed_status(Case::Controls))",
+    "controls-detail-exact-format": "b(configured_detail(Case::Controls,true,seq![])==observed_detail(Case::Controls,true))",
+    "controls-summary-has-status": "b(configured_summary(Case::Controls,true,seq![])==observed_summary(Case::Controls,true))",
+    "controls-detail-status-length": "plain_value(Case::Controls,true).len() as int",
+    "controls-emitted-status-line-length": "configured_detail(Case::Controls,true,seq![]).len() as int",
+    "controls-has-ansi": "b(has_ansi(configured_detail(Case::Controls,true,seq![])))",
+    "controls-none-detail-status-utf8": "b(utf8(plain_value(Case::Controls,true)))",
+    "controls-none-detail-equals-cleaned-raw": "b(plain_value(Case::Controls,true)==observed_status(Case::Controls))",
+    "controls-none-detail-exact-format": "b(configured_detail(Case::Controls,true,seq![110u8,111,110,101])==observed_detail(Case::Controls,false))",
+    "controls-none-summary-has-status": "b(configured_summary(Case::Controls,true,seq![110u8,111,110,101])==observed_summary(Case::Controls,false))",
+    "controls-none-detail-status-length": "plain_value(Case::Controls,true).len() as int",
+    "controls-none-emitted-status-line-length": "configured_detail(Case::Controls,true,seq![110u8,111,110,101]).len() as int",
+    "controls-none-has-ansi": "b(has_ansi(configured_detail(Case::Controls,true,seq![110u8,111,110,101])))",
+    "bad-record-is-ok": "b(record(Case::Bad).status.is_ok)",
+    "bad-record-ended": "b(record(Case::Bad).projection.ended)",
+    "bad-record-finalized": "b(record(Case::Bad).projection.finalized)",
+    "bad-raw-length": "status(Case::Bad).raw.len() as int",
+    "bad-color-on": "b(color_scheme(true,seq![]))",
+    "bad-stored-raw-utf8": "b(utf8(status(Case::Bad).raw))",
+    "bad-decoded-utf8": "b(utf8(status(Case::Bad).error_text))",
+    "bad-raw-has-cr": "b(has_byte(status(Case::Bad).raw,13u8))",
+    "bad-raw-has-lf": "b(has_byte(status(Case::Bad).raw,10u8))",
+    "bad-raw-has-tab": "b(has_byte(status(Case::Bad).raw,9u8))",
+    "bad-detail-equals-cleaned-raw": "b(plain_value(Case::Bad,true)==observed_status(Case::Bad))",
+    "bad-detail-exact-format": "b(configured_detail(Case::Bad,true,seq![])==observed_detail(Case::Bad,true))",
+    "bad-summary-has-status": "b(configured_summary(Case::Bad,true,seq![])==observed_summary(Case::Bad,true))",
+    "bad-detail-status-length": "plain_value(Case::Bad,true).len() as int",
+    "bad-emitted-status-line-length": "configured_detail(Case::Bad,true,seq![]).len() as int",
+    "bad-has-ansi": "b(has_ansi(configured_detail(Case::Bad,true,seq![])))",
+    "bad-none-detail-status-utf8": "b(utf8(plain_value(Case::Bad,true)))",
+    "bad-none-detail-equals-cleaned-raw": "b(plain_value(Case::Bad,true)==observed_status(Case::Bad))",
+    "bad-none-detail-exact-format": "b(configured_detail(Case::Bad,true,seq![110u8,111,110,101])==observed_detail(Case::Bad,false))",
+    "bad-none-summary-has-status": "b(configured_summary(Case::Bad,true,seq![110u8,111,110,101])==observed_summary(Case::Bad,false))",
+    "bad-none-detail-status-length": "plain_value(Case::Bad,true).len() as int",
+    "bad-none-emitted-status-line-length": "configured_detail(Case::Bad,true,seq![110u8,111,110,101]).len() as int",
+    "bad-none-has-ansi": "b(has_ansi(configured_detail(Case::Bad,true,seq![110u8,111,110,101])))",
+    "color-none-is-off": "b(!color_scheme(true,seq![110u8,111,110,101]))"
+  },
+  "replay_prelude": "producer_neighbor(); branch_neighbor(); format_neighbor(); native_good_bytes(); native_controls_bytes(); native_bad_bytes();",
+  "native_expected": {
+    "driver-compile": 1,
+    "repo-clear": 1,
+    "repo-create": 1,
+    "install-good": 1,
+    "good-color-class-present": 1,
+    "good-color-value-none": 0,
+    "good-record-command": 1,
+    "good-record-count": 1,
+    "summary-good": 1,
+    "detail-good": 1,
+    "good-code": 1,
+    "good-payload": 1,
+    "install-controls": 0,
+    "controls-color-class-present": 1,
+    "controls-color-value-none": 0,
+    "controls-record-command": 1,
+    "controls-record-count": 1,
+    "summary-controls": 1,
+    "detail-controls": 1,
+    "repo-delete": 1,
+    "install-bad": 0,
+    "bad-color-class-present": 1,
+    "bad-color-value-none": 0,
+    "bad-record-command": 1,
+    "bad-record-count": 1,
+    "summary-bad": 1,
+    "detail-bad": 1,
+    "color-none": 1,
+    "none-color-class-present": 1,
+    "none-color-value-none": 1,
+    "summary-good-none": 1,
+    "detail-good-none": 1,
+    "summary-controls-none": 1,
+    "detail-controls-none": 1,
+    "summary-bad-none": 1,
+    "detail-bad-none": 1,
+    "final-tlevel": 0,
+    "good-summary-utf8": 1,
+    "good-detail-utf8": 1,
+    "good-summary-row-found": 1,
+    "good-none-summary-utf8": 1,
+    "good-none-detail-utf8": 1,
+    "good-none-summary-row-found": 1,
+    "controls-summary-utf8": 1,
+    "controls-detail-utf8": 0,
+    "controls-summary-row-found": 1,
+    "controls-none-summary-utf8": 1,
+    "controls-none-detail-utf8": 0,
+    "controls-none-summary-row-found": 1,
+    "bad-summary-utf8": 1,
+    "bad-detail-utf8": 0,
+    "bad-summary-row-found": 1,
+    "bad-none-summary-utf8": 1,
+    "bad-none-detail-utf8": 0,
+    "bad-none-summary-row-found": 1
+  },
+  "native_receipt": ".g5/uplift/consolidated/iter23/native/20261115T231537227723Z/observations.json",
+  "domain": {
+    "status": "literal SDK raw/error_text/IsOK ports, not generic encoding",
+    "record": "successful Finalize/PersistToTwin ports; selected Success field only",
+    "output": "original Success field slices; current device byte identity; other columns/whole commands qualification only",
+    "colors": "compiled class present and returned setting empty or none; GetValue storage provider",
+    "archive": "unassessed/unpursued"
+  }
+}

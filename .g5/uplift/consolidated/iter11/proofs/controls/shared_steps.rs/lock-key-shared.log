@@ -1,0 +1,37 @@
+verification results:: 2 verified, 2 errors
+error: postcondition not satisfied
+  --> /Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter11/proofs/controls/shared_steps.rs/lock-key-shared.rs:63:10
+   |
+61 | pub proof fn completed_success_is_not_due(s:State,j:int,m:int)
+   | -------------------------------------------------------------- at the end of the function body
+62 |  requires s.row.is_some(),s.row.unwrap().complete,s.row.unwrap().ok,!s.locks.contains(m)
+63 |  ensures !begin(s,j,m,false).state.runs[j].due
+   |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+note: recommendation not met
+  --> /Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter11/proofs/controls/shared_steps.rs/lock-key-shared.rs:63:11
+   |
+15 |  recommends !s.runs.contains_key(job)
+   |             ------------------------- recommendation not met
+...
+63 |  ensures !begin(s,j,m,false).state.runs[j].due
+   |           ^^^^^^^^^^^^^^^^^^
+
+note: recommendation not met
+  --> /Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter11/proofs/controls/shared_steps.rs/lock-key-shared.rs:63:11
+   |
+63 |  ensures !begin(s,j,m,false).state.runs[j].due
+   |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+  --> map.rs:87:12
+   |
+   = note: recommendation not met
+
+error: assertion failed
+  --> /Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter11/proofs/controls/shared_steps.rs/lock-key-shared.rs:66:9
+   |
+66 |  assert(a().locks.contains(1));assert(!a().locks.contains(2));
+   |         ^^^^^^^^^^^^^^^^^^^^^ assertion failed
+
+error: aborting due to 2 previous errors
+

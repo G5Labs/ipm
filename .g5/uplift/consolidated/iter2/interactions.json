@@ -1,0 +1,474 @@
+[
+  {
+    "family": "restart",
+    "ontology": "history.survives-rollback.temp-copy",
+    "edges": [
+      {
+        "role": "writers",
+        "member": "General/HistoryTemp.cls::Init",
+        "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+        "slice": "src/cls/IPM/General/HistoryTemp.cls:9-26",
+        "source_sha256": "7593487d9f6dbe8b91bc43b76f91c570df93fbe0050ccaa41f5744510f8c9467",
+        "source_body_proved": false
+      },
+      {
+        "role": "writers",
+        "member": "General/HistoryTemp.cls::PersistToTwin",
+        "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+        "slice": "src/cls/IPM/General/HistoryTemp.cls:30-59",
+        "source_sha256": "4072069dbc16a0c1db76151dedc49a2c18a41a0c487b4ec58af22e004c9d30d7",
+        "source_body_proved": false
+      },
+      {
+        "role": "writers",
+        "member": "General/HistoryTemp.cls::%OnClose",
+        "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+        "slice": "src/cls/IPM/General/HistoryTemp.cls:62-73",
+        "source_sha256": "849f9b85b625c719690472e404ef13195fd6c38b4a384b14ce8c84fc59261c02",
+        "source_body_proved": false
+      },
+      {
+        "role": "writers",
+        "member": "Lifecycle/Module.cls::%Clean",
+        "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+        "slice": "src/cls/IPM/Lifecycle/Module.cls:8-93",
+        "source_sha256": "b832dcaff299e32d21f6b0f8a4746a63ba2966ede83c5b2787a5b13f188b7b18",
+        "source_body_proved": false
+      },
+      {
+        "role": "reader",
+        "member": "General/History.cls::GetHistory",
+        "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+        "slice": "src/cls/IPM/General/History.cls:132-148",
+        "source_sha256": "f3303e1939405e348ba38d46bbb082995ad8c5f84a002c3079ff0907b658f556",
+        "source_body_proved": false
+      }
+    ],
+    "provider_and_reader_boundary": "IRIS IRISTEMP versus durable database restart; one ARM64 provider/configuration",
+    "receipt": "boundaries/native-replay-20261114T173805Z/receipt.json"
+  },
+  {
+    "family": "active-delete",
+    "ontology": "history.delete.running-records",
+    "edges": [
+      {
+        "role": "decision",
+        "member": "General/History.cls::DeleteHistory",
+        "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+        "slice": "src/cls/IPM/General/History.cls:151-159",
+        "source_sha256": "b9b0f40986c71bdbd53248b6674adf00cfacbcdeb1f095a12324fc055085f538",
+        "source_body_proved": false
+      },
+      {
+        "role": "other_writers",
+        "member": "General/History.cls::AutoPurgeOldHistory",
+        "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+        "slice": "src/cls/IPM/General/History.cls:162-181",
+        "source_sha256": "e0836113531c04c1cf64025fd432cd8bfbd524e6124b9cc45eb8018736ec650a",
+        "source_body_proved": false
+      },
+      {
+        "role": "other_writers",
+        "member": "General/HistoryTemp.cls::PersistToTwin",
+        "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+        "slice": "src/cls/IPM/General/HistoryTemp.cls:30-59",
+        "source_sha256": "4072069dbc16a0c1db76151dedc49a2c18a41a0c487b4ec58af22e004c9d30d7",
+        "source_body_proved": false
+      },
+      {
+        "role": "other_writers",
+        "member": "General/HistoryTemp.cls::%OnClose",
+        "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+        "slice": "src/cls/IPM/General/HistoryTemp.cls:62-73",
+        "source_sha256": "849f9b85b625c719690472e404ef13195fd6c38b4a384b14ce8c84fc59261c02",
+        "source_body_proved": false
+      },
+      {
+        "role": "reader",
+        "member": "General/History.cls::GetHistory",
+        "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+        "slice": "src/cls/IPM/General/History.cls:132-148",
+        "source_sha256": "f3303e1939405e348ba38d46bbb082995ad8c5f84a002c3079ff0907b658f556",
+        "source_body_proved": false
+      }
+    ],
+    "provider_and_reader_boundary": "IRIS transaction-lock timing and on-close object save; finite observed schedules",
+    "receipt": "boundaries/native/delete-final-reader.log"
+  },
+  {
+    "family": "repository-lock",
+    "ontology": "repo.filesystem",
+    "edges": [
+      {
+        "role": "decision",
+        "member": "Utils/LockManager.cls::%OnNew",
+        "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+        "slice": "src/cls/IPM/Utils/LockManager.cls:23-27",
+        "source_sha256": "c88f600c5f827743b51fb1f471825a32697809e3462853effe73b5e39044fb55",
+        "source_body_proved": false
+      },
+      {
+        "role": "decision",
+        "member": "Utils/LockManager.cls::%OnClose",
+        "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+        "slice": "src/cls/IPM/Utils/LockManager.cls:144-147",
+        "source_sha256": "b5408f040ca77647ad4e23a33d551bad9de0266e3b9e528ee30b5b76d779d166",
+        "source_body_proved": false
+      },
+      {
+        "role": "caller_writer",
+        "member": "Repo/Filesystem/Definition.cls::BuildCache",
+        "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+        "slice": "src/cls/IPM/Repo/Filesystem/Definition.cls:117-182",
+        "source_sha256": "13b5889b1413248de8ee1b169b837544baed9b802fb8dc2803f182e5d2dc1ec3",
+        "source_body_proved": false
+      },
+      {
+        "role": "other_writers",
+        "member": "Repo/Filesystem/Definition.cls::ScanDirectory",
+        "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+        "slice": "src/cls/IPM/Repo/Filesystem/Definition.cls:313-359",
+        "source_sha256": "fe335862dd41057fc7fb18defc3835eb032aeafc655931fd83c1d4435077f4d8",
+        "source_body_proved": false
+      },
+      {
+        "role": "other_writers",
+        "member": "Repo/Filesystem/Definition.cls::AddCacheItem",
+        "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+        "slice": "src/cls/IPM/Repo/Filesystem/Definition.cls:184-241",
+        "source_sha256": "10eb408dbb1bdea9ccf1f9fb062efe8d98cb5e2ee568da3db106dfebcc312c76",
+        "source_body_proved": false
+      }
+    ],
+    "provider_and_reader_boundary": "IRIS explicit lock and transaction unlock modes; competitor lock probe final reader",
+    "receipt": "boundaries/native-replay-20261114T173805Z/receipt.json"
+  },
+  {
+    "family": "cpf",
+    "ontology": "module.processor.cpf-effects",
+    "edges": [
+      {
+        "role": "decision",
+        "member": "ResourceProcessor/CPF.cls::GetSourceFile",
+        "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+        "slice": "src/cls/IPM/ResourceProcessor/CPF.cls:114-124",
+        "source_sha256": "657cf02f22efb06eea4d86c277c502def6844d1d24cb5d198d9415b62b7dcf48",
+        "source_body_proved": false
+      },
+      {
+        "role": "decision",
+        "member": "ResourceProcessor/CPF.cls::DoMerge",
+        "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+        "slice": "src/cls/IPM/ResourceProcessor/CPF.cls:126-169",
+        "source_sha256": "1a0e3b2cddd7f1e0aa9e95a5a88a7f606b918d46bf45fb581a34ce53339ddc70",
+        "source_body_proved": false
+      },
+      {
+        "role": "decision",
+        "member": "ResourceProcessor/CPF.cls::MergeCPF",
+        "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+        "slice": "src/cls/IPM/ResourceProcessor/CPF.cls:173-196",
+        "source_sha256": "115c49d4223aa2d0802aa5e212c4ffd0f1bc3bdd610edaf19cacc194bc98dd3b",
+        "source_body_proved": false
+      }
+    ],
+    "provider_and_reader_boundary": "iris merge child plus Security.Roles.Exists actual configuration reader; journaled sentinel separate",
+    "receipt": "boundaries/native-replay-20261114T173805Z/cpf.log"
+  },
+  {
+    "family": "registry-selection-integrity",
+    "ontology": "repo.oras.integrity",
+    "edges": [
+      {
+        "role": "decision",
+        "member": "Repo/Oras/PackageService.cls::GetLatestTag",
+        "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+        "slice": "src/cls/IPM/Repo/Oras/PackageService.cls:908-924",
+        "source_sha256": "71470a097074036be76f333f3df642f5524e8ad974aa306c04bd9fb77578a443",
+        "source_body_proved": false
+      },
+      {
+        "role": "decision",
+        "member": "Repo/Oras/PackageService.cls::VerifyModuleHashAndSize",
+        "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+        "slice": "src/cls/IPM/Repo/Oras/PackageService.cls:995-1022",
+        "source_sha256": "8e1970c003e978c9ffc0eaae506a82a84566d5570eb82e1d32755e2d24355c55",
+        "source_body_proved": false
+      },
+      {
+        "role": "other_writers",
+        "member": "Repo/Oras/PublishService.cls::PushOras",
+        "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+        "slice": "src/cls/IPM/Repo/Oras/PublishService.cls:140-176",
+        "source_sha256": "24b734d87279d0d375f42e76098d1272bbb09e8342becb94e2ad954fa6b81b07",
+        "source_body_proved": false
+      },
+      {
+        "role": "other_writers",
+        "member": "Repo/Oras/PublishService.cls::DeleteTags",
+        "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+        "slice": "src/cls/IPM/Repo/Oras/PublishService.cls:179-199",
+        "source_sha256": "5f98d11d38db69e0828c36a93e6818514049b13825c13ba7d6e89faaf8c785dd",
+        "source_body_proved": false
+      },
+      {
+        "role": "providers",
+        "member": "Repo/Oras/PackageService.cls::GetClient",
+        "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+        "slice": "src/cls/IPM/Repo/Oras/PackageService.cls:568-617",
+        "source_sha256": "050ca726c73f3fef6a149f57955caf38f7bb7e8367aa3758279ddb4d8e867673",
+        "source_body_proved": false
+      },
+      {
+        "role": "providers",
+        "member": "Repo/Oras/PackageService.cls::PullOras",
+        "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+        "slice": "src/cls/IPM/Repo/Oras/PackageService.cls:846-865",
+        "source_sha256": "2d173853ecff4e9ac15b87b45f435174a9e6c747a0bc84e1f7771a32852f6901",
+        "source_body_proved": false
+      },
+      {
+        "role": "final_reader",
+        "member": "Repo/Oras/PackageService.cls::Pull",
+        "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+        "slice": "src/cls/IPM/Repo/Oras/PackageService.cls:772-843",
+        "source_sha256": "2cc1471974317325de79bf897373bd2bc8938365d60ca09374cbc53e8ec826d1",
+        "source_body_proved": false
+      },
+      {
+        "role": "final_reader",
+        "member": "Repo/Oras/PackageService.cls::GetModule",
+        "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+        "slice": "src/cls/IPM/Repo/Oras/PackageService.cls:233-247",
+        "source_sha256": "4b11faa783db884fa401932a0330df07df220e725ffd82a2ca4d972910b94e80",
+        "source_body_proved": false
+      }
+    ],
+    "provider_and_reader_boundary": "Actual loopback OCI tags/manifest; hash/size are explicit direct-helper arguments, not a full network Pull proof",
+    "receipt": "native/receipt.json"
+  },
+  {
+    "family": "publish-cache",
+    "ontology": "repo.publish-cache",
+    "edges": [
+      {
+        "role": "decision",
+        "member": "Repo/Remote/PublishManager.cls::CheckServiceCache",
+        "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+        "slice": "src/cls/IPM/Repo/Remote/PublishManager.cls:12-43",
+        "source_sha256": "ce521b0f186b3cc2c6d61e068045ef754c2bd1f569fd5c5327272c5eb7df87cc",
+        "source_body_proved": false
+      },
+      {
+        "role": "decision",
+        "member": "Repo/Oras/PublishManager.cls::CheckServiceCache",
+        "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+        "slice": "src/cls/IPM/Repo/Oras/PublishManager.cls:4-20",
+        "source_sha256": "48653d95d4e5f348424cd3042bc72c4d3897f81ed642322f769dcbe44521cdb5",
+        "source_body_proved": false
+      },
+      {
+        "role": "configuration_writers",
+        "member": "Repo/Remote/Definition.cls::OnConfigure",
+        "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+        "slice": "src/cls/IPM/Repo/Remote/Definition.cls:60-115",
+        "source_sha256": "b52196a1e2739e851353a8e6b581b5868ff7d6dbaa96c2c68b26122714c55185",
+        "source_body_proved": false
+      },
+      {
+        "role": "configuration_writers",
+        "member": "Repo/Oras/Definition.cls::OnConfigure",
+        "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+        "slice": "src/cls/IPM/Repo/Oras/Definition.cls:87-141",
+        "source_sha256": "60819c5d74ad48f3c5e992c683ae98d9d94348fb7eebaecd085cf81dc6eace8f",
+        "source_body_proved": false
+      },
+      {
+        "role": "providers",
+        "member": "Repo/Remote/PackageService.cls::IsAvailable",
+        "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+        "slice": "src/cls/IPM/Repo/Remote/PackageService.cls:275-293",
+        "source_sha256": "b45c7b5162a938e6db627e19f6c9f19c44526947db4a2d38112d2b7160d4b336",
+        "source_body_proved": false
+      },
+      {
+        "role": "providers",
+        "member": "Repo/Oras/PackageService.cls::IsAvailable",
+        "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+        "slice": "src/cls/IPM/Repo/Oras/PackageService.cls:93-109",
+        "source_sha256": "fd7ac53f50408849027c356800a9ed813bc2a2429fcf057d1aff98e86de1bdf2",
+        "source_body_proved": false
+      },
+      {
+        "role": "final_reader",
+        "member": "Repo/Remote/PublishManager.cls::Unpublish",
+        "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+        "slice": "src/cls/IPM/Repo/Remote/PublishManager.cls:66-81",
+        "source_sha256": "4afad58e3579e4a73065b4feb3e627d0f9f69e7f179ccdbf3b1e08e6a56757ad",
+        "source_body_proved": false
+      },
+      {
+        "role": "final_reader",
+        "member": "Repo/Oras/PublishManager.cls::Unpublish",
+        "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+        "slice": "src/cls/IPM/Repo/Oras/PublishManager.cls:43-58",
+        "source_sha256": "39e7d8c2e22cd2b784efc17060d614818956e98da152987138f25a022e4d008e",
+        "source_body_proved": false
+      }
+    ],
+    "provider_and_reader_boundary": "Retained same-process same-namespace manager; generated repository save writer in native fixture; shell lifetime open",
+    "receipt": "native/receipt.json"
+  },
+  {
+    "family": "publication-effects",
+    "ontology": "build.publish.partial-effects",
+    "edges": [
+      {
+        "role": "decision",
+        "member": "Lifecycle/Base.cls::%Publish",
+        "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+        "slice": "src/cls/IPM/Lifecycle/Base.cls:1580-1680",
+        "source_sha256": "54392509355254a72fca7e5f651176a7a72af345665a8ec9ba3e61f7a4bdfab2",
+        "source_body_proved": false
+      },
+      {
+        "role": "decision",
+        "member": "Repo/Oras/PublishService.cls::PublishModule",
+        "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+        "slice": "src/cls/IPM/Repo/Oras/PublishService.cls:6-62",
+        "source_sha256": "920e5c46c9a0f29df53c4190073df2135f85e3c086638700873316670bb388d9",
+        "source_body_proved": false
+      },
+      {
+        "role": "writers",
+        "member": "Repo/Oras/PublishService.cls::PushOras",
+        "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+        "slice": "src/cls/IPM/Repo/Oras/PublishService.cls:140-176",
+        "source_sha256": "24b734d87279d0d375f42e76098d1272bbb09e8342becb94e2ad954fa6b81b07",
+        "source_body_proved": false
+      },
+      {
+        "role": "writers",
+        "member": "Repo/Oras/PublishService.cls::DeleteTags",
+        "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+        "slice": "src/cls/IPM/Repo/Oras/PublishService.cls:179-199",
+        "source_sha256": "5f98d11d38db69e0828c36a93e6818514049b13825c13ba7d6e89faaf8c785dd",
+        "source_body_proved": false
+      },
+      {
+        "role": "writers",
+        "member": "Repo/Remote/PublishService.cls::Publish",
+        "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+        "slice": "src/cls/IPM/Repo/Remote/PublishService.cls:14-36",
+        "source_sha256": "04031deed24ce544278fd5218934b9568ee31589a457de18a07c92440281c0ba",
+        "source_body_proved": false
+      },
+      {
+        "role": "writers",
+        "member": "Repo/Remote/PublishService.cls::Unpublish",
+        "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+        "slice": "src/cls/IPM/Repo/Remote/PublishService.cls:56-74",
+        "source_sha256": "5a807c4a879a22374e85ca6478bfd97fcb64b7d7db9b80c4fecd558718f9fe81",
+        "source_body_proved": false
+      }
+    ],
+    "provider_and_reader_boundary": "Provider completed call count, effect and status independent; no end-to-end failing remote write native observation",
+    "receipt": "proofs/models.json"
+  },
+  {
+    "family": "reporting",
+    "ontology": "build.test-output.counts",
+    "edges": [
+      {
+        "role": "writers",
+        "member": "ResourceProcessor/Test.cls::OnPhase",
+        "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+        "slice": "src/cls/IPM/ResourceProcessor/Test.cls:93-232",
+        "source_sha256": "d0a9b6e5eb833ec420f045a5a82f9d99cfa0944de36f5b9aeccbe05dfdd0b69c",
+        "source_body_proved": false
+      },
+      {
+        "role": "writers",
+        "member": "ResourceProcessor/Test.cls::ReportTestResults",
+        "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+        "slice": "src/cls/IPM/ResourceProcessor/Test.cls:240-298",
+        "source_sha256": "394654cc71175634867ce192d6dffe23bb34f838b4459a66d2094a70c7c317c7",
+        "source_body_proved": false
+      },
+      {
+        "role": "decision",
+        "member": "Test/Abstract.cls::BuildResultTree",
+        "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+        "slice": "src/cls/IPM/Test/Abstract.cls:103-194",
+        "source_sha256": "c9690b3f16b762f23c7c466f1a9485d9e72d88409f1a443750f5d5a553d76891",
+        "source_body_proved": false
+      },
+      {
+        "role": "decision",
+        "member": "Test/Abstract.cls::GetSummary",
+        "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+        "slice": "src/cls/IPM/Test/Abstract.cls:199-253",
+        "source_sha256": "6a1c82df18cdb89c31d9e5cbba50bcf52724ec0625a6c5d76de30ed76c81e213",
+        "source_body_proved": false
+      },
+      {
+        "role": "final_reader",
+        "member": "Test/JsonOutput.cls::WriteToFileStream",
+        "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+        "slice": "src/cls/IPM/Test/JsonOutput.cls:4-9",
+        "source_sha256": "b36f866d977fa638d17a44061d3eed41bbe658a926675da64c04cf75c76e23c0",
+        "source_body_proved": false
+      },
+      {
+        "role": "final_reader",
+        "member": "Test/JsonOutput.cls::OutputToDevice",
+        "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+        "slice": "src/cls/IPM/Test/JsonOutput.cls:11-75",
+        "source_sha256": "f4c19e2e75f2f465cb74adc46f7e545194d85960ae5ae7d97a5a84aa5f5f37f2",
+        "source_body_proved": false
+      }
+    ],
+    "provider_and_reader_boundary": "Seeded UnitTest global fields; actual full-tree JSON and summary read; serializers/verify lifecycle remain open",
+    "receipt": "native/receipt.json"
+  },
+  {
+    "family": "forced-uninstall",
+    "ontology": "uninstall.all",
+    "edges": [
+      {
+        "role": "decision",
+        "member": "Utils/Module.cls::UninstallAll",
+        "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+        "slice": "src/cls/IPM/Utils/Module.cls:709-828",
+        "source_sha256": "d0e255c2d229d1d1c5a13d5828d08f0b7f059903b8d66336753ee66e019d674c",
+        "source_body_proved": false
+      },
+      {
+        "role": "provider",
+        "member": "Storage/Module.cls::Uninstall",
+        "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+        "slice": "src/cls/IPM/Storage/Module.cls:727-758",
+        "source_sha256": "80c0fd5fe919b0dee6b9334001cce359ca414eac78387e70cf620c26dbac8a90",
+        "source_body_proved": false
+      },
+      {
+        "role": "writers",
+        "member": "Lifecycle/Base.cls::%Clean",
+        "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+        "slice": "src/cls/IPM/Lifecycle/Base.cls:305-505",
+        "source_sha256": "270d0dafbca5631e1460bb0c2c293ba6245815751e853160143ecef470958223",
+        "source_body_proved": false
+      },
+      {
+        "role": "final_reader",
+        "member": "Main.cls::GetListModules",
+        "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+        "slice": "src/cls/IPM/Main.cls:1304-1417",
+        "source_sha256": "ac673614ac205fce81a5b5addff2469ec529787752d4bcbbdd29d62e08bd98ab",
+        "source_body_proved": false
+      }
+    ],
+    "provider_and_reader_boundary": "One eligible iteration; provider-retained module state independent of returned error; actual failure/removal not natively exercised",
+    "receipt": "proofs/models.json"
+  }
+]

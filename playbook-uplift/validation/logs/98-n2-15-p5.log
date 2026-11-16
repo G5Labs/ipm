@@ -1,0 +1,199 @@
+# container: ipm-uplift-n2-a  image: containers.intersystems.com/intersystems/iris-community:2026.1  at: 2026-11-13T19:17:37Z
+# script: validation/iris/n2/15-p5.script
+
+Node: 804549afce9f, Instance: IRIS
+
+USER>
+
+LOAD 1 
+
+USER>
+
+SETUP hooks 1
+
+CMD> uninstall -all
+
+Uninstalling n2-wait
+[USER|n2-wait]	Clean START
+[USER|n2-wait]	Unconfigure START
+[USER|n2-wait]	Unconfigure SUCCESS
+[USER|n2-wait]	Clean SUCCESS
+CMD< OK
+
+CMD> repo -delete-all
+
+CMD< OK
+
+CMD> history delete -confirm
+
+Deleted 1 record(s).
+CMD< OK
+
+CMD> load http://localhost:8765/n2-git.git
+Cloning into 'n2-git'...
+
+
+Building dependency graph...Done.
+[USER|n2-git]	Initialize START
+[USER|n2-git]	Initialize SUCCESS
+[USER|n2-git]	Reload START (/usr/irissys/mgr/Temp/6788769458088039925/n2-git/)
+[USER|n2-git]	Reload SUCCESS
+[n2-git]	Module object refreshed.
+[USER|n2-git]	Validate START
+[USER|n2-git]	Validate SUCCESS
+[USER|n2-git]	Compile START
+[USER|n2-git]	Compile SUCCESS
+[USER|n2-git]	Activate START
+[USER|n2-git]	Configure START
+[USER|n2-git]	Configure SUCCESS
+[USER|n2-git]	Activate SUCCESS
+CMD< OK
+
+OBS|nc-gap-P5-url-ok-txn|cls:N2Git.Marker=compiled/V:1.0.0;cmdStatus=ok;command=load http://localhost:8765/n2-git.git;historyRows=1;historyTempLeft=0;invokesRan=n2-git:1;mod:n2-git=1.0.0;newTempDirs=1;recordRoot=/usr/irissys/mgr/Temp/6788769458088039925/n2-git/;recordRootExists=1;row1=id120/load/n2-git/1.0.0/success:ok/committed:1/ended:1/finalized:1/phases:Initialize:ok Reload:ok Validate:ok Compile:ok Activate:ok;sourceName=<empty>;tlevel=0;
+
+CMD> uninstall -all
+
+Uninstalling n2-git
+[USER|n2-git]	Clean START
+[USER|n2-git]	Unconfigure START
+[USER|n2-git]	Unconfigure SUCCESS
+[USER|n2-git]	Clean SUCCESS
+CMD< OK
+
+CMD> repo -delete-all
+
+CMD< OK
+
+CMD> history delete -confirm
+
+Deleted 2 record(s).
+CMD< OK
+
+CMD> load http://localhost:8765/n2-git.git -dev
+Cloning into 'n2-git'...
+
+
+Building dependency graph...Done.
+[USER|n2-git]	Initialize START
+[USER|n2-git]	Initialize SUCCESS
+[USER|n2-git]	Reload START (/usr/irissys/mgr/Temp/6788769460177029759/n2-git/)
+[USER|n2-git]	Reload SUCCESS
+[n2-git]	Module object refreshed.
+[USER|n2-git]	Validate START
+[USER|n2-git]	Validate SUCCESS
+[USER|n2-git]	Compile START
+[USER|n2-git]	Compile SUCCESS
+[USER|n2-git]	Activate START
+[USER|n2-git]	Configure START
+[USER|n2-git]	Configure SUCCESS
+[USER|n2-git]	Activate SUCCESS
+CMD< OK
+
+OBS|nc-gap-P5-url-ok-dev|cls:N2Git.Marker=compiled/V:1.0.0;cmdStatus=ok;command=load http://localhost:8765/n2-git.git -dev;historyRows=1;historyTempLeft=0;invokesRan=n2-git:0;mod:n2-git=1.0.0/dev;newTempDirs=1;recordRoot=/usr/irissys/mgr/Temp/6788769460177029759/n2-git/;recordRootExists=1;row1=id122/load/n2-git/1.0.0/success:ok/committed:1/ended:1/finalized:1/phases:Initialize:ok Reload:ok Validate:ok Compile:ok Activate:ok;sourceName=<empty>;tlevel=0;
+
+CMD> uninstall -all
+
+Uninstalling n2-git
+[USER|n2-git]	Clean START
+[USER|n2-git]	Unconfigure START
+[USER|n2-git]	Unconfigure SUCCESS
+[USER|n2-git]	Clean SUCCESS
+CMD< OK
+
+CMD> repo -delete-all
+
+CMD< OK
+
+CMD> history delete -confirm
+
+Deleted 2 record(s).
+CMD< OK
+
+CMD> load http://localhost:8765/n2-gitfail.git
+Cloning into 'n2-gitfail'...
+
+
+Building dependency graph...Done.
+[USER|n2-gitfail]	Initialize START
+[USER|n2-gitfail]	Initialize SUCCESS
+[USER|n2-gitfail]	Reload START (/usr/irissys/mgr/Temp/6788769462257060427/n2-gitfail/)
+[USER|n2-gitfail]	Reload SUCCESS
+[n2-gitfail]	Module object refreshed.
+[USER|n2-gitfail]	Validate START
+[USER|n2-gitfail]	Validate SUCCESS
+[USER|n2-gitfail]	Compile START
+[USER|n2-gitfail]	Compile SUCCESS
+[USER|n2-gitfail]	Activate START
+[USER|n2-gitfail]	Configure START
+[n2-gitfail]	Configure FAILURE
+[n2-gitfail]	Activate FAILURE
+[31mERROR![0m n2: phase-level Invoke failure injected
+CMD< ERROR #5001: n2: phase-level Invoke failure injected
+
+OBS|nc-gap-P5-url-fail-txn|cmdError=ERROR #5001: n2: phase-level Invoke failure injected;cmdStatus=err;command=load http://localhost:8765/n2-gitfail.git;historyRows=1;historyTempLeft=0;invokesRan=none;newTempDirs=1;row1=id124/load/n2-gitfail/1.0.0/success:err/committed:0/ended:1/finalized:1/phases:Initialize:ok Reload:ok Validate:ok Compile:ok Activate:err;sourceName=<empty>;tlevel=0;
+
+CMD> uninstall -all
+
+CMD< OK
+
+CMD> repo -delete-all
+
+CMD< OK
+
+CMD> history delete -confirm
+
+Deleted 1 record(s).
+CMD< OK
+
+CMD> load http://localhost:8765/n2-gitfail.git -DNoTransaction=1
+Cloning into 'n2-gitfail'...
+
+
+Building dependency graph...Done.
+[USER|n2-gitfail]	Initialize START
+[USER|n2-gitfail]	Initialize SUCCESS
+[USER|n2-gitfail]	Reload START (/usr/irissys/mgr/Temp/6788769464374370511/n2-gitfail/)
+[USER|n2-gitfail]	Reload SUCCESS
+[n2-gitfail]	Module object refreshed.
+[USER|n2-gitfail]	Validate START
+[USER|n2-gitfail]	Validate SUCCESS
+[USER|n2-gitfail]	Compile START
+[USER|n2-gitfail]	Compile SUCCESS
+[USER|n2-gitfail]	Activate START
+[USER|n2-gitfail]	Configure START
+[n2-gitfail]	Configure FAILURE
+[n2-gitfail]	Activate FAILURE
+[31mERROR![0m n2: phase-level Invoke failure injected
+CMD< ERROR #5001: n2: phase-level Invoke failure injected
+
+OBS|nc-gap-P5-url-fail-notxn|cls:N2GitF.Marker=compiled/V:1.0.0;cmdError=ERROR #5001: n2: phase-level Invoke failure injected;cmdStatus=err;command=load http://localhost:8765/n2-gitfail.git -DNoTransaction:1;historyRows=1;historyTempLeft=0;invokesRan=none;mod:n2-gitfail=1.0.0;newTempDirs=1;recordRoot=/usr/irissys/mgr/Temp/6788769464374370511/n2-gitfail/;recordRootExists=1;row1=id125/load/n2-gitfail/1.0.0/success:err/committed:1/ended:1/finalized:1/phases:Initialize:ok Reload:ok Validate:ok Compile:ok Activate:err;sourceName=<empty>;tlevel=0;
+
+CMD> uninstall -all
+
+Uninstalling n2-gitfail
+[USER|n2-gitfail]	Clean START
+[USER|n2-gitfail]	Unconfigure START
+[USER|n2-gitfail]	Unconfigure SUCCESS
+[USER|n2-gitfail]	Clean SUCCESS
+CMD< OK
+
+CMD> repo -delete-all
+
+CMD< OK
+
+CMD> history delete -confirm
+
+Deleted 2 record(s).
+CMD< OK
+
+CMD> load http://localhost:8765/n2-nope.git
+Cloning into 'n2-nope'...
+fatal: repository 'http://localhost:8765/n2-nope.git/' not found
+
+
+[31mERROR![0m File not found to obtain module object: /usr/irissys/mgr/Temp/6788769466450262304/n2-nope/module.xml
+CMD< ERROR #5001: File not found to obtain module object: /usr/irissys/mgr/Temp/6788769466450262304/n2-nope/module.xml
+
+OBS|nc-gap-P5-url-missing|cmdError=ERROR #5001: File not found to obtain module object: /usr/irissys/mgr/Temp/6788769466450262304/n2-nope/module.xml;cmdStatus=err;command=load http://localhost:8765/n2-nope.git;historyRows=1;historyTempLeft=0;invokesRan=none;newTempDirs=1;row1=id127/load//0.0.0/success:err/committed:0/ended:1/finalized:1/phases:;sourceName=<empty>;tlevel=0;
+
+USER>

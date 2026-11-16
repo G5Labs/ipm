@@ -1,0 +1,39 @@
+verification results:: 21 verified, 2 errors
+error: postcondition not satisfied
+   --> /Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter16/proofs/controls/provenance.rs/ignore-enabled-filter.rs:149:10
+    |
+148 |   pub proof fn selection_binds_supplier(w:World,r:Request)
+    |   -------------------------------------------------------- at the end of the function body
+149 |    ensures match select(w,r) {Some(q)=>w.repos.contains_key(r.repository) &&
+    |  __________^
+150 | |   w.repos[r.repository].enabled && q.server==r.repository && q.root==w.repos[r.repository].root &&
+151 | |   w.roots.contains_key(q.root) && q.package==w.roots[q.root] && q.package.name==r.name && q.package.version==r.version,
+152 | |   None=>true}
+    | |_____________^ failed this postcondition
+
+note: function body check: not all errors may have been reported; rerun with a higher value for --multiple-errors to find other potential errors in this function
+   --> /Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter16/proofs/controls/provenance.rs/ignore-enabled-filter.rs:200:1
+    |
+200 | pub proof fn local_and_refusal_neighbors()
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: postcondition not satisfied
+   --> /Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter16/proofs/controls/provenance.rs/ignore-enabled-filter.rs:207:2
+    |
+200 | pub proof fn local_and_refusal_neighbors()
+    | ------------------------------------------ at the end of the function body
+...
+207 |  !disabled().ok,disabled().world.module==None,payload(disabled().world)==0,
+    |  ^^^^^^^^^^^^^^ failed this postcondition
+
+error: postcondition not satisfied
+   --> /Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter16/proofs/controls/provenance.rs/ignore-enabled-filter.rs:207:17
+    |
+200 | pub proof fn local_and_refusal_neighbors()
+    | ------------------------------------------ at the end of the function body
+...
+207 |  !disabled().ok,disabled().world.module==None,payload(disabled().world)==0,
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: aborting due to 3 previous errors
+

@@ -1,0 +1,56 @@
+verification results:: 4 verified, 3 errors
+note: function body check: not all errors may have been reported; rerun with a higher value for --multiple-errors to find other potential errors in this function
+  --> .g5/Verus_verification/consolidated/iter14/model-lane/final-controls/unix-delete-before-clears-tree.rs:94:1
+   |
+94 | pub proof fn unix_copy_preserves_unrelated(files:Files,delete_matching:bool)
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: postcondition not satisfied
+  --> .g5/Verus_verification/consolidated/iter14/model-lane/final-controls/unix-delete-before-clears-tree.rs:95:10
+   |
+94 | pub proof fn unix_copy_preserves_unrelated(files:Files,delete_matching:bool)
+   | ---------------------------------------------------------------------------- at the end of the function body
+95 |  ensures unix_copy(files,unix_args(delete_matching)).sentinel==files.sentinel,
+   |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: postcondition not satisfied
+  --> .g5/Verus_verification/consolidated/iter14/model-lane/final-controls/unix-delete-before-clears-tree.rs:96:2
+   |
+94 | pub proof fn unix_copy_preserves_unrelated(files:Files,delete_matching:bool)
+   | ---------------------------------------------------------------------------- at the end of the function body
+95 |  ensures unix_copy(files,unix_args(delete_matching)).sentinel==files.sentinel,
+96 |  unix_copy(files,unix_args(delete_matching)).nested_marker==files.nested_marker,
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+note: function body check: not all errors may have been reported; rerun with a higher value for --multiple-errors to find other potential errors in this function
+   --> .g5/Verus_verification/consolidated/iter14/model-lane/final-controls/unix-delete-before-clears-tree.rs:100:1
+    |
+100 | pub proof fn request_is_distinct_from_clearing()
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: postcondition not satisfied
+   --> .g5/Verus_verification/consolidated/iter14/model-lane/final-controls/unix-delete-before-clears-tree.rs:106:2
+    |
+100 | pub proof fn request_is_distinct_from_clearing()
+    | ------------------------------------------------ at the end of the function body
+...
+106 |  unix_copy(before(false,true),unix_args(true)).sentinel,
+    |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: postcondition not satisfied
+   --> .g5/Verus_verification/consolidated/iter14/model-lane/final-controls/unix-delete-before-clears-tree.rs:108:2
+    |
+100 | pub proof fn request_is_distinct_from_clearing()
+    | ------------------------------------------------ at the end of the function body
+...
+108 |  unix_copy(before(false,true),unix_args(true)).nested_marker
+    |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: assertion failed
+   --> .g5/Verus_verification/consolidated/iter14/model-lane/final-controls/unix-delete-before-clears-tree.rs:131:73
+    |
+131 |  assert(ordinary_loaded().dir);assert(ordinary_loaded().payload);assert(ordinary_loaded().sentinel);
+    |                                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^ assertion failed
+
+error: aborting due to 5 previous errors
+

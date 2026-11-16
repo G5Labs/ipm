@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Export generator="IRIS" version="26" zv="IRIS for UNIX (Ubuntu Server LTS for ARM64 Containers) 2026.1 (Build 234U)" ts="2026-11-14 17:46:44">
+<Class name="%IPM.Repo.Remote.PublishService">
+<Super>%IPM.Repo.Remote.PackageService,%IPM.Repo.IPublishService</Super>
+<TimeChanged>67888,9993.089131461</TimeChanged>
+<TimeCreated>67888,9993.089131461</TimeCreated>
+
+<Method name="PublishModule">
+<FormalSpec>pModule:%IPM.Repo.Remote.ModuleInfo</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+    try {
+        do ..Publish(pModule)
+    } catch Ex {
+        return Ex.AsStatus()
+    }
+    return $$$OK
+]]></Implementation>
+</Method>
+
+<Method name="Publish">
+<FormalSpec>pModule:%IPM.Repo.Remote.ModuleInfo</FormalSpec>
+<Implementation><![CDATA[
+    if ((..Username="") || (..Password="")) && (..Token="") {
+        $$$ThrowStatus($$$ERROR($$$GeneralError, "Publishing module, authorization required."))
+    }
+
+    set tRequest = ..GetHttpRequest()
+    set tRequest.ContentType = "application/json"
+    set publishTimeout =  ##class(%IPM.Repo.UniversalSettings).GetValue("publish_timeout")
+    set:publishTimeout'="" tRequest.Timeout = publishTimeout
+
+    $$$ThrowOnError(pModule.%JSONExportToStream(tRequest.EntityBody))
+    $$$ThrowOnError(tRequest.Post(tRequest.Location_"packages"))
+
+    if (tRequest.HttpResponse.StatusCode '= 200) {
+        if tRequest.HttpResponse.StatusCode = 401 {
+            $$$ThrowStatus($$$ERROR($$$GeneralError, "Publishing module, authorization required."))
+        } else {
+            set tMessage = "Publishing module, server responded with status code "_tRequest.HttpResponse.StatusCode_"."
+            $$$ThrowStatus($$$ERROR($$$GeneralError, tMessage))
+        }
+    }
+]]></Implementation>
+</Method>
+
+<Method name="CheckUnpublishEnabled">
+<FormalSpec>packageName:%String,packageVersion:%String</FormalSpec>
+<ReturnType>%Boolean</ReturnType>
+<Implementation><![CDATA[
+    if ((..Username="") || (..Password="")) && (..Token="") {
+        $$$ThrowStatus($$$ERROR($$$GeneralError, "Unpublishing module, authorization required."))
+    }
+    set tRequest = ..GetHttpRequest()
+    $$$ThrowOnError(tRequest.Send("OPTIONS",tRequest.Location_"packages/"_packageName_"/"_packageVersion))
+    if (tRequest.HttpResponse.StatusCode = 200) {
+        set allow = $$$ucase(tRequest.HttpResponse.GetHeader("allow"))
+        if ( allow["DELETE" ) {
+            return 1
+        }
+    }
+    return 0
+]]></Implementation>
+</Method>
+
+<Method name="Unpublish">
+<FormalSpec>packageName:%String,packageVersion:%String</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+    if ((..Username="") || (..Password="")) && (..Token="") {
+        $$$ThrowStatus($$$ERROR($$$GeneralError, "Unpublishing module, authorization required."))
+    }
+    set tRequest = ..GetHttpRequest()
+    $$$ThrowOnError(tRequest.Send("DELETE",tRequest.Location_"packages/"_packageName_"/"_packageVersion))
+    if (tRequest.HttpResponse.StatusCode '= 200) {
+        set errMsg = ""
+        try {
+            set errMsg = $piece({}.%FromJSON(tRequest.HttpResponse.Data).summary,":",2,*)
+            if (errMsg'="") {set errMsg = ";"_errMsg}
+        } catch { }
+        $$$ThrowStatus($$$ERROR($$$GeneralError, "Unpublishing module, something went wrong (HTTP response status code: "_tRequest.HttpResponse.StatusCode_errMsg_")."))
+    }
+    return $$$OK
+]]></Implementation>
+</Method>
+</Class>
+</Export>

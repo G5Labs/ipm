@@ -1,0 +1,180 @@
+
+Node: 65454c4a22aa, Instance: IRIS
+
+USER>
+
+USER>
+OBS U1 ok=1 empty=0 greeting=first x=1 y= list=1,2,3, k=
+
+USER>
+OBS U2 ok=1 empty=0 greeting=second x=1 y=2 list=9,2,3, k=
+
+USER>
+OBS U2r ok=1 empty=0 greeting=first x=1 y=2 list=1,2,3, k=
+
+USER>
+OBS U3 ok=0 empty=1 greeting= x= y= list= k=
+OBS U3 error=ERROR #5012: File '/tmp/c5/missing.json' does not exist
+
+USER>
+OBS U4 ok=0 empty=1 greeting= x= y= list= k=
+OBS U4 error=ERROR #5001: Invalid configuration file: /tmp/c5/bad.json. Expected JSON object.
+
+USER>
+OBS U5 ok=0 empty=1 greeting= x= y= list= k=
+OBS U5 error=ERROR #5001: Invalid configuration file. Expected a JSON object, not a JSON array
+
+USER>
+OBS U6 ok=0 empty=1 greeting= x= y= list= k=
+OBS U6 error=ERROR #5001: Invalid arguments. Expected two dynamic objects. Got 5 and 9@%Library.DynamicObject
+
+USER>
+OBS U6r ok=1 empty=0 greeting= x= y= list= k=5
+
+USER>
+OBS U7.setup ok=1 empty=0 greeting= x= y= list=hello, k=
+
+USER>
+OBS U7 v=hello u=[] list0=hello d1=aCONS_DOLLARb bs=ab
+
+USER>
+OBS U8 ok=0 empty=1 greeting= x= y= list= k=
+OBS U8 error=ERROR #5002: ObjectScript error: <REGULAR EXPRESSION>ReplaceFirst+3^%Regex.Matcher.1
+
+USER>
+OBS U9 missing=[] none=[]
+
+USER>
+OBS U10 ok=1 empty=0 greeting=first x=1 y= list=1,2,3, k=
+
+USER>
+[32mIPM (zpm)[0m [39m0.10.11-SNAPSHOT[0m
+[32mh-inst[0m    [39m1.0.0[0m
+[32mmv-a[0m      [39m2.0.0[0m
+USER>
+OBS U10 after.list=first
+
+USER>
+
+USER>
+OBS U11 fresh.empty=1
+
+USER>
+
+USER>
+
+USER>
+
+====================================================================================
+|| [39mWelcome to the Package Manager Shell (ZPM). Version: [32m0.10.11-SNAPSHOT[0m[0m          ||
+|| [39mEnter q/quit to exit the shell. Enter ?/help to view available commands[0m        ||
+|| [39m[36mNo registry configured[0m[0m                                                         ||
+|| [39mSystem Mode: <unset>[0m                                                           ||
+|| [39mMirror Status: NOTINIT[0m                                                         ||
+====================================================================================
+IRIS for UNIX (Ubuntu Server LTS for ARM64 Containers) 2026.1 (Build 234U) Fri Mar 27 2026 14:08:22 EDT
+zpm:USER[39m>[0m
+
+Building dependency graph...Done.
+[USER|envmod]	Initialize START
+[USER|envmod]	Initialize SUCCESS
+[USER|envmod]	Reload START (/tmp/c5/envmod/)
+[USER|envmod]	Reload SUCCESS
+[envmod]	Module object refreshed.
+[USER|envmod]	Validate START
+[USER|envmod]	Validate SUCCESS
+[USER|envmod]	Compile START
+[USER|envmod]	Compile SUCCESS
+[USER|envmod]	Activate START
+[USER|envmod]	Configure START
+[USER|envmod]	Configure SUCCESS
+[USER|envmod]	Activate SUCCESS
+zpm:USER[39m>[0m
+
+Building dependency graph...Done.
+[USER|envmod]	Initialize START
+[USER|envmod]	Initialize SUCCESS
+[USER|envmod]	Reload START (/tmp/c5/envmod/)
+[envmod]	Reload FAILURE
+[31mERROR![0m File '/tmp/c5/missing.json' does not exist
+  > Operating system return code: -2
+zpm:USER[39m>[0m
+
+[USER|envmod]	Configure START
+[USER|envmod]	Configure SUCCESS
+zpm:USER[39m>[0m
+
+Building dependency graph...Done.
+[USER|envmod]	Initialize START
+[USER|envmod]	Initialize SUCCESS
+[USER|envmod]	Reload START (/tmp/c5/envmod/)
+[USER|envmod]	Reload SUCCESS
+[envmod]	Module object refreshed.
+[USER|envmod]	Validate START
+[USER|envmod]	Validate SUCCESS
+[USER|envmod]	Compile START
+[USER|envmod]	Compile SUCCESS
+[USER|envmod]	Activate START
+[USER|envmod]	Configure START
+[USER|envmod]	Configure SUCCESS
+[USER|envmod]	Activate SUCCESS
+zpm:USER[39m>[0m
+
+USER>
+
+USER>
+
+OBS S1 records=[first][][]
+
+USER>
+OBS S2 gen=[]
+
+USER>
+
+CMD S3 load /tmp/c5/envmod/ -env /tmp/c5/b.json
+
+Building dependency graph...Done.
+[USER|envmod]	Initialize START
+[USER|envmod]	Initialize SUCCESS
+[USER|envmod]	Reload START (/tmp/c5/envmod/)
+[USER|envmod]	Reload SUCCESS
+[envmod]	Module object refreshed.
+[USER|envmod]	Validate START
+[USER|envmod]	Validate SUCCESS
+[USER|envmod]	Compile START
+[USER|envmod]	Compile SUCCESS
+[USER|envmod]	Activate START
+[USER|envmod]	Configure START
+[USER|envmod]	Configure SUCCESS
+[USER|envmod]	Activate SUCCESS
+OBS S3 status=OK
+OBS S3 tlevel.before=0 tlevel.after=0
+
+USER>
+OBS S3 gen=[second] last=[second]
+
+USER>
+
+CMD S4 load /tmp/c5/envmod/ -env /tmp/c5/a.json;/tmp/c5/bad.json
+
+Building dependency graph...Done.
+[USER|envmod]	Initialize START
+[USER|envmod]	Initialize SUCCESS
+[USER|envmod]	Reload START (/tmp/c5/envmod/)
+[envmod]	Reload FAILURE
+[31mERROR![0m Invalid configuration file: /tmp/c5/bad.json. Expected JSON object.
+OBS S4 status=ERR
+OBS S4 error=ERROR #5001: Invalid configuration file: /tmp/c5/bad.json. Expected JSON object.
+OBS S4 tlevel.before=0 tlevel.after=0
+
+USER>
+OBS S4 mod.envmod=present version=1.0.0 repo= desc= dev=0
+
+USER>
+OBS S4 gen=[second]
+
+USER>
+
+NATIVE-END
+
+USER>

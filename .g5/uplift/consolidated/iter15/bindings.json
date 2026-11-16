@@ -1,0 +1,201 @@
+{
+  "verus_dir": ".g5/Verus_verification/consolidated/iter15",
+  "changed_files": [
+    ".g5/ontology/concepts/repositories.g5.md",
+    ".g5/ontology/features/dependencies.g5.md",
+    ".g5/uplift/consolidated/BUGS.md",
+    ".g5/uplift/consolidated/QUESTIONS.md",
+    ".g5/uplift/consolidated/DESIGN-SIMPLIFICATIONS.md"
+  ],
+  "rows": [
+    {
+      "id": "S15-01",
+      "owner": ".g5/ontology/concepts/repositories.g5.md#repo.oras.tag-decode",
+      "model": "oras.rs",
+      "symbols": [
+        "replace",
+        "encode",
+        "decode",
+        "parse",
+        "tag_for",
+        "get_all",
+        "codec_roundtrip",
+        "raw_neighbors"
+      ],
+      "direct": [
+        [
+          "src/cls/IPM/Utils/EmbeddedPython.cls",
+          "SortOCITags"
+        ],
+        [
+          "src/cls/IPM/Repo/Oras/PackageService.cls",
+          "GetAllTags"
+        ],
+        [
+          "src/cls/IPM/Repo/Oras/PackageService.cls",
+          "TagForReference"
+        ]
+      ],
+      "reader": [
+        [
+          "src/cls/IPM/Repo/Oras/PackageService.cls",
+          "AggregatePlatformVersions"
+        ]
+      ],
+      "source_macros": [
+        "src/inc/IPM/Common.inc::Semver2Tag",
+        "src/inc/IPM/Common.inc::Tag2Semver",
+        "src/inc/IPM/Common.inc::OrasTagPlatformSeparator"
+      ],
+      "scope": "Raw text codec and literal release rank sorting; no JSON/CSV transport or general SemVer parser proof. Equal-version provider tag order retained, not guaranteed by OCI."
+    },
+    {
+      "id": "S15-02",
+      "owner": ".g5/ontology/concepts/repositories.g5.md#repo.oras.selection-modes",
+      "model": "oras.rs",
+      "symbols": [
+        "aggregate",
+        "prefer",
+        "service",
+        "manager",
+        "display",
+        "metadata_tag",
+        "selected_neighbors"
+      ],
+      "direct": [
+        [
+          "src/cls/IPM/Repo/Oras/PackageService.cls",
+          "AggregatePlatformVersions"
+        ],
+        [
+          "src/cls/IPM/Repo/Oras/PackageService.cls",
+          "PreferCompatibleVersions"
+        ],
+        [
+          "src/cls/IPM/Repo/Oras/PackageService.cls",
+          "AddModulesFromTags"
+        ],
+        [
+          "src/cls/IPM/Repo/Oras/PackageService.cls",
+          "ListModulesFromTagString"
+        ],
+        [
+          "src/cls/IPM/Repo/Oras/PackageService.cls",
+          "ListModules"
+        ]
+      ],
+      "reader": [
+        [
+          "src/cls/IPM/Repo/Manager.cls",
+          "SearchRepositoriesForModule"
+        ],
+        [
+          "src/cls/IPM/Storage/ModuleInfo.cls",
+          "IsCompatibleWithPlatform"
+        ],
+        [
+          "src/cls/IPM/Utils/Module.cls",
+          "GetModuleListExecute"
+        ],
+        [
+          "src/cls/IPM/Repo/Oras/PackageService.cls",
+          "GetModule"
+        ],
+        [
+          "src/cls/IPM/Repo/Utils.cls",
+          "SearchRepositoriesForModule"
+        ]
+      ],
+      "scope": "Distinct service/manager/display modes; full mixed catalog and same-version platform aggregation. Successful metadata JSON/name/credentials/transport remain partial provider roles."
+    },
+    {
+      "id": "S15-03",
+      "owner": ".g5/ontology/concepts/repositories.g5.md#repo.oras.selection-modes",
+      "model": "oras.rs",
+      "symbols": [
+        "normal_consumer",
+        "ranged",
+        "pinned",
+        "standalone",
+        "payload_value"
+      ],
+      "direct": [
+        [
+          "src/cls/IPM/Storage/Module.cls",
+          "BuildDependencyGraph"
+        ],
+        [
+          "src/cls/IPM/Utils/Module.cls",
+          "LoadDependencies"
+        ],
+        [
+          "src/cls/IPM/Utils/Module.cls",
+          "LoadNewModule"
+        ]
+      ],
+      "reader": [
+        [
+          "src/cls/IPM/Main.cls",
+          "Load"
+        ],
+        [
+          "src/cls/IPM/Main.cls",
+          "Install"
+        ]
+      ],
+      "scope": "Conditional composition with inherited successful pull/compile and normal new-load contract for one dependency. Stored version and callable payload checked separately. General graph resolution/CLI/rollback body refinement remains partial."
+    },
+    {
+      "id": "S15-04",
+      "owner": ".g5/ontology/concepts/repositories.g5.md#repo.oras.build-readers",
+      "model": "oras.rs",
+      "symbols": [
+        "deep_fields",
+        "pair_order",
+        "deep_aggregate",
+        "deep_oci",
+        "deep_service_first_version",
+        "same_base_insert",
+        "deep_manager_version",
+        "deep_pull_tag"
+      ],
+      "direct": [
+        [
+          "src/cls/IPM/General/SemanticVersion.cls",
+          "FromString"
+        ],
+        [
+          "src/cls/IPM/Utils/EmbeddedPython.cls",
+          "CompareVersionTotalOrder"
+        ],
+        [
+          "src/cls/IPM/Utils/EmbeddedPython.cls",
+          "SortVersions"
+        ],
+        [
+          "src/cls/IPM/Repo/Oras/PackageService.cls",
+          "AggregatePlatformVersions"
+        ],
+        [
+          "src/cls/IPM/Repo/Manager.cls",
+          "SearchRepositoriesForModule"
+        ]
+      ],
+      "reader": [
+        [
+          "src/cls/IPM/Utils/Module.cls",
+          "GetModuleListExecute"
+        ],
+        [
+          "src/cls/IPM/Repo/Oras/PackageService.cls",
+          "TagForReference"
+        ],
+        [
+          "src/cls/IPM/Repo/Oras/PackageService.cls",
+          "GetModule"
+        ]
+      ],
+      "scope": "Two hyphen-free deep build literals, identical encoded fields, stable natural-key tie order, separate first-row display and same-base last overwrite. No generic numeric casts/build sorting or install-failure claim."
+    }
+  ]
+}

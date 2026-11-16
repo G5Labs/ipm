@@ -1,0 +1,96 @@
+verification results:: 18 verified, 5 errors
+error: postcondition not satisfied
+   --> /Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter16/proofs/controls/provenance.rs/wrong-selected-root.rs:149:10
+    |
+148 |   pub proof fn selection_binds_supplier(w:World,r:Request)
+    |   -------------------------------------------------------- at the end of the function body
+149 |    ensures match select(w,r) {Some(q)=>w.repos.contains_key(r.repository) &&
+    |  __________^
+150 | |   w.repos[r.repository].enabled && q.server==r.repository && q.root==w.repos[r.repository].root &&
+151 | |   w.roots.contains_key(q.root) && q.package==w.roots[q.root] && q.package.name==r.name && q.package.version==r.version,
+152 | |   None=>true}
+    | |_____________^ failed this postcondition
+
+note: function body check: not all errors may have been reported; rerun with a higher value for --multiple-errors to find other potential errors in this function
+   --> /Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter16/proofs/controls/provenance.rs/wrong-selected-root.rs:180:1
+    |
+180 | pub proof fn ordinary_neighbors()
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: postcondition not satisfied
+   --> /Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter16/proofs/controls/provenance.rs/wrong-selected-root.rs:182:53
+    |
+180 | pub proof fn ordinary_neighbors()
+    | --------------------------------- at the end of the function body
+181 |  ensures install(initial(),request(alpha())).ok,install(initial(),request(beta())).ok,
+182 |  payload(after_a())==1,supplier(after_a())==alpha(),installed_root(after_a())==Some(Root::A),
+    |                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: postcondition not satisfied
+   --> /Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter16/proofs/controls/provenance.rs/wrong-selected-root.rs:184:2
+    |
+180 | pub proof fn ordinary_neighbors()
+    | --------------------------------- at the end of the function body
+...
+184 |  history_has_supplier(after_a(),0,alpha(),Root::A),
+    |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: postcondition not satisfied
+   --> /Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter16/proofs/controls/provenance.rs/wrong-selected-root.rs:204:2
+    |
+200 | pub proof fn local_and_refusal_neighbors()
+    | ------------------------------------------ at the end of the function body
+...
+204 |  history_has_supplier(after_local(),1,alpha(),Root::C),history_has_supplier(after_local(),2,beta(),Root::B),
+    |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+note: function body check: not all errors may have been reported; rerun with a higher value for --multiple-errors to find other potential errors in this function
+   --> /Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter16/proofs/controls/provenance.rs/wrong-selected-root.rs:210:1
+    |
+210 | pub proof fn uninstall_projection_neighbors()
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: postcondition not satisfied
+   --> /Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter16/proofs/controls/provenance.rs/wrong-selected-root.rs:215:2
+    |
+210 | pub proof fn uninstall_projection_neighbors()
+    | --------------------------------------------- at the end of the function body
+...
+215 |  history_has_supplier(after_a_uninstall(),0,alpha(),Root::A),
+    |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: postcondition not satisfied
+   --> /Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter16/proofs/controls/provenance.rs/wrong-selected-root.rs:216:2
+    |
+210 | pub proof fn uninstall_projection_neighbors()
+    | --------------------------------------------- at the end of the function body
+...
+216 |  history_has_supplier(after_c_uninstall(),1,alpha(),Root::C),
+    |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+note: function body check: not all errors may have been reported; rerun with a higher value for --multiple-errors to find other potential errors in this function
+   --> /Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter16/proofs/controls/provenance.rs/wrong-selected-root.rs:221:1
+    |
+221 | pub proof fn reader_neighbors()
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: postcondition not satisfied
+   --> /Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter16/proofs/controls/provenance.rs/wrong-selected-root.rs:223:45
+    |
+221 | pub proof fn reader_neighbors()
+    | ------------------------------- at the end of the function body
+222 |  ensures after_a().records[0].action==Action::Install,after_a().records[0].source==alpha(),
+223 |  after_a().records[0].moniker==filesystem(),after_a().records[0].details==details(Root::A),
+    |                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: postcondition not satisfied
+   --> /Users/ziniuw/Desktop/projects/G5-benchmark/ipm/.g5/uplift/consolidated/iter16/proofs/controls/provenance.rs/wrong-selected-root.rs:226:45
+    |
+221 | pub proof fn reader_neighbors()
+    | ------------------------------- at the end of the function body
+...
+226 |  after_c().records[1].moniker==filesystem(),after_c().records[1].details==details(Root::C),
+    |                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: aborting due to 8 previous errors
+

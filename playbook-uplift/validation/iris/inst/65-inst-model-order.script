@@ -1,0 +1,4 @@
+set sc=$system.OBJ.LoadDir("/tmp/uplift/inst/Uplift/","ck-d",.err,1) write !,"LOAD inst ",$system.Status.IsOK(sc)," ",$system.Status.GetErrorText(sc),!
+try { do ##class(Uplift.Inst.Model).Order() } catch e { write "OBS|error-nc-inst-model-order|error=",$translate(e.DisplayString(),"|;=","/,:"),";",! }
+while $tlevel { trollback }
+halt

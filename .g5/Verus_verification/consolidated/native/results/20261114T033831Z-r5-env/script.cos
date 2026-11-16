@@ -1,0 +1,36 @@
+set cfg=##class(%IPM.General.EnvironmentConfig).%Get()
+do ##class(Consolidated.Obs).EnvLoad("U1","/tmp/c5/a.json")
+do ##class(Consolidated.Obs).EnvLoad("U2","/tmp/c5/a.json;/tmp/c5/b.json")
+do ##class(Consolidated.Obs).EnvLoad("U2r"," /tmp/c5/b.json ; /tmp/c5/a.json ")
+do ##class(Consolidated.Obs).EnvLoad("U3","/tmp/c5/a.json;/tmp/c5/missing.json")
+do ##class(Consolidated.Obs).EnvLoad("U4","/tmp/c5/a.json;/tmp/c5/bad.json")
+do ##class(Consolidated.Obs).EnvLoad("U5","/tmp/c5/a.json;/tmp/c5/arr.json")
+do ##class(Consolidated.Obs).EnvLoad("U6","/tmp/c5/s1.json;/tmp/c5/s2.json")
+do ##class(Consolidated.Obs).EnvLoad("U6r","/tmp/c5/s2.json;/tmp/c5/s1.json")
+do ##class(Consolidated.Obs).EnvLoad("U7.setup","/tmp/c5/e.json")
+write "OBS U7 v=",cfg.GetArg("envmod","v")," u=[",cfg.GetArg("envmod","u"),"] list0=",cfg.GetArg("envmod","list").%Get(0)," d1=",cfg.GetArg("envmod","d1")," bs=",cfg.GetArg("envmod","bs"),!
+do ##class(Consolidated.Obs).EnvLoad("U8","/tmp/c5/e9.json")
+write "OBS U9 missing=[",cfg.GetArg("envmod","greeting","deeper"),"] none=[",cfg.GetArg("nope"),"]",!
+do ##class(Consolidated.Obs).EnvLoad("U10","/tmp/c5/a.json")
+set sc=##class(%IPM.Main).Shell("list")
+write "OBS U10 after.list=",cfg.GetArg("envmod","greeting"),!
+kill cfg
+write "OBS U11 fresh.empty=",##class(%IPM.General.EnvironmentConfig).%Get().IsEmpty(),!
+// ---------- S: one interactive shell session, three commands
+kill ^Consolidated.Env
+do ##class(%IPM.Main).Shell()
+load /tmp/c5/envmod/ -env /tmp/c5/a.json
+load /tmp/c5/envmod/ -env /tmp/c5/a.json;/tmp/c5/missing.json
+envmod configure
+load /tmp/c5/envmod/
+quit
+set s="" for i=1:1:$get(^Consolidated.Env) { set s=s_"["_^Consolidated.Env(i)_"]" }
+write !,"OBS S1 records=",s,!
+write "OBS S2 gen=[",##class(EnvMod.Gen).Val(),"]",!
+do ##class(Consolidated.Obs).Run("S3","load /tmp/c5/envmod/ -env /tmp/c5/b.json")
+write "OBS S3 gen=[",##class(EnvMod.Gen).Val(),"] last=[",^Consolidated.Env(^Consolidated.Env),"]",!
+do ##class(Consolidated.Obs).Run("S4","load /tmp/c5/envmod/ -env /tmp/c5/a.json;/tmp/c5/bad.json")
+do ##class(Consolidated.Obs).Mod("S4","envmod")
+write "OBS S4 gen=[",##class(EnvMod.Gen).Val(),"]",!
+write !,"NATIVE-END",!
+halt
