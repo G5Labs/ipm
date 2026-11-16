@@ -1,0 +1,83 @@
+{
+ "recorded_utc": "2026-11-16T18:25:48.213897+00:00",
+ "batch": 12,
+ "iteration": 58,
+ "prior_seal": "4366f6d2",
+ "workflow": "DeepSeeItem (.DFI) resources: load (non-dev, -dev), reload with changed/removed item, uninstall -> DFI documents in namespace, content, status",
+ "unbound_members": [
+  "ResourceProcessor/Default/DeepSeeItem.cls::%OnNew",
+  "::OnPhase",
+  "::OnResolveChildren",
+  "::OnGetUniqueName"
+ ],
+ "owner": ".g5/ontology/concepts/modules.g5.md#module.processor (processor list only; Lifecycle/Base GetDefaultResourceProcessor maps DFI -> DeepSeeItem)",
+ "exposure": "Only member names/lengths of DeepSeeItem.cls (from the parent map listing) and the DFI->DeepSeeItem mapping in Lifecycle/Base.GetDefaultResourceProcessor were seen; bodies unread.",
+ "predictions": [
+  {
+   "case": "load module with a DFI resource (folder item, e.g. a pivot) non-dev",
+   "reader": "DFI document exists, content",
+   "predicted": "imported into the namespace"
+  },
+  {
+   "case": "same with -dev",
+   "reader": "same",
+   "predicted": "imported"
+  },
+  {
+   "case": "reload after editing the DFI file",
+   "reader": "content",
+   "predicted": "updated"
+  },
+  {
+   "case": "reload after removing one DFI file from a multi-item resource",
+   "reader": "item exists",
+   "predicted": "unspecified; likely kept"
+  },
+  {
+   "case": "uninstall",
+   "reader": "item exists",
+   "predicted": "deleted"
+  }
+ ],
+ "exposure_after_source": "Read DeepSeeItem.cls fully (OnPhase handles only names containing \"*\"; others go to Document.OnPhase; OnResolveChildren drops items whose folder item cannot be opened and filters by Keywords) and the product fixture resource-tests (explicit DFI names).",
+ "source_predictions": [
+  {
+   "case": "explicit DFI resources A,B, non-dev and -dev load",
+   "predicted": "folder items created (Document processor path)"
+  },
+  {
+   "case": "wildcard resource IPMCont58W-*.DFI with W1.dashboard.xml, W2.dashboard.dfi, W3.dashboard.XML, W4.dashboard.DFI on Linux",
+   "predicted": "W1 and W4 load; W2 and W3 do not, because the UNIX branch appends \"X*.XML;X*.DFI\" without a separating \";\" so the second and third patterns fuse into \"X*.dfiX*.XML\" (owner: all four load)"
+  },
+  {
+   "case": "edit A title, reload (-dev)",
+   "predicted": "updated"
+  },
+  {
+   "case": "remove B file, reload (-dev)",
+   "predicted": "B kept in namespace"
+  },
+  {
+   "case": "uninstall",
+   "predicted": "explicit items deleted; wildcard items deleted if resolution finds them"
+  }
+ ],
+ "outcome": {
+  "status": "ready for integration (not sealed)",
+  "model": "dfiitems.rs 3 verified, 4/4 controls",
+  "native": "20261116T182720911100Z 48 fields; 12 replayed; 3 flips rejected",
+  "findings": [
+   "wildcard .dfi/.XML files skipped on Linux (proposed Low)",
+   "uninstall leaves wildcard-loaded DFI items (proposed Low)"
+  ],
+  "matched": "all source predictions; r2 (removed file of an explicit resource fails reload) recorded as expected behaviour"
+ },
+ "integration": {
+  "by": "main thread",
+  "independent_rerun": "run.py --no-native: 3 verified, 4/4 controls, 12 replayed",
+  "findings": [
+   "C:D62 Low",
+   "C:D63 Low"
+  ]
+ }
+}

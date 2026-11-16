@@ -153,6 +153,7 @@ Resource processors with special behavior include:
 
 - `FileCopy`, which copies files or folders ([file copy](#module.processor.file-copy)).
 - `Copy`, which copies classes from another namespace ([namespace copy](#module.processor.copy)).
+- `.DFI` resources, which load Analytics folder items ([DeepSee items](#module.processor.deepsee)).
 - `WebApplication`, which sets up [web applications](#module.webapp). `CSPApplication` is deprecated.
 - `CPF`, which merges configuration into the instance ([CPF timing](#module.processor.cpf)).
 - `SystemSetting`, [Artifactory downloads](../features/artifact-download.g5.md#artifact), unit test and [localization](#module.processor.localized-messages) processors.
@@ -218,6 +219,14 @@ A `<CPF>` file merges into the instance configuration before Initialize by defau
 
 - A command whose phases do not include that phase, such as `compile -only`, does not merge it.
 - A merge the instance rejects, such as an unknown section, fails the phase with the merge tool's message and a pointer to messages.log.
+
+<a id="module.processor.deepsee"></a>
+[D · module.processor.deepsee]
+
+A `.DFI` resource loads an Analytics folder item, such as a dashboard or pivot, from `<SourcesRoot>/dfi/`, where `-` in the item name becomes a folder separator. A name containing `*` loads every matching file in that folder.
+
+- As built on Linux, a wildcard resource loads only files ending in `.xml` or `.DFI`. Files ending in `.dfi` or `.XML` are silently skipped (defect C:D62).
+- Uninstall removes explicitly named items. As built, items loaded through a wildcard resource remain (defect C:D63).
 
 <a id="module.processor.localized-messages"></a>
 [D · module.processor.localized-messages]
@@ -695,6 +704,18 @@ Findings audit: [sources, alternatives, implications and settlement gate](../../
 - Expands: [Resource processors](#module.processor).
 
 Sources: `ResourceProcessor/CPF.cls` (`OnBeforePhase`, `OnAfterPhase`, `OnCustomPhase`, `DoMerge`, `MergeCPF`); test `CPFMerge.cls` and fixture `cpf-merge`. Model: [cpfmerge.rs](../../Verus_verification/consolidated/iter48/cpfmerge.rs) `merges_in`, `neighbors`, `after_is_not_before` ([handoff](../../uplift/consolidated/iter48/HANDOFF.md)). Compensation after a later failure is the open question C:Q12.
+
+### module.processor.deepsee
+
+- agent
+- user-facing-behavior
+- Expands: [Resource processors](#module.processor).
+
+Sources: `ResourceProcessor/Default/DeepSeeItem.cls`; product fixture `resource-tests`. Model: [dfiitems.rs](../../Verus_verification/consolidated/iter58/dfiitems.rs) `wildcard_extension_neighbors`, `uninstall_neighbors`, `leftover_after_uninstall` ([handoff](../../uplift/consolidated/iter58/HANDOFF.md)). Keywords filtering and other platforms are not assessed.
+
+Findings: [On Linux, a wildcard DFI resource skips `.dfi` and `.XML` files](../../uplift/consolidated/BUGS.md#c-d62)
+
+Findings: [Uninstall leaves DFI items loaded through a wildcard resource](../../uplift/consolidated/BUGS.md#c-d63)
 
 ### module.processor.localized-messages
 

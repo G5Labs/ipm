@@ -1,0 +1,112 @@
+{
+ "native_dir": "iter58",
+ "native_image_id": "sha256:7da4480b6916c2205bb839c342d35ceed69abd6ef771f948922e7dd29963f903",
+ "session_timeout": 900,
+ "models": {
+  "dfiitems.rs": {
+   "separator-present": [
+    "pub open spec fn matched_unix(ext: int) -> bool { ext == 0 || ext == 3 }",
+    "pub open spec fn matched_unix(ext: int) -> bool { 0 <= ext <= 3 }"
+   ],
+   "wildcard-cleaned": [
+    "pub open spec fn removed_by_uninstall(i: Item) -> bool { !i.wildcard }",
+    "pub open spec fn removed_by_uninstall(i: Item) -> bool { true }"
+   ],
+   "explicit-kept": [
+    "pub open spec fn removed_by_uninstall(i: Item) -> bool { !i.wildcard }",
+    "pub open spec fn removed_by_uninstall(i: Item) -> bool { false }"
+   ],
+   "lowercase-only": [
+    "pub open spec fn matched_unix(ext: int) -> bool { ext == 0 || ext == 3 }",
+    "pub open spec fn matched_unix(ext: int) -> bool { ext == 0 || ext == 1 }"
+   ]
+  }
+ },
+ "replay": {
+  "d1.item.IPMCont58W.W2": "(if loaded(Item { wildcard: true, ext: 1 }) { 1int } else { 0int })",
+  "u1.item.IPMCont58W.W1": "(if present_after_uninstall(Item { wildcard: true, ext: 0 }) { 1int } else { 0int })",
+  "d1.item.IPMCont58W.W3": "(if loaded(Item { wildcard: true, ext: 2 }) { 1int } else { 0int })",
+  "d1.item.IPMCont58.DashA": "(if loaded(Item { wildcard: false, ext: 0 }) { 1int } else { 0int })",
+  "u1.item.IPMCont58.DashA": "(if present_after_uninstall(Item { wildcard: false, ext: 0 }) { 1int } else { 0int })",
+  "d1.item.IPMCont58.DashB": "(if loaded(Item { wildcard: false, ext: 0 }) { 1int } else { 0int })",
+  "u1.item.IPMCont58.DashB": "(if present_after_uninstall(Item { wildcard: false, ext: 0 }) { 1int } else { 0int })",
+  "d1.item.IPMCont58W.W1": "(if loaded(Item { wildcard: true, ext: 0 }) { 1int } else { 0int })",
+  "u1.item.IPMCont58W.W2": "(if present_after_uninstall(Item { wildcard: true, ext: 1 }) { 1int } else { 0int })",
+  "u1.item.IPMCont58W.W3": "(if present_after_uninstall(Item { wildcard: true, ext: 2 }) { 1int } else { 0int })",
+  "d1.item.IPMCont58W.W4": "(if loaded(Item { wildcard: true, ext: 3 }) { 1int } else { 0int })",
+  "u1.item.IPMCont58W.W4": "(if present_after_uninstall(Item { wildcard: true, ext: 3 }) { 1int } else { 0int })"
+ },
+ "replay_preludes": {
+  "d1.item.IPMCont58W.W2": "assert(((if loaded(Item { wildcard: true, ext: 1 }) { 1int } else { 0int })) == 0);",
+  "u1.item.IPMCont58W.W1": "assert(((if present_after_uninstall(Item { wildcard: true, ext: 0 }) { 1int } else { 0int })) == 1);",
+  "d1.item.IPMCont58W.W3": "assert(((if loaded(Item { wildcard: true, ext: 2 }) { 1int } else { 0int })) == 0);",
+  "d1.item.IPMCont58.DashA": "assert(((if loaded(Item { wildcard: false, ext: 0 }) { 1int } else { 0int })) == 1);",
+  "u1.item.IPMCont58.DashA": "assert(((if present_after_uninstall(Item { wildcard: false, ext: 0 }) { 1int } else { 0int })) == 0);",
+  "d1.item.IPMCont58.DashB": "assert(((if loaded(Item { wildcard: false, ext: 0 }) { 1int } else { 0int })) == 1);",
+  "u1.item.IPMCont58.DashB": "assert(((if present_after_uninstall(Item { wildcard: false, ext: 0 }) { 1int } else { 0int })) == 0);",
+  "d1.item.IPMCont58W.W1": "assert(((if loaded(Item { wildcard: true, ext: 0 }) { 1int } else { 0int })) == 1);",
+  "u1.item.IPMCont58W.W2": "assert(((if present_after_uninstall(Item { wildcard: true, ext: 1 }) { 1int } else { 0int })) == 0);",
+  "u1.item.IPMCont58W.W3": "assert(((if present_after_uninstall(Item { wildcard: true, ext: 2 }) { 1int } else { 0int })) == 0);",
+  "d1.item.IPMCont58W.W4": "assert(((if loaded(Item { wildcard: true, ext: 3 }) { 1int } else { 0int })) == 1);",
+  "u1.item.IPMCont58W.W4": "assert(((if present_after_uninstall(Item { wildcard: true, ext: 3 }) { 1int } else { 0int })) == 1);"
+ },
+ "replay_grouped": true,
+ "replay_prelude": "",
+ "replay_model": "dfiitems.rs",
+ "session": [
+  "set sc=$system.OBJ.Load(\"/tmp/iter58/Reader.cls\",\"ck-d\")",
+  "write !,\"LOADSTATUS|\",sc,!",
+  "do ##class(IPMCont.DfiReader).All()"
+ ],
+ "native_expected": {
+  "n1.ok": 1,
+  "n1.item.IPMCont58.DashA": 0,
+  "n1.item.IPMCont58.DashB": 0,
+  "n1.item.IPMCont58W.W1": 0,
+  "n1.item.IPMCont58W.W2": 0,
+  "n1.item.IPMCont58W.W3": 0,
+  "n1.item.IPMCont58W.W4": 0,
+  "n1.item.IPMCont58N.DashN": 1,
+  "d1.ok": 1,
+  "d1.item.IPMCont58.DashA": 1,
+  "d1.item.IPMCont58.DashB": 1,
+  "d1.item.IPMCont58W.W1": 1,
+  "d1.item.IPMCont58W.W2": 0,
+  "d1.item.IPMCont58W.W3": 0,
+  "d1.item.IPMCont58W.W4": 1,
+  "d1.item.IPMCont58N.DashN": 1,
+  "r1.ok": 1,
+  "r1.item.IPMCont58.DashA": 2,
+  "r1.item.IPMCont58.DashB": 1,
+  "r1.item.IPMCont58W.W1": 1,
+  "r1.item.IPMCont58W.W2": 0,
+  "r1.item.IPMCont58W.W3": 0,
+  "r1.item.IPMCont58W.W4": 1,
+  "r1.item.IPMCont58N.DashN": 1,
+  "r2.ok": 0,
+  "r2.item.IPMCont58.DashA": 2,
+  "r2.item.IPMCont58.DashB": 1,
+  "r2.item.IPMCont58W.W1": 1,
+  "r2.item.IPMCont58W.W2": 0,
+  "r2.item.IPMCont58W.W3": 0,
+  "r2.item.IPMCont58W.W4": 1,
+  "r2.item.IPMCont58N.DashN": 1,
+  "u1.ok": 1,
+  "u1.item.IPMCont58.DashA": 0,
+  "u1.item.IPMCont58.DashB": 0,
+  "u1.item.IPMCont58W.W1": 1,
+  "u1.item.IPMCont58W.W2": 0,
+  "u1.item.IPMCont58W.W3": 0,
+  "u1.item.IPMCont58W.W4": 1,
+  "u1.item.IPMCont58N.DashN": 1,
+  "u2.ok": 1,
+  "u2.item.IPMCont58.DashA": 0,
+  "u2.item.IPMCont58.DashB": 0,
+  "u2.item.IPMCont58W.W1": 1,
+  "u2.item.IPMCont58W.W2": 0,
+  "u2.item.IPMCont58W.W3": 0,
+  "u2.item.IPMCont58W.W4": 1,
+  "u2.item.IPMCont58N.DashN": 0
+ },
+ "expectation_basis": "Owner and source predictions in iter58/working-ledger.json before explore1; values from explore1, which matched the source predictions."
+}

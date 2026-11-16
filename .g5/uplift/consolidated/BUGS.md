@@ -695,6 +695,32 @@ Reproduced by: E2E reproduced. [Iteration57 native receipt](iter57/native/202611
 
 This contradicts the [CSP lifecycle statement](../../ontology/concepts/modules.g5.md#module.csp.lifecycle) for a deprecated but supported processor. A repair would write only declared attributes when the application exists. It was not checked.
 
+<a id="c-d62"></a>
+### C:D62: On Linux, a wildcard DFI resource skips `.dfi` and `.XML` files
+
+Severity: Low · Decision: Open
+
+Run: Uplift 2026-11-16
+
+Found by: source review of `ResourceProcessor/Default/DeepSeeItem.cls::OnPhase`, whose UNIX branch appends the extra patterns without a `;`, then [iteration58 model](../../Verus_verification/consolidated/iter58/dfiitems.rs) `wildcard_extension_neighbors` with control `separator-present` ([proof receipt](iter58/proofs/models.json)).
+
+Reproduced by: E2E reproduced. [Iteration58 native receipt](iter58/native/20261116T182720911100Z/observations.json) on IRIS 2026.1 x86-64 at `571e04a1`. W2.dashboard.dfi and W3.dashboard.XML are not loaded while W1 (`.xml`) and W4 (`.DFI`) are (case d1). Passing neighbour: explicit `.xml` items load (d1, n1).
+
+The skipped files produce no warning, contrary to the [DeepSee item statement](../../ontology/concepts/modules.g5.md#module.processor.deepsee). A repair would add the missing separator. It was not checked.
+
+<a id="c-d63"></a>
+### C:D63: Uninstall leaves DFI items loaded through a wildcard resource
+
+Severity: Low · Decision: Open
+
+Run: Uplift 2026-11-16
+
+Found by: native case u1, then [iteration58 model](../../Verus_verification/consolidated/iter58/dfiitems.rs) `leftover_after_uninstall` with control `wildcard-cleaned` ([proof receipt](iter58/proofs/models.json)).
+
+Reproduced by: E2E reproduced. [Iteration58 native receipt](iter58/native/20261116T182720911100Z/observations.json). After `uninstall m58`, the wildcard-loaded items W1 and W4 remain while the explicitly named A and B are removed (u1).
+
+Uninstall therefore leaves module content behind, contrary to the [DeepSee item statement](../../ontology/concepts/modules.g5.md#module.processor.deepsee). A repair would resolve wildcard children at Clean from the namespace items matching the pattern. It was not checked.
+
 ## Outside active reproduction scope
 
 <a id="c-d17"></a>
