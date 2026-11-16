@@ -152,6 +152,20 @@ Commands for scripting:
 - `exec` runs ObjectScript.
 - `import` loads classes from files and re-exports them to source control if needed.
 
+<a id="devtools.exec"></a>
+[D · devtools.exec]
+
+`exec <expression>` runs ObjectScript in the current namespace. Data changes it makes persist, and a runtime or syntax error fails the command.
+
+- As built, the expression runs under a saved `$namespace`, so changing the namespace has no lasting effect, although the command help gives exactly that as its example (defect C:D56).
+
+<a id="devtools.init"></a>
+[D · devtools.init]
+
+`init -noprompt` reindexes the filesystem cache and changes the namespace's source-control setup only as asked. A configured class that no longer exists is disabled, and `-extension <class>` makes IPM's composite extension active with that class as primary.
+
+- As built, without `-extension` an existing plain class is only stored as the composite's primary and stays the active class, although the command reports that it enabled the package manager extension. The IPM hooks of the [source-control statement](../concepts/lifecycle.g5.md#lifecycle.source-control) then never run (defect C:D57).
+
 <a id="devtools.scripting.file-sequence"></a>
 [D · devtools.scripting.file-sequence]
 
@@ -371,6 +385,26 @@ Findings audit: [sources, alternatives, implications and settlement gate](../../
 - Expands: [Developer tools](#devtools).
 
 Sources: `Main.cls:322-404`, `:509-522`; CHANGELOG 0.10.6 (`#996`). Inventory: CAT-36; A2 1.2 rows 18, 19, 23. The `run-from-file` help says the JSON root is "a single array" (`Main.cls:352`), while the examples and code need an object with `commands`. Observed: each line of `run-from-file` runs as its own shell command with its own history record.
+
+### devtools.exec
+
+- agent
+- user-facing-behavior
+- Expands: [Scripting](#devtools.scripting).
+
+Sources: `Main.cls::ExecuteCOS`; command help example. Model: [nsinit.rs](../../Verus_verification/consolidated/iter55/nsinit.rs) `exec`, `exec_neighbors` ([handoff](../../uplift/consolidated/iter55/HANDOFF.md)).
+
+Findings: [The `exec` help example that changes the namespace has no effect](../../uplift/consolidated/BUGS.md#c-d56)
+
+### devtools.init
+
+- agent
+- user-facing-behavior
+- Expands: [Authoring commands](#devtools.authoring).
+
+Sources: `Main.cls::Init`; `ExtensionBase/CompositeMethodOverrides.cls::SetExtensionClasses`. Model: [nsinit.rs](../../Verus_verification/consolidated/iter55/nsinit.rs) `init_quiet`, `init_neighbors` ([handoff](../../uplift/consolidated/iter55/HANDOFF.md)). Interactive prompts, `-zpm` and `-menuextension` are not assessed.
+
+Findings: [`init -noprompt` reports enabling the package manager extension but leaves a plain source-control class active](../../uplift/consolidated/BUGS.md#c-d57)
 
 ### devtools.scripting.file-sequence
 

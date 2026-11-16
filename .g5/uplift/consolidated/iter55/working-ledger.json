@@ -1,0 +1,149 @@
+{
+ "recorded_utc": "2026-11-16T18:14:19.051089+00:00",
+ "batch": 11,
+ "iteration": 55,
+ "prior_seal": "afec28cf",
+ "workflow": "zn/namespace listing and switching, exec/cos, init non-interactive decisions",
+ "unbound_members": [
+  "Main.cls::Namespace",
+  "Main.cls::SwitchToNamespace",
+  "Main.cls::GetListNamespace",
+  "Main.cls::ActiveNamespacesExecute",
+  "Main.cls::ActiveNamespacesFetch",
+  "Main.cls::ActiveNamespacesClose",
+  "Main.cls::ActiveNamespaces",
+  "Main.cls::ExecuteCOS",
+  "Main.cls::Init"
+ ],
+ "owners": [
+  ".g5/ontology/features/inspection.g5.md#inspect (namespace (zn) lists modules by namespace and switches to a namespace)",
+  ".g5/ontology/features/developer-tools.g5.md#devtools.authoring (init sets up a namespace for IPM and its editor extensions)",
+  "developer-tools exec runs ObjectScript"
+ ],
+ "exposure": "Command help read (namespace/zn: \"See list modules in namespace and go to the namespace\", examples zn *, zn sql*; exec/cos: Executes the provided ObjectScript expression; init: interactive, -noprompt/-zpm/-extension/-menuextension). Iteration43 handoff summary known (init wraps existing source-control extension into the Composite). Bodies not read.",
+ "predictions": [
+  {
+   "case": "zn * with USER (IPM installed) and an extra namespace without IPM",
+   "reader": "listed namespaces/modules",
+   "predicted": "lists every namespace that has IPM modules with its modules; namespace without IPM omitted or shown empty"
+  },
+  {
+   "case": "zn <namespace with IPM>",
+   "reader": "current $namespace after command",
+   "predicted": "switches to that namespace"
+  },
+  {
+   "case": "zn <namespace without IPM>",
+   "reader": "current namespace, status",
+   "predicted": "switches (or warns IPM absent); unspecified"
+  },
+  {
+   "case": "zn <unknown namespace>",
+   "reader": "status, current namespace",
+   "predicted": "error; stays in current namespace"
+  },
+  {
+   "case": "zn sql* pattern",
+   "reader": "listed namespaces",
+   "predicted": "only namespaces matching the prefix"
+  },
+  {
+   "case": "exec set ^IPMCONT55=1",
+   "reader": "global value, status",
+   "predicted": "executed; status OK"
+  },
+  {
+   "case": "exec with runtime error (write 1/0)",
+   "reader": "status",
+   "predicted": "command fails with the error"
+  },
+  {
+   "case": "exec with syntax error",
+   "reader": "status",
+   "predicted": "command fails"
+  },
+  {
+   "case": "init -noprompt",
+   "reader": "namespace config changes (repo cache, source control class), status",
+   "predicted": "configures namespace without prompts; idempotent"
+  }
+ ],
+ "exposure_after_source": "Read Main.Namespace, IsIPMEnabled (visibility of %IPM.Main.Shell in the target namespace), GetListNamespace (not used by Namespace), ExecuteCOS (new $namespace before xecute), Shell (no $namespace restore), Init (-noprompt branches).",
+ "source_predictions": [
+  {
+   "case": "z1 zn NS55A (namespace without IPM)",
+   "predicted": "if %IPM classes are visible there (percent package), switches; otherwise red \"IPM is not enabled\" and OK status without switching"
+  },
+  {
+   "case": "z2 zn NOPE55",
+   "predicted": "error \"Failed to switch to namespace\", namespace unchanged"
+  },
+  {
+   "case": "z4 zn %SYS",
+   "predicted": "switches if %IPM visible in %SYS; the switch persists after Shell returns"
+  },
+  {
+   "case": "z5 zn NS55* with empty answer",
+   "predicted": "lists, no switch"
+  },
+  {
+   "case": "e2 exec set $namespace=\"%SYS\" (help example)",
+   "predicted": "no lasting effect: ExecuteCOS does new $namespace (help example ineffective)"
+  },
+  {
+   "case": "e3 exec write 1/0",
+   "predicted": "error status"
+  },
+  {
+   "case": "i1 init -noprompt, no source control",
+   "predicted": "source control class stays empty"
+  },
+  {
+   "case": "i2 plain %Studio.SourceControl.Base configured, init -noprompt",
+   "predicted": "silently wrapped: class becomes %IPM.ExtensionBase.Composite with primary %Studio.SourceControl.Base"
+  },
+  {
+   "case": "i4 nonexistent class configured, init -noprompt",
+   "predicted": "disabled with message; class empty"
+  }
+ ],
+ "explore1": {
+  "log": "attempts/explore1.log",
+  "refuted": "i2: init -noprompt with a plain source-control class only stores it as the Composite primary; the namespace class stays the plain class, while the output says the extension was enabled and lists it as configured (source prediction of a full wrap refuted)",
+  "reader_fix": "listing markers matched message/prompt text; refined to listing-line format"
+ },
+ "source_predictions_round2": [
+  {
+   "case": "i2",
+   "predicted": "namespace class stays %Studio.SourceControl.Base; stored primary = Base; messages claim enabled/configured"
+  },
+  {
+   "case": "i3 init -noprompt -extension %Studio.SourceControl.Base",
+   "predicted": "namespace class becomes the Composite with primary Base (active)"
+  },
+  {
+   "case": "z5",
+   "predicted": "NS55A listed as \"(IPM not enabled)\"; USER listed"
+  }
+ ],
+ "outcome": {
+  "status": "lane complete, not sealed (main thread integrates)",
+  "model": "nsinit.rs 3 verified, 5/5 controls",
+  "native": "20261116T181741769046Z 214 fields; 22 replayed; 3 flips rejected",
+  "new_discrepancies": [
+   "exec help example (set $namespace) cannot take effect (Low, documentation/behaviour mismatch)",
+   "init -noprompt reports enabling the package manager extension but leaves the plain class active (Low)"
+  ],
+  "owner_gaps": "no statements for zn decisions, exec semantics or init non-interactive behaviour"
+ },
+ "integration": {
+  "by": "main thread",
+  "independent_rerun": "run.py --no-native: 3 verified, 5/5 controls, 22 replayed",
+  "ontology": "new D inspect.namespace, devtools.exec, devtools.init",
+  "findings": [
+   "C:D56 Low",
+   "C:D57 Low"
+  ],
+  "convergence_role": "remaining untested commands"
+ }
+}

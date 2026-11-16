@@ -617,6 +617,32 @@ Reproduced by: E2E reproduced. [Iteration53 native receipt](iter53/native/202611
 
 This is the `generate` authoring export of namespace source into the module folder, not package or artifact export. Ignored or unrelated routines end up in a new module, contrary to the [generation statement](../../ontology/features/developer-tools.g5.md#devtools.authoring.generate). A repair would apply the same prefix mask and ignore test to routines as to classes. It was not checked.
 
+<a id="c-d56"></a>
+### C:D56: The `exec` help example that changes the namespace has no effect
+
+Severity: Low · Decision: Open
+
+Run: Uplift 2026-11-16
+
+Found by: source review of `Main.cls::ExecuteCOS` (`new $namespace`), then [iteration55 model](../../Verus_verification/consolidated/iter55/nsinit.rs) `exec_neighbors` with control `exec-keeps-namespace-change` ([proof receipt](iter55/proofs/models.json)).
+
+Reproduced by: E2E reproduced. [Iteration55 native receipt](iter55/native/20261116T181741769046Z/observations.json) on IRIS 2026.1 x86-64 at `571e04a1`. `exec set $namespace="%SYS"` returns OK and the session stays in USER (case e2). Passing neighbour: `exec set ^IPMCONT55=1` persists (e1).
+
+The command help's own example is `cos set $Namespace = "MYAPP"`, contrary to the [exec statement](../../ontology/features/developer-tools.g5.md#devtools.exec). A repair would either drop the namespace save or change the help example. It was not checked.
+
+<a id="c-d57"></a>
+### C:D57: `init -noprompt` reports enabling the package manager extension but leaves a plain source-control class active
+
+Severity: Low · Decision: Open
+
+Run: Uplift 2026-11-16
+
+Found by: iteration55 exploration refuting the source prediction, then source review of `Main.cls::Init` (`SetExtensionClasses` stores the primary without setting the namespace class), and [iteration55 model](../../Verus_verification/consolidated/iter55/nsinit.rs) `init_neighbors` with control `init-activates-composite` ([proof receipt](iter55/proofs/models.json)).
+
+Reproduced by: E2E reproduced. [Iteration55 native receipt](iter55/native/20261116T181741769046Z/observations.json). With `%Studio.SourceControl.Base` configured, `init -noprompt` prints "Enabling package manager extension if present... done" and lists Base as "(primary)", but the namespace class stays Base (case i2). Passing neighbour: `init -noprompt -extension %Studio.SourceControl.Base` activates the composite (i3).
+
+Module lifecycle hooks therefore never reach the extension, contrary to the [init statement](../../ontology/features/developer-tools.g5.md#devtools.init). A repair would also set the namespace class to the composite when wrapping, or word the message as a stored preference. It was not checked.
+
 ## Outside active reproduction scope
 
 <a id="c-d17"></a>

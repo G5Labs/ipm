@@ -71,6 +71,13 @@ As built, `show` lists only direct, unscoped dependents and hides scoped depende
 - `-s` sorts by name, version or date, ascending or descending, and IPM stays first. As built, `-s version` compares prereleases of the same version as text, so `1.0.0-rc.10` sorts before `1.0.0-rc.2` (defect C:D42).
 - `-tree` ignores `-s`. It starts from installed modules that no other installed module depends on, in name order, and prints each dependency under every module that needs it, marking an uninstalled one `[missing]`.
 
+<a id="inspect.namespace"></a>
+[D · inspect.namespace]
+
+`zn <name>` switches the session to that namespace only when IPM is available there. Otherwise it prints "IPM is not enabled" and leaves the namespace and the command status unchanged, while an unknown namespace fails the command.
+
+- `zn <pattern>` lists the matching namespaces, marking those without IPM, and switches to the one the user enters. An empty answer keeps the current namespace.
+
 <a id="inspect.list-dependents"></a>
 [D · inspect.list-dependents]
 
@@ -159,6 +166,14 @@ Findings: [P:F-DEP-3 — e2e reproduced](../../../playbook-uplift/BUGS.md#p-f-de
 Sources: `Main.cls::ListInstalled`, `::SortList`, `::DisplayModules`, `::GetListModule`, `::AccumulateTreeRecursive`. Model: [listing.rs](../../Verus_verification/consolidated/iter35/listing.rs) `flat_pos`, `sort_neighbors`, `tree`, `tree_neighbors` ([handoff](../../uplift/consolidated/iter35/HANDOFF.md)). Date sort, `-python`, `-showupstream`, `-description`, `-repository` and namespace patterns are not assessed.
 
 Findings: [`list-installed -s version` orders prereleases of one version as text](../../uplift/consolidated/BUGS.md#c-d42)
+
+### inspect.namespace
+
+- agent
+- user-facing-behavior
+- Expands: [Inspection](#inspect).
+
+Sources: `Main.cls::Namespace`, `::IsIPMEnabled`. Model: [nsinit.rs](../../Verus_verification/consolidated/iter55/nsinit.rs) `zn`, `zn_neighbors` ([handoff](../../uplift/consolidated/iter55/HANDOFF.md)). Switching into a second IPM namespace is not assessed.
 
 ### inspect.list-dependents
 
