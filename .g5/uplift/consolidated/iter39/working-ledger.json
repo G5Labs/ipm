@@ -1,0 +1,91 @@
+{
+ "recorded_utc": "2026-11-16T17:39:36.864032+00:00",
+ "batch": 5,
+ "iteration": 39,
+ "prior_seal": "52110051",
+ "workflow": "editing an installed module manifest as the <name>.ZPM document (document API used by IDEs): save/compile -> stored module record and readers; invalid edit; document delete",
+ "unbound_members": [
+  "StudioDocument/Module.cls::Save",
+  "StudioDocument/Module.cls::UpdatePersistentFromStream",
+  "StudioDocument/Module.cls::OnCompileDocument",
+  "StudioDocument/Module.cls::Delete",
+  "StudioDocument/Module.cls::Exists",
+  "StudioDocument/Abstract.cls::*",
+  "Storage/Module.cls::ValidateStream"
+ ],
+ "owner": ".g5/ontology/concepts/modules.g5.md (manifest is a <Document> named <Name>.ZPM); no statement about editing it",
+ "exposure": "Only member names/line numbers of StudioDocument/Module.cls and Abstract.cls (grep of declarations) seen; bodies unread.",
+ "predictions": [
+  {
+   "case": "open m.ZPM via %RoutineMgr, change <Version> 1.0.0 -> 1.1.0, save and compile",
+   "reader": "stored module VersionString, list-installed version",
+   "predicted": "record updated to 1.1.0"
+  },
+  {
+   "case": "same with malformed XML / name changed to another module",
+   "reader": "save status, stored record",
+   "predicted": "refused; record unchanged"
+  },
+  {
+   "case": "save without compile",
+   "reader": "stored record",
+   "predicted": "unspecified; likely updated only on compile or on save"
+  },
+  {
+   "case": "delete m.ZPM document",
+   "reader": "module record exists",
+   "predicted": "unspecified"
+  }
+ ],
+ "exposure_after_source": "Read StudioDocument/Module Save, ImportStream (transaction + rollback), UpdatePersistentFromStream (clear collections, save, parse, name check), OnCompileDocument, Delete; Abstract CompileDocument.",
+ "source_predictions": [
+  {
+   "case": "e1 save edited m39.ZPM with version 1.1.0",
+   "predicted": "record version 1.1.0 at save time (ImportStream updates persistent); resources kept"
+  },
+  {
+   "case": "e2 save malformed XML",
+   "predicted": "save refused; transaction rolled back; record unchanged incl. resources"
+  },
+  {
+   "case": "e3 save with <Name> of another module",
+   "predicted": "refused (name mismatch); unchanged"
+  },
+  {
+   "case": "e4 save lower version 0.5.0",
+   "predicted": "accepted (no strictly-higher rule on this path, unlike module-version)"
+  },
+  {
+   "case": "e5 save empty content",
+   "predicted": "record version reset to 0.0.1+snapshot, resources kept"
+  },
+  {
+   "case": "e6 delete m39.ZPM document",
+   "predicted": "module record and stream deleted; module classes stay compiled in the namespace"
+  }
+ ],
+ "explore": {
+  "explore1": "e3 save reported success; record unchanged at version 1.1.0 (same version as e1, so ambiguous)",
+  "explore2": "e2 refused malformed save left the stored document text EMPTY while the record kept 1.1.0; e3 document text holds m39other while record name stays m39"
+ },
+ "source_predictions_round2": [
+  {
+   "case": "e3 with version 1.2.0",
+   "predicted": "record m39 takes version 1.2.0 (Name not overwritten on the existing object, so the mismatch guard never fires) while the document says m39other"
+  },
+  {
+   "case": "e2",
+   "predicted": "document text empty after refusal (stream Clear outside transaction, written content rolled back)"
+  }
+ ],
+ "outcome": {
+  "status": "sealed",
+  "model": "document.rs 6 verified, 5/5 controls",
+  "native": "20261116T174319930857Z 84 fields; 75 replayed; 3 flips rejected",
+  "findings": [
+   "C:D44 Medium",
+   "C:D45 Low"
+  ],
+  "reach": "452/1216 (+3 new, +3 strengthened)"
+ }
+}

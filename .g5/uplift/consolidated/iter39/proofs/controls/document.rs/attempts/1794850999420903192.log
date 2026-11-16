@@ -1,0 +1,21 @@
+verification results:: 4 verified, 2 errors
+error: postcondition not satisfied
+  --> /home/ziniu_wu_g5labs_ai/experiments/iris-ipm-continuous-20261116/ipm/.g5/uplift/consolidated/iter39/proofs/controls/document.rs/empty-clears-resources.rs:74:13
+   |
+72 | pub proof fn empty_resets_version_keeps_resources(s: State, r: Record)
+   | ---------------------------------------------------------------------- at the end of the function body
+73 |     requires s.record == Some(r)
+74 |     ensures save(s, Text::Empty).state.record == Some(Record { version: SNAP(), ..r })
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: postcondition not satisfied
+   --> /home/ziniu_wu_g5labs_ai/experiments/iris-ipm-continuous-20261116/ipm/.g5/uplift/consolidated/iter39/proofs/controls/document.rs/empty-clears-resources.rs:102:61
+    |
+ 98 | pub proof fn schedule()
+    | ----------------------- at the end of the function body
+...
+102 |         version(e4().state) == 3, version(e5().state) == 4, resources(e5().state) == 1,
+    |                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: aborting due to 2 previous errors
+

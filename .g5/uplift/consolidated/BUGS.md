@@ -318,6 +318,19 @@ Reproduced by: E2E reproduced. [Iteration36 native receipt](iter36/native/202611
 
 `%Configure` calls `GetCustomParameters` into `customParams`, then builds the installer variables only from the phase parameters, which hold `<Parameter>` and `-D` values. This contradicts [module defaults](../../ontology/concepts/modules.g5.md#module.parameter), which says the module receives both kinds of default, and the [installer parameters statement](../../ontology/concepts/lifecycle.g5.md#lifecycle.installer.parameters). A repair would merge `customParams` into the variables before `OnConfigureComponent`, keeping `-D` precedence. It was not checked.
 
+<a id="c-d44"></a>
+### C:D44: A refused module document save empties the stored document text
+
+Severity: Medium · Decision: Open
+
+Run: Uplift 2026-11-16
+
+Found by: iteration39 native exploration (`iter39/attempts/explore2.log`), then source review of `StudioDocument/Module.cls::ImportStream`, and [iteration39 model](../../Verus_verification/consolidated/iter39/document.rs) `refused_save_erases_text` with control `stream-clear-rolled-back` ([proof receipt](iter39/proofs/models.json)).
+
+Reproduced by: E2E reproduced. [Iteration39 native receipt](iter39/native/20261116T174319930857Z/observations.json) on IRIS 2026.1 x86-64 at `571e04a1`. After a valid edit to `m39.ZPM` (version 1.1.0, e1), saving malformed XML through `%RoutineMgr` is refused with an XSLT parse error (e2). The module record still reads 1.1.0 with its resource, but the stored `m39.ZPM` text is now empty. Passing neighbour: the valid save in e1 stores both the text and the record.
+
+`ImportStream` clears the stored stream and writes the new text before its transaction starts. When the record update fails, the rollback discards the written text but not the earlier clear. An editor that reopens the document then sees an empty manifest, and saving that empty document resets the version (see the [document statement](../../ontology/concepts/modules.g5.md#module.identity.document)). A repair would clear and write the stream inside the transaction. It was not checked.
+
 <a id="c-d2"></a>
 ### C:D2: When IPM cannot create a load's temporary `.modules` repository, it prints "Failed to clean up repository 'ipm-temp-modules-N'. You may need to manually dele...
 
@@ -460,6 +473,19 @@ Found by: source review of `General/History.cls::VersionToString`, then [iterati
 Reproduced by: E2E reproduced. [Iteration38 native receipt](iter38/native/20261116T173827930786Z/observations.json) on IRIS 2026.1 x86-64 at `571e04a1`. `load m38z`, whose manifest declares version 0.0.0-0, succeeds with a known package, yet `history find` and `history details` show `<unset>` for that record (record z). Passing neighbours: m38a 1.2.3 shows `v1.2.3`, and the record of an invalid manifest (record b) shows `<unset>` as intended.
 
 The renderer compares the stored version text with the placeholder, so a real `0.0.0-0` cannot be told apart from a version that was never known, contrary to the [Version field statement](../../ontology/features/history.g5.md#history.fields). A repair would show the placeholder only when the version was never set, for example with an explicit flag. It was not checked.
+
+<a id="c-d45"></a>
+### C:D45: A module document that names a different module is saved under the old name
+
+Severity: Low · Decision: Open
+
+Run: Uplift 2026-11-16
+
+Found by: iteration39 native exploration (`iter39/attempts/explore1.log`, `explore3.log`), then source review of `StudioDocument/Module.cls::UpdatePersistentFromStream`, and [iteration39 model](../../Verus_verification/consolidated/iter39/document.rs) `other_name_accepted_under_old_name` with control `name-guard-effective` ([proof receipt](iter39/proofs/models.json)).
+
+Reproduced by: E2E reproduced. [Iteration39 native receipt](iter39/native/20261116T174319930857Z/observations.json). Saving `m39.ZPM` with `<Name>m39other</Name>` and version 1.2.0 succeeds (e3). The record stays named m39 and takes version 1.2.0, no `m39other` record exists, and the stored document text says m39other. Passing neighbour: a save that keeps the name (e1) updates the record and the text consistently.
+
+`UpdatePersistentFromStream` refuses a name that differs from the document name, but importing onto the existing record does not replace its Name, so the comparison always passes. The document and the record then disagree, contrary to the [document statement](../../ontology/concepts/modules.g5.md#module.identity.document). A repair would compare the parsed manifest name before importing it onto the record. It was not checked.
 
 ## Outside active reproduction scope
 

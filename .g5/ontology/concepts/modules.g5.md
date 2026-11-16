@@ -24,6 +24,17 @@ A manifest gives the module a `Name`, a [semantic version](versions.g5.md#versio
 - The manifest is a `<Document>` named `<Name>.ZPM`.
 - An optional `ExternalName` can be used in commands in place of the name. It must be unique and must not match another module's name.
 
+<a id="module.identity.document"></a>
+[D · module.identity.document]
+
+An installed module's manifest can be edited as its `<Name>.ZPM` document, as editors do. Saving the document updates the stored module record at once.
+
+- A valid edit replaces the version and the other manifest fields. A lower version is accepted on this path.
+- Saving an empty document keeps the record and its resources but sets its version to `0.0.1+snapshot`.
+- Deleting the document deletes the module record and leaves the module's code in the namespace.
+- As built, a save that IPM refuses, such as malformed XML, still empties the stored document text while the record keeps the earlier manifest (defect C:D44).
+- As built, a manifest naming a different module is accepted under the old name: the record takes the other fields and the document keeps the new name (defect C:D45).
+
 <a id="module.resource"></a>
 [I · module.resource]
 
@@ -421,6 +432,18 @@ Sources: README L1-6; `wiki/03`; `wiki/00` L1-10.
 - Expands: [Module](#module).
 
 Sources: `wiki/03` L99-115, L181-186; CHANGELOG 0.10.0 (`#755`, `#756`), 0.10.5 (`#959`, `#958`). Inventory: CAT-01. Test: `ExternalNameModuleAction.cls`. Observed: the manifest is validated on save, refusing an external-name clash or a resource owned by another module (`Storage/Module.cls:1510-1591`, OP-LOAD-09).
+
+### module.identity.document
+
+- agent
+- user-facing-behavior
+- Expands: [Module identity](#module.identity).
+
+Sources: `StudioDocument/Module.cls::Save`, `::ImportStream`, `::UpdatePersistentFromStream`, `::Delete`. Model: [document.rs](../../Verus_verification/consolidated/iter39/document.rs) `save`, `delete`, `valid_edit_updates_record`, `refused_save_erases_text`, `other_name_accepted_under_old_name`, `empty_resets_version_keeps_resources`, `delete_keeps_classes` ([handoff](../../uplift/consolidated/iter39/HANDOFF.md)). Compile-time document handling is not assessed.
+
+Findings: [A refused module document save empties the stored document text](../../uplift/consolidated/BUGS.md#c-d44)
+
+Findings: [A module document that names a different module is saved under the old name](../../uplift/consolidated/BUGS.md#c-d45)
 
 ### module.resource
 
