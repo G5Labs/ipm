@@ -1,0 +1,68 @@
+{
+ "recorded_utc": "2026-11-16T17:57:07.095159+00:00",
+ "batch": 8,
+ "iteration": 48,
+ "prior_seal": "f0e1de72",
+ "workflow": "CPF resource: merge a CPF file into the instance configuration at a declared phase (Before/After) or custom phase -> instance setting, command status",
+ "unbound_members": [
+  "ResourceProcessor/CPF.cls::OnBeforePhase",
+  "::OnAfterPhase",
+  "::OnCustomPhase",
+  "::OnPhase",
+  "::OnResolveChildren",
+  "::ReadOutputFile"
+ ],
+ "owner": ".g5/ontology/concepts/modules.g5.md#module.processor (CPF merges configuration into the instance); lifecycle.custom (custom phases with <CPF>); C:Q12 (package failure and CPF compensation)",
+ "exposure": "CPF.cls bodies not read; product test _data/cpf-merge exists (not read yet).",
+ "predictions": [
+  {
+   "case": "CPF resource Phase=Activate (default When) merging a config setting",
+   "reader": "instance setting after load",
+   "predicted": "merged during Activate"
+  },
+  {
+   "case": "CPF with CustomPhase=MyCpf",
+   "reader": "setting after load vs after module-action MyCpf",
+   "predicted": "unchanged at load, merged on the custom phase"
+  },
+  {
+   "case": "CPF file with an invalid section/key",
+   "reader": "command status, setting",
+   "predicted": "load fails"
+  },
+  {
+   "case": "module-action compile -only (phase not matching)",
+   "reader": "setting",
+   "predicted": "no merge"
+  }
+ ],
+ "exposure_after_source": "Read CPF.cls (OnBeforePhase/OnAfterPhase/OnCustomPhase/OnPhase/OnResolveChildren/DoMerge/MergeCPF/ReadOutputFile) and the product test fixture _data/cpf-merge/module.xml.",
+ "source_predictions": [
+  {
+   "case": "load: CPF default Phase=Initialize When=Before",
+   "predicted": "mapping A created during load"
+  },
+  {
+   "case": "load: CPF CustomPhase=Map48",
+   "predicted": "mapping B absent after load"
+  },
+  {
+   "case": "m48 compile -only",
+   "predicted": "no merge (no Initialize)"
+  },
+  {
+   "case": "m48 map48",
+   "predicted": "mapping B created"
+  },
+  {
+   "case": "m48 badcpf (invalid section)",
+   "predicted": "fails with merge error details; status error"
+  }
+ ],
+ "outcome": {
+  "status": "sealed",
+  "model": "cpfmerge.rs 3 verified, 4/4 controls (run1 kept: when-ignored survived before the timing lemma)",
+  "native": "20261116T175828056236Z 17 fields; 6 replayed",
+  "findings": "none; every prediction matched"
+ }
+}

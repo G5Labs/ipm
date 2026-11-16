@@ -1,0 +1,69 @@
+{
+ "native_dir": "iter48",
+ "native_image_id": "sha256:7da4480b6916c2205bb839c342d35ceed69abd6ef771f948922e7dd29963f903",
+ "session_timeout": 900,
+ "models": {
+  "cpfmerge.rs": {
+   "custom-also-at-phase": [
+    "if c.custom != 0 { p == c.custom && before }",
+    "if c.custom != 0 { (p == c.custom || c.phase == p) && before }"
+   ],
+   "invalid-ignored": [
+    "pub open spec fn ok(c: Cpf, phases: Seq<int>) -> bool { !merged_by(c, phases) || c.valid }",
+    "pub open spec fn ok(c: Cpf, phases: Seq<int>) -> bool { true }"
+   ],
+   "when-ignored": [
+    "(match c.when { When::Before => before, When::After => !before })",
+    "true"
+   ],
+   "default-phase-compile": [
+    "pub open spec fn A() -> Cpf { Cpf { phase: INITIALIZE(),",
+    "pub open spec fn A() -> Cpf { Cpf { phase: COMPILE(),"
+   ]
+  }
+ },
+ "replay": {
+  "x1.ok": "(if ok(BAD(), seq![49int]) { 1int } else { 0int })",
+  "c1.mapB": "(if merged_by(B(), load()) || merged_by(B(), seq![COMPILE()]) { 1int } else { 0int })",
+  "l1.mapA": "(if merged_by(A(), load()) { 1int } else { 0int })",
+  "l1.mapB": "(if merged_by(B(), load()) { 1int } else { 0int })",
+  "p1.mapB": "(if merged_by(B(), seq![48int]) { 1int } else { 0int })",
+  "l1.ok": "(if ok(A(), load()) && ok(B(), load()) && ok(BAD(), load()) { 1int } else { 0int })"
+ },
+ "replay_preludes": {
+  "x1.ok": "reveal_with_fuel(merged_by, 6); assert(((if ok(BAD(), seq![49int]) { 1int } else { 0int })) == 0);",
+  "c1.mapB": "reveal_with_fuel(merged_by, 6); assert(((if merged_by(B(), load()) || merged_by(B(), seq![COMPILE()]) { 1int } else { 0int })) == 0);",
+  "l1.mapA": "reveal_with_fuel(merged_by, 6); assert(((if merged_by(A(), load()) { 1int } else { 0int })) == 1);",
+  "l1.mapB": "reveal_with_fuel(merged_by, 6); assert(((if merged_by(B(), load()) { 1int } else { 0int })) == 0);",
+  "p1.mapB": "reveal_with_fuel(merged_by, 6); assert(((if merged_by(B(), seq![48int]) { 1int } else { 0int })) == 1);",
+  "l1.ok": "reveal_with_fuel(merged_by, 6); assert(((if ok(A(), load()) && ok(B(), load()) && ok(BAD(), load()) { 1int } else { 0int })) == 1);"
+ },
+ "replay_grouped": true,
+ "replay_prelude": "",
+ "replay_model": "cpfmerge.rs",
+ "session": [
+  "set sc=$system.OBJ.Load(\"/tmp/iter48/Reader.cls\",\"ck-d\")",
+  "write !,\"LOADSTATUS|\",sc,!",
+  "do ##class(IPMCont.CpfReader).All()"
+ ],
+ "native_expected": {
+  "pre.mapA": 0,
+  "l1.ok": 1,
+  "l1.details": 0,
+  "l1.mapA": 1,
+  "l1.mapB": 0,
+  "c1.ok": 1,
+  "c1.details": 0,
+  "c1.mapA": 1,
+  "c1.mapB": 0,
+  "p1.ok": 1,
+  "p1.details": 0,
+  "p1.mapA": 1,
+  "p1.mapB": 1,
+  "x1.ok": 0,
+  "x1.details": 1,
+  "x1.mapA": 1,
+  "x1.mapB": 1
+ },
+ "expectation_basis": "Owner/source predictions in iter48/working-ledger.json before explore1; values from explore1, which matched every prediction."
+}

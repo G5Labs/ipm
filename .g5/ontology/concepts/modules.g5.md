@@ -136,7 +136,7 @@ Resource processors with special behavior include:
 - `FileCopy`, which copies files or folders ([file copy](#module.processor.file-copy)).
 - `Copy`, which copies classes from another namespace ([namespace copy](#module.processor.copy)).
 - `WebApplication`, which sets up [web applications](#module.webapp). `CSPApplication` is deprecated.
-- `CPF`, which merges configuration into the instance.
+- `CPF`, which merges configuration into the instance ([CPF timing](#module.processor.cpf)).
 - `SystemSetting`, [Artifactory downloads](../features/artifact-download.g5.md#artifact), unit test and localization processors.
 
 Processor defaults and processing order are [owned here](#module.processor.defaults).
@@ -192,6 +192,14 @@ Should install take over an existing web application of the same name, and shoul
 - Evidence: `CreateOrUpdateWebApp` updates any existing application and `DeleteWebApp` deletes by name. No changelog, test or discussion addresses applications made outside IPM. The duplicate-name refusal protects only applications another module lists.
 - Working assumption: keep the as-built behavior and disclose it. Alternatives are to refuse install when the application exists and no module lists it, or to record creation and delete only what IPM created. Both change today's reinstall-over-manual-setup path.
 - Register: C:Q15.
+
+<a id="module.processor.cpf"></a>
+[D · module.processor.cpf]
+
+A `<CPF>` file merges into the instance configuration before Initialize by default, or before or after another named phase, or only when its custom phase is requested.
+
+- A command whose phases do not include that phase, such as `compile -only`, does not merge it.
+- A merge the instance rejects, such as an unknown section, fails the phase with the merge tool's message and a pointer to messages.log.
 
 <a id="module.processor.copy"></a>
 [D · module.processor.copy]
@@ -624,6 +632,15 @@ Dead check: `ResourceProcessor/WebApplication.cls::OnPhase` (Validate branch, `D
 No authorized policy decision. Register entry C:Q15.
 
 Findings audit: [sources, alternatives, implications and settlement gate](../../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#module.webapp.ownership). The recorded assumption is provisional; no new maintainer approval was found.
+
+### module.processor.cpf
+
+- agent
+- user-facing-behavior
+- test-coverage
+- Expands: [Resource processors](#module.processor).
+
+Sources: `ResourceProcessor/CPF.cls` (`OnBeforePhase`, `OnAfterPhase`, `OnCustomPhase`, `DoMerge`, `MergeCPF`); test `CPFMerge.cls` and fixture `cpf-merge`. Model: [cpfmerge.rs](../../Verus_verification/consolidated/iter48/cpfmerge.rs) `merges_in`, `neighbors`, `after_is_not_before` ([handoff](../../uplift/consolidated/iter48/HANDOFF.md)). Compensation after a later failure is the open question C:Q12.
 
 ### module.processor.copy
 
