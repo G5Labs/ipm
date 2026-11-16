@@ -513,6 +513,19 @@ Reproduced by: E2E reproduced. [Iteration42 native receipt](iter42/native/202611
 
 Reload falls back to the stored root for developer-mode modules, but Initialize does not, so the chain run by `compile` reloads `src` but not `preload`. The [Initialize statement](../../ontology/concepts/lifecycle.g5.md#lifecycle.initialize) and CHANGELOG `#702` place preload in the complete chain. A repair would use the same root fallback as Reload. It was not checked.
 
+<a id="c-d48"></a>
+### C:D48: The test phase keeps test classes loaded in a module that is not in developer mode
+
+Severity: Low · Decision: Open
+
+Run: Uplift 2026-11-16
+
+Found by: source review of `ResourceProcessor/Test.cls::OnPhase`, whose existence check runs after `LoadTestDirectory` has loaded the classes, and [iteration40 model](../../Verus_verification/consolidated/iter40/unittests.rs) `test_leaves_test_code` with control `delete-checked-before-load` ([proof receipt](iter40/proofs/models.json)).
+
+Reproduced by: E2E reproduced. [Iteration40 native receipt](iter40/native/20261116T174722753053Z/observations.json) on IRIS 2026.1 x86-64 at `571e04a1`. After `load t40` (not developer mode) and `test t40 -only`, `T40.Tests.Basic` and the never-run verify-only `T40.VTests.Basic` are both defined, and the former is compiled (case n1). Passing neighbours: the plain load has no test classes (n0), and `uninstall` removes them (n2).
+
+The processor means to delete loaded test code outside developer mode, but the check that should protect pre-existing classes always sees the classes it just loaded, so `/nodelete` is always passed. This contradicts the [test statement](../../ontology/features/build-and-publish.g5.md#build.test) that test-scoped resources load for this phase only. A repair would take the existence check before loading the test directory. It was not checked.
+
 ## Outside active reproduction scope
 
 <a id="c-d17"></a>

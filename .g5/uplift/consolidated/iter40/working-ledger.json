@@ -1,0 +1,83 @@
+{
+ "recorded_utc": "2026-11-16T17:45:31.336332+00:00",
+ "batch": 6,
+ "iteration": 40,
+ "prior_seal": "d0bb0707",
+ "workflow": "UnitTest resource processor: test-class load before the test phase and removal after it, by developer mode and declared Phase -> test classes present in the namespace, tests run, command status",
+ "unbound_members": [
+  "ResourceProcessor/Test.cls::%OnNew",
+  "ResourceProcessor/Test.cls::OnAfterPhase",
+  "ResourceProcessor/Test.cls::OnItemRelativePath",
+  "ResourceProcessor/Test.cls::SupportsSync",
+  "ResourceProcessor/Test.cls::GetSyncDirectory",
+  "ResourceProcessor/Test.cls::SyncSummaryTallyTests",
+  "ResourceProcessor/Test.cls::ExtensionGet",
+  "ResourceProcessor/Test.cls::OnGetUniqueName",
+  "ResourceProcessor/Test.cls::GetSourceControlInfo"
+ ],
+ "already_owned": "build.test.selection (Class/Package, phase matching, Suite/Case), build.test.outcome (failure counting), build.test.outcome.empty; iter4 W1 binds OnPhase run outcome. Not re-modelled.",
+ "owner": ".g5/ontology/features/build-and-publish.g5.md#build.test (\"Test-scoped resources and dependencies load for this phase only\") and the processor DESCRIPTION (\"For modules in development mode, the unit tests are always loaded and are not deleted after they are run.\")",
+ "exposure": "Test.cls member list (grep of declarations) and DESCRIPTION/property declarations read; method bodies not read. build.test.* statements read.",
+ "predictions": [
+  {
+   "case": "non-dev module with UnitTest Package, `test m`",
+   "reader": "tests ran (counter), test classes present after the command",
+   "predicted": "tests run; test classes removed after the run"
+  },
+  {
+   "case": "same module loaded -dev, `test m`",
+   "reader": "same",
+   "predicted": "tests run; test classes stay"
+  },
+  {
+   "case": "non-dev module after plain load (no test)",
+   "reader": "test classes present",
+   "predicted": "not loaded (test-scoped)"
+  },
+  {
+   "case": "UnitTest Phase=\"verify\" only, `test m`",
+   "reader": "tests ran",
+   "predicted": "not run (selection, owned)"
+  },
+  {
+   "case": "failing test in non-dev module",
+   "reader": "status, classes present",
+   "predicted": "command fails; classes removed (or kept?) unspecified"
+  }
+ ],
+ "exposure_after_source": "Read Test.cls OnAfterPhase (Reload loads tests only in developer mode), OnPhase (LoadTestDirectory, CompilePackage, tDoDelete check after loading, /nodelete), OnResolveChildren, %OnNew, sync helpers; Test/Manager.LoadTestDirectory.",
+ "source_predictions": [
+  {
+   "case": "n0 non-dev load",
+   "predicted": "test classes absent"
+  },
+  {
+   "case": "n1 non-dev test",
+   "predicted": "test-phase package runs, verify-phase package does not; test classes REMAIN after the run because the existence check runs after LoadTestDirectory loaded them, so /nodelete is always passed (contrary to DESCRIPTION)"
+  },
+  {
+   "case": "n2 uninstall",
+   "predicted": "unknown: whether Clean removes the leftover test classes"
+  },
+  {
+   "case": "d0 dev load",
+   "predicted": "whole test directory loaded at Reload (both test and verify packages present)"
+  },
+  {
+   "case": "d1 dev test",
+   "predicted": "test package runs; classes remain"
+  }
+ ],
+ "outcome": {
+  "status": "lane complete, not sealed",
+  "model": "unittests.rs 4 verified, 5/5 controls",
+  "native": "20261116T174722753053Z 48 fields; 42 replayed; 3 flips rejected",
+  "failed_attempt": "run-1: model named tests.rs produced an executable colliding with repo directory tests; renamed unittests.rs (attempts/proofs-run1-name-conflict)"
+ },
+ "integration": {
+  "by": "main thread",
+  "independent_rerun": "run.py --no-native: 4 verified, 5/5 controls, 42 replayed",
+  "findings": "C:D48 Low",
+  "fork_cost": "~640k subagent tokens, 199 s"
+ }
+}

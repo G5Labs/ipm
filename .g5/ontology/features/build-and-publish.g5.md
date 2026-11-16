@@ -19,6 +19,9 @@ IPM gives module authors commands to test, package, verify, publish and deploy a
 
 `test <module>` runs the module's unit tests in the current namespace. Test-scoped resources and dependencies load for this phase only. Resource targets and selector precedence follow [test selection](#build.test.selection).
 
+- A module's test classes are loaded at load time only in developer mode. The test phase loads every class under the test resource's directory, then compiles and runs the resource's package.
+- As built, the test phase never deletes the test classes it loaded, even for a module not in developer mode. They stay in the namespace, including verify-only packages that did not run, until the module is uninstalled (defect C:D48).
+
 <a id="build.test.selection"></a>
 [D · build.test.selection]
 
@@ -231,6 +234,10 @@ Sources: `Main.cls:32-58`, `:120-162`; `wiki/00` L3-83. Inventory: CAT-11, CAT-2
 
 Sources: `Main.cls:48`; `wiki/00` L36; CHANGELOG 0.10.11 (`#1023`, `#1005`). Inventory: CAT-02, CAT-11; A2 1.2 row 8, OP-LOAD-29. Tests: `Scopes.cls` `TestScopedClassLoadsOnTest`, `UnitTestDirectory.cls`.
 
+
+Iteration40 test-code lifetime: [unittests.rs](../../Verus_verification/consolidated/iter40/unittests.rs) `test_leaves_test_code`, `non_dev_load_has_no_tests`, `uninstall_clears` ([handoff](../../uplift/consolidated/iter40/HANDOFF.md)).
+
+Findings: [The test phase keeps test classes loaded in a module that is not in developer mode](../../uplift/consolidated/BUGS.md#c-d48)
 ### build.test.selection
 
 - agent
