@@ -1,0 +1,84 @@
+{
+ "recorded_utc": "2026-11-16T18:20:35.303422+00:00",
+ "batch": 12,
+ "iteration": 56,
+ "prior_seal": "4ec615c6",
+ "workflow": "localization resources: .LOC message document (Default.LocalizedMessages, Directory localize) loaded into the message dictionary; LocalizationExport resource exporting domains to a file after compile; reload overwrite; uninstall removal",
+ "unbound_members": [
+  "ResourceProcessor/LocalizationExport.cls::*",
+  "ResourceProcessor/Default/LocalizedMessages.cls::*",
+  "ResourceProcessor/LegacyLocalizedMessages.cls::*",
+  "StudioDocument/LocalizedMessages.cls::*"
+ ],
+ "owner": ".g5/ontology/concepts/modules.g5.md#module.processor (\"localization processors\" only); processor DESCRIPTION parameters",
+ "exposure": "Only class/method declarations and DESCRIPTION/ATTRIBUTES/property declarations read (Default.LocalizedMessages: Directory \"localize\", Format XML/UDL; LocalizationExport: Domains, Filename, \"Exports messages for localization after the module is compiled\"). Bodies unread.",
+ "predictions": [
+  {
+   "case": "load module with localize/D56/Msgs.LOC (domain D56, en text A)",
+   "reader": "^IRIS.Msg(\"D56\",\"en\",id)",
+   "predicted": "message present with text A"
+  },
+  {
+   "case": "edit .LOC text to B, reload (dev -only) or load again",
+   "reader": "message text",
+   "predicted": "B (overwritten)"
+  },
+  {
+   "case": ".LOC drops a message id, reload",
+   "reader": "removed id",
+   "predicted": "unspecified; likely removed if the document replaces the domain"
+  },
+  {
+   "case": "uninstall",
+   "reader": "domain messages",
+   "predicted": "removed with the module resource"
+  },
+  {
+   "case": "LocalizationExport resource with Domains=D56 Filename=out.xml",
+   "reader": "file exists and contains the message",
+   "predicted": "file written after compile"
+  }
+ ],
+ "exposure_after_source": "Read Default/LocalizedMessages (Compile via CompileList; default Filename /localize/<name without dots>.xml) and LocalizationExport.OnBeforePhase (Activate exports the .LOC domains to Module.Root + Filename; no-op without a root), GetDomainsForResource, GetMessageFile; product test Resources.cls deletes the exported file from the fixture directory.",
+ "source_predictions": [
+  {
+   "case": "l1 load loc56",
+   "predicted": "messages A=alpha, B=beta in ^IRIS.Msg; file <root>/localize/D56Msgs.xml written into the source directory"
+  },
+  {
+   "case": "l2 edit LOC (A=alpha2, drop B, add C), load again",
+   "predicted": "A alpha2, C gamma; B unknown (depends on message compile replacing the domain)"
+  },
+  {
+   "case": "u1 uninstall",
+   "predicted": "LOC document deleted; whether ^IRIS.Msg domain is removed depends on the IRIS document delete"
+  },
+  {
+   "case": "r1 load the same kind of module from a read-only directory",
+   "predicted": "Activate fails (cannot create localize export file) and the load fails, although nothing in the module asks to write"
+  },
+  {
+   "case": "n1 read-only directory, module without .LOC",
+   "predicted": "load succeeds"
+  }
+ ],
+ "outcome": {
+  "status": "lane complete, not sealed (main thread integrates)",
+  "model": "locmsgs.rs 4 verified, 4/4 controls (no-export-write survived the pre-check until l1/r1 export obligations were added; not a harness run failure)",
+  "native": "20261116T182256528947Z 32 fields; 27 replayed; flips r1.ok, u1.msg.A, l2.msg.B rejected",
+  "findings": [
+   "proposed Medium: .LOC module load fails from a read-only module root (Activate writes the localization export into the root)",
+   "proposed Low: uninstall leaves the module messages in ^IRIS.Msg"
+  ],
+  "convergence_role": "different underserved workflow (final probe)"
+ },
+ "integration": {
+  "by": "main thread",
+  "independent_rerun": "run.py --no-native: 4 verified, 4/4 controls, 27 replayed",
+  "findings": [
+   "C:D58 Medium",
+   "C:D59 Low"
+  ],
+  "convergence_role": "final probe (different underserved workflow) - produced a Medium, so convergence deferred"
+ }
+}

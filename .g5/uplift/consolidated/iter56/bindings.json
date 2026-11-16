@@ -1,0 +1,70 @@
+{
+ "verus_dir": ".g5/Verus_verification/consolidated/iter56",
+ "changed_files": [
+  "locmsgs.rs",
+  "cases.json",
+  "run.py",
+  "native/**"
+ ],
+ "rows": [
+  {
+   "id": "S56-01",
+   "owner": ".g5/ontology/concepts/modules.g5.md#module.processor.localized-messages",
+   "model": "locmsgs.rs",
+   "symbols": [
+    "load",
+    "reload_replaces_domain",
+    "readonly_root_fails",
+    "schedule"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/ResourceProcessor/Default/LocalizedMessages.cls",
+     "OnBeforePhase"
+    ],
+    [
+     "src/cls/IPM/ResourceProcessor/LocalizationExport.cls",
+     "OnBeforePhase"
+    ],
+    [
+     "src/cls/IPM/ResourceProcessor/LocalizationExport.cls",
+     "GetDomainsForResource"
+    ]
+   ],
+   "reader": [
+    [
+     "src/cls/IPM/ResourceProcessor/LocalizationExport.cls",
+     "GetMessageFile"
+    ],
+    [
+     "src/cls/IPM/ResourceProcessor/Default/LocalizedMessages.cls",
+     "OnPhase"
+    ]
+   ],
+   "scope": ".LOC compile replaces the domain messages for its language; Activate writes <root>/localize/<name>.xml; a read-only module root makes the load fail. Native l1, l2, r1, n1. Explicit LocalizationExport resources (Domains/Filename), UDL format, other languages and LegacyLocalizedMessages not assessed."
+  },
+  {
+   "id": "S56-02",
+   "owner": ".g5/ontology/concepts/modules.g5.md#module.processor.localized-messages",
+   "model": "locmsgs.rs",
+   "symbols": [
+    "uninstall",
+    "uninstall_keeps_messages",
+    "schedule"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/Lifecycle/Base.cls",
+     "%Clean"
+    ]
+   ],
+   "reader": [
+    [
+     "src/cls/IPM/ResourceProcessor/Default/LocalizedMessages.cls",
+     "OnPhase"
+    ]
+   ],
+   "scope": "Uninstall deletes the .LOC document and module record; the domain messages in ^IRIS.Msg and the exported file remain. Native u1."
+  }
+ ]
+}

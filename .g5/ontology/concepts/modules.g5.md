@@ -155,7 +155,7 @@ Resource processors with special behavior include:
 - `Copy`, which copies classes from another namespace ([namespace copy](#module.processor.copy)).
 - `WebApplication`, which sets up [web applications](#module.webapp). `CSPApplication` is deprecated.
 - `CPF`, which merges configuration into the instance ([CPF timing](#module.processor.cpf)).
-- `SystemSetting`, [Artifactory downloads](../features/artifact-download.g5.md#artifact), unit test and localization processors.
+- `SystemSetting`, [Artifactory downloads](../features/artifact-download.g5.md#artifact), unit test and [localization](#module.processor.localized-messages) processors.
 
 Processor defaults and processing order are [owned here](#module.processor.defaults).
 
@@ -218,6 +218,14 @@ A `<CPF>` file merges into the instance configuration before Initialize by defau
 
 - A command whose phases do not include that phase, such as `compile -only`, does not merge it.
 - A merge the instance rejects, such as an unknown section, fails the phase with the merge tool's message and a pointer to messages.log.
+
+<a id="module.processor.localized-messages"></a>
+[D · module.processor.localized-messages]
+
+A `.LOC` resource holds localized messages, which are loaded into the namespace's message dictionary when the module compiles. Loading a changed file replaces that domain's messages for its language, so a message removed from the file disappears.
+
+- During Activate, IPM also writes the file's domains to `<module root>/localize/<name>.xml`. As built, that write is required, so a module with a `.LOC` resource cannot be loaded from a read-only folder (defect C:D58).
+- As built, uninstall deletes the `.LOC` document but leaves its messages in the message dictionary and the exported file in place (defect C:D59).
 
 <a id="module.processor.copy"></a>
 [D · module.processor.copy]
@@ -679,6 +687,18 @@ Findings audit: [sources, alternatives, implications and settlement gate](../../
 - Expands: [Resource processors](#module.processor).
 
 Sources: `ResourceProcessor/CPF.cls` (`OnBeforePhase`, `OnAfterPhase`, `OnCustomPhase`, `DoMerge`, `MergeCPF`); test `CPFMerge.cls` and fixture `cpf-merge`. Model: [cpfmerge.rs](../../Verus_verification/consolidated/iter48/cpfmerge.rs) `merges_in`, `neighbors`, `after_is_not_before` ([handoff](../../uplift/consolidated/iter48/HANDOFF.md)). Compensation after a later failure is the open question C:Q12.
+
+### module.processor.localized-messages
+
+- agent
+- user-facing-behavior
+- Expands: [Resource processors](#module.processor).
+
+Sources: `ResourceProcessor/Default/LocalizedMessages.cls`, `ResourceProcessor/LocalizationExport.cls::OnBeforePhase`; test `Resources.cls`, which deletes the exported file from its fixture. Model: [locmsgs.rs](../../Verus_verification/consolidated/iter56/locmsgs.rs) `reload_replaces_domain`, `readonly_root_fails`, `uninstall_keeps_messages` ([handoff](../../uplift/consolidated/iter56/HANDOFF.md)).
+
+Findings: [A module with a `.LOC` resource cannot be loaded from a read-only folder](../../uplift/consolidated/BUGS.md#c-d58)
+
+Findings: [Uninstall leaves a module's localized messages in the message dictionary](../../uplift/consolidated/BUGS.md#c-d59)
 
 ### module.processor.copy
 

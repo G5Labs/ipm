@@ -357,6 +357,19 @@ Reproduced by: E2E reproduced. [Iteration44 native receipt](iter44/native/202611
 
 The [authoring statement](../../ontology/features/developer-tools.g5.md#devtools.authoring) offers `arrange` as an ordinary authoring command, and no product test covers it. A repair would treat an absent source-control class as "not under source control, editable". It was not checked.
 
+<a id="c-d58"></a>
+### C:D58: A module with a `.LOC` resource cannot be loaded from a read-only folder
+
+Severity: Medium · Decision: Open
+
+Run: Uplift 2026-11-16
+
+Found by: source review of `ResourceProcessor/LocalizationExport.cls::OnBeforePhase` (Activate export into the module root), then [iteration56 model](../../Verus_verification/consolidated/iter56/locmsgs.rs) `readonly_root_fails` with control `readonly-tolerated` ([proof receipt](iter56/proofs/models.json)).
+
+Reproduced by: E2E reproduced. [Iteration56 native receipt](iter56/native/20261116T182256528947Z/observations.json) on IRIS 2026.1 x86-64 at `571e04a1`. Loading `loc56ro` from a read-only copy fails with `Cannot open file '<root>/localize/D56RMsgs.xml'` and installs nothing (case r1). Passing neighbour: a read-only module without a `.LOC` resource loads (n1).
+
+The module asks for no export, and installing should not need to write into its source folder, contrary to the [localization statement](../../ontology/concepts/modules.g5.md#module.processor.localized-messages). A repair would skip or tolerate the export when the root is not writable, or write it only on request. It was not checked.
+
 <a id="c-d2"></a>
 ### C:D2: When IPM cannot create a load's temporary `.modules` repository, it prints "Failed to clean up repository 'ipm-temp-modules-N'. You may need to manually dele...
 
@@ -642,6 +655,19 @@ Found by: iteration55 exploration refuting the source prediction, then source re
 Reproduced by: E2E reproduced. [Iteration55 native receipt](iter55/native/20261116T181741769046Z/observations.json). With `%Studio.SourceControl.Base` configured, `init -noprompt` prints "Enabling package manager extension if present... done" and lists Base as "(primary)", but the namespace class stays Base (case i2). Passing neighbour: `init -noprompt -extension %Studio.SourceControl.Base` activates the composite (i3).
 
 Module lifecycle hooks therefore never reach the extension, contrary to the [init statement](../../ontology/features/developer-tools.g5.md#devtools.init). A repair would also set the namespace class to the composite when wrapping, or word the message as a stored preference. It was not checked.
+
+<a id="c-d59"></a>
+### C:D59: Uninstall leaves a module's localized messages in the message dictionary
+
+Severity: Low · Decision: Open
+
+Run: Uplift 2026-11-16
+
+Found by: iteration56 native case u1 against the Clean phase, which deletes only the document, and [iteration56 model](../../Verus_verification/consolidated/iter56/locmsgs.rs) `uninstall_keeps_messages` with control `uninstall-clears-messages` ([proof receipt](iter56/proofs/models.json)).
+
+Reproduced by: E2E reproduced. [Iteration56 native receipt](iter56/native/20261116T182256528947Z/observations.json). After `uninstall loc56`, `^IRIS.Msg("D56Dom","en")` still holds messages A and C, while the document and module record are gone (u1). Passing neighbour: load and reload replace the domain correctly (l1, l2).
+
+This contradicts Clean removing the module's resources, as stated in the [localization statement](../../ontology/concepts/modules.g5.md#module.processor.localized-messages). A repair would delete the document's domains on Clean unless another module owns them. It was not checked.
 
 ## Outside active reproduction scope
 
