@@ -1,0 +1,2 @@
+ROUTINE S45Inc [Type=INC]
+#define S45VALUE 1

@@ -1,0 +1,45 @@
+verification results:: 2 verified, 3 errors
+error: postcondition not satisfied
+  --> /home/ziniu_wu_g5labs_ai/experiments/iris-ipm-continuous-20261116/ipm/.g5/uplift/consolidated/iter45/proofs/controls/scan.rs/new-file-needs-baseline.rs:41:13
+   |
+38 | pub proof fn depth_and_case_do_not_matter(f: F, d: nat, u: bool)
+   | ---------------------------------------------------------------- at the end of the function body
+...
+41 |             sync(seq![F { depth: d, upper_ext: u, ..f }]).files[0].ns == Some(f.disk)
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+note: function body check: not all errors may have been reported; rerun with a higher value for --multiple-errors to find other potential errors in this function
+  --> /home/ziniu_wu_g5labs_ai/experiments/iris-ipm-continuous-20261116/ipm/.g5/uplift/consolidated/iter45/proofs/controls/scan.rs/new-file-needs-baseline.rs:46:1
+   |
+46 | pub proof fn unreadable_fails_then_retries(f: F)
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: postcondition not satisfied
+  --> /home/ziniu_wu_g5labs_ai/experiments/iris-ipm-continuous-20261116/ipm/.g5/uplift/consolidated/iter45/proofs/controls/scan.rs/new-file-needs-baseline.rs:48:13
+   |
+46 | pub proof fn unreadable_fails_then_retries(f: F)
+   | ------------------------------------------------ at the end of the function body
+47 |     requires walked(f), !f.readable, f.base != Some(f.disk)
+48 |     ensures !sync(seq![f]).ok, sync(seq![f]).files[0] == f,
+   |             ^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: postcondition not satisfied
+  --> /home/ziniu_wu_g5labs_ai/experiments/iris-ipm-continuous-20261116/ipm/.g5/uplift/consolidated/iter45/proofs/controls/scan.rs/new-file-needs-baseline.rs:49:13
+   |
+46 | pub proof fn unreadable_fails_then_retries(f: F)
+   | ------------------------------------------------ at the end of the function body
+...
+49 |             sync(seq![F { readable: true, ..sync(seq![f]).files[0] }]).files[0].ns == Some(f.disk)
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: postcondition not satisfied
+  --> /home/ziniu_wu_g5labs_ai/experiments/iris-ipm-continuous-20261116/ipm/.g5/uplift/consolidated/iter45/proofs/controls/scan.rs/new-file-needs-baseline.rs:66:9
+   |
+63 | pub proof fn schedule()
+   | ----------------------- at the end of the function body
+...
+66 |         sync(seq![F { depth: 1, upper_ext: true, skip_dir: false, readable: true, disk: 3, base: None, ns: None }]).files[0].ns == Some(3int),
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: aborting due to 4 previous errors
+

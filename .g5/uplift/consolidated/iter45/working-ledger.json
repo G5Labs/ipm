@@ -1,0 +1,77 @@
+{
+ "recorded_utc": "2026-11-16T17:52:10.336758+00:00",
+ "batch": 7,
+ "iteration": 45,
+ "prior_seal": "0053fc32",
+ "workflow": "sync file discovery: scan directory collection/dedup, directory walk and hashing, path normalization and path->document name mapping -> which edits sync detects and which documents it touches",
+ "unbound_members": [
+  "Storage/FileHash.cls::WalkAndHashDirs",
+  "::WalkAndHashFilesPython",
+  "::WalkAndHashFilesPythonImpl",
+  "::WalkAndHashFilesSQL",
+  "::DeduplicateScanDirs",
+  "::NormalizePath",
+  "::RelPathToDocName",
+  "::CanonicalDocName",
+  "::GetStoredPaths",
+  "::HashPath",
+  "::ExistsByPath",
+  "::RelativePathSet"
+ ],
+ "why": "iteration32 bound change detection and routing but treated the directory walk and path normalization as a premise; the producer of allFiles/hashes is the missing role.",
+ "owner": ".g5/ontology/features/developer-tools.g5.md#devtools.sync",
+ "exposure": "Read in iteration32: Pipeline.Run, CollectScanDirs, ComputeChanges pass structure (uses RelPathToDocName), SyncBuildReverseIndex comments (RelPathToDocName guesses from conventional prefix directories). FileHash walk/normalize/doc-name bodies not read.",
+ "predictions": [
+  {
+   "case": "edit a class in a nested subpackage src/cls/A/B/C.cls under A.PKG",
+   "reader": "compiled value after sync",
+   "predicted": "synced"
+  },
+  {
+   "case": "edit an include file src/inc/X.inc (X.INC resource)",
+   "reader": "sync Updated lines / include text",
+   "predicted": "synced"
+  },
+  {
+   "case": "file with uppercase extension src/cls/A/D.CLS",
+   "reader": "synced or ignored",
+   "predicted": "synced (extension case-insensitive)"
+  },
+  {
+   "case": "two resources whose directories nest (A.PKG and A.Sub.PKG both under src/cls)",
+   "reader": "edit in nested package synced once, routed to the more specific resource",
+   "predicted": "synced once"
+  },
+  {
+   "case": "file added under a package dir not yet in namespace",
+   "reader": "new class compiled",
+   "predicted": "synced as new"
+  }
+ ],
+ "exposure_after_source": "Read FileHash RelPathToDocName, NormalizePath, CanonicalDocName, WalkAndHashDirs, DeduplicateScanDirs, WalkAndHashFilesPython(Impl), WalkAndHashFilesSQL.",
+ "source_predictions": [
+  {
+   "case": "f1 nested subpackage edit",
+   "predicted": "synced (os.walk recursive), value updated"
+  },
+  {
+   "case": "f2 include file edit under src/inc (X.INC resource)",
+   "predicted": "synced (Updated 1)"
+  },
+  {
+   "case": "f3 new file Up.CLS (uppercase extension) under src/cls/S45",
+   "predicted": "walk sees it; RelPathToDocName lowercases the extension; whether Reload loads it decides"
+  },
+  {
+   "case": "f4 edit then chmod 000 the file",
+   "predicted": "hash empty string -> treated as modified -> load fails -> sync error; file retried next sync"
+  }
+ ],
+ "outcome": {
+  "status": "sealed",
+  "model": "scan.rs 5 verified, 4/4 controls",
+  "native": "20261116T175348033084Z 49 fields; 6 replayed; 3 flips rejected",
+  "findings": "none; every prediction matched",
+  "convergence_evidence": "sync discovery lane found no discrepancy after iteration32 bound the rest of sync"
+ }
+}
