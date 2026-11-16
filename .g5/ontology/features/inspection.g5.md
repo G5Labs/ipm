@@ -78,12 +78,16 @@ Extension Verus: [thin_surfaces.rs::inspection_choice](../../Verus_verification/
 
 [Ownership and orphan-reader contract](../../Verus_verification/consolidated/iter20/ownership.rs) separates physical code, stored modules, resource relationships, home lookup and visible rows. [Iteration20](../../uplift/consolidated/iter20/HANDOFF.md) records normal compile/load producers, actual inventory, stored owner/child data, home-name API and CLI readers. A reference exists only as data; an actual module object is required for ownership. Provider/persistence/inventory boundaries and the two-class projection are explicit.
 
+State machines: [ownership · iter20](../../Verus_verification/models/iter20-ownership/manifest.json)
+
 ### inspect.orphans.identifier-case
 
 - agent; user-facing-behavior; source-inspected; native-tested; Verus-scoped
 - Expands: [CLS orphan ownership](#inspect.orphans.ownership).
 
 [Case-preserving lookup](../../Verus_verification/consolidated/iter20/ownership.rs) keeps actual lowercase catalog input separate from uppercase direct calls. The first native gate's uppercase observer was wrong and is retained as a producer-format miss; the corrected observations do not establish a new product defect. [Evidence and limits](../../uplift/consolidated/iter20/HANDOFF.md).
+
+State machines: [ownership · iter20](../../Verus_verification/models/iter20-ownership/manifest.json)
 
 ### inspect.dependents
 
@@ -93,7 +97,9 @@ Extension Verus: [thin_surfaces.rs::inspection_choice](../../Verus_verification/
 
 Authority: product method comments and `General/ModuleSummary.cls::GetDirectDependents`, `::GetLines`, `::GetInstalledStatus`, `::ParseRequirements`. [Scoped Verus reader contracts](../../Verus_verification/consolidated/iter2/readers.rs) and [native reader observations](../../uplift/consolidated/iter2/native/receipt.json) distinguish selection and output; SQL ordering, arbitrary formatting and the whole graph remain outside these proofs.
 
-Findings: [P:F-DEP-3 — e2e reproduced](../../../playbook-uplift/BUGS.md#p-f-dep-3). The linked entry qualifies the caller, reader and providers.
+Findings: [P:F-DEP-3 — e2e reproduced](../../Verus_verification/bugs_issues.md#p-f-dep-3). The linked entry qualifies the caller, reader and providers.
+
+State machines: [readers · iter2](../../Verus_verification/models/iter2-readers/manifest.json)
 
 ### inspect.webapp.detail
 
@@ -101,3 +107,5 @@ Findings: [P:F-DEP-3 — e2e reproduced](../../../playbook-uplift/BUGS.md#p-f-de
 - Expands: [inspect](#inspect).
 
 Sources and readers: `General/ModuleSummary.cls::GetWebApplicationDetail` → summary rendering; `GetAttribute` supplies first nonempty values. [Iteration 7 index](../../uplift/consolidated/iter7/INDEX.md). [Contract](../../Verus_verification/consolidated/iter7/inputs.rs): `detail`. These are specification proofs; native observations and remaining provider boundaries are in the index and trust inventory.
+
+State machines: [inputs · iter7](../../Verus_verification/models/iter7-inputs/manifest.json)

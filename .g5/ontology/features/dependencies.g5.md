@@ -48,6 +48,8 @@ A dependency version must also satisfy the requirements of modules already insta
 
 - A direct helper with a populated Root is a distinct neighbor. The intended root-location rule above is preserved; this observation is a defect, not an exception authorizing another location.
 
+- Working assumption: A needed module loaded from a folder is written to the lock file with an empty registry.
+
 <a id="deps.lockfile.content"></a>
 [D · deps.lockfile.content]
 
@@ -56,15 +58,6 @@ The lock-file writer opens installed modules by name, so their stored versions, 
 - The graph helper emits dependencies before their dependents, keeping its scan position as nodes are removed. The JSON object's keys are serialized in name order, so a parent can appear before its leaf. This is inherited P:F-DEP-2; no current lock-file installer consumes that order.
 - Each repository is included once, including the base module's repository. Export uses the repository kind's field mapping and omits the named username, password and token fields. Allowed text fields, including URL, are retained; arbitrary secrets embedded in those strings are not scrubbed by this projection.
 - The normal CLI fixtures, a reverse-name graph and direct writer helpers were checked separately. Root placement, write-error handling and use during later lifecycle failure retain the earlier qualifications above.
-
-<a id="deps.lockfile.local-supplier-policy"></a>
-[Q · deps.lockfile.local-supplier-policy]
-
-Should a lock file accept a directory-loaded dependency with no registry?
-
-- Working assumption: A needed module loaded from a folder is written to the lock file with an empty registry.
-- Alternative and implications: Fail the command (if a future `ci` needs a registry for every entry): F-DEP-9 changes accordingly.
-- This assumption guides review; it is not a maintainer decision. An explicit owner policy or an attributable source addressing this exact case would settle it.
 
 ## Metadata
 
@@ -83,9 +76,9 @@ Source locators follow the conventions on the [root page](../root.g5.md#how-to-r
 
 Sources: CHANGELOG 0.9.0 (`#261`), 0.10.5 (`#316`, `#481`, `#1015`); `wiki/03` L243-250. Inventory: CAT-18; OP-LOAD-13 (`Storage.Module:BuildDependencyGraph`, `Storage/Module.cls:898`). Tests: `BuildDependencyGraph.cls` `TestScopedDepExcludedWhenPhaseInactive`, `TestInstalledVersionUsedWhenCompatible`; `Scopes.cls` `TestScopedDependencyLoadingTest`. Observed: phase-limited dependencies are described only by code and tests. Each phase-scoped dependency that `test` or `verify` loads gets a `load` history record (OP-LOAD-29). No human source says when resolution runs relative to the manifest save. The statement says only that it precedes any dependency load (reconstruction check R1).
 
-Findings: [P:F-DEP-1 — e2e reproduced](../../../playbook-uplift/BUGS.md#p-f-dep-1). The linked entry qualifies the caller, reader and providers.
+Findings: [P:F-DEP-1 — e2e reproduced](../../Verus_verification/bugs_issues.md#p-f-dep-1). The linked entry qualifies the caller, reader and providers.
 
-Findings: [P:F-DEP-7 — e2e reproduced](../../../playbook-uplift/BUGS.md#p-f-dep-7). The linked entry qualifies the caller, reader and providers.
+Findings: [P:F-DEP-7 — e2e reproduced](../../Verus_verification/bugs_issues.md#p-f-dep-7). The linked entry qualifies the caller, reader and providers.
 
 ### deps.conflict
 
@@ -107,6 +100,7 @@ Sources: message `Utils/Module.cls:116-126`. Inventory: INT-LOAD-14; OP-LOAD-18 
 
 ### deps.lockfile
 
+- uncertain
 - human-provided
 - user-facing-behavior
 - test-coverage
@@ -116,11 +110,13 @@ Sources: CHANGELOG 0.10.5 (`#961`); issue #962 (open, install from a lock file);
 
 Extension Verus: [thin_surfaces.rs::dependency_status](../../Verus_verification/consolidated/verus/thin_surfaces.rs), [thin_surfaces.rs::write_file](../../Verus_verification/consolidated/verus/thin_surfaces.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
 
-Findings: [P:F-DEP-2 — e2e reproduced](../../../playbook-uplift/BUGS.md#p-f-dep-2). The linked entry qualifies the caller, reader and providers.
+Findings: [P:F-DEP-2 — e2e reproduced](../../Verus_verification/bugs_issues.md#p-f-dep-2). The linked entry qualifies the caller, reader and providers.
 
-Findings: [P:F-DEP-8 — e2e reproduced](../../../playbook-uplift/BUGS.md#p-f-dep-8). The linked entry qualifies the caller, reader and providers.
+Findings: [P:F-DEP-8 — e2e reproduced](../../Verus_verification/bugs_issues.md#p-f-dep-8). The linked entry qualifies the caller, reader and providers.
 
-Findings: [C:D16 — e2e reproduced](../../uplift/consolidated/BUGS.md#c-d16). The linked entry qualifies the caller, reader and providers.
+Findings: [C:D16 — e2e reproduced](../../Verus_verification/bugs_issues.md#c-d16). The linked entry qualifies the caller, reader and providers.
+
+Open questions: [deps.lockfile.local-supplier-policy](../../Verus_verification/open_questions.md#deps.lockfile.local-supplier-policy)
 
 ### deps.lockfile.content
 
@@ -131,17 +127,4 @@ Findings: [C:D16 — e2e reproduced](../../uplift/consolidated/BUGS.md#c-d16). T
 
 P:F-DEP-2's earlier [formal ordering witness](../../../playbook-uplift/models/verus/dep_resolve.rs) and native nc-dep-13-lockfile-order are inherited evidence. Current work strengthens producer-to-artifact correspondence and canonical ownership; it does not claim the ordering discrepancy as new.
 
-### deps.lockfile.local-supplier-policy
-
-- agent
-- uncertain
-- user-facing-behavior
-- Expands: [deps.lockfile](#deps.lockfile)
-
-Sources: [DEC-DEP-3](../../../playbook-uplift/decisions/03-04.md); The writer already does this for the base module (`LockFile.cls#L74-L78`).
-
-Findings audit: [sources, alternatives, implications and settlement gate](../../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#deps.lockfile.local-supplier-policy). The recorded assumption is provisional; no new maintainer approval was found.
-
-Findings: [P:F-DEP-9 — e2e reproduced](../../../playbook-uplift/BUGS.md#p-f-dep-9). The linked entry qualifies the caller, reader and providers.
-
-Supporting context: issue #962 concerns future lock-file installation; it does not decide local-supplier serialization.
+State machines: [lockfile · iter12](../../Verus_verification/models/iter12-lockfile/manifest.json); [dep_resolve · inherited playbook](../../Verus_verification/models/playbook-dep-resolve/manifest.json)

@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 """Keep backward anchors while rendering canonical/retired entries distinctly."""
 from pathlib import Path
+
+if (Path(__file__).resolve().parents[4] / ".g5/Verus_verification/results/viewer-index.jsonl").exists():
+    raise SystemExit("Historical register generator. Use the sealed iteration 28 revision to reproduce the audit.")
+
 import json,re,os
 H=Path(__file__).resolve().parent;R=H.parents[3]
 bugs=json.loads((H/'bugs.json').read_text())

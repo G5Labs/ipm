@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 from pathlib import Path
+
+if (Path(__file__).resolve().parents[4] / ".g5/Verus_verification/results/viewer-index.jsonl").exists():
+    raise SystemExit("Historical register generator. Use the sealed iteration 28 revision to reproduce the audit.")
+
 import re,json,os,hashlib
 H=Path(__file__).resolve().parent;R=H.parents[3]
 paths={'C':'.g5/uplift/consolidated/DESIGN-SIMPLIFICATIONS.md','G':'.g5/Verus_verification/design_simplification.md','P':'playbook-uplift/DESIGN-SIMPLIFICATIONS.md'}

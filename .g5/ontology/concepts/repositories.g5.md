@@ -86,27 +86,8 @@ An ORAS registry can use a registry namespace, which is a path inside the regist
 
 - This is an availability probe, not proof that authentication, pulling or publishing will work. Native loopback HTTP cases distinguish all four replies.
 
-
-
-
-
-<a id="repo.oras.unpublish-platform-policy"></a>
-[Q · repo.oras.unpublish-platform-policy]
-
-Which platform tags should unpublish remove when only a version is named?
-
 - Working assumption: ORAS `unpublish R/M V` deletes the plain tag and every `V__<platform>` tag of that version.
-- Alternative and implications: Require the platform to be named; the plain form must still not fail as "not found".
-- This assumption guides review; it is not a maintainer decision. An explicit owner policy or an attributable source addressing this exact case would settle it.
-
-<a id="repo.oras.credentials-change-policy"></a>
-[Q · repo.oras.credentials-change-policy]
-
-Should changing an ORAS registry address clear its stored credentials?
-
 - Working assumption: Changing an ORAS registry's address clears its stored credentials, as for a remote registry.
-- Alternative and implications: Keep and warn (operator only renamed the host): F-REPO-11 becomes a missing warning.
-- This assumption guides review; it is not a maintainer decision. An explicit owner policy or an attributable source addressing this exact case would settle it.
 
 <a id="repo.filesystem"></a>
 [I · repo.filesystem]
@@ -114,12 +95,15 @@ Should changing an ORAS registry address clear its stored credentials?
 A filesystem repository offers every module whose `module.xml` IPM finds under its folder, down to a set depth.
 
 - IPM reads the folder into a cache when the repository is created and when it is refreshed. A refresh replaces the whole cache, so a module whose folder is gone stops being offered.
-- A `module.xml` that is not a readable manifest is skipped. A readable manifest whose module name is invalid fails the whole refresh, which then changes nothing. Whether one bad module should block the rest is [open](#repo.filesystem.bad-module).
+- A `module.xml` that is not a readable manifest is skipped. A readable manifest whose module name is invalid fails the whole refresh, which then changes nothing. Whether one bad module should block the rest is [open](../../Verus_verification/open_questions.md#repo.filesystem.bad-module).
 - A refresh of an existing repository locks it. While another process holds that lock, the refresh fails after a timeout and changes nothing.
 - The earlier claim that this explicit lock lasts until a caller's transaction ends was incorrect for the actual constructor. The default lock manager releases it when the refresh method returns, even if an outer transaction remains open. Explicit `%New(0)` keeps it through close until commit; default `%New(1)` releases at close.
-- The cache still needs consistent replacement. How transaction isolation and other writers protect an uncommitted refresh remains [open](#repo.filesystem.concurrent-refresh); the observed release does not authorize a race.
+- The cache still needs consistent replacement. How transaction isolation and other writers protect an uncommitted refresh remains [open](../../Verus_verification/open_questions.md#repo.filesystem.concurrent-refresh); the observed release does not authorize a race.
 
 - Physical duplicates of one logical version follow the [first-admission rule](#repo.filesystem.duplicates). Later [source edits](#repo.filesystem.mutable-source) can make a selected cached version differ from the module actually loaded.
+
+- Working assumption: no. Skip it with a warning, like an unreadable manifest, so the other modules stay available.
+- Working assumption: keep the intended consistent cache and investigate competing refreshes under actual database isolation. Alternatives are deferred release, refusing an outer transaction or demonstrating that existing database locks suffice.
 
 <a id="repo.filesystem.duplicates"></a>
 [D · repo.filesystem.duplicates]
@@ -145,15 +129,6 @@ A filesystem cache saves a manifest but retains a pointer to its physical direct
 - Reconfiguring that same repository through the ordinary `repo -fs` command rebuilds its cache. Search then offers `2.0.0`; an explicit `1.0.0` request fails with not found and retains the installed `2.0.0`. An explicit `2.0.0` request succeeds.
 - This qualification uses one ordinary directory, unchanged module name, plain releases `1.0.0` and `2.0.0`, successful file replacement and normal load/compile/save. It does not establish behavior during concurrent edits, source removal, parse/provider failure or other delivery branches. The [stable-source duplicate rule](#repo.filesystem.duplicates) retains its original scope.
 
-<a id="repo.filesystem.bad-module"></a>
-[Q · repo.filesystem.bad-module]
-
-Should a module with an invalid name in a filesystem repository's folder block the whole repository?
-
-- Provisional answer: no. Skip it with a warning, like an unreadable manifest, so the other modules stay available.
-- As built: yes. The same failure stops a load's temporary `.modules` repository from being created, which then fails the load after its commit.
-- Alternative: fail every bad manifest, including unreadable ones, so nothing is silently hidden.
-
 <a id="repo.oras.integrity"></a>
 [D · repo.oras.integrity]
 
@@ -163,22 +138,17 @@ As built, an ORAS pull without a tag selects the last tag supplied by the regist
 - Archive validation skips non-tar layers and compares size and digest with the first tar layer. A later matching tar layer does not rescue an earlier mismatch. The pull path also chooses the first downloaded `*.tgz`; those two choices need not name the same artifact.
 - Failed validation returns an error even if the raw helper assigned a stream. The final `GetModule` reader throws that status instead of returning the stream to the loader. Multiple layers/files, provider order and digest integrity remain distinct premises.
 
-<a id="repo.oras.integrity.policy"></a>
-[Q · repo.oras.integrity.policy]
-
-Should an untagged pull always select the highest semantic version, and must a package have exactly one archive layer?
-
-- Owner: registry maintainers and IPM maintainers; no owner decision was available. The method comment supports highest-version intent, while source behavior depends on provider order.
 - Working assumption: expose the mismatch and retain size/digest checking. Alternatives are sorting before selection or requiring a registry ordering contract, plus rejecting ambiguous archives or selecting by declared digest.
-- Proposed repairs are not implemented or proved. Preserve deployed platform tags and compare both a valid single archive and ambiguous multi-layer input before a repair.
 
 <a id="repo.remote.download"></a>
 [D · repo.remote.download]
 
 To install from a remote registry, IPM asks the registry for the package's URL and hash, then downloads that URL. It sends the repository's credentials on both requests, even when the URL names a different server.
 
-- The download follows the URL exactly as the registry returns it. This was a deliberate 2022 change from a path relative to the repository. Sending credentials to another server was not discussed; see the [credential question](#repo.remote.download.credentials).
+- The download follows the URL exactly as the registry returns it. This was a deliberate 2022 change from a path relative to the repository. Sending credentials to another server was not discussed; see the [credential question](../../Verus_verification/open_questions.md#repo.remote.download.credentials).
 - Artifactory downloads do the opposite and send no credentials on the byte request ([artifact authentication](../features/artifact-download.g5.md#artifact.authentication)).
+
+- Working assumption: keep following the returned URL, and record the forwarding as suspected defect C:D20. The proposed alternative sends credentials only when the URL's server and port match the repository; a third choice is to refuse such URLs. Either change can break registries that redirect downloads to storage needing the same credentials.
 
 <a id="repo.remote.download.redirect"></a>
 [D · repo.remote.download.redirect]
@@ -201,15 +171,6 @@ When the registry gives a hash, the downloaded file's SHA-1 must equal it exactl
 
 The registry may return an install token with the package. IPM keeps it only after the hash check passes, sends it once with the install report and then deletes it.
 
-<a id="repo.remote.download.credentials"></a>
-[Q · repo.remote.download.credentials]
-
-Should registry credentials be sent to a download URL on a different server?
-
-- Evidence: commit `d6cc4204` switched to the registry-supplied URL to "fix downloading packages"; a native provider received the repository's Basic credentials and API key at a different host and port. Elsewhere the maintainers treat credentials as belonging to one host: CHANGELOG 0.10.11 `#1115` stops ORAS credential checks from following redirects "so credentials are not sent to another host", and `#649` clears a remote registry's credentials when its URL changes. No source decides the download case.
-- Working assumption: keep following the returned URL, and record the forwarding as suspected defect C:D20. The proposed alternative sends credentials only when the URL's server and port match the repository; a third choice is to refuse such URLs. Either change can break registries that redirect downloads to storage needing the same credentials.
-- Register: C:Q14 and proposal C:S14, revised as C:S14b after the [redirect challenge](#repo.remote.download.redirect).
-
 <a id="repo.publish-cache"></a>
 [D · repo.publish-cache]
 
@@ -217,15 +178,6 @@ As built, a retained Remote publishing manager reuses an available client withou
 
 - In paired native calls using the same retained managers, disabling a repository after success still yielded an available Remote client, while ORAS yielded unavailable. This does not promise a cache lifetime across separate shell commands.
 - An available service may report that deletion is disabled while the manager returns a successful status. Capability, availability and operation status are different results.
-
-<a id="repo.filesystem.concurrent-refresh"></a>
-[Q · repo.filesystem.concurrent-refresh]
-
-Does cache replacement need its explicit lock until the caller's transaction ends?
-
-- Owner: IPM maintainers. The default constructor releases at object close; the deferred constructor is a separate supported mechanism.
-- Working assumption: keep the intended consistent cache and investigate competing refreshes under actual database isolation. Alternatives are deferred release, refusing an outer transaction or demonstrating that existing database locks suffice.
-- No race corruption or repair is established by the observed lock release. [Withdrawal and paired evidence](../../uplift/consolidated/iter2/boundaries/withdrawals.json).
 
 <a id="repo.search.version-list"></a>
 [D · repo.search.version-list]
@@ -269,8 +221,10 @@ For the two published current-platform builds `1.0.0+a.1.a` and `1.0.0+a.1.z`, r
 
 - The service's first normal row and the SQL normal listing report `+a.1.a`. Dependency lookup emits both; the manager's map key omits Build, so the later row replaces the earlier one and actual installation selects `+a.1.z`.
 - Both source manifest versions, packaged records and published tags were checked before installation. The installed callable payload succeeds. The broader prediction that installation would choose the first service row was refuted.
-- C:D30 records this narrow listing/order discrepancy against aggregation's latest-first promise and IPM's deliberate alphabetical build comparison. [C:Q9](#repo.oras.integrity.policy) still owns authoritative ordering policy. Decoding aggregation alone is not a checked complete repair because the manager has a separate last-writer rule.
+- C:D30 records this narrow listing/order discrepancy against aggregation's latest-first promise and IPM's deliberate alphabetical build comparison. [C:Q9](../../Verus_verification/open_questions.md#repo.oras.integrity.policy) still owns authoritative ordering policy. Decoding aggregation alone is not a checked complete repair because the manager has a separate last-writer rule.
 - No general SemVer build-precedence mandate, arbitrary OCI tag order, install failure or business-data corruption is inferred.
+
+- Working assumption: expose the mismatch and retain size/digest checking. Alternatives are sorting before selection or requiring a registry ordering contract, plus rejecting ambiguous archives or selecting by declared digest.
 
 ## Metadata
 
@@ -302,7 +256,7 @@ Sources: `Main.cls:222-266`; repository-type `XData Commands` in `Repo/*/Definit
 - user-facing-behavior
 - Expands: [Repositories](#repo).
 
-Sources: CHANGELOG 0.9.0 (`#261`); CHANGELOG 0.9.x "Repo check should happen in the order to repo creation, not by repo name" (HSIEO-9269, HSIEO-9404); `Main.cls:413-414` (`install registry/HS.JSON`). Inventory: CAT-18. Code: `Repo/Manager.cls:67-70` (SQL order by sort position), `:150` (results keyed by version, then repository ID), `:153-187` (highest version first). Consolidated round 1 native cases TR5, TR5b, TR5c (`20261114T025102Z-r1-temp-repo`) and model `Verus_verification/consolidated/models/temp_repo.py` (`search`; wrong variants `search-tie-by-sortorder`, `search-first-repo`, `search-lowest-version` rejected). The earlier observation that a load's `.modules` folder is searched before all others holds only for versions no older repository offers ([precedence](../features/load.g5.md#load.dependencies.local-repo.precedence)).
+Sources: CHANGELOG 0.9.0 (`#261`); CHANGELOG 0.9.x "Repo check should happen in the order to repo creation, not by repo name" (HSIEO-9269, HSIEO-9404); `Main.cls:413-414` (`install registry/HS.JSON`). Inventory: CAT-18. Code: `Repo/Manager.cls:67-70` (SQL order by sort position), `:150` (results keyed by version, then repository ID), `:153-187` (highest version first). Consolidated round 1 native cases TR5, TR5b, TR5c (`20261114T025102Z-r1-temp-repo`) and model `Verus_verification/consolidated/models/temp_repo.py` (`search`; wrong variants `search-tie-by-sortorder`, `search-first-repo`, `search-lowest-version` rejected). The earlier observation that a load's `.modules` folder is searched before all others holds only for versions no older repository offers ([precedence](../../Verus_verification/open_questions.md#load.dependencies.local-repo.precedence)).
 
 Extension Verus: [temp_repo.rs::select](../../Verus_verification/consolidated/verus/temp_repo.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
 
@@ -310,7 +264,9 @@ Iteration 3 search repair: `Repo/Manager.cls::SearchRepositoriesForModule` and `
 
 Iteration 4 token producer: `Repo/SearchCriteria.cls::KeywordsSet` (text split on single spaces, `$list` input not split, empty elements dropped from both; a list object assigned as given) and the lowercased criteria name in `SearchRepositoriesForModule`. Verus [repairs4.rs](../../Verus_verification/consolidated/iter4/repairs4.rs) `{keywords,visits_filesystem,criteria_name,keyword_neighbors}`; controls `empty-tokens-kept`, `dollar-list-not-filtered`, `object-filtered`, `keywords-ignored-at-gate` rejected. The token rule is source-only; no new native case.
 
-Findings: [P:F-INST-4 — e2e reproduced](../../../playbook-uplift/BUGS.md#p-f-inst-4). The linked entry qualifies the caller, reader and providers.
+Findings: [P:F-INST-4 — e2e reproduced](../../Verus_verification/bugs_issues.md#p-f-inst-4). The linked entry qualifies the caller, reader and providers.
+
+State machines: [repairs4 · iter4](../../Verus_verification/models/iter4-repairs4/manifest.json)
 
 ### repo.origin.installed
 
@@ -320,6 +276,8 @@ Findings: [P:F-INST-4 — e2e reproduced](../../../playbook-uplift/BUGS.md#p-f-i
 
 [Supplier and reader contract](../../Verus_verification/consolidated/iter16/provenance.rs): `select`, `apply_install`, `install`, `local_load`, `show_repository`, `listed_for_repository`, `history_detail`. The model derives source identity from a configured supplier and its selected fixture package. Fresh installs require actual module/code absence; `successful_uninstall` is an observed-success projection, not general removal or compensation. Existing-installed behavior is unassessed by this fresh-install contract and covered separately below. [Correspondence and runbook](../../uplift/consolidated/iter16/HANDOFF.md).
 
+State machines: [provenance · iter16](../../Verus_verification/models/iter16-provenance/manifest.json)
+
 ### repo.origin.same-version
 
 - agent; user-facing-behavior; source-inspected; native-tested; Verus-scoped
@@ -327,13 +285,15 @@ Findings: [P:F-INST-4 — e2e reproduced](../../../playbook-uplift/BUGS.md#p-f-i
 
 [Equal-version source and reader contract](../../Verus_verification/consolidated/iter18/reloading.rs) extends the unchanged fresh-install model with the plain equal-version admission and selected load writers. [Iteration18](../../uplift/consolidated/iter18/HANDOFF.md) records actual callable bytes, stored metadata, unique permanent successful records and rendered current/history readers. Rejected-attempt history and generic provider mechanics are outside the new guarantee; earlier proof and native receipts remain unchanged.
 
+State machines: [reloading · iter18](../../Verus_verification/models/iter18-reloading/manifest.json)
+
 ### repo.read-only
 
 - human-provided
 - user-facing-behavior
 - Expands: [Repositories](#repo).
 
-Sources: `Main.cls:262`; `wiki/00` L135. Inventory: INT-LOAD-13; OP-LOAD-10. Observed: normal mode is forced after the update-required check ([developer-mode bypass](../features/load.g5.md#load.refusal.update-required.dev-bypass)).
+Sources: `Main.cls:262`; `wiki/00` L135. Inventory: INT-LOAD-13; OP-LOAD-10. Observed: normal mode is forced after the update-required check ([developer-mode bypass](../../Verus_verification/open_questions.md#load.refusal.update-required.dev-bypass)).
 
 ### repo.prereleases
 
@@ -353,6 +313,7 @@ Sources: README L23-30; `preload/cls/IPM/Installer.cls:114`. Inventory: CAT-21. 
 
 ### repo.oras
 
+- uncertain
 - human-provided
 - user-facing-behavior
 - test-coverage
@@ -362,39 +323,22 @@ Sources: CHANGELOG 0.10.0 (`#541`, `#754`), 0.10.7 (`#1130`), 0.10.10 (`#1267`),
 
 Extension Verus: [thin_surfaces.rs::oras_available](../../Verus_verification/consolidated/verus/thin_surfaces.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
 
-### repo.oras.unpublish-platform-policy
-
-- agent
-- uncertain
-- user-facing-behavior
-- Expands: [repo.oras](#repo.oras)
-
-Sources: [DEC-REPO-5](../../../playbook-uplift/decisions/05-06.md); Today a deployed version cannot be unpublished by version at all, which no source intends.
-
-Findings audit: [sources, alternatives, implications and settlement gate](../../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#repo.oras.unpublish-platform-policy). The recorded assumption is provisional; no new maintainer approval was found.
-
-### repo.oras.credentials-change-policy
-
-- agent
-- uncertain
-- user-facing-behavior
-- Expands: [repo.oras](#repo.oras)
-
-Sources: [DEC-REPO-3](../../../playbook-uplift/decisions/05-06.md); Standard practice (credentials belong to a host); the remote registry already does it (`Remote/Definition.cls#L81-L86`).
-
-Findings audit: [sources, alternatives, implications and settlement gate](../../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#repo.oras.credentials-change-policy). The recorded assumption is provisional; no new maintainer approval was found.
+Open questions: [repo.oras.credentials-change-policy](../../Verus_verification/open_questions.md#repo.oras.credentials-change-policy), [repo.oras.unpublish-platform-policy](../../Verus_verification/open_questions.md#repo.oras.unpublish-platform-policy)
 
 ### repo.filesystem
 
+- uncertain
 - human-provided
 - user-facing-behavior
 - Expands: [Repositories](#repo).
 
-- Children: [bad module](#repo.filesystem.bad-module), [physical duplicates](#repo.filesystem.duplicates).
+- Children: [bad module](../../Verus_verification/open_questions.md#repo.filesystem.bad-module), [physical duplicates](#repo.filesystem.duplicates).
 
 Sources: `Repo/Filesystem/Definition.cls`; `AGENTS.md` test guidance. Inventory: CAT-23. Observed: the folder scan is cached in `^IPM.Repo.Filesystem.CacheD`. Consolidated round 4 (`20261114T033125Z-r4-owners`, ARM64) and model `Verus_verification/consolidated/models/owners.py` (`BuildCache`, `AddCacheItem`, `ScanDirectory`, lock manager): an unreadable `module.xml` is not cached (LK1); a second process holding the repository's lock makes a refresh fail with ERROR #5803 after the timeout (LK2); a refresh drops a removed module (LK3); the lock is released afterwards at transaction level zero (LK4). The inherited LK5 result was interpreted as holding the default refresh lock through an outer transaction. Iter 2's actual constructor and successful refresh pairs contradict that interpretation; the old hand-model theorem remains true only of its incorrect abstraction. The first LK5 terminal `TSTART` attempt was already excluded. [Corrected binding and withdrawal](../../uplift/consolidated/iter2/boundaries/withdrawals.json). Hidden `.modules` folders are scanned: the same tree fails with `Depth=0` and builds with `Depth=1` (DC0, DC1). Round 1: an invalid name fails the cache build and its save is rolled back (TR7).
 
 Extension Verus: [owners.rs::build_cache](../../Verus_verification/consolidated/verus/owners.rs), [owners.rs::lock_class_id](../../Verus_verification/consolidated/verus/owners.rs), [owners.rs::scan](../../Verus_verification/consolidated/verus/owners.rs), [owners.rs::unlock_all](../../Verus_verification/consolidated/verus/owners.rs), [owners.rs::unlock_class_id](../../Verus_verification/consolidated/verus/owners.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
+
+Open questions: [repo.filesystem.bad-module](../../Verus_verification/open_questions.md#repo.filesystem.bad-module), [repo.filesystem.concurrent-refresh](../../Verus_verification/open_questions.md#repo.filesystem.concurrent-refresh)
 
 ### repo.filesystem.duplicates
 
@@ -403,6 +347,8 @@ Extension Verus: [owners.rs::build_cache](../../Verus_verification/consolidated/
 
 [First-admission and directory-reader contract](../../Verus_verification/consolidated/iter19/duplicates.rs) derives the logical key from physical entries, retains manifest/directory together, and follows the selected directory's actual code and description. [Iteration19](../../uplift/consolidated/iter19/HANDOFF.md) qualifies constructor order, sampled scan input, cache/service readers and actual install/show/list results. Marker fields are a manifest projection, not a formal proof of XML bytes. Indexed-row consistency and stable provider/filesystem premises are explicit; old cache and lock correspondence qualifications remain.
 
+State machines: [duplicates · iter19](../../Verus_verification/models/iter19-duplicates/manifest.json)
+
 ### repo.install.version-request
 
 - agent; inferred-from-product-help; user-facing-behavior
@@ -410,7 +356,9 @@ Extension Verus: [owners.rs::build_cache](../../Verus_verification/consolidated/
 
 The product-authored install help defines the version argument as the version or version expression of the module to install; the pinned-install comment says selection filters its requested version. This recovers the existing user-facing obligation, with no new owner decision. [Temporal model](../../Verus_verification/consolidated/iter21/temporal.rs) distinguishes the exact checked release requests from the actual loaded module. Generic version/range conformance retains its separate gaps.
 
-Findings: [C:D32 — e2e reproduced](../../uplift/consolidated/BUGS.md#c-d32). The linked entry qualifies the caller, reader and providers.
+Findings: [C:D32 — e2e reproduced](../../Verus_verification/bugs_issues.md#c-d32). The linked entry qualifies the caller, reader and providers.
+
+State machines: [temporal · iter21](../../Verus_verification/models/iter21-temporal/manifest.json)
 
 ### repo.filesystem.mutable-source
 
@@ -419,46 +367,35 @@ Findings: [C:D32 — e2e reproduced](../../uplift/consolidated/BUGS.md#c-d32). T
 
 [Cache versus current-directory contract](../../Verus_verification/consolidated/iter21/temporal.rs) keeps the cached snapshot separate from physical manifest/code and follows successful installation to current metadata, callable payload and search/show readers. [Iteration21](../../uplift/consolidated/iter21/HANDOFF.md) records both native runs, source/provider scope, mismatch, refusal neighbor and C:D32 disposition. This extends the assessed temporal domain without changing iteration19's stable-source premise. Concurrent filesystem mutation and generic lifecycle guarantees remain unassessed.
 
-### repo.filesystem.bad-module
-
-- agent
-- uncertain
-- user-facing-behavior
-- Expands: [Filesystem repository](#repo.filesystem).
-
-Sources: `Repo/Filesystem/Definition.cls:184-241` (unreadable manifests skipped at `:196-200`; a save error returned at `:234-237` and aggregated at `:170-176`). Native LK1 (skipped), TR7 and Dtxn (blocked). G's attempt 1 for case C29 also found that an unparseable manifest is skipped (`native/make_replay.py:248`). Question C:Q5.
-
-Extension Verus: [owners.rs::add_cache](../../Verus_verification/consolidated/verus/owners.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
-
-Findings audit: [sources, alternatives, implications and settlement gate](../../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#repo.filesystem.bad-module). The recorded assumption is provisional; no new maintainer approval was found.
+State machines: [temporal · iter21](../../Verus_verification/models/iter21-temporal/manifest.json)
 
 ### repo.oras.integrity
 
+- uncertain
 - agent
 - user-facing-behavior, security
 - Expands: [ORAS](#repo.oras).
-- Children: [selection and layer policy](#repo.oras.integrity.policy).
+- Children: [selection and layer policy](../../Verus_verification/open_questions.md#repo.oras.integrity.policy).
 
 Sources: `Repo/Oras/PackageService.cls::GetLatestTag`, `::GetAllTags`, `::Pull`, `::VerifyModuleHashAndSize`, `::GetModule`; comments and pinned history. [Scoped state/contract and assertions](../../Verus_verification/consolidated/iter2/registry.rs); [actual provider observations](../../uplift/consolidated/iter2/native/receipt.json). These are source-backed observations and a suspected provider-dependent defect, not a registry prevalence claim.
 
-### repo.oras.integrity.policy
+Open questions: [repo.oras.integrity.policy](../../Verus_verification/open_questions.md#repo.oras.integrity.policy)
 
-- agent
-- uncertain
-- Expands: [ORAS integrity](#repo.oras.integrity).
-
-No authorized policy decision. The parent states source authority, alternatives, preservation conditions and remaining premises.
-
-Findings audit: [sources, alternatives, implications and settlement gate](../../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#repo.oras.integrity.policy). The recorded assumption is provisional; no new maintainer approval was found.
+State machines: [registry · iter2](../../Verus_verification/models/iter2-registry/manifest.json)
 
 ### repo.remote.download
 
+- uncertain
 - agent
 - user-facing-behavior, security
 - Expands: [Repositories](#repo).
-- Children: [redirects](#repo.remote.download.redirect), [integrity](#repo.remote.download.integrity), [install token](#repo.remote.download.token), [credential question](#repo.remote.download.credentials).
+- Children: [redirects](#repo.remote.download.redirect), [integrity](#repo.remote.download.integrity), [install token](#repo.remote.download.token), [credential question](../../Verus_verification/open_questions.md#repo.remote.download.credentials).
 
 Direct decision: `Repo/Remote/PackageService.cls::GetModule`; request builder `Repo/Http/PackageService.cls::GetHttpRequest`. Caller: `Utils/Module.cls` remote branch of the module-reference loader (`tClient.GetModule`, then `LoadModuleFromArchive`, then `CollectAnalytics`). History: commit `d6cc4204` (2022-07-07). The parsed `path` variable and its comment are dead code. Verus [registry.rs](../../Verus_verification/consolidated/iter4/registry.rs) `{metadata_request,bytes_request,repaired_bytes_request,lemma_cross_origin_carries_credentials}`; controls `bytes-sent-to-configured-origin`, `bytes-drop-credentials-as-built` and `repair-still-forwards` rejected. Native R-cross: a two-origin provider recorded Basic and `apikey` headers on `127.0.0.1:18502` after metadata from `localhost:18501`. Redirect handling (`FollowRedirect=1`), TLS and production registries are outside this observation.
+
+Open questions: [repo.remote.download.credentials](../../Verus_verification/open_questions.md#repo.remote.download.credentials)
+
+State machines: [registry · iter4](../../Verus_verification/models/iter4-registry/manifest.json)
 
 ### repo.remote.download.redirect
 
@@ -467,6 +404,8 @@ Direct decision: `Repo/Remote/PackageService.cls::GetModule`; request builder `R
 - Expands: [Remote download](#repo.remote.download).
 
 Direct decision: `Repo/Http/PackageService.cls::GetHttpRequest` (`FollowRedirect = 1`, `apikey` header and `Username`/`Password` set once on the request). Caller: `Repo/Remote/PackageService.cls::GetModule`. Iteration 5 challenge of iteration 4's request boundary, which had left redirects open. Native X1: metadata named `localhost:18501/redirect/cross`, which answered 302 to `127.0.0.1:18502`; the provider recorded Basic and `apikey` on all three requests. Verus [redirect.rs](../../Verus_verification/consolidated/iter5/redirect.rs) `{as_built_sends,s14_sends,s14b_sends,lemma_s14_insufficient,lemma_s14b_never_leaks}`; controls `redirect-drops-credentials-as-built`, `s14-checks-every-hop`, `s14b-checks-first-hop` rejected. Redirects on metadata and listing requests share the same builder but were not exercised. CHANGELOG 0.10.11 `#1115` fixed the same redirect leak for ORAS token checks.
+
+State machines: [redirect · iter5](../../Verus_verification/models/iter5-redirect/manifest.json)
 
 ### repo.remote.download.integrity
 
@@ -483,16 +422,6 @@ Direct decision: `Repo/Remote/PackageService.cls::GetModule` lines 130-151. Read
 
 Writer: `Repo/Remote/PackageService.cls::GetModule` (`^IRIS.TempZPMRInst`). Reader: `::SendAnalyticsToRegistry`. Verus `token_stored`; control `token-stored-before-integrity` rejected. Native R-same/R-cross store, R-mismatch/R-upper do not, R-analytics sends `tok-same` once and the entry is gone afterwards.
 
-### repo.remote.download.credentials
-
-- agent
-- uncertain
-- Expands: [Remote download](#repo.remote.download).
-
-No authorized policy decision. Register entries C:Q14 and C:S14; the proposed request is proved only at the abstract request boundary and was not applied.
-
-Findings audit: [sources, alternatives, implications and settlement gate](../../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#repo.remote.download.credentials). The recorded assumption is provisional; no new maintainer approval was found.
-
 ### repo.publish-cache
 
 - agent
@@ -501,15 +430,7 @@ Findings audit: [sources, alternatives, implications and settlement gate](../../
 
 Sources: `Repo/Remote/PublishManager.cls`, `Repo/Oras/PublishManager.cls`, `General/Singleton.cls`. [State and capability projections](../../Verus_verification/consolidated/iter2/registry.rs); [paired native manager observations](../../uplift/consolidated/iter2/native/receipt.json). Probe transport, manager lifetime and competing configuration writers remain explicit premises.
 
-### repo.filesystem.concurrent-refresh
-
-- agent
-- uncertain
-- Expands: [Filesystem cache](#repo.filesystem).
-
-Source owner and constructor binding: [boundary ledger](../../uplift/consolidated/iter2/boundaries/bindings.json). The prior lock correspondence is withdrawn; other cache properties retain their evidence.
-
-Findings audit: [sources, alternatives, implications and settlement gate](../../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#repo.filesystem.concurrent-refresh). The recorded assumption is provisional; no new maintainer approval was found.
+State machines: [registry · iter2](../../Verus_verification/models/iter2-registry/manifest.json)
 
 ### repo.search.version-list
 
@@ -518,12 +439,16 @@ Findings audit: [sources, alternatives, implications and settlement gate](../../
 
 Sources and readers: `Repo/Filesystem/PackageService.cls::ListModules` → `Repo/Utils.cls::moduleSqlToList` → `Repo/Manager.cls::SearchRepositoriesForModule` → `Repo/Utils.cls::SearchRepositoriesForModule`. [Iteration 8 index](../../uplift/consolidated/iter8/INDEX.md). [Contract](../../Verus_verification/consolidated/iter8/catalog.rs): `eligible`, `ordered`, `grouped`. The [trust inventory](../../Verus_verification/consolidated/iter8/TRUST.md) names provider and input boundaries; direct ObjectScript implementation proofs: 0.
 
+State machines: [catalog · iter8](../../Verus_verification/models/iter8-catalog/manifest.json)
+
 ### repo.oras.platform-selection
 
 - agent; user-facing-behavior; native-tested; source-inspected; Verus-scoped
 - Expands: [repo](#repo).
 
 Sources and readers: `Storage/ModuleInfo.cls::{IsCompatibleWithPlatform,FormatPlatformVersions}` → `Repo/Manager.cls::SearchRepositoriesForModule`, `Utils/Module.cls::GetModuleListExecute` and `Repo/Oras/PackageService.cls::TagForReference`; aggregation/ordering at `AggregatePlatformVersions` and `PreferCompatibleVersions` remain source-backed. [Iteration 8 index](../../uplift/consolidated/iter8/INDEX.md). [Contract](../../Verus_verification/consolidated/iter8/catalog.rs): `compatible`, `catalog_visible`, `install_candidate`, `reported_platform`, `tag_for`. The [trust inventory](../../Verus_verification/consolidated/iter8/TRUST.md) names provider and input boundaries; direct ObjectScript implementation proofs: 0.
+
+State machines: [catalog · iter8](../../Verus_verification/models/iter8-catalog/manifest.json)
 
 ### repo.oras.tag-decode
 
@@ -532,6 +457,8 @@ Sources and readers: `Storage/ModuleInfo.cls::{IsCompatibleWithPlatform,FormatPl
 
 [Codec model](../../Verus_verification/consolidated/iter15/oras.rs): `replace`, `encode`, `decode`, `parse`, `tag_for`, `codec_roundtrip`, `raw_neighbors`. Sources: Common.inc macros Semver2Tag/Tag2Semver/OrasTagPlatformSeparator and Oras.PackageService::TagForReference. No direct body proof or generic invalid-tag parser claim.
 
+State machines: [oras · iter15](../../Verus_verification/models/iter15-oras/manifest.json)
+
 ### repo.oras.selection-modes
 
 - agent; user-facing-behavior; source-inspected; native-tested; Verus-scoped
@@ -539,9 +466,16 @@ Sources and readers: `Storage/ModuleInfo.cls::{IsCompatibleWithPlatform,FormatPl
 
 [Producer/reader model](../../Verus_verification/consolidated/iter15/oras.rs): `get_all`, `aggregate`, `prefer`, `service`, `manager`, `display`, `normal_consumer`. Sources: Oras.PackageService::{GetAllTags,AggregatePlatformVersions,PreferCompatibleVersions,AddModulesFromTags,ListModules}, EmbeddedPython::SortOCITags, Repo.Manager::SearchRepositoriesForModule, Utils.Module::GetModuleListExecute. The two actual consumer fixtures and callable dependency payload check final effects; normal-load composition retains inherited successful-pull/compile and rollback premises. Metadata's first-platform witness is conditional input-order behavior, not a registry-order guarantee. [Evidence](../../uplift/consolidated/iter15/HANDOFF.md).
 
+State machines: [oras · iter15](../../Verus_verification/models/iter15-oras/manifest.json)
+
 ### repo.oras.build-readers
 
+- uncertain
 - agent; user-facing-behavior; source-inspected; native-tested; Verus-scoped
 - Expands: [ORAS selection](#repo.oras.selection-modes).
 
 [Two-literal projection](../../Verus_verification/consolidated/iter15/oras.rs): `deep_fields`, `deep_aggregate`, `deep_oci`, `deep_service_first_version`, `same_base_insert`, `deep_manager_version`, `deep_pull_tag`. Sources: SemanticVersion::FromString dot/plus branches, EmbeddedPython::{CompareVersionTotalOrder,SortVersions,SortOCITags}, PackageService aggregate/first-row decision, Manager's Build-omitting key and SQL display reader. Numeric casts are not generalized; equality follows identical raw core fields for these literals and is natively calibrated. The release manager projection assumes distinct base keys; the deep same-base overwrite is separate. [Review](../../uplift/consolidated/iter15/model-review.md).
+
+Open questions: [repo.oras.integrity.policy](../../Verus_verification/open_questions.md#repo.oras.integrity.policy)
+
+State machines: [oras · iter15](../../Verus_verification/models/iter15-oras/manifest.json)

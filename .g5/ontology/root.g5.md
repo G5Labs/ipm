@@ -115,3 +115,5 @@ Sources: `wiki/01` L109-167; CHANGELOG 0.10.9 (`#1186`); CONTRIBUTING L115-156. 
 - Expands: [Shell](#ipm.shell).
 
 Direct decision: `Main.cls::Shell` (`pTerminateOnError`), `Main.cls::LanguageExtensions` (the `ZPM` body, lowercase `do ##class(%IPM.Main).Shell(pArgs...) quit` since commit `8eb520fd`, 2025-07-02), `Main.cls::UpdateLanguageExtensions` (builds `%ZLANGF00` by rewriting only lines containing the exact text `Do ##class`, unchanged by that commit). Before `8eb520fd` the same rewrite produced `Quit ##class(...)`. Verus [entry_forms.rs](../Verus_verification/consolidated/iter5/entry_forms.rs) `{function_returns_value,pinned_body,outcome,entry_neighbors}`; controls `matcher-case-insensitive`, `pinned-body-capitalized`, `command-flag-terminates`, `plain-shell-terminates` rejected. Native Z1-Z5 through stdin sessions on a fresh container, including the installed `%ZLANGF00` text. Why the command form ignores `,1` was not traced; only its outcome is claimed.
+
+State machines: [entry forms · iter5](../Verus_verification/models/iter5-entry-forms/manifest.json)

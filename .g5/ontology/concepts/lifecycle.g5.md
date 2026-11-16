@@ -18,6 +18,8 @@ IPM runs a module's phases in this fixed order: Clean, Initialize, Reload, Valid
 - Compile compiles the module, and Activate runs post-compile setup, including Configure.
 - Clean removes the module's resources.
 
+- Working assumption: A standalone `reload` of a module with no root says that nothing was loaded; the phase stays silent inside other phase lists.
+
 <a id="lifecycle.chain"></a>
 [I · lifecycle.chain]
 
@@ -50,15 +52,6 @@ Module actions first look up the installed internal name and then its external n
 
 A declared custom hook runs when its phase is selected, not on an ordinary load or uninstall. Custom phase names are matched without regard to case.
 
-<a id="lifecycle.empty-reload-policy"></a>
-[Q · lifecycle.empty-reload-policy]
-
-Should standalone reload warn or fail when a module has no source root?
-
-- Working assumption: A standalone `reload` of a module with no root says that nothing was loaded; the phase stays silent inside other phase lists.
-- Alternative and implications: Fail the standalone command (stricter for scripts).
-- This assumption guides review; it is not a maintainer decision. An explicit owner policy or an attributable source addressing this exact case would settle it.
-
 ## Metadata
 
 
@@ -69,11 +62,14 @@ Source locators follow the conventions on the [root page](../root.g5.md#how-to-r
 
 ### lifecycle
 
+- uncertain
 - human-provided
 - user-facing-behavior
 - Children: [chain](#lifecycle.chain), [only](#lifecycle.only), [module-action](#lifecycle.module-action), [custom](#lifecycle.custom), [hooks](#lifecycle.hooks).
 
 Sources: `wiki/00` L3-39; `Main.cls:32-58`. Inventory: CAT-11; A2 1.3 lifecycle phases (`%IPM.Lifecycle.Base`, `%IPM.Lifecycle.Module`). The help lists a `register` phase and example (`Main.cls:53-55`, `:64`) that has no implementation.
+
+Open questions: [lifecycle.empty-reload-policy](../../Verus_verification/open_questions.md#lifecycle.empty-reload-policy)
 
 ### lifecycle.chain
 
@@ -124,15 +120,4 @@ Sources: `wiki/00` L5-7. Inventory: A2 1.3 resource processor hooks (`ResourcePr
 
 Sources: `Storage/Module.cls::{ExecutePhases,GetCustomPhases}` → lifecycle and Invoke readers. Native S6-04 loads product fixtures then requests Greeting by both names, packages by external name and runs ordinary/custom phase calls. [Contract](../../Verus_verification/consolidated/iter6/workflows.rs): `selected_module`, `custom_hook`. Phase chain construction and case folding retain inherited source evidence; this new contract takes the resolved phase sequence as its boundary input. [Index](../../uplift/consolidated/iter6/INDEX.md).
 
-### lifecycle.empty-reload-policy
-
-- agent
-- uncertain
-- user-facing-behavior
-- Expands: [lifecycle](#lifecycle)
-
-Sources: [DEC-SYNC-4](../../../playbook-uplift/decisions/07-09.md); Help: reload "pulls module source code into the namespace from disk"; the code's "For now" no-op.
-
-Findings audit: [sources, alternatives, implications and settlement gate](../../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#lifecycle.empty-reload-policy). The recorded assumption is provisional; no new maintainer approval was found.
-
-Findings: [P:F-SYNC-3 — e2e reproduced](../../../playbook-uplift/BUGS.md#p-f-sync-3). The linked entry qualifies the caller, reader and providers.
+State machines: [workflows · iter6](../../Verus_verification/models/iter6-workflows/manifest.json)

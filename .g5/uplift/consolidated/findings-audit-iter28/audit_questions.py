@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 from pathlib import Path
+
+if (Path(__file__).resolve().parents[4] / ".g5/Verus_verification/results/viewer-index.jsonl").exists():
+    raise SystemExit("Historical register generator. Use the sealed iteration 28 revision to reproduce the audit.")
+
 import re,json,subprocess,os,hashlib
 H=Path(__file__).resolve().parent;R=H.parents[3]
 def move_links(text,source,dest):

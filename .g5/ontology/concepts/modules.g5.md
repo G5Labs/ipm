@@ -73,7 +73,9 @@ Attribute values in a manifest, such as file targets, invoke arguments and the a
 
 - A replacement containing `$` may raise; a dotted parameter name can match another name because it becomes regex syntax. A cyclic reference exhausts the loop before the declared cycle error can run (C:D3–D5).
 
-- These failures contradict literal-name/value intent. [C:Q2](#module.parameter.expressions.brace-policy) asks whether brace-free macros should expand; it does not leave the observed gate undecided.
+- These failures contradict literal-name/value intent. [C:Q2](../../Verus_verification/open_questions.md#module.parameter.expressions.brace-policy) asks whether brace-free macros should expand; it does not leave the observed gate undecided.
+
+- Working assumption: keep the observed brace gate until a maintainer chooses otherwise.
 
 <a id="module.parameter.literal-values"></a>
 [I · module.parameter.literal-values]
@@ -146,7 +148,9 @@ A `<WebApplication>` resource creates the named web application during install a
 - If an application with that name already exists, for example one an administrator made, install changes only the properties the manifest declares and keeps every other property. Uninstalling the module then deletes that application.
 - Reinstalling resets declared properties that someone edited by hand, and keeps edits to properties the manifest does not declare.
 - A second module that declares a web application name another installed module already lists is refused when its manifest is read, so two modules cannot share one application.
-- `NameSpace` defaults to the namespace being installed into. Whether IPM should take over or delete applications it did not create is an [open question](#module.webapp.ownership).
+- `NameSpace` defaults to the namespace being installed into. Whether IPM should take over or delete applications it did not create is an [open question](../../Verus_verification/open_questions.md#module.webapp.ownership).
+
+- Working assumption: keep the as-built behavior and disclose it. Alternatives are to refuse install when the application exists and no module lists it, or to record creation and delete only what IPM created. Both change today's reinstall-over-manual-setup path.
 
 <a id="module.webapp.failure"></a>
 [D · module.webapp.failure]
@@ -158,28 +162,12 @@ The application is created before the module's later steps run. If the install t
 
 Upgrading to a version whose manifest no longer declares a web application leaves that application in place. A later uninstall deletes only the applications the installed version declares, so the old application is left behind for good (C:D26).
 
-<a id="module.webapp.upgrade.policy"></a>
-[Q · module.webapp.upgrade.policy]
-
-Should a higher-version load remove a web application omitted by the new manifest?
-
 - Working assumption: disclose that the application remains; do not promise automatic removal without an ownership rule.
-- Alternatives: remove resources formerly owned by the module, or require an explicit migration. Automatic removal needs ownership and administrator-edit checks; explicit migration leaves cleanup to the author.
-- An owner decision covering dropped resources, administrator changes and later uninstall would settle the policy. C:D26 observed a load, not update.
 
 <a id="module.webapp.validation"></a>
 [D · module.webapp.validation]
 
 An attribute that is not a web application property, such as a misspelled one, is passed through without an error and has no effect. The processor has a check for unknown attributes, but the lifecycle's Validate step never calls it (C:D23).
-
-<a id="module.webapp.ownership"></a>
-[Q · module.webapp.ownership]
-
-Should install take over an existing web application of the same name, and should uninstall delete one IPM did not create?
-
-- Evidence: `CreateOrUpdateWebApp` updates any existing application and `DeleteWebApp` deletes by name. No changelog, test or discussion addresses applications made outside IPM. The duplicate-name refusal protects only applications another module lists.
-- Working assumption: keep the as-built behavior and disclose it. Alternatives are to refuse install when the application exists and no module lists it, or to record creation and delete only what IPM created. Both change today's reinstall-over-manual-setup path.
-- Register: C:Q15.
 
 <a id="module.processor.file-copy"></a>
 [I · module.processor.file-copy]
@@ -197,6 +185,8 @@ Should install take over an existing web application of the same name, and shoul
 
 - Directory overlay rules protect system directories. These cases were checked through both the processor and an actual failing load; no general filesystem compensation is proved.
 - Direct `DoCopy` with a missing source returns an error and creates no copied target file. A successful copy remains after database rollback while a journaled database sentinel disappears; rollback does not turn a failed copy into a successful one. Creating the destination directory and partial operating-system copy errors are separate effects.
+
+- Working assumption: Protect configured roots and their ancestors and an exact target containing an IRIS.DAT marker.
 
 <a id="module.placement"></a>
 [I · module.placement]
@@ -237,6 +227,8 @@ A module can depend on Python packages.
 - `-bypass-py-deps` skips this, and `-extra-pip-flags` adds pip flags.
 - Python 3.9 or later is required. The `PipCaller` and `UseStandalonePip` settings pick which pip runs.
 
+- Working assumption: Clean preserves the current shared Python installation.
+
 <a id="module.env"></a>
 [I · module.env]
 
@@ -245,7 +237,7 @@ A module can depend on Python packages.
 - Files merge in order. A later value replaces an earlier one, and nested objects merge key by key.
 - Every command that runs module phases starts from an empty configuration and loads only its own `-env` files. A later command in the same shell session does not see an earlier command's files.
 - While a configuration is loaded, IPM compiles the module's classes in one process, so code generated at compile time can read it.
-- What a failing file should leave behind, and how arrays merge, is [open](#module.env.failure).
+- What a failing file should leave behind, and how arrays merge, is [open](../../Verus_verification/open_questions.md#module.env.failure).
 - An environment value is inserted literally. As built, a `$` or `\` in the value changes or breaks the result. This is a known defect.
 
 - Object elements in arrays merge recursively at the same array index: `[{"x":1}]` followed by `[{"y":2}]` keeps both keys. Primitive arrays merge by position: `[1,2]` then `[3]` yields `[3,2]`.
@@ -254,23 +246,7 @@ A module can depend on Python packages.
 
 - Process-local config reaches a same-process compile, while a fresh worker process starts empty. These are observed implementation rules; C:Q6 below keeps the desired failure/merge policy open.
 
-<a id="module.env.failure"></a>
-[Q · module.env.failure]
-
-When one of several `-env` files is missing, malformed or an array, what should the command keep, and how should two arrays merge?
-
-- Provisional answer: as built. The command fails and keeps nothing from any file, and a later array overwrites the earlier one position by position, so it cannot remove items.
-- Alternatives: keep the files loaded before the failing one, or check every file before changing anything; let a later array replace the earlier one.
-
-<a id="module.parameter.expressions.brace-policy"></a>
-[Q · module.parameter.expressions.brace-policy]
-
-Should a `$$$macro` expand when the attribute contains no opening brace?
-
-- Evidence: `%Evaluate` returns early on no `{`; native E15/P4 leave the macro literal. The expression documentation lists macros without this gate.
-- Working assumption: keep the observed brace gate until a maintainer chooses otherwise.
-- Alternative: expand macros with or without a brace.
-- Affected claims: parameter evaluation, after-install message, file-copy target and Invoke arguments. Alias C:Q2; parent [module.parameter.expressions](#module.parameter.expressions).
+- Working assumption: as built. The command fails and keeps nothing from any file, and a later array overwrites the earlier one position by position, so it cannot remove items.
 
 <a id="module.processor.cpf-effects"></a>
 [D · module.processor.cpf-effects]
@@ -280,14 +256,7 @@ A CPF processor runs a child command that changes instance configuration. Its ex
 - In the disposable IRIS provider, a valid role-creation merge returned success and the role survived rollback, while a journaled sentinel disappeared. An invalid-section neighbor returned error with child exit 7 and created no role.
 - These observations cover one configuration action and one refusal. Other actions, partial failures and settings that need restart remain external premises; exit zero alone does not prove their effect.
 
-<a id="module.processor.cpf-effects.policy"></a>
-[Q · module.processor.cpf-effects.policy]
-
-Must package failure undo instance configuration changes?
-
-- Owner: IPM maintainers and instance administrators; no owner decision was available.
 - Working assumption: database rollback alone gives no such promise. Alternatives are compensating selected changes or refusing them inside package transactions.
-- Depends on: [rollback policy](transactions-and-dev-mode.g5.md#transaction.rollback-scope.policy). A successful native role test settles observation, not this policy.
 
 <a id="module.global.roundtrip"></a>
 [D · module.global.roundtrip]
@@ -332,14 +301,9 @@ The contract covers nonempty input and delimiter splitting. Value/display mappin
 
 The legacy SystemSetting processor writes a named CSP setting during Compile, replacing its old value. Other phases, including Clean on uninstall, do not restore or delete that setting.
 
-Only names whose first dot-separated segment is CSP are handled; the second segment is the setting key. The declared value is written to the current namespace's mapped `^%SYS("CSP", key)` global. New modules are directed by the product to use CPF instead. [Whether uninstall should retain or restore that setting is open](#module.system-setting.cleanup-policy).
+Only names whose first dot-separated segment is CSP are handled; the second segment is the setting key. The declared value is written to the current namespace's mapped `^%SYS("CSP", key)` global. New modules are directed by the product to use CPF instead. [Whether uninstall should retain or restore that setting is open](../../Verus_verification/open_questions.md#module.system-setting.cleanup-policy).
 
-<a id="module.system-setting.cleanup-policy"></a>
-[Q · module.system-setting.cleanup-policy]
-
-Should uninstall keep a legacy SystemSetting value or restore the value that preceded installation?
-
-The implementation keeps the installed value, and that is the working assumption. Restoring the old value would need to track it and account for later administrator edits; blindly deleting it can remove a setting another user now relies on. The owner must choose this policy (C:Q17).
+- Working assumption: Uninstall keeps the installed SystemSetting value.
 
 <a id="module.webapp.package"></a>
 [D · module.webapp.package]
@@ -357,14 +321,9 @@ An explicit PythonWheel resource installs its local wheel during Initialize, eve
 
 - A missing wheel or failed pip call fails an ordinary module. IPM's own module instead warns and continues with the resource unhandled, so setup can continue without that optional package.
 - Clean marks the wheel handled and leaves the shared Python installation in place. Uninstalling a module therefore does not establish that its Python package is gone.
-- [Cleanup of shared Python packages remains an owner decision](#module.python.cleanup-policy). After a failed pip call, package presence is unconfirmed: pip can have made partial changes. Missing-file refusal never calls pip. Pip dependency resolution, online indexes and compensation after partial installation remain external boundaries.
+- [Cleanup of shared Python packages remains an owner decision](../../Verus_verification/open_questions.md#module.python.cleanup-policy). After a failed pip call, package presence is unconfirmed: pip can have made partial changes. Missing-file refusal never calls pip. Pip dependency resolution, online indexes and compensation after partial installation remain external boundaries.
 
-<a id="module.python.cleanup-policy"></a>
-[Q · module.python.cleanup-policy]
-
-How should IPM remove Python packages without removing a package another module or administrator uses?
-
-The working assumption preserves the current shared installation on Clean. Tracking package users could permit later removal, but the product TODO does not settle ownership of manually installed or upgraded versions. This needs an owner decision (C:Q18).
+- Working assumption: Clean preserves the current shared Python installation.
 
 <a id="module.processor.file-copy.protection"></a>
 [D · module.processor.file-copy.protection]
@@ -373,7 +332,9 @@ Directory protection is checked again at copy and Clean time. A marker at `targe
 
 - Adding a synthetic marker after load makes Clean keep the copied directory. Removing its marker before Clean makes the ordinary scratch directory eligible for removal. The checked commands succeed and remove the module record in both cases.
 - A single-file resource inside a protected directory is still deleted on Clean when KeepOnUninstall is false; the surrounding directory and unrelated files remain.
-- The marker check examines the target itself, not descendants. A scratch parent containing an otherwise unknown child with a synthetic IRIS.DAT is unprotected and Clean removes the whole parent. [The intended unknown-descendant policy remains open](#module.processor.file-copy.unknown-descendants).
+- The marker check examines the target itself, not descendants. A scratch parent containing an otherwise unknown child with a synthetic IRIS.DAT is unprotected and Clean removes the whole parent. [The intended unknown-descendant policy remains open](../../Verus_verification/open_questions.md#module.processor.file-copy.unknown-descendants).
+
+- Working assumption: Protect configured roots and their ancestors and an exact target containing an IRIS.DAT marker.
 
 <a id="module.processor.file-copy.unix-overlay"></a>
 [D · module.processor.file-copy.unix-overlay]
@@ -381,11 +342,6 @@ Directory protection is checked again at copy and Clean time. A marker at `targe
 On the pinned Unix runtime, an ordinary directory load with Overlay=0 copies the new payload but keeps unrelated old entries. The Unix CopyDir wrapper always enables the provider's overlay option; its delete-first argument instead controls deletion of matching files before replacement. Both direct flag values kept an unrelated sentinel while replacing an old same-name payload. This contradicts the documented full-replacement rule above and is C:D29.
 
 Protected-directory checks still change the requested argument and Clean behavior. They must not be treated as proof that the Unix copy operation clears an unprotected target. The Windows wrapper explicitly removes the target first, but no Windows execution is claimed.
-
-<a id="module.processor.file-copy.unknown-descendants"></a>
-[Q · module.processor.file-copy.unknown-descendants]
-
-Should FileCopy protect a parent containing an unconfigured descendant with an IRIS.DAT marker, or only configured roots/ancestors and a marker at the exact target? The observed rule is the latter. Tests cover exact unconfigured markers and configured-root ancestors; no inspected human decision settles a recursive search requirement. C:Q22 retains both interpretations.
 
 ## Metadata
 
@@ -454,14 +410,15 @@ Sources: `wiki/03` L243-250; CHANGELOG 0.10.7 (`#408`), 0.10.6 (`#1072`). Invent
 
 Sources: `wiki/03` L252-258; `wiki/00` L175-180; CHANGELOG 0.10.3 (`#779`), 0.10.7 (`#1013`). Inventory: CAT-04; OP-LOAD-05 (`Storage/Module.cls:799-831`). Native: a `-D` value overrides a default (E07), and chains resolve through several levels (E22, E31, E36).
 
-Findings: [C:D3 — e2e reproduced](../../uplift/consolidated/BUGS.md#c-d3). The linked entry qualifies the caller, reader and providers.
+Findings: [C:D3 — e2e reproduced](../../Verus_verification/bugs_issues.md#c-d3). The linked entry qualifies the caller, reader and providers.
 
-Findings: [C:D4 — e2e reproduced](../../uplift/consolidated/BUGS.md#c-d4). The linked entry qualifies the caller, reader and providers.
+Findings: [C:D4 — e2e reproduced](../../Verus_verification/bugs_issues.md#c-d4). The linked entry qualifies the caller, reader and providers.
 
-Findings: [C:D5 — e2e reproduced](../../uplift/consolidated/BUGS.md#c-d5). The linked entry qualifies the caller, reader and providers.
+Findings: [C:D5 — e2e reproduced](../../Verus_verification/bugs_issues.md#c-d5). The linked entry qualifies the caller, reader and providers.
 
 ### module.parameter.expressions
 
+- uncertain
 - agent
 - user-facing-behavior
 - Expands: [Parameters](#module.parameter).
@@ -469,6 +426,8 @@ Findings: [C:D5 — e2e reproduced](../../uplift/consolidated/BUGS.md#c-d5). The
 Sources: doc comment `Utils/Module.cls:2678-2696` (system expressions and `$$$macros`); code `Storage/Module.cls:1833-1894` (order: macros, parameters, system values, `{name}`, `#{}`), `Storage/ModuleSetting/Default.cls:14-110`, `Utils/Module.cls:2697-2815`. Native corpus E01-E36 (`20261114T025636Z-r1-evaluator`, IRIS 2026.1 build 234U ARM64) and model `Verus_verification/consolidated/models/attr_evaluator.py`, which matches every observed value and rejects 23 wrong variants. Observed details a reader may need: `$$$OK no brace` stays unchanged (E15); a default named `version` does not override the module version (E20); a parameter name is used as a regular expression, so `a.b` also matches `{$axb}` (E21).
 
 Extension Verus: [attr_evaluator.rs::evaluate](../../Verus_verification/consolidated/verus/attr_evaluator.rs), [attr_evaluator.rs::evaluate_expression](../../Verus_verification/consolidated/verus/attr_evaluator.rs), [attr_evaluator.rs::macro_helper](../../Verus_verification/consolidated/verus/attr_evaluator.rs), [attr_evaluator.rs::macro_value](../../Verus_verification/consolidated/verus/attr_evaluator.rs), [attr_evaluator.rs::parameters](../../Verus_verification/consolidated/verus/attr_evaluator.rs), [attr_evaluator.rs::regex_replace_match](../../Verus_verification/consolidated/verus/attr_evaluator.rs), [attr_evaluator.rs::system_expression](../../Verus_verification/consolidated/verus/attr_evaluator.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
+
+Open questions: [module.parameter.expressions.brace-policy](../../Verus_verification/open_questions.md#module.parameter.expressions.brace-policy)
 
 ### module.parameter.literal-values
 
@@ -498,7 +457,7 @@ Extension Verus: [attr_evaluator.rs::resolve_bounded](../../Verus_verification/c
 - Expands: [Module](#module).
 - Children: [requirement values](#module.requirement.values).
 
-Sources: `wiki/03` L260-272; CHANGELOG 0.9.0 (`#364`), 0.10.0 (`#469`), 0.10.4 (`#874`), 0.10.10 (`#106`). Inventory: CAT-05; OP-LOAD-12. Tests: `VersionReq.cls` (`IPMVersion`, `PythonVersion`), `SystemRequirements.cls`, `Health.cls`, `Interoperability.cls`. When the check runs is open ([timing](../features/load.g5.md#load.refusal.requirements.timing)). `wiki/03` L267 dates `IPMVersion` to 0.9.0, CHANGELOG says 0.10.0.
+Sources: `wiki/03` L260-272; CHANGELOG 0.9.0 (`#364`), 0.10.0 (`#469`), 0.10.4 (`#874`), 0.10.10 (`#106`). Inventory: CAT-05; OP-LOAD-12. Tests: `VersionReq.cls` (`IPMVersion`, `PythonVersion`), `SystemRequirements.cls`, `Health.cls`, `Interoperability.cls`. When the check runs is open ([timing](../../Verus_verification/open_questions.md#load.refusal.requirements.timing)). `wiki/03` L267 dates `IPMVersion` to 0.9.0, CHANGELOG says 0.10.0.
 
 ### module.requirement.values
 
@@ -515,7 +474,9 @@ Sources: `Storage/SystemRequirements.cls::{CheckRequirements,CheckHealth,CheckIn
 
 Iteration 3: [Invoke contracts](../../Verus_verification/consolidated/iter3/public_repairs.rs), `invoke_ok` and `invoke_selected`, with native checked/unchecked returned-error neighbors in [the index](../../uplift/consolidated/iter3/INDEX.json). Dictionary return type and argument evaluation are source bindings, not implementation proofs.
 
-Sources: `wiki/03` L345-362; CHANGELOG 0.10.0 (`#530`), 0.10.5 (`#828`). Inventory: CAT-06. Tests: `Invoke.cls`, `CustomPhase.cls`. `wiki/03` L359 gives a stale `CheckStatus` default. Observed: an Invoke that returns an error leaves its phase's history entry open ([returned errors](../features/history.g5.md#history.phases.returned-errors)).
+Sources: `wiki/03` L345-362; CHANGELOG 0.10.0 (`#530`), 0.10.5 (`#828`). Inventory: CAT-06. Tests: `Invoke.cls`, `CustomPhase.cls`. `wiki/03` L359 gives a stale `CheckStatus` default. Observed: an Invoke that returns an error leaves its phase's history entry open ([returned errors](../../Verus_verification/open_questions.md#history.phases.returned-errors)).
+
+State machines: [public repairs · iter3](../../Verus_verification/models/iter3-public-repairs/manifest.json)
 
 ### module.processor
 
@@ -537,12 +498,17 @@ Sources: `ResourceProcessor/Abstract.cls::{%OnNew,SetParams,CopyAttributes,Apply
 
 ### module.webapp
 
+- uncertain
 - agent
 - user-facing-behavior
 - Expands: [Processors](#module.processor).
-- Children: [failure](#module.webapp.failure), [upgrade](#module.webapp.upgrade), [validation](#module.webapp.validation), [ownership question](#module.webapp.ownership).
+- Children: [failure](#module.webapp.failure), [upgrade](#module.webapp.upgrade), [validation](#module.webapp.validation), [ownership question](../../Verus_verification/open_questions.md#module.webapp.ownership).
 
 Direct decision: `ResourceProcessor/WebApplication.cls::{OnBeforePhase,CreateOrUpdateWebApp,DeleteWebApp,CopyAttributes,OnGetUniqueName}`. Readers and callers: `Storage/Module.cls::ExecutePhases` (processor `OnBeforePhase` for Configure, Activate, Unconfigure and Clean), `Storage/Module.cls` duplicate-resource check at manifest import (`:1568`), `%SYS` `Security.Applications::{Exists,Get,Modify,Create,Delete}`. CHANGELOG 0.9.0 `#562`. Verus [webapp.rs](../../Verus_verification/consolidated/iter5/webapp.rs) `{merged,install_app,modify_called,refused_at_import,lemma_adoption_keeps_undeclared,webapp_neighbors}`; controls `adoption-overwrites-undeclared`, `existing-app-not-adopted`, `modify-always-called` rejected. Native W1 (create), W2/W3 (administrator app adopted, then deleted), W4 (second module refused), W5 (manual edits) in a fresh container; replayed as Verus assertions. Iteration 5 discovery.
+
+Open questions: [module.webapp.ownership](../../Verus_verification/open_questions.md#module.webapp.ownership)
+
+State machines: [webapp · iter5](../../Verus_verification/models/iter5-webapp/manifest.json)
 
 ### module.webapp.failure
 
@@ -550,26 +516,18 @@ Direct decision: `ResourceProcessor/WebApplication.cls::{OnBeforePhase,CreateOrU
 - user-facing-behavior
 - Expands: [Web applications](#module.webapp).
 
-Direct decision: transaction scope of the load (`Utils/Module.cls` load path) over `%SYS` writes from `CreateOrUpdateWebApp`. Verus `failed_after_activate`; control `transaction-keeps-app` rejected. Native W8 (transaction: app and module gone) versus W8b (`-DNoTransaction=1`: both kept), using a fixture invoke that fails after Activate. Contrast: [CPF effects](#module.processor.cpf-effects.policy) are not undone by rollback. Developer-mode commit points were not exercised.
+Direct decision: transaction scope of the load (`Utils/Module.cls` load path) over `%SYS` writes from `CreateOrUpdateWebApp`. Verus `failed_after_activate`; control `transaction-keeps-app` rejected. Native W8 (transaction: app and module gone) versus W8b (`-DNoTransaction=1`: both kept), using a fixture invoke that fails after Activate. Contrast: [CPF effects](../../Verus_verification/open_questions.md#module.processor.cpf-effects.policy) are not undone by rollback. Developer-mode commit points were not exercised.
 
 ### module.webapp.upgrade
 
+- uncertain
 - agent
 - user-facing-behavior
 - Expands: [Web applications](#module.webapp).
 
 Readers: `Storage/Module.cls::ExecutePhases` and `Lifecycle/Base.cls::%Clean` act only on the installed manifest's resources; no step compares the old and new manifests. Verus `upgrade_drops_declaration`; control `upgrade-removes-app` rejected. Native W10 (load 2.0.0 without the app, then uninstall: app still present). The `update` command from a registry was not run; this used `load` of a higher version.
 
-### module.webapp.upgrade.policy
-
-- agent
-- uncertain
-- user-facing-behavior
-- Expands: [Upgrade behavior](#module.webapp.upgrade)
-
-Sources: C:D26; [starting evidence](../../uplift/consolidated/findings-audit-iter28/sealed/.g5/uplift/consolidated/BUGS.md).
-
-Findings audit: [sources, alternatives, implications and settlement gate](../../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#module.webapp.upgrade.policy). The recorded assumption is provisional; no new maintainer approval was found.
+Open questions: [module.webapp.upgrade.policy](../../Verus_verification/open_questions.md#module.webapp.upgrade.policy)
 
 ### module.webapp.validation
 
@@ -579,18 +537,9 @@ Findings audit: [sources, alternatives, implications and settlement gate](../../
 
 Dead check: `ResourceProcessor/WebApplication.cls::OnPhase` (Validate branch, `DoPropertiesExist`). Missing caller: `Lifecycle/Base.cls::%Validate` returns OK without dispatching; the generic `ResourceProcessor/Abstract.cls::OnBeforePhase("Validate")` only runs `%ValidateObject`. CHANGELOG 0.10.11 `#806` quotes the refusal message as once user-visible. Verus `validate_dispatches`, `refused_at_validate`; control `validate-dispatches` rejected. Native W9 (`NoSuchProperty="1"`: load OK, app created).
 
-### module.webapp.ownership
-
-- agent
-- uncertain
-- Expands: [Web applications](#module.webapp).
-
-No authorized policy decision. Register entry C:Q15.
-
-Findings audit: [sources, alternatives, implications and settlement gate](../../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#module.webapp.ownership). The recorded assumption is provisional; no new maintainer approval was found.
-
 ### module.processor.file-copy
 
+- uncertain
 - human-provided
 - user-facing-behavior
 - test-coverage
@@ -601,6 +550,8 @@ Sources: CHANGELOG 0.10.11 (`#300`, `#934`, `#1135`); `ResourceProcessor/FileCop
 Extension Verus: [thin_surfaces.rs::clean_removes](../../Verus_verification/consolidated/verus/thin_surfaces.rs), [thin_surfaces.rs::copies_after](../../Verus_verification/consolidated/verus/thin_surfaces.rs), [thin_surfaces.rs::copies_before](../../Verus_verification/consolidated/verus/thin_surfaces.rs), [thin_surfaces.rs::file_copy_observation](../../Verus_verification/consolidated/verus/thin_surfaces.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
 
 The prior thin_surfaces `clears_target` is a requested-argument predicate, not a qualified Unix clearing guarantee. Its `copy_step` success clause removing unrelated entries loses Unix correspondence for unprotected Overlay=0 targets; earlier source/proofs/receipts are preserved. [Superseding boundary](#module.processor.file-copy.unix-overlay).
+
+Open questions: [module.processor.file-copy.unknown-descendants](../../Verus_verification/open_questions.md#module.processor.file-copy.unknown-descendants)
 
 ### module.placement
 
@@ -623,6 +574,8 @@ Iteration 4 producer repair: iteration 3 passed the lifecycle default in as a bo
 
 Sources: `wiki/05`; CHANGELOG 0.10.0 (`#754`), 0.10.4 (`#815`), 0.10.10 (`#1158`), 0.10.11 (`#1242`, `#1279`, `#1125`). Inventory: CAT-34. Tests: `DeployedItems.cls`, `DeployedPackageLoad.cls`, `OrasDeployedPlatformFilter.cls`. `wiki/05` L22-67 is stale about plain loads and removed phases.
 
+State machines: [repairs4 · iter4](../../Verus_verification/models/iter4-repairs4/manifest.json)
+
 ### module.deployed.project-load
 
 - agent
@@ -632,67 +585,44 @@ Sources: `ResourceProcessor/Default/Document.cls::{OnPhase,LoadFromDeployedProje
 
 ### module.python
 
+- uncertain
 - human-provided
 - user-facing-behavior
 - Expands: [Module](#module).
 
 Sources: `wiki/03` L117-178; `wiki/07`; README L52-58; `Main.cls:310-311`; CHANGELOG 0.9.0 (`#538`, `#595`, `#647`), 0.10.10. Inventory: CAT-08; OP-LOAD-25. Test: `ProcessPythonWheel.cls`. pip changes stay after a rollback ([rollback scope](transactions-and-dev-mode.g5.md#transaction.rollback-scope)).
 
+Open questions: [module.python.cleanup-policy](../../Verus_verification/open_questions.md#module.python.cleanup-policy)
+
 ### module.env
 
+- uncertain
 - human-provided
 - user-facing-behavior
 - test-coverage
 - Expands: [Module](#module).
 
-- Children: [failure](#module.env.failure).
+- Children: [failure](../../Verus_verification/open_questions.md#module.env.failure).
 
 Sources: `Main.cls:66`, `:73`, `:304`; CHANGELOG 0.10.0 (`#704`, `#743`), 0.10.10 (`#1260`). Inventory: CAT-37. Test: `EnvironmentConfig.cls`. The help points to a wiki page that does not exist. Code: `General/EnvironmentConfig.cls:9-129`, `Lifecycle/Base.cls:2188-2200` (clear, then load in order; called in every Reload phase, `:631`, and by the phase commands, `Main.cls:2755`, `:2832`), `Utils/LegacyCompat.cls:36-41` (single-process compile). Consolidated round 5 native runs `20261114T033831Z-r5-env` and `20261114T033908Z-r5-env-b` (ARM64) and model `Verus_verification/consolidated/models/env_config.py`: deep merge and position-by-position arrays (U2, U2r); a missing, malformed or array file fails and empties the configuration (U3-U5); a later scalar replaces an object, a later object onto a scalar fails (U6, U6r); `${CONS_VAR}` fills from the OS environment, an unset one is empty (U7); `a$1b` becomes `aCONS_DOLLARb`, `a\b` becomes `ab`, `a$9b` raises `<REGULAR EXPRESSION>` (U7, U8; defect C:D14); in one interactive session the next commands read an empty configuration (S1); a compile-time generator sees the configuration only in a single-process compile (M1-M4), which IPM selects while a configuration is loaded (S3).
 
 Extension Verus: [env_config.rs::clear](../../Verus_verification/consolidated/verus/env_config.rs), [env_config.rs::command](../../Verus_verification/consolidated/verus/env_config.rs), [env_config.rs::evaluate_json](../../Verus_verification/consolidated/verus/env_config.rs), [env_config.rs::generator_visible](../../Verus_verification/consolidated/verus/env_config.rs), [env_config.rs::is_empty](../../Verus_verification/consolidated/verus/env_config.rs), [env_config.rs::load_file](../../Verus_verification/consolidated/verus/env_config.rs), [env_config.rs::lookup](../../Verus_verification/consolidated/verus/env_config.rs), [env_config.rs::merge_value](../../Verus_verification/consolidated/verus/env_config.rs), [env_config.rs::singleton_get](../../Verus_verification/consolidated/verus/env_config.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
 
-Findings: [C:D14 — e2e reproduced](../../uplift/consolidated/BUGS.md#c-d14). The linked entry qualifies the caller, reader and providers.
+Findings: [C:D14 — e2e reproduced](../../Verus_verification/bugs_issues.md#c-d14). The linked entry qualifies the caller, reader and providers.
 
-### module.env.failure
-
-- agent
-- uncertain
-- user-facing-behavior
-- Expands: [Environment files](#module.env).
-
-Sources: the plan's policy row "A failing environment file" (no source states the intent); `General/EnvironmentConfig.cls:27-30` (clear on any error), `:118-126` (arrays merged by index). Native U2, U2r, U3-U5. Question C:Q6.
-
-Findings audit: [sources, alternatives, implications and settlement gate](../../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#module.env.failure). The recorded assumption is provisional; no new maintainer approval was found.
-
-### module.parameter.expressions.brace-policy
-
-- uncertain
-- agent-provided
-- user-facing-behavior
-- Expands: [expressions](#module.parameter.expressions).
-
-Evidence: C:Q2; Storage/Module.cls:1833-1841; E15/P4; new attr_evaluator.rs.
-
-Findings audit: [sources, alternatives, implications and settlement gate](../../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#module.parameter.expressions.brace-policy). The recorded assumption is provisional; no new maintainer approval was found.
+Open questions: [module.env.failure](../../Verus_verification/open_questions.md#module.env.failure)
 
 ### module.processor.cpf-effects
 
+- uncertain
 - agent
 - user-facing-behavior
 - Expands: [Processors](#module.processor).
-- Children: [compensation policy](#module.processor.cpf-effects.policy).
+- Children: [compensation policy](../../Verus_verification/open_questions.md#module.processor.cpf-effects.policy).
 
 Sources: `ResourceProcessor/CPF.cls::GetSourceFile`, `::DoMerge`, `::MergeCPF`; [exact bindings, premises and final readers](../../uplift/consolidated/iter2/boundaries/bindings.json); [native and Verus receipts](../../uplift/consolidated/iter2/boundaries/REPORT.md). Hand translation under explicit provider outcomes; no ObjectScript-body proof.
 
-### module.processor.cpf-effects.policy
-
-- agent
-- uncertain
-- Expands: [CPF effects](#module.processor.cpf-effects).
-
-Authority remains open; source observation and checked alternatives are in the parent. Arbitrary CPF compensation has not been designed or implemented.
-
-Findings audit: [sources, alternatives, implications and settlement gate](../../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#module.processor.cpf-effects.policy). The recorded assumption is provisional; no new maintainer approval was found.
+Open questions: [module.processor.cpf-effects.policy](../../Verus_verification/open_questions.md#module.processor.cpf-effects.policy)
 
 ### module.global.roundtrip
 
@@ -701,12 +631,16 @@ Findings audit: [sources, alternatives, implications and settlement gate](../../
 
 Sources: `ResourceProcessor/Default/Global.cls::{OnItemRelativePath,OnResolveChildren,OnPhase}` → `Lifecycle/Base.cls::ExportSingleModule` and `$system.OBJ.Load`. Native S6-02 explicitly kills `^My.Settings` before archive load and reads Parameter=42, so a surviving value cannot supply the result. [Contract](../../Verus_verification/consolidated/iter6/workflows.rs): `global_path`, `package_global`, `reload_global`. Serialization and database provider success remain premises. [Index](../../uplift/consolidated/iter6/INDEX.md).
 
+State machines: [workflows · iter6](../../Verus_verification/models/iter6-workflows/manifest.json)
+
 ### module.processor.default-sweep
 
 - agent; user-facing-behavior; source-inspected; Verus-scoped
 - Expands: [module.processor](#module.processor).
 
 Sources and readers: `Storage/ModuleSetting/Default.cls::EvaluateAttribute` → `ResourceProcessor/Abstract.cls::%Evaluate`; `Utils/Module.cls::%RegExReplace`. [Iteration 7 index](../../uplift/consolidated/iter7/INDEX.md). [Contract](../../Verus_verification/consolidated/iter7/inputs.rs): `replace`, `sweep`. These are specification proofs; native observations and remaining provider boundaries are in the index and trust inventory.
+
+State machines: [inputs · iter7](../../Verus_verification/models/iter7-inputs/manifest.json)
 
 ### module.csp.directory
 
@@ -715,12 +649,16 @@ Sources and readers: `Storage/ModuleSetting/Default.cls::EvaluateAttribute` → 
 
 Sources and readers: `ResourceProcessor/CSPApplication.cls::OnBeforePhase` → `OnPhaseInternal`. [Iteration 7 index](../../uplift/consolidated/iter7/INDEX.md). [Contract](../../Verus_verification/consolidated/iter7/inputs.rs): `csp_directory`, `csp_after_before`. These are specification proofs; native observations and remaining provider boundaries are in the index and trust inventory.
 
+State machines: [inputs · iter7](../../Verus_verification/models/iter7-inputs/manifest.json)
+
 ### module.webapp.provider-status
 
 - agent; user-facing-behavior; source-inspected; Verus-scoped
 - Expands: [module.webapp](#module.webapp).
 
 Sources and readers: `ResourceProcessor/WebApplication.cls::CreateOrUpdateWebApp` → `OnBeforePhase` → `Storage/Module.cls::ExecutePhases`. [Iteration 7 index](../../uplift/consolidated/iter7/INDEX.md). [Contract](../../Verus_verification/consolidated/iter7/inputs.rs): `differs`, `app_status`. These are specification proofs; native observations and remaining provider boundaries are in the index and trust inventory.
+
+State machines: [inputs · iter7](../../Verus_verification/models/iter7-inputs/manifest.json)
 
 ### module.list.delimiter
 
@@ -729,23 +667,19 @@ Sources and readers: `ResourceProcessor/WebApplication.cls::CreateOrUpdateWebApp
 
 Sources and readers: `DataType/ListOfOptions.cls::XSDToLogical` → generated property conversions and `ResourceProcessor/Abstract.cls::CopyAttributes`. [Iteration 7 index](../../uplift/consolidated/iter7/INDEX.md). [Contract](../../Verus_verification/consolidated/iter7/inputs.rs): `split`, `delimiter`. These are specification proofs; native observations and remaining provider boundaries are in the index and trust inventory.
 
+State machines: [inputs · iter7](../../Verus_verification/models/iter7-inputs/manifest.json)
+
 ### module.system-setting
 
+- uncertain
 - agent; user-facing-behavior; native-tested; Verus-scoped
 - Expands: [Processors](#module.processor).
 
 Sources: `ResourceProcessor/SystemSetting.cls::{OnPhase,OnResolveChildren}` → `Storage/Module.cls::ExecutePhases`. Product test `SystemSetting::TestSystemSetting` supplies the independent seed. Native S7-10 first sets the value to old, loads the product fixture, reads 123, uninstalls and reads 123 again. [Contract](../../Verus_verification/consolidated/iter7/inputs.rs): `system_target`, `system_value`. Global mapping and database transaction semantics are provider premises. [Index](../../uplift/consolidated/iter7/INDEX.md).
 
-### module.system-setting.cleanup-policy
+Open questions: [module.system-setting.cleanup-policy](../../Verus_verification/open_questions.md#module.system-setting.cleanup-policy)
 
-- agent; uncertain; user-facing-behavior
-- Expands: [Legacy setting](#module.system-setting).
-
-Source/native: S7-10, `SystemSetting.cls::OnPhase` has only Compile writes and no Clean action. This is distinct from CPF external child effects (C:Q12), and no new defect is asserted.
-
-Findings audit: [sources, alternatives, implications and settlement gate](../../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#module.system-setting.cleanup-policy). The recorded assumption is provisional; no new maintainer approval was found.
-
-- uncertain
+State machines: [inputs · iter7](../../Verus_verification/models/iter7-inputs/manifest.json)
 
 ### module.webapp.package
 
@@ -754,30 +688,31 @@ Findings audit: [sources, alternatives, implications and settlement gate](../../
 
 Sources and readers: `ResourceProcessor/WebApplication.cls::OnExportItem` → `Lifecycle/Base.cls::{ExportSingleModule,%Publish}`, `Lifecycle/Module.cls::%Package`, registry payload/manifest readers → `WebApplication.cls::CreateOrUpdateWebApp`; final reader `Security.Applications.Get`. [Iteration 8 index](../../uplift/consolidated/iter8/INDEX.md). [Contract](../../Verus_verification/consolidated/iter8/webapps.rs): `package_app`, `evaluate_path`, `uninstall`, `reinstall`. The [trust inventory](../../Verus_verification/consolidated/iter8/TRUST.md) names provider and input boundaries; direct ObjectScript implementation proofs: 0.
 
+State machines: [webapps · iter8](../../Verus_verification/models/iter8-webapps/manifest.json)
+
 ### module.python.explicit-wheel
 
+- uncertain
 - agent; user-facing-behavior; native-tested; source-inspected; Verus-scoped
 - Expands: [module.python](#module.python).
 
 Sources and readers: `ResourceProcessor/PythonWheel.cls::{OnPhase,OnResolveChildren}` → `Lifecycle/Base.cls::InstallOrDownloadPythonRequirements`, `Utils/Module.cls::PipInstall` and subsequent Python metadata/import readers. [Iteration 8 index](../../uplift/consolidated/iter8/INDEX.md). [Contract](../../Verus_verification/consolidated/iter8/python.rs): `wheel_path`, `requirements_called`, `wheel`, `without_empty`. The [trust inventory](../../Verus_verification/consolidated/iter8/TRUST.md) names provider and input boundaries; direct ObjectScript implementation proofs: 0.
 
-### module.python.cleanup-policy
+Open questions: [module.python.cleanup-policy](../../Verus_verification/open_questions.md#module.python.cleanup-policy)
 
-- agent; uncertain; user-facing-behavior
-- Expands: [Explicit wheel](#module.python.explicit-wheel).
-
-Source: `PythonWheel.cls::OnPhase` Clean TODO explicitly identifies shared-package risk. Native uninstall retains the local lune 1.6.2 distribution. This is not a new defect claim.
-
-Findings audit: [sources, alternatives, implications and settlement gate](../../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#module.python.cleanup-policy). The recorded assumption is provisional; no new maintainer approval was found.
-
-- uncertain
+State machines: [python · iter8](../../Verus_verification/models/iter8-python/manifest.json)
 
 ### module.processor.file-copy.protection
 
+- uncertain
 - agent; source-inspected; native-tested; Verus-scoped
 - Expands: [FileCopy](#module.processor.file-copy).
 
 [Classifier and lifecycle model](../../Verus_verification/consolidated/iter14/protection.rs): `prefix`, `ancestor_of_root`, `protected`, `marker_write`, `clean`, `lifecycle_neighbors`. Source: Utils.File::{IsProtectedDirectory,DatabaseDirectories,NormalizeForComparison}; FileCopy::{NormalizeNames,DoCopy,OnPhase}. Paths are already normalized lowercase segments; root enumeration and raw path/file classification remain provider boundaries. Native scratch load/uninstall checks files, marker changes and module rows separately. No real database directory was modified.
+
+Open questions: [module.processor.file-copy.unknown-descendants](../../Verus_verification/open_questions.md#module.processor.file-copy.unknown-descendants)
+
+State machines: [protection · iter14](../../Verus_verification/models/iter14-protection/manifest.json)
 
 ### module.processor.file-copy.unix-overlay
 
@@ -786,15 +721,6 @@ Findings audit: [sources, alternatives, implications and settlement gate](../../
 
 [Unix provider model](../../Verus_verification/consolidated/iter14/protection.rs): `delete_first`, `unix_args`, `unix_copy`, `copy`. Source: FileCopy Overlay property and DoCopy; Utils.File::CopyDir Unix and contrasting Windows branches. [Direct calibration and provider reference](../../uplift/consolidated/iter14/provider-reference.md). The initial expected-clear model and failed native replay remain visible; bytes/status/rows are native qualification, not implementation proofs.
 
-Findings: [C:D29 — e2e reproduced](../../uplift/consolidated/BUGS.md#c-d29). The linked entry qualifies the caller, reader and providers.
+Findings: [C:D29 — e2e reproduced](../../Verus_verification/bugs_issues.md#c-d29). The linked entry qualifies the caller, reader and providers.
 
-### module.processor.file-copy.unknown-descendants
-
-- agent; unresolved; provisional-as-built
-- Expands: [Protection](#module.processor.file-copy.protection).
-
-Source comments protect database directories including an unconfigured exact marker; unit tests exercise that case without an ancestor scan. The synthetic nested-marker native neighbor and `whole_segment_neighbors` formal witness expose the distinction. No real database-loss claim or accepted recursive policy is inferred. [C:Q22](../../uplift/consolidated/QUESTIONS.md).
-
-Findings audit: [sources, alternatives, implications and settlement gate](../../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#module.processor.file-copy.unknown-descendants). The recorded assumption is provisional; no new maintainer approval was found.
-
-- uncertain
+State machines: [protection · iter14](../../Verus_verification/models/iter14-protection/manifest.json)

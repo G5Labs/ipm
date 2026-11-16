@@ -26,26 +26,8 @@ IPM 0.9 and later is installed per namespace. Each namespace can have its own IP
 - A missing later target can leave [earlier configuration entries pending](#namespace.enable.partial-batch).
 - `-community` sets up the community registry and maps IPM and its repositories to all namespaces, like IPM 0.7.
 
-
-
-
-<a id="namespace.enable.source-ambiguity-policy"></a>
-[Q · namespace.enable.source-ambiguity-policy]
-
-Which source owns mapped IPM when several namespace records name one code database?
-
 - Working assumption: The source of a mapped namespace is the namespace whose own code database holds the IPM code.
-- Alternative and implications: Report a tie as an error instead of guessing. Either way F-NSP-7 stays a defect.
-- This assumption guides review; it is not a maintainer decision. An explicit owner policy or an attributable source addressing this exact case would settle it.
-
-<a id="namespace.enable.community-failure-policy"></a>
-[Q · namespace.enable.community-failure-policy]
-
-What status should enable -community return when a component step fails?
-
 - Working assumption: If a step of `enable -community` fails, the command stops and returns that error.
-- Alternative and implications: Run all three steps and return a combined error (also fine); or keep OK and document: F-NSP-11 becomes documentation.
-- This assumption guides review; it is not a maintainer decision. An explicit owner policy or an attributable source addressing this exact case would settle it.
 
 <a id="namespace.unmap"></a>
 [I · namespace.unmap]
@@ -116,33 +98,14 @@ Sources: README L23-30, L64-70. Inventory: CAT-29. Observed: IPM settings (`conf
 
 ### namespace.enable
 
+- uncertain
 - human-provided
 - user-facing-behavior
 - Expands: [Namespace](#namespace).
 
 Sources: `Main.cls:726-761`; README L66-70; `wiki/Installation-Patterns`; CHANGELOG 0.9.1 (`#663`), 0.9.2 (`#681`, `#682`), 0.10.7 (`#1001`). Inventory: CAT-29; A2 1.2 row 35 (`Main:EnableIPM`, `Main.cls:3553-3925`). The example `enable -v latest -allow-upgrade NS1,NS2,NS3` (`Main.cls:756`) omits `-ns`.
 
-### namespace.enable.source-ambiguity-policy
-
-- agent
-- uncertain
-- user-facing-behavior
-- Expands: [namespace.enable](#namespace.enable)
-
-Sources: [DEC-NSP-6](../../../playbook-uplift/decisions/07-09.md); `-map` help and issue #470; "last by name" has no source.
-
-Findings audit: [sources, alternatives, implications and settlement gate](../../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#namespace.enable.source-ambiguity-policy). The recorded assumption is provisional; no new maintainer approval was found.
-
-### namespace.enable.community-failure-policy
-
-- agent
-- uncertain
-- user-facing-behavior
-- Expands: [namespace.enable](#namespace.enable)
-
-Sources: [DEC-NSP-4](../../../playbook-uplift/decisions/07-09.md); Scripts use `zpm "...":1` to stop on errors; every other `enable` path returns its error.
-
-Findings audit: [sources, alternatives, implications and settlement gate](../../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#namespace.enable.community-failure-policy). The recorded assumption is provisional; no new maintainer approval was found.
+Open questions: [namespace.enable.community-failure-policy](../../Verus_verification/open_questions.md#namespace.enable.community-failure-policy), [namespace.enable.source-ambiguity-policy](../../Verus_verification/open_questions.md#namespace.enable.source-ambiguity-policy)
 
 ### namespace.unmap
 
@@ -176,7 +139,9 @@ Sources: README L68; `preload/cls/IPM/Installer.cls:133-139`. Inventory: CAT-29,
 
 [Inherited state contract](../../../playbook-uplift/models/verus/ns_mapping.rs): `map_code_one`, `map_repo_one`, `enable_map`; [current boundary and named readers](../../Verus_verification/consolidated/iter12/namespaces.rs): `request`, `repo_visible`, `own_target`, `own_skip`, `own_cleared`. Native observations cover saved D/S/I mappings, active code and fresh-process name lookup while a local repository writer is present or cleared. [Index](../../uplift/consolidated/iter12/INDEX.md).
 
-Findings: [P:F-NSP-4 — e2e reproduced](../../../playbook-uplift/BUGS.md#p-f-nsp-4). The linked entry qualifies the caller, reader and providers.
+Findings: [P:F-NSP-4 — e2e reproduced](../../Verus_verification/bugs_issues.md#p-f-nsp-4). The linked entry qualifies the caller, reader and providers.
+
+State machines: [namespaces · iter12](../../Verus_verification/models/iter12-namespaces/manifest.json); [ns_mapping · inherited playbook](../../Verus_verification/models/playbook-ns-mapping/manifest.json)
 
 ### namespace.unmap.routine-result
 
@@ -185,7 +150,9 @@ Findings: [P:F-NSP-4 — e2e reproduced](../../../playbook-uplift/BUGS.md#p-f-ns
 
 [Inherited contract](../../../playbook-uplift/models/verus/ns_mapping.rs): `remove_rtn`, `unmap_one`, `unmap`, `has_ipm`; [current reader wrapper](../../Verus_verification/consolidated/iter12/namespaces.rs): `unmapped`, `unmap_request`, `repo_visible`. The routine type and active-vs-saved tables are distinct. Actual configuration success, fresh shell execution and repository visibility were checked; partial provider failures and source-selection ties remain conditional.
 
-Findings: [P:F-NSP-6 — e2e reproduced](../../../playbook-uplift/BUGS.md#p-f-nsp-6). The linked entry qualifies the caller, reader and providers.
+Findings: [P:F-NSP-6 — e2e reproduced](../../Verus_verification/bugs_issues.md#p-f-nsp-6). The linked entry qualifies the caller, reader and providers.
+
+State machines: [namespaces · iter12](../../Verus_verification/models/iter12-namespaces/manifest.json); [ns_mapping · inherited playbook](../../Verus_verification/models/playbook-ns-mapping/manifest.json)
 
 ### namespace.version.mapped-reader
 
@@ -194,7 +161,9 @@ Findings: [P:F-NSP-6 — e2e reproduced](../../../playbook-uplift/BUGS.md#p-f-ns
 
 [Formal contract](../../Verus_verification/consolidated/iter12/namespaces.rs): `requirement`, `new_normal_load`, using inherited `check_ipm_version`. Version values are ranks for the checked current/minimum pair after parsing, not a new SemVer parser. Normal load rollback uses the existing [load contract](../features/load.g5.md#load.core); the fixture has no dependencies/resources and no prior module row. Native source/target loads and persisted rows are read separately. [Evidence](../../uplift/consolidated/iter12/INDEX.md).
 
-Findings: [P:F-NSP-2 — e2e reproduced](../../../playbook-uplift/BUGS.md#p-f-nsp-2). The linked entry qualifies the caller, reader and providers.
+Findings: [P:F-NSP-2 — e2e reproduced](../../Verus_verification/bugs_issues.md#p-f-nsp-2). The linked entry qualifies the caller, reader and providers.
+
+State machines: [namespaces · iter12](../../Verus_verification/models/iter12-namespaces/manifest.json)
 
 ### namespace.enable.partial-batch
 
@@ -202,3 +171,5 @@ Findings: [P:F-NSP-2 — e2e reproduced](../../../playbook-uplift/BUGS.md#p-f-ns
 - Expands: [Enable](#namespace.enable).
 
 [Ordered prefix and activation contract](../../Verus_verification/consolidated/iter13/batch.rs): `visit`, `run`, `publish`, `selected_neighbors`. Source: `Main::EnableIPM` switches namespace before each code-map call, defers activation until both loops finish and marks a retry even when entries already exist; `Utils.Module::PerformBatchActivation` loads only marked namespaces. Package/routine pairs are aggregated after successful providers. The model omits already-installed targets, repointing and arbitrary provider errors. A whole-configuration publication hypothesis was refuted by fresh native consumers and retained in the [evidence](../../uplift/consolidated/iter13/HANDOFF.md).
+
+State machines: [batch · iter13](../../Verus_verification/models/iter13-batch/manifest.json)

@@ -25,6 +25,9 @@ module resource + environment
 
 An `ArtifactoryTarball` resource downloads an archive and copies its contents to `InstallDirectory` during Activate. During package export, it copies those contents to the destination supplied for that resource.
 
+- Working assumption: preserve observed reuse and disclose that it gives no freshness guarantee. Alternatives are immutable digest-addressed files, explicit refresh, or validating the cached bytes against the selected artifact.
+- Working assumption: disclose the warning boundary without promising protection. Alternatives are a common refusal rule, an explicit operator override, or retaining warning-only behavior.
+
 <a id="artifact.filter"></a>
 [D · artifact.filter]
 
@@ -77,35 +80,20 @@ An archive read error should fail extraction and the consuming download. Success
 - A gzip stream containing a nonempty header with a bad checksum is refused. A valid archive extracts its file. These neighbors distinguish the defect from a policy that rejects every empty archive.
 - The formal contract covers the first-header decision under the observed gzip/header provider. It does not verify gzip decoding, checksum arithmetic, PAX records, path traversal or every extraction write.
 
-<a id="artifact.refresh-policy"></a>
-[Q · artifact.refresh-policy]
-
-When should an existing artifact folder or same-named temporary file be refreshed?
-
-- Owner: IPM maintainers and module authors. The code deliberately reuses a local folder during Activate, but no accepted cache identity or expiry rule was found.
-- Working assumption: preserve observed reuse and disclose that it gives no freshness guarantee. Alternatives are immutable digest-addressed files, explicit refresh, or validating the cached bytes against the selected artifact.
-- This decision affects reproducible installs and exports. Do not remove local/offline reuse as part of an authentication repair.
-
-<a id="artifact.target-policy"></a>
-[Q · artifact.target-policy]
-
-Should artifact copies refuse protected installation folders as FileCopy does?
-
-- Owner: IPM maintainers and instance administrators. The processor calls the shared warning before Activate's copy; it does not call FileCopy's deletion guard. No protected system folder was modified in this run.
-- Working assumption: disclose the warning boundary without promising protection. Alternatives are a common refusal rule, an explicit operator override, or retaining warning-only behavior.
-- Archive path safety, partial copies and compensation remain open. A successful copy under `/tmp` settles none of these policies.
-
 ## Metadata
 
 
 ### artifact
 
+- uncertain
 - agent
 - user-facing-behavior
 - Expands: [Resource processors](../concepts/modules.g5.md#module.processor).
-- Children: [filter](#artifact.filter), [selection](#artifact.selection), [authentication](#artifact.authentication), [local content](#artifact.local-content), [failures](#artifact.failure), [archive admission](#artifact.archive-admission), [refresh policy](#artifact.refresh-policy), [target policy](#artifact.target-policy).
+- Children: [filter](#artifact.filter), [selection](#artifact.selection), [authentication](#artifact.authentication), [local content](#artifact.local-content), [failures](#artifact.failure), [archive admission](#artifact.archive-admission), [refresh policy](../../Verus_verification/open_questions.md#artifact.refresh-policy), [target policy](../../Verus_verification/open_questions.md#artifact.target-policy).
 
 Sources: `ResourceProcessor/ArtifactoryTarball.cls`; `Lifecycle/Base.cls::ExportSingleModule`. All child source spans, source hashes, Verus contracts and exact native contrasts are in the generated [iteration 3 index](../../uplift/consolidated/iter3/INDEX.json). These are scoped hand translations and native correspondence evidence; no ObjectScript implementation proof is claimed.
+
+Open questions: [artifact.refresh-policy](../../Verus_verification/open_questions.md#artifact.refresh-policy), [artifact.target-policy](../../Verus_verification/open_questions.md#artifact.target-policy)
 
 ### artifact.filter
 
@@ -126,7 +114,7 @@ Sources: `ArtifactoryTarball.cls::{SelectNewestArtifact,MatchesCondition,HasProp
 - agent
 - Expands: [Artifact download](#artifact).
 
-Sources: `ArtifactoryTarball.cls::{DownloadArtifact,GetArtifactPath,RetrieveArtifact}`. Verus: `artifacts.rs::{auth,metadata_request,bytes_request,credentials_cross_endpoint}`. Native requests record fixture-token metadata followed by an unauthenticated GET and HTTP 401. See [C:D17](../../uplift/consolidated/BUGS.md).
+Sources: `ArtifactoryTarball.cls::{DownloadArtifact,GetArtifactPath,RetrieveArtifact}`. Verus: `artifacts.rs::{auth,metadata_request,bytes_request,credentials_cross_endpoint}`. Native requests record fixture-token metadata followed by an unauthenticated GET and HTTP 401. See [C:D17](../../Verus_verification/bugs_issues.md).
 
 ### artifact.local-content
 
@@ -147,26 +135,4 @@ Sources: `ArtifactoryTarball.cls::DownloadArtifact`; Verus `artifacts.rs::downlo
 - agent
 - Expands: [Artifact download](#artifact).
 
-Sources: `General/Archive.cls::Extract`; `Utils/FileBinaryTar.cls::{ExtractFile,ExtractStream,ParseHeader}`. Verus: `artifacts.rs::{header_action,artifact_first_header,failed_read_is_not_rejected}`; explicit gzip/header port in [TRUST](../../Verus_verification/consolidated/iter3/TRUST.md). Native invalid gzip, bad checksum and valid archive are distinct cases. [C:D18](../../uplift/consolidated/BUGS.md) retains the intended failure rule.
-
-### artifact.refresh-policy
-
-- agent
-- Expands: [Artifact download](#artifact).
-
-Evidence: local reuse and same-filename native contrasts; [C:Q10](../../uplift/consolidated/QUESTIONS.md). No owner ratification or refresh implementation.
-
-Findings audit: [sources, alternatives, implications and settlement gate](../../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#artifact.refresh-policy). The recorded assumption is provisional; no new maintainer approval was found.
-
-- uncertain
-
-### artifact.target-policy
-
-- agent
-- Expands: [Artifact download](#artifact).
-
-Evidence: `ArtifactoryTarball.cls::OnAfterPhase`, `Utils/File.cls::WarnIfInInstallDirectory`; [C:Q11](../../uplift/consolidated/QUESTIONS.md). Only temporary directories were used by the probes.
-
-Findings audit: [sources, alternatives, implications and settlement gate](../../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#artifact.target-policy). The recorded assumption is provisional; no new maintainer approval was found.
-
-- uncertain
+Sources: `General/Archive.cls::Extract`; `Utils/FileBinaryTar.cls::{ExtractFile,ExtractStream,ParseHeader}`. Verus: `artifacts.rs::{header_action,artifact_first_header,failed_read_is_not_rejected}`; explicit gzip/header port in [TRUST](../../Verus_verification/consolidated/iter3/TRUST.md). Native invalid gzip, bad checksum and valid archive are distinct cases. [C:D18](../../Verus_verification/bugs_issues.md) retains the intended failure rule.

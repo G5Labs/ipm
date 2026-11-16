@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 """Rebuild the findings audit from saved starting files, never product sources."""
 from pathlib import Path
+
+if (Path(__file__).resolve().parents[4] / ".g5/Verus_verification/results/viewer-index.jsonl").exists():
+    raise SystemExit("Historical register generator. Use the sealed iteration 28 revision to reproduce the audit.")
+
 from collections import Counter
 import hashlib, json, os, re
 

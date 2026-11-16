@@ -13,6 +13,8 @@ Commands that help people write and maintain modules in a namespace. None of the
 
 IPM includes tools to keep developer-mode modules in step with files on disk, to write manifests and to script IPM.
 
+- Working assumption: Generation skips an invalid source file and may produce a manifest without it.
+
 <a id="devtools.sync"></a>
 [I · devtools.sync]
 
@@ -27,6 +29,9 @@ IPM includes tools to keep developer-mode modules in step with files on disk, to
 - A failed compile, load or reload outside sync can change server code without setting that mark. Reverting to exact baseline bytes can then make sync report nothing to do while the server keeps the edited code; this is the separate outside-sync premise and P:F-SYNC-1.
 
 - A test failure after successful sync activation happens after hash commit and does not undo it.
+
+- Working assumption: `sync` with no module name reports each failure and a summary, then returns OK.
+- Working assumption: Files that a failed `compile`, `load -dev` or `reload` put on the server are re-detected by the next `sync`.
 
 <a id="devtools.sync.retry"></a>
 [I · devtools.sync.retry]
@@ -74,24 +79,6 @@ Sync turns a changed test file's path into a class name by removing the resource
 
 
 
-<a id="devtools.sync.aggregate-status-policy"></a>
-[Q · devtools.sync.aggregate-status-policy]
-
-Should sync without a module name return an error when a module fails?
-
-- Working assumption: `sync` with no module name reports each failure and a summary, then returns OK.
-- Alternative and implications: Return an error when any module fails, like `sync <module>`: a new Low defect.
-- This assumption guides review; it is not a maintainer decision. An explicit owner policy or an attributable source addressing this exact case would settle it.
-
-<a id="devtools.sync.failed-import-policy"></a>
-[Q · devtools.sync.failed-import-policy]
-
-Should sync retry a failed compile or reload after its source is reverted?
-
-- Working assumption: Files that a failed `compile`, `load -dev` or `reload` put on the server are re-detected by the next `sync`.
-- Alternative and implications: Retry marks stay sync-only and the docs say "after a failed compile, run compile again": F-SYNC-1 becomes documentation.
-- This assumption guides review; it is not a maintainer decision. An explicit owner policy or an attributable source addressing this exact case would settle it.
-
 <a id="devtools.authoring"></a>
 [I · devtools.authoring]
 
@@ -110,15 +97,9 @@ Commands for writing modules:
 
 - `major`, `minor` and `patch` bump that part and reset the parts after it. `-prerelease` and `-build` then set those parts.
 - A version that is not higher than the current one is refused unless `-force` is given. A request for the current version should report it unchanged; as built, it is refused. This is a known defect.
-- The `module.xml` file the module was loaded from is not changed. Whether it should be is [open](#devtools.authoring.module-version.file).
+- The `module.xml` file the module was loaded from is not changed. Whether it should be is [open](../../Verus_verification/open_questions.md#devtools.authoring.module-version.file).
 
-<a id="devtools.authoring.module-version.file"></a>
-[Q · devtools.authoring.module-version.file]
-
-Should `module-version` also update the `module.xml` file a module was loaded from?
-
-- Provisional answer: no, as built. The command edits the namespace's copy, and source control hooks, when present, take it from there.
-- Alternative: yes for a module loaded in developer mode, whose folder is its working copy.
+- Working assumption: no, as built. The command edits the namespace's copy, and source control hooks, when present, take it from there.
 
 <a id="devtools.scripting"></a>
 [I · devtools.scripting]
@@ -143,15 +124,10 @@ IPM prepares the whole command file before running it. Text preparation trims an
 `generate` keeps classes under the chosen tests folder out of application resources, even when that folder is inside the source folder. It writes those tests as UnitTest entries with Phase="test" and their package and test directory.
 
 - A missing source folder fails before resources are added. A missing tests folder adds no tests.
-- Files with unsupported extensions or source that cannot load are skipped. [Whether invalid source should instead fail generation is open](#devtools.generate.invalid-source).
+- Files with unsupported extensions or source that cannot load are skipped. [Whether invalid source should instead fail generation is open](../../Verus_verification/open_questions.md#devtools.generate.invalid-source).
 - Classes are grouped by directory and their shared top-level package. The exact grouping algorithm has source evidence but no general proof here.
 
-<a id="devtools.generate.invalid-source"></a>
-[Q · devtools.generate.invalid-source]
-
-Should `generate` report or refuse a source file that cannot load?
-
-As built, it skips the file and can produce a manifest without it. The working assumption preserves that behavior; the alternative fails generation or reports each omission so an author can fix it (C:Q16).
+- Working assumption: Generation skips an invalid source file and may produce a manifest without it.
 
 <a id="devtools.generate.cors"></a>
 [D · devtools.generate.cors]
@@ -187,14 +163,18 @@ Source locators follow the conventions on the [root page](../root.g5.md#how-to-r
 
 ### devtools
 
+- uncertain
 - human-provided
 - user-facing-behavior
 - Children: [sync](#devtools.sync), [authoring](#devtools.authoring), [scripting](#devtools.scripting).
 
 Sources: `Main.cls:85-119`, `:322-404`, `:509-522`, `:639-705`, `:781-805`. Inventory: CAT-31, CAT-36.
 
+Open questions: [devtools.generate.invalid-source](../../Verus_verification/open_questions.md#devtools.generate.invalid-source)
+
 ### devtools.sync
 
+- uncertain
 - human-provided
 - user-facing-behavior
 - test-coverage
@@ -203,6 +183,8 @@ Sources: `Main.cls:85-119`, `:322-404`, `:509-522`, `:639-705`, `:781-805`. Inve
 - Children: [retry](#devtools.sync.retry), [compile after a resolution failure](#devtools.sync.compile-after-resolve), [test stop](#devtools.sync.test-stop), [skipped-test tracking](#devtools.sync.skipped-tracking), [test paths](#devtools.sync.test-paths).
 
 Sources: `Main.cls:108-119`; `wiki/02` L1136-1189; CHANGELOG 0.10.10 (`#1117`), 0.10.11 (`#1290`). Inventory: CAT-31; A2 1.2 row 6 (`Main:Sync`, `General/Sync/Pipeline.cls`). Tests: `Sync.cls` `TestNoChangeIsNoOp`, `TestModifiedClassRecompiles`, `TestLoadSkipSyncStampsNoBaseline`. Observed: `sync` runs without a transaction.
+
+Open questions: [devtools.sync.aggregate-status-policy](../../Verus_verification/open_questions.md#devtools.sync.aggregate-status-policy), [devtools.sync.failed-import-policy](../../Verus_verification/open_questions.md#devtools.sync.failed-import-policy)
 
 ### devtools.sync.retry
 
@@ -221,6 +203,8 @@ Sources: issue #1224; `General/Sync/Pipeline.cls:146-153`, `:201-222`. Inventory
 
 Direct decision: `General/Sync/Pipeline.cls::SyncCompile`. Callers and readers: `::Run` steps 7 and 8 (`$$$ThrowOnError` on its status, then hash commit in step 9), `::SyncDispatchProcessors` (loads each changed file with compile), `General/Sync/Summary.cls::AddWarning` (keeps text only while the summary is active). Verus [sync_compile.rs](../../Verus_verification/consolidated/iter4/sync_compile.rs) `{sync_compile,sync_compile_neighbors}`; six controls rejected. Native Y1 (survivor recompiled to the new definition, failed resource stays stale, warning retained with an active summary) and Y2 (no compile, status OK, no retained warning) call the real private step through a subclass, with a fixture processor whose resolution fails on demand. The full `sync` command around this step was not run. Answers public case I3F20.
 
+State machines: [sync compile · iter4](../../Verus_verification/models/iter4-sync-compile/manifest.json)
+
 ### devtools.sync.test-stop
 
 - agent
@@ -229,12 +213,16 @@ Direct decision: `General/Sync/Pipeline.cls::SyncCompile`. Callers and readers: 
 
 Direct decision: `General/Sync/Pipeline.cls::SyncRunTests` (`$$$ThrowOnError` per resource). Contrast: `Lifecycle/Base.cls::%Test` uses `$$$ADDSC`. Verus [test_outcome.rs](../../Verus_verification/consolidated/iter4/test_outcome.rs) `sync_invoked` versus `lifecycle_invoked`; controls `sync-runs-all-resources` and `lifecycle-stops-at-first-failure` rejected. Native evidence covers only the `test` side (T1); the sync side is source-only.
 
+State machines: [test outcome · iter4](../../Verus_verification/models/iter4-test-outcome/manifest.json)
+
 ### devtools.sync.skipped-tracking
 
 - agent; user-facing-behavior; source-inspected; native-tested; Verus-scoped
 - Expands: [Sync](#devtools.sync).
 
 [Iteration 26](../../uplift/consolidated/iter26/HANDOFF.md) and the [summary contract](../../Verus_verification/consolidated/iter26/sync_summary.rs) connect `Main.Sync` tracking lifetime, `Summary.Begin`/`End`, the active guard and per-module increment in `AddSkipped`, stored module/sequence/class readers and the selected `Report` loop. Direct API neighbors cover inactive, interleaved, duplicate and reset records; ordinary named and namespace syncs qualify the verify-only skip, actual class reload, absence of a test call, aggregate output and cleanup. Existing compile/test-stop contracts remain valid and do not supply these missing stored fields. This addresses an explicitly disclosed closed-panel coverage gap; it is repair evidence, not unseen discovery. No permanent SQL/history storage or full sync-body proof is implied.
+
+State machines: [sync summary · iter26](../../Verus_verification/models/iter26-sync-summary/manifest.json)
 
 ### devtools.sync.test-paths
 
@@ -244,31 +232,9 @@ Direct decision: `General/Sync/Pipeline.cls::SyncRunTests` (`$$$ThrowOnError` pe
 
 Direct decision: `ResourceProcessor/Test.cls::RelPathToClassName`; caller `::OnSync`. Verus [repairs4.rs](../../Verus_verification/consolidated/iter4/repairs4.rs) `{package_rel_path,rel_path_neighbors}`; controls `outside-path-returns-empty` and `prefix-requires-boundary` rejected. Native C cases call the real private method through a subclass. The comment contradiction is recorded as suspected defect C:D21; its reach through sync routing is unproved. Answers public case I2C04.
 
-Findings: [C:D21 — partial reproduced](../../uplift/consolidated/BUGS.md#c-d21). The linked entry qualifies the caller, reader and providers.
+Findings: [C:D21 — partial reproduced](../../Verus_verification/bugs_issues.md#c-d21). The linked entry qualifies the caller, reader and providers.
 
-### devtools.sync.aggregate-status-policy
-
-- agent
-- uncertain
-- user-facing-behavior
-- Expands: [devtools.sync](#devtools.sync)
-
-Sources: [DEC-SYNC-3](../../../playbook-uplift/decisions/07-09.md); PR #1205: it "collects failures without throwing" (says the loop continues; silent on the final status).
-
-Findings audit: [sources, alternatives, implications and settlement gate](../../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#devtools.sync.aggregate-status-policy). The recorded assumption is provisional; no new maintainer approval was found.
-
-### devtools.sync.failed-import-policy
-
-- agent
-- uncertain
-- user-facing-behavior
-- Expands: [devtools.sync](#devtools.sync)
-
-Sources: [DEC-SYNC-1](../../../playbook-uplift/decisions/07-09.md); Sync help "since the last load/sync"; issue #1224's expected behaviour for the same symptom inside sync.
-
-Findings audit: [sources, alternatives, implications and settlement gate](../../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#devtools.sync.failed-import-policy). The recorded assumption is provisional; no new maintainer approval was found.
-
-Findings: [P:F-SYNC-1 — e2e reproduced](../../../playbook-uplift/BUGS.md#p-f-sync-1). The linked entry qualifies the caller, reader and providers.
+State machines: [repairs4 · iter4](../../Verus_verification/models/iter4-repairs4/manifest.json)
 
 ### devtools.authoring
 
@@ -282,30 +248,20 @@ Sources: `Main.cls:85-99`, `:639-705`, `:781-805`; CHANGELOG 0.10.11 (`#150`, `#
 
 ### devtools.authoring.module-version
 
+- uncertain
 - agent
 - user-facing-behavior
 - test-coverage
 - Expands: [Authoring](#devtools.authoring).
-- Children: [file](#devtools.authoring.module-version.file).
+- Children: [file](../../Verus_verification/open_questions.md#devtools.authoring.module-version.file).
 
 Sources: `Main.cls:781-795` (help), `:4011-4099` (one transaction around the record save and `StudioDocument/Module.cls:UpdateVersion`, rolled back on any error), `:4060-4067` (the "unchanged" branch after the higher-version check); CHANGELOG 0.10.0 (`#710`); test `ModuleVersion.cls`. Native MV0-MV10 (`20261114T033125Z-r4-owners`, ARM64) and model `Verus_verification/consolidated/models/owners.py`: `minor` 1.2.3 -> 1.3.0; `1.0.0` refused, then accepted with `-force`; `patch -prerelease rc.1 -build b7` -> 1.0.1-rc.1+b7; no version (MV5) refused as "not strictly higher" (defect C:D13); a prerelease of another version refused (MV6); `01.0.0` invalid (MV7); `major` -> 2.0.0; the record and the stored manifest always agree, and the file stayed 1.2.3 (MV10). The rollback path was not exercised natively.
 
 Extension Verus: [owners.rs::bump](../../Verus_verification/consolidated/verus/owners.rs), [owners.rs::module_version](../../Verus_verification/consolidated/verus/owners.rs), [owners.rs::with_build](../../Verus_verification/consolidated/verus/owners.rs), [owners.rs::with_pre](../../Verus_verification/consolidated/verus/owners.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
 
-Findings: [C:D13 — e2e reproduced](../../uplift/consolidated/BUGS.md#c-d13). The linked entry qualifies the caller, reader and providers.
+Findings: [C:D13 — e2e reproduced](../../Verus_verification/bugs_issues.md#c-d13). The linked entry qualifies the caller, reader and providers.
 
-### devtools.authoring.module-version.file
-
-- agent
-- uncertain
-- user-facing-behavior
-- Expands: [module-version](#devtools.authoring.module-version).
-
-Sources: native MV10; `StudioDocument/Module.cls:403-420` rewrites the stored `.ZPM` document only. Question C:Q4.
-
-Extension Verus: [owners.rs::update_version](../../Verus_verification/consolidated/verus/owners.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
-
-Findings audit: [sources, alternatives, implications and settlement gate](../../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#devtools.authoring.module-version.file). The recorded assumption is provisional; no new maintainer approval was found.
+Open questions: [devtools.authoring.module-version.file](../../Verus_verification/open_questions.md#devtools.authoring.module-version.file)
 
 ### devtools.scripting
 
@@ -317,29 +273,26 @@ Sources: `Main.cls:322-404`, `:509-522`; CHANGELOG 0.10.6 (`#996`). Inventory: C
 
 ### devtools.scripting.file-sequence
 
+- design-verified
 - agent; user-facing-behavior; source-inspected; native-tested; Verus-scoped
 - Expands: [Scripting](#devtools.scripting).
 
 [Scoped contract](../../Verus_verification/consolidated/iter28/script.rs) connects selected raw files and qualified JSON parsing to preparation, ordered execution, fail-stop, dry-run listing and actual stored-setting reads. [Evidence index](../../uplift/consolidated/iter28/INDEX.md). The selected config writer/read relations reuse unchanged settings definitions; known child-command execution/SDK errors, JSON parsing, file IO and command metadata are qualified providers. The runtime-error fixture increments a job-local counter before division by zero; no full ObjectScript interpreter, arbitrary JSON/lexer/quoting or rollback guarantee is inferred. Settings are read through GetValue and independently through the actual `%SYS` global. This closes a builder-selected unmodeled workflow, not a new defect or an unseen-case score.
 
+State machines: [script · iter28](../../Verus_verification/models/iter28-script/manifest.json)
+
 ### devtools.generate.resources
 
+- uncertain
 - agent; user-facing-behavior; source-inspected; native-tested; Verus-scoped
 - Expands: [Authoring](#devtools.authoring).
-- Children: [invalid source](#devtools.generate.invalid-source).
+- Children: [invalid source](../../Verus_verification/open_questions.md#devtools.generate.invalid-source).
 
 Sources: `Storage/ModuleTemplate.cls::{ReadResources,ReadItems,AddPackages,GroupClasses,ProcessResources,ReadFolder}` → `SaveFile`. Tests: `Generate::{TestTestsUnderSourceFolderAreNotPackaged,TestUnitTestsFromTestsFolder,TestMissingSourceFolderThrows}`. [Iteration 6 index](../../uplift/consolidated/iter6/INDEX.md) S6-01. [Contract](../../Verus_verification/consolidated/iter6/workflows.rs): `application_item`, `test_item`, `template_status`; normalized paths, file-loader success and filesystem existence are explicit provider inputs. General package grouping remains unproved.
 
-### devtools.generate.invalid-source
+Open questions: [devtools.generate.invalid-source](../../Verus_verification/open_questions.md#devtools.generate.invalid-source)
 
-- agent; uncertain; user-facing-behavior
-- Expands: [Generated resources](#devtools.generate.resources).
-
-Source: `ReadItems` continues after a failed `$system.OBJ.Load`. C:Q16 is a proposal for owner review; no defect is asserted without an accepted policy.
-
-Findings audit: [sources, alternatives, implications and settlement gate](../../uplift/consolidated/findings-audit-iter28/QUESTION-REVIEW.md#devtools.generate.invalid-source). The recorded assumption is provisional; no new maintainer approval was found.
-
-- uncertain
+State machines: [workflows · iter6](../../Verus_verification/models/iter6-workflows/manifest.json)
 
 ### devtools.generate.cors
 
@@ -348,6 +301,8 @@ Findings audit: [sources, alternatives, implications and settlement gate](../../
 
 Sources and readers: `Storage/ModuleTemplate.cls::ValidateCorsOrigin` → `Main.cls::GenerateModuleXML` retry prompt and `SetCORSProps`. [Iteration 7 index](../../uplift/consolidated/iter7/INDEX.md). [Contract](../../Verus_verification/consolidated/iter7/inputs.rs): `split`, `cors_calls`, `cors_ok`. These are specification proofs; native observations and remaining provider boundaries are in the index and trust inventory.
 
+State machines: [inputs · iter7](../../Verus_verification/models/iter7-inputs/manifest.json)
+
 ### devtools.sync.empty-hash
 
 - agent; user-facing-behavior; source-inspected; Verus-scoped
@@ -355,9 +310,13 @@ Sources and readers: `Storage/ModuleTemplate.cls::ValidateCorsOrigin` → `Main.
 
 Sources and readers: `Storage/FileHash.cls::StampOneFileWithHash` → `StampModule`, `OpenByPath` and later sync baseline reads. [Iteration 7 index](../../uplift/consolidated/iter7/INDEX.md). [Contract](../../Verus_verification/consolidated/iter7/inputs.rs): `stamp`. These are specification proofs; native observations and remaining provider boundaries are in the index and trust inventory.
 
+State machines: [inputs · iter7](../../Verus_verification/models/iter7-inputs/manifest.json)
+
 ### devtools.generate.webapps
 
 - agent; user-facing-behavior; native-tested; source-inspected; Verus-scoped
 - Expands: [devtools.authoring](#devtools.authoring).
 
 Sources and readers: `Storage/ModuleTemplate.cls::{SetJWTProps,SetCORSProps,AddWebApps,SetSourcePathForCSPApp,ProcessResources,SaveFile}` → `Main.cls::GenerateModuleXML`, WebApplication and FileCopy phase readers. [Iteration 8 index](../../uplift/consolidated/iter8/INDEX.md). [Contract](../../Verus_verification/consolidated/iter8/webapps.rs): `jwt_prompt`, `generated_props`, `generated_path`, `manifest_path`, `filecopy_target`, `copy_one`. The [trust inventory](../../Verus_verification/consolidated/iter8/TRUST.md) names provider and input boundaries; direct ObjectScript implementation proofs: 0.
+
+State machines: [webapps · iter8](../../Verus_verification/models/iter8-webapps/manifest.json)

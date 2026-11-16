@@ -22,7 +22,7 @@ IPM has instance settings managed with `config`, and stored flags added to every
 | `ModuleRoot` | `<data directory>/ipm/` | Where archives unpack. It must be writable. |
 | `PipCaller`, `UseStandalonePip` | | Which pip IPM runs. |
 | `PublishTimeout` | | How long publishing may take. |
-| `SemVerPostRelease` | `0` | How `x.y.z-w` is ordered ([post-release](../concepts/versions.g5.md#version.post-release)). |
+| `SemVerPostRelease` | `0` | How `x.y.z-w` is ordered ([post-release](versions.g5.md#version.post-release)). |
 | `TerminalPrompt` | | What the shell prompt shows. |
 | `TestReportFormat` | | Default format of test summaries. |
 
@@ -85,7 +85,7 @@ Source locators follow the conventions on the [root page](../root.g5.md#how-to-r
 
 Sources: `wiki/02` L93-141; `Main.cls:210-220`; CHANGELOG 0.9.0 (`#224`); `preload/cls/IPM/Installer.cls:110-124`. Inventory: CAT-26; A2 1.2 row 15 (`Main:Config`, `%IPM.Repo.UniversalSettings`), OP-HIST-22. Tests: `Unit/CLI.cls` `TestReportFormatConfiguration`, `ModuleRoot.cls`. Observed: settings are stored in `^IPM.settings` in `%SYS`, so they apply to the whole instance. Confirmed product defect B2 D5: `delete` restores the first value ever set, not the built-in default, so `config delete HistoryRetain` can leave retention on (case F0; `20261113T184628Z-repro-config-delete-retain`; also seen after `20261113T182514Z-suite-test-CLI`).
 
-Findings: [P:F-REPO-4 — e2e reproduced](../../../playbook-uplift/BUGS.md#p-f-repo-4). The linked entry qualifies the caller, reader and providers.
+Findings: [P:F-REPO-4 — e2e reproduced](../../Verus_verification/bugs_issues.md#p-f-repo-4). The linked entry qualifies the caller, reader and providers.
 
 ### settings.writes
 
@@ -107,9 +107,9 @@ Sources: `Repo/UniversalSettings.cls::{SetTestReportFormat,GetTestReportFormat,U
 - user-facing-behavior
 - Expands: [Settings](#settings).
 
-Sources: `Main.cls:617-637`; `wiki/02` L143-166; maintainer comment `Main.cls:1067-1070`. Inventory: CAT-27; A2 1.2 row 28 (`Main:ProcessDefaultModifiers`). Confirmed product defect D19: the flags are stored in `^%IPM.DefaultModifiers`, which maps to IRISSYS from every namespace, so defaults set in USER are visible in USER-VERIFY (stage C case X1, `20261113T204152Z-stagec`). Confirmed as D18, decision pending under Q-18: they are also read by `history` as filters ([default-modifier filters](../features/history.g5.md#history.read.filter.default-modifiers), stage C case H2, `20261113T204152Z-stagec`).
+Sources: `Main.cls:617-637`; `wiki/02` L143-166; maintainer comment `Main.cls:1067-1070`. Inventory: CAT-27; A2 1.2 row 28 (`Main:ProcessDefaultModifiers`). Confirmed product defect D19: the flags are stored in `^%IPM.DefaultModifiers`, which maps to IRISSYS from every namespace, so defaults set in USER are visible in USER-VERIFY (stage C case X1, `20261113T204152Z-stagec`). Confirmed as D18, decision pending under Q-18: they are also read by `history` as filters ([default-modifier filters](../../Verus_verification/open_questions.md#history.read.filter.default-modifiers), stage C case H2, `20261113T204152Z-stagec`).
 
-Findings: [P:F-REPO-5 — e2e reproduced](../../../playbook-uplift/BUGS.md#p-f-repo-5). The linked entry qualifies the caller, reader and providers.
+Findings: [P:F-REPO-5 — e2e reproduced](../../Verus_verification/bugs_issues.md#p-f-repo-5). The linked entry qualifies the caller, reader and providers.
 
 ### settings.install-flags
 
@@ -134,4 +134,6 @@ Sources: `Main.cls:211-215`; `wiki/02` L111, L124-138. Inventory: CAT-40; OP-LOA
 
 Sources and readers: `Repo/UniversalSettings.cls::PrintOne` → `GetValue`; shell `Main.cls::Config`. [Iteration 7 index](../../uplift/consolidated/iter7/INDEX.md). [Contract](../../Verus_verification/consolidated/iter7/inputs.rs): `config_get_called`. These are specification proofs; native observations and remaining provider boundaries are in the index and trust inventory.
 
-Findings: [P:F-REPO-8 — e2e reproduced](../../../playbook-uplift/BUGS.md#p-f-repo-8). The linked entry qualifies the caller, reader and providers.
+Findings: [P:F-REPO-8 — e2e reproduced](../../Verus_verification/bugs_issues.md#p-f-repo-8). The linked entry qualifies the caller, reader and providers.
+
+State machines: [inputs · iter7](../../Verus_verification/models/iter7-inputs/manifest.json)
