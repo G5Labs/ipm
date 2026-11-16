@@ -1,0 +1,94 @@
+{
+ "recorded_utc": "2026-11-16T18:26:16.810445+00:00",
+ "batch": 12,
+ "iteration": 60,
+ "prior_seal": "4366f6d2",
+ "workflow": "legacy localized messages: <Resource ProcessorClass=\"LegacyLocalizedMessages\" includeFiles=... merge=...> message XML -> ^IRIS.Msg/^IRIS.MsgNames domains and a generated include file of macros -> reload, merge, uninstall",
+ "unbound_members": [
+  "ResourceProcessor/LegacyLocalizedMessages.cls::OnBeforePhase",
+  "::OnResolveChildren",
+  "::GetDomainMap",
+  "::GetDomains",
+  "::MergeMessageDomains"
+ ],
+ "owner": ".g5/ontology/concepts/modules.g5.md#module.processor.localized-messages (iteration56) covers the default .LOC processor only; the legacy processor has no statement",
+ "exposure": "Read processor DESCRIPTION, ATTRIBUTES, property doc comments (includeFiles formats, merge meaning), method signatures, and ExtensionBase/Utils.cls lines 110-145 (INC lookup via the legacy processor). Method bodies not read. Iteration56 handoff, fixtures and reader read.",
+ "predictions": [
+  {
+   "case": "p1 load module with a message XML resource processed by LegacyLocalizedMessages, includeFiles=one include",
+   "reader": "^IRIS.Msg domain contents; include file generated with a macro per message name",
+   "predicted": "messages loaded; include compiled with macros"
+  },
+  {
+   "case": "p2 includeFiles=\"DomA:IncA,DomB:IncB\" with two domains",
+   "reader": "each include contains only its domain macros",
+   "predicted": "separate includes per domain"
+  },
+  {
+   "case": "p3 reload with a message removed/changed, merge=0",
+   "reader": "domain contents and include macros",
+   "predicted": "domain replaced (removed message gone, macro gone)"
+  },
+  {
+   "case": "p4 merge=1 with a pre-existing message in the same domain from elsewhere",
+   "reader": "pre-existing message kept alongside loaded ones",
+   "predicted": "merged; merge=0 neighbor replaces"
+  },
+  {
+   "case": "p5 uninstall",
+   "reader": "messages, include file",
+   "predicted": "unspecified; iteration56 saw default processor leave messages (C:D59, not re-filed)"
+  }
+ ],
+ "exposure_after_source": "Read LegacyLocalizedMessages OnBeforePhase (Validate checks, Compile: Import^%occMsgXML wipes file domains, include generation per domain map, merge saves/restores mapped domains), GetDomainMap, GetDomains, MergeMessageDomains, OnResolveChildren.",
+ "source_predictions": [
+  {
+   "case": "p1 single include, two named messages",
+   "predicted": "^IRIS.Msg has both; L60Inc1.INC generated with both names"
+  },
+  {
+   "case": "p2 includeFiles \"L60DomA:L60IncA,L60DomB:L60IncB\"",
+   "predicted": "both includes generated, each with its own domain"
+  },
+  {
+   "case": "p3 reload single-include module with ErrTwo removed, merge=0, extra pre-existing id 98 in the domain",
+   "predicted": "domain replaced: ErrTwo and id 98 gone; include lacks ErrTwo"
+  },
+  {
+   "case": "p4 merge=1 with pre-existing id 99 in mapped domain",
+   "predicted": "id 99 kept plus loaded messages"
+  },
+  {
+   "case": "u1 uninstall multi-include module",
+   "predicted": "OnResolveChildren names only the first include ($piece of the whole attribute), so L60IncA is deleted and L60IncB stays; messages stay"
+  },
+  {
+   "case": "u2 uninstall single-include module",
+   "predicted": "L60Inc1 deleted; messages stay (same class as C:D59, not re-filed)"
+  }
+ ],
+ "explore1": {
+  "log": "attempts/explore1.log",
+  "miss": "u1 prediction refuted in scope: neither L60IncA nor L60IncB is a resolved child (child.IncA=0, child.IncB=0), so uninstall leaves both generated includes; source cause is $piece(..includeFiles,\":\",2) of the whole attribute (\"L60IncA,L60DomB\")",
+  "added_for_explore2": "child count and a flag for a child name containing a comma"
+ },
+ "outcome": {
+  "status": "lane complete, not sealed (main thread integrates)",
+  "model": "legacymsgs.rs 6 verified, 4/4 controls rejected",
+  "native": "20261116T182833808281Z 106 gated fields; 12 replayed; flips of p2.child.IncA, u1.incB.B, u2.inc1.one rejected",
+  "findings": [
+   "new Low (proposed): mapped includeFiles with two or more entries leaves every generated include after uninstall"
+  ],
+  "refuted_predictions": [
+   "only the second include leaks (both leak)"
+  ],
+  "not_refiled": "messages left after uninstall (C:D59 class)"
+ },
+ "integration": {
+  "by": "main thread",
+  "independent_rerun": "run.py --no-native: 6 verified, 4/4 controls, 12 replayed",
+  "findings": [
+   "C:D64 Low"
+  ]
+ }
+}

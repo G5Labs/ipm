@@ -1,0 +1,69 @@
+{
+ "verus_dir": ".g5/Verus_verification/consolidated/iter60",
+ "changed_files": [
+  "legacymsgs.rs",
+  "cases.json",
+  "run.py",
+  "native/**"
+ ],
+ "rows": [
+  {
+   "id": "S60-01",
+   "owner": ".g5/ontology/concepts/modules.g5.md#module.processor.localized-messages.legacy",
+   "model": "legacymsgs.rs",
+   "symbols": [
+    "after_load",
+    "replace_and_merge",
+    "generated",
+    "fixture"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/ResourceProcessor/LegacyLocalizedMessages.cls",
+     "OnBeforePhase"
+    ],
+    [
+     "src/cls/IPM/ResourceProcessor/LegacyLocalizedMessages.cls",
+     "GetDomainMap"
+    ],
+    [
+     "src/cls/IPM/ResourceProcessor/LegacyLocalizedMessages.cls",
+     "GetDomains"
+    ],
+    [
+     "src/cls/IPM/ResourceProcessor/LegacyLocalizedMessages.cls",
+     "MergeMessageDomains"
+    ]
+   ],
+   "reader": [],
+   "scope": "Compile imports the message file replacing each file domain (pre-existing ids removed), generates one include per target (single or domain-mapped), and with merge=1 restores earlier ids of mapped domains. Native p1-p4. Message importer and include generator are providers; validation of malformed includeFiles not exercised."
+  },
+  {
+   "id": "S60-02",
+   "owner": ".g5/ontology/concepts/modules.g5.md#module.processor.localized-messages.legacy",
+   "model": "legacymsgs.rs",
+   "symbols": [
+    "children",
+    "in_seq",
+    "survives_uninstall",
+    "single_include_cleaned",
+    "one_mapped_entry_cleaned",
+    "mapped_includes_leak",
+    "fixture"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/ResourceProcessor/LegacyLocalizedMessages.cls",
+     "OnResolveChildren"
+    ]
+   ],
+   "reader": [
+    [
+     "src/cls/IPM/Lifecycle/Base.cls",
+     "%Clean"
+    ]
+   ],
+   "scope": "Resolved children: the single include, or for the mapped form $piece(includeFiles,\":\",2) of the whole attribute, which with two or more entries is a comma-joined name matching no include; %Clean deletes only resolved children. Native p1/p2 child names, u1, u2. Messages left after uninstall are the C:D59 class and are not re-filed."
+  }
+ ]
+}
