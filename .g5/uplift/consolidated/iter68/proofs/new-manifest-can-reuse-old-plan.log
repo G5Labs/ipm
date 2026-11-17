@@ -1,0 +1,21 @@
+verification results:: 7 verified, 1 errors
+error: postcondition not satisfied
+   --> new_manifest_can_reuse_old_plan.rs:171:9
+    |
+165 | / pub proof fn resolution_preserves_metadata_identity(
+166 | |     previous_target: Target, previous_policy: Policy, previous_manifest: Manifest,
+167 | |     previous_evidence: Verification, target: Target, policy: Policy,
+168 | |     manifest: Manifest, evidence: Verification, observed: Descriptor,
+169 | | )
+    | |_- at the end of the function body
+170 |       ensures
+171 | /         match resolve(previous_target, previous_policy, previous_manifest, previous_evidence) {
+172 | |             Some(previous) =>
+173 | |                 continue_from_metadata(previous, target, policy, manifest, evidence, observed)
+174 | |                 ==> previous_target == target && previous_policy == policy
+175 | |                     && previous_manifest.digest == manifest.digest,
+176 | |             None => !authorized(previous_target, previous_policy, previous_manifest, previous_evidence),
+177 | |         },
+    | |_________^ failed this postcondition
+
+error: aborting due to 1 previous error

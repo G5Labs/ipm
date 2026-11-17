@@ -1,0 +1,20 @@
+verification results:: 7 verified, 1 errors
+error: postcondition not satisfied
+  --> unbound_layer_size.rs:73:9
+   |
+68 | / pub proof fn extraction_binds_scope_and_bytes(
+69 | |     target: Target, policy: Policy, manifest: Manifest, evidence: Verification,
+70 | |     observed: Descriptor,
+71 | | )
+   | |_- at the end of the function body
+72 |       ensures
+73 | /         protected_admission(target, policy, manifest, evidence, observed).may_extract
+74 | |             ==> match evidence {
+75 | |                 Verification::Authorized { target: scope, policy: checked, manifest_digest, signer } =>
+76 | |                     scope.registry == target.registry
+...  |
+86 | |                 _ => false,
+87 | |             },
+   | |_____________^ failed this postcondition
+
+error: aborting due to 1 previous error

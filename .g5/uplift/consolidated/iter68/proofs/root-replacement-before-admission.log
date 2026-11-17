@@ -1,0 +1,39 @@
+verification results:: 5 verified, 3 errors
+error: postcondition not satisfied
+  --> root_replacement_before_admission.rs:88:9
+   |
+68 | / pub proof fn extraction_binds_scope_and_bytes(
+69 | |     target: Target, policy: Policy, manifest: Manifest, evidence: Verification,
+70 | |     observed: Descriptor,
+71 | | )
+   | |_- at the end of the function body
+...
+88 | /         protected_admission(target, policy, manifest, evidence, observed).may_replace_root
+89 | |             ==> protected_admission(target, policy, manifest, evidence, observed).may_extract,
+   | |_____________________________________________________________________________________________^ failed this postcondition
+
+error: postcondition not satisfied
+   --> root_replacement_before_admission.rs:100:9
+    |
+ 92 | / pub proof fn trust_failure_has_no_consumer_effect(
+ 93 | |     target: Target, policy: Policy, manifest: Manifest, evidence: Verification,
+ 94 | |     observed: Descriptor,
+ 95 | | )
+    | |_- at the end of the function body
+...
+100 |           !protected_admission(target, policy, manifest, evidence, observed).may_replace_root,
+    |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: postcondition not satisfied
+   --> root_replacement_before_admission.rs:111:9
+    |
+103 | / pub proof fn verified_manifest_with_bad_bytes_only_allows_metadata(
+104 | |     target: Target, policy: Policy, manifest: Manifest, evidence: Verification,
+105 | |     observed: Descriptor,
+106 | | )
+    | |_- at the end of the function body
+...
+111 |           !protected_admission(target, policy, manifest, evidence, observed).may_replace_root,
+    |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: aborting due to 3 previous errors

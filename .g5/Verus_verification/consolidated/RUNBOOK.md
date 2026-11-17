@@ -28,3 +28,7 @@ python3 .g5/uplift/consolidated/iter17/project_map.py --member 'ResourceProcesso
 Each result names the exact pinned source declaration/range, hash, formal declarations, role, scope, origin and evidence classification. A canonical-model-file reconciliation exposes any referenced model absent from the map. The current freshness gate conservatively hashes all production roots as well as formal inputs, so new/deleted/edited writers reopen correspondence even where a precise symbol dependency is unavailable. Map resolution and semantic validation remain separate.
 
 The selected report identity claim connects `ReportTestResults`' tracked device ID and omitted file argument to `Test.Abstract.ToFile`'s global-latest default, `JsonOutput.WriteToFileStream`, and actual file/device readers. The map's reverse query lists every registered claim affected by either member. Iteration17's handoff gives proof/control commands and observed contrasts; provider allocation, assertion execution, JSON serialization and stream persistence have their declared native/inspection limits. No shipped ObjectScript body has direct executable verification.
+
+## ORAS archive admission for #281
+
+[Iteration 68](../../uplift/consolidated/iter68/HANDOFF.md) has its own replay command and pinned bindings to the ObjectScript source and the installed wheel. Its as-built native evidence and proposed signed-admission proof appear as separate viewer models. Use its `--check` command to validate the saved receipt inputs.

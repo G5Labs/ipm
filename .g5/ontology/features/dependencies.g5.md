@@ -17,6 +17,7 @@ Before it loads any dependency, IPM resolves the module's whole dependency tree 
 - It passes every parameter except [developer mode](../concepts/transactions-and-dev-mode.g5.md#dev-mode.not-propagated) on to the dependencies.
 - A dependency limited to the `test` or `verify` phase is loaded only for that phase.
 - ORAS dependency selection also applies [platform filtering across versions](../architecture/package-sources.g5.md#repo.oras.selection-modes); a version range does not authorize an incompatible deployed artifact.
+- [ORAS manifest and archive identity](../architecture/package-sources.g5.md#repo.oras.archive-boundary) describes how a dependency is read and later fetched.
 
 <a id="deps.conflict"></a>
 [I · deps.conflict]

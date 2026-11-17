@@ -1,0 +1,36 @@
+verification results:: 6 verified, 2 errors
+error: postcondition not satisfied
+  --> ignore_registry.rs:73:9
+   |
+68 | / pub proof fn extraction_binds_scope_and_bytes(
+69 | |     target: Target, policy: Policy, manifest: Manifest, evidence: Verification,
+70 | |     observed: Descriptor,
+71 | | )
+   | |_- at the end of the function body
+72 |       ensures
+73 | /         protected_admission(target, policy, manifest, evidence, observed).may_extract
+74 | |             ==> match evidence {
+75 | |                 Verification::Authorized { target: scope, policy: checked, manifest_digest, signer } =>
+76 | |                     scope.registry == target.registry
+...  |
+86 | |                 _ => false,
+87 | |             },
+   | |_____________^ failed this postcondition
+
+error: postcondition not satisfied
+   --> ignore_registry.rs:132:9
+    |
+125 | / pub proof fn cached_evidence_cannot_cross_identity(
+126 | |     old_target: Target, new_target: Target, old_policy: Policy, new_policy: Policy,
+127 | |     old_manifest: Manifest, new_manifest: Manifest, observed: Descriptor,
+128 | | )
+    | |_- at the end of the function body
+...
+132 | /         !protected_admission(new_target, new_policy, new_manifest,
+133 | |             Verification::Authorized {
+134 | |                 target: old_target, policy: old_policy,
+135 | |                 manifest_digest: old_manifest.digest, signer: old_policy.signer,
+136 | |             }, observed).use_manifest,
+    | |_____________________________________^ failed this postcondition
+
+error: aborting due to 2 previous errors

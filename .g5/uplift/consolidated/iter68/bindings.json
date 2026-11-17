@@ -1,0 +1,56 @@
+{
+  "verus_dir": ".g5/Verus_verification/consolidated/iter68",
+  "rows": [
+    {
+      "id": "oras-extraction-boundary",
+      "owner": ".g5/ontology/architecture/package-sources.g5.md#repo.oras.archive-boundary",
+      "model": "as_built.rs",
+      "symbols": ["observe", "rejection_stops_loader_after_provider_effect"],
+      "scope": "Scoped native comparison: ORAS extracts a directory layer during pull, before IPM's later archive check. A size refusal stops the installed root replacement and records the failure.",
+      "source_ranges": [
+        ["src/cls/IPM/Repo/Oras/PackageService.cls", 790, 842, "Pull: stage, invoke provider, select .tgz, check and return status"],
+        ["src/cls/IPM/Repo/Oras/PackageService.cls", 846, 865, "PullOras: calls the provider's pull"],
+        ["wheels/oras-0.1.30-py3-none-any.whl!oras/provider.py", 838, 875, "Registry.pull: fetches the manifest, writes layers and extracts directory layers"],
+        ["wheels/oras-0.1.30-py3-none-any.whl!oras/utils/fileio.py", 60, 89, "extract_targz: native provider extraction helper"],
+        ["src/cls/IPM/Repo/Oras/PackageService.cls", 233, 246, "GetModule: status must succeed before returning the stream"],
+        ["src/cls/IPM/Utils/Module.cls", 140, 174, "LoadModuleReference: consumes stream only after GetModule returns"],
+        ["src/cls/IPM/Utils/Module.cls", 235, 258, "LoadModuleFromArchive: replaces installed root, extracts and loads"],
+        ["src/cls/IPM/Main.cls", 2665, 2699, "Install records final status; Reinstall delegates through Install"]
+      ]
+    },
+    {
+      "id": "oras-dependency-identity",
+      "owner": ".g5/ontology/architecture/package-sources.g5.md#repo.oras.archive-boundary",
+      "model": "as_built.rs",
+      "symbols": ["changed_tag", "hash_acceptance_does_not_require_metadata_identity"],
+      "scope": "One ordinary exact dependency of a new parent: a catalog and dependency manifest read can return revision 1 while package retrieval and subsequent validation use revision 2 of the same tag.",
+      "source_ranges": [
+        ["src/cls/IPM/Repo/Oras/PackageService.cls", 398, 409, "Catalog metadata lookup by tag"],
+        ["src/cls/IPM/Repo/Manager.cls", 195, 216, "RetrieveModuleManifest forwards the selected reference"],
+        ["src/cls/IPM/Repo/Oras/PackageService.cls", 249, 279, "GetModuleManifest and TagForReference: request constructed from selected name and tag"],
+        ["src/cls/IPM/Repo/Oras/PackageService.cls", 867, 886, "GetModuleXML: reads the annotation by tag"],
+        ["src/cls/IPM/Storage/Module.cls", 1187, 1216, "Exact dependency: retrieves and caches annotation, builds graph node without manifest digest"],
+        ["src/cls/IPM/Storage/Module.cls", 1223, 1246, "Fuzzy neighbor uses the same split, source inspection only"],
+        ["src/cls/IPM/Utils/Module.cls", 1379, 1413, "LoadDependencies: consumes a separate graph reference"],
+        ["src/cls/IPM/Utils/Module.cls", 92, 100, "LoadModuleReference: reconstructs reference from graph and platform"],
+        ["src/cls/IPM/Repo/Oras/PackageService.cls", 1006, 1021, "VerifyModuleHashAndSize: fresh manifest lookup by tag"]
+      ]
+    },
+    {
+      "id": "oras-proposed-admission",
+      "owner": ".g5/ontology/architecture/package-sources.g5.md#repo.oras.signed-admission",
+      "model": "admission.rs",
+      "symbols": ["extraction_binds_scope_and_bytes", "trust_failure_has_no_consumer_effect", "cached_evidence_cannot_cross_identity", "resolution_preserves_metadata_identity", "authorized_resolution_has_a_success_path"],
+      "scope": "Proposed scheme-neutral policy contract for the future PR. The links identify integration points where new implementation correspondence must be established.",
+      "source_ranges": [
+        ["src/cls/IPM/Repo/Oras/Definition.cls", 21, 47, "Repository modifiers and construction of read client"],
+        ["src/cls/IPM/Repo/Oras/Definition.cls", 87, 141, "Repository configuration lifecycle"],
+        ["src/cls/IPM/Repo/Manager.cls", 18, 46, "Service cache keyed by configured repository name"],
+        ["src/cls/IPM/Repo/Oras/PackageService.cls", 233, 279, "Payload and metadata read interfaces and exact target tag"],
+        ["src/cls/IPM/Storage/Module.cls", 1166, 1246, "Dependency lookup, manifest cache and planning boundary"],
+        ["src/cls/IPM/Repo/Oras/PackageService.cls", 845, 865, "Current pull adapter where raw retrieval must be established"],
+        ["src/cls/IPM/Utils/Module.cls", 235, 258, "First effects in the final archive consumer"]
+      ]
+    }
+  ]
+}

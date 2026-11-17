@@ -1,0 +1,66 @@
+{
+  "as_built.rs": {
+    "provider-unpacks-only-after-validation": [
+      "provider_extracted: t.provider_extracts,",
+      "provider_extracted: t.provider_extracts && status.status_ok,"
+    ],
+    "failed-validation-releases-linked-stream": [
+      "archive_released: status.status_ok,",
+      "archive_released: status.stream_set,"
+    ],
+    "hash-check-binds-earlier-metadata": [
+      "archive_released: status.status_ok,",
+      "archive_released: status.status_ok && t.metadata_manifest == t.pull_manifest,"
+    ]
+  },
+  "admission.rs": {
+    "ignore-registry": [
+      "target == expected_target",
+      "target.repository_path == expected_target.repository_path && target.tag == expected_target.tag"
+    ],
+    "ignore-package-path": [
+      "target == expected_target",
+      "target.registry == expected_target.registry && target.tag == expected_target.tag"
+    ],
+    "ignore-build-platform-tag": [
+      "target == expected_target",
+      "target.registry == expected_target.registry && target.repository_path == expected_target.repository_path"
+    ],
+    "reuse-old-policy-revision": [
+      "policy == active_policy",
+      "policy.identity == active_policy.identity && policy.signer == active_policy.signer"
+    ],
+    "ignore-signer": [
+      "&& signer == active_policy.signer",
+      "&& true"
+    ],
+    "trust-outage-allows-metadata": [
+      "_ => false,\n    }\n}",
+      "Verification::Unavailable => true,\n        _ => false,\n    }\n}"
+    ],
+    "unbound-manifest-digest": [
+      "&& manifest_digest == manifest.digest,",
+      "&& true,"
+    ],
+    "unbound-layer-digest": [
+      "manifest.package == Some(observed)",
+      "match manifest.package { Some(layer) => layer.size == observed.size, None => false }"
+    ],
+    "unbound-layer-size": [
+      "manifest.package == Some(observed)",
+      "match manifest.package { Some(layer) => layer.digest == observed.digest, None => false }"
+    ],
+    "extraction-before-admission": [
+      "may_extract: admitted,",
+      "may_extract: use_manifest,"
+    ],
+    "root-replacement-before-admission": [
+      "may_replace_root: admitted }",
+      "may_replace_root: true }"
+    ],
+    "new-manifest-can-reuse-old-plan": [
+      "&& previous.manifest_digest == manifest.digest",
+      "&& true"
+    ]
+  }
+}

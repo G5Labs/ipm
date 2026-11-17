@@ -1,0 +1,20 @@
+verification results:: 7 verified, 1 errors
+error: postcondition not satisfied
+  --> trust_outage_allows_metadata.rs:74:9
+   |
+69 | / pub proof fn extraction_binds_scope_and_bytes(
+70 | |     target: Target, policy: Policy, manifest: Manifest, evidence: Verification,
+71 | |     observed: Descriptor,
+72 | | )
+   | |_- at the end of the function body
+73 |       ensures
+74 | /         protected_admission(target, policy, manifest, evidence, observed).may_extract
+75 | |             ==> match evidence {
+76 | |                 Verification::Authorized { target: scope, policy: checked, manifest_digest, signer } =>
+77 | |                     scope.registry == target.registry
+...  |
+87 | |                 _ => false,
+88 | |             },
+   | |_____________^ failed this postcondition
+
+error: aborting due to 1 previous error

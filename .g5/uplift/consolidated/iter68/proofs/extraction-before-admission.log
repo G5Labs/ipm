@@ -1,0 +1,32 @@
+verification results:: 6 verified, 2 errors
+error: postcondition not satisfied
+  --> extraction_before_admission.rs:73:9
+   |
+68 | / pub proof fn extraction_binds_scope_and_bytes(
+69 | |     target: Target, policy: Policy, manifest: Manifest, evidence: Verification,
+70 | |     observed: Descriptor,
+71 | | )
+   | |_- at the end of the function body
+72 |       ensures
+73 | /         protected_admission(target, policy, manifest, evidence, observed).may_extract
+74 | |             ==> match evidence {
+75 | |                 Verification::Authorized { target: scope, policy: checked, manifest_digest, signer } =>
+76 | |                     scope.registry == target.registry
+...  |
+86 | |                 _ => false,
+87 | |             },
+   | |_____________^ failed this postcondition
+
+error: postcondition not satisfied
+   --> extraction_before_admission.rs:110:9
+    |
+103 | / pub proof fn verified_manifest_with_bad_bytes_only_allows_metadata(
+104 | |     target: Target, policy: Policy, manifest: Manifest, evidence: Verification,
+105 | |     observed: Descriptor,
+106 | | )
+    | |_- at the end of the function body
+...
+110 |           !protected_admission(target, policy, manifest, evidence, observed).may_extract,
+    |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: aborting due to 2 previous errors

@@ -178,6 +178,7 @@ def generate():
                 claims,
             )
             base = model.get("baseline") or model.get("proof") or {}
+            run_prefix = key if model.get("variant") or model.get("native_receipt") else directory.name
             for label, kind, item in [("proof", "proof", base)] + [
                 (c.get("id", c.get("name", "control")), "control", c)
                 for c in model.get("controls", [])
@@ -221,13 +222,21 @@ def generate():
                     key,
                     label,
                     kind,
-                    directory.name + "-" + label,
+                    run_prefix + "-" + label,
                     outcome,
                     assessment,
                     receipt,
                     "verified" if kind == "proof" else "named assertion rejected",
+                    variant=model.get("variant", "as-built"),
                     verified=item.get("verified"),
                     errors=item.get("errors"),
+                )
+            if model.get("native_receipt"):
+                receipt = directory / model["native_receipt"]
+                observations = load(receipt)["observations"]
+                row(
+                    key, "native comparison", "native", key + "-native",
+                    "native fields compared", "matched", receipt, cases=len(observations),
                 )
             run = directory / "run.json"
             if run.exists() and len(models) == 1:

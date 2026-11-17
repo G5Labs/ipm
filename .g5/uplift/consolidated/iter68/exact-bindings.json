@@ -1,0 +1,238 @@
+{
+  "product_pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+  "rows": [
+    {
+      "id": "oras-extraction-boundary",
+      "owner": ".g5/ontology/architecture/package-sources.g5.md#repo.oras.archive-boundary",
+      "model": "as_built.rs",
+      "symbols": [
+        "observe",
+        "rejection_stops_loader_after_provider_effect"
+      ],
+      "scope": "Scoped native comparison: ORAS extracts a directory layer during pull, before IPM's later archive check. A size refusal stops the installed root replacement and records the failure.",
+      "source_ranges": [
+        {
+          "path": "src/cls/IPM/Repo/Oras/PackageService.cls",
+          "start": 790,
+          "end": 842,
+          "role": "Pull: stage, invoke provider, select .tgz, check and return status",
+          "file_sha256": "cc5d1aa4ed289c786304cbc68e0c0e4542beb343a34d1cd930a491dc817802bc",
+          "span_sha256": "d83d7aa4f71ee9e518a864589f25df2ecd287f862b0ded530a1e710e083528a0"
+        },
+        {
+          "path": "src/cls/IPM/Repo/Oras/PackageService.cls",
+          "start": 846,
+          "end": 865,
+          "role": "PullOras: calls the provider's pull",
+          "file_sha256": "cc5d1aa4ed289c786304cbc68e0c0e4542beb343a34d1cd930a491dc817802bc",
+          "span_sha256": "2d173853ecff4e9ac15b87b45f435174a9e6c747a0bc84e1f7771a32852f6901"
+        },
+        {
+          "path": "wheels/oras-0.1.30-py3-none-any.whl",
+          "wheel_member": "oras/provider.py",
+          "start": 838,
+          "end": 875,
+          "role": "Registry.pull: fetches the manifest, writes layers and extracts directory layers",
+          "file_sha256": "57671f8f619a213a9482e7511c3a5685519d734da2850d2a0ff3286fb82670af",
+          "span_sha256": "2563f4a1bd1fd8b3b2aa0bbc4d2b40125dfb6b4e580daabcf65300498257915a"
+        },
+        {
+          "path": "wheels/oras-0.1.30-py3-none-any.whl",
+          "wheel_member": "oras/utils/fileio.py",
+          "start": 60,
+          "end": 89,
+          "role": "extract_targz: native provider extraction helper",
+          "file_sha256": "57671f8f619a213a9482e7511c3a5685519d734da2850d2a0ff3286fb82670af",
+          "span_sha256": "f10f4e350f4dace18540b75a6ced30201d5d6f6b097303e2c44e0c5555db55b9"
+        },
+        {
+          "path": "src/cls/IPM/Repo/Oras/PackageService.cls",
+          "start": 233,
+          "end": 246,
+          "role": "GetModule: status must succeed before returning the stream",
+          "file_sha256": "cc5d1aa4ed289c786304cbc68e0c0e4542beb343a34d1cd930a491dc817802bc",
+          "span_sha256": "84ec104fcdbba3ad93d14b4bf535d56b2a0d078acf339ebf0f8b74cc2bf2a12a"
+        },
+        {
+          "path": "src/cls/IPM/Utils/Module.cls",
+          "start": 140,
+          "end": 174,
+          "role": "LoadModuleReference: consumes stream only after GetModule returns",
+          "file_sha256": "7d48b4876dab2365179bc6127f923d4e81fd4c4950d08fca4de707002bb4059f",
+          "span_sha256": "a8dd75aabde943ea98b9f30e6b88d78662f9751e6f347e84b9a59fa1e950d74c"
+        },
+        {
+          "path": "src/cls/IPM/Utils/Module.cls",
+          "start": 235,
+          "end": 258,
+          "role": "LoadModuleFromArchive: replaces installed root, extracts and loads",
+          "file_sha256": "7d48b4876dab2365179bc6127f923d4e81fd4c4950d08fca4de707002bb4059f",
+          "span_sha256": "2a4e3c788bc9746421a5755223a4b9bd562d6514078e6836ac7c9d6ba024c19e"
+        },
+        {
+          "path": "src/cls/IPM/Main.cls",
+          "start": 2665,
+          "end": 2699,
+          "role": "Install records final status; Reinstall delegates through Install",
+          "file_sha256": "4180cd956f7ad09b6a27ebdc773858f08db2059f7fa6efe749eaf64ad9051062",
+          "span_sha256": "60965e20511c97ea52271e97ccfcaa02cd5c827dd5538d57b6805bc05e8d7ced"
+        }
+      ]
+    },
+    {
+      "id": "oras-dependency-identity",
+      "owner": ".g5/ontology/architecture/package-sources.g5.md#repo.oras.archive-boundary",
+      "model": "as_built.rs",
+      "symbols": [
+        "changed_tag",
+        "hash_acceptance_does_not_require_metadata_identity"
+      ],
+      "scope": "One ordinary exact dependency of a new parent: a catalog and dependency manifest read can return revision 1 while package retrieval and subsequent validation use revision 2 of the same tag.",
+      "source_ranges": [
+        {
+          "path": "src/cls/IPM/Repo/Oras/PackageService.cls",
+          "start": 398,
+          "end": 409,
+          "role": "Catalog metadata lookup by tag",
+          "file_sha256": "cc5d1aa4ed289c786304cbc68e0c0e4542beb343a34d1cd930a491dc817802bc",
+          "span_sha256": "e27c9ad434685738335b24b2e90315bfd60da5a2a8eb1334e748f0ea3f929cd0"
+        },
+        {
+          "path": "src/cls/IPM/Repo/Manager.cls",
+          "start": 195,
+          "end": 216,
+          "role": "RetrieveModuleManifest forwards the selected reference",
+          "file_sha256": "0e963557b11579aab7d36cf4988f87852d56b65594ad51c186f2dd80df3e4e7d",
+          "span_sha256": "ac0e04f121c5890582d339a1a7a273487441e8580157d374cc2ba9d2c39b51a4"
+        },
+        {
+          "path": "src/cls/IPM/Repo/Oras/PackageService.cls",
+          "start": 249,
+          "end": 279,
+          "role": "GetModuleManifest and TagForReference: request constructed from selected name and tag",
+          "file_sha256": "cc5d1aa4ed289c786304cbc68e0c0e4542beb343a34d1cd930a491dc817802bc",
+          "span_sha256": "45b2295e3864fc9e5aa79059cee992d6d5dd05a38f079effd640670377b87cb2"
+        },
+        {
+          "path": "src/cls/IPM/Repo/Oras/PackageService.cls",
+          "start": 867,
+          "end": 886,
+          "role": "GetModuleXML: reads the annotation by tag",
+          "file_sha256": "cc5d1aa4ed289c786304cbc68e0c0e4542beb343a34d1cd930a491dc817802bc",
+          "span_sha256": "17a3946cd30152e92cad408b071398b5373f2a3f6258d95dc2d81f08596e4064"
+        },
+        {
+          "path": "src/cls/IPM/Storage/Module.cls",
+          "start": 1187,
+          "end": 1216,
+          "role": "Exact dependency: retrieves and caches annotation, builds graph node without manifest digest",
+          "file_sha256": "ebdf57076d719edb7fac04cee3228be1c38fe9ac248afb7a25c3ed8d6472f858",
+          "span_sha256": "3c9a2acce356fe13911a3b39400462336202cf09cc695d7e870c85b667a1ade8"
+        },
+        {
+          "path": "src/cls/IPM/Storage/Module.cls",
+          "start": 1223,
+          "end": 1246,
+          "role": "Fuzzy neighbor uses the same split, source inspection only",
+          "file_sha256": "ebdf57076d719edb7fac04cee3228be1c38fe9ac248afb7a25c3ed8d6472f858",
+          "span_sha256": "c7da7473c30a989a0ecba5ed4b6fddc6922df7d306db57f451d0eeb6a630036e"
+        },
+        {
+          "path": "src/cls/IPM/Utils/Module.cls",
+          "start": 1379,
+          "end": 1413,
+          "role": "LoadDependencies: consumes a separate graph reference",
+          "file_sha256": "7d48b4876dab2365179bc6127f923d4e81fd4c4950d08fca4de707002bb4059f",
+          "span_sha256": "dad845b6f7c414fc8180f90fa9d679e2e2395d287900fd9f0e6008ed0f9b0e7b"
+        },
+        {
+          "path": "src/cls/IPM/Utils/Module.cls",
+          "start": 92,
+          "end": 100,
+          "role": "LoadModuleReference: reconstructs reference from graph and platform",
+          "file_sha256": "7d48b4876dab2365179bc6127f923d4e81fd4c4950d08fca4de707002bb4059f",
+          "span_sha256": "7840a479cf8b964ddf0ffa9b8bdea46030f89fa969ea8f0b97d8bdb92550ec58"
+        },
+        {
+          "path": "src/cls/IPM/Repo/Oras/PackageService.cls",
+          "start": 1006,
+          "end": 1021,
+          "role": "VerifyModuleHashAndSize: fresh manifest lookup by tag",
+          "file_sha256": "cc5d1aa4ed289c786304cbc68e0c0e4542beb343a34d1cd930a491dc817802bc",
+          "span_sha256": "17f5206ec0bfc46f0a444b002f68f6c561972be0715d9ca5ee94833638ca1e50"
+        }
+      ]
+    },
+    {
+      "id": "oras-proposed-admission",
+      "owner": ".g5/ontology/architecture/package-sources.g5.md#repo.oras.signed-admission",
+      "model": "admission.rs",
+      "symbols": [
+        "extraction_binds_scope_and_bytes",
+        "trust_failure_has_no_consumer_effect",
+        "cached_evidence_cannot_cross_identity",
+        "resolution_preserves_metadata_identity",
+        "authorized_resolution_has_a_success_path"
+      ],
+      "scope": "Proposed scheme-neutral policy contract for the future PR. The links identify integration points where new implementation correspondence must be established.",
+      "source_ranges": [
+        {
+          "path": "src/cls/IPM/Repo/Oras/Definition.cls",
+          "start": 21,
+          "end": 47,
+          "role": "Repository modifiers and construction of read client",
+          "file_sha256": "cab2ea195b7e4441f4c87901424041edf46dc24d3fb6db76861583669ea9b98c",
+          "span_sha256": "d6938ceee62eb0960ca291869106b3799de33d015086951986e7e622b4399f52"
+        },
+        {
+          "path": "src/cls/IPM/Repo/Oras/Definition.cls",
+          "start": 87,
+          "end": 141,
+          "role": "Repository configuration lifecycle",
+          "file_sha256": "cab2ea195b7e4441f4c87901424041edf46dc24d3fb6db76861583669ea9b98c",
+          "span_sha256": "60819c5d74ad48f3c5e992c683ae98d9d94348fb7eebaecd085cf81dc6eace8f"
+        },
+        {
+          "path": "src/cls/IPM/Repo/Manager.cls",
+          "start": 18,
+          "end": 46,
+          "role": "Service cache keyed by configured repository name",
+          "file_sha256": "0e963557b11579aab7d36cf4988f87852d56b65594ad51c186f2dd80df3e4e7d",
+          "span_sha256": "30c6c9cc997b5739bc8f8a90e32dc6dd1fb96dcb2e8d13bc31ad1e6b8185d5b6"
+        },
+        {
+          "path": "src/cls/IPM/Repo/Oras/PackageService.cls",
+          "start": 233,
+          "end": 279,
+          "role": "Payload and metadata read interfaces and exact target tag",
+          "file_sha256": "cc5d1aa4ed289c786304cbc68e0c0e4542beb343a34d1cd930a491dc817802bc",
+          "span_sha256": "68d0e43e4cb5fa15cad1e710a48f416587165df921f6473eb27706a2ff73f66f"
+        },
+        {
+          "path": "src/cls/IPM/Storage/Module.cls",
+          "start": 1166,
+          "end": 1246,
+          "role": "Dependency lookup, manifest cache and planning boundary",
+          "file_sha256": "ebdf57076d719edb7fac04cee3228be1c38fe9ac248afb7a25c3ed8d6472f858",
+          "span_sha256": "564128cb33b9dff5e90bc9d884d3ab7fdfc224bedc63d4848a7f7588de9c964a"
+        },
+        {
+          "path": "src/cls/IPM/Repo/Oras/PackageService.cls",
+          "start": 845,
+          "end": 865,
+          "role": "Current pull adapter where raw retrieval must be established",
+          "file_sha256": "cc5d1aa4ed289c786304cbc68e0c0e4542beb343a34d1cd930a491dc817802bc",
+          "span_sha256": "190e015953f67b402267e88e0019c050fbca041bbcbb971bb7f16085e1b87773"
+        },
+        {
+          "path": "src/cls/IPM/Utils/Module.cls",
+          "start": 235,
+          "end": 258,
+          "role": "First effects in the final archive consumer",
+          "file_sha256": "7d48b4876dab2365179bc6127f923d4e81fd4c4950d08fca4de707002bb4059f",
+          "span_sha256": "2a4e3c788bc9746421a5755223a4b9bd562d6514078e6836ac7c9d6ba024c19e"
+        }
+      ]
+    }
+  ]
+}

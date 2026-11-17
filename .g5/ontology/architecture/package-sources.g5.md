@@ -76,6 +76,22 @@ As built, an ORAS pull without a tag selects the last tag supplied by the regist
 
 - Working assumption: expose the mismatch and retain size/digest checking. Alternatives are sorting before selection or requiring a registry ordering contract, plus rejecting ambiguous archives or selecting by declared digest.
 
+<a id="repo.oras.archive-boundary"></a>
+[D · repo.oras.archive-boundary]
+
+As built, the ORAS client can unpack a directory layer in its staging area before IPM checks the package archive. A failed archive size or digest check stops IPM from replacing the installed module's directory.
+
+- A same-version reinstall with a size mismatch left an unpacked staging file. The installed files, callable code and module row stayed at the original revision. IPM recorded a failed, uncommitted install.
+- ORAS dependency resolution reads the package's manifest annotation by tag, then retrieves the archive by tag again. A checked parent load resolved a child using revision 1 and installed revision 2 after the registry moved that same tag. The archive passed the later size and digest check against revision 2.
+
+<a id="repo.oras.signed-admission"></a>
+[I · repo.oras.signed-admission]
+
+When verification is configured for an ORAS repository, IPM must verify the publisher's authorization for the selected artifact before unpacking it. Signing is part of external promotion.
+
+- Proposed for [issue #281](https://github.com/intersystems/ipm/issues/281). The experiment contract also requires dependencies resolved from protected repositories to use metadata and bytes from the same authorized manifest. Failed verification must stop before unpacking or replacing the installed directory.
+- Open decisions include the trust format and signer policy, whether protected resolution may choose an unprotected repository, and how a configuration change affects an in-flight operation. The proposed contract scopes each decision to the selected repository and policy revision.
+
 ## Platform tags and version listings
 
 <a id="repo.oras.tag-decode"></a>
@@ -194,6 +210,27 @@ Sources: `Repo/Oras/PackageService.cls::GetLatestTag`, `::GetAllTags`, `::Pull`,
 Open questions: [Should an untagged pull always select the highest semantic version, and must a package have exactly one archive layer?](../../Verus_verification/open_questions.md#repo.oras.integrity.policy)
 
 State machines: [registry · iter2](../../Verus_verification/models/iter2-registry/manifest.json)
+
+### repo.oras.archive-boundary
+
+- agent
+- user-facing-behavior, security
+- Expands: [ORAS integrity](#repo.oras.integrity).
+
+[As-built model and receipts](../../uplift/consolidated/iter68/HANDOFF.md) trace the bundled provider, IPM's status gate, installed files, history and a live dependency consumer. [Pinned source bindings](../../uplift/consolidated/iter68/exact-bindings.json) include the installed wheel implementation.
+
+State machines: [ORAS archive boundary](../../Verus_verification/models/iter68-as-built/manifest.json)
+
+### repo.oras.signed-admission
+
+- uncertain
+- human-provided
+- user-facing-behavior, security
+- Expands: [ORAS archive boundary](#repo.oras.archive-boundary).
+
+Authority: [issue #281](https://github.com/intersystems/ipm/issues/281) and its maintainer comments. The metadata, digest and policy-revision rules are the proposed [experiment contract](../../uplift/consolidated/iter68/HANDOFF.md). No product adapter or verifier is implemented by this model.
+
+State machines: [Proposed signed admission](../../Verus_verification/models/iter68-admission/manifest.json)
 
 ### repo.oras.tag-decode
 
