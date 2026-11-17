@@ -142,6 +142,20 @@ Method TestConfigureTrustServer()
     do $$$AssertEquals(repo.GetPackageService().TrustServer, "", "Package service no longer verifies")
 }
 
+/// Repo types that cannot verify refuse a trust server instead of ignoring it.
+Method TestTrustServerRefusedForOtherRepoTypes()
+{
+    set sc = ##class(%IPM.Main).Shell("repo -r -name cfg-remote -url http://registry:52773/registry/ -trust-server " _ ..#TrustServer)
+    do ..AssertRefused(sc, "-trust-server applies only to ORAS repositories, not to repository 'cfg-remote' of type Remote Repository.")
+    do $$$AssertNotTrue(##class(%IPM.Repo.Definition).ServerDefinitionKeyExists("cfg-remote"), "No remote repo was created")
+
+    set path = ##class(%IPM.Utils.File).CreateTempDirectory()
+    do $$$AssertStatusOK(##class(%IPM.Main).Shell("repo -fs -name cfg-fs -path " _ path), "Configured a filesystem repo")
+    set sc = ##class(%IPM.Main).Shell("repo -n cfg-fs -trust-server " _ ..#TrustServer)
+    do ..AssertRefused(sc, "not to repository 'cfg-fs' of type Filesystem.")
+    do ##class(%IPM.Utils.File).RemoveDirectoryTree(path)
+}
+
 /// A repo without a trust server, including one saved before the setting existed, installs unsigned modules as before.
 Method TestRepoWithoutTrustServerUnchanged()
 {

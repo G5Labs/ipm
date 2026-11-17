@@ -171,6 +171,12 @@ ClassMethod Configure(
             set tInstance.Name = tName
         }
 
+        // Other repo types would ignore the setting and leave their modules unverified
+        if $data(pModifiers("trust-server")) && 'tInstance.%Extends("%IPM.Repo.Oras.Definition") {
+            set tMessage = "-trust-server applies only to ORAS repositories, not to repository '%1' of type %2."
+            $$$ThrowStatus($$$ERROR($$$GeneralError,$$$FormatText(tMessage,tName,$parameter(tInstance,"DISPLAYNAME"))))
+        }
+
         if $data(pModifiers("disable")) {
             set tInstance.Enabled = 0
         } elseif (tIsNew || $data(pModifiers("enable"))) {
