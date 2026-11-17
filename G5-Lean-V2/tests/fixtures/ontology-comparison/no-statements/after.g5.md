@@ -1,3 +1,0 @@
-# Index
-
-Just other prose.
