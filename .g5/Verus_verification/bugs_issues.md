@@ -1,6 +1,6 @@
 # IPM bugs and issues
 
-The G, C and P prefixes retain the original register identities. [Iteration 28 reconciliation](../uplift/consolidated/findings-audit-iter28/README.md).
+Each entry explains a recorded problem, its impact and the evidence. Findings that depend on an unresolved policy say so in their descriptions.
 
 <a id="catalog-rows-24-of-42-checked"></a><!-- historical section alias -->
 <a id="history-commitments-17-of-17-checked"></a><!-- historical section alias -->
