@@ -21,7 +21,9 @@ prompt: What should the installer's upgrade flag and database name mean?
 severity: medium
 multi_select: false
 allow_free_text: true
-options: []
+options:
+  - label: as built, IPM never sets them. The upgrade flag is 0 and the database name is empty unless `-DConfigure.IsUpgrade` or `-DConfigure.DatabaseName` supplies them, even when a newer version replaces an installed one.
+    description: Default assumption.
 answer:
   selected: []
   text: ""
@@ -52,7 +54,9 @@ prompt: When a phase list mixes standard phases with a custom or unknown name, w
 severity: medium
 multi_select: false
 allow_free_text: true
-options: []
+options:
+  - label: Run the standard chain, then each custom phase in the order named. Refuse the whole command before any phase runs when a name is neither a standard nor a declared custom phase.
+    description: Default assumption.
 answer:
   selected: []
   text: ""
@@ -84,7 +88,9 @@ prompt: Should standalone reload warn or fail when a module has no source root?
 severity: medium
 multi_select: false
 allow_free_text: true
-options: []
+options:
+  - label: A standalone `reload` of a module with no root says that nothing was loaded; the phase stays silent inside other phase lists.
+    description: Default assumption.
 answer:
   selected: []
   text: ""
@@ -115,7 +121,9 @@ prompt: Should a load fail or warn when `LifecycleClass` names a class that is n
 severity: medium
 multi_select: false
 allow_free_text: true
-options: []
+options:
+  - label: as built, fall back to `Module` silently.
+    description: Default assumption.
 answer:
   selected: []
   text: ""
@@ -146,7 +154,9 @@ prompt: Should a higher-version load remove a web application omitted by the new
 severity: medium
 multi_select: false
 allow_free_text: true
-options: []
+options:
+  - label: disclose that the application remains; do not promise automatic removal without an ownership rule.
+    description: Default assumption.
 answer:
   selected: []
   text: ""
@@ -178,7 +188,9 @@ prompt: Should install take over an existing web application of the same name, a
 severity: medium
 multi_select: false
 allow_free_text: true
-options: []
+options:
+  - label: keep the as-built behavior and disclose it. Alternatives are to refuse install when the application exists and no module lists it, or to record creation and delete only what IPM created. Both change today's reinstall-over-manual-setup path.
+    description: Default assumption.
 answer:
   selected: []
   text: ""
@@ -209,7 +221,9 @@ prompt: When one of several `-env` files is missing, malformed or an array, what
 severity: medium
 multi_select: false
 allow_free_text: true
-options: []
+options:
+  - label: as built. The command fails and keeps nothing from any file, and a later array overwrites the earlier one position by position, so it cannot remove items.
+    description: Default assumption.
 answer:
   selected: []
   text: ""
@@ -243,6 +257,8 @@ severity: medium
 multi_select: false
 allow_free_text: true
 options:
+  - label: keep the observed brace gate until a maintainer chooses otherwise.
+    description: Default assumption.
   - label: |-
       expand macros with or without a brace.
       - Affected claims: parameter evaluation, after-install message, file-copy target and Invoke arguments. Alias C:Q2; parent
@@ -280,7 +296,9 @@ prompt: Must package failure undo instance configuration changes?
 severity: medium
 multi_select: false
 allow_free_text: true
-options: []
+options:
+  - label: database rollback alone gives no such promise. Alternatives are compensating selected changes or refusing them inside package transactions.
+    description: Default assumption.
 answer:
   selected: []
   text: ""
@@ -309,7 +327,9 @@ prompt: Should uninstall keep a legacy SystemSetting value or restore the value 
 severity: medium
 multi_select: false
 allow_free_text: true
-options: []
+options:
+  - label: Q17).
+    description: Default assumption.
 answer:
   selected: []
   text: ""
@@ -338,7 +358,9 @@ prompt: How should IPM remove Python packages without removing a package another
 severity: medium
 multi_select: false
 allow_free_text: true
-options: []
+options:
+  - label: Q18).
+    description: Default assumption.
 answer:
   selected: []
   text: ""
@@ -368,7 +390,9 @@ prompt: Should FileCopy protect a parent containing an unconfigured descendant w
 severity: medium
 multi_select: false
 allow_free_text: true
-options: []
+options:
+  - label: Protect configured storage roots, their ancestors, and an exact target containing an IRIS.DAT marker. Preserve the observed behavior while a recursive search requirement remains undecided.
+    description: Default assumption.
 answer:
   selected: []
   text: ""
@@ -400,7 +424,9 @@ prompt: Which source owns mapped IPM when several namespace records name one cod
 severity: medium
 multi_select: false
 allow_free_text: true
-options: []
+options:
+  - label: The source of a mapped namespace is the namespace whose own code database holds the IPM code.
+    description: Default assumption.
 answer:
   selected: []
   text: ""
@@ -432,7 +458,9 @@ prompt: What status should enable -community return when a component step fails?
 severity: medium
 multi_select: false
 allow_free_text: true
-options: []
+options:
+  - label: If a step of `enable -community` fails, the command stops and returns that error.
+    description: Default assumption.
 answer:
   selected: []
   text: ""
@@ -464,7 +492,9 @@ prompt: Which platform tags should unpublish remove when only a version is named
 severity: medium
 multi_select: false
 allow_free_text: true
-options: []
+options:
+  - label: ORAS `unpublish R/M V` deletes the plain tag and every `V__<platform>` tag of that version.
+    description: Default assumption.
 answer:
   selected: []
   text: ""
@@ -496,7 +526,9 @@ prompt: Should changing an ORAS registry address clear its stored credentials?
 severity: medium
 multi_select: false
 allow_free_text: true
-options: []
+options:
+  - label: Changing an ORAS registry's address clears its stored credentials, as for a remote registry.
+    description: Default assumption.
 answer:
   selected: []
   text: ""
@@ -529,6 +561,8 @@ severity: medium
 multi_select: false
 allow_free_text: true
 options:
+  - label: no. Skip it with a warning, like an unreadable manifest, so the other modules stay available.
+    description: Default assumption.
   - label: fail every bad manifest, including unreadable ones, so nothing is silently hidden
     description: ""
 answer:
@@ -562,7 +596,9 @@ prompt: Should an untagged pull always select the highest semantic version, and 
 severity: medium
 multi_select: false
 allow_free_text: true
-options: []
+options:
+  - label: expose the mismatch and retain size/digest checking. Alternatives are sorting before selection or requiring a registry ordering contract, plus rejecting ambiguous archives or selecting by declared digest.
+    description: Default assumption.
 answer:
   selected: []
   text: ""
@@ -594,7 +630,9 @@ prompt: Should registry credentials be sent to a download URL on a different ser
 severity: medium
 multi_select: false
 allow_free_text: true
-options: []
+options:
+  - label: keep following the returned URL, and record the forwarding as suspected defect C:D20. The proposed alternative sends credentials only when the URL's server and port match the repository; a third choice is to refuse such URLs. Either change can break registries that redirect downloads to storage needing the same credentials.
+    description: Default assumption.
 answer:
   selected: []
   text: ""
@@ -626,7 +664,9 @@ prompt: Does cache replacement need its explicit lock until the caller's transac
 severity: medium
 multi_select: false
 allow_free_text: true
-options: []
+options:
+  - label: keep the intended consistent cache and investigate competing refreshes under actual database isolation. Alternatives are deferred release, refusing an outer transaction or demonstrating that existing database locks suffice.
+    description: Default assumption.
 answer:
   selected: []
   text: ""
@@ -661,6 +701,8 @@ severity: medium
 multi_select: false
 allow_free_text: true
 options:
+  - label: yes. A module's `<Defaults>` apply whenever that module is installed, including as a dependency. A `NoJournal` dependency therefore keeps its changes when the parent rolls back, and its history record must survive and say so.
+    description: Default assumption.
   - label: the parent's transaction governs every nested load, so a dependency's `<Defaults>` `NoJournal` is ignored, or the dependency is refused, while a parent transact
     description: the parent's transaction governs every nested load, so a dependency's `<Defaults>` `NoJournal` is ignored, or the dependency is refused, while a parent transaction is open. This keeps [the whole-load rollback](../ontology/features/load.g5.md#load.outcome)
 answer:
@@ -695,6 +737,8 @@ severity: medium
 multi_select: false
 allow_free_text: true
 options:
+  - label: yes. A module that declares `NoTransaction` must not run inside a transaction opened for its parent, so the package change runs without one, and a failure may leave a partial install.
+    description: Default assumption.
   - label: the flag affects only the dependency's own load, so the parent's transaction still wraps it and undoes it on failure. A user whose install contains a conflictin
     description: the flag affects only the dependency's own load, so the parent's transaction still wraps it and undoes it on failure. A user whose install contains a conflicting module passes `-DNoTransaction=1` for the whole command
 answer:
@@ -729,6 +773,8 @@ severity: medium
 multi_select: false
 allow_free_text: true
 options:
+  - label: keep the current scope. The guard covers `install` only, and `-force` does not lift it.
+    description: Default assumption.
   - label: let `-force` lift the guard as the wiki says, and decide whether `load` is covered
     description: ""
 answer:
@@ -765,6 +811,8 @@ severity: medium
 multi_select: false
 allow_free_text: true
 options:
+  - label: yes, it keeps the stored mode.
+    description: Default assumption.
   - label: a plain load always uses normal mode, following that fix's wording that a module "should only be DevMode if the -dev flag is included"
     description: ""
 answer:
@@ -800,6 +848,8 @@ severity: medium
 multi_select: false
 allow_free_text: true
 options:
+  - label: database rollback is the existing boundary; external effects need separate receipts and must be reported.
+    description: Default assumption.
   - label: |-
       add explicit compensating actions for each external writer.
       - Affected claims: load failure atomicity, lock-file location and status, file copy, CPF and history
@@ -841,6 +891,8 @@ severity: medium
 multi_select: false
 allow_free_text: true
 options:
+  - label: Preserve the stated install overwrite guard for dependencies; load scope follows the parent force/load question.
+    description: Default assumption.
   - label: |-
       Allow top-level guard only, with a warning when dependency developer mode is cleared.
       - Affected claims: install refusal, dependency replacement and developer w
@@ -880,6 +932,8 @@ severity: medium
 multi_select: false
 allow_free_text: true
 options:
+  - label: Require closure consistency as intent; record the observed violating state rather than assuming a repair.
+    description: Default assumption.
   - label: |-
       Document temporary inconsistency after failure, or use one load-wide transaction mode.
       - Affected claims: dependency satisfaction, mixed-mode rollback and retry
@@ -917,6 +971,8 @@ severity: medium
 multi_select: false
 allow_free_text: true
 options:
+  - label: keep the special case for IRIS-style versions, because IPM's tests require `2022.2` to match only `2022.2`.
+    description: Default assumption.
   - label: one rule for every partial version. Then `2022.2` would also accept `2022.2.1`
     description: ""
 answer:
@@ -950,7 +1006,9 @@ prompt: When should an existing artifact folder or same-named temporary file be 
 severity: medium
 multi_select: false
 allow_free_text: true
-options: []
+options:
+  - label: preserve observed reuse and disclose that it gives no freshness guarantee. Alternatives are immutable digest-addressed files, explicit refresh, or validating the cached bytes against the selected artifact.
+    description: Default assumption.
 answer:
   selected: []
   text: ""
@@ -982,7 +1040,9 @@ prompt: Should artifact copies refuse protected installation folders as FileCopy
 severity: medium
 multi_select: false
 allow_free_text: true
-options: []
+options:
+  - label: disclose the warning boundary without promising protection. Alternatives are a common refusal rule, an explicit operator override, or retaining warning-only behavior.
+    description: Default assumption.
 answer:
   selected: []
   text: ""
@@ -1014,7 +1074,9 @@ prompt: Should a declared test package with no test classes fail `test` and `ver
 severity: medium
 multi_select: false
 allow_free_text: true
-options: []
+options:
+  - label: keep the warning and the passing status. The alternative is to fail, or to fail only when a run executes no tests at all. Either alternative changes current green builds whose test package is intentionally empty.
+    description: Default assumption.
 answer:
   selected: []
   text: ""
@@ -1044,7 +1106,9 @@ prompt: Should a reloaded manifest that omits IncludeTests keep the previous val
 severity: medium
 multi_select: false
 allow_free_text: true
-options: []
+options:
+  - label: preserve the checked behavior and use an explicit false to clear it. Resetting on omission would make a removed declaration disable test packaging, but would change existing reload behavior.
+    description: Default assumption.
 answer:
   selected: []
   text: ""
@@ -1075,7 +1139,9 @@ prompt: When the newest offer of a module breaks an installed module's requireme
 severity: medium
 multi_select: false
 allow_free_text: true
-options: []
+options:
+  - label: keep the as-built refusal, so the user sees the conflict and chooses a version explicitly.
+    description: Default assumption.
 answer:
   selected: []
   text: ""
@@ -1106,7 +1172,9 @@ prompt: Should `load <directory>` refuse or warn when the loaded module's versio
 severity: medium
 multi_select: false
 allow_free_text: true
-options: []
+options:
+  - label: as built, the load succeeds without a warning, and installed modules keep requirements the namespace no longer satisfies.
+    description: Default assumption.
 answer:
   selected: []
   text: ""
@@ -1138,7 +1206,9 @@ prompt: Should a lock file accept a directory-loaded dependency with no registry
 severity: medium
 multi_select: false
 allow_free_text: true
-options: []
+options:
+  - label: A needed module loaded from a folder is written to the lock file with an empty registry.
+    description: Default assumption.
 answer:
   selected: []
   text: ""
@@ -1170,7 +1240,9 @@ prompt: Should sync without a module name return an error when a module fails?
 severity: medium
 multi_select: false
 allow_free_text: true
-options: []
+options:
+  - label: "`sync` with no module name reports each failure and a summary, then returns OK."
+    description: Default assumption.
 answer:
   selected: []
   text: ""
@@ -1202,7 +1274,9 @@ prompt: Should sync retry a failed compile or reload after its source is reverte
 severity: medium
 multi_select: false
 allow_free_text: true
-options: []
+options:
+  - label: Files that a failed `compile`, `load -dev` or `reload` put on the server are re-detected by the next `sync`.
+    description: Default assumption.
 answer:
   selected: []
   text: ""
@@ -1234,6 +1308,8 @@ severity: medium
 multi_select: false
 allow_free_text: true
 options:
+  - label: no, as built. The command edits the namespace's copy, and source control hooks, when present, take it from there.
+    description: Default assumption.
   - label: yes for a module loaded in developer mode, whose folder is its working copy
     description: ""
 answer:
@@ -1264,7 +1340,9 @@ prompt: Should `generate` report or refuse a source file that cannot load?
 severity: medium
 multi_select: false
 allow_free_text: true
-options: []
+options:
+  - label: Q16).
+    description: Default assumption.
 answer:
   selected: []
   text: ""
@@ -1297,6 +1375,8 @@ severity: medium
 multi_select: false
 allow_free_text: true
 options:
+  - label: record them. Examples are `update` or `reinstall` of a module that is not installed, and `uninstall` with no name.
+    description: Default assumption.
   - label: argument refusals are not attempts, because IPM refuses them before the action starts
     description: ""
 answer:
@@ -1331,6 +1411,8 @@ severity: medium
 multi_select: false
 allow_free_text: true
 options:
+  - label: "`Committed` reflects the changes kept, even on an unfinished record. IPM writes it to the permanent record at each commit."
+    description: Default assumption.
   - label: an empty end time means the outcome is unknown, so readers must not trust `Committed=0` on such a record
     description: ""
 answer:
@@ -1368,6 +1450,8 @@ severity: medium
 multi_select: false
 allow_free_text: true
 options:
+  - label: keep the `load` label for dependencies of `load` and `update`, keep their stored source, and keep the rule that listings show a source only for installs.
+    description: Default assumption.
   - label: |-
       label them `install` with their source, following the original request's wording "install (including as a dependency)". That changes the maintainer test.
       - Alte
@@ -1407,6 +1491,8 @@ severity: medium
 multi_select: false
 allow_free_text: true
 options:
+  - label: yes. The docs read a phase with no end time as a hang or crash, so an ordinary error must not look like one.
+    description: Default assumption.
   - label: accept open phases for returned errors and document it
     description: ""
 answer:
@@ -1446,6 +1532,8 @@ severity: medium
 multi_select: false
 allow_free_text: true
 options:
+  - label: the record survives, because the original request says "if install rolls back we still need the history". `Committed` is exact only for actions started outside any caller transaction, because IPM cannot know the caller's later outcome. Record this limit.
+    description: Default assumption.
   - label: |-
       compare the transaction level at the end with the level at the start, so any commit nested in a caller transaction reads uncommitted.
       - Alternative: treat calle
@@ -1483,7 +1571,9 @@ prompt: What history outcome is required when an operator commits a stopped load
 severity: medium
 multi_select: false
 allow_free_text: true
-options: []
+options:
+  - label: Answering "Commit" at a crash prompt is an operator error to document.
+    description: Default assumption.
 answer:
   selected: []
   text: ""
@@ -1516,6 +1606,8 @@ severity: medium
 multi_select: false
 allow_free_text: true
 options:
+  - label: filters on listed columns, including version parts, must work, and IPM must never silently drop a filter. When `find` cannot run its query, it reports the error instead of showing an empty log.
+    description: Default assumption.
   - label: refuse an unknown column with an error, or ignore it with a warning and apply the rest
     description: ""
 answer:
@@ -1550,6 +1642,8 @@ severity: medium
 multi_select: false
 allow_free_text: true
 options:
+  - label: no. Default modifiers are meant for package changes, such as `-DNoTransaction=1`, while `history` filters are explicit requests.
+    description: Default assumption.
   - label: apply them as filters and document it
     description: ""
 answer:
@@ -1584,6 +1678,8 @@ severity: medium
 multi_select: false
 allow_free_text: true
 options:
+  - label: only the matching ones. `-confirm` only permits a delete without a filter.
+    description: Default assumption.
   - label: follow the command help
     description: ""
 answer:
@@ -1626,6 +1722,8 @@ severity: medium
 multi_select: false
 allow_free_text: true
 options:
+  - label: a delete or purge may remove any matching record, and the running action must still finish normally whether or not its record comes back.
+    description: Default assumption.
   - label: skip records of running actions, or always write the final result back
     description: ""
 answer:
@@ -1660,6 +1758,8 @@ severity: medium
 multi_select: false
 allow_free_text: true
 options:
+  - label: no. A finalized record is one whose action has ended, so a record without an end time stays unfinalized.
+    description: Default assumption.
   - label: finalize whenever IPM releases the record, and accept locked records with no end time
     description: ""
 answer:
@@ -1694,6 +1794,8 @@ severity: medium
 multi_select: false
 allow_free_text: true
 options:
+  - label: no. The command should still run, which is a proposed change.
+    description: Default assumption.
   - label: report the purge error and stop, as a signal that retention is broken
     description: ""
 answer:
@@ -1727,6 +1829,8 @@ severity: medium
 multi_select: false
 allow_free_text: true
 options:
+  - label: no. History belongs to each namespace.
+    description: Default assumption.
   - label: accept it, because removing IPM is rare
     description: ""
 answer:
@@ -1762,6 +1866,8 @@ severity: medium
 multi_select: false
 allow_free_text: true
 options:
+  - label: Count surviving child writes in the parent outcome; retain the distinction between parent and child records.
+    description: Default assumption.
   - label: |-
       Keep per-activation marker only and rely on independent child records after a repair.
       - Affected claims: Committed truth, record existence and aggregate load ou
@@ -1801,6 +1907,8 @@ severity: medium
 multi_select: false
 allow_free_text: true
 options:
+  - label: Report errors that mean requested deletion was not performed.
+    description: Default assumption.
   - label: |-
       Keep best-effort behavior and explicitly list skipped namespaces and errors.
       - Affected claims: global delete status and namespace scope. Alias Q-27
@@ -1838,6 +1946,8 @@ severity: medium
 multi_select: false
 allow_free_text: true
 options:
+  - label: Return identities sufficient for a caller to distinguish colliding namespace-local IDs.
+    description: Default assumption.
   - label: |-
       Keep the legacy row shape and document a separate namespace-aware API.
       - Affected claims: global query scope, identity and details lookup. Alias Q-28
@@ -1875,6 +1985,8 @@ severity: medium
 multi_select: false
 allow_free_text: true
 options:
+  - label: Retain the documented age rule while keeping deletion/finalization races explicit; no repair outcome is claimed.
+    description: Default assumption.
   - label: |-
       Skip active rows and define how killed actions eventually expire.
       - Affected claims: retention fix, active writers and abnormal process ends. Alias Q-29
@@ -1912,6 +2024,8 @@ severity: medium
 multi_select: false
 allow_free_text: true
 options:
+  - label: Keep current survival requirement and report the repair as undecided; no product repair applied.
+    description: Default assumption.
   - label: |-
       Use one load-wide mode plus guarded close and mark ordering, or extend the repair to durably mark escaped child writes.
       - Affected claims: D1 and aliases, calle
@@ -1951,6 +2065,8 @@ severity: medium
 multi_select: false
 allow_free_text: true
 options:
+  - label: Keep the intent that a no-write refusal is uncommitted; classify the early marker as a defect.
+    description: Default assumption.
   - label: |-
       Declare every no-transaction attempt committed from its start and change the owning I rule explicitly.
       - Affected claims: validation timing, no-transaction hist
@@ -1990,6 +2106,8 @@ severity: medium
 multi_select: false
 allow_free_text: true
 options:
+  - label: the version already installed, as the command summary and its examples say.
+    description: Default assumption.
   - label: the latest version, as the command description and the wiki say
     description: ""
 answer:
@@ -2027,6 +2145,8 @@ severity: medium
 multi_select: false
 allow_free_text: true
 options:
+  - label: yes. A maintainer test expects a newer version to install with `-dev`, and the original request asked IPM to point users to `-dev` or `-force`.
+    description: Default assumption.
   - label: |-
       only `-force` lifts it, as the README says.
       - Related: a `-dev` install from a [read-only repository](../ontology/concepts/repositories.g5.md#repo.read-only) is
@@ -2067,6 +2187,8 @@ severity: medium
 multi_select: false
 allow_free_text: true
 options:
+  - label: yes. The manifest docs say requirements are checked "before module installation", and a module that fails them was never installable.
+    description: Default assumption.
   - label: accept that a refused developer-mode or `-DNoTransaction=1` load keeps its saved manifest, since developer mode keeps what it did
     description: ""
 answer:
@@ -2101,6 +2223,8 @@ severity: medium
 multi_select: false
 allow_free_text: true
 options:
+  - label: the copy in the older repository, as built. The changelog says ties go to the repository created first.
+    description: Default assumption.
   - label: |-
       the `.modules` copy, because the code that creates the temporary repository says it should be found first and gives it the first sort position.
       - Either way, a
@@ -2138,7 +2262,9 @@ prompt: Should a phase-scoped dependency block uninstall?
 severity: medium
 multi_select: false
 allow_free_text: true
-options: []
+options:
+  - label: A need declared only for a phase (test, verify) does not block uninstall.
+    description: Default assumption.
 answer:
   selected: []
   text: ""
@@ -2168,7 +2294,9 @@ prompt: Should uninstall report an error and keep its metadata when a class cann
 severity: medium
 multi_select: false
 allow_free_text: true
-options: []
+options:
+  - label: preserve and disclose the checked behavior pending an owner decision. Returning an error would make incomplete removal visible to scripts; retaining metadata would preserve a retry route. Earlier external effects may already have occurred.
+    description: Default assumption.
 answer:
   selected: []
   text: ""
@@ -2199,7 +2327,9 @@ prompt: Should two modules be allowed to share an update-step class and method, 
 severity: medium
 multi_select: false
 allow_free_text: true
-options: []
+options:
+  - label: authors use distinct update packages. Alternatives are to refuse a conflicting home, key records by module, or retain explicit shared owners. Each changes registration and deletion behavior; concurrent writers need a separate check.
+    description: Default assumption.
 answer:
   selected: []
   text: ""
@@ -2231,7 +2361,9 @@ prompt: Should a developer-mode install seed update-step records?
 severity: medium
 multi_select: false
 allow_free_text: true
-options: []
+options:
+  - label: A developer-mode install or load seeds update steps like any install; a later update runs only newer steps.
+    description: Default assumption.
 answer:
   selected: []
   text: ""
@@ -2263,7 +2395,9 @@ prompt: Should a dependency first installed by update run its old steps or seed 
 severity: medium
 multi_select: false
 allow_free_text: true
-options: []
+options:
+  - label: A module that `update` installs for the first time has its steps seeded, as on a fresh install.
+    description: Default assumption.
 answer:
   selected: []
   text: ""
@@ -2295,7 +2429,9 @@ prompt: Should an update whose step lock is busy fail or report success?
 severity: medium
 multi_select: false
 allow_free_text: true
-options: []
+options:
+  - label: If the update lock is busy, `update` fails with an error that says so; it never reports success.
+    description: Default assumption.
 answer:
   selected: []
   text: ""
