@@ -585,13 +585,20 @@ Method AddModulesFromTags(
                     if 'matchesName && 'matchesExternalName {
                         continue
                     }
-                    // The annotation read above is not signed
-                    if (..TrustServer '= "") && '..SignedManifestNames(..ModuleNameFromRepository(name), tag, searchCriteria.Name, .trustError) {
-                        if $$$ISERR(trustError) {
-                            set msg = $$$FormatText("WARNING: Not offering '%1' %2 from repo '%3' as '%4', since its signed module.xml could not be checked: %5", ..ModuleNameFromRepository(name), tVersion.ToString(), ..RepoName, searchCriteria.Name, ##class(%IPM.Main).ErrorText(trustError))
-                            write !, $$$FormattedLine($$$Yellow, msg)
+                    // The annotation read above is not signed. Check the signed one of the artifact that install retrieves,
+                    // which is this platform's if there is one.
+                    if (..TrustServer '= "") {
+                        set signedTag = tag
+                        if (platformVersion '= "") && $listfind(platformVersions, $$$CurrentPlatformVersion) {
+                            set signedTag = moduleVersion _ $$$OrasTagPlatformSeparator _ $$$CurrentPlatformVersion
                         }
-                        continue
+                        if '..SignedManifestNames(..ModuleNameFromRepository(name), signedTag, searchCriteria.Name, .trustError) {
+                            if $$$ISERR(trustError) {
+                                set msg = $$$FormatText("WARNING: Not offering '%1' %2 from repo '%3' as '%4', since its signed module.xml could not be checked: %5", ..ModuleNameFromRepository(name), tVersion.ToString(), ..RepoName, searchCriteria.Name, ##class(%IPM.Main).ErrorText(trustError))
+                                write !, $$$FormattedLine($$$Yellow, msg)
+                            }
+                            continue
+                        }
                     }
                 } else {
                     // No module.xml available - skip this module

@@ -255,6 +255,26 @@ Method TestDependencyByExternalNameInNamespace()
     do ..AssertVersion("default-name", "0.0.1")
 }
 
+/// A deployed module offered under another name is checked against the signed module.xml of this platform's artifact,
+/// which is the one that installs, even when another platform's artifact is listed first and is not signed.
+Method TestExternalNameCheckedOnPlatformArtifact()
+{
+    if '..NotaryRuns() {
+        return
+    }
+    set package = "external-name"
+    do $$$AssertStatusOK(##class(%IPM.Main).Shell("load -nodev " _ ..GetModuleDir("publish-external-name", "0.0.1")), "Loaded the dependency")
+    // The registry lists this platform's tag after that of the lower platform version
+    do ..PublishForPlatform("default-name", "1000.1", package)
+    do ..PublishForPlatform("default-name", $$$CurrentPlatformVersion, package)
+    set ..Published(..#RepoName, package) = ""
+    do $$$AssertStatusOK(##class(%IPM.Main).Shell("uninstall default-name"))
+    do ..Sign(package, "0.0.1" _ $$$OrasTagPlatformSeparator _ $$$CurrentPlatformVersion)
+
+    do $$$AssertStatusOK(##class(%IPM.Main).Shell("load " _ ..GetModuleDir("oras-dep-name", "consumer-name")), "Loaded the consumer with this platform's signed artifact")
+    do ..AssertVersion("default-name", "0.0.1")
+}
+
 /// A signed module.xml annotation with line breaks around it is read as without a trust server,
 /// both to resolve a dependency and to offer a module under its external name.
 Method TestModuleXMLWhitespaceTrimmed()
@@ -770,14 +790,16 @@ Method LoadAndPackage(
 }
 
 /// Packages the loaded module and publishes it to the repo as deployed for platform, which the publish command can only do for the current platform.
+/// The registry package is named package.
 Method PublishForPlatform(
 	module As %String,
-	platform As %String)
+	platform As %String,
+	package As %String = {module})
 {
     set installed = ##class(%IPM.Storage.Module).NameOpen(module, , .sc)
     do $$$AssertStatusOK(sc)
     set moduleInfo = ##class(%IPM.Repo.Remote.ModuleInfo).%New()
-    set moduleInfo.Name = module
+    set moduleInfo.Name = package
     set moduleInfo.VersionString = installed.VersionString
     set moduleInfo.Deployed = 1
     set moduleInfo.PlatformVersion = platform
