@@ -73,7 +73,7 @@ Method OnBeforeOneTest(testName As %String) As %Status
 
 Method OnAfterOneTest(testName As %String) As %Status
 {
-    for module = ..#AppName, ..#DepName, "oras-trust-other", "oras-auth", "oras-dep-consumer-name", "default-name", "platform-filter-test" {
+    for module = ..#AppName, ..#DepName, "oras-trust-other", "oras-trust-impostor", "oras-auth", "oras-dep-consumer-name", "default-name", "platform-filter-test" {
         if ##class(%IPM.Storage.Module).NameExists(module) {
             do ##class(%IPM.Main).Shell("uninstall " _ module)
         }
@@ -287,6 +287,42 @@ Method TestExternalNameCheckedOnPlatformArtifact()
 
     do $$$AssertStatusOK(##class(%IPM.Main).Shell("load " _ ..GetModuleDir("oras-dep-name", "consumer-name")), "Loaded the consumer with this platform's signed artifact")
     do ..AssertVersion("default-name", "0.0.1")
+}
+
+/// Unsigned listing data decides whether install retrieves the untagged or this platform's artifact of a version.
+/// A module offered under another name is checked against the signed module.xml of the one it decides on.
+Method TestExternalNameCheckedOnInstalledArtifact()
+{
+    if '..NotaryRuns() {
+        return
+    }
+    set package = "external-name"
+    do $$$AssertStatusOK(##class(%IPM.Main).Shell("load " _ ..GetModuleDir("publish-external-name", "0.0.1")), "Loaded the dependency")
+    do $$$AssertStatusOK(##class(%IPM.Main).Shell("publish default-name -r " _ ..#RepoName _ " -only -use-external-name"), "Published under its external name")
+    set ..Published(..#RepoName, package) = ""
+    do $$$AssertStatusOK(##class(%IPM.Main).Shell("uninstall default-name"))
+    // The collection's artifact of the same version for this platform is another module
+    do $$$AssertStatusOK(##class(%IPM.Main).Shell("load -nodev " _ ..GetModuleDir("oras-content-trust", "impostor")), "Loaded the other module")
+    do ..PublishForPlatform("oras-trust-impostor", $$$CurrentPlatformVersion, package)
+    do ..Uninstall("oras-trust-impostor")
+    do ..Sign(package, "0.0.1")
+    do ..Sign(package, "0.0.1" _ $$$OrasTagPlatformSeparator _ $$$CurrentPlatformVersion)
+
+    // The listing reads the untagged artifact's metadata. Marked deployed, install retrieves this platform's artifact.
+    set original = ..GetManifest(package, "0.0.1")
+    set manifest = {}.%FromJSON(original)
+    do manifest.annotations.%Set("com.intersystems.ipm.deployed", "1")
+    do ..PutManifest(package, "0.0.1", manifest.%ToJSON())
+
+    set consumer = ..GetModuleDir("oras-dep-name", "consumer-name")
+    do ..AssertRefused(##class(%IPM.Main).Shell("load " _ consumer), "Could not find satisfactory version of default-name")
+    do ..AssertNotInstalled("oras-trust-impostor")
+    do ..AssertNotInstalled("default-name")
+
+    do ..PutManifest(package, "0.0.1", original)
+    do $$$AssertStatusOK(##class(%IPM.Main).Shell("load " _ consumer), "Loaded the consumer with the untagged artifact")
+    do ..AssertVersion("default-name", "0.0.1")
+    do ..AssertNotInstalled("oras-trust-impostor")
 }
 
 /// A signed module.xml annotation with line breaks around it is read as without a trust server,

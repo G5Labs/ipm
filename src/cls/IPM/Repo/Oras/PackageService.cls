@@ -585,12 +585,16 @@ Method AddModulesFromTags(
                     if 'matchesName && 'matchesExternalName {
                         continue
                     }
-                    // The annotation read above is not signed. Check the signed one of the artifact that install retrieves,
-                    // which is this platform's if there is one.
+                    // The annotation read above is not signed. Check the signed one of the artifact that install retrieves, which
+                    // SearchRepositoriesForModule and TagForReference pick by the deployed flag: this platform's if deployed,
+                    // otherwise the untagged one. A deployed module with no artifact for this platform does not install.
                     if (..TrustServer '= "") {
-                        set signedTag = tag
-                        if (platformVersion '= "") && $listfind(platformVersions, $$$CurrentPlatformVersion) {
-                            set signedTag = moduleVersion _ $$$OrasTagPlatformSeparator _ $$$CurrentPlatformVersion
+                        set signedTag = moduleVersion
+                        if artifactMetadata.IPMDeployed {
+                            set signedTag = tag
+                            if $listfind(platformVersions, $$$CurrentPlatformVersion) {
+                                set signedTag = moduleVersion _ $$$OrasTagPlatformSeparator _ $$$CurrentPlatformVersion
+                            }
                         }
                         if '..SignedManifestNames(..ModuleNameFromRepository(name), signedTag, searchCriteria.Name, .trustError) {
                             if $$$ISERR(trustError) {
