@@ -120,6 +120,17 @@ ClassMethod OnConfigure(
             do ##class(%IPM.Repo.Oras.PackageService).CheckNoPath(tUrl, namespace)
             do ..CheckRepoKeyUnique(pInstance, ..ComputeRepoKey(tUrl, namespace), "URL and namespace")
         }
+        // Checked before -publish changes another repo, so a refused URL changes nothing
+        if $data(pModifiers("trust-server"), trustServer) {
+            if (trustServer '= "") {
+                $$$ThrowOnError(##class(%IPM.DataType.RepoLocation).IsValid(trustServer))
+                set trustServer = ##class(%IPM.DataType.RepoLocation).Canonicalize(trustServer)
+                if ($piece(trustServer, "://") '= "https") {
+                    $$$ThrowStatus($$$ERROR($$$GeneralError, $$$FormatText("Trust server URL '%1' must use https.", trustServer)))
+                }
+            }
+            set pInstance.TrustServer = trustServer
+        }
         if $data(pModifiers("username"), tUsername) {
             set pInstance.Username = tUsername
         }
@@ -147,16 +158,6 @@ ClassMethod OnConfigure(
         }
         if $data(pModifiers("namespace"), tNamespace) {
             set pInstance.Namespace = tNamespace
-        }
-        if $data(pModifiers("trust-server"), trustServer) {
-            if (trustServer '= "") {
-                $$$ThrowOnError(##class(%IPM.DataType.RepoLocation).IsValid(trustServer))
-                set trustServer = ##class(%IPM.DataType.RepoLocation).Canonicalize(trustServer)
-                if ($piece(trustServer, "://") '= "https") {
-                    $$$ThrowStatus($$$ERROR($$$GeneralError, $$$FormatText("Trust server URL '%1' must use https.", trustServer)))
-                }
-            }
-            set pInstance.TrustServer = trustServer
         }
     } catch e {
         set tSC = e.AsStatus()

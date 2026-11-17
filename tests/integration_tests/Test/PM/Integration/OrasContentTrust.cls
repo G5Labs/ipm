@@ -156,6 +156,16 @@ Method TestTrustServerRefusedForOtherRepoTypes()
     do ##class(%IPM.Utils.File).RemoveDirectoryTree(path)
 }
 
+/// A refused trust server leaves the other repos as they were, including which one is the default deployment registry.
+Method TestRefusedTrustServerChangesNothing()
+{
+    set sc = ##class(%IPM.Main).Shell("repo -o -name cfg -url " _ ..#OrasURL _ " -namespace " _ ..Namespace _ "-cfg -publish 1 -trust-server http://notary:4443")
+    do ..AssertRefused(sc, "Trust server URL 'http://notary:4443' must use https.")
+    do $$$AssertNotTrue(##class(%IPM.Repo.Definition).ServerDefinitionKeyExists("cfg"), "No repo was created")
+    set repo = ##class(%IPM.Repo.Oras.Definition).ServerDefinitionKeyOpen(..#RepoName)
+    do $$$AssertEquals(repo.DeploymentEnabled, 1, "Repo '" _ ..#RepoName _ "' is still the default deployment registry")
+}
+
 /// A repo without a trust server, including one saved before the setting existed, installs unsigned modules as before.
 Method TestRepoWithoutTrustServerUnchanged()
 {
