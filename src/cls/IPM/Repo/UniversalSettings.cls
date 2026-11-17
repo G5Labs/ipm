@@ -50,7 +50,11 @@ Parameter TestReportFormat = "TestReportFormat";
 
 Parameter ModuleRoot = "ModuleRoot";
 
-Parameter CONFIGURABLE = "trackingId,analytics,ColorScheme,TerminalPrompt,PublishTimeout,PipCaller,UseStandalonePip,SemVerPostRelease,DefaultLogEntryLimit,HistoryRetain,TestReportFormat,ModuleRoot";
+/// Path to the notary executable that verifies packages from ORAS repositories configured with -trust-server.
+/// When empty, notary is found on the PATH.
+Parameter NotaryExecutable = "NotaryExecutable";
+
+Parameter CONFIGURABLE = "trackingId,analytics,ColorScheme,TerminalPrompt,PublishTimeout,PipCaller,UseStandalonePip,SemVerPostRelease,DefaultLogEntryLimit,HistoryRetain,TestReportFormat,ModuleRoot,NotaryExecutable";
 
 /// Returns configArray, that includes all configurable settings
 ClassMethod GetAll(Output configArray) As %Status

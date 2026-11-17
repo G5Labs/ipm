@@ -32,3 +32,7 @@ The selected report identity claim connects `ReportTestResults`' tracked device 
 ## ORAS archive admission for #281
 
 [Iteration 68](../../uplift/consolidated/iter68/HANDOFF.md) has its own replay command and pinned bindings to the ObjectScript source and the installed wheel. Its as-built native evidence and proposed signed-admission proof appear as separate viewer models. Use its `--check` command to validate the saved receipt inputs.
+
+## ORAS signed admission implementation for #281
+
+[Iteration 69](../../uplift/consolidated/iter69/HANDOFF.md) binds the implemented trust-server check to the iteration 68 contract. `python3 .g5/Verus_verification/consolidated/iter69/run.py` verifies the model and its controls, resolves the member bindings, compiles the candidate into `IPM_IRIS_CONTAINER` and runs `Test.PM.Integration.OrasContentTrust` against the oras and notary services. `--check` compares saved evidence with current inputs and names what is stale.

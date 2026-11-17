@@ -32,7 +32,7 @@ IPM refuses an install when:
 <a id="install.package"></a>
 [I · install.package]
 
-IPM downloads the package, unpacks it into `<ModuleRoot>/<name>/<version>/` and loads the module from there. For modules with deployed code, IPM picks the package built for this IRIS version and platform.
+IPM downloads the package, unpacks it into `<ModuleRoot>/<name>/<version>/` and loads the module from there. For modules with deployed code, IPM picks the package built for this IRIS version and platform. A protected ORAS repository first [checks the package's signature](../architecture/package-sources.g5.md#repo.oras.signed-admission).
 
 ## Choosing a version for reinstall
 

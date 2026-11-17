@@ -20,6 +20,7 @@ IPM has instance settings managed with `config`, and stored flags added to every
 | `DefaultLogEntryLimit` | `20` | How many records `history find` shows by default. |
 | `HistoryRetain` | `0` | Days to keep history. `0` keeps it forever ([retention](../concepts/data-policy.g5.md#history.retention)). |
 | `ModuleRoot` | `<data directory>/ipm/` | Where archives unpack. It must be writable. |
+| `NotaryExecutable` | | The notary CLI that [checks signatures](../architecture/package-sources.g5.md#repo.oras.signed-admission) for protected ORAS repositories. Empty finds `notary` on the PATH. |
 | `PipCaller`, `UseStandalonePip` | | Which pip IPM runs. |
 | `PublishTimeout` | | How long publishing may take. |
 | `SemVerPostRelease` | `0` | How `x.y.z-w` is ordered ([post-release](../concepts/versions.g5.md#version.post-release)). |

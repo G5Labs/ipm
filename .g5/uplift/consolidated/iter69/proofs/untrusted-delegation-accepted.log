@@ -1,0 +1,33 @@
+verification results:: 19 verified, 1 errors
+note: function body check: not all errors may have been reported; rerun with a higher value for --multiple-errors to find other potential errors in this function
+   --> untrusted_delegation_accepted.rs:210:7
+    |
+210 | proof fn lemma_select_is_docker_row(rows: Seq<Row>, tag: int)
+    |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: postcondition not satisfied
+   --> untrusted_delegation_accepted.rs:212:9
+    |
+212 |           select(rows, tag) == docker_row(rows, tag),
+    |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+...
+219 | /     if rows.len() > 0 && !(rows[0].tag == tag && trusted_role(rows[0].role)) {
+220 | |         lemma_select_is_docker_row(rows.subrange(1, rows.len() as int), tag);
+221 | |     }
+    | |_____- at the end of the function body
+
+error: postcondition not satisfied
+   --> untrusted_delegation_accepted.rs:213:9
+    |
+213 | /         match select(rows, tag) {
+214 | |             Some(row) => row.tag == tag && docker_trusts(row.role),
+215 | |             None => true,
+216 | |         },
+    | |_________^ failed this postcondition
+...
+219 | /     if rows.len() > 0 && !(rows[0].tag == tag && trusted_role(rows[0].role)) {
+220 | |         lemma_select_is_docker_row(rows.subrange(1, rows.len() as int), tag);
+221 | |     }
+    | |_____- at the end of the function body
+
+error: aborting due to 2 previous errors

@@ -3027,3 +3027,88 @@ answer:
   answered_at: null
 resolution_source: playbook-uplift/decisions/07-09.md
 ```
+
+<a id="repo.oras.signed-admission.supplier-policy"></a>
+### When a protected ORAS repository does not offer a version, may another enabled repository supply it?
+
+[Q · repo.oras.signed-admission.supplier-policy]
+
+- Working assumption: yes. A trust server limits only what its own repository offers. Repository selection across repositories is unchanged, so an unsigned version or a trust-server outage behaves like a version that repository lacks.
+- Alternative and implications: refuse the install whenever a protected repository has the module but cannot offer a signed version. This keeps an unprotected source from filling in, but one trust-server outage then blocks installs that other repositories could serve.
+- The issue asks for a per-repository check. A namespace-wide signed-only rule would be a new requirement.
+
+Disposition: open. Implemented assumption: [signed admission catalog](../ontology/architecture/package-sources.g5.md#repo.oras.signed-admission.catalog).
+
+```g5-question
+schema: 1
+id: repo.oras.signed-admission.supplier-policy
+status: open
+prompt: When a protected ORAS repository does not offer a version, may another enabled repository supply it?
+severity: medium
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: yes. A trust server limits only what its own repository offers, and repository selection across repositories is unchanged.
+```
+
+<a id="repo.oras.signed-admission.trust-server-credentials"></a>
+### Should IPM send credentials to a trust server that requires authentication?
+
+[Q · repo.oras.signed-admission.trust-server-credentials]
+
+- Working assumption: no. notary reads trust data anonymously, so every check against a trust server that requires a login fails, and nothing installs from that repository.
+- Alternative and implications: pass credentials to notary through `NOTARY_AUTH`, either the repository's own or separate trust-server credentials. That supports servers such as Artifactory's, but sending registry credentials to another service needs an explicit rule.
+
+Disposition: open. Implemented assumption: [verifier](../ontology/architecture/package-sources.g5.md#repo.oras.signed-admission.verifier).
+
+```g5-question
+schema: 1
+id: repo.oras.signed-admission.trust-server-credentials
+status: open
+prompt: Should IPM send credentials to a trust server that requires authentication?
+severity: low
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: no. notary reads trust data anonymously, so a trust server that requires a login refuses every check.
+```
+
+<a id="repo.oras.signed-admission.root-pinning"></a>
+### Should an administrator pin a trust server's root key before the first check?
+
+[Q · repo.oras.signed-admission.root-pinning]
+
+- Working assumption: no. As with docker, the first check of a repository trusts the root key the server presents and pins it. Administrators who need more can pin roots in notary's own `trust_pinning` configuration for the IRIS user.
+- Alternative and implications: add a repository argument for a root key or CA. A compromised trust server could then not plant a root at first contact, but every protected repository would need that key before it works.
+
+Disposition: open. Implemented assumption: [verifier](../ontology/architecture/package-sources.g5.md#repo.oras.signed-admission.verifier).
+
+```g5-question
+schema: 1
+id: repo.oras.signed-admission.root-pinning
+status: open
+prompt: Should an administrator pin a trust server's root key before the first check?
+severity: low
+multi_select: false
+allow_free_text: true
+options: []
+answer:
+  selected: []
+  text: ""
+  rationale: ""
+  answered_by: null
+  answered_at: null
+default_assumption: no. As with docker, the first check of a repository pins the root key the server presents.
+```

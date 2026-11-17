@@ -109,6 +109,18 @@ jobs:
             $ORAS_IMAGE)
           sleep 5
           docker logs $ORAS
+      - name: Run Docker Content Trust server
+        timeout-minutes: 5
+        run: |
+          NOTARY=$(docker run --rm -d \
+            --network zpm \
+            --name notary \
+            --network-alias notary \
+            -v "$PWD/tests/notary/server-config.json":/etc/notary/server-config.json:ro \
+            notary:server-0.7.0 \
+            -config=/etc/notary/server-config.json)
+          sleep 2
+          docker logs $NOTARY
       - name: Test and Verify
         timeout-minutes: 30
         run: |

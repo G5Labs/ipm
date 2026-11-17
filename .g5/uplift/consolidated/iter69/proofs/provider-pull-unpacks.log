@@ -1,0 +1,32 @@
+verification results:: 18 verified, 2 errors
+error: postcondition not satisfied
+   --> provider_pull_unpacks.rs:232:9
+    |
+232 | /         ({
+233 | |             let outcome = retrieve(config, listing, tag, manifest, parsed, blob);
+234 | |             let decision = protected_admission(
+235 | |                 abs_target(config, path, tag), abs_policy(config, snapshot), abs_manifest(manifest, parsed),
+...   |
+240 | |             &&& (outcome is Stream ==> outcome->package == abs_observed(blob))
+241 | |         }),
+    | |__________^ failed this postcondition
+242 |   {
+243 | /     match listing {
+244 | |         Listing::Verified { server, root, rows, true_rows, names_safe } => lemma_select_is_docker_row(rows, tag),
+245 | |         _ => {},
+246 | |     }
+    | |_____- at the end of the function body
+
+error: postcondition not satisfied
+   --> provider_pull_unpacks.rs:285:9
+    |
+285 |           !effects(retrieve(config, listing, tag, manifest, parsed, blob)).provider_unpacked,
+    |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+...
+288 | /     match listing {
+289 | |         Listing::Verified { server, root, rows, true_rows, names_safe } => lemma_select_is_docker_row(rows, tag),
+290 | |         _ => {},
+291 | |     }
+    | |_____- at the end of the function body
+
+error: aborting due to 2 previous errors

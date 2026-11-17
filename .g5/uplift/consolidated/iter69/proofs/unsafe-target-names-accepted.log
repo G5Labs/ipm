@@ -1,0 +1,53 @@
+verification results:: 18 verified, 2 errors
+error: postcondition not satisfied
+   --> unsafe_target_names_accepted.rs:232:9
+    |
+232 | /         ({
+233 | |             let outcome = retrieve(config, listing, tag, manifest, parsed, blob);
+234 | |             let decision = protected_admission(
+235 | |                 abs_target(config, path, tag), abs_policy(config, snapshot), abs_manifest(manifest, parsed),
+...   |
+240 | |             &&& (outcome is Stream ==> outcome->package == abs_observed(blob))
+241 | |         }),
+    | |__________^ failed this postcondition
+242 |   {
+243 | /     match listing {
+244 | |         Listing::Verified { server, root, rows, true_rows, names_safe } => lemma_select_is_docker_row(rows, tag),
+245 | |         _ => {},
+246 | |     }
+    | |_____- at the end of the function body
+
+note: function body check: not all errors may have been reported; rerun with a higher value for --multiple-errors to find other potential errors in this function
+   --> unsafe_target_names_accepted.rs:276:1
+    |
+276 | / pub proof fn failures_refuse(
+277 | |     config: Config, path: int, tag: int, snapshot: int, listing: Listing,
+278 | |     manifest: Received, parsed: Parsed, blob: Received,
+279 | | )
+    | |_^
+
+error: postcondition not satisfied
+   --> unsafe_target_names_accepted.rs:284:9
+    |
+284 |           retrieve(config, listing, tag, manifest, parsed, blob) is Refused,
+    |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+...
+288 | /     match listing {
+289 | |         Listing::Verified { server, root, rows, true_rows, names_safe } => lemma_select_is_docker_row(rows, tag),
+290 | |         _ => {},
+291 | |     }
+    | |_____- at the end of the function body
+
+error: postcondition not satisfied
+   --> unsafe_target_names_accepted.rs:286:9
+    |
+286 |           !effects(retrieve(config, listing, tag, manifest, parsed, blob)).consumer_unpacks,
+    |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+287 |   {
+288 | /     match listing {
+289 | |         Listing::Verified { server, root, rows, true_rows, names_safe } => lemma_select_is_docker_row(rows, tag),
+290 | |         _ => {},
+291 | |     }
+    | |_____- at the end of the function body
+
+error: aborting due to 3 previous errors

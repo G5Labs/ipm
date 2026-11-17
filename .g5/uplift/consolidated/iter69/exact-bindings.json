@@ -1,0 +1,436 @@
+{
+  "base_revision": "c1c055003731649021ef651c57f2cbf87bafe0cd",
+  "model": "implementation.rs",
+  "rows": [
+    {
+      "id": "trust-configuration",
+      "owner": ".g5/ontology/architecture/package-sources.g5.md#repo.oras.signed-admission.configuration",
+      "model": "implementation.rs",
+      "symbols": [
+        "Config",
+        "abs_policy"
+      ],
+      "scope": "The repo definition's trust server is the active policy identity. Writers, the copy and lock-file readers and the package service that consumes it.",
+      "verification": "transcription; native-tested",
+      "members": [
+        {
+          "member": "src/cls/IPM/Repo/Oras/Definition.cls::TrustServer",
+          "role": "stored setting, storage slot 7; empty for definitions saved before it existed",
+          "start": 10,
+          "end": 12,
+          "file_sha256": "ae77e61b587aa7d654f2eaabc2249289f4ae300b6c53d8789de54bb65d0a20ba",
+          "span_sha256": "2f31b24e968117a41fa89bd9648114a2aff0c7f5616e237002dd179ecb172024"
+        },
+        {
+          "member": "src/cls/IPM/Repo/Oras/Definition.cls::OnConfigure",
+          "role": "writer: the -trust-server modifier",
+          "start": 95,
+          "end": 157,
+          "file_sha256": "ae77e61b587aa7d654f2eaabc2249289f4ae300b6c53d8789de54bb65d0a20ba",
+          "span_sha256": "eaa7385b388849e88692d37bb0f66cd8d191c602473baa76199c8bf1200a56c6"
+        },
+        {
+          "member": "src/cls/IPM/Repo/Oras/Definition.cls::NormalizeTrustServer",
+          "role": "decision: canonical http or https URL, or refusal",
+          "start": 159,
+          "end": 175,
+          "file_sha256": "ae77e61b587aa7d654f2eaabc2249289f4ae300b6c53d8789de54bb65d0a20ba",
+          "span_sha256": "7ace5d0a51952634af71630d48d8c6550d96f1b59bc77c66362bd206480e9039"
+        },
+        {
+          "member": "src/cls/IPM/Repo/Oras/Definition.cls::GetPackageService",
+          "role": "reader: passes the trust server to each package service",
+          "start": 40,
+          "end": 53,
+          "file_sha256": "ae77e61b587aa7d654f2eaabc2249289f4ae300b6c53d8789de54bb65d0a20ba",
+          "span_sha256": "a78e5c7a425e04d3a2ef8bc37f00157afd4e73c7b64dc9e318ac2dfe53f106d2"
+        },
+        {
+          "member": "src/cls/IPM/Repo/Oras/Definition.cls::LockFileMapping",
+          "role": "reader: lock files keep the trust server",
+          "start": 196,
+          "end": 206,
+          "file_sha256": "ae77e61b587aa7d654f2eaabc2249289f4ae300b6c53d8789de54bb65d0a20ba",
+          "span_sha256": "9881d82f53a93298cff2616f663af4bf3e443310ca620741804d87c192abd260"
+        },
+        {
+          "member": "src/cls/IPM/Repo/Oras/PackageService.cls::TrustServer",
+          "role": "consumer: selects the protected path in GetModule, GetModuleManifest and AddModulesFromTags",
+          "start": 28,
+          "end": 30,
+          "file_sha256": "0feac8e5eba5e18932f74d9a770c35110d79bea7733c394a65e543d882dc8aea",
+          "span_sha256": "335f91769e8940a97ec34e0d9d3ef3d9dc74956f0f627dc51dc0510e6af4eb37"
+        },
+        {
+          "member": "src/cls/IPM/Repo/UniversalSettings.cls::NotaryExecutable",
+          "role": "setting: the verifier executable",
+          "start": 53,
+          "end": 55,
+          "file_sha256": "e28714cbc2d379abc66c13a5588d5f43f00547a2b8eb96d74d1d085a73cae942",
+          "span_sha256": "43a7cd64da8210dcccc051caf469e6d39b4d1c7d0a72d10caf363366b6f21d1b"
+        }
+      ]
+    },
+    {
+      "id": "trust-verifier",
+      "owner": ".g5/ontology/architecture/package-sources.g5.md#repo.oras.signed-admission.verifier",
+      "model": "implementation.rs",
+      "symbols": [
+        "Role",
+        "Row",
+        "Listing",
+        "trusted_role",
+        "select",
+        "docker_trusts",
+        "docker_row",
+        "only_trusted_roles",
+        "faithful"
+      ],
+      "scope": "notary list with the docker roles, parsed to the first trusted row per tag. notary's TUF verification under the pinned root is a premise of Listing::Verified, and faithful() is the premise that printed rows are the verified targets when no target name contains whitespace.",
+      "verification": "transcription; native-tested; notary verification is an unverified external premise",
+      "members": [
+        {
+          "member": "src/cls/IPM/Repo/Oras/ContentTrust.cls::TRUSTEDROLES",
+          "role": "decision: targets/releases, then targets",
+          "start": 14,
+          "end": 15,
+          "file_sha256": "0cf635ab333d5c76ae9057698bbd8c05ff9f7ef8c6234ff7ab3243d0723139d4",
+          "span_sha256": "9efa5d6d5422c6e1eb46265b2a387668bf626b447ebd68b4a59076ef70d36a3f"
+        },
+        {
+          "member": "src/cls/IPM/Repo/Oras/ContentTrust.cls::LookUpSignedTargets",
+          "role": "producer: runs notary list and classifies its exit",
+          "start": 72,
+          "end": 130,
+          "file_sha256": "0cf635ab333d5c76ae9057698bbd8c05ff9f7ef8c6234ff7ab3243d0723139d4",
+          "span_sha256": "108cdb9b14ee73bd45e4536d6af330637d029c3245665f914e31e89ad4cb7acf"
+        },
+        {
+          "member": "src/cls/IPM/Repo/Oras/ContentTrust.cls::ParseTargets",
+          "role": "decision: keeps rows whose role is trusted, first row per tag",
+          "start": 153,
+          "end": 182,
+          "file_sha256": "0cf635ab333d5c76ae9057698bbd8c05ff9f7ef8c6234ff7ab3243d0723139d4",
+          "span_sha256": "486cba5f0a9b3d6a4522a77eef03076f0445fc751a02ad4dcd850fe2f08a3bb6"
+        },
+        {
+          "member": "src/cls/IPM/Repo/Oras/ContentTrust.cls::UnsafeTargetName",
+          "role": "decision: refuses trust data with a target name that could print as a forged row",
+          "start": 132,
+          "end": 151,
+          "file_sha256": "0cf635ab333d5c76ae9057698bbd8c05ff9f7ef8c6234ff7ab3243d0723139d4",
+          "span_sha256": "9e4fae5049ba6110bb275e883cefd1e1f1da5250babf24222869f1e02c71b8c0"
+        },
+        {
+          "member": "src/cls/IPM/Repo/Oras/ContentTrust.cls::NotaryError",
+          "role": "reader: notary's reason for a failure",
+          "start": 184,
+          "end": 205,
+          "file_sha256": "0cf635ab333d5c76ae9057698bbd8c05ff9f7ef8c6234ff7ab3243d0723139d4",
+          "span_sha256": "fdb20c7a1d5df6c1893edde4d6feb72f9544745eda3e27ae6492be3e368cd061"
+        },
+        {
+          "member": "src/cls/IPM/Repo/Oras/ContentTrust.cls::TrustDirectory",
+          "role": "state: pinned roots per trust server",
+          "start": 207,
+          "end": 221,
+          "file_sha256": "0cf635ab333d5c76ae9057698bbd8c05ff9f7ef8c6234ff7ab3243d0723139d4",
+          "span_sha256": "e029155e1844774d56d85428479325a5860616e3c6159c379b3293d4070dda04"
+        },
+        {
+          "member": "src/cls/IPM/Repo/Oras/ContentTrust.cls::NotaryExecutable",
+          "role": "reader: the verifier setting",
+          "start": 223,
+          "end": 228,
+          "file_sha256": "0cf635ab333d5c76ae9057698bbd8c05ff9f7ef8c6234ff7ab3243d0723139d4",
+          "span_sha256": "4013f81f734e9da03c9c2b9bc0d2d66ce0fb2bb70c6ebf9f28200dfc839cbd62"
+        }
+      ]
+    },
+    {
+      "id": "trust-freshness",
+      "owner": ".g5/ontology/architecture/package-sources.g5.md#repo.oras.signed-admission.freshness",
+      "model": "implementation.rs",
+      "symbols": [
+        "notary_list",
+        "implemented_list",
+        "outage_refuses"
+      ],
+      "scope": "Removing the cached timestamp before notary runs turns notary's offline fallback into a failure, and a deadline turns a stalled server into one.",
+      "verification": "transcription of notary 0.7.0 client/tufclient.go::downloadTimestamp; native-tested",
+      "members": [
+        {
+          "member": "src/cls/IPM/Repo/Oras/ContentTrust.cls::LookUpSignedTargets",
+          "role": "decision: removes tuf/<gun>/metadata/timestamp.json before each run and runs notary under the timeout program",
+          "start": 72,
+          "end": 130,
+          "file_sha256": "0cf635ab333d5c76ae9057698bbd8c05ff9f7ef8c6234ff7ab3243d0723139d4",
+          "span_sha256": "108cdb9b14ee73bd45e4536d6af330637d029c3245665f914e31e89ad4cb7acf"
+        },
+        {
+          "member": "src/cls/IPM/Repo/Oras/ContentTrust.cls::VERIFYTIMEOUT",
+          "role": "the deadline in seconds",
+          "start": 17,
+          "end": 18,
+          "file_sha256": "0cf635ab333d5c76ae9057698bbd8c05ff9f7ef8c6234ff7ab3243d0723139d4",
+          "span_sha256": "821773de3146303ce50d3ece3cb75c680bf18998549fb2893bef2819e72526da"
+        }
+      ]
+    },
+    {
+      "id": "trust-snapshot",
+      "owner": ".g5/ontology/architecture/package-sources.g5.md#repo.oras.signed-admission.snapshot",
+      "model": "implementation.rs",
+      "symbols": [
+        "Key",
+        "Cache",
+        "lookup",
+        "key_for",
+        "snapshot_pins_metadata_and_payload",
+        "snapshot_keyed_by_server"
+      ],
+      "scope": "One SignedTargets outcome per repo, trust server and repository for the rest of a shell command.",
+      "verification": "transcription; native-tested",
+      "members": [
+        {
+          "member": "src/cls/IPM/Repo/Oras/ContentTrust.cls::SignedTargets",
+          "role": "decision: keeps the first outcome, success or failure, in the command's lookup state",
+          "start": 38,
+          "end": 70,
+          "file_sha256": "0cf635ab333d5c76ae9057698bbd8c05ff9f7ef8c6234ff7ab3243d0723139d4",
+          "span_sha256": "b7f81536e33bd014d843765da4250eb00bbaa805a021f796f65abd875f8ed0d3"
+        },
+        {
+          "member": "src/cls/IPM/Repo/Oras/ContentTrust.cls::TrustedTarget",
+          "role": "reader: the signed row for a tag",
+          "start": 20,
+          "end": 36,
+          "file_sha256": "0cf635ab333d5c76ae9057698bbd8c05ff9f7ef8c6234ff7ab3243d0723139d4",
+          "span_sha256": "b9175bca7b8dfab6462e2b52ab90dbebc05f6c6c2307955d60d1fd19b79ec4ac"
+        },
+        {
+          "member": "src/cls/IPM/Main.cls::ShellInternal",
+          "role": "lifetime: news and resets the lookup state for each shell command",
+          "start": 1019,
+          "end": 1165,
+          "file_sha256": "4180cd956f7ad09b6a27ebdc773858f08db2059f7fa6efe749eaf64ad9051062",
+          "span_sha256": "75d6d94a28a9019aab026b41a79f94a6a847104a56115c685d949ab47edba10e"
+        }
+      ]
+    },
+    {
+      "id": "trusted-catalog",
+      "owner": ".g5/ontology/architecture/package-sources.g5.md#repo.oras.signed-admission.catalog",
+      "model": "implementation.rs",
+      "symbols": [
+        "plan_and_payload_share_identity",
+        "abs_manifest"
+      ],
+      "scope": "Version selection and dependency metadata come from signed tags and signed manifests. The planner and selection readers consume them unchanged.",
+      "verification": "transcription; native-tested",
+      "members": [
+        {
+          "member": "src/cls/IPM/Repo/Oras/PackageService.cls::AddModulesFromTags",
+          "role": "producer: signed tags and signed-manifest annotations for selection",
+          "start": 396,
+          "end": 545,
+          "file_sha256": "0feac8e5eba5e18932f74d9a770c35110d79bea7733c394a65e543d882dc8aea",
+          "span_sha256": "ed4521493b0c6461939250f7fd73737de21808055a4d391ae3a50a282627bd33"
+        },
+        {
+          "member": "src/cls/IPM/Repo/Oras/PackageService.cls::GetModuleManifest",
+          "role": "producer: module.xml from the signed manifest for planning",
+          "start": 265,
+          "end": 287,
+          "file_sha256": "0feac8e5eba5e18932f74d9a770c35110d79bea7733c394a65e543d882dc8aea",
+          "span_sha256": "60a4228d736dd66f6df1059b9840025a4e2c7918769f7faa413f40b356637e84"
+        },
+        {
+          "member": "src/cls/IPM/Repo/Oras/PackageService.cls::Annotations",
+          "role": "reader of the signed manifest",
+          "start": 869,
+          "end": 874,
+          "file_sha256": "0feac8e5eba5e18932f74d9a770c35110d79bea7733c394a65e543d882dc8aea",
+          "span_sha256": "0dc5956cfebe5474553df5c5f2ba574bc2119b539aef321ffa766f8246cb26aa"
+        },
+        {
+          "member": "src/cls/IPM/Repo/Oras/PackageService.cls::ModuleXMLAnnotation",
+          "role": "reader of the signed manifest",
+          "start": 876,
+          "end": 880,
+          "file_sha256": "0feac8e5eba5e18932f74d9a770c35110d79bea7733c394a65e543d882dc8aea",
+          "span_sha256": "6b06e901a456324859b7aac795a926eaa1426e5461a8a5004f29827b36329134"
+        },
+        {
+          "member": "src/cls/IPM/Repo/Oras/PackageService.cls::SortTags",
+          "role": "ordering of signed tags, as GetAllTags orders registry tags",
+          "start": 1009,
+          "end": 1017,
+          "file_sha256": "0feac8e5eba5e18932f74d9a770c35110d79bea7733c394a65e543d882dc8aea",
+          "span_sha256": "f29ecab1310e5dbc96eb0d70a1e58427a9b630cd4f64d2ff6387c74ea3da6e18"
+        },
+        {
+          "member": "src/cls/IPM/Repo/Oras/PackageService.cls::SkipUntrusted",
+          "role": "decision: a package or version whose trust check fails is not offered, with a warning; registry and system errors propagate as before",
+          "start": 936,
+          "end": 954,
+          "file_sha256": "0feac8e5eba5e18932f74d9a770c35110d79bea7733c394a65e543d882dc8aea",
+          "span_sha256": "4427bd160994fafdd73bbc0932caf7c567f9910170fa60d5bf1d5689bbe01a4b"
+        },
+        {
+          "member": "src/cls/IPM/Repo/Oras/PackageService.cls::HasModule",
+          "role": "reader: answers from signed tags",
+          "start": 304,
+          "end": 316,
+          "file_sha256": "0feac8e5eba5e18932f74d9a770c35110d79bea7733c394a65e543d882dc8aea",
+          "span_sha256": "5db394d61333f6dbee3c14b201625a65ccbaaa2cba3d89f6efa41a161416ed5a"
+        },
+        {
+          "member": "src/cls/IPM/Repo/Oras/PackageService.cls::WarnUnsignedVersions",
+          "role": "diagnostic only; does not change selection",
+          "start": 967,
+          "end": 1007,
+          "file_sha256": "0feac8e5eba5e18932f74d9a770c35110d79bea7733c394a65e543d882dc8aea",
+          "span_sha256": "6d794d1e64a78850f996b5641b4d977d87cd70bf02e94beebd2ad421e914c468"
+        },
+        {
+          "member": "src/cls/IPM/Repo/Manager.cls::SearchRepositoriesForModule",
+          "role": "selection reader across repositories, unchanged",
+          "start": 51,
+          "end": 192,
+          "file_sha256": "0e963557b11579aab7d36cf4988f87852d56b65594ad51c186f2dd80df3e4e7d",
+          "span_sha256": "f51d02d8deaacedab5114158753f792bac5fbcd49e09c83552db0667103a6d18"
+        },
+        {
+          "member": "src/cls/IPM/Storage/Module.cls::ProcessSingleDependencyIterative",
+          "role": "planning consumer, unchanged",
+          "start": 1049,
+          "end": 1297,
+          "file_sha256": "ebdf57076d719edb7fac04cee3228be1c38fe9ac248afb7a25c3ed8d6472f858",
+          "span_sha256": "2c01a5d80565efca46fcf8f04c916baf23284b1ee1054aad8352c69ee943cd7d"
+        }
+      ]
+    },
+    {
+      "id": "trusted-bytes",
+      "owner": ".g5/ontology/architecture/package-sources.g5.md#repo.oras.signed-admission.bytes",
+      "model": "implementation.rs",
+      "symbols": [
+        "Received",
+        "Parsed",
+        "retrieve",
+        "trusted_row",
+        "package_layer",
+        "single_package",
+        "effects",
+        "stream_refines_admission",
+        "admitted_artifact_installs"
+      ],
+      "scope": "The protected payload path from the signed row to the stream IPM loads. The Python helpers hash the bytes they write.",
+      "verification": "transcription; native-tested",
+      "members": [
+        {
+          "member": "src/cls/IPM/Repo/Oras/PackageService.cls::GetModule",
+          "role": "decision: protected repositories take GetTrustedModule and never the ORAS pull",
+          "start": 240,
+          "end": 263,
+          "file_sha256": "0feac8e5eba5e18932f74d9a770c35110d79bea7733c394a65e543d882dc8aea",
+          "span_sha256": "b8d8260100e44f7395f21048f2498589aa413539676c69032039f67ab67470bc"
+        },
+        {
+          "member": "src/cls/IPM/Repo/Oras/PackageService.cls::GetTrustedModule",
+          "role": "producer of the stream",
+          "start": 911,
+          "end": 934,
+          "file_sha256": "0feac8e5eba5e18932f74d9a770c35110d79bea7733c394a65e543d882dc8aea",
+          "span_sha256": "4a23139f5745d1704540fd282fecc893147320fae8059e848a861f23afde1a0a"
+        },
+        {
+          "member": "src/cls/IPM/Repo/Oras/PackageService.cls::TrustedManifest",
+          "role": "decision: manifest by signed digest",
+          "start": 839,
+          "end": 867,
+          "file_sha256": "0feac8e5eba5e18932f74d9a770c35110d79bea7733c394a65e543d882dc8aea",
+          "span_sha256": "bd3b6d10f198006c3621575d15a753a8f81d2a235b35a8c21a520b29b5b98481"
+        },
+        {
+          "member": "src/cls/IPM/Repo/Oras/PackageService.cls::FetchTrustedManifest",
+          "role": "decision: received digest and size equal the signed ones",
+          "start": 1019,
+          "end": 1056,
+          "file_sha256": "0feac8e5eba5e18932f74d9a770c35110d79bea7733c394a65e543d882dc8aea",
+          "span_sha256": "42364e1e07b2447be571af1bb61200b47ed991f71d1d8e2db7144e64075dab58"
+        },
+        {
+          "member": "src/cls/IPM/Repo/Oras/PackageService.cls::PackageLayer",
+          "role": "decision: exactly one package layer",
+          "start": 882,
+          "end": 909,
+          "file_sha256": "0feac8e5eba5e18932f74d9a770c35110d79bea7733c394a65e543d882dc8aea",
+          "span_sha256": "602855b9233b3a7b0550629b00db49770c03fd968a82dcac6126a8ca1d466bc6"
+        },
+        {
+          "member": "src/cls/IPM/Repo/Oras/PackageService.cls::PACKAGELAYERMEDIATYPE",
+          "role": "the package layer type",
+          "start": 32,
+          "end": 33,
+          "file_sha256": "0feac8e5eba5e18932f74d9a770c35110d79bea7733c394a65e543d882dc8aea",
+          "span_sha256": "beb4e743d8ae63f30bedbc0aeb2ea2c74759dc40a92e6bea89f72c2208e559c6"
+        },
+        {
+          "member": "src/cls/IPM/Repo/Oras/PackageService.cls::DownloadTrustedBlob",
+          "role": "decision: package digest and size; removes the file on failure",
+          "start": 1058,
+          "end": 1102,
+          "file_sha256": "0feac8e5eba5e18932f74d9a770c35110d79bea7733c394a65e543d882dc8aea",
+          "span_sha256": "bfec7be640789b89d6bc2562aca6938685053d7038fc726ee0f104574f90e93b"
+        },
+        {
+          "member": "src/cls/IPM/Repo/Oras/PackageService.cls::MismatchAsError",
+          "role": "reader: error text",
+          "start": 956,
+          "end": 965,
+          "file_sha256": "0feac8e5eba5e18932f74d9a770c35110d79bea7733c394a65e543d882dc8aea",
+          "span_sha256": "cd089e2f63894a6f96e5792c4bbb027a357ddea808268b0362df48bac0858f58"
+        }
+      ]
+    },
+    {
+      "id": "trusted-refusal",
+      "owner": ".g5/ontology/architecture/package-sources.g5.md#repo.oras.signed-admission.refusal",
+      "model": "implementation.rs",
+      "symbols": [
+        "failures_refuse",
+        "Effects"
+      ],
+      "scope": "A refusal reaches the loader as a failed status before the archive is unpacked or the installed root is replaced.",
+      "verification": "source inspection of unchanged consumers; native-tested",
+      "members": [
+        {
+          "member": "src/cls/IPM/Repo/Manager.cls::RetrieveModulePackage",
+          "role": "caller: forwards the refusal as a status",
+          "start": 219,
+          "end": 242,
+          "file_sha256": "0e963557b11579aab7d36cf4988f87852d56b65594ad51c186f2dd80df3e4e7d",
+          "span_sha256": "ab15925be6b744bd3961755967ead2a77fafd4832676ace75d4fcc7a17906085"
+        },
+        {
+          "member": "src/cls/IPM/Utils/Module.cls::LoadModuleReference",
+          "role": "consumer: GetModule must return before LoadModuleFromArchive runs",
+          "start": 40,
+          "end": 211,
+          "file_sha256": "7d48b4876dab2365179bc6127f923d4e81fd4c4950d08fca4de707002bb4059f",
+          "span_sha256": "517e1e2b9dcafc61cfe673fc899fef3b6e0671780f335c5689f7f7e433cfe15e"
+        },
+        {
+          "member": "src/cls/IPM/Utils/Module.cls::LoadModuleFromArchive",
+          "role": "first unpacking effect, reached only with a stream",
+          "start": 213,
+          "end": 267,
+          "file_sha256": "7d48b4876dab2365179bc6127f923d4e81fd4c4950d08fca4de707002bb4059f",
+          "span_sha256": "b11df1108028314f4431667305a33d7cd17adf1a9b35a9c01d6fd1f0affe24d8"
+        }
+      ]
+    }
+  ]
+}

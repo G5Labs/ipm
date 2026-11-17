@@ -1,0 +1,21 @@
+verification results:: 19 verified, 1 errors
+error: postcondition not satisfied
+   --> payload_looks_up_again.rs:328:9
+    |
+322 | / pub proof fn snapshot_pins_metadata_and_payload(
+323 | |     cache: Cache, repo: int, config: Config, gun: int, tag: int,
+324 | |     first: Listing, second: Listing,
+325 | |     manifest: Received, parsed: Parsed, blob: Received,
+326 | | )
+    | |_- at the end of the function body
+327 |       ensures
+328 | /         ({
+329 | |             let (metadata_listing, after) = lookup(cache, key_for(repo, config, gun), first);
+330 | |             let (payload_listing, _) = lookup(after, key_for(repo, config, gun), second);
+331 | |             &&& payload_listing == metadata_listing
+...   |
+336 | |                     })
+337 | |         }),
+    | |__________^ failed this postcondition
+
+error: aborting due to 1 previous error
