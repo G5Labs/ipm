@@ -74,3 +74,17 @@ Applies to comments, `write` output, docs, and PR descriptions.
 - Start hand-written XML fixtures with `<Export generator="IRIS" version="26">`.
 - Leave `NEEDSREGISTRY` out of new test classes. It is legacy.
 - Before pushing, confirm new tests pass and the cases they touch still pass.
+
+## Verus foundation for the IPM feature experiment
+
+For a new feature, read .g5/ontology/root.g5.md and .agents/guidance/Verus/new-feature-pr.md.
+Use the owning ontology commitments and the foundation's current runbook to establish the affected scope.
+The supplied issue requirements determine feature scope. Preserve the distinction between existing
+behavior, proposed contracts and unresolved product choices.
+
+Guidance lives under this checkout's .agents/guidance directory. Resolve guidance references there.
+Use native Git and Docker operations for this standalone cloud experiment. The G5 workspace CLI
+operations require a G5 workspace runtime.
+
+The experiment has a shared product requirement packet and an arm-specific task prompt, delivered at
+dispatch. Its plain sibling and other experiment outputs are outside the candidate's input scope.

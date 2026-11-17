@@ -75,7 +75,7 @@ Test results gather in a per-process list. Each test resource counts only the re
 
 A CI job sees a test failure only through the command status. `%IPM.Main:Shell(command, 1)` ends the process with exit code 1 when the command fails. `zpm "<command>"` and `Shell(command)` without the second argument end with exit code 0 even when tests fail.
 
-- `zpm "<command>",1` does not work as a CI form: it exits 0 after a failure. The `$zpm()` function form raises an error instead of returning the status. Both are owned by [shell entry forms](../root.g5.md#ipm.shell.forms).
+- `zpm "<command>",1` does not work as a CI form: it exits 0 after a failure. The `$zpm()` function form raises an error instead of returning the status. Both are owned by [shell entry forms](../features/package-commands.g5.md#ipm.shell.forms).
 
 ## Which results a report describes
 
@@ -187,7 +187,7 @@ State machines: [test outcome · iter4](../../Verus_verification/models/iter4-te
 - user-facing-behavior
 - Expands: [Test outcome](#build.test.outcome).
 
-Direct decision: `Main.cls::Shell` (`pTerminateOnError` calls `$system.Process.Terminate($job,1)`); caller `Main.cls::LanguageExtensions` (`ZPM` passes its arguments through and discards the status). Native E1 exit 1, E2 exit 0 for a passing run, E3 exit 0 without the flag. Verus `exit_code`; control `exit-ignores-terminate-flag` rejected. Related: [ipm.shell](../root.g5.md#ipm.shell).
+Direct decision: `Main.cls::Shell` (`pTerminateOnError` calls `$system.Process.Terminate($job,1)`); caller `Main.cls::LanguageExtensions` (`ZPM` passes its arguments through and discards the status). Native E1 exit 1, E2 exit 0 for a passing run, E3 exit 0 without the flag. Verus `exit_code`; control `exit-ignores-terminate-flag` rejected. Related: [ipm.shell](../features/package-commands.g5.md#ipm.shell).
 
 ### build.test-output.run-identity
 

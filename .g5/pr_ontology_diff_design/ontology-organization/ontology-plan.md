@@ -27,7 +27,7 @@ The code and models distinguish outcomes that an outline by component would obsc
 
 ## Review results
 
-The comparison baseline is the IPM uplift at `5fb9f43cb`. Each of its 263 statements occurs once in the reorganized ontology. A comparison keyed by stable ID matched the original kind, full statement text and full per-statement metadata after resolving relative Markdown links to their original evidence or statement IDs. This includes examples, exceptions, working assumptions, parent and child references, provenance and verification qualifications.
+The comparison baseline is the IPM uplift at `5fb9f43cb`. Each of its 263 statements occurs once in the reorganized ontology. A comparison keyed by stable ID matched the original kind, full statement text and original metadata after resolving relative Markdown links. The shell entry-forms metadata also links back to the existing finding C:D24. Examples, exceptions, working assumptions, parent and child references, provenance and verification qualifications are preserved.
 
 Section headings group the statements for reading. The original statement hierarchy remains available through the links in each block’s metadata. Earlier file addresses that no longer own statements link to their current owners.
 
