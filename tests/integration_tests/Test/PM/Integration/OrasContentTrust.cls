@@ -255,6 +255,30 @@ Method TestDependencyByExternalNameInNamespace()
     do ..AssertVersion("default-name", "0.0.1")
 }
 
+/// A signed module.xml annotation with line breaks around it is read as without a trust server,
+/// both to resolve a dependency and to offer a module under its external name.
+Method TestModuleXMLWhitespaceTrimmed()
+{
+    if '..NotaryRuns() {
+        return
+    }
+    do ..PublishAppAndDep()
+    do ..PadModuleXML(..#DepName, ..#DepTag)
+    do ..Sign(..#AppName, "1.0.0")
+    do ..Sign(..#DepName, ..#DepTag)
+    do $$$AssertStatusOK(##class(%IPM.Main).Shell("install " _ ..#RepoName _ "/" _ ..#AppName), "Installed with a dependency whose module.xml is padded")
+    do $$$AssertEquals(##class(OrasTrustApp.Info).Describe(), "app 1.0.0 with dep " _ ..#DepVersion)
+
+    do $$$AssertStatusOK(##class(%IPM.Main).Shell("load " _ ..GetModuleDir("publish-external-name", "0.0.1")), "Loaded the dependency")
+    do $$$AssertStatusOK(##class(%IPM.Main).Shell("publish default-name -r " _ ..#RepoName _ " -only -use-external-name"), "Published under its external name")
+    set ..Published(..#RepoName, "external-name") = ""
+    do $$$AssertStatusOK(##class(%IPM.Main).Shell("uninstall default-name"))
+    do ..PadModuleXML("external-name", "0.0.1")
+    do ..Sign("external-name", "0.0.1")
+    do $$$AssertStatusOK(##class(%IPM.Main).Shell("load " _ ..GetModuleDir("oras-dep-name", "consumer-name")), "Loaded the consumer with its padded external-name dependency")
+    do ..AssertVersion("default-name", "0.0.1")
+}
+
 /// Basic authentication to the registry works alongside the trust server, and refusals show no password.
 Method TestRegistryCredentials()
 {
@@ -683,6 +707,19 @@ Method PutManifest(
 	text As %String)
 {
     do ..HttpManifest("PUT", ..#OrasURL _ "/v2/" _ ..Namespace _ "/" _ package _ "/manifests/" _ tag, text)
+}
+
+/// Points tag of package at a manifest whose module.xml annotation is a whole module.xml file with line breaks around it,
+/// as other publishing tools can write it. The XML declaration is only valid once the line break before it is trimmed.
+Method PadModuleXML(
+	package As %String,
+	tag As %String)
+{
+    set manifest = {}.%FromJSON(..GetManifest(package, tag))
+    set key = "com.intersystems.ipm.module.v1+xml"
+    set moduleXML = $char(10) _ "<?xml version=""1.0"" encoding=""UTF-8""?>" _ $char(10) _ manifest.annotations.%Get(key) _ $char(13, 10)
+    do manifest.annotations.%Set(key, moduleXML)
+    do ..PutManifest(package, tag, manifest.%ToJSON())
 }
 
 ClassMethod HttpManifest(

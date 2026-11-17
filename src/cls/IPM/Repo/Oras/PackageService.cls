@@ -268,8 +268,7 @@ Method GetModuleManifest(pModuleReference As %IPM.Storage.ModuleInfo) As %Stream
     // GetModuleXML returns a string, but callers expect a stream per %IPM.Repo.IPackageService
     try {
         if (..TrustServer '= "") {
-            set annotations = ..GetSignedManifest(pModuleReference.Name, tag).%Get("annotations")
-            set moduleXML = $select($isobject(annotations): $zstrip(annotations.%Get("com.intersystems.ipm.module.v1+xml"), "<>W"), 1: "")
+            set moduleXML = ..SignedModuleXML(pModuleReference.Name, tag)
         } else {
             set moduleXML = ..GetModuleXML(..Location, name, ..Namespace, ..Username, ..Password, ..Token, ..TokenAuthMethod)
         }
@@ -323,6 +322,19 @@ Method GetSignedManifest(
     return manifest
 }
 
+/// Returns the module.xml annotation of the manifest that TrustServer signs for package:tag, or "" if it has none.
+/// Surrounding whitespace and line breaks are trimmed, as GetModuleXML trims them.
+Method SignedModuleXML(
+	package As %String,
+	tag As %String) As %String
+{
+    set annotations = ..GetSignedManifest(package, tag).%Get("annotations")
+    if '$isobject(annotations) || 'annotations.%IsA("%DynamicObject") || (annotations.%GetTypeOf("com.intersystems.ipm.module.v1+xml") '= "string") {
+        return ""
+    }
+    return $zstrip(annotations.%Get("com.intersystems.ipm.module.v1+xml"), "<>WC")
+}
+
 /// Returns whether the module.xml in the manifest that TrustServer signs for package:tag has moduleName as its Name or ExternalName.
 /// Returns 0 with the reason in error if the manifest cannot be verified.
 Method SignedManifestNames(
@@ -333,8 +345,7 @@ Method SignedManifestNames(
 {
     set error = $$$OK
     try {
-        set annotations = ..GetSignedManifest(package, tag).%Get("annotations")
-        set moduleObj = ##class(%IPM.Utils.Module).GetModuleObjectFromString($select($isobject(annotations): annotations.%Get("com.intersystems.ipm.module.v1+xml"), 1: ""), .found)
+        set moduleObj = ##class(%IPM.Utils.Module).GetModuleObjectFromString(..SignedModuleXML(package, tag), .found)
     } catch e {
         if e.%IsA("%Exception.SystemException") {
             throw e
