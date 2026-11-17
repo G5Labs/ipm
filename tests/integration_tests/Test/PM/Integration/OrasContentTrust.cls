@@ -506,6 +506,17 @@ Method TestReplacedRootRefused()
     do ##class(%IPM.Utils.File).RemoveDirectoryTree(otherSigner)
 }
 
+/// The verify phase installs a module's dependencies in a namespace of its own, which shares the repo definitions of the
+/// namespace being verified. It shares the trust data pinned there too, or a replaced root would be accepted in it.
+/// Integration tests run in such a namespace, so this checks the mapping the verify phase made for them.
+Method TestPinnedTrustDataSharedWithRepoDefinitions()
+{
+    set repoDatabase = ##class(%SYS.Namespace).GetGlobalDest($namespace, "IPM.Repo.DefinitionD")
+    for global = "IPM.Repo.Oras.TrustD", "IPM.Repo.Oras.TrustI" {
+        do $$$AssertEquals(##class(%SYS.Namespace).GetGlobalDest($namespace, global), repoDatabase, "^" _ global _ " is stored with the repo definitions")
+    }
+}
+
 /// Registry content that does not match its signed digest or size is refused before it is unpacked.
 Method TestMismatchedContentRefused()
 {

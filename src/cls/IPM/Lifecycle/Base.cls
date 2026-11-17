@@ -1514,9 +1514,10 @@ Method %Verify(ByRef pParams) As %Status
                 $$$ThrowOnError(##class(%IPM.Utils.Build).MapRoutineEquivalently("%IPM.*",tInitNS,,tNewNamespace))
                 $$$ThrowOnError(##class(%IPM.Utils.Build).MapPackageEquivalently("%IPM",tInitNS,tNewNamespace))
 
-                // Map globals for %IPM.Repo.Definition and %IPM.Repo.Filesystem.Cache
-                // from the original namespace to the VERIFY namespace
-                for tClass = "%IPM.Repo.Definition","%IPM.Repo.Filesystem.Cache" {
+                // Map globals for %IPM.Repo.Definition, %IPM.Repo.Filesystem.Cache and %IPM.Repo.Oras.TrustedCollection
+                // from the original namespace to the VERIFY namespace. Modules from a repo with a trust server are then
+                // checked against the roots pinned in the original namespace.
+                for tClass = "%IPM.Repo.Definition","%IPM.Repo.Filesystem.Cache","%IPM.Repo.Oras.TrustedCollection" {
                     $$$ThrowOnError(##class(%IPM.Utils.Build).MapClassDataEquivalently(tClass,tInitNS,tNewNamespace))
                 }
 
