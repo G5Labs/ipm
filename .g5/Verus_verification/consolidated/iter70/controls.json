@@ -1,0 +1,74 @@
+{
+  "implementation.rs": {
+    "untrusted-delegation-accepted": [
+      "match role { Role::Releases => true, Role::Targets => true, Role::Other => false }",
+      "match role { Role::Releases => true, Role::Targets => true, Role::Other => true }"
+    ],
+    "wrong-server-invoked": [
+      "pub open spec fn invoked_server(config: Config) -> int {\n    config.trust_server\n}",
+      "pub open spec fn invoked_server(config: Config) -> int {\n    config.registry\n}"
+    ],
+    "manifest-digest-unchecked": [
+      "            if manifest.digest == row.digest && manifest.size == row.size {\n                match package_layer(parsed) {",
+      "            if manifest.size == row.size {\n                match package_layer(parsed) {"
+    ],
+    "first-of-several-package-layers": [
+      "pub open spec fn package_layer(parsed: Parsed) -> Option<Descriptor> {\n    if parsed.package_layers.len() == 1 {",
+      "pub open spec fn package_layer(parsed: Parsed) -> Option<Descriptor> {\n    if parsed.package_layers.len() >= 1 {"
+    ],
+    "package-digest-unchecked": [
+      "if blob.digest == layer.digest && blob.size == layer.size {",
+      "if blob.size == layer.size {"
+    ],
+    "package-size-unchecked": [
+      "if blob.digest == layer.digest && blob.size == layer.size {",
+      "if blob.digest == layer.digest {"
+    ],
+    "provider-pull-unpacks": [
+      "Effects { provider_unpacked: false,",
+      "Effects { provider_unpacked: true,"
+    ],
+    "cached-timestamp-kept": [
+      "notary_list(reachable, false, answer, cached)",
+      "notary_list(reachable, true, answer, cached)"
+    ],
+    "payload-looks-up-again": [
+      "    if cache.entries.contains_key(key) {\n        (cache.entries[key], cache)",
+      "    if false {\n        (cache.entries[key], cache)"
+    ],
+    "snapshot-ignores-trust-server": [
+      "Key { repo, server: config.trust_server, gun }",
+      "Key { repo, server: 0, gun }"
+    ],
+    "unsafe-target-names-accepted": [
+      "if names_safe { select(rows, tag) } else { None },",
+      "select(rows, tag),"
+    ],
+    "catalog-offers-registry-tags": [
+      "pub open spec fn offered(config: Config, listing: Listing, registry_tag: bool, tag: int) -> bool {\n    trusted_row(config, listing, tag) is Some\n}",
+      "pub open spec fn offered(config: Config, listing: Listing, registry_tag: bool, tag: int) -> bool {\n    registry_tag\n}"
+    ],
+    "catalog-metadata-by-tag": [
+      "            if manifest.digest == row.digest && manifest.size == row.size { Some(manifest) } else { None },",
+      "            Some(manifest),"
+    ],
+    "stall-reuses-other-listing": [
+      "        (Listing::Failed, cache)\n",
+      "        (cache.entries[Key { gun: 0, ..key }], cache)\n"
+    ],
+    "stall-not-recorded": [
+      "            stalled: if timed_out { cache.stalled.insert((key.repo, key.server)) } else { cache.stalled },",
+      "            stalled: cache.stalled,"
+    ]
+  },
+  "settings.rs": {
+    "notary-reset-uses-stored-default": [
+      "pub open spec fn factory_empty(k: int) -> bool { k == TRF() || k == NOTARY() }",
+      "pub open spec fn factory_empty(k: int) -> bool { k == TRF() }"
+    ],
+    "notary-not-configurable": [
+      "pub open spec fn configurable(k: int) -> bool { 0 <= k < 13 }",
+      "pub open spec fn configurable(k: int) -> bool { 0 <= k < 12 }"
+    ]
+  }
+}

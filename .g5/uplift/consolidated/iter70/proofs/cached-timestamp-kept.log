@@ -1,0 +1,35 @@
+verification results:: 23 verified, 1 errors
+note: function body check: not all errors may have been reported; rerun with a higher value for --multiple-errors to find other potential errors in this function
+   --> cached_timestamp_kept.rs:344:1
+    |
+344 | / pub proof fn outage_refuses(
+345 | |     config: Config, path: int, tag: int, snapshot: int, answer: Listing, cached: Listing,
+346 | |     manifest: Received, parsed: Parsed, blob: Received,
+347 | | )
+    | |_^
+
+error: postcondition not satisfied
+   --> cached_timestamp_kept.rs:349:9
+    |
+344 | / pub proof fn outage_refuses(
+345 | |     config: Config, path: int, tag: int, snapshot: int, answer: Listing, cached: Listing,
+346 | |     manifest: Received, parsed: Parsed, blob: Received,
+347 | | )
+    | |_- at the end of the function body
+348 |       ensures
+349 |           retrieve(config, implemented_list(false, answer, cached), tag, manifest, parsed, blob) is Refused,
+    |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: postcondition not satisfied
+   --> cached_timestamp_kept.rs:350:9
+    |
+344 | / pub proof fn outage_refuses(
+345 | |     config: Config, path: int, tag: int, snapshot: int, answer: Listing, cached: Listing,
+346 | |     manifest: Received, parsed: Parsed, blob: Received,
+347 | | )
+    | |_- at the end of the function body
+...
+350 |           abs_evidence(config, path, tag, snapshot, implemented_list(false, answer, cached)) is Unavailable,
+    |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: aborting due to 2 previous errors

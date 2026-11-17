@@ -98,6 +98,9 @@ ClassMethod ResetToDefault(key As %String) As %Status
     if key = ..#TestReportFormat {
         // No factory default; empty string means "use legacy output"
         set defaultValue = ""
+    } elseif key = ..#NotaryExecutable {
+        // Empty finds notary on the PATH. The stored default would be the first path ever set.
+        set defaultValue = ""
     } elseif key = ..#ModuleRoot {
         // Computed directly rather than read from storage — older IPM versions did not seed this default node
         set defaultValue = ##class(%File).NormalizeDirectory(##class(%SYSTEM.Util).DataDirectory() _ "ipm/")

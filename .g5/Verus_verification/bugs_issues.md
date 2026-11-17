@@ -1154,6 +1154,8 @@ Reproduced by: e2e reproduced. config delete restores first stored value; record
 
 [Executable regression receipt](../uplift/consolidated/findings-audit-iter28/runs/20261116T031648777527Z-repo/receipt.json); [Runner](../uplift/consolidated/findings-audit-iter28/run_regressions.py) `repo`. The receipt records commands, expected observations, actual readers and provider qualifications.
 
+The #281 candidate adds the `NotaryExecutable` key with an explicit reset to empty, as `TestReportFormat` has, so this defect does not apply to it ([iteration 70, R2](../uplift/consolidated/iter70/HANDOFF.md#findings-and-repairs)).
+
 Fresh reproduction on Linux x86-64 IRIS 2026.1: [iteration41 receipt](../uplift/consolidated/iter41/native/20261116T174828407055Z/observations.json), with the [iteration41 model](consolidated/iter41/settings.rs) replaying the same outcome.
 
 [Governing owner](../ontology/operations/settings.g5.md#settings). No product repair or maintainer approval is claimed.

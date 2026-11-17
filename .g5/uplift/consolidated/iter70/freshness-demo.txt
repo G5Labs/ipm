@@ -1,0 +1,32 @@
+# iter70 freshness gate demonstration, 2026-11-17T19:56:57Z, on a disposable copy of the final candidate tree
+## 0. unchanged copy
+$ python3 .g5/Verus_verification/consolidated/iter70/run.py --check
+Saved evidence matches the models, controls, source bindings, product inputs and test fixtures
+exit=0
+
+## 1. formal input changed (a comment in implementation.rs): the proof reopens
+$ python3 .g5/Verus_verification/consolidated/iter70/run.py --check
+    assert digest((HERE / model["file"]).read_bytes()) == model["sha256"], f"STALE model {model['file']}: rerun --proofs-only"
+AssertionError: STALE model implementation.rs: rerun --proofs-only
+exit=1
+
+## 2. source-only change inside a bound span (TRUSTEDROLES gains targets/other): correspondence reopens, theorem reusable
+$ python3 .g5/Verus_verification/consolidated/iter70/run.py --check
+    assert not stale, f"STALE correspondence {stale}: reread the source, update bindings.json and rerun"
+AssertionError: STALE correspondence [('trust-verifier', 'src/cls/IPM/Repo/Oras/ContentTrust.cls::TRUSTEDROLES')]: reread the source, update bindings.json and rerun
+exit=1
+
+## 3. new writer outside every bound span in a bound product file: native receipt reopens
+$ python3 .g5/Verus_verification/consolidated/iter70/run.py --check
+    assert not changed, f"STALE native receipt for {changed}: rerun --native-only"
+AssertionError: STALE native receipt for ['src/cls/IPM/Repo/Oras/ContentTrust.cls']: rerun --native-only
+exit=1
+
+## 4. new writer in a production file the runner does not list: only the shared census reports it
+$ python3 .g5/Verus_verification/consolidated/iter70/run.py --check
+Saved evidence matches the models, controls, source bindings, product inputs and test fixtures
+exit=0
+
+$ python3 .g5/uplift/consolidated/common30/freshness.py --root .
+exit=1
+census: {'added_files': ['src/cls/IPM/Repo/Oras/ContentTrust.cls', 'src/cls/IPM/Repo/Oras/NewWriter.cls'], 'removed_files': []}

@@ -3035,6 +3035,7 @@ resolution_source: playbook-uplift/decisions/07-09.md
 
 - Working assumption: yes. A trust server limits only what its own repository offers. Repository selection across repositories is unchanged, so an unsigned version or a trust-server outage behaves like a version that repository lacks.
 - Alternative and implications: refuse the install whenever a protected repository has the module but cannot offer a signed version. This keeps an unprotected source from filling in, but one trust-server outage then blocks installs that other repositories could serve.
+- Risk of the working assumption: anyone who can block traffic to the trust server, or keep a tag unsigned, can make an unqualified `install <module>` take the module from another enabled repository, possibly at another version. IPM warns that the protected repository does not offer it. `install <repo>/<module>` cannot fall back.
 - The issue asks for a per-repository check. A namespace-wide signed-only rule would be a new requirement.
 
 Disposition: open. Implemented assumption: [signed admission catalog](../ontology/architecture/package-sources.g5.md#repo.oras.signed-admission.catalog).
@@ -3064,6 +3065,7 @@ default_assumption: yes. A trust server limits only what its own repository offe
 
 - Working assumption: no. notary reads trust data anonymously, so every check against a trust server that requires a login fails, and nothing installs from that repository.
 - Alternative and implications: pass credentials to notary through `NOTARY_AUTH`, either the repository's own or separate trust-server credentials. That supports servers such as Artifactory's, but sending registry credentials to another service needs an explicit rule.
+- The current behavior fails closed: every check against such a server fails, so the repository offers nothing. notary reads the IRIS user's notary configuration alongside IPM's arguments, so an https trust server with a private CA should work through `remote_server.root_ca` there. That is not exercised.
 
 Disposition: open. Implemented assumption: [verifier](../ontology/architecture/package-sources.g5.md#repo.oras.signed-admission.verifier).
 

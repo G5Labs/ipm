@@ -1,0 +1,20 @@
+verification results:: 23 verified, 1 errors
+error: postcondition not satisfied
+   --> package_size_unchecked.rs:278:9
+    |
+278 | /         ({
+279 | |             let outcome = retrieve(config, listing, tag, manifest, parsed, blob);
+280 | |             let decision = protected_admission(
+281 | |                 abs_target(config, path, tag), abs_policy(config, snapshot), abs_manifest(manifest, parsed),
+...   |
+286 | |             &&& (outcome is Stream ==> outcome->package == abs_observed(blob))
+287 | |         }),
+    | |__________^ failed this postcondition
+288 |   {
+289 | /     match listing {
+290 | |         Listing::Verified { server, root, rows, true_rows, names_safe } => lemma_select_is_docker_row(rows, tag),
+291 | |         _ => {},
+292 | |     }
+    | |_____- at the end of the function body
+
+error: aborting due to 1 previous error

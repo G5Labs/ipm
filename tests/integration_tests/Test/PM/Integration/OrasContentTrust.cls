@@ -113,6 +113,16 @@ Method TestRepoConfiguration()
     do $$$AssertStatusOK(##class(%IPM.Main).Shell("repo -o -name trusted -trust-server """""), "Cleared the trust server")
     do $$$AssertEquals(##class(%IPM.Repo.Oras.Definition).ServerDefinitionKeyOpen("trusted").TrustServer, "", "The trust server is cleared")
 
+    // Other repository types do not check signatures, so they refuse the setting rather than ignore it
+    set sc = ##class(%IPM.Main).Shell("repo -fs -name untrusted-fs -path " _ ..FixtureDir("trust-app-1.0.0") _ " -trust-server " _ ..#TrustServerURL)
+    do $$$AssertStatusNotOK(sc, "A filesystem repo refuses -trust-server")
+    do $$$AssertNotTrue(##class(%IPM.Repo.Definition).ServerDefinitionKeyExists("untrusted-fs"), "The refused repo was not created")
+
+    // config delete restores finding notary on the PATH, not the first path ever set
+    do $$$AssertStatusOK(##class(%IPM.Main).Shell("config set NotaryExecutable /nonexistent/notary"))
+    do $$$AssertStatusOK(##class(%IPM.Main).Shell("config delete NotaryExecutable"))
+    do $$$AssertEquals(##class(%IPM.Repo.Oras.ContentTrust).NotaryExecutable(), "notary", "config delete resets the verifier path")
+
     // A definition saved by an earlier version has no slot for the trust server
     do $$$AssertStatusOK(##class(%IPM.Main).Shell("repo -o -name trusted -trust-server " _ ..#TrustServerURL))
     kill repo
@@ -144,6 +154,15 @@ Method TestSignedInstall()
     set reference.Name = "trust-app"
     set reference.VersionString = "1.0.0"
     do $$$AssertNotTrue(##class(%IPM.Repo.Oras.Definition).ServerDefinitionKeyOpen("trusted").GetPackageService().HasModule(reference), "HasModule ignores the unsigned version")
+
+    // The same manifest signed for another repository does not count for this one
+    set manifest = {}.%FromJSON(..ReadManifest(..#Registry, ..CaseNamespace _ "/trust-app", "1.0.0"))
+    set otherGUN = ..GUN("trust-app-mirror")
+    do ..InitTrust(otherGUN)
+    do ..Notary(..SignerDirectory, ["addhash", (otherGUN), "1.0.0", (manifest.size), "--sha256", ($piece(manifest.digest, ":", 2)), "-p"])
+    set sc = ..Run("install trusted/trust-app 1.0.0", .lines)
+    do ..AssertRefused(sc, .lines, "no signature for them: 1.0.0")
+    do ..AssertNotInstalled("trust-app")
 
     do ..Sign("trust-app", "1.0.0")
     do $$$AssertTrue(##class(%IPM.Repo.Oras.Definition).ServerDefinitionKeyOpen("trusted").GetPackageService().HasModule(reference), "HasModule finds the signed version")
@@ -321,6 +340,26 @@ Method TestStalledTrustServerRefused()
         do $$$AssertTrue(text [ "did not finish within 3 seconds", text)
     }
     do $$$AssertTrue(($zhorolog - start) < 30, "Gave up after " _ ($zhorolog - start) _ "s")
+
+    // Within one command, the next repository on the stalled server fails without waiting again
+    new $$$RepoLookupState
+    set $$$RepoLookupState = ""
+    set server = "http://127.0.0.1:" _ port
+    try {
+        do ##class(%IPM.Repo.Oras.ContentTrust).SignedTargets(server, "oras:5000/stalled/first", "stalled-repo", 3)
+        do $$$AssertFailure("A stalled trust server answered for the first repository")
+    } catch e {
+        do $$$AssertTrue($system.Status.GetErrorText(e.AsStatus()) [ "did not finish within 3 seconds")
+    }
+    set start = $zhorolog
+    try {
+        do ##class(%IPM.Repo.Oras.ContentTrust).SignedTargets(server, "oras:5000/stalled/second", "stalled-repo", 3)
+        do $$$AssertFailure("A stalled trust server answered for the second repository")
+    } catch e {
+        set text = $system.Status.GetErrorText(e.AsStatus())
+        do $$$AssertTrue(text [ "was not attempted because trust server " _ server _ " did not answer within 3 seconds", text)
+    }
+    do $$$AssertTrue(($zhorolog - start) < 2, "The second repository failed after " _ ($zhorolog - start) _ "s")
 }
 
 /// A protected repo only downloads and checks the package archive. The ORAS pull of an unprotected repo
@@ -655,17 +694,25 @@ Method Sign(
 {
     set manifest = {}.%FromJSON(..ReadManifest(..#Registry, ..CaseNamespace _ "/" _ module, tag, username, password))
     set gun = ..GUN(module)
-    if '..Notary(signerDirectory, ["list", (gun)], 1) {
-        do ..Notary(signerDirectory, ["init", (gun)])
-        do ..Notary(signerDirectory, ["key", "rotate", (gun), "snapshot", "-r"])
-        do ..Notary(signerDirectory, ["publish", (gun)])
-    }
+    do ..InitTrust(gun, signerDirectory)
     set args = ["addhash", (gun), (tag), (manifest.size + sizeOffset), "--sha256", ($piece(manifest.digest, ":", 2)), "-p"]
     if (role '= "") {
         do args.%Push("-r").%Push(role)
     }
     do ..Notary(signerDirectory, args)
     return manifest.digest
+}
+
+/// Creates trust data for repository gun on the trust server, with keys in signerDirectory, unless it has some.
+Method InitTrust(
+	gun As %String,
+	signerDirectory As %String = {..SignerDirectory})
+{
+    if '..Notary(signerDirectory, ["list", (gun)], 1) {
+        do ..Notary(signerDirectory, ["init", (gun)])
+        do ..Notary(signerDirectory, ["key", "rotate", (gun), "snapshot", "-r"])
+        do ..Notary(signerDirectory, ["publish", (gun)])
+    }
 }
 
 /// Adds delegation role for module's repository with a new key that the signer holds.
