@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - #1135: `KeepOnUninstall` attribute on `FileCopy` resources leaves the copied files in place on `uninstall` and `clean`, for files other modules may share
 - #1232: `FileCopy`, `CSPApplication`, and `ArtifactoryTarball` resources warn when they copy into the instance's install directory, which can be read-only, for example via `{$cspDir}` or `{$libDir}`. Instances whose install directory is also their data directory do not warn.
 - #150: `generate` asks for a tests folder (default `tests`) and adds a `UnitTest` resource for the test classes in it
+- #281: ORAS repos can verify modules against a Docker Content Trust (Notary) server with `repo -o -n <name> -trust-server <https url>`. A module from such a repo installs, updates, reinstalls or resolves as a dependency only once the server's trust data, checked by the notary client, signs its tag. It is then retrieved by the signed manifest digest and checked against that manifest before it is unpacked. Signing stays outside IPM, for example in a promotion process. The `NotaryPath` setting gives the notary client's path when it is not on the PATH.
 
 ### Fixed
 - #1023: `test` on a module with a `Scope="test"` class no longer fails in Compile with "Class does not exist". The class loads and compiles in the Test phase, as with `test -only`.

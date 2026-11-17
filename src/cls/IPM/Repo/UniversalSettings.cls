@@ -50,7 +50,11 @@ Parameter TestReportFormat = "TestReportFormat";
 
 Parameter ModuleRoot = "ModuleRoot";
 
-Parameter CONFIGURABLE = "trackingId,analytics,ColorScheme,TerminalPrompt,PublishTimeout,PipCaller,UseStandalonePip,SemVerPostRelease,DefaultLogEntryLimit,HistoryRetain,TestReportFormat,ModuleRoot";
+/// Path to the notary client that verifies modules from ORAS repos configured with a trust server.
+/// Empty runs notary from the PATH.
+Parameter NotaryPath = "NotaryPath";
+
+Parameter CONFIGURABLE = "trackingId,analytics,ColorScheme,TerminalPrompt,PublishTimeout,PipCaller,UseStandalonePip,SemVerPostRelease,DefaultLogEntryLimit,HistoryRetain,TestReportFormat,ModuleRoot,NotaryPath";
 
 /// Returns configArray, that includes all configurable settings
 ClassMethod GetAll(Output configArray) As %Status
@@ -91,8 +95,8 @@ ClassMethod ResetToDefault(key As %String) As %Status
         write "Config key = """_key_""" not found",!
         quit
     }
-    if key = ..#TestReportFormat {
-        // No factory default; empty string means "use legacy output"
+    if (key = ..#TestReportFormat) || (key = ..#NotaryPath) {
+        // No factory default. Empty means legacy output for TestReportFormat and notary from the PATH for NotaryPath.
         set defaultValue = ""
     } elseif key = ..#ModuleRoot {
         // Computed directly rather than read from storage — older IPM versions did not seed this default node

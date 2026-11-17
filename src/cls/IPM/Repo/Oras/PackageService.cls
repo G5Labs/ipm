@@ -1,4 +1,4 @@
-Include %IPM.Common
+Include (%IPM.Common, %IPM.Formatting)
 
 Class %IPM.Repo.Oras.PackageService Extends %IPM.Repo.Http.PackageService
 {
@@ -27,6 +27,12 @@ Property RepoName As %String(MAXLEN = "");
 
 /// Result of ProbeCredentials once RegistryFailure has needed it, otherwise "".
 Property CredentialsProbe As %String [ Private ];
+
+/// URL of the Docker Content Trust server that modules from this repo are verified against, if any.
+Property TrustServer As %String(MAXLEN = 2048);
+
+/// Verifies trust data from TrustServer. Created on first use and kept for this service's lifetime, so repeated lookups reuse one verification.
+Property ContentTrust As %IPM.Repo.Oras.ContentTrust [ Private ];
 
 Parameter ALLOWPREFIXINLOCATION = 0;
 
@@ -235,6 +241,15 @@ Method GetModule(
 	Output AsArchive As %Boolean = 0) As %Stream.Object
 {
     set tag = ..TagForReference(pModuleReference)
+    if (..TrustServer '= "") {
+        try {
+            set stream = ..PullSigned(pModuleReference.Name, tag)
+        } catch e {
+            throw ..ClassifyException(e, pModuleReference.Name)
+        }
+        set AsArchive = 1
+        return stream
+    }
     try {
         set status = ..Pull(..Location, pModuleReference.Name, tag, ..Namespace, ..Username, ..Password, ..Token, ..TokenAuthMethod, .stream)
     } catch e {
@@ -248,10 +263,16 @@ Method GetModule(
 
 Method GetModuleManifest(pModuleReference As %IPM.Storage.ModuleInfo) As %Stream.Object
 {
-    set name = pModuleReference.Name _ ":" _ ..TagForReference(pModuleReference)
+    set tag = ..TagForReference(pModuleReference)
+    set name = pModuleReference.Name _ ":" _ tag
     // GetModuleXML returns a string, but callers expect a stream per %IPM.Repo.IPackageService
     try {
-        set moduleXML = ..GetModuleXML(..Location, name, ..Namespace, ..Username, ..Password, ..Token, ..TokenAuthMethod)
+        if (..TrustServer '= "") {
+            set annotations = ..GetSignedManifest(pModuleReference.Name, tag).%Get("annotations")
+            set moduleXML = $select($isobject(annotations): $zstrip(annotations.%Get("com.intersystems.ipm.module.v1+xml"), "<>W"), 1: "")
+        } else {
+            set moduleXML = ..GetModuleXML(..Location, name, ..Namespace, ..Username, ..Password, ..Token, ..TokenAuthMethod)
+        }
     } catch e {
         throw ..ClassifyException(e, pModuleReference.Name)
     }
@@ -262,6 +283,116 @@ Method GetModuleManifest(pModuleReference As %IPM.Storage.ModuleInfo) As %Stream
     $$$ThrowOnError(stream.Write(moduleXML))
     $$$ThrowOnError(stream.Rewind())
     return stream
+}
+
+/// Returns the verifier for TrustServer.
+Method GetContentTrust() As %IPM.Repo.Oras.ContentTrust [ Private ]
+{
+    if '$isobject(..ContentTrust) || (..ContentTrust.Server '= ..TrustServer) {
+        set ..ContentTrust = ##class(%IPM.Repo.Oras.ContentTrust).%New(..TrustServer)
+    }
+    return ..ContentTrust
+}
+
+/// Returns the manifest that TrustServer signs for package:tag, retrieved by its digest and checked against the signed digest and size.
+Method GetSignedManifest(
+	package As %String,
+	tag As %String) As %DynamicObject
+{
+    set gun = ..GetAPITarget(..Location, package, ..Namespace)
+    set $listbuild(digest, size) = ..GetContentTrust().GetTarget(gun, tag)
+    set client = ..GetClient(..Location, ..Username, ..Password, ..Token, ..TokenAuthMethod)
+    try {
+        set text = client.call("get_verified_manifest", gun, digest, size, "The manifest signed for '" _ gun _ ":" _ tag _ "'")
+    } catch e {
+        set failure = ##class(%IPM.Repo.Oras.HttpException).FromException(e)
+        if $isobject(failure) && (failure.StatusCode = 404) {
+            set msg = $$$FormatText("Repo '%1' (%2) has no manifest %3, which trust server %4 signs for '%5:%6'.", ..RepoName, ..Location, digest, ..TrustServer, gun, tag)
+            $$$ThrowStatus($$$ERROR($$$GeneralError, msg))
+        }
+        throw ..ContentMismatch(e)
+    }
+    try {
+        set manifest = {}.%FromJSON(text)
+    } catch {
+        set manifest = ""
+    }
+    if '$isobject(manifest) || 'manifest.%IsA("%DynamicObject") {
+        $$$ThrowStatus($$$ERROR($$$GeneralError, $$$FormatText("The manifest signed for '%1:%2' is not a JSON object.", gun, tag)))
+    }
+    return manifest
+}
+
+/// Returns whether the module.xml in the manifest that TrustServer signs for package:tag has moduleName as its Name or ExternalName.
+/// Returns 0 with the reason in error if the manifest cannot be verified.
+Method SignedManifestNames(
+	package As %String,
+	tag As %String,
+	moduleName As %String,
+	Output error As %Status) As %Boolean [ Private ]
+{
+    set error = $$$OK
+    try {
+        set annotations = ..GetSignedManifest(package, tag).%Get("annotations")
+        set moduleObj = ##class(%IPM.Utils.Module).GetModuleObjectFromString($select($isobject(annotations): annotations.%Get("com.intersystems.ipm.module.v1+xml"), 1: ""), .found)
+    } catch e {
+        if e.%IsA("%Exception.SystemException") {
+            throw e
+        }
+        set error = e.AsStatus()
+        return 0
+    }
+    return found && (($$$lcase(moduleObj.Name) = $$$lcase(moduleName)) || ((moduleObj.ExternalName '= "") && ($$$lcase(moduleObj.ExternalName) = $$$lcase(moduleName))))
+}
+
+/// Retrieves the module archive of the manifest that TrustServer signs for package:tag into a new temporary directory,
+/// and returns it once it matches the digest and size in that manifest. Nothing is unpacked.
+Method PullSigned(
+	package As %String,
+	tag As %String) As %Stream.FileBinary
+{
+    set manifest = ..GetSignedManifest(package, tag)
+    set gun = ..GetAPITarget(..Location, package, ..Namespace)
+    set layer = ""
+    set layers = manifest.%Get("layers")
+    if $isobject(layers) && layers.%IsA("%DynamicArray") {
+        set iterator = layers.%GetIterator()
+        while iterator.%GetNext(, .candidate) {
+            if $isobject(candidate) && candidate.%IsA("%DynamicObject") && (candidate.%Get("mediaType") = "application/vnd.oci.image.layer.v1.tar") {
+                set layer = candidate
+                quit
+            }
+        }
+    }
+    if '$isobject(layer) {
+        $$$ThrowStatus($$$ERROR($$$GeneralError, $$$FormatText("The manifest signed for '%1:%2' has no module archive layer.", gun, tag)))
+    }
+    set digest = layer.%Get("digest")
+    set size = layer.%Get("size")
+    if (layer.%GetTypeOf("size") '= "number") || (size '= (size \ 1)) || (size < 0) {
+        $$$ThrowStatus($$$ERROR($$$GeneralError, $$$FormatText("The manifest signed for '%1:%2' gives an invalid size for its module archive.", gun, tag)))
+    }
+
+    set filename = ##class(%IPM.Utils.File).CreateTempDirectory() _ "module.tgz"
+    set client = ..GetClient(..Location, ..Username, ..Password, ..Token, ..TokenAuthMethod)
+    try {
+        do client.call("download_verified_blob", gun, digest, size, filename, "The module archive signed for '" _ gun _ ":" _ tag _ "'")
+    } catch e {
+        throw ..ContentMismatch(e)
+    }
+    set stream = ##class(%Stream.FileBinary).%New()
+    $$$ThrowOnError(stream.LinkToFile(filename))
+    return stream
+}
+
+/// Returns e as a status exception with its message if it is a ContentMismatchError raised by the oras helper, otherwise e.
+ClassMethod ContentMismatch(e As %Exception.AbstractException) As %Exception.AbstractException [ Private ]
+{
+    set marker = "ContentMismatchError'>: "
+    if e.%IsA("%Exception.PythonException") && (e.Data [ marker) {
+        return ##class(%Exception.StatusException).CreateFromStatus($$$ERROR($$$GeneralError, $piece(e.Data, marker, 2, *)))
+    }
+    return e
 }
 
 /// Returns the registry tag holding the artifact for the given module reference.
@@ -441,6 +572,14 @@ Method AddModulesFromTags(
 
                     // Only include if at least one matches
                     if 'matchesName && 'matchesExternalName {
+                        continue
+                    }
+                    // The annotation read above is not signed
+                    if (..TrustServer '= "") && '..SignedManifestNames(..ModuleNameFromRepository(name), tag, searchCriteria.Name, .trustError) {
+                        if $$$ISERR(trustError) {
+                            set msg = $$$FormatText("WARNING: Not offering '%1' %2 from repo '%3' as '%4', since its signed module.xml could not be checked: %5", ..ModuleNameFromRepository(name), tVersion.ToString(), ..RepoName, searchCriteria.Name, ##class(%IPM.Main).ErrorText(trustError))
+                            write !, $$$FormattedLine($$$Yellow, msg)
+                        }
                         continue
                     }
                 } else {
@@ -636,11 +775,14 @@ ClassMethod ImportOrasProvider() As %SYS.Python [ Internal, Language = python ]
 }
 
 /// Returns a module with the Python IPM uses around oras-py:
-/// BasicAwareRegistry, RegistryHttpError and registry_message.
+/// BasicAwareRegistry, RegistryHttpError, ContentMismatchError, read_verified and registry_message.
 /// Cached in sys.modules so RegistryHttpError stays one class across calls.
 ClassMethod OrasHelper() As %SYS.Python [ Internal, Language = python ]
 {
+    import hashlib
     import json
+    import os
+    import re
     import sys
     import types
 
@@ -690,6 +832,31 @@ ClassMethod OrasHelper() As %SYS.Python [ Internal, Language = python ]
     def failed(response):
         return (response is not None) and not (200 <= response.status_code < 300)
 
+    class ContentMismatchError(Exception):
+        """Registry content that does not match the digest or size it was requested with."""
+
+    def read_verified(response, digest, size, label, write):
+        """Passes the body of response to write, raising ContentMismatchError once it exceeds size bytes,
+        or at the end unless it is size bytes with the given sha256 digest."""
+        algorithm, _, expected = str(digest).partition(":")
+        if (algorithm != "sha256") or (re.fullmatch("[0-9a-f]{64}", expected) is None):
+            raise ContentMismatchError(f"{label} has digest {clean(digest)}, which is not a sha256 digest.")
+        size = int(size)
+        sha256 = hashlib.sha256()
+        received = 0
+        for chunk in response.iter_content(chunk_size=65536):
+            received += len(chunk)
+            if received > size:
+                raise ContentMismatchError(f"{label} from the registry is larger than its signed size of {size} bytes.")
+            sha256.update(chunk)
+            write(chunk)
+        if received != size:
+            raise ContentMismatchError(f"{label} from the registry is {received} bytes, but its signed size is {size} bytes.")
+        if sha256.hexdigest() != expected:
+            raise ContentMismatchError(f"{label} from the registry does not match its signed digest {digest}.")
+
+    manifest_media_types = ["application/vnd.oci.image.manifest.v1+json", "application/vnd.docker.distribution.manifest.v2+json"]
+
     raise_on_missing = object()
 
     class BasicAwareRegistry(provider.Registry):
@@ -712,6 +879,33 @@ ClassMethod OrasHelper() As %SYS.Python [ Internal, Language = python ]
                 return False
             self.set_header("Authorization", "Basic %s" % self._basic_auth)
             return True
+
+        def get_verified_manifest(self, container, digest, size, label):
+            """Returns the text of the manifest with the given digest, raising ContentMismatchError unless it has that digest and size."""
+            container = self.get_container(container)
+            url = f"{self.prefix}://{container.manifest_url(digest)}"
+            content = bytearray()
+            with self.do_request(url, "GET", headers={"Accept": ", ".join(manifest_media_types)}, stream=True) as response:
+                if failed(response):
+                    raise RegistryHttpError(response)
+                read_verified(response, digest, size, label, content.extend)
+            return bytes(content).decode("utf-8")
+
+        def download_verified_blob(self, container, digest, size, outfile, label):
+            """Writes the blob with the given digest to outfile, raising ContentMismatchError and removing outfile unless it has that digest and size."""
+            container = self.get_container(container)
+            url = f"{self.prefix}://{container.get_blob_url(digest)}"
+            try:
+                with self.do_request(url, "GET", headers=self.headers, stream=True) as response:
+                    if failed(response):
+                        raise RegistryHttpError(response)
+                    with open(outfile, "wb") as file:
+                        read_verified(response, digest, size, label, file.write)
+            except BaseException:
+                if os.path.exists(outfile):
+                    os.remove(outfile)
+                raise
+            return outfile
 
         def call(self, method_name, *args, if_missing=raise_on_missing, **kwargs):
             """Calls an oras-py method, raising RegistryHttpError when it fails on a registry response.
@@ -744,6 +938,8 @@ ClassMethod OrasHelper() As %SYS.Python [ Internal, Language = python ]
     module.provider = provider
     module.registry_message = registry_message
     module.RegistryHttpError = RegistryHttpError
+    module.ContentMismatchError = ContentMismatchError
+    module.read_verified = read_verified
     module.BasicAwareRegistry = BasicAwareRegistry
     sys.modules["_ipm_oras"] = module
     return module

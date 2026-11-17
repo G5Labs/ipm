@@ -7,6 +7,11 @@ Parameter MONIKER As STRING = "oras";
 
 Property Namespace As %IPM.DataType.OrasNamespace;
 
+/// https URL of a Docker Content Trust (Notary) server, e.g. https://notary.example.com.
+/// When set, a module is only retrieved from this repo once the server's signed trust data verifies its tag,
+/// and it is retrieved by the manifest digest that data signs.
+Property TrustServer As %IPM.DataType.RepoLocation;
+
 /// Covers the namespace as well as the URL, so repos on one registry can use different namespaces.
 Method RepoKey() As %List
 {
@@ -27,6 +32,11 @@ XData Commands [ XMLNamespace = "http://www.intersystems.com/PackageManager/CLI"
 <modifier name="oras" aliases="o" description="Create/update an ORAS server repository" />
 <modifier name="namespace" aliases="ns" value="true" description="For ORAS repositories, specifies the registry namespace, i.e. the fully specified path to a package is &lt;url>/&lt;namespace>/&lt;package>.
 Note, this is not the IRIS namespace, but a namespace in the sense of a (sub)directory in the registry's storage system. For example, if in a custom managed registry, the base url is 'registry.company.com', and the package is 'objectscript-example', but it will be stored at 'registry.company.com/packages/ipm/objectscript-example', then the namespace will be 'packages/ipm'." />
+<modifier name="trust-server" value="true" description="For ORAS repositories, specifies the https URL of a Docker Content Trust (Notary) server. Each module retrieved from the repository must then be signed in the server's trust data for its tag, under the collection &lt;registry host>/&lt;namespace>/&lt;package>, and is retrieved by the signed digest. Requires the notary client (see the NotaryPath setting). Set to &quot;&quot; to stop verifying." />
+
+<example description="Verify modules from an ORAS repository against a Docker Content Trust server">
+repo -o -n signed -url https://registry.company.com -namespace packages/ipm -trust-server https://notary.company.com
+</example>
 </group>
 </command>
 </commands>
@@ -43,6 +53,7 @@ Method GetPackageService() As %IPM.Repo.IPackageService
     set tClient.Password = ..Password
     set tClient.Token = ..Token
     set tClient.TokenAuthMethod = ..TokenAuthMethod
+    set tClient.TrustServer = ..TrustServer
     quit tClient
 }
 
@@ -67,6 +78,9 @@ Method Display()
     do ##super()
     if (..Namespace '= "") {
         write !,$char(9),"Namespace: ",..Padding(1),..Namespace
+    }
+    if (..TrustServer '= "") {
+        write !,$char(9),"Trust Server: ",..Padding(1),..TrustServer
     }
     if (..Username '= "") || (..Password '= "") || (..Token '= "") {
         set packageService = ..GetPackageService()
@@ -134,6 +148,16 @@ ClassMethod OnConfigure(
         if $data(pModifiers("namespace"), tNamespace) {
             set pInstance.Namespace = tNamespace
         }
+        if $data(pModifiers("trust-server"), trustServer) {
+            if (trustServer '= "") {
+                $$$ThrowOnError(##class(%IPM.DataType.RepoLocation).IsValid(trustServer))
+                set trustServer = ##class(%IPM.DataType.RepoLocation).Canonicalize(trustServer)
+                if ($piece(trustServer, "://") '= "https") {
+                    $$$ThrowStatus($$$ERROR($$$GeneralError, $$$FormatText("Trust server URL '%1' must use https.", trustServer)))
+                }
+            }
+            set pInstance.TrustServer = trustServer
+        }
     } catch e {
         set tSC = e.AsStatus()
     }
@@ -167,6 +191,7 @@ XData LockFileMapping
   <Property Name="ReadOnly" FieldName="readOnly" />
   <Property Name="URL" FieldName="url" />
   <Property Name="Namespace" FieldName="orasNamespace" />
+  <Property Name="TrustServer" FieldName="trustServer" />
 </Mapping>
 }
 
@@ -191,6 +216,9 @@ Storage Default
 </Value>
 <Value name="6">
 <Value>Namespace</Value>
+</Value>
+<Value name="7">
+<Value>TrustServer</Value>
 </Value>
 </Data>
 <DefaultData>OrasRepoDefinitionDefaultData</DefaultData>

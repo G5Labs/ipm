@@ -57,11 +57,12 @@ git checkout <target-branch> # consult with other IPM developers on which branch
 git checkout -b <new-branch-name>
 docker compose up -d --build
 ```
-This will spin up 3 (or 4, if you're working on v0.10.x) containers, which are:
+This will spin up 4 (or 5, if you're working on v0.10.x) containers, which are:
 - `ipm-iris-1`, a container that has the repo-version IPM built in the USER namespace, where the management portal (52773) is published to the host OS at 52774. On the Docker network, this container has the hostname `iris`.
 - `ipm-registry-1`, a container with a zpm-registry pre-configured, where the username is `admin`, the password is `SYS`, and the management portal (52773) is published to the host OS at 52775. On the Docker network, this container has the hostname `registry`.
 - `ipm-sandbox-1`, a container with a vanilla IRIS instance, where the management portal (52773) is published to the host OS at 52776. On the Docker network, this container has the hostname `sandbox`.
 - `ipm-oras-1`, a container WITHOUT any IRIS instance. This container is based on [zot](https://github.com/project-zot/zot) and provides an OCI image registry, with port 5000 published to the host OS at 5001. On the Docker network, this container has the hostname `oras`.
+- `ipm-notary-1`, a container WITHOUT any IRIS instance. This container runs a [Notary](https://github.com/notaryproject/notary) server, the Docker Content Trust server that ORAS repos configured with `-trust-server` verify modules against. It is not published to the host OS. On the Docker network, this container has the hostname `notary` and serves https on port 4443.
 
 The **registry** container runs [zpm-registry](https://github.com/intersystems-community/zpm-registry), the InterSystems community-maintained package registry — this is the same software that powers [pm.community.intersystems.com](https://pm.community.intersystems.com). The **oras** container runs [zot](https://github.com/project-zot/zot), a lightweight open-source OCI registry. OCI registries are the industry-standard type used by tools like Artifactory; zot is included here for easy local testing.
 
@@ -102,6 +103,8 @@ repo -o -name zot -url http://oras:5000/
 You can browse the contents of the zot registry at [http://localhost:5001/home](http://localhost:5001/home) in your browser.
 
 The `auth-test` and `auth-private` namespaces of the zot registry require credentials. See [tests/oras/README.md](tests/oras/README.md) for the test users and their access.
+
+To verify modules from the **oras** container against the **notary** container, see [tests/notary/README.md](tests/notary/README.md).
 
 If you need to shut down all the containers (either to switch to another branch or to revert back to a clean state) involved in the `docker-compose.yml`, run the following command in the project folder:
 ```bash

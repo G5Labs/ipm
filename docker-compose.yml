@@ -51,3 +51,12 @@ services:
     volumes:
       - ./tests/oras/zot-config.json:/etc/zot/config.json:ro
       - ./tests/oras/htpasswd:/etc/zot/htpasswd:ro
+  notary:
+    image: notary:server-0.7.0
+    restart: always
+    command:
+      - notary-server
+      - -config=/etc/notary/server-config.json
+    volumes:
+      - ./tests/notary/server-config.json:/etc/notary/server-config.json:ro
+      - ./tests/notary/certs/:/etc/notary/certs/:ro
