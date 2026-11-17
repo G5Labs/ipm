@@ -1,6 +1,6 @@
 # Loading a package
 
-`load` puts a module into the current namespace from a local path. It shares its core with `install` and `update`, so the rules on this page also govern those commands unless a rule says otherwise. This page is in the formal scope of the uplift, together with the [history log](history.g5.md).
+`load` puts a module into the current namespace from a local path. It shares its core with `install` and `update`, so the rules on this page also govern those commands unless a rule says otherwise.
 
 ```
 load <path>
@@ -25,19 +25,18 @@ The diagram shows the order at the pinned revision. The blocks below say which p
 
 - **Manifest**: the module's `module.xml` file.
 - **Module root**: the folder IPM loads a module's files from.
-- **ModuleRoot setting**: the folder where IPM unpacks archives, by default `<data directory>/ipm/`. See [settings](../concepts/settings.g5.md#settings).
+- **ModuleRoot setting**: the folder where IPM unpacks archives, by default `<data directory>/ipm/`. See [settings](../operations/settings.g5.md#settings).
 - **Installed module**: a module with the same name already in the namespace.
 - **Refusal**: IPM stops the load with an error because the request is not allowed.
 - **Module data**: what a load writes to the namespace's databases for a module, such as its manifest record and its code. Files on disk and the history log are not module data.
 - **First commit**: in developer mode, the point where IPM commits the saved manifest, before it loads dependencies and resources.
 
-## What a load does
+## Choosing the module source
 
 <a id="load"></a>
 [I · load]
 
 `load <path>` loads a module into the current namespace. IPM also loads the module's dependencies, if it can find them in the repositories set up with `repo`.
-
 
 <a id="load.path"></a>
 [I · load.path]
@@ -48,12 +47,17 @@ The path can be one of:
 - A `.tgz` or `.tar.gz` archive that contains `module.xml`.
 - A git repository URL. `-branch` picks the branch.
 
-
 <a id="load.path.archive"></a>
 [I · load.path.archive]
 
 IPM unpacks an archive into `<ModuleRoot>/<name>/<version>/`, as `install` does, and loads the module from there. A folder load stays where it is. IPM removes its temporary unpacking folder whether the load succeeds or fails.
 
+<a id="load.write-check"></a>
+[I · load.write-check]
+
+Before installing files, `install` and `load` check that IPM can write to the target folder.
+
+## Loading the module and its dependencies
 
 <a id="load.core"></a>
 [I · load.core]
@@ -61,10 +65,9 @@ IPM unpacks an archive into `<ModuleRoot>/<name>/<version>/`, as `install` does,
 `load`, `install`, `update` and dependency loads share one loading path.
 
 - `load` takes a local path. `install` finds the module in a repository and records where it came from.
-- IPM checks the request, saves the manifest, loads dependencies, then runs the [lifecycle phases](../concepts/lifecycle.g5.md#lifecycle.chain) Initialize, Reload, Validate, Compile and Activate.
+- IPM checks the request, saves the manifest, loads dependencies, then runs the [lifecycle phases](../architecture/lifecycle.g5.md#lifecycle.chain) Initialize, Reload, Validate, Compile and Activate.
 - `update` also runs ApplyUpdateSteps.
 - Rules that apply only to `install` are owned on the [install page](install.g5.md) and the [overwrite guard](../concepts/transactions-and-dev-mode.g5.md#dev-mode.overwrite-guard).
-
 
 <a id="load.options"></a>
 [I · load.options]
@@ -73,9 +76,9 @@ Other `load` options:
 
 - `-dev` and `-nodev` turn [developer mode](../concepts/transactions-and-dev-mode.g5.md#dev-mode) on or off. Without either, see [plain load keeps mode](../../Verus_verification/open_questions.md#dev-mode.sticky).
 - `-force` allows a newer version without running its update steps ([update required](#load.refusal.update-required)).
-- `-env` names `;`-separated JSON files of settings the module can read ([environment files](../concepts/modules.g5.md#module.env)).
+- `-env` names `;`-separated JSON files of settings the module can read ([environment files](manifest.g5.md#module.env)).
 - `-quiet` and `-verbose` set how much output appears.
-- `-bypass-py-deps` skips [Python dependencies](../concepts/modules.g5.md#module.python), and `-extra-pip-flags` passes flags to pip.
+- `-bypass-py-deps` skips [Python dependencies](resources.g5.md#module.python), and `-extra-pip-flags` passes flags to pip.
 - `-create-lockfile` writes the module's [lock file](dependencies.g5.md#deps.lockfile).
 - `-skip-sync` leaves recording file hashes for `sync` to the next `sync`, in developer mode.
 - `-D<name>=<value>` passes a parameter to the module and its phases, including the [transaction flags](../concepts/transactions-and-dev-mode.g5.md#transaction.opt-out).
@@ -83,9 +86,32 @@ Other `load` options:
 
 - Working assumption: yes, it keeps the stored mode.
 
+<a id="load.dependencies"></a>
+[I · load.dependencies]
 
-## Refusals
+IPM loads a module's dependencies before running the module's own phases.
 
+- Dependencies load one at a time, in dependency order.
+- A failed dependency load fails the whole load.
+- Each dependency load gets its own [history record](history.g5.md#history.dependencies).
+- [Resolution and conflicts](dependencies.g5.md#deps) and [which parameters pass down](../concepts/transactions-and-dev-mode.g5.md#dev-mode.not-propagated) are owned elsewhere.
+
+<a id="load.dependencies.local-repo"></a>
+[I · load.dependencies.local-repo]
+
+A `.modules` folder in the module root serves as a temporary repository for that load's dependencies. IPM removes this temporary repository when loading finishes, even after an error.
+
+- IPM creates none when the folder is missing or another repository already uses that folder. That other repository stays.
+- The temporary repository takes the first unused name `ipm-temp-modules-N`.
+- A dependency's own `.modules` folder gets the same treatment while that dependency loads.
+- Which copy of a dependency wins is owned by [search order](../concepts/repositories.g5.md#repo.search-order). Whether the `.modules` copy should win a tie is [open](../../Verus_verification/open_questions.md#load.dependencies.local-repo.precedence).
+
+- Cache creation failure can leave no row but retain its allocated id in the manager. Cleanup may warn about that missing row (C:D2). At the top-level cleanup call the module can already be committed; at a dependency call the parent rolls back, retaining its first manifest commit only in developer mode.
+- A higher candidate version wins before repository order. Equal versions choose the older repository id in the native observations; temporary sort position does not force local priority (C:Q1).
+
+- Working assumption: the copy in the older repository, as built. The changelog says ties go to the repository created first.
+
+## Refusing a request
 
 <a id="load.refusal"></a>
 [I · load.refusal]
@@ -100,18 +126,15 @@ IPM refuses a load with an error when the request is not allowed. A refusal happ
 
 - Working assumption: yes. The manifest docs say requirements are checked "before module installation", and a module that fails them was never installable.
 
-
 <a id="load.refusal.path"></a>
 [I · load.refusal.path]
 
 `load` accepts only absolute paths and git URLs. It refuses an empty path, and a path that does not exist fails with an error instead of reporting success.
 
-
 <a id="load.refusal.manifest"></a>
 [I · load.refusal.manifest]
 
 IPM refuses a module whose manifest is missing or invalid, for example malformed XML, no `<Module>` element or more than one document. It rejects such a manifest before it touches any resource.
-
 
 <a id="load.refusal.downgrade"></a>
 [I · load.refusal.downgrade]
@@ -120,7 +143,6 @@ IPM never replaces an installed module with an older version. It refuses with "C
 
 - As built, the check uses [version order](../concepts/versions.g5.md#version.order), which does not order prereleases of two different versions. So `1.0.0-rc` replaces an installed `2.0.0-beta` without a refusal. This is a known defect.
 
-
 <a id="load.refusal.update-required"></a>
 [I · load.refusal.update-required]
 
@@ -128,24 +150,30 @@ IPM refuses to load or install a newer version of an installed module when the n
 
 - Working assumption: yes. A maintainer test expects a newer version to install with `-dev`, and the original request asked IPM to point users to `-dev` or `-force`.
 
-
 <a id="load.refusal.requirements"></a>
 [I · load.refusal.requirements]
 
-IPM refuses a module whose [system requirements](../concepts/modules.g5.md#module.requirement) are not met. For example, a module that must be installed in `%SYS` fails to load in any other namespace and loads in `%SYS`.
+IPM refuses a module whose [system requirements](manifest.g5.md#module.requirement) are not met. For example, a module that must be installed in `%SYS` fails to load in any other namespace and loads in `%SYS`.
 
 - Working assumption: yes. The manifest docs say requirements are checked "before module installation", and a module that fails them was never installable.
 
+## Loading the same version or reloading from source
 
 <a id="load.same-version"></a>
 [D · load.same-version]
 
 Loading or installing the version that is already installed succeeds without `-force` or `-dev`, and loads that version again. Automation often reinstalls the same version and expects success.
 
-- A different qualified filesystem supplier can change the loaded files at the same version; [current and historical source readers](../concepts/repositories.g5.md#repo.origin.same-version) distinguish those actions.
+- A different qualified filesystem supplier can change the loaded files at the same version; [current and historical source readers](../concepts/data-policy.g5.md#repo.origin.same-version) distinguish those actions.
+
+<a id="load.reload.root"></a>
+[D · load.reload.root]
+
+Reload uses an explicit root when present. Without one, it falls back to the module's stored root only in developer mode.
+
+It loads environment configuration before checking whether a root remains empty. With no root it then succeeds without reading module.xml; configuration errors can still fail it first. With a root it attempts to read that manifest and reports a read error if it is missing.
 
 ## What a failed load keeps
-
 
 <a id="load.outcome"></a>
 [I · load.outcome]
@@ -173,7 +201,6 @@ What a failed load keeps depends on how it ran.
 - Working assumption: yes. A module's `<Defaults>` apply whenever that module is installed, including as a dependency. A `NoJournal` dependency therefore keeps its changes when the parent rolls back, and its history record must survive and say so.
 - Working assumption: yes. A module that declares `NoTransaction` must not run inside a transaction opened for its parent, so the package change runs without one, and a failure may leave a partial install.
 
-
 <a id="load.outcome.dev"></a>
 [I · load.outcome.dev]
 
@@ -184,41 +211,12 @@ In developer mode, a load commits in steps so the developer can debug a failure.
 - The module's own phases, Initialize through Activate, run outside a transaction. Whatever they did before a failure stays.
 - These commits happen only when transactions are on.
 
-
 <a id="load.outcome.dev.early-failure"></a>
 [I · load.outcome.dev.early-failure]
 
 A developer-mode load that fails or is refused before its first commit is rolled back in full, like a normal-mode load. For example, loading an older version with `-dev` is refused and leaves the installed version in place.
 
-## Dependencies
-
-
-<a id="load.dependencies"></a>
-[I · load.dependencies]
-
-IPM loads a module's dependencies before running the module's own phases.
-
-- Dependencies load one at a time, in dependency order.
-- A failed dependency load fails the whole load.
-- Each dependency load gets its own [history record](history.g5.md#history.dependencies).
-- [Resolution and conflicts](dependencies.g5.md#deps) and [which parameters pass down](../concepts/transactions-and-dev-mode.g5.md#dev-mode.not-propagated) are owned elsewhere.
-
-
-<a id="load.dependencies.local-repo"></a>
-[I · load.dependencies.local-repo]
-
-A `.modules` folder in the module root serves as a temporary repository for that load's dependencies. IPM removes this temporary repository when loading finishes, even after an error.
-
-- IPM creates none when the folder is missing or another repository already uses that folder. That other repository stays.
-- The temporary repository takes the first unused name `ipm-temp-modules-N`.
-- A dependency's own `.modules` folder gets the same treatment while that dependency loads.
-- Which copy of a dependency wins is owned by [search order](../concepts/repositories.g5.md#repo.search-order). Whether the `.modules` copy should win a tie is [open](../../Verus_verification/open_questions.md#load.dependencies.local-repo.precedence).
-
-- Cache creation failure can leave no row but retain its allocated id in the manager. Cleanup may warn about that missing row (C:D2). At the top-level cleanup call the module can already be committed; at a dependency call the parent rolls back, retaining its first manifest commit only in developer mode.
-- A higher candidate version wins before repository order. Equal versions choose the older repository id in the native observations; temporary sort position does not force local priority (C:Q1).
-
-- Working assumption: the copy in the older repository, as built. The changelog says ties go to the repository created first.
-
+## Command status and the after-install message
 
 <a id="load.status"></a>
 [I · load.status]
@@ -229,7 +227,6 @@ A load's result tells the caller whether the load took effect. Success means the
 
 - As built, an error can also follow the final commit. The caller must read the stored module and committed history result separately from status ([late errors](#load.status.after-commit)); a successful message and a brace-free macro are distinct valid neighbors.
 
-
 <a id="load.status.after-commit"></a>
 [I · load.status.after-commit]
 
@@ -239,32 +236,12 @@ Some work runs after the final commit, so it cannot undo the load. A failure the
 - As built, a failure in this work returns an error although the module stays installed and its history record reads committed. This is a known defect.
 - Inside a parent's load, the same failure in a dependency fails the dependency. The parent then rolls back as [a failed load](#load.outcome): fully in normal mode, and back to its first commit in developer mode.
 
-
 <a id="load.after-install-message"></a>
 [I · load.after-install-message]
 
-After a module loads, IPM prints the module's after-install message with its [expressions](../concepts/modules.g5.md#module.parameter.expressions) filled in. A message without a `{` is printed as written.
-
-
-<a id="load.write-check"></a>
-[I · load.write-check]
-
-Before installing files, `install` and `load` check that IPM can write to the target folder.
-
-
-
-<a id="load.reload.root"></a>
-[D · load.reload.root]
-
-Reload uses an explicit root when present. Without one, it falls back to the module's stored root only in developer mode.
-
-It loads environment configuration before checking whether a root remains empty. With no root it then succeeds without reading module.xml; configuration errors can still fail it first. With a root it attempts to read that manifest and reports a read error if it is missing.
+After a module loads, IPM prints the module's after-install message with its [expressions](manifest.g5.md#module.parameter.expressions) filled in. A message without a `{` is printed as written.
 
 ## Metadata
-
-
-
-
 
 Source locators follow the conventions on the [root page](../root.g5.md#how-to-read-this-ontology). Inventory IDs refer to [A1](../../uplift/ipm-verus-20261113/A/intent-inventory.md) (`CAT`, `INT`, `Q`), [A2](../../uplift/ipm-verus-20261113/A/operation-inventory.md) (`OP`, `OBS`, `P`) and the [coverage map](../../uplift/ipm-verus-20261113/A/coverage-map.md). Every block on this page is in the formal scope. Native results of stage B2 phase 1 are cited per block by run, as `<time>-<name>`. The full run ID is `20261113T<time>-<name>` under `.g5/Verus_verification/results/native/`, and the [B2 report](../../uplift/ipm-verus-20261113/B/native-report.md) explains each case and defect. Formal (B1) and native evidence per block, with reliance status, is in the [verification coverage map](../../Verus_verification/coverage-map.md). B2 phase 2 and stage C runs are listed in [B/native-replay.md](../../uplift/ipm-verus-20261113/B/native-replay.md) sections 3-7, and defects `D10`-`D20`, `I1` and `I2` in [VV/bugs_issues.md](../../Verus_verification/bugs_issues.md).
 
@@ -299,6 +276,14 @@ Sources: `Main.cls:278-291` (examples include `.tgz`, `.tar.gz` and git URLs), `
 
 Sources: CHANGELOG 0.10.7 (`#945`), 0.10.11 (`#1183`); `wiki/02` L649-653; comments `Main.cls:2498-2500`. Inventory: INT-LOAD-03; OP-LOAD-02. Test, `.tgz` only: `FileBinaryTar.cls` `TestLoadDestinationDirectory` checks the `<ModuleRoot>/<name>/<version>/` destination and the in-place folder load (PASS 5 of 5, `182337Z-suite-verify-FileBinaryTar`). `InstallModule`, `DeployedItems`, `GlobalsPackaging` and `FileCopy` tests also load `.tgz` files. No test loads a `.tar.gz` file. Observed: an existing `<ModuleRoot>/<name>/<version>/` is deleted and replaced before any version check, and the copy stays after a later failure (OBS-L7, see [rollback scope](../concepts/transactions-and-dev-mode.g5.md#transaction.rollback-scope)).
 
+### load.write-check
+
+- human-provided
+- user-facing-behavior
+- Expands: [Load](#load).
+
+Sources: CHANGELOG 0.10.7 (`#1053`); issue #1053. Inventory: INT-LOAD-16; OP-LOAD-19. Observed: an explicit check exists only for repository archives (`Utils/Module.cls:228-233`). An archive `load` relies on folder-creation errors (`Main.cls:2510`). Not run by B2.
+
 ### load.core
 
 - human-verified
@@ -317,6 +302,35 @@ Sources: `Main.cls:273` and `:407` (load and install descriptions); `wiki/00` L4
 Sources: `Main.cls:304-315`; CHANGELOG `#704`, `#1260`, `#595`, `#647`, `#961`, `#1290`, `#885`. Inventory: INT-LOAD-15, INT-LOAD-14; OP-LOAD-02. `wiki/02` L589-590 still describes `-synchronous` as active. Native evidence: `-nodev` (g9) sets normal mode, and a plain load (g8) keeps the stored developer mode (`182832Z-cases-dg`). `-create-lockfile`, `-env` and the pip options were not run.
 
 Open questions: [When a module is already in developer mode, does a plain `load` with neither `-dev` nor `-nodev` keep developer mode?](../../Verus_verification/open_questions.md#dev-mode.sticky)
+
+### load.dependencies
+
+- human-verified
+- user-facing-behavior
+- test-coverage
+- Expands: [Load](#load).
+- Children: [local repository](#load.dependencies.local-repo).
+
+Sources: `Main.cls:270-271`, `:312`; CHANGELOG 0.10.5 (`#885`); `wiki/00` L126. Inventory: INT-LOAD-14; OP-LOAD-13, OP-LOAD-18, OP-LOAD-20. Tests: `LoadModuleWithDeps.cls` `TestLoadModuleWithDependencies`; `History.cls` `TestWithDependencies`. Native evidence: A0 and A4 conform. A3 (a dependency's Activate fails) fails the parent (`182759Z-cases-a`). Suite LoadModuleWithDeps passes (`182313Z-suite-verify-LoadModuleWithDeps`).
+
+Extension Verus: [loadtx.rs::survived](../../Verus_verification/consolidated/verus/loadtx.rs), [temp_repo.rs::dependency_result](../../Verus_verification/consolidated/verus/temp_repo.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
+
+### load.dependencies.local-repo
+
+- uncertain
+- human-provided
+- user-facing-behavior
+- Expands: [Dependencies](#load.dependencies).
+
+- Children: [When another repository offers the same version of a dependency as the `.modules` folder, which copy should IPM install?](../../Verus_verification/open_questions.md#load.dependencies.local-repo.precedence).
+
+Consolidated round 1 (native run `20261114T025102Z-r1-temp-repo`, model `Verus_verification/consolidated/models/temp_repo.py`): TR1 no folder, no repository; TR2 removed after use; TR3 a leftover `ipm-temp-modules-1` makes the new one `-2` and the leftover stays; TR4 an existing repository at the same root is used and kept; TR7 a failed creation leaves no row but prints "Failed to clean up repository" for it (C:D2). The earlier text said the folder is searched first; TR5 shows an equal version in an older repository wins, so that clause moved to the precedence question. Issue I2's "resolve dependencies from that folder first" holds only for versions no older repository offers. Sources: PR #726 body by isc-shuliu; CHANGELOG 0.10.0 (`#726`, `#729`); comment `Main.cls:2523-2524`. Inventory: INT-LOAD-14; OP-LOAD-04. Confirmed product defect D13 (model case B1-C29, `20261113T193952Z-replay-return-b`): a load that committed reports `<INVALID OREF>` when the temporary repository could not be created. Earlier code reading: if the `.modules` folder cannot be cached, the temporary repository is never created and the final cleanup fails after the load has committed (OBS-L12). Issue I2: a load ended by Terminate or SIGKILL leaves its temporary repository registered at first priority, so later installs resolve dependencies from that folder first (six leftovers after the B2 replays, `20261113T210229Z-temp-repos-leftover`). No source covers a process end.
+
+Extension Verus: [temp_repo.rs::cleanup](../../Verus_verification/consolidated/verus/temp_repo.rs), [temp_repo.rs::on_new](../../Verus_verification/consolidated/verus/temp_repo.rs), [temp_repo.rs::skip_create](../../Verus_verification/consolidated/verus/temp_repo.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
+
+Findings: [C:D2 — e2e reproduced](../../Verus_verification/bugs_issues.md#c-d2). The linked entry qualifies the caller, reader and providers.
+
+Open questions: [When another repository offers the same version of a dependency as the `.modules` folder, which copy should IPM install?](../../Verus_verification/open_questions.md#load.dependencies.local-repo.precedence)
 
 ### load.refusal
 
@@ -399,6 +413,17 @@ Sources: PR #887 review r2388507362 by isc-tleavitt, 2025-09-29 ("someone's auto
 
 State machines: [reloading · iter18](../../Verus_verification/models/iter18-reloading/manifest.json)
 
+### load.reload.root
+
+- design-verified
+
+- agent; user-facing-behavior; source-inspected; Verus-scoped
+- Expands: [load.core](#load.core).
+
+Sources and readers: `Lifecycle/Base.cls::%Reload` → `LoadEnvironmentConfig`, `$system.OBJ.Load` and `Storage/Module.cls::ExecutePhases`. [Iteration 7 index](../../uplift/consolidated/iter7/INDEX.md). [Contract](../../Verus_verification/consolidated/iter7/inputs.rs): `reload`. These are specification proofs; native observations and remaining provider boundaries are in the index and trust inventory.
+
+State machines: [moderefresh · iter65](../../Verus_verification/models/iter65-moderefresh/manifest.json), [inputs · iter7](../../Verus_verification/models/iter7-inputs/manifest.json)
+
 ### load.outcome
 
 - design-verified
@@ -439,35 +464,6 @@ State machines: [failkeep · iter64](../../Verus_verification/models/iter64-fail
 
 Sources: CHANGELOG 0.10.11 (`#1237`: "A -dev action rolled back before its first commit reads uncommitted"); issue #1237 by isc-dchui ("Everything in that window runs inside a transaction that the catch block rolls back ... regardless of developer mode"). Inventory: INT-LOAD-05, INT-LOAD-09; OP-LOAD-06, OP-LOAD-16. Tests: `History.cls` `TestDevModeRollbackNotCommitted`, `TestDevMode`. Native evidence: g7 (`load -dev` of an older version) is refused with `Committed=0` (`182832Z-cases-dg`).
 
-### load.dependencies
-
-- human-verified
-- user-facing-behavior
-- test-coverage
-- Expands: [Load](#load).
-- Children: [local repository](#load.dependencies.local-repo).
-
-Sources: `Main.cls:270-271`, `:312`; CHANGELOG 0.10.5 (`#885`); `wiki/00` L126. Inventory: INT-LOAD-14; OP-LOAD-13, OP-LOAD-18, OP-LOAD-20. Tests: `LoadModuleWithDeps.cls` `TestLoadModuleWithDependencies`; `History.cls` `TestWithDependencies`. Native evidence: A0 and A4 conform. A3 (a dependency's Activate fails) fails the parent (`182759Z-cases-a`). Suite LoadModuleWithDeps passes (`182313Z-suite-verify-LoadModuleWithDeps`).
-
-Extension Verus: [loadtx.rs::survived](../../Verus_verification/consolidated/verus/loadtx.rs), [temp_repo.rs::dependency_result](../../Verus_verification/consolidated/verus/temp_repo.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
-
-### load.dependencies.local-repo
-
-- uncertain
-- human-provided
-- user-facing-behavior
-- Expands: [Dependencies](#load.dependencies).
-
-- Children: [When another repository offers the same version of a dependency as the `.modules` folder, which copy should IPM install?](../../Verus_verification/open_questions.md#load.dependencies.local-repo.precedence).
-
-Consolidated round 1 (native run `20261114T025102Z-r1-temp-repo`, model `Verus_verification/consolidated/models/temp_repo.py`): TR1 no folder, no repository; TR2 removed after use; TR3 a leftover `ipm-temp-modules-1` makes the new one `-2` and the leftover stays; TR4 an existing repository at the same root is used and kept; TR7 a failed creation leaves no row but prints "Failed to clean up repository" for it (C:D2). The earlier text said the folder is searched first; TR5 shows an equal version in an older repository wins, so that clause moved to the precedence question. Issue I2's "resolve dependencies from that folder first" holds only for versions no older repository offers. Sources: PR #726 body by isc-shuliu; CHANGELOG 0.10.0 (`#726`, `#729`); comment `Main.cls:2523-2524`. Inventory: INT-LOAD-14; OP-LOAD-04. Confirmed product defect D13 (model case B1-C29, `20261113T193952Z-replay-return-b`): a load that committed reports `<INVALID OREF>` when the temporary repository could not be created. Earlier code reading: if the `.modules` folder cannot be cached, the temporary repository is never created and the final cleanup fails after the load has committed (OBS-L12). Issue I2: a load ended by Terminate or SIGKILL leaves its temporary repository registered at first priority, so later installs resolve dependencies from that folder first (six leftovers after the B2 replays, `20261113T210229Z-temp-repos-leftover`). No source covers a process end.
-
-Extension Verus: [temp_repo.rs::cleanup](../../Verus_verification/consolidated/verus/temp_repo.rs), [temp_repo.rs::on_new](../../Verus_verification/consolidated/verus/temp_repo.rs), [temp_repo.rs::skip_create](../../Verus_verification/consolidated/verus/temp_repo.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
-
-Findings: [C:D2 — e2e reproduced](../../Verus_verification/bugs_issues.md#c-d2). The linked entry qualifies the caller, reader and providers.
-
-Open questions: [When another repository offers the same version of a dependency as the `.modules` folder, which copy should IPM install?](../../Verus_verification/open_questions.md#load.dependencies.local-repo.precedence)
-
 ### load.status
 
 - agent
@@ -493,22 +489,3 @@ Extension Verus: [attr_evaluator.rs::after_message](../../Verus_verification/con
 - Expands: [Load](#load).
 
 Sources: `Storage/Module.cls:84`, `:356-361`; `Utils/Module.cls:1354`. Native P1, P3, P4 (`20261114T025551Z-r1-eval-postcommit`): `Done {$namespace} {name}` prints `Done USER pc-ok`; `Done $$$OK` without a brace prints unchanged.
-
-### load.write-check
-
-- human-provided
-- user-facing-behavior
-- Expands: [Load](#load).
-
-Sources: CHANGELOG 0.10.7 (`#1053`); issue #1053. Inventory: INT-LOAD-16; OP-LOAD-19. Observed: an explicit check exists only for repository archives (`Utils/Module.cls:228-233`). An archive `load` relies on folder-creation errors (`Main.cls:2510`). Not run by B2.
-
-### load.reload.root
-
-- design-verified
-
-- agent; user-facing-behavior; source-inspected; Verus-scoped
-- Expands: [load.core](#load.core).
-
-Sources and readers: `Lifecycle/Base.cls::%Reload` → `LoadEnvironmentConfig`, `$system.OBJ.Load` and `Storage/Module.cls::ExecutePhases`. [Iteration 7 index](../../uplift/consolidated/iter7/INDEX.md). [Contract](../../Verus_verification/consolidated/iter7/inputs.rs): `reload`. These are specification proofs; native observations and remaining provider boundaries are in the index and trust inventory.
-
-State machines: [moderefresh · iter65](../../Verus_verification/models/iter65-moderefresh/manifest.json), [inputs · iter7](../../Verus_verification/models/iter7-inputs/manifest.json)

@@ -88,7 +88,7 @@ The caller must retain deployed_ok and prove that the new guard precedes fallbac
 
 [Actual model pair, proof result and source](../uplift/consolidated/findings-audit-iter28/SIMPLIFICATION-REVIEW.md#c-s13). Retained as a correctness repair; no net simplification is established.
 
-Governing owner: [build.package.deployed-status](../ontology/features/build-and-publish.g5.md#build.package.deployed-status). The repair remains a proposal.
+Governing owner: [build.package.deployed-status](../ontology/features/packaging-deployed-code.g5.md#build.package.deployed-status). The repair remains a proposal.
 
 <a id="c-s20"></a>
 ### C:S20: Capture ResolveChildren's returned status in Clean, propagate its error and do not delete module metadata after that error.
@@ -126,7 +126,7 @@ Every report caller must forward the correct ID; selection responsibility moves 
 
 [Actual model pair, proof result and source](../uplift/consolidated/findings-audit-iter28/SIMPLIFICATION-REVIEW.md#c-s21). Retained as a correctness repair; no net simplification is established.
 
-Governing owner: [build.test-output.run-identity](../ontology/features/build-and-publish.g5.md#build.test-output.run-identity). The repair remains a proposal.
+Governing owner: [build.test-output.run-identity](../ontology/concepts/testing-policy.g5.md#build.test-output.run-identity). The repair remains a proposal.
 
 ## Review records
 

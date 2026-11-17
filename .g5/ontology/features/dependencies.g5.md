@@ -1,4 +1,4 @@
-# Dependency resolution and lock files
+# Resolving dependencies and using lock files
 
 Before it loads any dependency, IPM works out which version of each dependency to use. [Loading](load.g5.md#load.dependencies) owns the order and failure rules of the dependency loads themselves.
 
@@ -7,7 +7,7 @@ Before it loads any dependency, IPM works out which version of each dependency t
 - **Dependency tree**: a module's dependencies, their dependencies, and so on.
 - **Lock file**: `module-lock.json`, a record of the exact dependency versions a module was installed with.
 
-## Statements
+## Choosing compatible dependencies
 
 <a id="deps"></a>
 [I · deps]
@@ -16,8 +16,7 @@ Before it loads any dependency, IPM resolves the module's whole dependency tree 
 
 - It passes every parameter except [developer mode](../concepts/transactions-and-dev-mode.g5.md#dev-mode.not-propagated) on to the dependencies.
 - A dependency limited to the `test` or `verify` phase is loaded only for that phase.
-- ORAS dependency selection also applies [platform filtering across versions](../concepts/repositories.g5.md#repo.oras.selection-modes); a version range does not authorize an incompatible deployed artifact.
-
+- ORAS dependency selection also applies [platform filtering across versions](../architecture/package-sources.g5.md#repo.oras.selection-modes); a version range does not authorize an incompatible deployed artifact.
 
 <a id="deps.conflict"></a>
 [I · deps.conflict]
@@ -26,7 +25,6 @@ When no version can satisfy every requirement, IPM stops the load with an error 
 
 - The conflict fails the load, so [what a failed load keeps](load.g5.md#load.outcome) applies.
 - In developer mode, resolution happens after the [first commit](load.g5.md#load.outcome.dev), so the saved manifest stays.
-
 
 <a id="deps.installed"></a>
 [I · deps.installed]
@@ -41,6 +39,7 @@ A dependency version must also satisfy the requirements of modules already insta
 - Working assumption: keep the as-built refusal, so the user sees the conflict and chooses a version explicitly.
 - Working assumption: as built, the load succeeds without a warning, and installed modules keep requirements the namespace no longer satisfies.
 
+## Recording and reusing exact versions
 
 <a id="deps.lockfile"></a>
 [I · deps.lockfile]
@@ -61,7 +60,6 @@ A dependency version must also satisfy the requirements of modules already insta
 
 - Working assumption: A needed module loaded from a folder is written to the lock file with an empty registry.
 
-
 <a id="deps.lockfile.content"></a>
 [D · deps.lockfile.content]
 
@@ -72,12 +70,6 @@ The lock-file writer opens installed modules by name, so their stored versions, 
 - The normal CLI fixtures, a reverse-name graph and direct writer helpers were checked separately. Root placement, write-error handling and use during later lifecycle failure retain the earlier qualifications above.
 
 ## Metadata
-
-
-
-
-
-Source locators follow the conventions on the [root page](../root.g5.md#how-to-read-this-ontology). Inventory IDs refer to [A1](../../uplift/ipm-verus-20261113/A/intent-inventory.md) and [A2](../../uplift/ipm-verus-20261113/A/operation-inventory.md). Resolution is used by the formal scope through [load](load.g5.md#load.dependencies). The graph algorithm itself is outside it.
 
 ### deps
 

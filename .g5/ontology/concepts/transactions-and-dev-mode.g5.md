@@ -9,7 +9,7 @@ How IPM protects a namespace when a package change fails, and how developer mode
 - **Normal mode**: a package change without developer mode.
 - **Developer mode**: a module setting, turned on with `-dev`, for a module someone is actively changing in this namespace.
 
-## Transactions
+## What a failed package change keeps
 
 <a id="transaction"></a>
 [I · transaction]
@@ -20,7 +20,6 @@ By default, IPM runs each package change as one IRIS transaction, so a failure r
 - [Developer mode](#dev-mode) and [turning transactions off](#transaction.opt-out) change this.
 - What a rollback does not undo is open ([rollback scope](#transaction.rollback-scope)).
 
-
 <a id="transaction.rollback-scope"></a>
 [D · transaction.rollback-scope]
 
@@ -29,12 +28,13 @@ A database rollback undoes journaled writes in its transaction. It does not undo
 - The database-only interpretation of the history bit is source-backed (P DEC-HIST-5). New native FileCopy tests kept a copied file after a failing load rolled its module record back; a deferred-copy neighbor left no file.
 
 - A direct missing-source copy fails without a copied target file; the successful-copy neighbor leaves its file after database rollback. Directory creation and partial operating-system errors are separate effects.
-- [CPF observations](modules.g5.md#module.processor.cpf-effects) now include a real role-creation merge and an invalid-section neighbor on a disposable provider. Child exit and applied configuration are separate outputs; other CPF effects remain external premises.
+- [CPF observations](../features/resources.g5.md#module.processor.cpf-effects) now include a real role-creation merge and an invalid-section neighbor on a disposable provider. Child exit and applied configuration are separate outputs; other CPF effects remain external premises.
 - A normal-mode rollback also undoes declared `<Mapping>` entries and a web application created during the load. A CPF merge, FileCopy targets and the localization export file written in Activate remain.
 - The broader policy question remains [external effects](../../Verus_verification/open_questions.md#transaction.rollback-scope.policy). These observed outcomes do not ratify compensation policy.
 
 - Working assumption: database rollback is the existing boundary; external effects need separate receipts and must be reported.
 
+## Turning off transactions or journaling
 
 <a id="transaction.opt-out"></a>
 [I · transaction.opt-out]
@@ -46,11 +46,10 @@ Users can turn off the transaction for a package change.
 - With either flag, if the process crashes during the change, nothing can be rolled back and the namespace may be left inconsistent.
 - Both apply to `install`, `load`, `reinstall` and `update`. They are expected to change in IPM 1.0.0.
 
-
 <a id="transaction.flag-sources"></a>
 [I · transaction.flag-sources]
 
-These flags can come from the command line, from the namespace's [default modifiers](settings.g5.md#settings.default-modifiers) or from the module's own `<Defaults>`. A value given on the command line wins over the other two.
+These flags can come from the command line, from the namespace's [default modifiers](../operations/settings.g5.md#settings.default-modifiers) or from the module's own `<Defaults>`. A value given on the command line wins over the other two.
 
 - How a dependency's own `<Defaults>` interact with its parent's transaction is open for `NoJournal` ([dependency defaults](../../Verus_verification/open_questions.md#transaction.flag-sources.dependency-defaults)) and for `NoTransaction` ([dependency NoTransaction](../../Verus_verification/open_questions.md#transaction.flag-sources.dependency-no-transaction)).
 
@@ -64,9 +63,7 @@ These flags can come from the command line, from the namespace's [default modifi
 - Working assumption: yes. A module that declares `NoTransaction` must not run inside a transaction opened for its parent, so the package change runs without one, and a failure may leave a partial install.
 - Working assumption: Require closure consistency as intent; record the observed violating state rather than assuming a repair.
 
-
-## Developer mode
-
+## Editing installed source
 
 <a id="dev-mode"></a>
 [I · dev-mode]
@@ -81,7 +78,6 @@ Developer mode (`-dev`) marks a module as one a developer is actively changing i
 
 - Working assumption: yes, it keeps the stored mode.
 
-
 <a id="dev-mode.source-files"></a>
 [D · dev-mode.source-files]
 
@@ -90,29 +86,6 @@ A successful developer-mode reinstall records the module root and maps its loade
 - Source mappings follow the directory actually selected for loading. Resource path readers describe the configured layout and do not search fallback folders: a class loaded directly from `src` can have a declared path under `src/cls` that does not exist.
 - With an explicit `code` directory, the mapping and resource path readers agree on the file under `src/code`; the checked reader opens that file and reads its class and method source.
 - This covers two ordinary, nondeployed filesystem modules without dependencies. External source-control plug-ins and IDE interpretation of the mappings, installer or Invoke flags, trigger scheduling and general failure behavior remain outside this qualification. A declared path that differs from a loader fallback is not classified as a product defect here.
-
-
-<a id="dev-mode.keep-on-failure"></a>
-[I · dev-mode.keep-on-failure]
-
-A failed developer-mode change keeps what it already did, so the developer can inspect and fix it. In normal mode, a failed change inside a transaction is rolled back.
-
-- Exception: a developer-mode load that fails before its first commit is rolled back in full ([early failure](../features/load.g5.md#load.outcome.dev.early-failure)).
-- Exception: its dependency loads commit together, so one failed dependency rolls back all of them.
-- The [load page](../features/load.g5.md#load.outcome.dev) says what is kept at each point.
-
-
-<a id="dev-mode.not-propagated"></a>
-[I · dev-mode.not-propagated]
-
-Developer mode is not passed on to dependencies, but every other `load`, `install` and `update` parameter is. Dependencies a developer only uses should stay in normal mode, so rollback and deployment work as usual.
-
-
-<a id="dev-mode.not-propagated.local-snapshot"></a>
-[D · dev-mode.not-propagated.local-snapshot]
-
-Exception: when a developer-mode load pulls a `+snapshot` dependency from a filesystem repository, that dependency also loads in developer mode.
-
 
 <a id="dev-mode.overwrite-guard"></a>
 [I · dev-mode.overwrite-guard]
@@ -124,13 +97,28 @@ A module installed in developer mode cannot be overwritten by a normal-mode inst
 - Working assumption: keep the current scope. The guard covers `install` only, and `-force` does not lift it.
 - Working assumption: Preserve the stated install overwrite guard for dependencies; load scope follows the parent force/load question.
 
+## Failure and dependency loads in developer mode
+
+<a id="dev-mode.keep-on-failure"></a>
+[I · dev-mode.keep-on-failure]
+
+A failed developer-mode change keeps what it already did, so the developer can inspect and fix it. In normal mode, a failed change inside a transaction is rolled back.
+
+- Exception: a developer-mode load that fails before its first commit is rolled back in full ([early failure](../features/load.g5.md#load.outcome.dev.early-failure)).
+- Exception: its dependency loads commit together, so one failed dependency rolls back all of them.
+- The [load page](../features/load.g5.md#load.outcome.dev) says what is kept at each point.
+
+<a id="dev-mode.not-propagated"></a>
+[I · dev-mode.not-propagated]
+
+Developer mode is not passed on to dependencies, but every other `load`, `install` and `update` parameter is. Dependencies a developer only uses should stay in normal mode, so rollback and deployment work as usual.
+
+<a id="dev-mode.not-propagated.local-snapshot"></a>
+[D · dev-mode.not-propagated.local-snapshot]
+
+Exception: when a developer-mode load pulls a `+snapshot` dependency from a filesystem repository, that dependency also loads in developer mode.
+
 ## Metadata
-
-
-
-
-
-Source locators follow the conventions on the [root page](../root.g5.md#how-to-read-this-ontology). Inventory IDs refer to [A1](../../uplift/ipm-verus-20261113/A/intent-inventory.md) (`CAT`, `INT`, `Q`), [A2](../../uplift/ipm-verus-20261113/A/operation-inventory.md) (`OP`, `OBS`, `P`) and the [coverage map](../../uplift/ipm-verus-20261113/A/coverage-map.md).
 
 ### transaction
 
@@ -206,6 +194,18 @@ Open questions: [When a module is already in developer mode, does a plain `load`
 
 State machines: [developer sources · iter25](../../Verus_verification/models/iter25-developer-sources/manifest.json)
 
+### dev-mode.overwrite-guard
+
+- uncertain
+- human-provided
+- user-facing-behavior
+- Expands: [Developer mode](#dev-mode).
+- Children: [May `-force` lift the developer-mode overwrite guard, and does the guard cover `load`?](../../Verus_verification/open_questions.md#dev-mode.overwrite-guard.force).
+
+Sources: `wiki/00` L129; message `Utils/Module.cls:109-112`. Inventory: INT-LOAD-12; OP-LOAD-18. Observed: the guard runs only for a top-level `install`, never for IPM itself, and `-DPermitDowngrade=1` skips it. No test.
+
+Open questions: [May a parent replace a dependency that is already in developer mode?](../../Verus_verification/open_questions.md#dev-mode.overwrite-guard.dependency-policy), [May `-force` lift the developer-mode overwrite guard, and does the guard cover `load`?](../../Verus_verification/open_questions.md#dev-mode.overwrite-guard.force)
+
 ### dev-mode.keep-on-failure
 
 - human-provided
@@ -232,15 +232,3 @@ Sources: CHANGELOG 0.10.5 (`#316`, `#1036`); `wiki/00` L133; commit `0e25c23d` c
 - Expands: [Not passed to dependencies](#dev-mode.not-propagated).
 
 Sources: maintainer comment `Utils/Module.cls:131-135` ("also load the snapshot version of that dependency in developer mode. This doesn't make sense if we're loading the dependency from a remote server"). Inventory: INT-LOAD-07; OP-LOAD-18. No test.
-
-### dev-mode.overwrite-guard
-
-- uncertain
-- human-provided
-- user-facing-behavior
-- Expands: [Developer mode](#dev-mode).
-- Children: [May `-force` lift the developer-mode overwrite guard, and does the guard cover `load`?](../../Verus_verification/open_questions.md#dev-mode.overwrite-guard.force).
-
-Sources: `wiki/00` L129; message `Utils/Module.cls:109-112`. Inventory: INT-LOAD-12; OP-LOAD-18. Observed: the guard runs only for a top-level `install`, never for IPM itself, and `-DPermitDowngrade=1` skips it. No test.
-
-Open questions: [May a parent replace a dependency that is already in developer mode?](../../Verus_verification/open_questions.md#dev-mode.overwrite-guard.dependency-policy), [May `-force` lift the developer-mode overwrite guard, and does the guard cover `load`?](../../Verus_verification/open_questions.md#dev-mode.overwrite-guard.force)

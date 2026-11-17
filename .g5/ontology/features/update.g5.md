@@ -1,4 +1,4 @@
-# Updating
+# Updating a module
 
 `update` moves an installed module to a newer version and runs the update steps its author wrote. It uses the [shared loading path](load.g5.md#load.core) and adds the ApplyUpdateSteps phase.
 
@@ -7,7 +7,7 @@
 - **Update step**: a method a module author writes to move data or settings from one version to the next.
 - **Update package**: the class package a module names in `<UpdatePackage>` to hold its update steps.
 
-## Statements
+## Choosing and admitting an update
 
 <a id="update"></a>
 [I · update]
@@ -15,7 +15,6 @@
 `update <module> [<version>]` updates an installed module to a newer version and runs its update steps. Without a version, it updates to the latest available. `-path <archive>` updates from a local archive instead of a repository.
 
 - History records it as `update`.
-
 
 <a id="update.refusal"></a>
 [I · update.refusal]
@@ -29,18 +28,17 @@ IPM refuses an update when:
 
 Like a [refused load](load.g5.md#load.refusal), a refused update keeps no module data.
 
-
 <a id="update.dev-mode"></a>
 [I · update.dev-mode]
 
 `update` does not pass developer mode on to dependencies.
-
 
 <a id="update.requirements"></a>
 [I · update.requirements]
 
 `update` checks version requirements against the versions modules will have after the update, not the ones installed now. Shared dependencies that must move in lock-step with each other update together instead of failing.
 
+## Applying and recording update steps
 
 <a id="update.steps"></a>
 [I · update.steps]
@@ -56,16 +54,6 @@ A module that declares `<UpdatePackage>` provides update steps.
 - Working assumption: A module that `update` installs for the first time has its steps seeded, as on a fresh install.
 - Working assumption: If the update lock is busy, `update` fails with an error that says so; it never reports success.
 
-
-<a id="update.steps.records"></a>
-[D · update.steps.records]
-
-A saved update-step record is unique by class and method within each step kind, rather than by module. Registering that key for another module moves its home to that module and keeps its completion and status; seeding a successful completed record does not run it again.
-
-- The two kinds, any-member and primary-only, use separate stores. Deleting a module removes the records whose current home is that module; records moved to another module survive until that home is deleted.
-- This describes successful registration, seeding and deletion in one namespace. [Shared execution](#update.steps.shared-execution) covers selected concurrent callers; general concurrency safety and mirror delivery remain open.
-
-
 <a id="update.steps.shared-execution"></a>
 [D · update.steps.shared-execution]
 
@@ -78,13 +66,15 @@ The update-step lock belongs to the module, while a step record belongs to its c
 
 - Working assumption: authors use distinct update packages. Alternatives are to refuse a conflicting home, key records by module, or retain explicit shared owners. Each changes registration and deletion behavior; concurrent writers need a separate check.
 
+<a id="update.steps.records"></a>
+[D · update.steps.records]
+
+A saved update-step record is unique by class and method within each step kind, rather than by module. Registering that key for another module moves its home to that module and keeps its completion and status; seeding a successful completed record does not run it again.
+
+- The two kinds, any-member and primary-only, use separate stores. Deleting a module removes the records whose current home is that module; records moved to another module survive until that home is deleted.
+- This describes successful registration, seeding and deletion in one namespace. [Shared execution](#update.steps.shared-execution) covers selected concurrent callers; general concurrency safety and mirror delivery remain open.
+
 ## Metadata
-
-
-
-
-
-Source locators follow the conventions on the [root page](../root.g5.md#how-to-read-this-ontology). Inventory IDs refer to [A1](../../uplift/ipm-verus-20261113/A/intent-inventory.md) and [A2](../../uplift/ipm-verus-20261113/A/operation-inventory.md). `update` is in the formal scope where it uses the shared loading path and the history log. Update-step scheduling has inherited playbook contracts; the record ownership and deletion boundary is scoped below.
 
 ### update
 
@@ -140,18 +130,6 @@ Findings: [P:F-INST-7 — e2e reproduced](../../Verus_verification/bugs_issues.m
 
 Open questions: [Should an update whose step lock is busy fail or report success?](../../Verus_verification/open_questions.md#update.steps.busy-policy), [Should a developer-mode install seed update-step records?](../../Verus_verification/open_questions.md#update.steps.dev-seeding-policy), [Should a dependency first installed by update run its old steps or seed them?](../../Verus_verification/open_questions.md#update.steps.fresh-seeding-policy), [Should two modules be allowed to share an update-step class and method, or should the second registration fail?](../../Verus_verification/open_questions.md#update.steps.shared-ownership)
 
-### update.steps.records
-
-- design-verified
-
-- agent; user-facing-behavior; source-inspected; native-tested; Verus-scoped
-- Expands: [Update steps](#update.steps).
-- Children: [Should two modules be allowed to share an update-step class and method, or should the second registration fail?](../../Verus_verification/open_questions.md#update.steps.shared-ownership).
-
-[Formal contract](../../Verus_verification/consolidated/iter9/ownership.rs): `get_add`, `seed`, `delete_module`, `cascade_preserves_other_home`, `both_moved`, `cascade_neighbors`. The home must exist and persistence must succeed. Generated uniqueness/FK cascade is an IRIS boundary validated against both native stores; class-list parsing and mirrors are outside this contract. [Bindings and observations](../../uplift/consolidated/iter9/INDEX.md).
-
-State machines: [ownership · iter9](../../Verus_verification/models/iter9-ownership/manifest.json)
-
 ### update.steps.shared-execution
 
 - design-verified
@@ -165,3 +143,15 @@ State machines: [ownership · iter9](../../Verus_verification/models/iter9-owner
 Open questions: [Should two modules be allowed to share an update-step class and method, or should the second registration fail?](../../Verus_verification/open_questions.md#update.steps.shared-ownership)
 
 State machines: [shared steps · iter11](../../Verus_verification/models/iter11-shared-steps/manifest.json)
+
+### update.steps.records
+
+- design-verified
+
+- agent; user-facing-behavior; source-inspected; native-tested; Verus-scoped
+- Expands: [Update steps](#update.steps).
+- Children: [Should two modules be allowed to share an update-step class and method, or should the second registration fail?](../../Verus_verification/open_questions.md#update.steps.shared-ownership).
+
+[Formal contract](../../Verus_verification/consolidated/iter9/ownership.rs): `get_add`, `seed`, `delete_module`, `cascade_preserves_other_home`, `both_moved`, `cascade_neighbors`. The home must exist and persistence must succeed. Generated uniqueness/FK cascade is an IRIS boundary validated against both native stores; class-list parsing and mirrors are outside this contract. [Bindings and observations](../../uplift/consolidated/iter9/INDEX.md).
+
+State machines: [ownership · iter9](../../Verus_verification/models/iter9-ownership/manifest.json)

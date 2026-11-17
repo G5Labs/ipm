@@ -228,7 +228,7 @@ default_assumption: as built. The command fails and keeps nothing from any file,
 - Evidence: `%Evaluate` returns early on no `{`; native E15/P4 leave the macro literal. The expression documentation lists macros without this gate.
 - Working assumption: keep the observed brace gate until a maintainer chooses otherwise.
 - Alternative: expand macros with or without a brace.
-- Affected claims: parameter evaluation, after-install message, file-copy target and Invoke arguments. Alias C:Q2; parent [module.parameter.expressions](../ontology/concepts/modules.g5.md#module.parameter.expressions).
+- Affected claims: parameter evaluation, after-install message, file-copy target and Invoke arguments. Alias C:Q2; parent [module.parameter.expressions](../ontology/features/manifest.g5.md#module.parameter.expressions).
 
 - C:Q2 · Should a `$$$macro` in an attribute value be expanded when the value contains no `{`? · see audited disposition
 
@@ -248,7 +248,7 @@ options:
       - Affected claims: parameter evaluation, after-install message, file-copy target and Invoke arguments. Alias C:Q2; parent
     description: |-
       expand macros with or without a brace.
-      - Affected claims: parameter evaluation, after-install message, file-copy target and Invoke arguments. Alias C:Q2; parent [module.parameter.expressions](../ontology/concepts/modules.g5.md#module.parameter.expressions)
+      - Affected claims: parameter evaluation, after-install message, file-copy target and Invoke arguments. Alias C:Q2; parent [module.parameter.expressions](../ontology/features/manifest.g5.md#module.parameter.expressions)
 answer:
   selected: []
   text: ""
@@ -580,7 +580,7 @@ default_assumption: expose the mismatch and retain size/digest checking. Alterna
 
 - Evidence: commit `d6cc4204` switched to the registry-supplied URL to "fix downloading packages"; a native provider received the repository's Basic credentials and API key at a different host and port. Elsewhere the maintainers treat credentials as belonging to one host: CHANGELOG 0.10.11 `#1115` stops ORAS credential checks from following redirects "so credentials are not sent to another host", and `#649` clears a remote registry's credentials when its URL changes. No source decides the download case.
 - Working assumption: keep following the returned URL, and record the forwarding as suspected defect C:D20. The proposed alternative sends credentials only when the URL's server and port match the repository; a third choice is to refuse such URLs. Either change can break registries that redirect downloads to storage needing the same credentials.
-- Register: C:Q14 and proposal C:S14, revised as C:S14b after the [redirect challenge](../ontology/concepts/repositories.g5.md#repo.remote.download.redirect).
+- Register: C:Q14 and proposal C:S14, revised as C:S14b after the [redirect challenge](../ontology/concepts/download-security.g5.md#repo.remote.download.redirect).
 
 - C:Q14 · Should registry credentials go to a download URL on another server? · see audited disposition
 
@@ -1529,7 +1529,7 @@ default_assumption: filters on listed columns, including version parts, must wor
 
 <a id="g-q-18"></a>
 <a id="history.read.filter.default-modifiers"></a>
-### Should the namespace's [default modifiers](../concepts/settings.g5.md#settings.default-modifiers) act as `history` filters?
+### Should the namespace's [default modifiers](../ontology/operations/settings.g5.md#settings.default-modifiers) act as `history` filters?
 
 [Q · history.read.filter.default-modifiers]
 
@@ -1545,7 +1545,7 @@ Disposition: open. [Source audit](../uplift/consolidated/findings-audit-iter28/Q
 schema: 1
 id: history.read.filter.default-modifiers
 status: open
-prompt: Should the namespace's [default modifiers](../concepts/settings.g5.md#settings.default-modifiers) act as `history` filters?
+prompt: Should the namespace's [default modifiers](../ontology/operations/settings.g5.md#settings.default-modifiers) act as `history` filters?
 severity: medium
 multi_select: false
 allow_free_text: true

@@ -162,7 +162,7 @@ Found by: iteration37 native exploration (`iter37/attempts/explore5.log`), then 
 
 Reproduced by: E2E reproduced. [Iteration37 native receipt](../uplift/consolidated/iter37/native/20261116T173211781373Z/observations.json) on IRIS 2026.1 x86-64 at `571e04a1`. The installing namespace already holds `CopyB.D1` (returns 4) before module `cpb` copies package `CopyB` from namespace CPSRC with `Overwrite="0"`. The load keeps D1 at 4 and copies only D2 (o2). `uninstall cpb` then deletes both D1 and D2 (u2). Passing neighbours: `CopyD.Owned`, listed by another installed module, survives `uninstall cpd` while the copied `CopyD.Free` is removed (u4). With the default `Overwrite`, the replaced pre-existing `CopyA.C2` is also removed by `uninstall cpa` (u1).
 
-The Copy load writes only the classes it exports from the source, but uninstall resolves the package in the installing namespace and deletes every class found there that no other module owns. Code a user kept by choosing `Overwrite="0"` is therefore lost on uninstall, contrary to the [Copy statement](../ontology/concepts/modules.g5.md#module.processor.copy) and to uninstall removing the module's own resources. A repair would record the classes each load actually copied and delete only those. It was not checked.
+The Copy load writes only the classes it exports from the source, but uninstall resolves the package in the installing namespace and deletes every class found there that no other module owns. Code a user kept by choosing `Overwrite="0"` is therefore lost on uninstall, contrary to the [Copy statement](../ontology/features/resources.g5.md#module.processor.copy) and to uninstall removing the module's own resources. A repair would record the classes each load actually copied and delete only those. It was not checked.
 
 <a id="c-d60"></a>
 ### C:D60: Uninstalling a CSPApplication without DeployPath deletes the module's source folder
@@ -171,11 +171,11 @@ Severity: High · Decision: Open
 
 Run: Uplift 2026-11-16
 
-Found by: source review of `ResourceProcessor/CSPApplication.cls::DeleteCSPApp` against the default directory recorded in [module.csp.directory](../ontology/concepts/modules.g5.md#module.csp.directory), then [iteration57 model](consolidated/iter57/cspapp.rs) `no_deploy_path_uninstall_deletes_source` with control `purge-skips-source-folder` ([proof receipt](../uplift/consolidated/iter57/proofs/models.json)).
+Found by: source review of `ResourceProcessor/CSPApplication.cls::DeleteCSPApp` against the default directory recorded in [module.csp.directory](../ontology/features/web-applications.g5.md#module.csp.directory), then [iteration57 model](consolidated/iter57/cspapp.rs) `no_deploy_path_uninstall_deletes_source` with control `purge-skips-source-folder` ([proof receipt](../uplift/consolidated/iter57/proofs/models.json)).
 
 Reproduced by: E2E reproduced. [Iteration57 native receipt](../uplift/consolidated/iter57/native/20261116T182314549001Z/observations.json) on IRIS 2026.1 x86-64 at `571e04a1`. After `load m57b`, whose `<CSPApplication>` has no DeployPath, `uninstall m57b` removes the module's own source folder `/tmp/iter57/m57b/web/` and its `index.html` (case b2). Passing neighbour: with DeployPath, uninstall purges only the deployed copy and the source survives (a3).
 
-Uninstall destroys files outside the namespace that the module never installed, which a developer may not have elsewhere, contrary to the [CSP lifecycle statement](../ontology/concepts/modules.g5.md#module.csp.lifecycle) and uninstall removing only the module's resources. A repair would never purge a directory inside the module's source root, or purge only a DeployPath. It was not checked.
+Uninstall destroys files outside the namespace that the module never installed, which a developer may not have elsewhere, contrary to the [CSP lifecycle statement](../ontology/features/web-applications.g5.md#module.csp.lifecycle) and uninstall removing only the module's resources. A repair would never purge a directory inside the module's source root, or purge only a DeployPath. It was not checked.
 
 <a id="p-f-inst-1"></a>
 ### P:F-INST-1: `update` reports success without running update steps when the update lock is busy for 3 s. No message unless verbose. The steps stay due, and nothing prompt...
@@ -256,7 +256,7 @@ Reproduced by: e2e reproduced. ordinary list triggers retention; old row survive
 
 [Executable regression receipt](../uplift/consolidated/findings-audit-iter28/runs/20261116T031715006352Z-early/receipt.json); [Runner](../uplift/consolidated/findings-audit-iter28/run_regressions.py) `early`. The receipt records commands, expected observations, actual readers and provider qualifications.
 
-[Governing owner](../ontology/features/history.g5.md#history.retention). No product repair or maintainer approval is claimed.
+[Governing owner](../ontology/concepts/data-policy.g5.md#history.retention). No product repair or maintainer approval is claimed.
 
 <a id="d4-q-17-refused--dev-notransaction-or-nojournal-loads-keep-the-module-and-read-committed-when-system-requirements-fail"></a><!-- historical fragment alias -->
 <a id="g-d4"></a>
@@ -479,7 +479,7 @@ Reproduced by: e2e reproduced. literal dollar Default makes load fail; five succ
 
 [Executable regression receipt](../uplift/consolidated/findings-audit-iter28/runs/20261116T031653939391Z-params/receipt.json); [Runner](../uplift/consolidated/findings-audit-iter28/run_regressions.py) `params`. The receipt records commands, expected observations, actual readers and provider qualifications.
 
-[Governing owner](../ontology/concepts/modules.g5.md#module.parameter). No product repair or maintainer approval is claimed.
+[Governing owner](../ontology/features/manifest.g5.md#module.parameter). No product repair or maintainer approval is claimed.
 
 <a id="c-d7"></a>
 ### C:D7: `^1.2` (a caret on a two-part version) means `1.2.x` instead of `>=1.2.0 <2.0.0-0`. The branch written for it is unreachable, because a two-part version is a...
@@ -518,7 +518,7 @@ Reproduced by: e2e reproduced. ordinary -env load feeds altered dollar value to 
 
 [Executable regression receipt](../uplift/consolidated/findings-audit-iter28/runs/20261116T031653939391Z-params/receipt.json); [Runner](../uplift/consolidated/findings-audit-iter28/run_regressions.py) `params`. The receipt records commands, expected observations, actual readers and provider qualifications.
 
-[Governing owner](../ontology/concepts/modules.g5.md#module.env). No product repair or maintainer approval is claimed.
+[Governing owner](../ontology/features/manifest.g5.md#module.env). No product repair or maintainer approval is claimed.
 
 <a id="c-d15"></a>
 ### C:D15: The downgrade refusal misses prereleases of different versions: with `2.0.0-beta` installed, `load` of `1.0.0-rc` succeeds and replaces it. `Follows` treats ...
@@ -542,7 +542,7 @@ Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-it
 
 Reproduced by: partial reproduced (historical helper witness; not rerun). existing allowed deployed-helper override shows local status suppression; no ordinary default-helper failure/full package entry established; no new package/archive run.
 
-[Governing owner](../ontology/features/build-and-publish.g5.md#build.package.deployed-status). No product repair or maintainer approval is claimed.
+[Governing owner](../ontology/features/packaging-deployed-code.g5.md#build.package.deployed-status). No product repair or maintainer approval is claimed.
 
 <a id="c-d16"></a>
 ### C:D16: First plain `load -lock` uses an empty stored Root and writes relative `module-lock.json` in process cwd. A developer-mode or direct nonempty-Root neighbor w...
@@ -607,7 +607,7 @@ Reproduced by: e2e reproduced. ordinary FileCopy Overlay=0 retains unrelated sen
 
 [Executable regression receipt](../uplift/consolidated/findings-audit-iter28/runs/20261116T031710701394Z-misc/receipt.json); [Runner](../uplift/consolidated/findings-audit-iter28/run_regressions.py) `misc`. The receipt records commands, expected observations, actual readers and provider qualifications.
 
-[Governing owner](../ontology/concepts/modules.g5.md#module.processor.file-copy.unix-overlay). No product repair or maintainer approval is claimed.
+[Governing owner](../ontology/features/resources.g5.md#module.processor.file-copy.unix-overlay). No product repair or maintainer approval is claimed.
 
 <a id="c-d31"></a>
 ### C:D31: A failing outer test runs a passing child through ordinary Shell. Outer device/status identify the failed outer run, but the outer JSON output file contains ...
@@ -620,7 +620,7 @@ Reproduced by: e2e reproduced. actual outer/child Shell test runs, final file/de
 
 [Executable regression receipt](../uplift/consolidated/findings-audit-iter28/runs/20261116T030004292651Z-iter17/receipt.json); [Runner](../uplift/consolidated/findings-audit-iter28/run_regressions.py) `iter17`. The receipt records commands, expected observations, actual readers and provider qualifications.
 
-[Governing owner](../ontology/features/build-and-publish.g5.md#build.test-output.run-identity). No product repair or maintainer approval is claimed.
+[Governing owner](../ontology/concepts/testing-policy.g5.md#build.test-output.run-identity). No product repair or maintainer approval is claimed.
 
 <a id="c-d33"></a>
 ### C:D33: Install a parent with exact dependency `1.0.0+snapshot`, change that dependency's source payload, then ordinarily reinstall the parent. The forced refresh ad...
@@ -646,7 +646,7 @@ Found by: source review of `Lifecycle/Base.cls::MatchSinglePhase` and `Storage/M
 
 Reproduced by: E2E reproduced. [Iteration30 native receipt](../uplift/consolidated/iter30/native/20261116T170433591502Z/observations.json) on IRIS 2026.1 x86-64 at `571e04a1`, developer-mode directory module `phasecase`. `phasecase compile activate -only` (case c3) and `mycustom compile -only` (c10) return an error status with `<METHOD DOES NOT EXIST> *%Compile,Activate` and `*%Mycustom,Compile`. Neither the After-Compile nor the After-Activate hook runs, and the compiled class keeps its old value. Passing neighbours: `phasecase compile -only` (c1), `compile phasecase -only` (c9) and `phasecase activate -only` (c11) each run exactly the named phase.
 
-`ModuleAction` builds a phase list and, under `-only`, `ExecutePhases` passes `$listtostring` of the whole list to `MatchSinglePhase`. The comma-joined name matches neither a standard nor a custom phase, so the lifecycle method call fails. The module-action help says `-only` "Only runs the specified phase(s)", and the [governing statement](../ontology/concepts/lifecycle.g5.md#lifecycle.only) says it runs just the named phases. A repair would match each name separately and keep the given order. A distinguishing check is c3 running Compile then Activate with no Initialize or Reload. The proposed repair was not checked.
+`ModuleAction` builds a phase list and, under `-only`, `ExecutePhases` passes `$listtostring` of the whole list to `MatchSinglePhase`. The comma-joined name matches neither a standard nor a custom phase, so the lifecycle method call fails. The module-action help says `-only` "Only runs the specified phase(s)", and the [governing statement](../ontology/architecture/lifecycle.g5.md#lifecycle.only) says it runs just the named phases. A repair would match each name separately and keep the given order. A distinguishing check is c3 running Compile then Activate with no Initialize or Reload. The proposed repair was not checked.
 
 <a id="c-d35"></a>
 ### C:D35: A phase list silently drops custom and unknown names listed beside a standard phase
@@ -659,7 +659,7 @@ Found by: source review of `Lifecycle/Base.cls::GetCompletePhases`, then [iterat
 
 Reproduced by: E2E reproduced. [Iteration30 native receipt](../uplift/consolidated/iter30/native/20261116T170433591502Z/observations.json). `phasecase reload mycustom` (case c4) succeeds after Initialize and Reload, and the module's `MyCustom` Invoke counter does not change. `phasecase compile bogus` (c6) succeeds as a plain compile chain. Passing and contrasting neighbours: `phasecase MYCUSTOM` (c5) runs the custom hook once, and `phasecase bogus` (c7) fails.
 
-In complete mode `GetCompletePhases` keeps a non-standard name only when it is the sole name. Otherwise each name contributes its standard chain, and a custom or unknown name contributes none. A requested custom phase is therefore skipped without notice, and a mistyped phase name beside a valid one is ignored while the command reports success. The [custom-phase statement](../ontology/concepts/lifecycle.g5.md#lifecycle.custom) says a custom phase runs when requested by name. Where it should run in a mixed list, and whether an unknown name must refuse the command, is the open [phase-list policy](open_questions.md#lifecycle.phase-list-policy). No repair was checked.
+In complete mode `GetCompletePhases` keeps a non-standard name only when it is the sole name. Otherwise each name contributes its standard chain, and a custom or unknown name contributes none. A requested custom phase is therefore skipped without notice, and a mistyped phase name beside a valid one is ignored while the command reports success. The [custom-phase statement](../ontology/architecture/lifecycle.g5.md#lifecycle.custom) says a custom phase runs when requested by name. Where it should run in a mixed list, and whether an unknown name must refuse the command, is the open [phase-list policy](open_questions.md#lifecycle.phase-list-policy). No repair was checked.
 
 <a id="c-d36"></a>
 ### C:D36: A module whose classes sit directly under SourcesRoot loads, but sync never sees its edits or deletions
@@ -698,7 +698,7 @@ Found by: source review of `Lifecycle/Base.cls::%Configure`, whose `GetCustomPar
 
 Reproduced by: E2E reproduced. [Iteration36 native receipt](../uplift/consolidated/iter36/native/20261116T173156335552Z/observations.json) on IRIS 2026.1 x86-64 at `571e04a1`. Module m36a declares `<Default Name="Greeting" Value="hello"/>` and `<Parameter Name="Mode">param</Parameter>`. On load, `OnConfigureComponent` receives Mode=param but no Greeting (case l1), while the module's After-Activate Invoke receives `${Greeting}`=hello. Passing neighbour: with `-DGreeting=bye`, both receive bye (l3).
 
-`%Configure` calls `GetCustomParameters` into `customParams`, then builds the installer variables only from the phase parameters, which hold `<Parameter>` and `-D` values. This contradicts [module defaults](../ontology/concepts/modules.g5.md#module.parameter), which says the module receives both kinds of default, and the [installer parameters statement](../ontology/concepts/lifecycle.g5.md#lifecycle.installer.parameters). A repair would merge `customParams` into the variables before `OnConfigureComponent`, keeping `-D` precedence. It was not checked.
+`%Configure` calls `GetCustomParameters` into `customParams`, then builds the installer variables only from the phase parameters, which hold `<Parameter>` and `-D` values. This contradicts [module defaults](../ontology/features/manifest.g5.md#module.parameter), which says the module receives both kinds of default, and the [installer parameters statement](../ontology/architecture/lifecycle.g5.md#lifecycle.installer.parameters). A repair would merge `customParams` into the variables before `OnConfigureComponent`, keeping `-D` precedence. It was not checked.
 
 <a id="c-d44"></a>
 ### C:D44: A refused module document save empties the stored document text
@@ -711,7 +711,7 @@ Found by: iteration39 native exploration (`iter39/attempts/explore2.log`), then 
 
 Reproduced by: E2E reproduced. [Iteration39 native receipt](../uplift/consolidated/iter39/native/20261116T174319930857Z/observations.json) on IRIS 2026.1 x86-64 at `571e04a1`. After a valid edit to `m39.ZPM` (version 1.1.0, e1), saving malformed XML through `%RoutineMgr` is refused with an XSLT parse error (e2). The module record still reads 1.1.0 with its resource, but the stored `m39.ZPM` text is now empty. Passing neighbour: the valid save in e1 stores both the text and the record.
 
-`ImportStream` clears the stored stream and writes the new text before its transaction starts. When the record update fails, the rollback discards the written text but not the earlier clear. An editor that reopens the document then sees an empty manifest, and saving that empty document resets the version (see the [document statement](../ontology/concepts/modules.g5.md#module.identity.document)). A repair would clear and write the stream inside the transaction. It was not checked.
+`ImportStream` clears the stored stream and writes the new text before its transaction starts. When the record update fails, the rollback discards the written text but not the earlier clear. An editor that reopens the document then sees an empty manifest, and saving that empty document resets the version (see the [document statement](../ontology/features/manifest.g5.md#module.identity.document)). A repair would clear and write the stream inside the transaction. It was not checked.
 
 <a id="c-d46"></a>
 ### C:D46: A preload class that fails to compile does not fail the load
@@ -724,7 +724,7 @@ Found by: source review of `Lifecycle/Base.cls::%Initialize`, which keeps the im
 
 Reproduced by: E2E reproduced. [Iteration42 native receipt](../uplift/consolidated/iter42/native/20261116T174706181264Z/observations.json) on IRIS 2026.1 x86-64 at `571e04a1`. `load m42b`, whose `preload/cls/M42B/Broken.cls` uses an undefined property type, reports Initialize SUCCESS and succeeds; the module is installed and `M42B.Broken` is not compiled (case b1). Passing neighbour: the same class error in an ordinary `src` resource fails `load m42c` and installs nothing (c1).
 
-Preload code usually bootstraps what later phases need, so a broken preload passes silently and fails later or not at all, contrary to the [Initialize statement](../ontology/concepts/lifecycle.g5.md#lifecycle.initialize) and to a load failing on compile errors. A repair would return the ImportDir/compile status from `%Initialize`. It was not checked.
+Preload code usually bootstraps what later phases need, so a broken preload passes silently and fails later or not at all, contrary to the [Initialize statement](../ontology/architecture/lifecycle.g5.md#lifecycle.initialize) and to a load failing on compile errors. A repair would return the ImportDir/compile status from `%Initialize`. It was not checked.
 
 <a id="c-d49"></a>
 ### C:D49: `arrange` fails in a namespace without a source-control class
@@ -750,7 +750,7 @@ Found by: source review of `ResourceProcessor/LocalizationExport.cls::OnBeforePh
 
 Reproduced by: E2E reproduced. [Iteration56 native receipt](../uplift/consolidated/iter56/native/20261116T182256528947Z/observations.json) on IRIS 2026.1 x86-64 at `571e04a1`. Loading `loc56ro` from a read-only copy fails with `Cannot open file '<root>/localize/D56RMsgs.xml'` and installs nothing (case r1). Passing neighbour: a read-only module without a `.LOC` resource loads (n1).
 
-The module asks for no export, and installing should not need to write into its source folder, contrary to the [localization statement](../ontology/concepts/modules.g5.md#module.processor.localized-messages). A repair would skip or tolerate the export when the root is not writable, or write it only on request. It was not checked.
+The module asks for no export, and installing should not need to write into its source folder, contrary to the [localization statement](../ontology/features/resources.g5.md#module.processor.localized-messages). A repair would skip or tolerate the export when the root is not writable, or write it only on request. It was not checked.
 
 <a id="c-d65"></a>
 ### C:D65: Uninstall leaves the package mappings IPM created, overriding an administrator's mapping
@@ -763,7 +763,7 @@ Found by: source review (no removal caller for mappings added by `OnConfigureMap
 
 Reproduced by: E2E reproduced. [Iteration59 native receipt](../uplift/consolidated/iter59/native/20261116T182911128903Z/observations.json) on IRIS 2026.1 x86-64 at `571e04a1`. After `uninstall m59a`, the USER mapping `%ZI59 -> USER` remains (case a2). With an administrator mapping `P59 -> DB59`, `load m59b` adds `P59.Sub -> USER`, which remains after `uninstall m59b`, so `P59.Sub` still resolves to USER rather than DB59 (b2). Passing neighbour: an ordinary package gets no mapping (d1).
 
-Namespace configuration changed by an install persists after the module is gone, contrary to the [placement statement](../ontology/concepts/modules.g5.md#module.placement). A repair would record the mappings a load created and remove them on uninstall unless another module needs them. It was not checked.
+Namespace configuration changed by an install persists after the module is gone, contrary to the [placement statement](../ontology/features/resources.g5.md#module.placement). A repair would record the mappings a load created and remove them on uninstall unless another module needs them. It was not checked.
 
 <a id="c-d66"></a>
 ### C:D66: Uninstall of a NoMapping module leaves its code outside the namespace
@@ -776,7 +776,7 @@ Found by: native exploration (case c2) and source review of `Lifecycle/Base.cls:
 
 Reproduced by: E2E reproduced. [Iteration59 native receipt](../uplift/consolidated/iter59/native/20261116T182911128903Z/observations.json). `load m59c -DNoMapping=1` compiles `%ZI59C.Main` into IRISSYS. `uninstall m59c` prints "Skipping mapped resource", removes the module record and leaves the class visible from `%SYS` and every namespace (c2). Passing neighbour: `uninstall m59c -global` removes it (c4).
 
-The module record disappears while its code remains shared by every namespace, contrary to the [placement statement](../ontology/concepts/modules.g5.md#module.placement). A repair would delete classes the module itself installed wherever they resolve, or refuse NoMapping placement outside the namespace database. It was not checked.
+The module record disappears while its code remains shared by every namespace, contrary to the [placement statement](../ontology/features/resources.g5.md#module.placement). A repair would delete classes the module itself installed wherever they resolve, or refuse NoMapping placement outside the namespace database. It was not checked.
 
 <a id="c-d67"></a>
 ### C:D67: Uninstall leaves a module's declared `<Mapping>` entries in the namespace
@@ -893,7 +893,7 @@ Reproduced by: e2e reproduced. ordinary requirement load fails in mapped namespa
 
 [Executable regression receipt](../uplift/consolidated/findings-audit-iter28/runs/20261116T030308508323Z-nsp/receipt.json); [Runner](../uplift/consolidated/findings-audit-iter28/run_regressions.py) `nsp`. The receipt records commands, expected observations, actual readers and provider qualifications.
 
-[Governing owner](../ontology/concepts/namespaces.g5.md#namespace.version.mapped-reader). No product repair or maintainer approval is claimed.
+[Governing owner](../ontology/operations/namespaces.g5.md#namespace.version.mapped-reader). No product repair or maintainer approval is claimed.
 
 <a id="p-f-nsp-4"></a>
 ### P:F-NSP-4: `enable -map -repos` (and `enable -community`) on a namespace with no IPM maps the code but skips the registries; a second run is needed. The repo step reads...
@@ -906,7 +906,7 @@ Reproduced by: e2e reproduced. enable -map -repos skips first repo mapping; same
 
 [Executable regression receipt](../uplift/consolidated/findings-audit-iter28/runs/20261116T030308508323Z-nsp/receipt.json); [Runner](../uplift/consolidated/findings-audit-iter28/run_regressions.py) `nsp`. The receipt records commands, expected observations, actual readers and provider qualifications.
 
-[Governing owner](../ontology/concepts/namespaces.g5.md#namespace.enable.mapping-results). No product repair or maintainer approval is claimed.
+[Governing owner](../ontology/operations/namespaces.g5.md#namespace.enable.mapping-results). No product repair or maintainer approval is claimed.
 
 <a id="p-f-nsp-6"></a>
 ### P:F-NSP-6: `unmap` leaves the `%IPM.*` routine mapping: the namespace still runs the source's IPM and is still reported as mapped. Argument-slot bug: the third argument...
@@ -919,7 +919,7 @@ Reproduced by: e2e reproduced. unmap removes package mapping but routine mapping
 
 [Executable regression receipt](../uplift/consolidated/findings-audit-iter28/runs/20261116T030308508323Z-nsp/receipt.json); [Runner](../uplift/consolidated/findings-audit-iter28/run_regressions.py) `nsp`. The receipt records commands, expected observations, actual readers and provider qualifications.
 
-[Governing owner](../ontology/concepts/namespaces.g5.md#namespace.unmap.routine-result). No product repair or maintainer approval is claimed.
+[Governing owner](../ontology/operations/namespaces.g5.md#namespace.unmap.routine-result). No product repair or maintainer approval is claimed.
 
 <a id="p-f-repo-5"></a>
 ### P:F-REPO-5: `default-modifiers` are documented per namespace but stored in `^%IPM.DefaultModifiers`, which IRIS keeps in IRISSYS: setting `-DNoTransaction=1` in one name...
@@ -932,7 +932,7 @@ Reproduced by: e2e reproduced. real namespaces read shared default modifiers; lo
 
 [Executable regression receipt](../uplift/consolidated/findings-audit-iter28/runs/20261116T031648777527Z-repo/receipt.json); [Runner](../uplift/consolidated/findings-audit-iter28/run_regressions.py) `repo`. The receipt records commands, expected observations, actual readers and provider qualifications.
 
-[Governing owner](../ontology/concepts/settings.g5.md#settings.default-modifiers). No product repair or maintainer approval is claimed.
+[Governing owner](../ontology/operations/settings.g5.md#settings.default-modifiers). No product repair or maintainer approval is claimed.
 
 <a id="p-f-sync-1"></a>
 ### P:F-SYNC-1: A failed `compile`, `load -dev` or `reload` that puts edited source on the server records no baseline and no retry mark. If the file is then reverted to its ...
@@ -1016,7 +1016,7 @@ Reproduced by: e2e reproduced. config delete restores first stored value; record
 
 Fresh reproduction on Linux x86-64 IRIS 2026.1: [iteration41 receipt](../uplift/consolidated/iter41/native/20261116T174828407055Z/observations.json), with the [iteration41 model](consolidated/iter41/settings.rs) replaying the same outcome.
 
-[Governing owner](../ontology/concepts/settings.g5.md#settings). No product repair or maintainer approval is claimed.
+[Governing owner](../ontology/operations/settings.g5.md#settings). No product repair or maintainer approval is claimed.
 
 <a id="c-d2"></a>
 ### C:D2: When IPM cannot create a load's temporary `.modules` repository, it prints "Failed to clean up repository 'ipm-temp-modules-N'. You may need to manually dele...
@@ -1042,7 +1042,7 @@ Reproduced by: e2e reproduced. cyclic Default reaches ordinary load error; acycl
 
 [Executable regression receipt](../uplift/consolidated/findings-audit-iter28/runs/20261116T031653939391Z-params/receipt.json); [Runner](../uplift/consolidated/findings-audit-iter28/run_regressions.py) `params`. The receipt records commands, expected observations, actual readers and provider qualifications.
 
-[Governing owner](../ontology/concepts/modules.g5.md#module.parameter). No product repair or maintainer approval is claimed.
+[Governing owner](../ontology/features/manifest.g5.md#module.parameter). No product repair or maintainer approval is claimed.
 
 <a id="c-d5"></a>
 ### C:D5: A parameter name is placed into a regular expression unescaped, so a dotted name such as `a.b` also fills `{$axb}`. Dotted names are the documented way to ne...
@@ -1055,7 +1055,7 @@ Reproduced by: e2e reproduced. a.b Default changes {$axb} in the command output;
 
 [Executable regression receipt](../uplift/consolidated/findings-audit-iter28/runs/20261116T031653939391Z-params/receipt.json); [Runner](../uplift/consolidated/findings-audit-iter28/run_regressions.py) `params`. The receipt records commands, expected observations, actual readers and provider qualifications.
 
-[Governing owner](../ontology/concepts/modules.g5.md#module.parameter). No product repair or maintainer approval is claimed.
+[Governing owner](../ontology/features/manifest.g5.md#module.parameter). No product repair or maintainer approval is claimed.
 
 <a id="c-d9"></a>
 ### C:D9: Build metadata containing a hyphen is parsed as a prerelease: `1.2.3+build-x` becomes `1.2.3-x+build-x`, which sorts before `1.2.3` and matches only itself a...
@@ -1172,7 +1172,7 @@ Found by: iteration39 native exploration (`iter39/attempts/explore1.log`, `explo
 
 Reproduced by: E2E reproduced. [Iteration39 native receipt](../uplift/consolidated/iter39/native/20261116T174319930857Z/observations.json). Saving `m39.ZPM` with `<Name>m39other</Name>` and version 1.2.0 succeeds (e3). The record stays named m39 and takes version 1.2.0, no `m39other` record exists, and the stored document text says m39other. Passing neighbour: a save that keeps the name (e1) updates the record and the text consistently.
 
-`UpdatePersistentFromStream` refuses a name that differs from the document name, but importing onto the existing record does not replace its Name, so the comparison always passes. The document and the record then disagree, contrary to the [document statement](../ontology/concepts/modules.g5.md#module.identity.document). A repair would compare the parsed manifest name before importing it onto the record. It was not checked.
+`UpdatePersistentFromStream` refuses a name that differs from the document name, but importing onto the existing record does not replace its Name, so the comparison always passes. The document and the record then disagree, contrary to the [document statement](../ontology/features/manifest.g5.md#module.identity.document). A repair would compare the parsed manifest name before importing it onto the record. It was not checked.
 
 <a id="c-d47"></a>
 ### C:D47: Module actions never refresh a developer-mode module's preload code
@@ -1185,7 +1185,7 @@ Found by: source review of `Lifecycle/Base.cls::%Initialize` (preload root from 
 
 Reproduced by: E2E reproduced. [Iteration42 native receipt](../uplift/consolidated/iter42/native/20261116T174706181264Z/observations.json). After editing `preload/cls/M42P/Boot.cls` from 1 to 2, `m42 initialize -only` and `m42 compile` both print "Skipping preload - directory does not exist" and Boot stays 1 (cases i1, i2). Passing neighbours: `load <dir> -dev` (i3) and `m42 initialize -only -DRootDirectory=<dir>` (i4) refresh it.
 
-Reload falls back to the stored root for developer-mode modules, but Initialize does not, so the chain run by `compile` reloads `src` but not `preload`. The [Initialize statement](../ontology/concepts/lifecycle.g5.md#lifecycle.initialize) and CHANGELOG `#702` place preload in the complete chain. A repair would use the same root fallback as Reload. It was not checked.
+Reload falls back to the stored root for developer-mode modules, but Initialize does not, so the chain run by `compile` reloads `src` but not `preload`. The [Initialize statement](../ontology/architecture/lifecycle.g5.md#lifecycle.initialize) and CHANGELOG `#702` place preload in the complete chain. A repair would use the same root fallback as Reload. It was not checked.
 
 <a id="c-d48"></a>
 ### C:D48: The test phase keeps test classes loaded in a module that is not in developer mode
@@ -1224,7 +1224,7 @@ Found by: iteration43 native exploration (explore4) refuting the source predicti
 
 Reproduced by: E2E reproduced. [Iteration43 native receipt](../uplift/consolidated/iter43/native/20261116T175445272137Z/observations.json) on IRIS 2026.1 x86-64 at `571e04a1`. With the IPM-aware test extension as the composite's primary, loading m43 from `/tmp/iter43/m43copy` after `/tmp/iter43/m43` changes the stored root but records no OnChangeModuleRoot call (p4). Reloading with `-DRootDirectory` back to the original directory also changes the root without the call (p4b). Passing neighbours: the before/after-phase and resource-change calls in the same runs (p1, p4, p4b).
 
-The interface comment says the call is "invoked when an existing module is reloaded from a different directory than its known module root". `%Reload` compares against a root that was already updated, so extensions that track module locations never learn of the move, contrary to the [source-control statement](../ontology/concepts/lifecycle.g5.md#lifecycle.source-control). A repair would compare against the stored root before it is overwritten. It was not checked.
+The interface comment says the call is "invoked when an existing module is reloaded from a different directory than its known module root". `%Reload` compares against a root that was already updated, so extensions that track module locations never learn of the move, contrary to the [source-control statement](../ontology/architecture/lifecycle.g5.md#lifecycle.source-control). A repair would compare against the stored root before it is overwritten. It was not checked.
 
 <a id="c-d52"></a>
 ### C:D52: `show` omits a `Health="false"` system requirement
@@ -1315,7 +1315,7 @@ Found by: iteration56 native case u1 against the Clean phase, which deletes only
 
 Reproduced by: E2E reproduced. [Iteration56 native receipt](../uplift/consolidated/iter56/native/20261116T182256528947Z/observations.json). After `uninstall loc56`, `^IRIS.Msg("D56Dom","en")` still holds messages A and C, while the document and module record are gone (u1). Passing neighbour: load and reload replace the domain correctly (l1, l2).
 
-This contradicts Clean removing the module's resources, as stated in the [localization statement](../ontology/concepts/modules.g5.md#module.processor.localized-messages). A repair would delete the document's domains on Clean unless another module owns them. It was not checked.
+This contradicts Clean removing the module's resources, as stated in the [localization statement](../ontology/features/resources.g5.md#module.processor.localized-messages). A repair would delete the document's domains on Clean unless another module owns them. It was not checked.
 
 <a id="c-d61"></a>
 ### C:D61: A CSPApplication load resets an existing application's undeclared properties
@@ -1328,7 +1328,7 @@ Found by: source review of `ResourceProcessor/CSPApplication.cls::CreateOrUpdate
 
 Reproduced by: E2E reproduced. [Iteration57 native receipt](../uplift/consolidated/iter57/native/20261116T182314549001Z/observations.json). An administrator's `/ipmcont57c` loses its description, its timeout of 1234 and its password authentication after `load m57c` (cases c0, c1). Passing neighbour: `WebApplication` keeps undeclared properties (iteration5).
 
-This contradicts the [CSP lifecycle statement](../ontology/concepts/modules.g5.md#module.csp.lifecycle) for a deprecated but supported processor. A repair would write only declared attributes when the application exists. It was not checked.
+This contradicts the [CSP lifecycle statement](../ontology/features/web-applications.g5.md#module.csp.lifecycle) for a deprecated but supported processor. A repair would write only declared attributes when the application exists. It was not checked.
 
 <a id="c-d62"></a>
 ### C:D62: On Linux, a wildcard DFI resource skips `.dfi` and `.XML` files
@@ -1341,7 +1341,7 @@ Found by: source review of `ResourceProcessor/Default/DeepSeeItem.cls::OnPhase`,
 
 Reproduced by: E2E reproduced. [Iteration58 native receipt](../uplift/consolidated/iter58/native/20261116T182720911100Z/observations.json) on IRIS 2026.1 x86-64 at `571e04a1`. W2.dashboard.dfi and W3.dashboard.XML are not loaded while W1 (`.xml`) and W4 (`.DFI`) are (case d1). Passing neighbour: explicit `.xml` items load (d1, n1).
 
-The skipped files produce no warning, contrary to the [DeepSee item statement](../ontology/concepts/modules.g5.md#module.processor.deepsee). A repair would add the missing separator. It was not checked.
+The skipped files produce no warning, contrary to the [DeepSee item statement](../ontology/features/resources.g5.md#module.processor.deepsee). A repair would add the missing separator. It was not checked.
 
 <a id="c-d63"></a>
 ### C:D63: Uninstall leaves DFI items loaded through a wildcard resource
@@ -1354,7 +1354,7 @@ Found by: native case u1, then [iteration58 model](consolidated/iter58/dfiitems.
 
 Reproduced by: E2E reproduced. [Iteration58 native receipt](../uplift/consolidated/iter58/native/20261116T182720911100Z/observations.json). After `uninstall m58`, the wildcard-loaded items W1 and W4 remain while the explicitly named A and B are removed (u1).
 
-Uninstall therefore leaves module content behind, contrary to the [DeepSee item statement](../ontology/concepts/modules.g5.md#module.processor.deepsee). A repair would resolve wildcard children at Clean from the namespace items matching the pattern. It was not checked.
+Uninstall therefore leaves module content behind, contrary to the [DeepSee item statement](../ontology/features/resources.g5.md#module.processor.deepsee). A repair would resolve wildcard children at Clean from the namespace items matching the pattern. It was not checked.
 
 <a id="c-d64"></a>
 ### C:D64: Uninstall leaves the includes generated by a multi-entry LegacyLocalizedMessages resource
@@ -1367,7 +1367,7 @@ Found by: iteration60 exploration refuting the source prediction, then source re
 
 Reproduced by: E2E reproduced. [Iteration60 native receipt](../uplift/consolidated/iter60/native/20261116T182833808281Z/observations.json) on IRIS 2026.1 x86-64 at `571e04a1`. For `includeFiles="L60DomA:L60IncA,L60DomB:L60IncB"`, the resource's only resolved child is `L60IncA,L60DomB.INC` (case p2), and after `uninstall lm60` both `L60IncA.INC` and `L60IncB.INC` remain (u1). Passing neighbour: the single-include form resolves `L60Inc1.INC`, and uninstall deletes it (p1, u2).
 
-The include name is read from the whole attribute instead of from each entry, contrary to the [legacy localization statement](../ontology/concepts/modules.g5.md#module.processor.localized-messages.legacy). A repair would take the include name from each list entry. It was not checked.
+The include name is read from the whole attribute instead of from each entry, contrary to the [legacy localization statement](../ontology/features/resources.g5.md#module.processor.localized-messages.legacy). A repair would take the include name from each list entry. It was not checked.
 
 <a id="c-d68"></a>
 ### C:D68: Uninstall leaves a developer-mode module's `^Sources` entries
@@ -1393,7 +1393,7 @@ Found by: source search (no consumer of the Document phase besides `%Document`),
 
 Reproduced by: E2E reproduced. [Iteration66 native receipt](../uplift/consolidated/iter66/native/20261116T184640249526Z/observations.json) on IRIS 2026.1 x86-64 at `571e04a1`. `n66 document` succeeds and does nothing (case c3), and `m66 document` only runs the modules' own Document hooks, dependency first (c1). Passing neighbour: the hooks run in the documented order and roll back on failure (c1, c4).
 
-This is documentation drift against the module-action help, recorded under the [Document phase statement](../ontology/concepts/lifecycle.g5.md#lifecycle.document). A repair would generate documentation or reword the help to "runs Document-phase hooks for the module and its dependencies". It was not checked.
+This is documentation drift against the module-action help, recorded under the [Document phase statement](../ontology/architecture/lifecycle.g5.md#lifecycle.document). A repair would generate documentation or reword the help to "runs Document-phase hooks for the module and its dependencies". It was not checked.
 
 <a id="c-d70"></a>
 ### C:D70: The composite's read-only check ignores other extensions
@@ -1406,7 +1406,7 @@ Found by: source review of `ExtensionBase/Composite.cls::IsReadOnly`, then [iter
 
 Reproduced by: E2E reproduced. [Iteration67 native receipt](../uplift/consolidated/iter67/native/20261116T184753560177Z/observations.json) on IRIS 2026.1 x86-64 at `571e04a1`. With the primary not read-only and the other extension read-only, `IsReadOnly("M67.Main.cls")` returns 0 and the other extension is never asked (case r1), while `GetStatus` for the same configuration reports the item not editable (g1). Passing neighbour: a read-only primary gives 1 (r2).
 
-The two checks disagree, contrary to the [editor statement](../ontology/concepts/lifecycle.g5.md#lifecycle.source-control.editor). A repair would consult the other extensions after a false primary answer. It was not checked.
+The two checks disagree, contrary to the [editor statement](../ontology/architecture/lifecycle.g5.md#lifecycle.source-control.editor). A repair would consult the other extensions after a false primary answer. It was not checked.
 
 <a id="c-d71"></a>
 ### C:D71: Configuring a nonexistent composite extension succeeds and then breaks source control in the namespace
@@ -1419,7 +1419,7 @@ Found by: source review of `ExtensionBase/CompositeMethodOverrides.cls::SetSubEx
 
 Reproduced by: E2E reproduced. [Iteration67 native receipt](../uplift/consolidated/iter67/native/20261116T184753560177Z/observations.json). `SetExtensionClasses("IPMCont.P67",$lb("IPMCont.O67","No.Such67"))` returns OK and stores `No.Such67`, after which creating the composite fails (case s1). Passing neighbour: the same call without the bad name creates the composite (setup).
 
-The trigger is a direct API call rather than an ordinary command, which keeps this Low. It contradicts the [editor statement](../ontology/concepts/lifecycle.g5.md#lifecycle.source-control.editor). A repair would store the validated list or refuse unknown class names. It was not checked.
+The trigger is a direct API call rather than an ordinary command, which keeps this Low. It contradicts the [editor statement](../ontology/architecture/lifecycle.g5.md#lifecycle.source-control.editor). A repair would store the validated list or refuse unknown class names. It was not checked.
 
 <a id="p-f-dep-1"></a>
 ### P:F-DEP-1: `PermitDowngrade` is half implemented: the resolver drops the "≥ installed" bound and picks an older version, then the load refuses any downgrade.
@@ -1499,7 +1499,7 @@ Reproduced by: e2e reproduced. ordinary config invalid key/value returns OK; val
 
 Fresh reproduction on Linux x86-64 IRIS 2026.1: [iteration41 receipt](../uplift/consolidated/iter41/native/20261116T174828407055Z/observations.json), with the [iteration41 model](consolidated/iter41/settings.rs) replaying the same outcome.
 
-[Governing owner](../ontology/concepts/settings.g5.md#settings.print). No product repair or maintainer approval is claimed.
+[Governing owner](../ontology/operations/settings.g5.md#settings.print). No product repair or maintainer approval is claimed.
 
 <a id="p-f-sync-3"></a>
 ### P:F-SYNC-3: `reload` of a module not in developer mode (no root) loads nothing and reports SUCCESS.

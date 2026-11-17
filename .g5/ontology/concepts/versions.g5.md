@@ -1,4 +1,4 @@
-# Versions
+# Version compatibility
 
 IPM compares module versions to pick what to install and to refuse downgrades.
 
@@ -7,13 +7,12 @@ IPM compares module versions to pick what to install and to refuse downgrades.
 - **Snapshot**: a version with the build part `+snapshot`, meaning the latest build of that version.
 - **Prerelease**: a version with a prerelease part, such as `1.0.0-beta.1`.
 
-## Statements
+## Comparing releases and prereleases
 
 <a id="version"></a>
 [I · version]
 
 Module versions are semantic versions: major, minor and patch numbers, with optional prerelease and build parts.
-
 
 <a id="version.order"></a>
 [I · version.order]
@@ -23,6 +22,12 @@ A higher major, minor or patch number makes a later version. A prerelease comes 
 - Prerelease parts compare one dot-separated identifier at a time. Numbers compare as numbers and come before words, and words compare by character code.
 - Build metadata may contain hyphens. It never turns a version into a prerelease.
 
+<a id="version.post-release"></a>
+[I · version.post-release]
+
+When the `SemVerPostRelease` setting is on, IPM treats `x.y.z-w` as a release after `x.y.z` instead of a prerelease before it.
+
+## Matching a version request
 
 <a id="version.range"></a>
 [I · version.range]
@@ -30,7 +35,6 @@ A higher major, minor or patch number makes a later version. A prerelease comes 
 Dependencies, `install` and `update` accept an exact version or a range, such as `1.x` or `>=1.2.0`. When IPM picks the highest version in a range, it skips prereleases and snapshots.
 
 - Working assumption: keep the special case for IRIS-style versions, because IPM's tests require `2022.2` to match only `2022.2`.
-
 
 <a id="version.range.partial"></a>
 [I · version.range.partial]
@@ -44,6 +48,7 @@ A comparison with a partial version fills the missing parts with zero. So `>=1.2
 
 - Working assumption: keep the special case for IRIS-style versions, because IPM's tests require `2022.2` to match only `2022.2`.
 
+## Combining requirements for one dependency
 
 <a id="version.range.combine"></a>
 [I · version.range.combine]
@@ -52,25 +57,12 @@ When several modules require the same dependency, IPM allows only the versions t
 
 - As built, two bounds that differ only by a prerelease part keep whichever came first, so the result depends on order. Because IPM visits dependencies by name, renaming a dependency can decide whether a solvable install succeeds. This is a known defect.
 
-
 <a id="version.range.snapshot-intersection"></a>
 [D · version.range.snapshot-intersection]
 
 As built, intersecting exact `1.0.0+snapshot` with `>=1.0.0+snapshot` raises a no-overlap error even though that snapshot satisfies both expressions separately. The exact-version intersection branch drops build metadata before testing the bounds, causing defect C:D33 and the checked [snapshot reinstall refusal](../features/install.g5.md#reinstall.snapshot-dependencies).
 
-
-<a id="version.post-release"></a>
-[I · version.post-release]
-
-When the `SemVerPostRelease` setting is on, IPM treats `x.y.z-w` as a release after `x.y.z` instead of a prerelease before it.
-
 ## Metadata
-
-
-
-
-
-Source locators follow the conventions on the [root page](../root.g5.md#how-to-read-this-ontology). Inventory IDs refer to [A1](../../uplift/ipm-verus-20261113/A/intent-inventory.md). Version comparison is used by the formal scope through the [downgrade refusal](../features/load.g5.md#load.refusal.downgrade). Consolidated round 2 brought parsing, ordering, ranges and their combination into the modeled scope (`Verus_verification/consolidated/models/semver.py`, native runs `20261114T030608Z-r2-semver`, `20261114T031048Z-r2-resolve`, `20261114T031514Z-r2-resolve-order`).
 
 ### version
 
@@ -101,6 +93,14 @@ Findings: [A filesystem repository install picks a prerelease over its own relea
 Findings: [`list-installed -s version` orders prereleases of one version as text](../../Verus_verification/bugs_issues.md#c-d42)
 
 State machines: [versions · iter34](../../Verus_verification/models/iter34-versions/manifest.json)
+
+### version.post-release
+
+- human-provided
+- user-facing-behavior
+- Expands: [Version](#version).
+
+Sources: `wiki/02` config table; CHANGELOG. Inventory: CAT-19, CAT-26.
 
 ### version.range
 
@@ -160,11 +160,3 @@ Extension Verus: [semver.rs::compare_versions](../../Verus_verification/consolid
 Findings: [C:D33 — e2e reproduced](../../Verus_verification/bugs_issues.md#c-d33). The linked entry qualifies the caller, reader and providers.
 
 State machines: [snapshot dependencies · iter24](../../Verus_verification/models/iter24-snapshot-dependencies/manifest.json)
-
-### version.post-release
-
-- human-provided
-- user-facing-behavior
-- Expands: [Version](#version).
-
-Sources: `wiki/02` config table; CHANGELOG. Inventory: CAT-19, CAT-26.
