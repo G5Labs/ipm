@@ -9,6 +9,10 @@ Parameter DOMAIN = "ZPM";
 
 Parameter STANDARDPHASES = {$listbuild("reload","compile","test","package","verify","publish","makedeployed","applyupdatesteps")};
 
+/// Globals that "enable -map -repos" maps and "unmap" unmaps: the repo definitions, and the trust data pinned for ORAS repos
+/// with a trust server. A namespace sharing those repos is then checked against the same roots.
+Parameter MAPPEDREPOGLOBALS = "IPM.Repo.DefinitionD,IPM.Repo.DefinitionS,IPM.Repo.DefinitionI,IPM.Repo.Oras.TrustD,IPM.Repo.Oras.TrustI";
+
 /// Description of commands to use for this CLI
 XData Commands [ XMLNamespace = "http://www.intersystems.com/PackageManager/CLI" ]
 {
@@ -3686,8 +3690,10 @@ ClassMethod EnableIPM(ByRef pCommandInfo)
                     write !,"Mapping IPM repository in "_initNamespace_" equivalently to "_namespace
                 }
                 set nsToActivate(namespace) = 1
-                for suffix = "D", "S", "I" {
-                    $$$ThrowOnError(##class(%IPM.Utils.Build).MapGlobalEquivalently("IPM.Repo.Definition"_suffix, initNamespace, namespace, 1))
+                set globals = $listfromstring(..#MAPPEDREPOGLOBALS)
+                set globalPointer = 0
+                while $listnext(globals, globalPointer, global) {
+                    $$$ThrowOnError(##class(%IPM.Utils.Build).MapGlobalEquivalently(global, initNamespace, namespace, 1))
                 }
             }
         }
@@ -3976,9 +3982,11 @@ ClassMethod UnmapIPM(ByRef pCommandInfo)
         if verbose {
             write !,"Unmapping repository settings from "_ns_" (mapped from "_src_")"
         }
-        for suffix = "D", "S", "I" {
+        set globals = $listfromstring(..#MAPPEDREPOGLOBALS)
+        set globalPointer = 0
+        while $listnext(globals, globalPointer, global) {
             set changed = 0
-            $$$ThrowOnError(##class(%IPM.Utils.Module).RemoveGlobalMapping(ns, "IPM.Repo.Definition"_suffix, 1, .changed))
+            $$$ThrowOnError(##class(%IPM.Utils.Module).RemoveGlobalMapping(ns, global, 1, .changed))
             if changed {
                 set nsToActivate(ns) = 1
             }

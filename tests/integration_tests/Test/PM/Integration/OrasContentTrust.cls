@@ -517,6 +517,33 @@ Method TestPinnedTrustDataSharedWithRepoDefinitions()
     }
 }
 
+/// enable -map -repos shares the repo definitions with another namespace and with them the trust data pinned for their modules.
+/// Otherwise that namespace would accept a replaced root. unmap stops sharing both.
+Method TestPinnedTrustDataMappedWithRepos()
+{
+    new $namespace
+    set source = $namespace
+    set target = "ORASTRUSTMAP"
+    set gun = ..GUN("pinned")
+    set collection = ##class(%IPM.Repo.Oras.TrustedCollection).%New()
+    set collection.GUN = gun
+    do $$$AssertStatusOK(collection.%Save(), "Pinned trust data for " _ gun)
+
+    do $$$AssertStatusOK(##class(%IPM.Test.Utils).CreateNamespace(target), "Created namespace " _ target)
+    do $$$AssertStatusOK(##class(%IPM.Main).Shell("enable -map -repos -ns " _ target _ " -q"), "Mapped IPM and repos to " _ target)
+    set $namespace = target
+    do $$$AssertTrue(##class(%IPM.Repo.Definition).ServerDefinitionKeyExists(..#RepoName), "Repo is shared with " _ target)
+    do $$$AssertTrue(##class(%IPM.Repo.Oras.TrustedCollection).GUNIndexExists(gun), "Pinned trust data is shared with " _ target)
+    set $namespace = source
+
+    do $$$AssertStatusOK(##class(%IPM.Main).Shell("unmap -ns " _ target _ " -q"), "Unmapped IPM and repos from " _ target)
+    for global = "IPM.Repo.DefinitionD", "IPM.Repo.Oras.TrustD", "IPM.Repo.Oras.TrustI" {
+        set shared = (##class(%SYS.Namespace).GetGlobalDest(target, global) = ##class(%SYS.Namespace).GetGlobalDest(source, global))
+        do $$$AssertNotTrue(shared, "^" _ global _ " is no longer shared with " _ target)
+    }
+    do $$$AssertStatusOK(##class(%IPM.Test.Utils).DeleteNamespace(target), "Deleted namespace " _ target)
+}
+
 /// Registry content that does not match its signed digest or size is refused before it is unpacked.
 Method TestMismatchedContentRefused()
 {
