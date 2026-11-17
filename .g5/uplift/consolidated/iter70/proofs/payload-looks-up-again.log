@@ -1,0 +1,39 @@
+verification results:: 22 verified, 2 errors
+error: postcondition not satisfied
+   --> payload_looks_up_again.rs:376:9
+    |
+370 | / pub proof fn snapshot_pins_metadata_and_payload(
+371 | |     cache: Cache, repo: int, config: Config, gun: int, tag: int,
+372 | |     first: Listing, second: Listing, first_timed_out: bool, second_timed_out: bool,
+373 | |     manifest: Received, parsed: Parsed, blob: Received,
+374 | | )
+    | |_- at the end of the function body
+375 |       ensures
+376 | /         ({
+377 | |             let (metadata_listing, after) = lookup(cache, key_for(repo, config, gun), first, first_timed_out);
+378 | |             let (payload_listing, _) = lookup(after, key_for(repo, config, gun), second, second_timed_out);
+379 | |             &&& payload_listing == metadata_listing
+...   |
+384 | |                     })
+385 | |         }),
+    | |__________^ failed this postcondition
+
+error: postcondition not satisfied
+   --> payload_looks_up_again.rs:492:9
+    |
+487 | / pub proof fn catalog_and_payload_read_one_manifest(
+488 | |     cache: Cache, repo: int, config: Config, gun: int, tag: int, first: Listing, second: Listing,
+489 | |     first_timed_out: bool, second_timed_out: bool, metadata: Received, manifest: Received, parsed: Parsed, blob: Received,
+490 | | )
+    | |_- at the end of the function body
+491 |       ensures
+492 | /         ({
+493 | |             let (catalog_listing, after) = lookup(cache, key_for(repo, config, gun), first, first_timed_out);
+494 | |             let (payload_listing, _) = lookup(after, key_for(repo, config, gun), second, second_timed_out);
+495 | |             (catalog_manifest(config, catalog_listing, tag, metadata) is Some
+496 | |                 && retrieve(config, payload_listing, tag, manifest, parsed, blob) is Stream)
+497 | |                 ==> metadata.digest == manifest.digest
+498 | |         }),
+    | |__________^ failed this postcondition
+
+error: aborting due to 2 previous errors

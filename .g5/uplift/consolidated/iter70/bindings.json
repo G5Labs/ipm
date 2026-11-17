@@ -1,0 +1,362 @@
+{
+  "verus_dir": ".g5/Verus_verification/consolidated/iter70",
+  "models": [
+    "implementation.rs",
+    "settings.rs"
+  ],
+  "rows": [
+    {
+      "id": "trust-configuration",
+      "owner": ".g5/ontology/architecture/package-sources.g5.md#repo.oras.signed-admission.configuration",
+      "model": "implementation.rs",
+      "symbols": [
+        "Config",
+        "abs_policy"
+      ],
+      "scope": "The repo definition's trust server is the active policy identity. Writers, the copy and lock-file readers and the package service that consumes it.",
+      "verification": "transcription; native-tested",
+      "members": [
+        [
+          "src/cls/IPM/Repo/Oras/Definition.cls::TrustServer",
+          "stored setting, storage slot 7; empty for definitions saved before it existed"
+        ],
+        [
+          "src/cls/IPM/Repo/Oras/Definition.cls::OnConfigure",
+          "writer: the -trust-server modifier"
+        ],
+        [
+          "src/cls/IPM/Repo/Oras/Definition.cls::NormalizeTrustServer",
+          "decision: canonical http or https URL, or refusal"
+        ],
+        [
+          "src/cls/IPM/Repo/Oras/Definition.cls::GetPackageService",
+          "reader: passes the trust server to each package service"
+        ],
+        [
+          "src/cls/IPM/Repo/Oras/Definition.cls::LockFileMapping",
+          "reader: lock files keep the trust server"
+        ],
+        [
+          "src/cls/IPM/Repo/Oras/PackageService.cls::TrustServer",
+          "consumer: selects the protected path in GetModule, GetModuleManifest and AddModulesFromTags"
+        ],
+        [
+          "src/cls/IPM/Repo/UniversalSettings.cls::NotaryExecutable",
+          "setting: the verifier executable"
+        ],
+        [
+          "src/cls/IPM/Repo/Definition.cls::TRUSTSERVERSUPPORTED",
+          "decision: 0 for repository types that do not check signatures"
+        ],
+        [
+          "src/cls/IPM/Repo/Oras/Definition.cls::TRUSTSERVERSUPPORTED",
+          "decision: 1 for ORAS repositories"
+        ],
+        [
+          "src/cls/IPM/Repo/Definition.cls::Configure",
+          "writer guard: refuses -trust-server, before anything is saved, for a type without TRUSTSERVERSUPPORTED. Native only (TestRepoConfiguration); not modeled"
+        ],
+        [
+          "src/cls/IPM/Repo/Oras/Definition.cls::GetPublishService",
+          "reader: passes the trust server to the publish service, whose inherited retrieval methods then check signatures too. Inspection only; no production caller retrieves through it"
+        ]
+      ],
+      "correspondence": "transcription with native agreement"
+    },
+    {
+      "id": "trust-verifier",
+      "owner": ".g5/ontology/architecture/package-sources.g5.md#repo.oras.signed-admission.verifier",
+      "model": "implementation.rs",
+      "symbols": [
+        "Role",
+        "Row",
+        "Listing",
+        "trusted_role",
+        "select",
+        "docker_trusts",
+        "docker_row",
+        "only_trusted_roles",
+        "faithful",
+        "invoked_server",
+        "notary_verified",
+        "trusted_row"
+      ],
+      "scope": "notary list with the docker roles, parsed to the first trusted row per tag. notary's TUF verification under the pinned root is a premise of Listing::Verified, and faithful() is the premise that printed rows are the verified targets when no target name contains whitespace.",
+      "verification": "transcription; native-tested; notary verification is an unverified external premise",
+      "members": [
+        [
+          "src/cls/IPM/Repo/Oras/ContentTrust.cls::TRUSTEDROLES",
+          "decision: targets/releases, then targets"
+        ],
+        [
+          "src/cls/IPM/Repo/Oras/ContentTrust.cls::LookUpSignedTargets",
+          "producer and decision (invoked_server): runs notary -d TrustDirectory(trustServer) -s trustServer list <gun> -r targets/releases,targets and classifies its exit. notary_verified is the premise on what notary checks"
+        ],
+        [
+          "src/cls/IPM/Repo/Oras/ContentTrust.cls::ParseTargets",
+          "decision: keeps rows whose role is trusted, first row per tag"
+        ],
+        [
+          "src/cls/IPM/Repo/Oras/ContentTrust.cls::UnsafeTargetName",
+          "decision: refuses trust data with a target name that could print as a forged row"
+        ],
+        [
+          "src/cls/IPM/Repo/Oras/ContentTrust.cls::NotaryError",
+          "reader: notary's reason for a failure"
+        ],
+        [
+          "src/cls/IPM/Repo/Oras/ContentTrust.cls::TrustDirectory",
+          "state: one directory of pinned roots per trust server, so the root notary checks against is the one pinned for the configured server"
+        ],
+        [
+          "src/cls/IPM/Repo/Oras/ContentTrust.cls::NotaryExecutable",
+          "reader: the verifier setting"
+        ],
+        [
+          "src/cls/IPM/Repo/Oras/ContentTrust.cls::TrustedTarget",
+          "reader: the signed row for a tag (trusted_row)"
+        ]
+      ],
+      "correspondence": "transcription with native agreement"
+    },
+    {
+      "id": "trust-freshness",
+      "owner": ".g5/ontology/architecture/package-sources.g5.md#repo.oras.signed-admission.freshness",
+      "model": "implementation.rs",
+      "symbols": [
+        "notary_list",
+        "implemented_list",
+        "outage_refuses"
+      ],
+      "scope": "Removing the cached timestamp before notary runs turns notary's offline fallback into a failure, and a deadline turns a stalled server into one.",
+      "verification": "transcription of notary 0.7.0 client/tufclient.go::downloadTimestamp; native-tested",
+      "members": [
+        [
+          "src/cls/IPM/Repo/Oras/ContentTrust.cls::LookUpSignedTargets",
+          "decision: removes tuf/<gun>/metadata/timestamp.json before each run and runs notary under the timeout program; sets timedOut when the deadline stops notary"
+        ],
+        [
+          "src/cls/IPM/Repo/Oras/ContentTrust.cls::VERIFYTIMEOUT",
+          "the deadline in seconds"
+        ]
+      ],
+      "correspondence": "transcription with native agreement"
+    },
+    {
+      "id": "trust-snapshot",
+      "owner": ".g5/ontology/architecture/package-sources.g5.md#repo.oras.signed-admission.snapshot",
+      "model": "implementation.rs",
+      "symbols": [
+        "Key",
+        "Cache",
+        "lookup",
+        "key_for",
+        "snapshot_pins_metadata_and_payload",
+        "snapshot_keyed_by_server",
+        "stalled_server_only_refuses",
+        "timeout_stalls_server"
+      ],
+      "scope": "One SignedTargets outcome per repo, trust server and repository for the rest of a shell command.",
+      "verification": "transcription; native-tested",
+      "members": [
+        [
+          "src/cls/IPM/Repo/Oras/ContentTrust.cls::SignedTargets",
+          "decision: keeps the first outcome, success or failure, in the command's lookup state; after a timeout on a trust server, fails later repositories of that repo on that server without running notary"
+        ],
+        [
+          "src/cls/IPM/Repo/Oras/ContentTrust.cls::TrustedTarget",
+          "reader: the signed row for a tag"
+        ],
+        [
+          "src/cls/IPM/Main.cls::ShellInternal",
+          "lifetime: news and resets the lookup state for each shell command"
+        ]
+      ],
+      "correspondence": "transcription with native agreement"
+    },
+    {
+      "id": "trusted-catalog",
+      "owner": ".g5/ontology/architecture/package-sources.g5.md#repo.oras.signed-admission.catalog",
+      "model": "implementation.rs",
+      "symbols": [
+        "offered",
+        "catalog_manifest",
+        "catalog_offers_only_authorized",
+        "catalog_and_payload_read_one_manifest",
+        "plan_and_payload_share_identity",
+        "abs_manifest"
+      ],
+      "scope": "Version selection and dependency metadata come from signed tags and signed manifests. The planner and selection readers consume them unchanged.",
+      "verification": "transcription; native-tested",
+      "members": [
+        [
+          "src/cls/IPM/Repo/Oras/PackageService.cls::AddModulesFromTags",
+          "producer (offered, catalog_manifest): signed tags and signed-manifest annotations for selection"
+        ],
+        [
+          "src/cls/IPM/Repo/Oras/PackageService.cls::GetModuleManifest",
+          "producer (catalog_manifest): module.xml from the signed manifest for planning"
+        ],
+        [
+          "src/cls/IPM/Repo/Oras/PackageService.cls::TrustedManifest",
+          "decision (catalog_manifest): the manifest by signed digest, skipped when missing"
+        ],
+        [
+          "src/cls/IPM/Repo/Oras/PackageService.cls::Annotations",
+          "reader of the signed manifest"
+        ],
+        [
+          "src/cls/IPM/Repo/Oras/PackageService.cls::ModuleXMLAnnotation",
+          "reader of the signed manifest"
+        ],
+        [
+          "src/cls/IPM/Repo/Oras/PackageService.cls::SortTags",
+          "ordering of signed tags, as GetAllTags orders registry tags"
+        ],
+        [
+          "src/cls/IPM/Repo/Oras/PackageService.cls::SkipUntrusted",
+          "decision: a package or version whose trust check fails is not offered, with a warning; registry and system errors propagate as before"
+        ],
+        [
+          "src/cls/IPM/Repo/Oras/PackageService.cls::HasModule",
+          "reader: answers from signed tags. No production caller; ignores the platform suffix as the unprotected HasModule does"
+        ],
+        [
+          "src/cls/IPM/Repo/Oras/PackageService.cls::WarnUnsignedVersions",
+          "diagnostic only; does not change selection"
+        ],
+        [
+          "src/cls/IPM/Repo/Manager.cls::SearchRepositoriesForModule",
+          "selection reader across repositories, unchanged"
+        ],
+        [
+          "src/cls/IPM/Storage/Module.cls::ProcessSingleDependencyIterative",
+          "planning consumer, unchanged"
+        ]
+      ],
+      "correspondence": "transcription with native agreement"
+    },
+    {
+      "id": "trusted-bytes",
+      "owner": ".g5/ontology/architecture/package-sources.g5.md#repo.oras.signed-admission.bytes",
+      "model": "implementation.rs",
+      "symbols": [
+        "Received",
+        "Parsed",
+        "retrieve",
+        "trusted_row",
+        "package_layer",
+        "single_package",
+        "effects",
+        "stream_refines_admission",
+        "admitted_artifact_installs"
+      ],
+      "scope": "The protected payload path from the signed row to the stream IPM loads. The Python helpers hash the bytes they write.",
+      "verification": "transcription; native-tested",
+      "members": [
+        [
+          "src/cls/IPM/Repo/Oras/PackageService.cls::GetModule",
+          "decision: protected repositories take GetTrustedModule and never the ORAS pull"
+        ],
+        [
+          "src/cls/IPM/Repo/Oras/PackageService.cls::GetTrustedModule",
+          "producer of the stream"
+        ],
+        [
+          "src/cls/IPM/Repo/Oras/PackageService.cls::TrustedManifest",
+          "decision: manifest by signed digest"
+        ],
+        [
+          "src/cls/IPM/Repo/Oras/PackageService.cls::FetchTrustedManifest",
+          "decision: received digest and size equal the signed ones"
+        ],
+        [
+          "src/cls/IPM/Repo/Oras/PackageService.cls::PackageLayer",
+          "decision: exactly one package layer"
+        ],
+        [
+          "src/cls/IPM/Repo/Oras/PackageService.cls::PACKAGELAYERMEDIATYPE",
+          "the package layer type"
+        ],
+        [
+          "src/cls/IPM/Repo/Oras/PackageService.cls::DownloadTrustedBlob",
+          "decision: package digest and size; removes the file on failure"
+        ],
+        [
+          "src/cls/IPM/Repo/Oras/PackageService.cls::MismatchAsError",
+          "reader: error text"
+        ]
+      ],
+      "correspondence": "transcription with native agreement"
+    },
+    {
+      "id": "trusted-refusal",
+      "owner": ".g5/ontology/architecture/package-sources.g5.md#repo.oras.signed-admission.refusal",
+      "model": "implementation.rs",
+      "symbols": [
+        "failures_refuse",
+        "Effects"
+      ],
+      "scope": "A refusal reaches the loader as a failed status before the archive is unpacked or the installed root is replaced.",
+      "verification": "source inspection of unchanged consumers; native-tested",
+      "members": [
+        [
+          "src/cls/IPM/Repo/Manager.cls::RetrieveModulePackage",
+          "caller: forwards the refusal as a status"
+        ],
+        [
+          "src/cls/IPM/Utils/Module.cls::LoadModuleReference",
+          "consumer: GetModule must return before LoadModuleFromArchive runs"
+        ],
+        [
+          "src/cls/IPM/Utils/Module.cls::LoadModuleFromArchive",
+          "first unpacking effect, reached only with a stream"
+        ]
+      ],
+      "correspondence": "transcription with native agreement"
+    },
+    {
+      "id": "notary-setting",
+      "owner": ".g5/ontology/architecture/package-sources.g5.md#repo.oras.signed-admission.configuration",
+      "model": "settings.rs",
+      "symbols": [
+        "configurable",
+        "factory_empty",
+        "set",
+        "delete",
+        "verifier",
+        "notary_set_then_delete_finds_on_path",
+        "delete_restores_first_write",
+        "delete_restores_seed",
+        "unknown_key_reports_ok"
+      ],
+      "members": [
+        [
+          "src/cls/IPM/Repo/UniversalSettings.cls::CONFIGURABLE",
+          "state: 13 keys, NotaryExecutable the 13th"
+        ],
+        [
+          "src/cls/IPM/Repo/UniversalSettings.cls::NotaryExecutable",
+          "key name"
+        ],
+        [
+          "src/cls/IPM/Repo/UniversalSettings.cls::UpdateOne",
+          "writer: config set"
+        ],
+        [
+          "src/cls/IPM/Repo/UniversalSettings.cls::SetValue",
+          "writer: first write also becomes the stored default"
+        ],
+        [
+          "src/cls/IPM/Repo/UniversalSettings.cls::ResetToDefault",
+          "decision: config delete resets NotaryExecutable and TestReportFormat to empty, other keys to the stored default"
+        ],
+        [
+          "src/cls/IPM/Repo/Oras/ContentTrust.cls::NotaryExecutable",
+          "reader (verifier): empty finds notary on the PATH"
+        ]
+      ],
+      "correspondence": "transcription with native agreement"
+    }
+  ]
+}

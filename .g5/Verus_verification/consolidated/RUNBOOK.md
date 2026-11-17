@@ -36,3 +36,11 @@ The selected report identity claim connects `ReportTestResults`' tracked device 
 ## ORAS signed admission implementation for #281
 
 [Iteration 69](../../uplift/consolidated/iter69/HANDOFF.md) binds the implemented trust-server check to the iteration 68 contract. `python3 .g5/Verus_verification/consolidated/iter69/run.py` verifies the model and its controls, resolves the member bindings, compiles the candidate into `IPM_IRIS_CONTAINER` and runs `Test.PM.Integration.OrasContentTrust` against the oras and notary services. `--check` compares saved evidence with current inputs and names what is stale.
+
+## ORAS signed admission re-verification for #281
+
+[Iteration 70](../../uplift/consolidated/iter70/HANDOFF.md) supersedes iteration 69. It re-verifies the delivered #281 candidate, repairs four product defects and three model discrepancies, and binds the repaired candidate. Iteration 69's records are kept unchanged.
+
+- `python3 .g5/Verus_verification/consolidated/iter70/run.py` verifies `implementation.rs` (24 obligations, 15 controls) and `settings.rs` (4 obligations, 2 controls). It resolves 52 member bindings, compiles the changed classes and their subclasses into `IPM_IRIS_CONTAINER`, and runs both `OrasContentTrust` test classes.
+- `--check` names stale proofs, correspondence or native receipts. Run `common30/freshness.py` with it, because a new production file outside the runner's list is caught only by that census.
+- The reverse lookup for this PR combined `iter67/project_map.py --member` per changed member with the shared freshness gate. Neither alone covered the PR ([calibration](../../uplift/consolidated/iter70/HANDOFF.md#reverse-lookup-and-its-calibration)).

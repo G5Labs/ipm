@@ -1,0 +1,91 @@
+verification results:: 21 verified, 3 errors
+error: postcondition not satisfied
+   --> wrong_server_invoked.rs:278:9
+    |
+278 | /         ({
+279 | |             let outcome = retrieve(config, listing, tag, manifest, parsed, blob);
+280 | |             let decision = protected_admission(
+281 | |                 abs_target(config, path, tag), abs_policy(config, snapshot), abs_manifest(manifest, parsed),
+...   |
+286 | |             &&& (outcome is Stream ==> outcome->package == abs_observed(blob))
+287 | |         }),
+    | |__________^ failed this postcondition
+288 |   {
+289 | /     match listing {
+290 | |         Listing::Verified { server, root, rows, true_rows, names_safe } => lemma_select_is_docker_row(rows, tag),
+291 | |         _ => {},
+292 | |     }
+    | |_____- at the end of the function body
+
+note: function body check: not all errors may have been reported; rerun with a higher value for --multiple-errors to find other potential errors in this function
+   --> wrong_server_invoked.rs:323:1
+    |
+323 | / pub proof fn failures_refuse(
+324 | |     config: Config, path: int, tag: int, snapshot: int, listing: Listing,
+325 | |     manifest: Received, parsed: Parsed, blob: Received,
+326 | | )
+    | |_^
+
+error: postcondition not satisfied
+   --> wrong_server_invoked.rs:332:9
+    |
+332 |           retrieve(config, listing, tag, manifest, parsed, blob) is Refused,
+    |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+...
+336 | /     match listing {
+337 | |         Listing::Verified { server, root, rows, true_rows, names_safe } => lemma_select_is_docker_row(rows, tag),
+338 | |         _ => {},
+339 | |     }
+    | |_____- at the end of the function body
+
+error: postcondition not satisfied
+   --> wrong_server_invoked.rs:334:9
+    |
+334 |           !effects(retrieve(config, listing, tag, manifest, parsed, blob)).consumer_unpacks,
+    |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+335 |   {
+336 | /     match listing {
+337 | |         Listing::Verified { server, root, rows, true_rows, names_safe } => lemma_select_is_docker_row(rows, tag),
+338 | |         _ => {},
+339 | |     }
+    | |_____- at the end of the function body
+
+note: function body check: not all errors may have been reported; rerun with a higher value for --multiple-errors to find other potential errors in this function
+   --> wrong_server_invoked.rs:461:1
+    |
+461 | / pub proof fn catalog_offers_only_authorized(
+462 | |     config: Config, path: int, tag: int, snapshot: int, listing: Listing, registry_tag: bool, manifest: Received,
+463 | | )
+    | |_^
+
+error: postcondition not satisfied
+   --> wrong_server_invoked.rs:468:9
+    |
+468 |           offered(config, listing, registry_tag, tag) ==> abs_evidence(config, path, tag, snapshot, listing) is Authorized,
+    |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+...
+479 | /     match listing {
+480 | |         Listing::Verified { server, root, rows, true_rows, names_safe } => lemma_select_is_docker_row(rows, tag),
+481 | |         _ => {},
+482 | |     }
+    | |_____- at the end of the function body
+
+error: postcondition not satisfied
+   --> wrong_server_invoked.rs:469:9
+    |
+469 | /         match catalog_manifest(config, listing, tag, manifest) {
+470 | |             Some(read) => match resolve(abs_target(config, path, tag), abs_policy(config, snapshot),
+471 | |                     Manifest { digest: read.digest, package: None },
+472 | |                     abs_evidence(config, path, tag, snapshot, listing)) {
+...   |
+476 | |             None => true,
+477 | |         },
+    | |_________^ failed this postcondition
+478 |   {
+479 | /     match listing {
+480 | |         Listing::Verified { server, root, rows, true_rows, names_safe } => lemma_select_is_docker_row(rows, tag),
+481 | |         _ => {},
+482 | |     }
+    | |_____- at the end of the function body
+
+error: aborting due to 5 previous errors

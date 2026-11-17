@@ -20,7 +20,7 @@ IPM has instance settings managed with `config`, and stored flags added to every
 | `DefaultLogEntryLimit` | `20` | How many records `history find` shows by default. |
 | `HistoryRetain` | `0` | Days to keep history. `0` keeps it forever ([retention](../concepts/data-policy.g5.md#history.retention)). |
 | `ModuleRoot` | `<data directory>/ipm/` | Where archives unpack. It must be writable. |
-| `NotaryExecutable` | | The notary CLI that [checks signatures](../architecture/package-sources.g5.md#repo.oras.signed-admission) for protected ORAS repositories. Empty finds `notary` on the PATH. |
+| `NotaryExecutable` | | The notary CLI that [checks signatures](../architecture/package-sources.g5.md#repo.oras.signed-admission) for protected ORAS repositories. Empty finds `notary` on the PATH, and `config delete` empties it. |
 | `PipCaller`, `UseStandalonePip` | | Which pip IPM runs. |
 | `PublishTimeout` | | How long publishing may take. |
 | `SemVerPostRelease` | `0` | How `x.y.z-w` is ordered ([post-release](../concepts/versions.g5.md#version.post-release)). |
@@ -39,7 +39,7 @@ Key membership is exact, as in the configurable list. A diagnostic is not an eff
 
 A setting write with overwrite disabled keeps a nonempty current value. An absent or empty current value still accepts the write, and later writes preserve the first stored default even when the current value is cleared.
 
-- This describes the low-level writer. It does not remove the known `config delete` defect: most keys restore that first value rather than a factory default. TestReportFormat and ModuleRoot have explicit reset rules.
+- This describes the low-level writer. It does not remove the known `config delete` defect: most keys restore that first value rather than a factory default. TestReportFormat, ModuleRoot and NotaryExecutable have explicit reset rules.
 
 ## Report format and usage reporting
 
@@ -93,7 +93,9 @@ Findings: [P:F-REPO-4 — e2e reproduced](../../Verus_verification/bugs_issues.m
 
 Iteration41: [settings.rs](../../Verus_verification/consolidated/iter41/settings.rs) `set`, `delete`, `delete_restores_first_write`, `unknown_key_reports_ok`, `invalid_format_refused_with_ok`, `analytics_disabled` ([handoff](../../uplift/consolidated/iter41/HANDOFF.md)).
 
-State machines: [settings · iter41](../../Verus_verification/models/iter41-settings/manifest.json), [settings · inherited playbook](../../Verus_verification/models/playbook-settings/manifest.json)
+Iteration70: [settings.rs](../../Verus_verification/consolidated/iter70/settings.rs) revises iteration41 for the 13th key, NotaryExecutable, whose `delete` empties it like TestReportFormat ([handoff](../../uplift/consolidated/iter70/HANDOFF.md)). Iteration41's theorems are unchanged and still describe the other 12 keys.
+
+State machines: [settings · iter41](../../Verus_verification/models/iter41-settings/manifest.json), [settings · iter70](../../Verus_verification/models/iter70-settings/manifest.json), [settings · inherited playbook](../../Verus_verification/models/playbook-settings/manifest.json)
 
 ### settings.print
 
@@ -114,6 +116,8 @@ State machines: [inputs · iter7](../../Verus_verification/models/iter7-inputs/m
 - Expands: [Settings](#settings).
 
 Sources: `Repo/UniversalSettings.cls::{SetValue,GetValue,GetDefaultValue,ResetToDefault}`. Verus `public_repairs.rs::{set_value,setting_neighbors}`. Native nonempty refusal, empty acceptance and first-default persistence are distinct observations. Cross-process concurrency and failed storage writes remain open.
+
+State machines: [settings · iter70](../../Verus_verification/models/iter70-settings/manifest.json)
 
 ### settings.report-format
 

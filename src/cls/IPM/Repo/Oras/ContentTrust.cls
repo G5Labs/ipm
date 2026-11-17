@@ -40,19 +40,27 @@ ClassMethod TrustedTarget(
 /// Throws if the trust data cannot be verified, or notary cannot be run or cannot reach trustServer.
 /// Within a shell command, the outcome is kept for repo repoName until the command ends, so the version an install
 /// selects, the manifest its dependencies are read from and the package it loads are the same signed artifact.
+/// Once trustServer has not answered in time, other repositories checked on it in the same command fail at once,
+/// rather than each waiting for timeout seconds.
 ClassMethod SignedTargets(
 	trustServer As %String,
 	repository As %String,
-	repoName As %String = "") As %DynamicObject
+	repoName As %String = "",
+	timeout As %Integer = {..#VERIFYTIMEOUT}) As %DynamicObject
 {
     set keep = (repoName '= "") && $data($$$RepoLookupState)
     set outcome = ""
     if keep {
         set outcome = $get($$$RepoLookupState(repoName, "trust", trustServer, repository))
+        if (outcome = "") && ($data($$$RepoLookupState(repoName, "trust", trustServer), stalled) # 2) {
+            set msg = $$$FormatText("Content trust verification of '%1' was not attempted because trust server %2 did not answer within %3 seconds earlier in this command.", repository, trustServer, stalled)
+            set outcome = $listbuild(0, $$$ERROR($$$GeneralError, msg))
+        }
     }
     if (outcome = "") {
+        set timedOut = 0
         try {
-            set outcome = $listbuild(1, ..LookUpSignedTargets(trustServer, repository).%ToJSON())
+            set outcome = $listbuild(1, ..LookUpSignedTargets(trustServer, repository, timeout, .timedOut).%ToJSON())
         } catch e {
             if e.%IsA("%Exception.SystemException") {
                 throw e
@@ -61,6 +69,9 @@ ClassMethod SignedTargets(
         }
         if keep {
             set $$$RepoLookupState(repoName, "trust", trustServer, repository) = outcome
+            if timedOut {
+                set $$$RepoLookupState(repoName, "trust", trustServer) = timeout
+            }
         }
     }
     if '$listget(outcome, 1) {
@@ -70,12 +81,14 @@ ClassMethod SignedTargets(
 }
 
 /// Runs notary to list the tags of repository signed in a trusted role, as SignedTargets returns them.
-/// Fails if notary takes more than timeout seconds.
+/// Fails, setting timedOut, if notary takes more than timeout seconds.
 ClassMethod LookUpSignedTargets(
 	trustServer As %String,
 	repository As %String,
-	timeout As %Integer = {..#VERIFYTIMEOUT}) As %DynamicObject [ Internal ]
+	timeout As %Integer = {..#VERIFYTIMEOUT},
+	Output timedOut As %Boolean = 0) As %DynamicObject [ Internal ]
 {
+    set timedOut = 0
     // The name comes from the registry and becomes part of the cached timestamp's path below
     if '$match(repository, "[a-z0-9.-]+(:[0-9]+)?(/[a-z0-9]+(([._]|__|-+)[a-z0-9]+)*)+") {
         $$$ThrowStatus($$$ERROR($$$GeneralError, $$$FormatText("'%1' is not a valid OCI repository name.", repository)))
@@ -107,6 +120,7 @@ ClassMethod LookUpSignedTargets(
         set sc = ##class(%IPM.Utils.Module).RunCommand(trustDir, command, .stdout, .stderr, .returnCode)
     }
     if timed && ((returnCode = 124) || (returnCode = 137)) {
+        set timedOut = 1
         $$$ThrowStatus($$$ERROR($$$GeneralError, $$$FormatText("Content trust verification of '%1' against trust server %2 did not finish within %3 seconds.", repository, trustServer, timeout)))
     }
     if (returnCode = "") || (returnCode < 0) || (timed && ((returnCode = 126) || (returnCode = 127))) {

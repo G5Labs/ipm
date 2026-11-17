@@ -7,6 +7,8 @@ Parameter MONIKER As STRING = "oras";
 
 Property Namespace As %IPM.DataType.OrasNamespace;
 
+Parameter TRUSTSERVERSUPPORTED As BOOLEAN = 1;
+
 /// URL of a Docker Content Trust (Notary) server, e.g. https://notary.example.com:4443.
 /// When set, every package retrieved from this repository must be signed for its tag on that server.
 Property TrustServer As %IPM.DataType.RepoLocation;
@@ -63,6 +65,8 @@ Method GetPublishService() As %IPM.Repo.IPublishService
     set tClient.Password = ..Password
     set tClient.Token = ..Token
     set tClient.TokenAuthMethod = ..TokenAuthMethod
+    // The publish service inherits the package service's retrieval methods, which must check signatures too
+    set tClient.TrustServer = ..TrustServer
     quit tClient
 }
 
