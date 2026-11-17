@@ -83,6 +83,8 @@ The G, C and P prefixes retain the original register identities. [Iteration 28 r
 
 Severity: Critical · Decision: Open
 
+Description: When loading a dependency inside its parent's transaction, a later parent failure can erase the dependency's history record. The audit trail then loses evidence of work that was attempted.
+
 Severity basis: A parent rollback removes a dependency's durable audit record entirely. The through-product witness establishes audit-data loss, which the G5 severity convention rates Critical.
 
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-d1)
@@ -98,6 +100,8 @@ Reproduced by: e2e reproduced. dependency row absent after parent rollback; succ
 ### G:D2: A filter column with `_` drops every later filter, so find widens and a filtered delete can remove every record
 
 Severity: Critical · Decision: Open
+
+Description: A history filter whose column name contains an underscore causes later filters to be ignored. A search can return too much history, and a filtered deletion can remove records the caller did not select.
 
 Severity basis: A documented version-part filter can turn a filtered delete into deletion of the entire history. The witness establishes unintended loss of unrelated persisted audit data.
 
@@ -115,6 +119,8 @@ Reproduced by: e2e reproduced. history delete removes three seeded identities de
 
 Severity: Critical · Decision: Open
 
+Description: If a caller wraps a load in its own transaction and rolls back, the load's history record disappears with the module changes. The intended audit behavior for this case still needs a human decision.
+
 Severity basis: A caller rollback removes the action's durable history. Critical is the conditional audit-data-loss impact if caller-survival is required; Q-05 remains unresolved.
 
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-d25)
@@ -130,6 +136,8 @@ Reproduced by: e2e reproduced. supported caller transaction rollback removes the
 
 Severity: High · Decision: Open
 
+Description: Version requirements such as less than 2 lose their comparison operator when the version is abbreviated. Dependency resolution can install a version outside the range the module requested.
+
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#c-d6)
 
 Reproduced by: e2e reproduced. ordinary dependency load installs 2.5.0 for <2; valid dependency neighbor Dok.
@@ -142,6 +150,8 @@ Reproduced by: e2e reproduced. ordinary dependency load installs 2.5.0 for <2; v
 ### C:D39: A filesystem repository install picks a prerelease over its own release and orders prerelease numbers as text
 
 Severity: High · Decision: Open
+
+Description: A filesystem repository can choose a prerelease over the corresponding stable release and sort numbered prereleases incorrectly. Installing without an exact version can select an older or less stable package than expected.
 
 Run: Uplift 2026-11-16
 
@@ -156,6 +166,8 @@ Reproduced by: E2E reproduced. [Iteration34 native receipt](../uplift/consolidat
 
 Severity: High · Decision: Open
 
+Description: A Copy resource can preserve a pre-existing class during installation but delete it during uninstall. Removing the module can therefore destroy a class that the module never installed.
+
 Run: Uplift 2026-11-16
 
 Found by: iteration37 native exploration (`iter37/attempts/explore5.log`), then source review of `Lifecycle/Base.cls::%Clean` child resolution against `ResourceProcessor/Copy.cls::OnAfterPhase`, and [iteration37 model](consolidated/iter37/copy.rs) `uninstall_deletes_kept_item` with control `uninstall-only-copied` ([proof receipt](../uplift/consolidated/iter37/proofs/models.json)).
@@ -168,6 +180,8 @@ The Copy load writes only the classes it exports from the source, but uninstall 
 ### C:D60: Uninstalling a CSPApplication without DeployPath deletes the module's source folder
 
 Severity: High · Decision: Open
+
+Description: Uninstalling a web application without a separate deployment path deletes files from the module's source folder. A developer can lose source files that were never copied into an installed deployment.
 
 Run: Uplift 2026-11-16
 
@@ -182,6 +196,8 @@ Uninstall destroys files outside the namespace that the module never installed, 
 
 Severity: High · Decision: Open
 
+Description: When another process holds the update lock, update can return success without running any pending steps or giving a normal warning. Whether it should fail or report a skipped update remains an open policy decision.
+
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-inst-1)
 
 Reproduced by: e2e reproduced. real competing update lock; command OK with old step rows; unlocked retry runs due steps.
@@ -194,6 +210,8 @@ Reproduced by: e2e reproduced. real competing update lock; command OK with old s
 ### P:F-INST-6: A class of the update package named `V<n><something>` (e.g. `V3Helper`) replaces step class `V<n>` in the step list; update then reports success without runn...
 
 Severity: High · Decision: Open
+
+Description: A helper class whose name starts like a numbered update step can replace the real step in the execution list. Update reports success while leaving required migration work undone.
 
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-inst-6)
 
@@ -208,6 +226,8 @@ Reproduced by: e2e reproduced. real V3Helper fixture suppresses V3 execution; V2
 
 Severity: High · Decision: Open
 
+Description: An uninstall that should be blocked can still remove web applications and run cleanup hooks before leaving the module installed. The remaining module can be damaged even though removal was refused.
+
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-unin-1)
 
 Reproduced by: e2e reproduced. blocked uninstall deletes actual test web application; module remains; ordinary global-resource uninstall neighbor.
@@ -221,6 +241,8 @@ Reproduced by: e2e reproduced. blocked uninstall deletes actual test web applica
 
 Severity: High · Decision: Open
 
+Description: If IPM cannot build a dependent module's dependency graph, uninstall ignores that failure and removes a required module. Other installed modules can be left without a dependency they still need.
+
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-unin-4)
 
 Reproduced by: e2e reproduced. dependent graph error lets uninstall remove required class; resolvable dependent neighbor blocks.
@@ -233,6 +255,8 @@ Reproduced by: e2e reproduced. dependent graph error lets uninstall remove requi
 ### C:D32: Cache a valid1.0.0 directory, then replace its manifest/code with2.0.0 without rebuilding the cache. Search/API stilloffer1, but ordinary explicit `install t...
 
 Severity: High · Decision: Open
+
+Description: A filesystem repository's cached version can disagree with the files currently stored in its directory. An explicit install of the cached version can succeed while installing different code and a different version.
 
 Severity basis: An explicit requested-version install succeeds with another version's callable bytes. This is a wrong installation result, not merely stale listing text.
 
@@ -250,6 +274,8 @@ Reproduced by: e2e reproduced. ordinary explicit-version install reads changed d
 
 Severity: Medium · Decision: Open
 
+Description: The history-retention job marks its daily cleanup complete without deleting expired records. Old history keeps accumulating while the status suggests that retention has been enforced.
+
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-d3)
 
 Reproduced by: e2e reproduced. ordinary list triggers retention; old row survives with marker today; retention-off neighbor.
@@ -263,6 +289,8 @@ Reproduced by: e2e reproduced. ordinary list triggers retention; old row survive
 ### G:D4: Refused `-dev`, NoTransaction or NoJournal loads keep the module and read committed when system requirements fail
 
 Severity: Medium · Decision: Open
+
+Description: A load refused for unmet system requirements can leave module data behind in developer or nontransactional modes. The history can also mark it committed; the intended refusal policy still needs a decision.
 
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-d4)
 
@@ -278,6 +306,8 @@ Reproduced by: e2e reproduced. SYSNamespace refusal retains developer module; or
 
 Severity: Medium · Decision: Open
 
+Description: When an invoked lifecycle hook returns an error, its history phase can remain marked open. The record looks unfinished rather than failed, and the intended final status is still awaiting clarification.
+
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-d6)
 
 Reproduced by: e2e reproduced. ordinary returned-error Activate Invoke leaves last phase OPEN; successful C01 phase is OK; intent remains Q-14.
@@ -291,6 +321,8 @@ Reproduced by: e2e reproduced. ordinary returned-error Activate Invoke leaves la
 ### G:D9: A refused load records an empty package
 
 Severity: Medium · Decision: Open
+
+Description: A load refused before installation can record an empty package name in history. Operators cannot identify the affected module from the normal audit fields.
 
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-d9)
 
@@ -306,6 +338,8 @@ Reproduced by: e2e reproduced. ordinary downgrade refusal followed by history de
 
 Severity: Medium · Decision: Open
 
+Description: A load that rejects its manifest can retain imported module data when transaction or journaling options are disabled. The failure result does not by itself mean that no state was kept.
+
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-d11)
 
 Reproduced by: e2e reproduced. NoJournal manifest refusal leaves the imported ZPM document at 2.0.0; successful NoJournal neighbor; broader cases remain in starting evidence.
@@ -319,6 +353,8 @@ Reproduced by: e2e reproduced. NoJournal manifest refusal leaves the imported ZP
 ### G:D12: Refusals after the no-transaction marker read `Committed=1` with nothing kept
 
 Severity: Medium · Decision: Open
+
+Description: A refused nontransactional load can be marked committed even when it kept no module changes. What that flag should mean for this case remains an open policy question.
 
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-d12)
 
@@ -334,6 +370,8 @@ Reproduced by: e2e reproduced. no-module-definition refusal under NoTransaction 
 
 Severity: Medium · Decision: Open
 
+Description: A load can commit successfully and then fail while creating its temporary local repository. The caller receives an internal error even though the module remains installed.
+
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-d13)
 
 Reproduced by: e2e reproduced. ordinary directory load hits failed temporary repository creation after commit; module remains; valid .modules neighbor.
@@ -347,6 +385,8 @@ Reproduced by: e2e reproduced. ordinary directory load hits failed temporary rep
 ### G:D18: Namespace default modifiers become `history` filters
 
 Severity: Medium · Decision: Open
+
+Description: Default command modifiers are reused as history filters, which can hide records from an ordinary history search. Whether those defaults should affect history queries remains an open policy decision.
 
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-d18)
 
@@ -362,6 +402,8 @@ Reproduced by: e2e reproduced. stored NoTransaction modifier makes ordinary hist
 
 Severity: Medium · Decision: Open
 
+Description: The global history API repeats the current namespace's records instead of reading each namespace's own records. Its result contains duplicates and omits activity from other namespaces.
+
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-d20)
 
 Reproduced by: e2e reproduced. public GlobalRecords repeats USER history and misses seeded other namespace; local Records returns exactly one correct row.
@@ -375,6 +417,8 @@ Reproduced by: e2e reproduced. public GlobalRecords repeats USER history and mis
 ### G:D21: A failed load can leave an installed module without its dependency
 
 Severity: Medium · Decision: Open
+
+Description: A failed parent load can keep a dependency installed while rolling back that dependency's own child. This leaves an incomplete installation; the intended transaction policy for these mixed modes remains open.
 
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-d21)
 
@@ -390,6 +434,8 @@ Reproduced by: e2e reproduced. ordinary parent failure leaves NoJournal middle d
 
 Severity: Medium · Decision: Open
 
+Description: A parent operation can be marked uncommitted even though a dependency's changes survived. The meaning of the parent's committed flag for partial persistence still needs a human decision.
+
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-d22)
 
 Reproduced by: e2e reproduced. same parent failure records committed=0 while middle dependency survives; successful parent neighbor.
@@ -403,6 +449,8 @@ Reproduced by: e2e reproduced. same parent failure records committed=0 while mid
 ### G:D23: The global history delete hides every error, not only permission errors
 
 Severity: Medium · Decision: Open
+
+Description: Global history deletion suppresses all query errors, not just permission failures. It can report success without deleting anything; the intended handling of other errors remains under discussion.
 
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-d23)
 
@@ -418,6 +466,8 @@ Reproduced by: e2e reproduced. ordinary global delete with unknown SQL column re
 
 Severity: Medium · Decision: Open
 
+Description: A failed history query is presented as an empty log with a successful status. Operators cannot distinguish no matching records from a bad filter or query failure; the reporting policy remains open.
+
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-d24)
 
 Reproduced by: e2e reproduced. misspelled history column returns OK; valid Success query neighbor.
@@ -431,6 +481,8 @@ Reproduced by: e2e reproduced. misspelled history column returns OK; valid Succe
 ### G:D28: A dependency's own `NoTransaction` default does not keep it out of the parent's transaction
 
 Severity: Medium · Decision: Open
+
+Description: A dependency's own NoTransaction default does not prevent it from joining its parent's transaction. A parent rollback removes it anyway, and the intended precedence of these settings still needs a decision.
 
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-d28)
 
@@ -446,6 +498,8 @@ Reproduced by: e2e reproduced. own NoTransaction dependency still rolls back wit
 
 Severity: Medium · Decision: Open
 
+Description: Some refused update, reinstall and uninstall commands create no history record. Whether the audit should include these early refusals remains an open policy question.
+
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-d29)
 
 Reproduced by: e2e reproduced. ordinary update/reinstall/uninstall argument refusals allocate no history ID; successful/failed named load neighbors elsewhere; intent remains Q-09.
@@ -460,6 +514,8 @@ Reproduced by: e2e reproduced. ordinary update/reinstall/uninstall argument refu
 
 Severity: Medium · Decision: Open
 
+Description: Loading a parent can replace a dependency that is in developer mode and clear that mode. Protection of developer dependencies still needs a policy decision, so the observed replacement is not a settled defect verdict.
+
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-i3)
 
 Reproduced by: e2e reproduced. ordinary parent load upgrades developer dependency and clears developer mode; same-version neighbor retains it.
@@ -472,6 +528,8 @@ Reproduced by: e2e reproduced. ordinary parent load upgrades developer dependenc
 ### C:D4: A parameter value that contains `$` cannot be used. `%RegExReplace` passes the value as ICU replacement text and escapes only backslashes, so `$5` or an unfi...
 
 Severity: Medium · Decision: Open
+
+Description: A module parameter containing a dollar sign is interpreted as replacement syntax rather than literal text. Files, messages or hooks using that parameter can fail during evaluation.
 
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#c-d4)
 
@@ -486,6 +544,8 @@ Reproduced by: e2e reproduced. literal dollar Default makes load fail; five succ
 
 Severity: Medium · Decision: Open
 
+Description: The version-range parser treats a two-part caret requirement as a much narrower range. This is confirmed at the component level; the full installation impact has not been reproduced for this entry.
+
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#c-d7)
 
 Reproduced by: partial reproduced. real range parser witness and valid caret neighbors; ordinary resolver caller with ^1.2 not re-executed.
@@ -498,6 +558,8 @@ Reproduced by: partial reproduced. real range parser witness and valid caret nei
 ### C:D8: Combining two requirements depends on their order when two bounds differ only by a prerelease part: the first is kept. `^1.0.0` AND `<2.0.0` gives `<2.0.0-0`...
 
 Severity: Medium · Decision: Open
+
+Description: Combining dependency version constraints can give a different result depending on their order. Renaming parent modules can make the same satisfiable dependency set fail resolution.
 
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#c-d8)
 
@@ -512,6 +574,8 @@ Reproduced by: e2e reproduced. named diamond load refusal with source-selected d
 
 Severity: Medium · Decision: Open
 
+Description: Environment values containing dollar signs or backslashes can be changed or rejected when inserted into a configuration file. Credentials and file paths may no longer contain the values supplied by the operator.
+
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#c-d14)
 
 Reproduced by: e2e reproduced. ordinary -env load feeds altered dollar value to its real Invoke reader; five neighbor.
@@ -524,6 +588,8 @@ Reproduced by: e2e reproduced. ordinary -env load feeds altered dollar value to 
 ### C:D15: The downgrade refusal misses prereleases of different versions: with `2.0.0-beta` installed, `load` of `1.0.0-rc` succeeds and replaces it. `Follows` treats ...
 
 Severity: Medium · Decision: Open
+
+Description: The downgrade check mishandles prereleases from different base versions. Loading an older prerelease can replace a newer installed version that should have been protected.
 
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#c-d15)
 
@@ -538,6 +604,8 @@ Reproduced by: e2e reproduced. ordinary prerelease downgrade accepted; release a
 
 Severity: Medium · Decision: Open
 
+Description: A component test shows that document export can overwrite an earlier helper error with a later successful result. Export may report success even though one part failed; the failing helper was supplied by a controlled override.
+
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#c-d19)
 
 Reproduced by: partial reproduced (historical helper witness; not rerun). existing allowed deployed-helper override shows local status suppression; no ordinary default-helper failure/full package entry established; no new package/archive run.
@@ -548,6 +616,8 @@ Reproduced by: partial reproduced (historical helper witness; not rerun). existi
 ### C:D16: First plain `load -lock` uses an empty stored Root and writes relative `module-lock.json` in process cwd. A developer-mode or direct nonempty-Root neighbor w...
 
 Severity: Medium · Decision: Open
+
+Description: A first non-developer load can write its lock file into the process's working directory instead of the module folder. The file can also remain after a later database rollback.
 
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#c-d16)
 
@@ -562,6 +632,8 @@ Reproduced by: e2e reproduced. first ordinary load -lock writes valid audit-lock
 
 Severity: Medium · Decision: Open
 
+Description: The function form of the package-manager command runs the command and then raises an error instead of returning its status. Scripts cannot safely use that form to tell whether the operation succeeded.
+
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#c-d24)
 
 Reproduced by: e2e reproduced. $zpm(version) throws after command; Shell(version) returns success.
@@ -574,6 +646,8 @@ Reproduced by: e2e reproduced. $zpm(version) throws after command; Shell(version
 ### C:D27: A supported processor returns an error from OnResolveChildren. Package refuses, but uninstall discards the status, deletes module/manifest metadata and leave...
 
 Severity: Medium · Decision: Open
+
+Description: Uninstall ignores an error while resolving a resource's children, removes module metadata, and leaves the class installed. The package manager can lose track of code that is still callable.
 
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#c-d27)
 
@@ -588,6 +662,8 @@ Reproduced by: e2e reproduced. supported error-returning resource extension; uni
 
 Severity: Medium · Decision: Open
 
+Description: A class held by an editing lock can survive uninstall while its module metadata is deleted. IPM reports success with a warning, but the supposedly removed code remains callable.
+
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#c-d28)
 
 Reproduced by: e2e reproduced. real class edit lock; uninstall succeeds with callable class retained; unlocked uninstall removes it.
@@ -600,6 +676,8 @@ Reproduced by: e2e reproduced. real class edit lock; uninstall succeeds with cal
 ### C:D29: FileCopy Overlay=0 loads new files but retains unrelated old entries instead of replacing the directory. Direct CopyDir flags0/1 both keep a sentinel and rep...
 
 Severity: Medium · Decision: Open
+
+Description: A FileCopy resource configured to replace a directory retains unrelated old files. Installation can leave stale contents alongside the new files instead of producing a clean target directory.
 
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#c-d29)
 
@@ -614,6 +692,8 @@ Reproduced by: e2e reproduced. ordinary FileCopy Overlay=0 retains unrelated sen
 
 Severity: Medium · Decision: Open
 
+Description: A failing test that runs a passing child test can write the child's results into its own JSON report. The report can look successful even though the outer test failed.
+
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#c-d31)
 
 Reproduced by: e2e reproduced. actual outer/child Shell test runs, final file/device identities and alone neighbors.
@@ -626,6 +706,8 @@ Reproduced by: e2e reproduced. actual outer/child Shell test runs, final file/de
 ### C:D33: Install a parent with exact dependency `1.0.0+snapshot`, change that dependency's source payload, then ordinarily reinstall the parent. The forced refresh ad...
 
 Severity: Medium · Decision: Open
+
+Description: Reinstalling a parent with an exact snapshot dependency can fail while combining compatible version constraints. The dependency's updated source is not installed, leaving the previous code in use.
 
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#c-d33)
 
@@ -640,6 +722,8 @@ Reproduced by: e2e reproduced. default snapshot reinstall refuses; shallow/relea
 
 Severity: Medium · Decision: Open
 
+Description: Using the only option with multiple lifecycle phases generates an invalid method call. None of the requested phases runs, even though each phase works when requested alone.
+
 Run: Uplift 2026-11-16
 
 Found by: source review of `Lifecycle/Base.cls::MatchSinglePhase` and `Storage/Module.cls::ExecutePhases`, then [iteration30 model](consolidated/iter30/phases.rs) `only_multiple_names_fail` and its control `only-runs-each-name` ([proof receipt](../uplift/consolidated/iter30/proofs/models.json)).
@@ -652,6 +736,8 @@ Reproduced by: E2E reproduced. [Iteration30 native receipt](../uplift/consolidat
 ### C:D35: A phase list silently drops custom and unknown names listed beside a standard phase
 
 Severity: Medium · Decision: Open
+
+Description: A lifecycle phase list silently drops custom or unknown names when they appear beside a standard phase. The command can report success without running all the work the caller requested.
 
 Run: Uplift 2026-11-16
 
@@ -666,6 +752,8 @@ In complete mode `GetCompletePhases` keeps a non-standard name only when it is t
 
 Severity: Medium · Decision: Open
 
+Description: A developer module can load classes directly from its source root, but sync does not scan that same layout. Later edits and deletions are ignored while sync reports that there is nothing to do.
+
 Run: Uplift 2026-11-16
 
 Found by: native exploration of the iteration32 sync workflow, then source review of `ResourceProcessor/Default/Document.cls::GetSyncDirectory` against its Reload directory list, and [iteration32 model](consolidated/iter32/sync.rs) `flat_schedule` with control `scan-uses-load-fallback` ([proof receipt](../uplift/consolidated/iter32/proofs/models.json)).
@@ -678,6 +766,8 @@ Reload looks for a resource in `{SourcesRoot}/{Directory}` and, when Directory i
 ### C:D38: `list-dependents -t` leaves out modules at the top of a dependency graph
 
 Severity: Medium · Decision: Open
+
+Description: The tree form of list-dependents omits modules at the top of the dependency graph. An operator sees an incomplete picture of which installed modules rely on the target.
 
 Run: Uplift 2026-11-16
 
@@ -692,6 +782,8 @@ The tree is built by inverting each installed module's dependency graph. That gr
 
 Severity: Medium · Decision: Open
 
+Description: During installation, a module's installer receives explicit parameters but not values declared as defaults. The same setting can therefore be available to later lifecycle steps while missing from configuration code.
+
 Run: Uplift 2026-11-16
 
 Found by: source review of `Lifecycle/Base.cls::%Configure`, whose `GetCustomParameters` result is unused, and [iteration36 model](consolidated/iter36/installer.rs) `default_versus_parameter` with control `default-reaches-installer-vars` ([proof receipt](../uplift/consolidated/iter36/proofs/models.json)).
@@ -704,6 +796,8 @@ Reproduced by: E2E reproduced. [Iteration36 native receipt](../uplift/consolidat
 ### C:D44: A refused module document save empties the stored document text
 
 Severity: Medium · Decision: Open
+
+Description: Saving malformed module XML correctly reports an error, but also empties the previously stored document. The module record survives, leaving it out of sync with the document an administrator can open and edit.
 
 Run: Uplift 2026-11-16
 
@@ -718,6 +812,8 @@ Reproduced by: E2E reproduced. [Iteration39 native receipt](../uplift/consolidat
 
 Severity: Medium · Decision: Open
 
+Description: A module can report a successful load even when one of its preload classes fails to compile. The module is then marked installed although code it needs is unavailable.
+
 Run: Uplift 2026-11-16
 
 Found by: source review of `Lifecycle/Base.cls::%Initialize`, which keeps the import status in a local and returns its own OK status, then [iteration42 model](consolidated/iter42/initialize.rs) `preload_error_swallowed` with control `preload-error-returned` ([proof receipt](../uplift/consolidated/iter42/proofs/models.json)).
@@ -730,6 +826,8 @@ Preload code usually bootstraps what later phases need, so a broken preload pass
 ### C:D49: `arrange` fails in a namespace without a source-control class
 
 Severity: Medium · Decision: Open
+
+Description: The arrange command fails in a namespace that has no source-control class configured, even for a simple manifest. Users must configure source control before they can rearrange that document.
 
 Run: Uplift 2026-11-16
 
@@ -744,6 +842,8 @@ The [authoring statement](../ontology/features/developer-tools.g5.md#devtools.au
 
 Severity: Medium · Decision: Open
 
+Description: Loading localization resources attempts to write inside the module's source folder. A module containing a .LOC resource therefore fails to install from a read-only folder, while an ordinary module can load from the same kind of location.
+
 Run: Uplift 2026-11-16
 
 Found by: source review of `ResourceProcessor/LocalizationExport.cls::OnBeforePhase` (Activate export into the module root), then [iteration56 model](consolidated/iter56/locmsgs.rs) `readonly_root_fails` with control `readonly-tolerated` ([proof receipt](../uplift/consolidated/iter56/proofs/models.json)).
@@ -756,6 +856,8 @@ The module asks for no export, and installing should not need to write into its 
 ### C:D65: Uninstall leaves the package mappings IPM created, overriding an administrator's mapping
 
 Severity: Medium · Decision: Open
+
+Description: Uninstall removes a module but leaves the package mappings that IPM added for it. A leftover mapping can continue to override an administrator's broader mapping and send later package lookups to the wrong database.
 
 Run: Uplift 2026-11-16
 
@@ -770,6 +872,8 @@ Namespace configuration changed by an install persists after the module is gone,
 
 Severity: Medium · Decision: Open
 
+Description: A module loaded with NoMapping can put code in the system database. Ordinary uninstall removes its registration but leaves that shared code accessible from other namespaces; the recorded global uninstall removes it.
+
 Run: Uplift 2026-11-16
 
 Found by: native exploration (case c2) and source review of `Lifecycle/Base.cls::%Clean` (mapped classes skipped unless `Clean.GlobalScope`), then [iteration59 model](consolidated/iter59/mappings.rs) `nomapping_code_orphaned` with control `mapped-code-deleted` ([proof receipt](../uplift/consolidated/iter59/proofs/models.json)).
@@ -782,6 +886,8 @@ The module record disappears while its code remains shared by every namespace, c
 ### C:D67: Uninstall leaves a module's declared `<Mapping>` entries in the namespace
 
 Severity: Medium · Decision: Open
+
+Description: Uninstall leaves the namespace mappings declared by a module, including when purge is requested. The module disappears from the installed list, but its changes to where classes or data are looked up remain active.
 
 Run: Uplift 2026-11-16
 
@@ -796,6 +902,8 @@ Namespace configuration made for the module outlives it, contrary to the [cleanu
 
 Severity: Medium · Decision: Open
 
+Description: When packages have competing version requirements, the resolver can stop at a conflict even though a compatible combination exists. It does not fully reconsider earlier choices, so a valid installation can be refused.
+
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-dep-7)
 
 Reproduced by: e2e reproduced. ordinary solvable graph install refuses; pinned solution installs all modules.
@@ -808,6 +916,8 @@ Reproduced by: e2e reproduced. ordinary solvable graph install refuses; pinned s
 ### P:F-INST-10: An update that brings in a module for the first time runs all of that module's update steps instead of seeding them as a fresh install does.
 
 Severity: Medium · Decision: Open
+
+Description: When an update introduces a dependency for the first time, IPM runs that dependency's old migration steps as though it were already installed. A fresh install normally records those steps as already accounted for.
 
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-inst-10)
 
@@ -822,6 +932,8 @@ Reproduced by: e2e reproduced. new dependency installed during update runs V1; f
 
 Severity: Medium · Decision: Open
 
+Description: If two registries provide the same package version, their creation order decides which copy installs. Configuring their priority does not change that choice, and deleting and re-adding a registry can unexpectedly change the source.
+
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-inst-4)
 
 Reproduced by: e2e reproduced. two filesystem repositories with tied versions; creation-order selection and reordered neighbor.
@@ -834,6 +946,8 @@ Reproduced by: e2e reproduced. two filesystem repositories with tied versions; c
 ### P:F-INST-5: `update -dev` from a registry does not run in developer mode, and a plain `update` of a module stored in developer mode clears it. Only `update -dev -path` k...
 
 Severity: Medium · Decision: Open
+
+Description: Updating from a registry does not honor the requested developer mode, and a normal update clears an existing developer-mode setting. A module can therefore stop being treated as a local development checkout after an update.
 
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-inst-5)
 
@@ -848,6 +962,8 @@ Reproduced by: e2e reproduced. ordinary update -dev from filesystem registry end
 
 Severity: Medium · Decision: Open
 
+Description: An update helper class named Validator, or another name starting with V but no version number, crashes update discovery. Every update of that module fails with a low-level error that does not identify the offending class.
+
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-inst-7)
 
 Reproduced by: e2e reproduced. real Validator fixture makes update fail; numbered-class neighbor.
@@ -860,6 +976,8 @@ Reproduced by: e2e reproduced. real Validator fixture makes update fail; numbere
 ### P:F-INST-8: A developer-mode install (or a plain `load` of a module stored in developer mode) seeds no update steps, so the next update reruns every step from V1, includ...
 
 Severity: Medium · Decision: Open
+
+Description: A developer-mode install does not record the update steps belonging to the installed version. The next update can rerun old migrations, including steps for versions already present.
 
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-inst-8)
 
@@ -874,6 +992,8 @@ Reproduced by: e2e reproduced. developer fresh install leaves zero step records;
 
 Severity: Medium · Decision: Open
 
+Description: Installing a package can overwrite one of its dependencies even when that dependency is in developer mode. The protection applies only to the package named in the command, so dependency updates can replace a developer's working copy.
+
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-inst-9)
 
 Reproduced by: e2e reproduced. ordinary parent install replaces developer dependency; initial developer load verifies prestate.
@@ -886,6 +1006,8 @@ Reproduced by: e2e reproduced. ordinary parent install replaces developer depend
 ### P:F-NSP-2: In a namespace that gets IPM by mapping, an `IPMVersion` requirement is checked against an empty version, so every module with such a requirement is refused ...
 
 Severity: Medium · Decision: Open
+
+Description: In a namespace that uses a mapped copy of IPM, the version check reads an empty IPM version. Packages that declare an IPMVersion requirement are refused even when the mapped installation is new enough.
 
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-nsp-2)
 
@@ -900,6 +1022,8 @@ Reproduced by: e2e reproduced. ordinary requirement load fails in mapped namespa
 
 Severity: Medium · Decision: Open
 
+Description: The first enable command maps IPM into a fresh namespace but skips the requested registries. A second run is needed before the namespace has both the package manager and its registry configuration.
+
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-nsp-4)
 
 Reproduced by: e2e reproduced. enable -map -repos skips first repo mapping; same command second run maps it.
@@ -912,6 +1036,8 @@ Reproduced by: e2e reproduced. enable -map -repos skips first repo mapping; same
 ### P:F-NSP-6: `unmap` leaves the `%IPM.*` routine mapping: the namespace still runs the source's IPM and is still reported as mapped. Argument-slot bug: the third argument...
 
 Severity: Medium · Decision: Open
+
+Description: Unmapping IPM leaves a routine mapping behind. The namespace can still execute the source namespace's IPM and still appears mapped, so the command has not fully detached it.
 
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-nsp-6)
 
@@ -926,6 +1052,8 @@ Reproduced by: e2e reproduced. unmap removes package mapping but routine mapping
 
 Severity: Medium · Decision: Open
 
+Description: Default command modifiers are documented as namespace-specific but are stored globally. Changing a default in one namespace, such as disabling transactions, changes how commands behave in other namespaces too.
+
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-repo-5)
 
 Reproduced by: e2e reproduced. real namespaces read shared default modifiers; local namespace settings neighbor.
@@ -938,6 +1066,8 @@ Reproduced by: e2e reproduced. real namespaces read shared default modifiers; lo
 ### P:F-SYNC-1: A failed `compile`, `load -dev` or `reload` that puts edited source on the server records no baseline and no retry mark. If the file is then reverted to its ...
 
 Severity: Medium · Decision: Open
+
+Description: After edited source fails to compile on the server, reverting the local file to its earlier contents can leave sync reporting nothing to do. The server still holds the broken source because the failed operation did not record that a retry was needed.
 
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-sync-1)
 
@@ -952,6 +1082,8 @@ Reproduced by: e2e reproduced. ordinary failed compile then exact-byte revert ma
 
 Severity: Medium · Decision: Open
 
+Description: Uninstall with purge removes classes without deleting their table data through the normal cleanup path. Users requesting data removal can be left with the old records unless a custom installer handles the flag itself.
+
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-unin-2)
 
 Reproduced by: e2e reproduced. ordinary persistent sentinel survives -purge and schema removal/reload; real extent-delete and installer callback neighbors.
@@ -964,6 +1096,8 @@ Reproduced by: e2e reproduced. ordinary persistent sentinel survives -purge and 
 ### P:F-UNIN-5: A global resource declared only by name (`<Resource Name="X.GBL"/>`, the usual form) keeps its data after uninstall; only resources with the `Global` attribu...
 
 Severity: Medium · Decision: Open
+
+Description: A global declared using the usual name-only resource form keeps its data after uninstall. Cleanup deletes the data only for the alternative form with an explicit Global attribute, so equivalent-looking declarations behave differently.
 
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-unin-5)
 
@@ -978,6 +1112,8 @@ Reproduced by: e2e reproduced. ordinary name-only global resource retains data; 
 
 Severity: Medium · Decision: Open
 
+Description: When dependents prevent uninstall, the module correctly stays installed but the command reports and records success. Automation and operators cannot tell from that result that the requested removal was blocked.
+
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-unin-6)
 
 Reproduced by: e2e reproduced. blocked uninstall returns OK and logs success with module retained; successful ordinary uninstall neighbor.
@@ -990,6 +1126,8 @@ Reproduced by: e2e reproduced. blocked uninstall returns OK and logs success wit
 ### P:F-LOAD-4: A load can fail after its final commit: an after-install message with `{` and a `$$$` macro that does not compile throws in `%EvaluateMacro`. The command ret...
 
 Severity: Medium · Decision: Open
+
+Description: A malformed macro in the final installation message can make load report failure after the module and classes have already been committed. The failed history entry therefore does not mean the installation was rolled back.
 
 Severity basis: An ordinary load returns failure after its changes commit, leaving installed code and a failed command result. This can misdirect scripts and recovery even though the trigger is an after-install message.
 
@@ -1005,6 +1143,8 @@ Reproduced by: e2e reproduced. ordinary after-install macro failure with durable
 ### P:F-REPO-4: `config delete` restores the first value ever set, not the factory default, for keys the installer does not seed (`TerminalPrompt`, `PublishTimeout`, `Histor...
 
 Severity: Medium · Decision: Open
+
+Description: Deleting a configuration override can restore the first custom value ever assigned instead of the factory default. Settings not initialized by the installer can remain customized after a user tries to reset them.
 
 Severity basis: Config delete restores a prior assigned value instead of the documented default, changing effective configuration. This is administrator-repairable behavior, not merely cosmetic text.
 
@@ -1023,6 +1163,8 @@ Fresh reproduction on Linux x86-64 IRIS 2026.1: [iteration41 receipt](../uplift/
 
 Severity: Low · Decision: Open
 
+Description: If creation of a temporary load repository fails, cleanup tells the user to delete that repository manually even though it was already rolled back. The warning sends the operator looking for a repository that does not exist.
+
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#c-d2)
 
 Reproduced by: e2e reproduced. TR7 missing-row cleanup warning; TR1 succeeds.
@@ -1035,6 +1177,8 @@ Reproduced by: e2e reproduced. TR7 missing-row cleanup warning; TR1 succeeds.
 ### C:D3: Parameters that refer to each other in a loop are never reported. The 20-level guard that throws "Circular reference or too many levels in placeholders" is u...
 
 Severity: Low · Decision: Open
+
+Description: Parameters that refer to each other in a loop do not produce the intended circular-reference error. Resolution stops with an unfilled placeholder, which can later fail with an unrelated regular-expression error.
 
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#c-d3)
 
@@ -1049,6 +1193,8 @@ Reproduced by: e2e reproduced. cyclic Default reaches ordinary load error; acycl
 
 Severity: Low · Decision: Open
 
+Description: A dotted parameter name is treated as a regular-expression pattern during substitution. Setting a.b can also replace a different parameter such as axb, giving the wrong value to module configuration.
+
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#c-d5)
 
 Reproduced by: e2e reproduced. a.b Default changes {$axb} in the command output; exact ordinary value neighbor.
@@ -1061,6 +1207,8 @@ Reproduced by: e2e reproduced. a.b Default changes {$axb} in the command output;
 ### C:D9: Build metadata containing a hyphen is parsed as a prerelease: `1.2.3+build-x` becomes `1.2.3-x+build-x`, which sorts before `1.2.3` and matches only itself a...
 
 Severity: Low · Decision: Open
+
+Description: A hyphen in version build metadata is mistaken for a prerelease marker. A release such as 1.2.3+build-x is then ordered and matched as a prerelease, which can change dependency selection.
 
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#c-d9)
 
@@ -1075,6 +1223,8 @@ Reproduced by: e2e reproduced. ordinary module load stores the malformed parsed 
 
 Severity: Low · Decision: Open
 
+Description: When version requirements conflict, the error can show literal placeholders instead of the two incompatible ranges. Users are told resolution failed without the details needed to identify and fix the conflict.
+
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#c-d10)
 
 Reproduced by: partial reproduced. real AND helper error text; full conflicting-dependency command message path remains.
@@ -1087,6 +1237,8 @@ Reproduced by: partial reproduced. real AND helper error text; full conflicting-
 ### C:D12: `history find` shows the result of an action that has not ended (still running or killed) as `ERROR #00: (no error description)`, so an operator reads it as ...
 
 Severity: Low · Decision: Open
+
+Description: History displays a still-running or interrupted action as an unexplained error. An operator cannot distinguish an unfinished command from one that completed and actually reported failure.
 
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#c-d12)
 
@@ -1101,6 +1253,8 @@ Reproduced by: e2e reproduced. history find displays ERROR #00 for an unfinished
 
 Severity: Low · Decision: Open
 
+Description: Asking module-version to retain the current version is rejected instead of being treated as an unchanged value. This also blocks a build-metadata-only change unless force is used.
+
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#c-d13)
 
 Reproduced by: e2e reproduced. module-version unchanged refusal; patch bump succeeds.
@@ -1113,6 +1267,8 @@ Reproduced by: e2e reproduced. module-version unchanged refusal; patch bump succ
 ### C:D21: The test path converter strips the resource folder as raw leading text. A path outside the folder keeps its folders in the class name, although the method co...
 
 Severity: Low · Decision: Open
+
+Description: The test-path helper removes a folder name as a text prefix rather than checking folder boundaries. Files outside the test folder can be converted into incorrect test class names instead of being excluded.
 
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#c-d21)
 
@@ -1127,6 +1283,8 @@ Reproduced by: partial reproduced. real private converter exposed by subclass an
 
 Severity: Low · Decision: Open
 
+Description: Whole-namespace sync loses dependency ordering when the connection passes through a module outside developer mode. A developer module can be synced before another developer module it indirectly depends on.
+
 Run: Uplift 2026-11-16
 
 Found by: source review of `Utils/Module.cls::GetDevModeModulesInDependencyOrder`, then [iteration32 model](consolidated/iter32/sync.rs) `order_neighbors` with controls `dev-edge-filter-removed` and `row-order-only` ([proof receipt](../uplift/consolidated/iter32/proofs/models.json)).
@@ -1139,6 +1297,8 @@ The helper keeps only dependency edges whose both ends are in developer mode and
 ### C:D42: `list-installed -s version` orders prereleases of one version as text
 
 Severity: Low · Decision: Open
+
+Description: The installed-package list sorts prerelease numbers as text. Versions such as rc.10 can appear before rc.2, giving users a misleading version order even though normal release numbers sort correctly.
 
 Run: Uplift 2026-11-16
 
@@ -1153,6 +1313,8 @@ The [version order](../ontology/concepts/versions.g5.md#version.order) compares 
 
 Severity: Low · Decision: Open
 
+Description: History treats the valid version 0.0.0-0 as if no version was recorded. An installed module with that version is shown as unset, obscuring what the command actually operated on.
+
 Run: Uplift 2026-11-16
 
 Found by: source review of `General/History.cls::VersionToString`, then [iteration38 model](consolidated/iter38/render.rs) `known_placeholder_indistinguishable` with control `placeholder-only-when-unknown` ([proof receipt](../uplift/consolidated/iter38/proofs/models.json)).
@@ -1165,6 +1327,8 @@ The renderer compares the stored version text with the placeholder, so a real `0
 ### C:D45: A module document that names a different module is saved under the old name
 
 Severity: Low · Decision: Open
+
+Description: Editing a stored module document to name a different module succeeds without renaming its module record. The document and installed record then disagree about which module they describe.
 
 Run: Uplift 2026-11-16
 
@@ -1179,6 +1343,8 @@ Reproduced by: E2E reproduced. [Iteration39 native receipt](../uplift/consolidat
 
 Severity: Low · Decision: Open
 
+Description: Ordinary actions on a developer-mode module do not find its preload folder. Editing preload code and then initializing or compiling the module leaves the old code running unless the root is supplied explicitly or the module is loaded again.
+
 Run: Uplift 2026-11-16
 
 Found by: source review of `Lifecycle/Base.cls::%Initialize` (preload root from the RootDirectory parameter only) against `%Reload` (developer-mode root fallback), then [iteration42 model](consolidated/iter42/initialize.rs) `module_action_skips_preload` with control `module-action-uses-module-root` ([proof receipt](../uplift/consolidated/iter42/proofs/models.json)).
@@ -1191,6 +1357,8 @@ Reload falls back to the stored root for developer-mode modules, but Initialize 
 ### C:D48: The test phase keeps test classes loaded in a module that is not in developer mode
 
 Severity: Low · Decision: Open
+
+Description: Running tests for a non-development module leaves its test classes in the namespace afterward. It also loads verification-only test classes that were not run, leaving extra code until uninstall.
 
 Run: Uplift 2026-11-16
 
@@ -1205,6 +1373,8 @@ The processor means to delete loaded test code outside developer mode, but the c
 
 Severity: Low · Decision: Open
 
+Description: Rearranging a module manifest silently deletes comments before resources and at the end of the module. Explanations written alongside those declarations are lost even though other comments survive.
+
 Run: Uplift 2026-11-16
 
 Found by: iteration44 exploration, then source review of `Utils/XMLCommentHandler.cls` (`GetPosition`, `endElement`, `Reapply`), and [iteration44 model](consolidated/iter44/comments.rs) `resource_comments_dropped` and `trailing_comment_dropped` with controls `resource-path-unchanged` and `trailing-attached-to-parent` ([proof receipt](../uplift/consolidated/iter44/proofs/models.json)).
@@ -1217,6 +1387,8 @@ The export wraps resources in a new `<Resources>` element, so the recorded resou
 ### C:D51: A source-control extension is never told that a module's root changed
 
 Severity: Low · Decision: Open
+
+Description: Moving a module's source root updates IPM's stored path without notifying its source-control extension. The extension can keep using the previous location because the promised root-change callback never arrives.
 
 Run: Uplift 2026-11-16
 
@@ -1231,6 +1403,8 @@ The interface comment says the call is "invoked when an existing module is reloa
 
 Severity: Low · Decision: Open
 
+Description: The show command hides a system requirement explicitly set to Health=false. Users inspecting the module cannot see that declared compatibility restriction in the displayed requirements.
+
 Run: Uplift 2026-11-16
 
 Found by: source review of `General/ModuleSummary.cls::GetSystemRequirements` (Health listed only when true) against `Storage/SystemRequirements.cls::CheckHealth` (Health=0 refuses Health instances), and [iteration46 model](consolidated/iter46/summary.rs) `health_false_hidden` with control `health-false-shown` ([proof receipt](../uplift/consolidated/iter46/proofs/models.json)).
@@ -1243,6 +1417,8 @@ A reader of `show` cannot tell that the module refuses IRIS for Health, contrary
 ### C:D53: YAML and TOON test reports change assertion message text
 
 Severity: Low · Decision: Open
+
+Description: YAML and TOON test reports alter some assertion messages, including line endings; YAML also changes leading spaces and adds a newline. The reported message can differ from the actual failure text, while JSON preserves it.
 
 Run: Uplift 2026-11-16
 
@@ -1257,6 +1433,8 @@ A CI tool reading the YAML or TOON report gets assertion text that differs from 
 
 Severity: Low · Decision: Open
 
+Description: Interactive module generation swaps the license and copyright-date answers. The generated manifest can contain a year as its license and a license name as its copyright date.
+
 Run: Uplift 2026-11-16
 
 Found by: source review of `Main.cls::GenerateModuleXML` against `Storage/ModuleTemplate.cls::SetAuthorProps`, and [iteration53 model](consolidated/iter53/generator.rs) `author_swapped` with control `author-args-in-order` ([proof receipt](../uplift/consolidated/iter53/proofs/models.json)).
@@ -1269,6 +1447,8 @@ The command passes the two answers to `SetAuthorProps` in the wrong order, contr
 ### C:D55: `generate -export` ignores the ignore list for routines and matches routine masks anywhere in the name
 
 Severity: Low · Decision: Open
+
+Description: Module export ignores routine exclusions and matches routine names too broadly. A generated package can include routines the user excluded or unrelated routines whose names merely contain the requested prefix.
 
 Run: Uplift 2026-11-16
 
@@ -1283,6 +1463,8 @@ This is the `generate` authoring export of namespace source into the module fold
 
 Severity: Low · Decision: Open
 
+Description: The documented exec example for changing namespaces reports success but leaves the session in its original namespace. Users following that example can run subsequent commands in a different namespace than they intended.
+
 Run: Uplift 2026-11-16
 
 Found by: source review of `Main.cls::ExecuteCOS` (`new $namespace`), then [iteration55 model](consolidated/iter55/nsinit.rs) `exec_neighbors` with control `exec-keeps-namespace-change` ([proof receipt](../uplift/consolidated/iter55/proofs/models.json)).
@@ -1295,6 +1477,8 @@ The command help's own example is `cos set $Namespace = "MYAPP"`, contrary to th
 ### C:D57: `init -noprompt` reports enabling the package manager extension but leaves a plain source-control class active
 
 Severity: Low · Decision: Open
+
+Description: Initialization says the package-manager source-control extension was enabled even when a plain source-control class remains active. The message gives users a false indication that the integration is ready.
 
 Run: Uplift 2026-11-16
 
@@ -1309,6 +1493,8 @@ Module lifecycle hooks therefore never reach the extension, contrary to the [ini
 
 Severity: Low · Decision: Open
 
+Description: Uninstall removes a localization module's document and registration but leaves its translated messages in the shared dictionary. Text supplied by an uninstalled module can remain available to applications.
+
 Run: Uplift 2026-11-16
 
 Found by: iteration56 native case u1 against the Clean phase, which deletes only the document, and [iteration56 model](consolidated/iter56/locmsgs.rs) `uninstall_keeps_messages` with control `uninstall-clears-messages` ([proof receipt](../uplift/consolidated/iter56/proofs/models.json)).
@@ -1321,6 +1507,8 @@ This contradicts Clean removing the module's resources, as stated in the [locali
 ### C:D61: A CSPApplication load resets an existing application's undeclared properties
 
 Severity: Low · Decision: Open
+
+Description: Loading a CSPApplication resource resets existing application settings that the manifest did not specify. An administrator's timeout, description and authentication settings can be replaced while installing the module.
 
 Run: Uplift 2026-11-16
 
@@ -1335,6 +1523,8 @@ This contradicts the [CSP lifecycle statement](../ontology/features/web-applicat
 
 Severity: Low · Decision: Open
 
+Description: On Linux, wildcard discovery of dashboard resources accepts only some filename-capitalization variants. Files ending in .dfi or .XML are silently skipped even though equivalent .DFI and .xml files load.
+
 Run: Uplift 2026-11-16
 
 Found by: source review of `ResourceProcessor/Default/DeepSeeItem.cls::OnPhase`, whose UNIX branch appends the extra patterns without a `;`, then [iteration58 model](consolidated/iter58/dfiitems.rs) `wildcard_extension_neighbors` with control `separator-present` ([proof receipt](../uplift/consolidated/iter58/proofs/models.json)).
@@ -1347,6 +1537,8 @@ The skipped files produce no warning, contrary to the [DeepSee item statement](.
 ### C:D63: Uninstall leaves DFI items loaded through a wildcard resource
 
 Severity: Low · Decision: Open
+
+Description: Uninstall removes explicitly named dashboard items but leaves items discovered through a wildcard resource. The package is removed while some of its dashboards remain installed.
 
 Run: Uplift 2026-11-16
 
@@ -1361,6 +1553,8 @@ Uninstall therefore leaves module content behind, contrary to the [DeepSee item 
 
 Severity: Low · Decision: Open
 
+Description: A legacy localization resource containing several include-file mappings is parsed incorrectly for cleanup. Uninstall leaves the generated include files behind, although the single-file form is removed correctly.
+
 Run: Uplift 2026-11-16
 
 Found by: iteration60 exploration refuting the source prediction, then source review of `ResourceProcessor/LegacyLocalizedMessages.cls::OnResolveChildren`, and [iteration60 model](consolidated/iter60/legacymsgs.rs) `mapped_includes_leak` with control `children-per-entry` ([proof receipt](../uplift/consolidated/iter60/proofs/models.json)).
@@ -1373,6 +1567,8 @@ The include name is read from the whole attribute instead of from each entry, co
 ### C:D68: Uninstall leaves a developer-mode module's `^Sources` entries
 
 Severity: Low · Decision: Open
+
+Description: Uninstalling a developer-mode module leaves source-location entries pointing to its old folders. The installed module and classes are gone, but source tooling can still find stale mappings for them.
 
 Run: Uplift 2026-11-16
 
@@ -1387,6 +1583,8 @@ A later document in that package is still mapped to the old folder for source-co
 
 Severity: Low · Decision: Open
 
+Description: The document action reports success without generating API documentation unless the module supplies its own hooks. Users expecting the command itself to regenerate documentation receive no output and no explanation.
+
 Run: Uplift 2026-11-16
 
 Found by: source search (no consumer of the Document phase besides `%Document`), then [iteration66 model](consolidated/iter66/docphase.rs) `phase_generates_nothing` with control `phase-writes-own-mark` ([proof receipt](../uplift/consolidated/iter66/proofs/models.json)).
@@ -1399,6 +1597,8 @@ This is documentation drift against the module-action help, recorded under the [
 ### C:D70: The composite's read-only check ignores other extensions
 
 Severity: Low · Decision: Open
+
+Description: When several source-control extensions are combined, the read-only check asks only the primary extension. Another extension can mark a file read-only while this check still permits editing, disagreeing with the reported file status.
 
 Run: Uplift 2026-11-16
 
@@ -1413,6 +1613,8 @@ The two checks disagree, contrary to the [editor statement](../ontology/architec
 
 Severity: Low · Decision: Open
 
+Description: Source-control configuration accepts an extension class that does not exist. Creating the combined extension then fails, leaving source control unusable in that namespace until the configuration is corrected.
+
 Run: Uplift 2026-11-16
 
 Found by: source review of `ExtensionBase/CompositeMethodOverrides.cls::SetSubExtensionClasses` (validated list discarded, raw list stored) and `%OnNew`, then [iteration67 model](consolidated/iter67/composite.rs) `misconfigured_other_breaks_creation` with control `subs-filtered` ([proof receipt](../uplift/consolidated/iter67/proofs/models.json)).
@@ -1425,6 +1627,8 @@ The trigger is a direct API call rather than an ordinary command, which keeps th
 ### P:F-DEP-1: `PermitDowngrade` is half implemented: the resolver drops the "≥ installed" bound and picks an older version, then the load refuses any downgrade.
 
 Severity: Low · Decision: Open
+
+Description: Allowing a downgrade lets dependency resolution select an older version, but the loader still refuses to install it. The option can produce a plan that IPM itself cannot execute.
 
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-dep-1)
 
@@ -1439,6 +1643,8 @@ Reproduced by: e2e reproduced. PermitDowngrade relaxes resolution then load refu
 
 Severity: Low · Decision: Open
 
+Description: Lock files list packages alphabetically instead of putting dependencies before their consumers. This is a recorded format-contract gap; the audit did not establish a current installation failure because lock-file replay was not implemented.
+
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-dep-2)
 
 Reproduced by: e2e reproduced. ordinary create-lockfile emits name order while load output is dependency first; downstream ci is unimplemented.
@@ -1451,6 +1657,8 @@ Reproduced by: e2e reproduced. ordinary create-lockfile emits name order while l
 ### P:F-DEP-3: `list-dependents` with a capitalised name (as in the help examples) prints nothing.
 
 Severity: Low · Decision: Open
+
+Description: The command that lists packages depending on a module returns no results when its name is capitalized. A valid module can appear to have no dependents when users follow the capitalization shown in help.
 
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-dep-3)
 
@@ -1465,6 +1673,8 @@ Reproduced by: e2e reproduced. list-dependents lowercase displays parent; mixed 
 
 Severity: Low · Decision: Open
 
+Description: An installation that later fails can leave a newly written lock file behind. That file describes a dependency selection from an installation that did not complete, which can mislead later tooling or users.
+
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-dep-8)
 
 Reproduced by: e2e reproduced. failed create-lockfile install leaves JSON while module/dependency rows disappear; successful lockfile neighbor.
@@ -1478,6 +1688,8 @@ Reproduced by: e2e reproduced. failed create-lockfile install leaves JSON while 
 
 Severity: Low · Decision: Open
 
+Description: Lock-file creation fails when a dependency was loaded from a local folder and has no registry. A valid local dependency therefore prevents the installation from producing its requested lock file.
+
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-dep-9)
 
 Reproduced by: e2e reproduced. ordinary local-loaded dependency produces lockfile warning and no changed file; registry supplier neighbor.
@@ -1490,6 +1702,8 @@ Reproduced by: e2e reproduced. ordinary local-loaded dependency produces lockfil
 ### P:F-REPO-8: `config` with an unknown key or a bad value prints a message and returns OK, so scripts cannot detect typos.
 
 Severity: Low · Decision: Open
+
+Description: Invalid configuration names and values print a warning but return success. Scripts cannot reliably detect a typo or rejected setting from the command result.
 
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-repo-8)
 
@@ -1506,6 +1720,8 @@ Fresh reproduction on Linux x86-64 IRIS 2026.1: [iteration41 receipt](../uplift/
 
 Severity: Low · Decision: Open
 
+Description: Reloading a module without a developer source root reports success while loading nothing. The result suggests the server code was refreshed even though no source was available to reload.
+
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-sync-3)
 
 Reproduced by: e2e reproduced. ordinary reload of normal module succeeds without reloading edited file; root-bearing developer load neighbor.
@@ -1519,6 +1735,8 @@ Reproduced by: e2e reproduced. ordinary reload of normal module succeeds without
 
 Severity: Low · Decision: Open
 
+Description: Recursive uninstall deletes a removed dependency's module record but keeps its stored manifest text. The top-level module is cleaned up correctly, leaving inconsistent cleanup for its dependencies.
+
 Found by: [Starting entry and evidence](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-unin-9)
 
 Reproduced by: e2e reproduced. ordinary recursive uninstall removes dependency code/module but retains its manifest; top manifest is removed.
@@ -1526,881 +1744,3 @@ Reproduced by: e2e reproduced. ordinary recursive uninstall removes dependency c
 [Executable regression receipt](../uplift/consolidated/findings-audit-iter28/runs/20261116T031648777527Z-repo/receipt.json); [Runner](../uplift/consolidated/findings-audit-iter28/run_regressions.py) `repo`. The receipt records commands, expected observations, actual readers and provider qualifications.
 
 [Governing owner](../ontology/features/uninstall.g5.md#uninstall.recurse). No product repair or maintainer approval is claimed.
-
-## Review records
-
-These ratings describe the retained consequence or review priority. Aliases do not add defects; closed, withdrawn, excluded and unconfirmed records retain their existing dispositions.
-
-<a id="g-oos-1"></a>
-### G:OOS-1 review record
-
-Severity: High
-
-Severity basis: Unquoted URL/branch values at a shell boundary present potential command injection. Potential Critical compromise is discounted because reachability/exploitation is unconfirmed; defensive review only.
-
-G:OOS-1: defensive source/existing-evidence review only; outside active reproduction scope. [Preserved claim and scope](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-oos-1)
-
-<a id="d5-config-delete-historyretain-restores-the-first-value-ever-set-not-the-default-0"></a><!-- historical fragment alias -->
-<a id="g-d5"></a>
-### G:D5 review record
-
-Severity: Medium
-
-Severity basis: Same scoped trigger/consequence as P:F-REPO-4; inherit its impact rating without creating another defect. The alias disposition and reproduction limits remain unchanged.
-
-G:D5: alias. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-d5)
-
-<a id="d10-the-durable-record-of-an-action-that-never-ended-keeps-only-its-start-values"></a><!-- historical fragment alias -->
-<a id="g-d10"></a>
-### G:D10 review record
-
-Severity: Medium
-
-Severity basis: Abnormal termination leaves a durable history row with start values rather than the known action progress/outcome. This impairs administrative diagnosis; fresh process-death qualification remains open.
-
-G:D10: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-d10)
-
-<a id="d14-q-22-a-dependency-whose-own-defaults-set-nojournal-escapes-its-parents-normal-mode-rollback"></a><!-- historical fragment alias -->
-<a id="g-d14"></a>
-### G:D14 review record
-
-Severity: Medium
-
-Severity basis: A dependency can retain changes when its parent rolls back. This is an installation-state/atomicity policy consequence, not a defect under the current NoJournal working assumption.
-
-G:D14: policy-only/as-built-observed. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-d14)
-
-<a id="d15-load-refuses-targz-archives"></a><!-- historical fragment alias -->
-<a id="g-d15"></a>
-### G:D15 review record
-
-Severity: Medium
-
-Severity basis: A documented archive format does not load, while the equivalent supported extension works. The failure is visible and an administrator can rename/use a supported input.
-
-G:D15: inconclusive/execution-scope-blocked. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-d15)
-
-<a id="d16-update--path-with-another-modules-archive-crashes-instead-of-giving-the-mismatch-refusal"></a><!-- historical fragment alias -->
-<a id="g-d16"></a>
-### G:D16 review record
-
-Severity: Medium
-
-Severity basis: The wrong-module archive gives an internal error, a false commit marker in NoTransaction mode and leftover extracted files. No unwanted module-manifest installation is inferred.
-
-G:D16: inconclusive/execution-scope-blocked. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-d16)
-
-<a id="d17-load-accepts-an-existing-relative-path"></a><!-- historical fragment alias -->
-<a id="g-d17"></a>
-### G:D17 review record
-
-Severity: Low
-
-Severity basis: Relative-path acceptance is evidenced, but loading an unintended module or violating a required refusal is not established. This rates the limited interface/documentation candidate.
-
-G:D17: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-d17)
-
-<a id="d19-namespace-default-modifiers-are-shared-by-every-namespace"></a><!-- historical fragment alias -->
-<a id="g-d19"></a>
-### G:D19 review record
-
-Severity: Medium
-
-Severity basis: Same scoped trigger/consequence as P:F-REPO-5; inherit its impact rating without creating another defect. The alias disposition and reproduction limits remain unchanged.
-
-G:D19: alias. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-d19)
-
-<a id="d26-q-08-the-record-of-an-action-that-never-ended-reads-committed0-although-its-changes-were-kept"></a><!-- historical fragment alias -->
-<a id="g-d26"></a>
-### G:D26 review record
-
-Severity: Medium
-
-Severity basis: An unfinished record can report uncommitted after changes were retained, misleading audit/recovery decisions. The abnormal-end outcome policy and exact fresh witness remain open.
-
-G:D26: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-d26)
-
-<a id="d27-q-21-a-terminate-finalizes-locks-the-record-of-an-action-that-never-ended"></a><!-- historical fragment alias -->
-<a id="g-d27"></a>
-### G:D27 review record
-
-Severity: Medium
-
-Severity basis: Finalizing an unfinished record prevents ordinary correction and misstates its lifecycle state. This is a recoverable history-management consequence, conditional on the open finalization policy.
-
-G:D27: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-d27)
-
-<a id="d30-new-uninstall--purge-sets-a-key-nothing-reads"></a><!-- historical fragment alias -->
-<a id="g-d30"></a>
-### G:D30 review record
-
-Severity: Medium
-
-Severity basis: Same scoped trigger/consequence as P:F-UNIN-2; inherit its impact rating without creating another defect. The alias disposition and reproduction limits remain unchanged.
-
-G:D30: alias. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-d30)
-
-<a id="d31-new-q-03-q-24-install-replaces-a-dependency-in-developer-mode-without-the-overwrite-guard"></a><!-- historical fragment alias -->
-<a id="g-d31"></a>
-### G:D31 review record
-
-Severity: Medium
-
-Severity basis: Same scoped trigger/consequence as P:F-INST-9; inherit its impact rating without creating another defect. The alias disposition and reproduction limits remain unchanged.
-
-G:D31: alias. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-d31)
-
-<a id="i1-an-unfinished-phase-is-shown-as-error-00-no-error-description"></a><!-- historical fragment alias -->
-<a id="g-i1"></a>
-### G:I1 review record
-
-Severity: Low
-
-Severity basis: Same scoped trigger/consequence as C:D12; inherit its impact rating without creating another defect. The alias disposition and reproduction limits remain unchanged.
-
-G:I1: alias. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-i1)
-
-<a id="i2-a-load-ended-mid-way-leaves-its-temporary-modules-repository-registered-at-first-priority"></a><!-- historical fragment alias -->
-<a id="g-i2"></a>
-### G:I2 review record
-
-Severity: Low
-
-Severity basis: A stopped load can leave a temporary registry entry. The broader claim of always winning later resolution was narrowed; unqualified downstream selection keeps this below Medium.
-
-G:I2: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-i2)
-
-<a id="i4-new-the-history-class-queries-return-no-id-and-no-namespace"></a><!-- historical fragment alias -->
-<a id="g-i4"></a>
-### G:I4 review record
-
-Severity: Medium
-
-Severity basis: Programmatic global-history rows cannot identify their namespace/record ID, limiting reliable attribution. Whether that API shape must change remains an owner question.
-
-G:I4: policy-only/source-reviewed. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-i4)
-
-<a id="i5-compile-ignores-a-resource-processors-error-status"></a><!-- historical fragment alias -->
-<a id="g-i5"></a>
-### G:I5 review record
-
-Severity: Medium
-
-Severity basis: A processor compile error could be reported as successful compilation. High-impact silent incomplete work is discounted one level because a supported failing compile entry remains unconfirmed.
-
-G:I5: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-i5)
-
-<a id="i6-files-a-load-writes-outside-the-database-outlive-its-rollback"></a><!-- historical fragment alias -->
-<a id="g-i6"></a>
-### G:I6 review record
-
-Severity: Medium
-
-Severity basis: External files/effects can remain after database rollback and require reconciliation. This is a conditional compensation-policy consequence; database transactions alone never promised filesystem rollback.
-
-G:I6: policy-only/source-reviewed. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-i6)
-
-<a id="i7-permitdowngrade-reaches-the-dependency-graph-and-one-guard-but-not-the-downgrade-refusal"></a><!-- historical fragment alias -->
-<a id="g-i7"></a>
-### G:I7 review record
-
-Severity: Low
-
-Severity basis: Same scoped trigger/consequence as P:F-DEP-1; inherit its impact rating without creating another defect. The alias disposition and reproduction limits remain unchanged.
-
-G:I7: alias. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-i7)
-
-<a id="i8-new--dnolock1-turns-compile-locking-on"></a><!-- historical fragment alias -->
-<a id="g-i8"></a>
-### G:I8 review record
-
-Severity: Low
-
-Severity basis: The NoLock argument may enable compile locking rather than bypass it. The anticipated effect is contention/timeouts, discounted from Medium because the actual competing compile schedule is unqualified.
-
-G:I8: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-i8)
-
-<a id="obs-l3-a-plain-load-does-not-save-root-and-repository-so-the-first-lock-file-goes-to-the-wrong-folder"></a><!-- historical fragment alias -->
-<a id="g-obs-l3"></a>
-### G:OBS-L3 review record
-
-Severity: Medium
-
-Severity basis: Same scoped trigger/consequence as C:D16; inherit its impact rating without creating another defect. The alias disposition and reproduction limits remain unchanged.
-
-G:OBS-L3: alias. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-obs-l3)
-
-<a id="obs-l4-update--dev-from-a-registry-ends-in-normal-mode"></a><!-- historical fragment alias -->
-<a id="g-obs-l4"></a>
-### G:OBS-L4 review record
-
-Severity: Medium
-
-Severity basis: Same scoped trigger/consequence as P:F-INST-5; inherit its impact rating without creating another defect. The alias disposition and reproduction limits remain unchanged.
-
-G:OBS-L4: alias. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-obs-l4)
-
-<a id="obs-l5-a-dependency-first-installed-by-update-runs-all-its-update-steps"></a><!-- historical fragment alias -->
-<a id="g-obs-l5"></a>
-### G:OBS-L5 review record
-
-Severity: Medium
-
-Severity basis: Same scoped trigger/consequence as P:F-INST-10; inherit its impact rating without creating another defect. The alias disposition and reproduction limits remain unchanged.
-
-G:OBS-L5: alias. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-obs-l5)
-
-<a id="obs-l9-update-steps-are-skipped-silently-when-the-update-lock-times-out"></a><!-- historical fragment alias -->
-<a id="g-obs-l9"></a>
-### G:OBS-L9 review record
-
-Severity: High
-
-Severity basis: Same scoped trigger/consequence as P:F-INST-1; inherit its impact rating without creating another defect. The alias disposition and reproduction limits remain unchanged.
-
-G:OBS-L9: alias. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-obs-l9)
-
-<a id="obs-l16-a-failed-legacy-xml-install-reads-committed0-although-it-kept-changes"></a><!-- historical fragment alias -->
-<a id="g-obs-l16"></a>
-### G:OBS-L16 review record
-
-Severity: Low
-
-Severity basis: A failed legacy install may misreport retained changes as uncommitted. The Medium audit consequence is discounted because the exact legacy-provider path remains unqualified.
-
-G:OBS-L16: inconclusive/execution-scope-blocked. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-obs-l16)
-
-<a id="obs-l17-uninstalling-a-module-others-require-reports-success"></a><!-- historical fragment alias -->
-<a id="g-obs-l17"></a>
-### G:OBS-L17 review record
-
-Severity: Medium
-
-Severity basis: Same scoped trigger/consequence as P:F-UNIN-6; inherit its impact rating without creating another defect. The alias disposition and reproduction limits remain unchanged.
-
-G:OBS-L17: alias. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-obs-l17)
-
-<a id="obs-h7-q-15-dependency-records-are-labeled-load-keep-a-source-and-list-it-as-na"></a><!-- historical fragment alias -->
-<a id="g-obs-h7"></a>
-### G:OBS-H7 review record
-
-Severity: Low
-
-Severity basis: Dependency source is hidden in an install-only display while the stored source remains available. This is a display/policy record, not a demonstrated installation error.
-
-G:OBS-H7: policy-only/source-reviewed. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-obs-h7)
-
-<a id="obs-h12-q-13-a-purge-failure-stops-the-users-command"></a><!-- historical fragment alias -->
-<a id="g-obs-h12"></a>
-### G:OBS-H12 review record
-
-Severity: Low
-
-Severity basis: A failed maintenance purge could stop the requested command. The recoverable Medium command failure is discounted because an ordinary failing provider trigger is unconfirmed.
-
-G:OBS-H12: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-obs-h12)
-
-<a id="obs-h13-q-16-ipm-self-uninstall-with-full-cleanup-deletes-other-namespaces-in-progress-records"></a><!-- historical fragment alias -->
-<a id="g-obs-h13"></a>
-### G:OBS-H13 review record
-
-Severity: High
-
-Severity basis: Shared temporary history clearing could lose or mix another namespace's in-progress audit records. Potential Critical data loss is discounted one level because the concurrent trigger is unconfirmed.
-
-G:OBS-H13: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-obs-h13)
-
-<a id="obs-h15-self-uninstall-records-success-before-it-runs-and-exits-the-shell-even-when-skipped"></a><!-- historical fragment alias -->
-<a id="g-obs-h15"></a>
-### G:OBS-H15 review record
-
-Severity: Low
-
-Severity basis: A skipped self-uninstall may still report success and exit the shell. This rates the limited diagnostic/control-flow candidate; the full interactive outcome remains unqualified.
-
-G:OBS-H15: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-obs-h15)
-
-<a id="g-d7"></a>
-### G:D7 review record
-
-Severity: Low
-
-Severity basis: The raw-status display is documented and this allegation is withdrawn. Low labels the retained documentation/review record; no current defect is asserted.
-
-G:D7: withdrawn/source-settled. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-d7)
-
-<a id="g-obs-h9"></a>
-### G:OBS-H9 review record
-
-Severity: Low
-
-Severity basis: Unconfirmed global deletion is documented behavior and the allegation is withdrawn. Low labels the policy reference, not a newly alleged unsafe-delete defect.
-
-G:OBS-H9: withdrawn/source-settled. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-obs-h9)
-
-<a id="g-obs-h10"></a>
-### G:OBS-H10 review record
-
-Severity: Low
-
-Severity basis: The claimed empty namespace groups were refuted. Low is administrative priority for the closed display record; no surviving product consequence is asserted.
-
-G:OBS-H10: refuted. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-obs-h10)
-
-<a id="g-obs-l15"></a>
-### G:OBS-L15 review record
-
-Severity: Low
-
-Severity basis: Temporary LoadedResource lifetime is outside the reviewed functional contract. No material consequence through a supported caller is established; this remains a scoped reference record.
-
-G:OBS-L15: outside-functional-contract. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-obs-l15)
-
-<a id="g-oos-2"></a>
-### G:OOS-2 review record
-
-Severity: Low
-
-Severity basis: A verify phase has a history-coverage difference, but phase commands are excluded by the recorded history contract. This rates the observability/scope reference without reopening a defect.
-
-G:OOS-2: inconclusive/execution-scope-blocked. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-oos-2)
-
-<a id="g-oos-3"></a>
-### G:OOS-3 review record
-
-Severity: Low
-
-Severity basis: A skipped method is displayed as passed. Only misleading test-count output is established, not an incorrect command verdict or a demonstrated faulty release.
-
-G:OOS-3: outside-functional-contract. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#g-oos-3)
-
-<a id="c-d17"></a>
-### C:D17 review record
-
-Severity: Medium
-
-Severity basis: Authenticated metadata succeeds but protected artifact bytes cannot be downloaded; this blocks installation and is recoverable by fixing the request authentication.
-
-C:D17: defensive source/existing-evidence review only; outside active reproduction scope. [Preserved claim and scope](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#c-d17)
-
-<a id="c-d18"></a>
-### C:D18 review record
-
-Severity: High
-
-Severity basis: Existing evidence shows invalid artifact bytes reported as successfully extracted and activated. This is a false installation result; decoder and broader archive-safety claims remain outside scope.
-
-C:D18: defensive source/existing-evidence review only; outside active reproduction scope. [Preserved claim and scope](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#c-d18)
-
-<a id="c-d20"></a>
-### C:D20 review record
-
-Severity: High
-
-Severity basis: Repository credentials can reach a different origin or redirect hop. This rates potential credential disclosure, not an observed production compromise; the origin policy remains open.
-
-C:D20: defensive source/existing-evidence review only; outside active reproduction scope. [Preserved claim and scope](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#c-d20)
-
-<a id="c-d22"></a>
-### C:D22 review record
-
-Severity: Low
-
-Severity basis: Only digest spelling differs: uppercase hexadecimal rejects valid bytes. No integrity bypass is alleged, and real-registry prevalence remains unconfirmed.
-
-C:D22: defensive source/existing-evidence review only; outside active reproduction scope. [Preserved claim and scope](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#c-d22)
-
-<a id="c-d23"></a>
-### C:D23 review record
-
-Severity: Low
-
-Severity basis: An invalid attribute is silently ignored. The demonstrated consequence is missing validation/diagnostics; no authentication bypass is established.
-
-C:D23: defensive source/existing-evidence review only; outside active reproduction scope. [Preserved claim and scope](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#c-d23)
-
-<a id="c-d25"></a>
-### C:D25 review record
-
-Severity: High
-
-Severity basis: Same scoped trigger/consequence as P:F-UNIN-1; inherit its impact rating without creating another defect. The alias disposition and reproduction limits remain unchanged.
-
-C:D25: alias. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#c-d25)
-
-<a id="c-d26"></a>
-### C:D26 review record
-
-Severity: Medium
-
-Severity basis: A formerly declared web application remains after replacement and later uninstall, requiring administrator cleanup. Upgrade ownership policy remains unresolved.
-
-C:D26: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#c-d26)
-
-<a id="c-d30"></a>
-### C:D30 review record
-
-Severity: Low
-
-Severity basis: The service/listing selects a different deep-build tag while the checked installer selects the expected artifact. The demonstrated impact is misleading listing order.
-
-C:D30: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#c-d30)
-
-<a id="p-f-repo-1"></a>
-### P:F-REPO-1 review record
-
-Severity: Medium
-
-Severity basis: The selected token-auth protocol is ignored, causing valid authenticated registry requests to fail. No credential disclosure to a new destination is alleged for this entry.
-
-P:F-REPO-1: defensive source/existing-evidence review only; outside active reproduction scope. [Preserved claim and scope](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-repo-1)
-
-<a id="p-f-repo-10"></a>
-### P:F-REPO-10 review record
-
-Severity: High
-
-Severity basis: Publication can go to the wrong configured registry despite its publish flag. This is an incorrect publication destination with potential source exposure; no production disclosure is claimed.
-
-P:F-REPO-10: defensive source/existing-evidence review only; outside active reproduction scope. [Preserved claim and scope](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-repo-10)
-
-<a id="p-f-repo-11"></a>
-### P:F-REPO-11 review record
-
-Severity: High
-
-Severity basis: Changing an ORAS address retains credentials that can reach the new host. Potential Critical credential exposure is discounted for the unqualified delivery/authorization policy; source/existing-evidence review only.
-
-P:F-REPO-11: defensive source/existing-evidence review only; outside active reproduction scope. [Preserved claim and scope](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-repo-11)
-
-<a id="p-f-repo-2"></a>
-### P:F-REPO-2 review record
-
-Severity: Medium
-
-Severity basis: Documented SSL and publication endpoint options are ignored, preventing the intended registry configuration. No TLS-verification bypass or actual disclosure is inferred.
-
-P:F-REPO-2: defensive source/existing-evidence review only; outside active reproduction scope. [Preserved claim and scope](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-repo-2)
-
-<a id="p-f-repo-7"></a>
-### P:F-REPO-7 review record
-
-Severity: High
-
-Severity basis: A disabled registry can still be contacted with credentials or selected for publication. Potential Critical exposure is discounted because harmful-recipient/authorization consequences are unconfirmed.
-
-P:F-REPO-7: defensive source/existing-evidence review only; outside active reproduction scope. [Preserved claim and scope](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-repo-7)
-
-<a id="p-f-unin-3"></a>
-### P:F-UNIN-3 review record
-
-Severity: Medium
-
-Severity basis: Aliases skip self-uninstall safeguards and can leave the package manager unusable until reinstalled. Existing evidence supports administrative recovery impact, not a new authorization/exploitation claim.
-
-P:F-UNIN-3: defensive source/existing-evidence review only; outside active reproduction scope. [Preserved claim and scope](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-unin-3)
-
-<a id="p-f-unin-8"></a>
-### P:F-UNIN-8 review record
-
-Severity: High
-
-Severity basis: Recursive uninstall can remove the package manager mid-operation and leave partial cleanup/records behind. Core package-management operations remain unavailable until recovery.
-
-P:F-UNIN-8: defensive source/existing-evidence review only; outside active reproduction scope. [Preserved claim and scope](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-unin-8)
-
-<a id="p-f-dep-4"></a>
-### P:F-DEP-4 review record
-
-Severity: Low
-
-Severity basis: A dependency-scope comment contradicts the implemented/tested behavior. This is documentation drift.
-
-P:F-DEP-4: documentation-or-test-gap. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-dep-4)
-
-<a id="p-f-dep-5"></a>
-### P:F-DEP-5 review record
-
-Severity: Low
-
-Severity basis: A test comment still describes an already-fixed intersection edge case. This is stale documentation.
-
-P:F-DEP-5: documentation-or-test-gap. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-dep-5)
-
-<a id="p-f-dep-6"></a>
-### P:F-DEP-6 review record
-
-Severity: Low
-
-Severity basis: Empty/swallowing assertions weaken test evidence. No additional product failure follows from the test gap alone.
-
-P:F-DEP-6: documentation-or-test-gap. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-dep-6)
-
-<a id="p-f-hist-1"></a>
-### P:F-HIST-1 review record
-
-Severity: Critical
-
-Severity basis: Same scoped trigger/consequence as G:D1; inherit its impact rating without creating another defect. The alias disposition and reproduction limits remain unchanged.
-
-P:F-HIST-1: alias. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-hist-1)
-
-<a id="p-f-hist-10"></a>
-### P:F-HIST-10 review record
-
-Severity: Low
-
-Severity basis: The blanket deleted-active-row claim was withdrawn and now points to C:Q7. Low labels the retained policy/alias record; neither deletion/close schedule is newly called a defect.
-
-P:F-HIST-10: alias. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-hist-10)
-
-<a id="p-f-hist-2"></a>
-### P:F-HIST-2 review record
-
-Severity: Medium
-
-Severity basis: A developer-mode crash retains the module but leaves misleading commit/name history fields, impairing recovery diagnosis. The exact fresh crash-in-dependency gate remains open.
-
-P:F-HIST-2: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-hist-2)
-
-<a id="p-f-hist-3"></a>
-### P:F-HIST-3 review record
-
-Severity: Critical
-
-Severity basis: Same scoped trigger/consequence as G:D25; inherit its impact rating without creating another defect. The alias disposition and reproduction limits remain unchanged.
-
-P:F-HIST-3: alias. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-hist-3)
-
-<a id="p-f-hist-4"></a>
-### P:F-HIST-4 review record
-
-Severity: Low
-
-Severity basis: The retained record concerns an operator-selected terminal commit and its documentation. It does not establish a product defect under an accepted supported-input contract.
-
-P:F-HIST-4: documentation-or-test-gap. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-hist-4)
-
-<a id="p-f-hist-5"></a>
-### P:F-HIST-5 review record
-
-Severity: Medium
-
-Severity basis: Same scoped trigger/consequence as G:D9; inherit its impact rating without creating another defect. The alias disposition and reproduction limits remain unchanged.
-
-P:F-HIST-5: alias. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-hist-5)
-
-<a id="p-f-hist-6"></a>
-### P:F-HIST-6 review record
-
-Severity: Medium
-
-Severity basis: Same scoped trigger/consequence as G:D3; inherit its impact rating without creating another defect. The alias disposition and reproduction limits remain unchanged.
-
-P:F-HIST-6: alias. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-hist-6)
-
-<a id="p-f-hist-7"></a>
-### P:F-HIST-7 review record
-
-Severity: Low
-
-Severity basis: A narrow commit-to-marker window can misreport retained work. Medium audit impact is discounted because the deterministic witness uses a patched stall and the graceful-stop cause remains unidentified.
-
-P:F-HIST-7: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-hist-7)
-
-<a id="p-f-hist-8"></a>
-### P:F-HIST-8 review record
-
-Severity: Medium
-
-Severity basis: Restart can leave a misleading, editable unfinished audit row after changes survived. This affects administrative recovery; no fresh restart witness is claimed.
-
-P:F-HIST-8: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-hist-8)
-
-<a id="p-f-hist-9"></a>
-### P:F-HIST-9 review record
-
-Severity: Medium
-
-Severity basis: Same scoped trigger/consequence as G:D6; inherit its impact rating without creating another defect. The alias disposition and reproduction limits remain unchanged.
-
-P:F-HIST-9: alias. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-hist-9)
-
-<a id="p-f-inst-11"></a>
-### P:F-INST-11 review record
-
-Severity: Low
-
-Severity basis: Help/README descriptions disagree about developer bypass and reinstall version. This is documentation and unresolved-intent clarification, not a new runtime defect.
-
-P:F-INST-11: documentation-or-test-gap. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-inst-11)
-
-<a id="p-f-inst-2"></a>
-### P:F-INST-2 review record
-
-Severity: Low
-
-Severity basis: The mirror-role-change comment promises unsupported behavior and a test can skip silently. The retained issue is documentation/test quality.
-
-P:F-INST-2: documentation-or-test-gap. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-inst-2)
-
-<a id="p-f-inst-3"></a>
-### P:F-INST-3 review record
-
-Severity: Low
-
-Severity basis: Update interruption/failure tests assert too little. This rates a coverage gap without inventing another product failure.
-
-P:F-INST-3: documentation-or-test-gap. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-inst-3)
-
-<a id="p-f-load-1"></a>
-### P:F-LOAD-1 review record
-
-Severity: Low
-
-Severity basis: A failed clone is reported later as a missing manifest, obscuring its cause. The demonstrated issue is misleading diagnostics; the URL/shell boundary is not reprobed.
-
-P:F-LOAD-1: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-load-1)
-
-<a id="p-f-load-2"></a>
-### P:F-LOAD-2 review record
-
-Severity: Medium
-
-Severity basis: URL loads retain a clone in a temporary directory used by later reload/sync, creating persistent cleanup/source-location dependence. No URL/shell reproduction was run in this review.
-
-P:F-LOAD-2: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-load-2)
-
-<a id="p-f-load-3"></a>
-### P:F-LOAD-3 review record
-
-Severity: Medium
-
-Severity basis: A failed archive load can replace installed source files while database state rolls back, requiring administrator reconciliation. The excluded archive entry is not exercised or widened to irreversible business-data loss.
-
-P:F-LOAD-3: inconclusive/execution-scope-blocked. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-load-3)
-
-<a id="p-f-nsp-1"></a>
-### P:F-NSP-1 review record
-
-Severity: Medium
-
-Severity basis: Enable can report success despite installer failure, leaving the namespace incompletely enabled. This is visible, administratively repairable installation misbehavior.
-
-P:F-NSP-1: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-nsp-1)
-
-<a id="p-f-nsp-10"></a>
-### P:F-NSP-10 review record
-
-Severity: Low
-
-Severity basis: Legacy module records may remain unmigrated. Medium upgrade-management impact is discounted because the evidence uses simulated legacy records rather than a fully qualified old installation.
-
-P:F-NSP-10: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-nsp-10)
-
-<a id="p-f-nsp-11"></a>
-### P:F-NSP-11 review record
-
-Severity: Low
-
-Severity basis: Enable-community returns success after a component failure. Medium partial-enable impact is discounted because the exact current failure/consumer gate remains unqualified.
-
-P:F-NSP-11: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-nsp-11)
-
-<a id="p-f-nsp-12"></a>
-### P:F-NSP-12 review record
-
-Severity: Medium
-
-Severity basis: Same scoped trigger/consequence as G:D4; inherit its impact rating without creating another defect. The alias disposition and reproduction limits remain unchanged.
-
-P:F-NSP-12: alias. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-nsp-12)
-
-<a id="p-f-nsp-3"></a>
-### P:F-NSP-3 review record
-
-Severity: Low
-
-Severity basis: Version help omits the build labels that the command prints. This is display/documentation drift.
-
-P:F-NSP-3: documentation-or-test-gap. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-nsp-3)
-
-<a id="p-f-nsp-5"></a>
-### P:F-NSP-5 review record
-
-Severity: Medium
-
-Severity basis: Installing through an existing code mapping can update shared source code and leave ownership/unmap state inconsistent. Existing observations support an administrator-repairable mapping defect.
-
-P:F-NSP-5: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-nsp-5)
-
-<a id="p-f-nsp-7"></a>
-### P:F-NSP-7 review record
-
-Severity: Medium
-
-Severity basis: An ambiguous shared-code source can produce the wrong owner and skip repository mapping/warnings. This affects namespace administration; source-selection policy remains open.
-
-P:F-NSP-7: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-nsp-7)
-
-<a id="p-f-nsp-8"></a>
-### P:F-NSP-8 review record
-
-Severity: Low
-
-Severity basis: The argument-slot error causes extra configuration activations without a demonstrated final-state difference. A collation/data consequence is not asserted.
-
-P:F-NSP-8: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-nsp-8)
-
-<a id="p-f-nsp-9"></a>
-### P:F-NSP-9 review record
-
-Severity: Low
-
-Severity basis: Upgrade CLI scripts may be written under an unexpanded placeholder instead of installed. Medium missing-command impact is discounted because a genuine legacy-upgrade producer remains unqualified.
-
-P:F-NSP-9: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-nsp-9)
-
-<a id="p-f-repo-12"></a>
-### P:F-REPO-12 review record
-
-Severity: Medium
-
-Severity basis: A deployed platform-tagged version cannot be unpublished using its version. This breaks a registry-management operation and needs an administrator workaround.
-
-P:F-REPO-12: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-repo-12)
-
-<a id="p-f-repo-3"></a>
-### P:F-REPO-3 review record
-
-Severity: Low
-
-Severity basis: Publish selection help is stale relative to the supported fallback policy. This is documentation drift.
-
-P:F-REPO-3: documentation-or-test-gap. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-repo-3)
-
-<a id="p-f-repo-6"></a>
-### P:F-REPO-6 review record
-
-Severity: Low
-
-Severity basis: The claimed unrelated-class dispatch is unreachable through the supported parser and was refuted. Low labels the closed review record, not a surviving code-execution vulnerability.
-
-P:F-REPO-6: refuted/unreachable-CLI-trigger. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-repo-6)
-
-<a id="p-f-repo-9"></a>
-### P:F-REPO-9 review record
-
-Severity: Low
-
-Severity basis: An invalid repository type prompts rather than producing the intended diagnostic and can consume subsequent script input. No unrelated-class dispatch is inferred.
-
-P:F-REPO-9: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-repo-9)
-
-<a id="p-f-res-1"></a>
-### P:F-RES-1 review record
-
-Severity: Medium
-
-Severity basis: Same scoped trigger/consequence as C:D19; inherit its impact rating without creating another defect. The alias disposition and reproduction limits remain unchanged.
-
-P:F-RES-1: alias. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-res-1)
-
-<a id="p-f-res-2"></a>
-### P:F-RES-2 review record
-
-Severity: Low
-
-Severity basis: The documented register phase is absent or silently ineffective in a sequence. The established scope is an incomplete documented option and misleading status.
-
-P:F-RES-2: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-res-2)
-
-<a id="p-f-res-3"></a>
-### P:F-RES-3 review record
-
-Severity: Medium
-
-Severity basis: A developer-mode deployment command changes class/source availability despite saying it will only report. The shown effects require source reload/administrator repair; irreversible business-data loss is not established.
-
-P:F-RES-3: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-res-3)
-
-<a id="p-f-res-4"></a>
-### P:F-RES-4 review record
-
-Severity: Low
-
-Severity basis: A successful package command omits its output-file location without verbosity. This is missing user-facing information.
-
-P:F-RES-4: documentation-or-test-gap. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-res-4)
-
-<a id="p-f-res-5"></a>
-### P:F-RES-5 review record
-
-Severity: Low
-
-Severity basis: Command-file help specifies the wrong extension/JSON shape. This is documentation that misleads users into invalid inputs.
-
-P:F-RES-5: documentation-or-test-gap. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-res-5)
-
-<a id="p-f-res-6"></a>
-### P:F-RES-6 review record
-
-Severity: Low
-
-Severity basis: An exec example promises a persistent namespace change that is deliberately isolated. This is a documentation error.
-
-P:F-RES-6: documentation-or-test-gap. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-res-6)
-
-<a id="p-f-res-7"></a>
-### P:F-RES-7 review record
-
-Severity: Medium
-
-Severity basis: Long names are truncated in produced packages, making required artifacts unusable or missing under the expected name. The original input remains available; irreversible source-data loss is not asserted.
-
-P:F-RES-7: inconclusive/execution-scope-blocked. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-res-7)
-
-<a id="p-f-res-8"></a>
-### P:F-RES-8 review record
-
-Severity: Low
-
-Severity basis: Nested quiet output can close the outer null device and fail. Medium command failure is discounted because this audit has not qualified the ordinary nested command/reader beyond inherited test evidence.
-
-P:F-RES-8: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-res-8)
-
-<a id="p-f-sync-2"></a>
-### P:F-SYNC-2 review record
-
-Severity: Low
-
-Severity basis: The first sync after skip-sync deliberately absorbs a baseline; the flag documentation should disclose this. This is a documentation record.
-
-P:F-SYNC-2: documentation-or-test-gap. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-sync-2)
-
-<a id="p-f-unin-10"></a>
-### P:F-UNIN-10 review record
-
-Severity: Medium
-
-Severity basis: Cleanup leaves cache indices that prevent later filesystem-registry creation until they are repaired. This is recoverable administrative breakage.
-
-P:F-UNIN-10: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-unin-10)
-
-<a id="p-f-unin-11"></a>
-### P:F-UNIN-11 review record
-
-Severity: Low
-
-Severity basis: Level-zero self-Clean prints an orphan warning and may skip its expected hooks. The confirmed warning is misleading; the broader hook consequence remains unqualified.
-
-P:F-UNIN-11: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-unin-11)
-
-<a id="p-f-unin-7"></a>
-### P:F-UNIN-7 review record
-
-Severity: Low
-
-Severity basis: Untyped orphan listings contain system/mapped items that should not be treated as user-owned cleanup targets. Only misleading inventory output is established.
-
-P:F-UNIN-7: inconclusive. [Disposition, source and remaining gate](../uplift/consolidated/findings-audit-iter28/BUG-REVIEW.md#p-f-unin-7)

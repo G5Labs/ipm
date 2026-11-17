@@ -282,25 +282,25 @@
 [c-d71](../../Verus_verification/bugs_issues.md#c-d71)
 
 <a id="c-d17"></a>
-[c-d17](../../Verus_verification/bugs_issues.md#c-d17)
+[c-d17](findings-audit-iter28/BUG-REVIEW.md#c-d17)
 
 <a id="c-d18"></a>
-[c-d18](../../Verus_verification/bugs_issues.md#c-d18)
+[c-d18](findings-audit-iter28/BUG-REVIEW.md#c-d18)
 
 <a id="c-d20"></a>
-[c-d20](../../Verus_verification/bugs_issues.md#c-d20)
+[c-d20](findings-audit-iter28/BUG-REVIEW.md#c-d20)
 
 <a id="c-d22"></a>
-[c-d22](../../Verus_verification/bugs_issues.md#c-d22)
+[c-d22](findings-audit-iter28/BUG-REVIEW.md#c-d22)
 
 <a id="c-d23"></a>
-[c-d23](../../Verus_verification/bugs_issues.md#c-d23)
+[c-d23](findings-audit-iter28/BUG-REVIEW.md#c-d23)
 
 <a id="c-d25"></a>
-[c-d25](../../Verus_verification/bugs_issues.md#c-d25)
+[c-d25](findings-audit-iter28/BUG-REVIEW.md#c-d25)
 
 <a id="c-d26"></a>
-[c-d26](../../Verus_verification/bugs_issues.md#c-d26)
+[c-d26](findings-audit-iter28/BUG-REVIEW.md#c-d26)
 
 <a id="c-d30"></a>
-[c-d30](../../Verus_verification/bugs_issues.md#c-d30)
+[c-d30](findings-audit-iter28/BUG-REVIEW.md#c-d30)
