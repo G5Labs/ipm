@@ -2,7 +2,7 @@
 
 A repository install and an Artifactory resource each look up a package before fetching its bytes. The two providers handle credentials differently. The remote registry’s credential boundary is an open maintainer decision.
 
-The [ORAS archive boundary](../architecture/package-sources.g5.md#repo.oras.archive-boundary) covers OCI downloads and links to the proposed [signature verification rule](../architecture/package-sources.g5.md#repo.oras.signed-admission).
+The [ORAS archive boundary](../architecture/package-sources.g5.md#repo.oras.archive-boundary) covers OCI downloads. A repository configured with a trust server also [checks signatures](../architecture/package-sources.g5.md#repo.oras.signed-admission) before unpacking.
 
 ## Remote package registries
 

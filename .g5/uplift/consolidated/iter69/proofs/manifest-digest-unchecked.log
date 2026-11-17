@@ -1,0 +1,39 @@
+verification results:: 18 verified, 2 errors
+error: postcondition not satisfied
+   --> manifest_digest_unchecked.rs:232:9
+    |
+232 | /         ({
+233 | |             let outcome = retrieve(config, listing, tag, manifest, parsed, blob);
+234 | |             let decision = protected_admission(
+235 | |                 abs_target(config, path, tag), abs_policy(config, snapshot), abs_manifest(manifest, parsed),
+...   |
+240 | |             &&& (outcome is Stream ==> outcome->package == abs_observed(blob))
+241 | |         }),
+    | |__________^ failed this postcondition
+242 |   {
+243 | /     match listing {
+244 | |         Listing::Verified { server, root, rows, true_rows, names_safe } => lemma_select_is_docker_row(rows, tag),
+245 | |         _ => {},
+246 | |     }
+    | |_____- at the end of the function body
+
+error: postcondition not satisfied
+   --> manifest_digest_unchecked.rs:328:9
+    |
+322 | / pub proof fn snapshot_pins_metadata_and_payload(
+323 | |     cache: Cache, repo: int, config: Config, gun: int, tag: int,
+324 | |     first: Listing, second: Listing,
+325 | |     manifest: Received, parsed: Parsed, blob: Received,
+326 | | )
+    | |_- at the end of the function body
+327 |       ensures
+328 | /         ({
+329 | |             let (metadata_listing, after) = lookup(cache, key_for(repo, config, gun), first);
+330 | |             let (payload_listing, _) = lookup(after, key_for(repo, config, gun), second);
+331 | |             &&& payload_listing == metadata_listing
+...   |
+336 | |                     })
+337 | |         }),
+    | |__________^ failed this postcondition
+
+error: aborting due to 2 previous errors

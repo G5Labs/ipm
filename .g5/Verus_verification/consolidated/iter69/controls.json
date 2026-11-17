@@ -1,0 +1,48 @@
+{
+  "implementation.rs": {
+    "untrusted-delegation-accepted": [
+      "match role { Role::Releases => true, Role::Targets => true, Role::Other => false }",
+      "match role { Role::Releases => true, Role::Targets => true, Role::Other => true }"
+    ],
+    "trust-server-or-root-unchecked": [
+      "if server == config.trust_server && root == config.pinned_root && names_safe { select(rows, tag) } else { None },",
+      "if names_safe { select(rows, tag) } else { None },"
+    ],
+    "manifest-digest-unchecked": [
+      "if manifest.digest == row.digest && manifest.size == row.size {",
+      "if manifest.size == row.size {"
+    ],
+    "first-of-several-package-layers": [
+      "pub open spec fn package_layer(parsed: Parsed) -> Option<Descriptor> {\n    if parsed.package_layers.len() == 1 {",
+      "pub open spec fn package_layer(parsed: Parsed) -> Option<Descriptor> {\n    if parsed.package_layers.len() >= 1 {"
+    ],
+    "package-digest-unchecked": [
+      "if blob.digest == layer.digest && blob.size == layer.size {",
+      "if blob.size == layer.size {"
+    ],
+    "package-size-unchecked": [
+      "if blob.digest == layer.digest && blob.size == layer.size {",
+      "if blob.digest == layer.digest {"
+    ],
+    "provider-pull-unpacks": [
+      "Effects { provider_unpacked: false,",
+      "Effects { provider_unpacked: true,"
+    ],
+    "cached-timestamp-kept": [
+      "notary_list(reachable, false, answer, cached)",
+      "notary_list(reachable, true, answer, cached)"
+    ],
+    "payload-looks-up-again": [
+      "    if cache.entries.contains_key(key) {\n        (cache.entries[key], cache)",
+      "    if false {\n        (cache.entries[key], cache)"
+    ],
+    "snapshot-ignores-trust-server": [
+      "Key { repo, server: config.trust_server, gun }",
+      "Key { repo, server: 0, gun }"
+    ],
+    "unsafe-target-names-accepted": [
+      "if server == config.trust_server && root == config.pinned_root && names_safe { select(rows, tag) } else { None },",
+      "if server == config.trust_server && root == config.pinned_root { select(rows, tag) } else { None },"
+    ]
+  }
+}

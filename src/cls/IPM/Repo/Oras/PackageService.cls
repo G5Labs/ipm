@@ -1,4 +1,4 @@
-Include %IPM.Common
+Include (%IPM.Common, %IPM.Formatting)
 
 Class %IPM.Repo.Oras.PackageService Extends %IPM.Repo.Http.PackageService
 {
@@ -24,6 +24,13 @@ Method ModuleNameFromRepository(repository As %String) As %String
 
 /// Name of the repo definition this service was built from, for messages.
 Property RepoName As %String(MAXLEN = "");
+
+/// Docker Content Trust server that packages from this repo must be signed on, or "" to accept unsigned packages.
+/// See <class>%IPM.Repo.Oras.ContentTrust</class>.
+Property TrustServer As %IPM.DataType.RepoLocation;
+
+/// Media type of the layer holding a package archive, as ORAS pushes a file.
+Parameter PACKAGELAYERMEDIATYPE = "application/vnd.oci.image.layer.v1.tar";
 
 /// Result of ProbeCredentials once RegistryFailure has needed it, otherwise "".
 Property CredentialsProbe As %String [ Private ];
@@ -235,6 +242,15 @@ Method GetModule(
 	Output AsArchive As %Boolean = 0) As %Stream.Object
 {
     set tag = ..TagForReference(pModuleReference)
+    if (..TrustServer '= "") {
+        try {
+            set stream = ..GetTrustedModule(pModuleReference.Name, tag)
+        } catch e {
+            throw ..ClassifyException(e, pModuleReference.Name)
+        }
+        set AsArchive = 1
+        return stream
+    }
     try {
         set status = ..Pull(..Location, pModuleReference.Name, tag, ..Namespace, ..Username, ..Password, ..Token, ..TokenAuthMethod, .stream)
     } catch e {
@@ -248,10 +264,16 @@ Method GetModule(
 
 Method GetModuleManifest(pModuleReference As %IPM.Storage.ModuleInfo) As %Stream.Object
 {
-    set name = pModuleReference.Name _ ":" _ ..TagForReference(pModuleReference)
+    set tag = ..TagForReference(pModuleReference)
+    set name = pModuleReference.Name _ ":" _ tag
     // GetModuleXML returns a string, but callers expect a stream per %IPM.Repo.IPackageService
     try {
-        set moduleXML = ..GetModuleXML(..Location, name, ..Namespace, ..Username, ..Password, ..Token, ..TokenAuthMethod)
+        if (..TrustServer '= "") {
+            set manifest = ..TrustedManifest(..AppendNamespace(pModuleReference.Name), tag)
+            set moduleXML = ..ModuleXMLAnnotation(manifest)
+        } else {
+            set moduleXML = ..GetModuleXML(..Location, name, ..Namespace, ..Username, ..Password, ..Token, ..TokenAuthMethod)
+        }
     } catch e {
         throw ..ClassifyException(e, pModuleReference.Name)
     }
@@ -281,6 +303,10 @@ ClassMethod TagForReference(moduleReference As %IPM.Storage.ModuleInfo) As %Stri
 
 Method HasModule(pModuleReference As %IPM.Storage.ModuleInfo) As %Boolean
 {
+    if (..TrustServer '= "") {
+        set repository = ..GetAPITarget(..Location, ..AppendNamespace(pModuleReference.Name))
+        return ##class(%IPM.Repo.Oras.ContentTrust).SignedTargets(..TrustServer, repository, ..RepoName).%IsDefined($$$Semver2Tag(pModuleReference.VersionString))
+    }
     set name = pModuleReference.Name _ ":" _ $$$Semver2Tag(pModuleReference.VersionString)
 
     #; Get ORAS client
@@ -375,7 +401,24 @@ Method AddModulesFromTags(
 	name As %String,
 	ByRef moduleList As %ListOfObjects) [ Private ]
 {
-    set allTagsString = ..GetAllTags(..Location, name, "", client)
+    if (..TrustServer '= "") {
+        // Only signed tags are offered, so a version is selected from the same trust data that its download is checked against
+        set signedTargets = ""
+        try {
+            set signedTargets = ##class(%IPM.Repo.Oras.ContentTrust).SignedTargets(..TrustServer, ..GetAPITarget(..Location, name), ..RepoName)
+        } catch e {
+            do ..SkipUntrusted(e, ..ModuleNameFromRepository(name))
+        }
+        if '$isobject(signedTargets) {
+            return
+        }
+        set allTagsString = ..SortTags(signedTargets.%ToJSON())
+        if (searchCriteria.Name '= "") && ($$$lcase($piece(name, "/", *)) = $$$lcase(searchCriteria.Name)) {
+            do ..WarnUnsignedVersions(name, client, signedTargets, semverExpr)
+        }
+    } else {
+        set allTagsString = ..GetAllTags(..Location, name, "", client)
+    }
     set allVersionsList = ..AggregatePlatformVersions($listfromstring(allTagsString, ", "), .aggregatedPlatformVersion)
     // The tri-states of AllVersions that report a single version should report one this platform
     // can actually install. The empty state reports every version, so its order doesn't matter.
@@ -404,7 +447,20 @@ Method AddModulesFromTags(
         }
 
         // get metadata from annotations
-        set metadata = ..GetPackageMetadata(..Location, name, tag, "", client)
+        if (..TrustServer '= "") {
+            set manifest = ""
+            try {
+                set manifest = ..TrustedManifest(name, tag, 1)
+            } catch e {
+                do ..SkipUntrusted(e, ..ModuleNameFromRepository(name) _ " " _ $$$Tag2Semver(tag))
+            }
+            if '$isobject(manifest) {
+                continue
+            }
+            set metadata = ..Annotations(manifest).%ToJSON()
+        } else {
+            set metadata = ..GetPackageMetadata(..Location, name, tag, "", client)
+        }
         set artifactMetadata = ##class(%IPM.Repo.Oras.ArtifactMetadata).%New()
         $$$ThrowOnError(artifactMetadata.%JSONImport(metadata))
 
@@ -421,7 +477,11 @@ Method AddModulesFromTags(
             // Otherwise fetch module.xml to check namespaced Name and ExternalName
             if 'packageNameMatches {
                 // Note: pass empty namespace since 'name' already includes the full path
-                set moduleXMLText = ..GetModuleXML(..Location, name _ ":" _ tag, "", ..Username, ..Password, ..Token, ..TokenAuthMethod)
+                if (..TrustServer '= "") {
+                    set moduleXMLText = ..ModuleXMLAnnotation(manifest)
+                } else {
+                    set moduleXMLText = ..GetModuleXML(..Location, name _ ":" _ tag, "", ..Username, ..Password, ..Token, ..TokenAuthMethod)
+                }
 
                 if (moduleXMLText '= "") {
                     // Parse module.xml
@@ -765,6 +825,280 @@ ClassMethod IsOrasUnreadable(pythonDir As %String) As %Boolean [ Internal, Langu
     except OSError:
         return False
     return False
+}
+
+// ** CONTENT TRUST FUNCTIONS **
+
+/// Returns path, a repository path within the registry, prefixed with this service's namespace.
+/// e.g. with namespace "packages", "module-a" -> "packages/module-a"
+Method AppendNamespace(path As %String) As %String
+{
+    return $select(..Namespace = "": path, 1: ..AppendURIs(..Namespace, path))
+}
+
+/// Returns the manifest that the trust server signed as tag of repository path, e.g. path "packages/module-a".
+/// The manifest is fetched by the signed digest and its bytes are checked against the signed digest and size.
+/// With ifMissing, returns "" when the registry no longer has the signed manifest; otherwise that throws.
+Method TrustedManifest(
+	path As %String,
+	tag As %String,
+	ifMissing As %Boolean = 0) As %DynamicObject
+{
+    set repository = ..GetAPITarget(..Location, path)
+    set target = ##class(%IPM.Repo.Oras.ContentTrust).TrustedTarget(..TrustServer, repository, tag, ..RepoName)
+    try {
+        set text = ..FetchTrustedManifest(..Location, repository, target.digest, target.size, ..Username, ..Password, ..Token, ..TokenAuthMethod)
+    } catch e {
+        set failure = ##class(%IPM.Repo.Oras.HttpException).FromException(e)
+        if ifMissing && $isobject(failure) && (failure.StatusCode = 404) {
+            return ""
+        }
+        throw ..MismatchAsError(e)
+    }
+    try {
+        set manifest = {}.%FromJSON(text)
+    } catch e {
+        set manifest = ""
+    }
+    if '$isobject(manifest) || 'manifest.%IsA("%DynamicObject") {
+        $$$ThrowStatus($$$ERROR($$$GeneralError, $$$FormatText("The signed manifest of '%1:%2' is not a JSON object.", repository, tag)))
+    }
+    return manifest
+}
+
+/// Returns the annotations of manifest, or {} if it has none.
+ClassMethod Annotations(manifest As %DynamicObject) As %DynamicObject
+{
+    set annotations = manifest.%Get("annotations")
+    return $select($isobject(annotations) && annotations.%IsA("%DynamicObject"): annotations, 1: {})
+}
+
+/// Returns the module.xml text that manifest carries in its annotations, or "" if it has none.
+ClassMethod ModuleXMLAnnotation(manifest As %DynamicObject) As %String
+{
+    return $zstrip(..Annotations(manifest).%Get("com.intersystems.ipm.module.v1+xml"), "<>WC")
+}
+
+/// Returns the descriptor of the package archive layer in manifest, the signed manifest of reference.
+/// Throws unless there is exactly one, since otherwise the signature does not identify one package.
+ClassMethod PackageLayer(
+	manifest As %DynamicObject,
+	reference As %String) As %DynamicObject
+{
+    set layers = manifest.%Get("layers")
+    set package = ""
+    if $isobject(layers) && layers.%IsA("%DynamicArray") {
+        set iterator = layers.%GetIterator()
+        while iterator.%GetNext(, .layer) {
+            if '$isobject(layer) || (layer.%Get("mediaType") '= ..#PACKAGELAYERMEDIATYPE) {
+                continue
+            }
+            if $isobject(package) {
+                $$$ThrowStatus($$$ERROR($$$GeneralError, $$$FormatText("The signed manifest of '%1' has more than one package layer.", reference)))
+            }
+            set package = layer
+        }
+    }
+    if '$isobject(package) {
+        $$$ThrowStatus($$$ERROR($$$GeneralError, $$$FormatText("The signed manifest of '%1' has no package layer.", reference)))
+    }
+    if '$match(package.%Get("digest"), "sha256:[0-9a-f]{64}") || '$match(package.%Get("size"), "[0-9]+") {
+        $$$ThrowStatus($$$ERROR($$$GeneralError, $$$FormatText("The package layer in the signed manifest of '%1' has no valid sha256 digest and size.", reference)))
+    }
+    return package
+}
+
+/// Downloads the package archive of moduleName with tag after checking it against the trust server, and returns it.
+/// The archive is fetched by the digest in the signed manifest and its bytes are checked before anything unpacks them.
+Method GetTrustedModule(
+	moduleName As %String,
+	tag As %String) As %Stream.FileBinary
+{
+    set path = ..AppendNamespace(moduleName)
+    set manifest = ..TrustedManifest(path, tag)
+    set repository = ..GetAPITarget(..Location, path)
+    set layer = ..PackageLayer(manifest, repository _ ":" _ tag)
+    set directory = ##class(%File).NormalizeDirectory(##class(%IPM.Utils.File).CreateTempDirectory() _ moduleName _ "/" _ tag)
+    if '##class(%File).CreateDirectoryChain(directory, .createError) {
+        $$$ThrowStatus($$$ERROR($$$GeneralError, $$$FormatText("Unable to create download directory '%1': error %2", directory, createError)))
+    }
+    set file = directory _ "package.tgz"
+    try {
+        do ..DownloadTrustedBlob(..Location, repository, layer.%Get("digest"), layer.%Get("size"), file, ..Username, ..Password, ..Token, ..TokenAuthMethod)
+    } catch e {
+        throw ..MismatchAsError(e)
+    }
+    set stream = ##class(%Stream.FileBinary).%New()
+    $$$ThrowOnError(stream.LinkToFile(file))
+    return stream
+}
+
+/// Rethrows e if it is a system error or a failed registry response, which lookups handle as for any repo.
+/// Otherwise warns, once per shell command, that this repo does not offer what because its trust check failed,
+/// so one package or version that fails does not hide the others.
+Method SkipUntrusted(
+	e As %Exception.AbstractException,
+	what As %String)
+{
+    if e.%IsA("%Exception.SystemException") || ##class(%IPM.Repo.Oras.HttpException).IsRegistryFailure(e) {
+        throw e
+    }
+    if (..RepoName '= "") && $data($$$RepoLookupState) {
+        if $data($$$RepoLookupState(..RepoName, "untrusted", what)) {
+            return
+        }
+        set $$$RepoLookupState(..RepoName, "untrusted", what) = ""
+    }
+    set msg = $$$FormatText("WARNING: Repo '%1' does not offer %2: %3", ..RepoName, what, ##class(%IPM.Main).ErrorText(..MismatchAsError(e).AsStatus()))
+    write !, $$$FormattedLine($$$Yellow, msg)
+}
+
+/// Returns e as an IPM error with just its message if it is the ValueError FetchTrustedManifest or DownloadTrustedBlob
+/// raise when bytes do not match their signed digest and size, otherwise e.
+ClassMethod MismatchAsError(e As %Exception.AbstractException) As %Exception.AbstractException
+{
+    set marker = "<class 'ValueError'>: "
+    if e.%IsA("%Exception.PythonException") && (e.Data [ marker) {
+        return ##class(%Exception.StatusException).CreateFromStatus($$$ERROR($$$GeneralError, $piece(e.Data, marker, 2, *)))
+    }
+    return e
+}
+
+/// Warns, once per shell command, about versions of repository path that satisfy semverExpr in the registry
+/// but have no trusted signature among signedTargets, since this repo does not offer them.
+Method WarnUnsignedVersions(
+	path As %String,
+	client As %SYS.Python,
+	signedTargets As %DynamicObject,
+	semverExpr As %IPM.General.SemanticVersionExpression)
+{
+    set once = (..RepoName '= "") && $data($$$RepoLookupState)
+    if once && $data($$$RepoLookupState(..RepoName, "unsigned", path)) {
+        return
+    }
+    set unsigned = ""
+    // Only explains a refusal, so failing to list the registry's tags must not fail the lookup
+    try {
+        set tags = $listfromstring(..GetAllTags(..Location, path, "", client), ", ")
+    } catch e {
+        if e.%IsA("%Exception.SystemException") {
+            throw e
+        }
+        return
+    }
+    set pointer = 0
+    while $listnext(tags, pointer, tag) {
+        if (tag = "") || signedTargets.%IsDefined(tag) {
+            continue
+        }
+        set version = ##class(%IPM.General.SemanticVersion).FromString($$$Tag2Semver($piece(tag, $$$OrasTagPlatformSeparator)))
+        if $isobject(version) && version.Satisfies(semverExpr) {
+            set unsigned = unsigned _ $listbuild($$$Tag2Semver(tag))
+        }
+    }
+    if (unsigned = "") {
+        return
+    }
+    if once {
+        set $$$RepoLookupState(..RepoName, "unsigned", path) = ""
+    }
+    set msg = $$$FormatText("WARNING: Repo '%1' does not offer these versions of '%2' because trust server %3 has no signature for them: %4", ..RepoName, ..ModuleNameFromRepository(path), ..TrustServer, $listtostring(unsigned, ", "))
+    write !, $$$FormattedLine($$$Yellow, msg)
+}
+
+/// Returns tagsJSON, a JSON object keyed by tag, as a comma separated string of its tags with higher versions first, as GetAllTags does.
+ClassMethod SortTags(tagsJSON As %String) As %String [ Language = python ]
+{
+    import iris
+    import json
+
+    tags = iris.cls("%IPM.Utils.EmbeddedPython").SortOCITags(list(json.loads(tagsJSON).keys()), 1)
+    return ", ".join(str(x) for x in tags)
+}
+
+/// Returns the manifest with digest and size in repository, e.g. "registry.example.com/ns/module", as text.
+/// Throws unless the bytes the registry returns have exactly that digest and size.
+ClassMethod FetchTrustedManifest(
+	registry As %String,
+	repository As %String,
+	digest As %String,
+	size As %Integer,
+	username As %String,
+	password As %String,
+	token As %String,
+	tokenAuthMethod As %String) As %String [ Language = python ]
+{
+    import hashlib
+    import iris
+
+    service = iris.cls("%IPM.Repo.Oras.PackageService")
+    helper = service.OrasHelper()
+    client = service.GetClient(registry, username, password, token, tokenAuthMethod)
+    url = f"{client.prefix}://{client.get_container(repository).manifest_url(digest)}"
+    # Send the configured credentials up front, as oras-py's get_blob does
+    headers = dict(client.headers)
+    headers["Accept"] = "application/vnd.oci.image.manifest.v1+json, application/vnd.docker.distribution.manifest.v2+json"
+    response = client.call("do_request", url, "GET", headers=headers, stream=True)
+    with response:
+        if not (200 <= response.status_code < 300):
+            raise helper.RegistryHttpError(response)
+        # Read one byte past the signed size, so a longer manifest is refused without reading all of it
+        data = b""
+        for chunk in response.iter_content(chunk_size=65536):
+            data += chunk
+            if len(data) > size:
+                break
+    actual = "sha256:" + hashlib.sha256(data).hexdigest()
+    if (len(data) != size) or (actual != digest):
+        received = f"more than {size} bytes" if len(data) > size else f"{len(data)} bytes with digest {actual}"
+        raise ValueError(f"The registry's manifest for {repository}@{digest} does not match the signed manifest of {size} bytes: received {received}.")
+    return data.decode("utf-8")
+}
+
+/// Downloads the blob with digest and size in repository to outfile, without unpacking it.
+/// Throws, leaving no outfile, unless the downloaded bytes have exactly that digest and size.
+ClassMethod DownloadTrustedBlob(
+	registry As %String,
+	repository As %String,
+	digest As %String,
+	size As %Integer,
+	outfile As %String,
+	username As %String,
+	password As %String,
+	token As %String,
+	tokenAuthMethod As %String) [ Language = python ]
+{
+    import hashlib
+    import iris
+    import os
+
+    service = iris.cls("%IPM.Repo.Oras.PackageService")
+    helper = service.OrasHelper()
+    client = service.GetClient(registry, username, password, token, tokenAuthMethod)
+    url = f"{client.prefix}://{client.get_container(repository).get_blob_url(digest)}"
+    os.makedirs(os.path.dirname(outfile), exist_ok=True)
+    received = 0
+    hasher = hashlib.sha256()
+    try:
+        response = client.call("do_request", url, "GET", headers=dict(client.headers), stream=True)
+        with response:
+            if not (200 <= response.status_code < 300):
+                raise helper.RegistryHttpError(response)
+            with open(outfile, "wb") as f:
+                for chunk in response.iter_content(chunk_size=65536):
+                    received += len(chunk)
+                    if received > size:
+                        break
+                    hasher.update(chunk)
+                    f.write(chunk)
+        actual = "sha256:" + hasher.hexdigest()
+        if (received != size) or (actual != digest):
+            detail = f"more than {size} bytes" if received > size else f"{received} bytes with digest {actual}"
+            raise ValueError(f"The package downloaded from {repository}@{digest} does not match its signed descriptor of {size} bytes: received {detail}.")
+    except BaseException:
+        if os.path.exists(outfile):
+            os.remove(outfile)
+        raise
 }
 
 /// Pulls the specified module to disk and returns the module in tgz form as %Stream.FileBinary

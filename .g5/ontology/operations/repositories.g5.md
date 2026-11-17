@@ -12,6 +12,7 @@ Operators choose which package sources a namespace can use and which allow publi
 - Credentials can come from `-password-stdin`, `-password-env` or `-token-env`.
 - `-publish 1` allows publishing to a repository.
 - `-copy-from` copies repository settings from another namespace.
+- `-trust-server` makes an ORAS repository [check signatures](../architecture/package-sources.g5.md#repo.oras.signed-admission) on a Docker Content Trust server.
 
 ## Community registry on a new installation
 

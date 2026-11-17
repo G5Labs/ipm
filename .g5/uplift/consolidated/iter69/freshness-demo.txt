@@ -1,0 +1,21 @@
+# iter69 freshness gate demonstration (2026-11-17T17:32:14Z)
+
+## 1. Unchanged inputs
+Saved evidence matches the model, controls, source bindings, product inputs and test fixtures
+
+## 2. Formal input changed: implementation.rs widens trusted_role to every role
+AssertionError: STALE model implementation.rs: rerun --proofs-only
+
+## 3. Source-only change: ContentTrust.cls trusts targets/other as well
+AssertionError: STALE correspondence [('trust-verifier', 'src/cls/IPM/Repo/Oras/ContentTrust.cls::TRUSTEDROLES')]: reread the source, update bindings.json and rerun
+
+## 4. Restored
+Saved evidence matches the model, controls, source bindings, product inputs and test fixtures
+
+## 5. New writer outside the bound spans: PackageService.cls gains a method that clears TrustServer
+AssertionError: STALE native receipt for ['src/cls/IPM/Repo/Oras/PackageService.cls']: rerun --native-only
+
+## 6. Restored
+Saved evidence matches the model, controls, source bindings, product inputs and test fixtures
+
+Limit: a new writer in a production file outside run.py's PRODUCT list (for example Main.cls) changes no hashed input here. The foundation census in common30/freshness.py reports added and removed files only.
