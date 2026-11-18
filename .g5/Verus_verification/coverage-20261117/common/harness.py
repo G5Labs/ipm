@@ -156,7 +156,9 @@ def main(here):
   bridge.write_text(head.replace('pub proof fn observations() {\n','')+''.join('pub proof fn observation_'+str(i)+'() {\n'+cfg.get('replay_preludes',{}).get(key,cfg.get('replay_prelude',''))+assertions[i]+'\n}\n' for i,key in enumerate(cfg['replay']))+'}\nfn main() {}\n')
  replay=proof(bridge,bridge.with_suffix('.log'));assert replay['exit']==0,replay
  flipped=[]
- for i,(key,expr) in enumerate(list(cfg['replay'].items())[:3]):
+ flip_keys=cfg.get('flip_fields') or list(cfg['replay'])[:3]
+ for key in flip_keys:
+  i=list(cfg['replay']).index(key);expr=cfg['replay'][key]
   prelude=cfg.get('replay_preludes',{}).get(key,cfg.get('replay_prelude',''))
   focused=head.replace('pub proof fn observations() {\n','')+'pub proof fn observation_'+str(i)+'() {\n'+prelude+assertions[i]+'\n}\n}\nfn main() {}\n'
   barrier=cfg.get('focused_replay_barrier',False)

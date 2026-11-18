@@ -1,0 +1,41 @@
+verification results:: 94 verified, 2 errors
+error: postcondition not satisfied
+    --> /home/ziniu_wu_g5labs_ai/experiments/model-coverage-uplift-20261117/ipm/ipm/.g5/uplift/coverage-20261117/iter73/proofs/controls/grouping.rs/tests-branch-swapped.rs:1258:13
+     |
+1255 |   pub proof fn test_class_has_unittest_entry(ts: Seq<File>, tf: Seq<int>, tkeys: Seq<(Seq<int>, int)>, i: int)
+     |   ------------------------------------------------------------------------------------------------------------ at the end of the function body
+...
+1258 |       ensures ({
+     |  _____________^
+1259 | |         let ex = Excl { base: tf, tests: None };
+1260 | |         let w = add_packages(ts, ex, tkeys, Some(tf));
+1261 | |         let p = group(ts, ex, directory(ts[i]), ts[i].name[0]).unwrap();
+...    |
+1264 | |         &&& w.0.len() == 0
+1265 | |     }),
+     | |______^ failed this postcondition
+
+note: function body check: not all errors may have been reported; rerun with a higher value for --multiple-errors to find other potential errors in this function
+    --> /home/ziniu_wu_g5labs_ai/experiments/model-coverage-uplift-20261117/ipm/ipm/.g5/uplift/coverage-20261117/iter73/proofs/controls/grouping.rs/tests-branch-swapped.rs:1273:1
+     |
+1273 | pub proof fn source_listing_adds_no_unittest(s: Seq<File>, ex: Excl, keys: Seq<(Seq<int>, int)>)
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: postcondition not satisfied
+    --> /home/ziniu_wu_g5labs_ai/experiments/model-coverage-uplift-20261117/ipm/ipm/.g5/uplift/coverage-20261117/iter73/proofs/controls/grouping.rs/tests-branch-swapped.rs:1274:13
+     |
+1273 | pub proof fn source_listing_adds_no_unittest(s: Seq<File>, ex: Excl, keys: Seq<(Seq<int>, int)>)
+     | ------------------------------------------------------------------------------------------------ at the end of the function body
+1274 |     ensures add_packages(s, ex, keys, None).1.len() == 0, add_packages(s, ex, keys, None).0 == pkg_entries(s, ex, keys),
+     |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: postcondition not satisfied
+    --> /home/ziniu_wu_g5labs_ai/experiments/model-coverage-uplift-20261117/ipm/ipm/.g5/uplift/coverage-20261117/iter73/proofs/controls/grouping.rs/tests-branch-swapped.rs:1274:59
+     |
+1273 | pub proof fn source_listing_adds_no_unittest(s: Seq<File>, ex: Excl, keys: Seq<(Seq<int>, int)>)
+     | ------------------------------------------------------------------------------------------------ at the end of the function body
+1274 |     ensures add_packages(s, ex, keys, None).1.len() == 0, add_packages(s, ex, keys, None).0 == pkg_entries(s, ex, keys),
+     |                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: aborting due to 3 previous errors
+

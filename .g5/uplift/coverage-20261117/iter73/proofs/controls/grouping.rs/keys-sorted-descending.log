@@ -1,0 +1,33 @@
+verification results:: 95 verified, 1 errors
+note: function body check: not all errors may have been reported; rerun with a higher value for --multiple-errors to find other potential errors in this function
+    --> /home/ziniu_wu_g5labs_ai/experiments/model-coverage-uplift-20261117/ipm/ipm/.g5/uplift/coverage-20261117/iter73/proofs/controls/grouping.rs/keys-sorted-descending.rs:1002:1
+     |
+1002 | pub proof fn lemma_keys_sorted(s: Seq<File>, ex: Excl, keys: Seq<(Seq<int>, int)>, p: int, q: int)
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: postcondition not satisfied
+    --> /home/ziniu_wu_g5labs_ai/experiments/model-coverage-uplift-20261117/ipm/ipm/.g5/uplift/coverage-20261117/iter73/proofs/controls/grouping.rs/keys-sorted-descending.rs:1004:13
+     |
+1004 |       ensures lex_lt(order_key(s, ex, keys[p]), order_key(s, ex, keys[q])),
+     |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+...
+1008 | /     if q < keys.len() - 1 {
+1009 | |         lemma_keys_sorted(s, ex, k0, p, q);
+1010 | |         assert(k0[p] == keys[p] && k0[q] == keys[q]);
+1011 | |     } else if p < keys.len() - 2 {
+...    |
+1014 | |         lex_trans(order_key(s, ex, keys[p]), order_key(s, ex, keys[keys.len() - 2]), order_key(s, ex, keys[q]));
+1015 | |     }
+     | |_____- at the end of the function body
+
+error: precondition not satisfied
+    --> /home/ziniu_wu_g5labs_ai/experiments/model-coverage-uplift-20261117/ipm/ipm/.g5/uplift/coverage-20261117/iter73/proofs/controls/grouping.rs/keys-sorted-descending.rs:1014:9
+     |
+ 993 |     requires lex_lt(a, c), lex_lt(c, e),
+     |                            ------------ failed precondition
+...
+1014 |         lex_trans(order_key(s, ex, keys[p]), order_key(s, ex, keys[keys.len() - 2]), order_key(s, ex, keys[q]));
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: aborting due to 2 previous errors
+

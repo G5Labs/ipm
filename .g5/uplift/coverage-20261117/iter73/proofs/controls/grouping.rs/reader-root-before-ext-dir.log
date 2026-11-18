@@ -1,0 +1,27 @@
+verification results:: 93 verified, 3 errors
+error: postcondition not satisfied
+    --> /home/ziniu_wu_g5labs_ai/experiments/model-coverage-uplift-20261117/ipm/ipm/.g5/uplift/coverage-20261117/iter73/proofs/controls/grouping.rs/reader-root-before-ext-dir.rs:1299:9
+     |
+1297 | pub proof fn reader_directory_rule(e: Entry)
+     | -------------------------------------------- at the end of the function body
+1298 |     ensures e.dir.len() > 0 ==> reader_dir(e, true) == e.dir && reader_dir(e, false) == e.dir,
+1299 |         e.dir.len() == 0 ==> reader_dir(e, true) == seq![entry_ext(e)] && reader_dir(e, false) == Seq::<int>::empty(),
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: postcondition not satisfied
+    --> /home/ziniu_wu_g5labs_ai/experiments/model-coverage-uplift-20261117/ipm/ipm/.g5/uplift/coverage-20261117/iter73/proofs/controls/grouping.rs/reader-root-before-ext-dir.rs:1307:13
+     |
+1305 | pub proof fn root_class_beside_cls_folder(f: File)
+     | -------------------------------------------------- at the end of the function body
+1306 |     requires f.path.len() == 0, f.name.len() == 1, f.ext == CLS,
+1307 |     ensures !reader_finds(f, single_entry(f), true), reader_finds(f, single_entry(f), false),
+     |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: assertion failed
+    --> /home/ziniu_wu_g5labs_ai/experiments/model-coverage-uplift-20261117/ipm/ipm/.g5/uplift/coverage-20261117/iter73/proofs/controls/grouping.rs/reader-root-before-ext-dir.rs:1461:16
+     |
+1461 |         assert(reader_dir(e, true) == seq![f.ext]);
+     |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ assertion failed
+
+error: aborting due to 3 previous errors
+

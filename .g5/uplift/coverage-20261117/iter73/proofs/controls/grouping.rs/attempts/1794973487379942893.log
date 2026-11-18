@@ -1,0 +1,39 @@
+verification results:: 93 verified, 3 errors
+error: postcondition not satisfied
+   --> /home/ziniu_wu_g5labs_ai/experiments/model-coverage-uplift-20261117/ipm/ipm/.g5/uplift/coverage-20261117/iter73/proofs/controls/grouping.rs/collapse-keeps-first.rs:744:13
+    |
+744 |       ensures count_name(collapse(es), n, x) == b(has_name(es, n, x)),
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+...
+747 | /     if es.len() > 0 {
+748 | |         let es0 = es.subrange(0, es.len() - 1);
+749 | |         let l = es[es.len() - 1];
+750 | |         writer_one_entry_per_name(es0, n, x);
+...   |
+753 | |         lemma_push_prefix(y, l);
+754 | |     }
+    | |_____- at the end of the function body
+
+error: assertion failed
+   --> /home/ziniu_wu_g5labs_ai/experiments/model-coverage-uplift-20261117/ipm/ipm/.g5/uplift/coverage-20261117/iter73/proofs/controls/grouping.rs/collapse-keeps-first.rs:774:16
+    |
+774 |         assert(has_entry(y, e));
+    |                ^^^^^^^^^^^^^^^ assertion failed
+
+error: postcondition not satisfied
+   --> /home/ziniu_wu_g5labs_ai/experiments/model-coverage-uplift-20261117/ipm/ipm/.g5/uplift/coverage-20261117/iter73/proofs/controls/grouping.rs/collapse-keeps-first.rs:797:13
+    |
+797 |       ensures has_entry(collapse(es), e),
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+...
+804 | /     if l != e {
+805 | |         lemma_has_entry_count(es0, e);
+806 | |         assert(!same_key(l, e));
+807 | |         collapse_keeps_unique(es0, e);
+...   |
+812 | |         assert(y.push(l)[m] == e);
+813 | |     }
+    | |_____- at the end of the function body
+
+error: aborting due to 3 previous errors
+

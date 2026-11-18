@@ -1,0 +1,39 @@
+verification results:: 95 verified, 1 errors
+note: function body check: not all errors may have been reported; rerun with a higher value for --multiple-errors to find other potential errors in this function
+    --> /home/ziniu_wu_g5labs_ai/experiments/model-coverage-uplift-20261117/ipm/ipm/.g5/uplift/coverage-20261117/iter73/proofs/controls/grouping.rs/export-nests-all.rs:1316:1
+     |
+1316 | pub proof fn export_layout(name: Seq<int>, ext: int)
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: postcondition not satisfied
+    --> /home/ziniu_wu_g5labs_ai/experiments/model-coverage-uplift-20261117/ipm/ipm/.g5/uplift/coverage-20261117/iter73/proofs/controls/grouping.rs/export-nests-all.rs:1318:13
+     |
+1318 |       ensures layout_ok(exported(name, ext)) <==> (ext == CLS || name.len() == 1),
+     |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+...
+1324 | /     if ext == CLS {
+1325 | |         assert(f.path.subrange(f.path.len() - pkg_len(f), f.path.len() as int) =~= package(f));
+1326 | |         assert(f.path.subrange(0, f.path.len() - pkg_len(f)) =~= seq![CLS]);
+1327 | |     } else if name.len() == 1 {
+1328 | |         assert(f.path.subrange(1, 1) =~= package(f));
+1329 | |         assert(f.path.subrange(0, 1) =~= seq![ext]);
+1330 | |     }
+     | |_____- at the end of the function body
+
+error: postcondition not satisfied
+    --> /home/ziniu_wu_g5labs_ai/experiments/model-coverage-uplift-20261117/ipm/ipm/.g5/uplift/coverage-20261117/iter73/proofs/controls/grouping.rs/export-nests-all.rs:1321:9
+     |
+1321 |           ext != CLS && name.len() >= 2 ==> directory(exported(name, ext)) == Seq::<int>::empty(),
+     |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+...
+1324 | /     if ext == CLS {
+1325 | |         assert(f.path.subrange(f.path.len() - pkg_len(f), f.path.len() as int) =~= package(f));
+1326 | |         assert(f.path.subrange(0, f.path.len() - pkg_len(f)) =~= seq![CLS]);
+1327 | |     } else if name.len() == 1 {
+1328 | |         assert(f.path.subrange(1, 1) =~= package(f));
+1329 | |         assert(f.path.subrange(0, 1) =~= seq![ext]);
+1330 | |     }
+     | |_____- at the end of the function body
+
+error: aborting due to 2 previous errors
+

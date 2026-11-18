@@ -1,0 +1,69 @@
+verification results:: 93 verified, 3 errors
+note: function body check: not all errors may have been reported; rerun with a higher value for --multiple-errors to find other potential errors in this function
+   --> /home/ziniu_wu_g5labs_ai/experiments/model-coverage-uplift-20261117/ipm/ipm/.g5/uplift/coverage-20261117/iter73/proofs/controls/grouping.rs/directory-keeps-whole-path.rs:607:1
+    |
+607 | pub proof fn package_layout_round_trip(f: File, d: Seq<int>)
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: postcondition not satisfied
+   --> /home/ziniu_wu_g5labs_ai/experiments/model-coverage-uplift-20261117/ipm/ipm/.g5/uplift/coverage-20261117/iter73/proofs/controls/grouping.rs/directory-keeps-whole-path.rs:609:13
+    |
+607 | pub proof fn package_layout_round_trip(f: File, d: Seq<int>)
+    | ------------------------------------------------------------ at the end of the function body
+608 |     requires f.name.len() >= 1, d.len() > 0, f.path == d + package(f),
+609 |     ensures directory(f) == d, reader_finds(f, single_entry(f), true), reader_finds(f, single_entry(f), false),
+    |             ^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: postcondition not satisfied
+   --> /home/ziniu_wu_g5labs_ai/experiments/model-coverage-uplift-20261117/ipm/ipm/.g5/uplift/coverage-20261117/iter73/proofs/controls/grouping.rs/directory-keeps-whole-path.rs:609:32
+    |
+607 | pub proof fn package_layout_round_trip(f: File, d: Seq<int>)
+    | ------------------------------------------------------------ at the end of the function body
+608 |     requires f.name.len() >= 1, d.len() > 0, f.path == d + package(f),
+609 |     ensures directory(f) == d, reader_finds(f, single_entry(f), true), reader_finds(f, single_entry(f), false),
+    |                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: assertion failed
+   --> /home/ziniu_wu_g5labs_ai/experiments/model-coverage-uplift-20261117/ipm/ipm/.g5/uplift/coverage-20261117/iter73/proofs/controls/grouping.rs/directory-keeps-whole-path.rs:619:12
+    |
+619 |     assert(directory(f) + package(f) =~= f.path);
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ assertion failed
+
+note: function body check: not all errors may have been reported; rerun with a higher value for --multiple-errors to find other potential errors in this function
+    --> /home/ziniu_wu_g5labs_ai/experiments/model-coverage-uplift-20261117/ipm/ipm/.g5/uplift/coverage-20261117/iter73/proofs/controls/grouping.rs/directory-keeps-whole-path.rs:1316:1
+     |
+1316 | pub proof fn export_layout(name: Seq<int>, ext: int)
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: postcondition not satisfied
+    --> /home/ziniu_wu_g5labs_ai/experiments/model-coverage-uplift-20261117/ipm/ipm/.g5/uplift/coverage-20261117/iter73/proofs/controls/grouping.rs/directory-keeps-whole-path.rs:1319:9
+     |
+1319 |           ext == CLS ==> directory(exported(name, ext)) == seq![CLS],
+     |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+...
+1324 | /     if ext == CLS {
+1325 | |         assert(f.path.subrange(f.path.len() - pkg_len(f), f.path.len() as int) =~= package(f));
+1326 | |         assert(f.path.subrange(0, f.path.len() - pkg_len(f)) =~= seq![CLS]);
+1327 | |     } else if name.len() == 1 {
+1328 | |         assert(f.path.subrange(1, 1) =~= package(f));
+1329 | |         assert(f.path.subrange(0, 1) =~= seq![ext]);
+1330 | |     }
+     | |_____- at the end of the function body
+
+error: postcondition not satisfied
+    --> /home/ziniu_wu_g5labs_ai/experiments/model-coverage-uplift-20261117/ipm/ipm/.g5/uplift/coverage-20261117/iter73/proofs/controls/grouping.rs/directory-keeps-whole-path.rs:1321:9
+     |
+1321 |           ext != CLS && name.len() >= 2 ==> directory(exported(name, ext)) == Seq::<int>::empty(),
+     |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+...
+1324 | /     if ext == CLS {
+1325 | |         assert(f.path.subrange(f.path.len() - pkg_len(f), f.path.len() as int) =~= package(f));
+1326 | |         assert(f.path.subrange(0, f.path.len() - pkg_len(f)) =~= seq![CLS]);
+1327 | |     } else if name.len() == 1 {
+1328 | |         assert(f.path.subrange(1, 1) =~= package(f));
+1329 | |         assert(f.path.subrange(0, 1) =~= seq![ext]);
+1330 | |     }
+     | |_____- at the end of the function body
+
+error: aborting due to 5 previous errors
+

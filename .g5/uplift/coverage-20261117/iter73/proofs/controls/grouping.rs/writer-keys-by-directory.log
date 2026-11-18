@@ -1,0 +1,33 @@
+verification results:: 93 verified, 3 errors
+error: postcondition not satisfied
+   --> /home/ziniu_wu_g5labs_ai/experiments/model-coverage-uplift-20261117/ipm/ipm/.g5/uplift/coverage-20261117/iter73/proofs/controls/grouping.rs/writer-keys-by-directory.rs:691:13
+    |
+691 |       ensures count_name(drop_key(es, e), n, x) == if e.name == n && e.ext == x { 0 } else { count_name(es, n, x) },
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+...
+694 | /     if es.len() > 0 {
+695 | |         let es0 = es.subrange(0, es.len() - 1);
+696 | |         let l = es[es.len() - 1];
+697 | |         lemma_drop_key_count(es0, e, n, x);
+698 | |         let r = drop_key(es0, e);
+699 | |         if !same_key(l, e) { lemma_push_prefix(r, l); }
+700 | |     }
+    | |_____- at the end of the function body
+
+error: precondition not satisfied
+   --> /home/ziniu_wu_g5labs_ai/experiments/model-coverage-uplift-20261117/ipm/ipm/.g5/uplift/coverage-20261117/iter73/proofs/controls/grouping.rs/writer-keys-by-directory.rs:969:9
+    |
+935 |     requires has_entry(es, e1), has_entry(es, e2), e1 != e2, same_key(e1, e2),
+    |                                                              ---------------- failed precondition
+...
+969 |         lemma_two_entries(out, ei, ej);
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: assertion failed
+    --> /home/ziniu_wu_g5labs_ai/experiments/model-coverage-uplift-20261117/ipm/ipm/.g5/uplift/coverage-20261117/iter73/proofs/controls/grouping.rs/writer-keys-by-directory.rs:1063:16
+     |
+1063 |         assert(same_key(es[ss.len() + q], es[r]));
+     |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ assertion failed
+
+error: aborting due to 3 previous errors
+

@@ -1,0 +1,91 @@
+verification results:: 91 verified, 5 errors
+error: postcondition not satisfied
+   --> /home/ziniu_wu_g5labs_ai/experiments/model-coverage-uplift-20261117/ipm/ipm/.g5/uplift/coverage-20261117/iter73/proofs/controls/grouping.rs/unsupported-kept.rs:445:63
+    |
+443 | pub proof fn unsupported_never_written(s: Seq<File>, ex: Excl, g: File, d: Seq<int>, t: int)
+    | -------------------------------------------------------------------------------------------- at the end of the function body
+444 |     requires g.ext != CLS, g.ext != MAC, g.ext != INC, g.ext != INT,
+445 |     ensures group(s.push(g), ex, d, t) == group(s, ex, d, t), singles(s.push(g), ex) == singles(s, ex),
+    |                                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: postcondition not satisfied
+   --> /home/ziniu_wu_g5labs_ai/experiments/model-coverage-uplift-20261117/ipm/ipm/.g5/uplift/coverage-20261117/iter73/proofs/controls/grouping.rs/unsupported-kept.rs:858:13
+    |
+858 |       ensures count_name(singles(s, ex), n, PKG) == 0,
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+...
+861 | /     if s.len() > 0 {
+862 | |         let s0 = s.subrange(0, s.len() - 1);
+863 | |         lemma_singles_no_pkg(s0, ex, n);
+864 | |         let g = s[s.len() - 1];
+865 | |         if single(g, ex) { lemma_push_prefix(singles(s0, ex), single_entry(g)); }
+866 | |     }
+    | |_____- at the end of the function body
+
+note: function body check: not all errors may have been reported; rerun with a higher value for --multiple-errors to find other potential errors in this function
+    --> /home/ziniu_wu_g5labs_ai/experiments/model-coverage-uplift-20261117/ipm/ipm/.g5/uplift/coverage-20261117/iter73/proofs/controls/grouping.rs/unsupported-kept.rs:1020:1
+     |
+1020 | pub proof fn collapse_earlier_key_loses(s: Seq<File>, ex: Excl, keys: Seq<(Seq<int>, int)>, i: int, j: int)
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: assertion failed
+    --> /home/ziniu_wu_g5labs_ai/experiments/model-coverage-uplift-20261117/ipm/ipm/.g5/uplift/coverage-20261117/iter73/proofs/controls/grouping.rs/unsupported-kept.rs:1045:16
+     |
+1045 |         assert(es[r] == ps[m]);
+     |                ^^^^^^^^^^^^^^ assertion failed
+
+note: recommendation not met
+    --> /home/ziniu_wu_g5labs_ai/experiments/model-coverage-uplift-20261117/ipm/ipm/.g5/uplift/coverage-20261117/iter73/proofs/controls/grouping.rs/unsupported-kept.rs:1045:25
+     |
+1045 |         assert(es[r] == ps[m]);
+     |                         ^^^^^
+     |
+    --> seq.rs:981:12
+     |
+     = note: recommendation not met
+
+note: recommendation not met
+    --> /home/ziniu_wu_g5labs_ai/experiments/model-coverage-uplift-20261117/ipm/ipm/.g5/uplift/coverage-20261117/iter73/proofs/controls/grouping.rs/unsupported-kept.rs:1046:16
+     |
+1046 |         assert(ps[m] == pkg_entry(s, ex, keys[m]));
+     |                ^^^^^
+     |
+    --> seq.rs:981:12
+     |
+     = note: recommendation not met
+
+error: assertion failed
+    --> /home/ziniu_wu_g5labs_ai/experiments/model-coverage-uplift-20261117/ipm/ipm/.g5/uplift/coverage-20261117/iter73/proofs/controls/grouping.rs/unsupported-kept.rs:1046:16
+     |
+1046 |         assert(ps[m] == pkg_entry(s, ex, keys[m]));
+     |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ assertion failed
+
+error: assertion failed
+    --> /home/ziniu_wu_g5labs_ai/experiments/model-coverage-uplift-20261117/ipm/ipm/.g5/uplift/coverage-20261117/iter73/proofs/controls/grouping.rs/unsupported-kept.rs:1143:16
+     |
+1143 |         assert(provides(e, s[i], s));
+     |                ^^^^^^^^^^^^^^^^^^^^ assertion failed
+
+note: function body check: not all errors may have been reported; rerun with a higher value for --multiple-errors to find other potential errors in this function
+    --> /home/ziniu_wu_g5labs_ai/experiments/model-coverage-uplift-20261117/ipm/ipm/.g5/uplift/coverage-20261117/iter73/proofs/controls/grouping.rs/unsupported-kept.rs:1432:1
+     |
+1432 | pub proof fn export_dotted_item_fails_load(s: Seq<File>, ex: Excl, keys: Seq<(Seq<int>, int)>, i: int)
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: precondition not satisfied
+    --> /home/ziniu_wu_g5labs_ai/experiments/model-coverage-uplift-20261117/ipm/ipm/.g5/uplift/coverage-20261117/iter73/proofs/controls/grouping.rs/unsupported-kept.rs:1450:5
+     |
+1418 |     requires x != PKG,
+     |              -------- failed precondition
+...
+1450 |     lemma_pkg_count_other_ext(s, ex, keys, f.name, f.ext);
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: assertion failed
+    --> /home/ziniu_wu_g5labs_ai/experiments/model-coverage-uplift-20261117/ipm/ipm/.g5/uplift/coverage-20261117/iter73/proofs/controls/grouping.rs/unsupported-kept.rs:1459:16
+     |
+1459 |         assert(m == i);
+     |                ^^^^^^ assertion failed
+
+error: aborting due to 7 previous errors
+
