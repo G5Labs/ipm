@@ -53,7 +53,7 @@
      "text": "Only %IPM.Main:Shell() lets a script see that a command failed: Shell(command) returns the status, and Shell(command, 1) also ends the process with exit code 1 on failure.",
      "cases": "Shell vs Shell(,1) vs command/function forms; failing vs passing command",
      "observation": "returned status, process exit code, continuation",
-     "grade": "full",
+     "grade": "partial",
      "check": "proved",
      "models": [
       ".g5/Verus_verification/consolidated/iter5/entry_forms.rs::outcome",
@@ -61,10 +61,12 @@
      ],
      "evidence": [
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
-      ".g5/uplift/consolidated/iter5/run_all.json"
+      ".g5/uplift/consolidated/iter5/run_all.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__package-commands.json"
      ],
-     "basis": "reused:.g5/ontology/features/package-commands.g5.md metadata (iter5 entry_forms.rs)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/ontology/features/package-commands.g5.md metadata (iter5 entry_forms.rs); iteration-72 rule-4a re-audit (G5): partial, support inspection",
+     "assessed_in": "iteration-72",
+     "gap": "Rule 4a (iteration-72): The exclusivity claim (\"only Shell lets a script see a failure\") rests on constant rows for the command and function forms. How the arguments reach Shell and the terminate flag are not computed."
     },
     {
      "id": "ipm.shell.forms#2",
@@ -74,7 +76,7 @@
      "text": "The zpm \"<command>\" command form discards the status; adding ,1 does not pass a flag, so the process keeps running and exits 0.",
      "cases": "zpm \"cmd\" vs zpm \"cmd\",1 on a failing command",
      "observation": "exit code and continuation",
-     "grade": "full",
+     "grade": "partial",
      "check": "proved",
      "models": [
       ".g5/Verus_verification/consolidated/iter5/entry_forms.rs::outcome",
@@ -82,10 +84,12 @@
      ],
      "evidence": [
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
-      ".g5/uplift/consolidated/iter5/run_all.json"
+      ".g5/uplift/consolidated/iter5/run_all.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__package-commands.json"
      ],
-     "basis": "reused:.g5/ontology/features/package-commands.g5.md metadata (iter5 entry_forms.rs)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/ontology/features/package-commands.g5.md metadata (iter5 entry_forms.rs); iteration-72 rule-4a re-audit (G5): partial, support inspection",
+     "assessed_in": "iteration-72",
+     "gap": "Rule 4a (iteration-72): That ,1 does not reach Shell is written down as a constant row. The %ZLANGC00 argument passing is not modelled."
     },
     {
      "id": "ipm.shell.forms#3",
@@ -105,10 +109,13 @@
      ],
      "evidence": [
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
-      ".g5/uplift/consolidated/iter5/run_all.json"
+      ".g5/uplift/consolidated/iter5/run_all.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__package-commands.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G5.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/package-commands.g5.md metadata (iter5 entry_forms.rs, C:D24)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/ontology/features/package-commands.g5.md metadata (iter5 entry_forms.rs, C:D24); iteration-72 rule-4a re-audit (G5): full, support mutation-checked (mutations G5-m35)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     }
    ]
   }

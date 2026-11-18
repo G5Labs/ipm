@@ -1,0 +1,721 @@
+{
+ "page": ".g5/ontology/features/history.g5.md",
+ "auditor": "G1",
+ "entries": [
+  {
+   "id": "history.actions#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "crate model.rs top_step inserts the top History row at Main:Load pc1, before the path check and LoadNewModule; theorem_top_record_complete covers every returned verdict",
+   "product": "Main.cls Load (row created before checks)",
+   "mutations": [
+    "G1-c01"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "history.record#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "crate top_step: twin_insert at pc1 (start), t_final sets ok/tend at pc4, persist at pc5 (finalized)",
+   "product": "",
+   "mutations": [
+    "G1-c01",
+    "G1-c02",
+    "G1-c03"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "history.record#3",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "crate kill(): rollback without %OnClose leaves the pc1 row with TimeEnd empty; playbook load_general crash_k",
+   "product": "",
+   "mutations": [
+    "G1-c04"
+   ],
+   "control": "crate control-11 (death keeps transaction) rejected at case_c45_kill_dep_record_lost; load_general control crash-records-success",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "history.record#5",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "playbook load_general progress_row/honest: a crashed or running row reads ok=false, ended=false (computed by crash_k from the temp row)",
+   "product": "",
+   "mutations": [],
+   "control": "playbook-uplift/models/verus/controls/load_general.json + results/load_general.json: crash-records-success killed inv_crash, inv_instance_crash",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "history.record#6",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "crate kill(): no PersistToTwin, so the durable row keeps its Init values (no phases, no package) while IRISTEMP holds five phases (case_c46, case_c45)",
+   "product": "",
+   "mutations": [
+    "G1-c04"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "history.record#9",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "crate kill vs terminate: Committed on the unfinished row comes from the Init row (kill) or %OnClose persist (terminate); load_general dev/instance crash witnesses",
+   "product": "",
+   "mutations": [
+    "G1-c05"
+   ],
+   "control": "playbook-uplift/models/verus/controls/load_general.json + results/load_general.json: fix-without-dev-persist, instance-crash-runs-onclose rejected",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "history.fields#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "crate lnm_a: the package is named (t_names) at pc5, after the pc2 downgrade/update guard, so a guard refusal leaves Package empty (case_c11, case_c15)",
+   "product": "Utils/Module.cls LoadNewModule guard before name",
+   "mutations": [
+    "G1-c08"
+   ],
+   "control": "crate control-08/09 (guards removed) also reject case_c11/c15",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "history.fields#4",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "render.rs summary.shows_unset = r.vunset (stored text equals 0.0.0-0), independent of whether the package is known",
+   "product": "General/History.cls VersionToString",
+   "mutations": [
+    "G1-m10"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": "vunset abstracts the stored-text comparison into a bool"
+  },
+  {
+   "id": "history.fields#6",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "render.rs summary.na / detail_source_na = action != install; history.rs source_shown",
+   "product": "General/History.cls SourceToString",
+   "mutations": [
+    "G1-m11"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "history.fields#7",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "crate t_final sets tend at Finalize; kill leaves it unset; load_general honest (phase Ended <=> ended)",
+   "product": "",
+   "mutations": [
+    "G1-c02"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "history.fields#9",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "crate t_final ok from the returned error flag; running rows ok=0 (kill_rec)",
+   "product": "",
+   "mutations": [
+    "G1-c03"
+   ],
+   "control": "playbook-uplift/models/verus/controls/load_general.json + results/load_general.json: crash-records-success, ok-recorded-as-failure",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "history.phases#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "crate lnm_phase runs phases k=1..5 and records each in the temp row; persist copies ph/phst (case_c01, case_c28)",
+   "product": "",
+   "mutations": [
+    "G1-c09"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": "successful-load phase count pinned by case_c01 (l1_ok requires ph 5); refusal-before-phases side rests on the explorer (bounded)"
+  },
+  {
+   "id": "history.phases#5",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "crate lnm_phase: act==1 (throw) ends Activate with status 2; act==2 (returned error status) fails without ending the phase (case_c28)",
+   "product": "Utils/Module.cls / Lifecycle ExecutePhases",
+   "mutations": [
+    "G1-c10"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "history.survives-rollback#1",
+   "verdict": "full",
+   "support": "inspection",
+   "deciding": "crate: top row inserted at Main:Load pc1 before LoadNewModule TSTART, so rollback1/end_rollback (restore tx[0]) keep it; theorem_top_record_durable, theorem_r1",
+   "product": "",
+   "mutations": [],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": "no mutation: making the insert transactional needs a restructured machine; the caller-transaction neighbour (case_c42, row lost) shows the model distinguishes an insert inside a transaction"
+  },
+  {
+   "id": "history.survives-rollback#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "crate: a dependency row is inserted inside the parent transaction (dep_autonomous false as built), so the parent rollback removes it (case_c31, case_c33)",
+   "product": "",
+   "mutations": [
+    "G1-c06"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "history.survives-rollback#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "same as #2: dependency row vs IRISTEMP row vs module store after parent rollback (case_c31, case_c45)",
+   "product": "",
+   "mutations": [
+    "G1-c06"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "history.survives-rollback#4",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "load_general step_caller_end restores snaps[0] on caller rollback, removing the row (g_caller_rollback_leaves_no_trace); crate case_c42",
+   "product": "",
+   "mutations": [],
+   "control": "playbook-uplift/models/verus/controls/load_general.json + results/load_general.json: caller-rollback-keeps-db killed g_caller_rollback_leaves_no_trace",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "history.survives-rollback.temp-copy#1",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "crate: IRISTEMP outside rollback (with_temp only under control 6), PersistToTwin at entry $TLEVEL (theorem_persist_target, theorem_tlevel)",
+   "product": "",
+   "mutations": [],
+   "control": ".g5/Verus_verification/results/verus/20261113T22*-final-r3-control-06 (IRISTEMP rolled back) rejected at lemma_kill_inv, lemma_terminate_inv, lemma_lnm0_d, lemma_lnm1_d",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "history.survives-rollback.temp-copy#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "crate kill() runs no %OnClose (IRISTEMP row and Init row remain) vs terminate() close_log (case_c45 kill/terminate)",
+   "product": "",
+   "mutations": [
+    "G1-c04"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "history.dependencies#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "crate twin_insert for the dependency slot in LoadModuleReference; attempted/needed decides whether a dependency load runs",
+   "product": "",
+   "mutations": [
+    "G1-c07"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": "the not-needed (already installed) side is checked only by the explorer (bounded receipt), not by a Verus case"
+  },
+  {
+   "id": "history.dependencies.parent-rollback#1",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "load_general step_dep: dependency row ok from its own outcome (outs[i]); honest clause dep_rows ok <=> outs ok",
+   "product": "",
+   "mutations": [],
+   "control": "playbook-uplift/models/verus/controls/load_general.json + results/load_general.json: dep-failure-recorded-as-success killed inv_dep",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "history.dependencies.parent-rollback#2",
+   "verdict": "partial",
+   "support": "mutation-checked",
+   "deciding": "load_general step_dep writes the dependency Committed as a per-outcome constant (Ok -> 1, Fail -> NoTxn); crate dependency SetCommitted (lnm pc30, w=1) is computed but no Verus theorem or case pins it",
+   "product": "",
+   "mutations": [
+    "G1-c13"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "Committed of a dependency row is not pinned: crate mutant G1-c13 (dependency LoadNewModule never marks its log committed) verifies 263/0; load_general takes it from a per-outcome table. Needs a Verus case/theorem on the crate dependency row Committed vs the dependency module store (e.g. -dev parent fails after C2, case_c46 dependency row Committed=1 with dependency kept)",
+   "note": ""
+  },
+  {
+   "id": "history.committed#1",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "crate cs_ok/theorem_commit_sound: kept writes imply Committed via the SetCommitted sites (pc3 notx, pc8 dev C1, pc30 final); load_general honest",
+   "product": "",
+   "mutations": [],
+   "control": ".g5/Verus_verification/results/verus/20261113T22*-final-r3-control-01/02/03 (each SetCommitted removed) rejected at lemma_lnm0_a/b/d; playbook-uplift/models/verus/controls/load_general.json + results/load_general.json: dev-no-setcommitted",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "history.committed#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "crate pc3: the no-transaction SetCommitted runs before the manifest is checked, so a refused manifest reads Committed=1 with nothing kept (case_c08, case_c09)",
+   "product": "Utils/Module.cls:1227",
+   "mutations": [
+    "G1-c11"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "history.committed#4",
+   "verdict": "partial",
+   "support": "inspection",
+   "deciding": "models cover load only (crate, load_general)",
+   "product": "",
+   "mutations": [],
+   "control": "crate control-05 (Finalize ISOK term removed) survives for load",
+   "instance_scoped": false,
+   "gap": "Claims every action, but only load is modelled; install/update/uninstall Committed on success is not represented (uninstall Committed comes from AbstractHistory.cls:131, update/install via Utils/Module.cls SetCommitted).",
+   "note": "settled by review-71"
+  },
+  {
+   "id": "history.committed#5",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "crate: the dependency row is lost with the parent rollback (case_c31), so it cannot read uncommitted (refutes the intent)",
+   "product": "",
+   "mutations": [
+    "G1-c06"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "history.committed#6",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "load_general fail_end restores the level snapshot and keeps the temp Committed (false before any commit); honest atomicity and Committed clauses; crate case_c11/c15",
+   "product": "",
+   "mutations": [
+    "G1-m39"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "history.committed#7",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "crate pc8: developer-mode TCOMMIT then SetCommitted (C1); case_c26",
+   "product": "",
+   "mutations": [],
+   "control": ".g5/Verus_verification/results/verus/20261113T22*-final-r3-control-01 (no SetCommitted C1) rejected at case_c26 and lemma_lnm0_b; .g5/Verus_verification/results/verus/20261113T22*-final-r3-control-12 rejected at case_c26",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "history.committed#8",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "crate pc3 no-transaction SetCommitted before writes; theorem_commit_sound over txm 1 and 2; case_c27",
+   "product": "",
+   "mutations": [],
+   "control": ".g5/Verus_verification/results/verus/20261113T22*-final-r3-control-03 (no SetCommitted notx) and 13 (NoTransaction ignored) rejected at case_c27, lemma_lnm0_a",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "history.committed#9",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "same deciding site as committed#2 (pc3 SetCommitted before the manifest check)",
+   "product": "",
+   "mutations": [
+    "G1-c11"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "history.committed#11",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "history.rs finalize: committed = stored Committed || status OK; crate case_c29 (CleanUp error after C3)",
+   "product": "General/AbstractHistory.cls:131",
+   "mutations": [
+    "G1-m01"
+   ],
+   "control": ".g5/Verus_verification/results/verus/20261113T22*-final-r3-control-02 (no SetCommitted C3) rejected at case_c29",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "history.committed#13",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "load_general crash_k: Res::Commit keeps the open levels (closed db) while the row stays unsuccessful (g_operator_commit_dishonest)",
+   "product": "",
+   "mutations": [
+    "G1-m41",
+    "G1-m40"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": "G1-m40 (Commit also marks Committed=1) survives because the record stays dishonest through Success=0 with kept writes; not a meaningful change to the claim"
+  },
+  {
+   "id": "history.committed.marking#1",
+   "verdict": "partial",
+   "support": "control",
+   "deciding": "crate set_com sites (pc3, pc8, pc30) for load only",
+   "product": "Utils/Module.cls:1227,1313,1350; General/AbstractHistory.cls:131",
+   "mutations": [],
+   "control": ".g5/Verus_verification/results/verus/20261113T22*-final-r3-control-01/02/03",
+   "instance_scoped": false,
+   "gap": "False for uninstall: SetCommitted is called only from Utils/Module.cls:1227,1313,1350 (load paths); uninstall Committed is derived at Finalize (AbstractHistory.cls:131, Committed || ISOK(status)), contradicting \"does not derive it afterwards\". Load part holds (controls 01-03).",
+   "note": "settled by review-71; master to set refuted/split"
+  },
+  {
+   "id": "history.committed.vs-success#1",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "crate cases c26 (dev failure after C1), c27 (notx failure), c11 (refusal, rolled back): Success and Committed computed independently by the machine",
+   "product": "",
+   "mutations": [],
+   "control": ".g5/Verus_verification/results/verus/20261113T22*-final-r3-control-01 rejected at case_c26; 03 and 13 rejected at case_c27",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "history.read.filter#4",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "history.rs valid_column/where_prefix: an underscore name fails the column check, so no predicate",
+   "product": "General/History.cls ConstructSQLWhere",
+   "mutations": [
+    "G1-m02",
+    "G1-m03"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "history.read.filter#6",
+   "verdict": "partial",
+   "support": "mutation-checked",
+   "deciding": "history.rs where_prefix stops at the first absent value or invalid name",
+   "product": "General/History.cls ConstructSQLWhere",
+   "mutations": [
+    "G1-m04",
+    "G1-m03"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "The absent-value stop is never exercised: mutant G1-m04 (where_prefix ignores value_present) verifies. The IRIS collation order of the keys is an input sequence, not modelled. Add a theorem with a key whose value is absent (e.g. valid key, absent value, valid key) and an ordering premise.",
+   "note": ""
+  },
+  {
+   "id": "history.read.filter#7",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "history.rs valid_column on the Version_Major bytes; invalid_first_key_widens_delete; valid_single_key_deletes_only_matches",
+   "product": "",
+   "mutations": [
+    "G1-m02",
+    "G1-m03"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "history.read.filter#9",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "history.rs where_prefix stop rule (earlier_filter_remains_effective, invalid_first_key_widens_delete)",
+   "product": "",
+   "mutations": [
+    "G1-m02",
+    "G1-m03"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "history.read.details#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "history.rs details: lookup keyed by (namespace, id); None for an absent key",
+   "product": "",
+   "mutations": [
+    "G1-m06"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": "\"an unknown ID is an error\" is represented as None"
+  },
+  {
+   "id": "history.read.details#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "status_reader.rs render(detail=true) selects the raw stored status (refine Raw)",
+   "product": "General/History.cls SuccessToString detail branch",
+   "mutations": [
+    "G1-m13"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "history.read.details#4",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "render.rs detail_phases maps each stored phase in order; duration only when ended; status from the phase",
+   "product": "General/History.cls ShowPhases",
+   "mutations": [
+    "G1-m12"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "history.read.status-bytes#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "status_reader.rs render(detail=false): Success for an OK status, decoded error text otherwise",
+   "product": "General/History.cls SuccessToString",
+   "mutations": [
+    "G1-m14"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "history.read.status-bytes#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "status_reader.rs detail raw selection and ordered CR/LF/TAB replacement (clean)",
+   "product": "General/History.cls ShowColumns",
+   "mutations": [
+    "G1-m13",
+    "G1-m15"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "history.read.status-bytes#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "status_reader.rs utf8 observer over the rendered summary and detail bytes of the stored no-repository status (native bytes)",
+   "product": "",
+   "mutations": [
+    "G1-m16"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": "the obligation names this one checked status; raw bytes are the native observation"
+  },
+  {
+   "id": "history.read.status-bytes#4",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "status_reader.rs clean() labels and color_scheme (setting none disables ANSI)",
+   "product": "",
+   "mutations": [
+    "G1-m15",
+    "G1-m17"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "history.read.unfinished#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "history.rs success_to_string: status 0 is not OK, so the summary decodes it to ERROR #00 (refutes the intent)",
+   "product": "General/History.cls SuccessToString ($$$ISOK)",
+   "mutations": [
+    "G1-m08"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "history.read.unfinished#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "history.rs success_to_string(0,false) == Error00",
+   "product": "General/History.cls SuccessToString",
+   "mutations": [
+    "G1-m08"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": "the ERROR #00 text of status 0 is an IRIS library premise"
+  },
+  {
+   "id": "history.read.api#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "history.rs programmatic_global reads db[caller] for every handle (refutes the intent)",
+   "product": "General/History.cls GlobalRecordsFetch",
+   "mutations": [
+    "G1-m07"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "history.read.api#5",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "history.rs programmatic_global repeats the caller rows per handle",
+   "product": "",
+   "mutations": [
+    "G1-m07"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "history.delete#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "history.rs delete = ids minus selection(where_prefix(fs)); an invalid first key leaves no predicate and deletes everything (refutes the intent)",
+   "product": "",
+   "mutations": [
+    "G1-m03"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "history.delete#5",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "history.rs invalid_first_key_widens_delete",
+   "product": "",
+   "mutations": [
+    "G1-m03"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "history.delete#7",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "history.rs valid_single_key_deletes_only_matches (selection intersects the column matches)",
+   "product": "",
+   "mutations": [
+    "G1-m05"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  }
+ ]
+}

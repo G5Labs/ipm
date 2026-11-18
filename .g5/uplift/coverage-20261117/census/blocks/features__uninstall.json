@@ -39,10 +39,13 @@
       ".g5/uplift/consolidated/iter10/run.json",
       ".g5/uplift/consolidated/iter11/run.json",
       "playbook-uplift/models/verus/results/uninstall.json",
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__uninstall.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G2.jsonl"
      ],
-     "basis": "new:iteration-70 (intended promise; iter10/iter11 as-built models contradict it; playbook unin_refines_complete proves it only under successful providers and PGA)",
-     "assessed_in": "iteration-70"
+     "basis": "new:iteration-70 (intended promise; iter10/iter11 as-built models contradict it; playbook unin_refines_complete proves it only under successful providers and PGA); iteration-72 rule-4a re-audit (G2): full, support mutation-checked (mutations G2-m27, G2-m28, G2-m31; control playbook-uplift/models/verus/results/uninstall.json impl-code-not-collected)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "uninstall#2",
@@ -77,10 +80,13 @@
      ],
      "evidence": [
       "playbook-uplift/models/verus/results/uninstall.json",
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__uninstall.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G2.jsonl"
      ],
-     "basis": "new:iteration-70 (playbook witness: the target's code and IPM's classes are deleted, then the command fails with both records kept)",
-     "assessed_in": "iteration-70"
+     "basis": "new:iteration-70 (playbook witness: the target's code and IPM's classes are deleted, then the command fails with both records kept); iteration-72 rule-4a re-audit (G2): full, support mutation-checked (mutations G2-m54)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     }
    ],
    "parent": {
@@ -104,7 +110,11 @@
      "uninstall.cleanup#1",
      "uninstall.cleanup#2",
      "uninstall.cleanup#3",
-     "uninstall.cleanup#4"
+     "uninstall.cleanup#4",
+     "uninstall.cleanup#7",
+     "uninstall.cleanup#8",
+     "uninstall.cleanup#9",
+     "uninstall.cleanup#10"
     ],
     "B1": [
      "uninstall.cleanup#5"
@@ -119,25 +129,27 @@
      "units": [
       "P1"
      ],
-     "text": "Uninstall deletes the module's classes, packages, includes and routines with their compiled forms, its record, its stored manifest and its sync baseline.",
-     "cases": "code kinds, record, stream and baseline vs kinds that remain (name-only global, declared mapping, ^Sources entry)",
-     "observation": "presence of each artifact after uninstall",
-     "grade": "full",
-     "check": "proved",
+     "text": "Uninstall deletes the module's classes, packages, includes and routines with their compiled forms.",
+     "cases": "code kinds; mapped code without -global (as built skipped, Lifecycle/Base.cls:375-378) vs with -global",
+     "observation": "code present after uninstall",
+     "grade": "partial",
+     "check": "unchecked",
      "models": [
-      ".g5/Verus_verification/consolidated/iter63/cleanup.rs::remains",
-      ".g5/Verus_verification/consolidated/iter63/cleanup.rs::code_removed",
       "playbook-uplift/models/verus/uninstall.rs::clean_code",
-      "playbook-uplift/models/verus/uninstall.rs::record_delete",
-      "playbook-uplift/models/verus/uninstall.rs::unin_refines_manifest_with_record"
+      "playbook-uplift/models/verus/uninstall.rs::code_gone",
+      "playbook-uplift/models/verus/uninstall.rs::unin_refines_complete",
+      ".g5/Verus_verification/consolidated/iter63/cleanup.rs::code_removed"
      ],
      "evidence": [
       ".g5/uplift/consolidated/iter63/run.json",
       "playbook-uplift/models/verus/results/uninstall.json",
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__uninstall.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/M.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/uninstall.g5.md metadata (iter63 cleanup.rs); playbook clean_code/record_delete added in iteration-70",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/ontology/features/uninstall.g5.md metadata (iter63 cleanup.rs); playbook clean_code/record_delete added in iteration-70; iteration-72 rule-4a re-audit (G2): partial, support control (control playbook-uplift/models/verus/results/uninstall.json impl-code-not-collected, impl-record-delete-keeps-manifest); iteration-72 (review-71 B): split into code (#1), record (#7), stored manifest (#8, #10) and sync baseline (#9)",
+     "assessed_in": "iteration-72",
+     "gap": "clean_code removes non-mapped code and exempts mapped code without -global (code_gone), but no theorem pins the mapped-code condition. M-m08 (delete mapped code without -global) survives and M-m09 (never delete mapped code) is killed. The block omits the as-built condition."
     },
     {
      "id": "uninstall.cleanup#2",
@@ -145,10 +157,10 @@
       "P1"
      ],
      "text": "A global resource's data is deleted only when the resource names it with the Global attribute.",
-     "cases": "global resource with Global attribute vs name-only global resource",
+     "cases": "Global attribute set vs name-only global resource; Global set with Preserve on (product keeps it, Default/Global.cls:76-80)",
      "observation": "global data after uninstall",
-     "grade": "full",
-     "check": "proved",
+     "grade": "partial",
+     "check": "unchecked",
      "models": [
       ".g5/Verus_verification/consolidated/iter63/cleanup.rs::globals_by_declaration",
       "playbook-uplift/models/verus/uninstall.rs::clean_step",
@@ -157,10 +169,14 @@
      "evidence": [
       ".g5/uplift/consolidated/iter63/run.json",
       "playbook-uplift/models/verus/results/uninstall.json",
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__uninstall.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G2.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/mutations/M.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/uninstall.g5.md metadata (iter63 cleanup.rs)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/ontology/features/uninstall.g5.md metadata (iter63 cleanup.rs); iteration-72 rule-4a re-audit (G2): full, support mutation-checked (mutations G2-m53)",
+     "assessed_in": "iteration-72",
+     "gap": "The Global-attribute contrast is pinned (M-m13 killed; unin_witness_global_kept), but the Preserve condition is not: M-m12 (delete Global data even with Preserve) survives. The block does not state Preserve."
     },
     {
      "id": "uninstall.cleanup#3",
@@ -188,7 +204,7 @@
      "text": "As built (C:D67), declared <Mapping> entries stay in the namespace after uninstall, also with -purge.",
      "cases": "declared mapping vs removed code kinds; purge vs no purge",
      "observation": "namespace mapping configuration after uninstall",
-     "grade": "full",
+     "grade": "partial",
      "check": "proved",
      "models": [
       ".g5/Verus_verification/consolidated/iter63/cleanup.rs::reload_side_effects_outlive_uninstall",
@@ -197,10 +213,12 @@
      ],
      "evidence": [
       ".g5/uplift/consolidated/iter63/run.json",
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__uninstall.json"
      ],
-     "basis": "reused:.g5/ontology/features/uninstall.g5.md metadata (iter63 cleanup.rs)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/ontology/features/uninstall.g5.md metadata (iter63 cleanup.rs); iteration-72 rule-4a re-audit (G2): partial, support inspection",
+     "assessed_in": "iteration-72",
+     "gap": "Rule 4a (iteration-72): Rests on the constant per-kind table cleanup.rs::remains (review-71); no model computes that Reload-added mappings are never removed by any uninstall path, with or without -purge."
     },
     {
      "id": "uninstall.cleanup#6",
@@ -210,17 +228,107 @@
      "text": "As built (C:D68), a developer-mode module's ^Sources entries stay after uninstall and keep pointing at its old folder.",
      "cases": "^Sources entry vs removed code kinds; purge vs no purge",
      "observation": "^Sources entries after uninstall",
-     "grade": "full",
+     "grade": "partial",
      "check": "proved",
      "models": [
       ".g5/Verus_verification/consolidated/iter63/cleanup.rs::reload_side_effects_outlive_uninstall",
       ".g5/Verus_verification/consolidated/iter63/cleanup.rs::remains"
      ],
      "evidence": [
-      ".g5/uplift/consolidated/iter63/run.json"
+      ".g5/uplift/consolidated/iter63/run.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__uninstall.json"
      ],
-     "basis": "reused:.g5/ontology/features/uninstall.g5.md metadata (iter63 cleanup.rs)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/ontology/features/uninstall.g5.md metadata (iter63 cleanup.rs); iteration-72 rule-4a re-audit (G2): partial, support inspection",
+     "assessed_in": "iteration-72",
+     "gap": "Rule 4a (iteration-72): Rests on the constant per-kind table cleanup.rs::remains (review-71); no model computes that developer-mode ^Sources entries survive uninstall."
+    },
+    {
+     "id": "uninstall.cleanup#7",
+     "units": [
+      "P1"
+     ],
+     "text": "Uninstall deletes the module's record.",
+     "cases": "top-level uninstall vs blocked uninstall",
+     "observation": "module record present after uninstall",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      "playbook-uplift/models/verus/uninstall.rs::record_delete",
+      "playbook-uplift/models/verus/uninstall.rs::exec_clean",
+      "playbook-uplift/models/verus/uninstall.rs::unin_refines_honest"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      "playbook-uplift/models/verus/controls/uninstall.json",
+      "playbook-uplift/models/verus/results/uninstall.json"
+     ],
+     "basis": "new:iteration-72 (review-71 B): split from #1. Control impl-top-record-kept (the top-level Clean never deletes the record) is killed in unin_refines_honest.",
+     "assessed_in": "iteration-72",
+     "support": "control"
+    },
+    {
+     "id": "uninstall.cleanup#8",
+     "units": [
+      "P1"
+     ],
+     "text": "Uninstall deletes the module's stored manifest together with its record.",
+     "cases": "top-level target without -r",
+     "observation": "stored manifest after uninstall",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      "playbook-uplift/models/verus/uninstall.rs::record_delete",
+      "playbook-uplift/models/verus/uninstall.rs::unin_refines_manifest_with_record"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/mutations/M.jsonl"
+     ],
+     "basis": "new:iteration-72 (review-71 B): split from #1; premise PR (no -r), -r dependencies are #10. Mutation M-m10 (record_delete keeps the stream) killed.",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
+    },
+    {
+     "id": "uninstall.cleanup#9",
+     "units": [
+      "P1"
+     ],
+     "text": "Uninstall deletes the module's sync baseline.",
+     "cases": "baseline rows before vs after",
+     "observation": "FileHash rows after uninstall",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter63/cleanup.rs::remains"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-72 (review-71 B): split from #1",
+     "assessed_in": "iteration-72",
+     "gap": "cleanup.rs::remains is a per-kind constant table (Baseline removed, by the FileHash foreign-key cascade its header cites). No model derives the cascade from the record delete (rule 4a)."
+    },
+    {
+     "id": "uninstall.cleanup#10",
+     "units": [
+      "P1"
+     ],
+     "text": "Intended (P1 for each removed module): uninstall -recurse deletes each removed dependency's stored manifest with its record. As built the nested NameDelete deletes the record only.",
+     "cases": "-r uninstall removing a dependency vs the top-level target",
+     "observation": "dependency stored manifest after uninstall",
+     "grade": "full",
+     "check": "refuted",
+     "models": [
+      "playbook-uplift/models/verus/uninstall.rs::unin_witness_recurse_leaves_manifest",
+      "playbook-uplift/models/verus/uninstall.rs::dep_step"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/mutations/M.jsonl"
+     ],
+     "basis": "new:iteration-72 (review-71 B): unin_witness_recurse_leaves_manifest shows the dependency record gone and its stream kept (l1_manifest_with_record fails). Mutation M-m11 (nested removal also deletes the stream) killed.",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     }
    ]
   },
@@ -259,10 +367,13 @@
      ],
      "evidence": [
       ".g5/uplift/consolidated/iter9/run.json",
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__uninstall.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G2.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/uninstall.g5.md metadata (iter9 ownership.rs)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/ontology/features/uninstall.g5.md metadata (iter9 ownership.rs); iteration-72 rule-4a re-audit (G2): full, support mutation-checked (mutations G2-m40)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "uninstall.package-ownership#2",
@@ -302,10 +413,13 @@
      ],
      "evidence": [
       ".g5/uplift/consolidated/iter9/run.json",
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__uninstall.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G2.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/uninstall.g5.md metadata (iter9 ownership.rs)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/ontology/features/uninstall.g5.md metadata (iter9 ownership.rs); iteration-72 rule-4a re-audit (G2): full, support mutation-checked (mutations G2-m41)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "uninstall.package-ownership#4",
@@ -324,10 +438,13 @@
      ],
      "evidence": [
       ".g5/uplift/consolidated/iter9/run.json",
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__uninstall.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G2.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/uninstall.g5.md metadata (iter9 ownership.rs)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/ontology/features/uninstall.g5.md metadata (iter9 ownership.rs); iteration-72 rule-4a re-audit (G2): full, support mutation-checked (mutations G2-m40)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     }
    ]
   },
@@ -362,10 +479,13 @@
      ],
      "evidence": [
       ".g5/uplift/consolidated/iter11/run.json",
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__uninstall.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G2.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/uninstall.g5.md metadata (iter11 deletion.rs)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/ontology/features/uninstall.g5.md metadata (iter11 deletion.rs); iteration-72 rule-4a re-audit (G2): full, support mutation-checked (mutations G2-m31)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "uninstall.class-delete-error#2",
@@ -383,10 +503,13 @@
      ],
      "evidence": [
       ".g5/uplift/consolidated/iter11/run.json",
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__uninstall.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G2.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/uninstall.g5.md metadata (iter11 deletion.rs)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/ontology/features/uninstall.g5.md metadata (iter11 deletion.rs); iteration-72 rule-4a re-audit (G2): full, support mutation-checked (mutations G2-m32)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     }
    ]
   },
@@ -427,10 +550,13 @@
      ],
      "evidence": [
       "playbook-uplift/models/verus/results/uninstall.json",
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__uninstall.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G2.jsonl"
      ],
-     "basis": "new:iteration-70 (proved under premise PG; refuted by the playbook F-UNIN-4 witness, where an unresolvable dependent graph lets the target be removed)",
-     "assessed_in": "iteration-70"
+     "basis": "new:iteration-70 (proved under premise PG; refuted by the playbook F-UNIN-4 witness, where an unresolvable dependent graph lets the target be removed); iteration-72 rule-4a re-audit (G2): full, support mutation-checked (mutations G2-m60; control playbook-uplift/models/verus/results/uninstall.json impl-dependents-only-nested (kills unin_witness_blocked_deletes_webapp, unin_refines_dependents_protect))",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "uninstall.dependents#2",
@@ -461,10 +587,13 @@
       ".g5/uplift/consolidated/iter5/run_all.json",
       ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
       "playbook-uplift/models/verus/results/uninstall.json",
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__uninstall.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G2.jsonl"
      ],
-     "basis": "new:iteration-70 (as-built models return success for the blocked case; the repaired neighbour returns an error). The message naming the dependents is not modeled.",
-     "assessed_in": "iteration-70"
+     "basis": "new:iteration-70 (as-built models return success for the blocked case; the repaired neighbour returns an error). The message naming the dependents is not modeled.; iteration-72 rule-4a re-audit (G2): full, support mutation-checked (mutations G2-m55)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "uninstall.dependents#4",
@@ -562,10 +691,13 @@
       ".g5/uplift/consolidated/iter5/run_all.json",
       ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
       "playbook-uplift/models/verus/results/uninstall.json",
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__uninstall.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G2.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/uninstall.g5.md metadata (iter5 webapp.rs, P witness)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/ontology/features/uninstall.g5.md metadata (iter5 webapp.rs, P witness); iteration-72 rule-4a re-audit (G2): full, support mutation-checked (mutations G2-m56)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "uninstall.dependents.as-built#2",
@@ -586,10 +718,13 @@
       ".g5/uplift/consolidated/iter5/run_all.json",
       ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
       "playbook-uplift/models/verus/results/uninstall.json",
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__uninstall.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G2.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/uninstall.g5.md metadata (iter5 webapp.rs, P witness)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/ontology/features/uninstall.g5.md metadata (iter5 webapp.rs, P witness); iteration-72 rule-4a re-audit (G2): full, support mutation-checked (mutations G2-m55; control playbook-uplift/models/verus/results/uninstall.json impl-dependents-only-nested)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "uninstall.dependents.as-built#3",
@@ -607,10 +742,12 @@
      ],
      "evidence": [
       "playbook-uplift/models/verus/results/uninstall.json",
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__uninstall.json"
      ],
-     "basis": "new:iteration-70 (playbook l1_only_own: only resources owned by modules in scope are deleted; premise PF concerns shared FileCopy folders only)",
-     "assessed_in": "iteration-70"
+     "basis": "new:iteration-70 (playbook l1_only_own: only resources owned by modules in scope are deleted; premise PF concerns shared FileCopy folders only); iteration-72 rule-4a re-audit (G2): full, support control (control playbook-uplift/models/verus/results/uninstall.json impl-filecopy-deletes-all-copies, premise-drop-pf)",
+     "assessed_in": "iteration-72",
+     "support": "control"
     },
     {
      "id": "uninstall.dependents.as-built#4",
@@ -629,10 +766,13 @@
      ],
      "evidence": [
       ".g5/uplift/consolidated/iter5/run_all.json",
-      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__uninstall.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G2.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/uninstall.g5.md metadata (iter5 webapp.rs)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/ontology/features/uninstall.g5.md metadata (iter5 webapp.rs); iteration-72 rule-4a re-audit (G2): full, support mutation-checked (mutations G2-m33)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "uninstall.dependents.as-built#5",
@@ -651,10 +791,12 @@
      ],
      "evidence": [
       "playbook-uplift/models/verus/results/uninstall.json",
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__uninstall.json"
      ],
-     "basis": "new:iteration-70 (l1_only_own: records removed only within scope(t), which excludes dependents)",
-     "assessed_in": "iteration-70"
+     "basis": "new:iteration-70 (l1_only_own: records removed only within scope(t), which excludes dependents); iteration-72 rule-4a re-audit (G2): full, support control (control playbook-uplift/models/verus/results/uninstall.json impl-record-delete-wrong-module)",
+     "assessed_in": "iteration-72",
+     "support": "control"
     }
    ]
   },
@@ -686,10 +828,13 @@
      ],
      "evidence": [
       "playbook-uplift/models/verus/results/uninstall.json",
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__uninstall.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G2.jsonl"
      ],
-     "basis": "new:iteration-70 (F-UNIN-9 witness: the dependency's code and record go but its stored manifest stays, so the dependency is not fully uninstalled)",
-     "assessed_in": "iteration-70"
+     "basis": "new:iteration-70 (F-UNIN-9 witness: the dependency's code and record go but its stored manifest stays, so the dependency is not fully uninstalled); iteration-72 rule-4a re-audit (G2): full, support mutation-checked (mutations G2-m57; control playbook-uplift/models/verus/results/uninstall.json impl-record-delete-keeps-manifest)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "uninstall.recurse#2",
@@ -708,10 +853,13 @@
      ],
      "evidence": [
       "playbook-uplift/models/verus/results/uninstall.json",
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__uninstall.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G2.jsonl"
      ],
-     "basis": "new:iteration-70 (its web app is still deleted and its row logged as success: owned by uninstall.dependents.as-built)",
-     "assessed_in": "iteration-70"
+     "basis": "new:iteration-70 (its web app is still deleted and its row logged as success: owned by uninstall.dependents.as-built); iteration-72 rule-4a re-audit (G2): full, support mutation-checked (mutations G2-m58)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "uninstall.recurse#3",
@@ -774,10 +922,13 @@
      "evidence": [
       ".g5/uplift/consolidated/iter10/run.json",
       ".g5/Verus_verification/consolidated/iter10/error-cases.json",
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__uninstall.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G2.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/uninstall.g5.md metadata (iter10 errors.rs, controls clean-propagates-status, hook-error-leaks-children)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/ontology/features/uninstall.g5.md metadata (iter10 errors.rs, controls clean-propagates-status, hook-error-leaks-children); iteration-72 rule-4a re-audit (G2): full, support mutation-checked (mutations G2-m27, G2-m28)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "uninstall.child-error#2",
@@ -797,10 +948,13 @@
      "evidence": [
       ".g5/uplift/consolidated/iter10/run.json",
       ".g5/Verus_verification/consolidated/iter10/error-cases.json",
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__uninstall.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G2.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/uninstall.g5.md metadata (iter10 errors.rs, control package-swallows-error)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/ontology/features/uninstall.g5.md metadata (iter10 errors.rs, control package-swallows-error); iteration-72 rule-4a re-audit (G2): full, support mutation-checked (mutations G2-m29)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "uninstall.child-error#3",
@@ -818,10 +972,13 @@
      ],
      "evidence": [
       ".g5/uplift/consolidated/iter10/run.json",
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__uninstall.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G2.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/uninstall.g5.md metadata (iter10 errors.rs)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/ontology/features/uninstall.g5.md metadata (iter10 errors.rs); iteration-72 rule-4a re-audit (G2): full, support mutation-checked (mutations G2-m30)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     }
    ]
   },
@@ -915,7 +1072,7 @@
      "text": "Traversal progress is not proof of removal from the installed-module store: a failed provider can leave resources or its row behind.",
      "cases": "forced failed provider vs successful provider",
      "observation": "work-graph removal vs stored module row",
-     "grade": "full",
+     "grade": "partial",
      "check": "proved",
      "models": [
       ".g5/Verus_verification/consolidated/iter2/readers.rs::force_does_not_turn_failure_into_removal",
@@ -923,10 +1080,13 @@
      ],
      "evidence": [
       ".g5/uplift/consolidated/iter2/validation.json",
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__uninstall.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G2.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/uninstall.g5.md body link (iter2 readers.rs)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/ontology/features/uninstall.g5.md body link (iter2 readers.rs); iteration-72 rule-4a re-audit (G2): partial, support mutation-checked (mutations G2-m52)",
+     "assessed_in": "iteration-72",
+     "gap": "Rule 4a (iteration-72): Whether the failed provider leaves the stored module row is the input provider_retained, not computed from the failure; only the work-graph removal is computed (G2-m52)."
     }
    ]
   },
@@ -958,10 +1118,12 @@
      "evidence": [
       "playbook-uplift/models/verus/results/uninstall.json",
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
-      ".g5/uplift/consolidated/iter59/run.json"
+      ".g5/uplift/consolidated/iter59/run.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__uninstall.json"
      ],
-     "basis": "new:iteration-70 (playbook: intent_blocked includes global scope; blocked_unchanged under PW and honest under PB; iter59 global_module_skipped shows -global removes the code). The skip leaves web apps deleted when the module owns one (premise PW); see handoff.",
-     "assessed_in": "iteration-70"
+     "basis": "new:iteration-70 (playbook: intent_blocked includes global scope; blocked_unchanged under PW and honest under PB; iter59 global_module_skipped shows -global removes the code). The skip leaves web apps deleted when the module owns one (premise PW); see handoff.; iteration-72 rule-4a re-audit (G2): full, support control (control playbook-uplift/models/verus/results/uninstall.json impl-no-global-scope-skip)",
+     "assessed_in": "iteration-72",
+     "support": "control"
     }
    ]
   },
@@ -996,10 +1158,13 @@
      "evidence": [
       ".g5/uplift/consolidated/iter27/run.json",
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
-      ".g5/uplift/consolidated/iter63/run.json"
+      ".g5/uplift/consolidated/iter63/run.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__uninstall.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G2.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/uninstall.g5.md metadata (iter27 purge.rs, P:F-UNIN-2)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/ontology/features/uninstall.g5.md metadata (iter27 purge.rs, P:F-UNIN-2); iteration-72 rule-4a re-audit (G2): full, support mutation-checked (mutations G2-m45, G2-m46)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "uninstall.purge#2",
@@ -1044,10 +1209,14 @@
      ],
      "evidence": [
       ".g5/uplift/consolidated/iter27/run.json",
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__uninstall.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G2.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/uninstall.g5.md metadata (iter27 purge.rs)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/ontology/features/uninstall.g5.md metadata (iter27 purge.rs); iteration-72 rule-4a re-audit (G2): full, support mutation-checked (mutations G2-m47; instance-scoped)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked",
+     "instance_scoped": true
     },
     {
      "id": "uninstall.purge.as-built#2",
@@ -1067,10 +1236,13 @@
      ],
      "evidence": [
       ".g5/uplift/consolidated/iter27/run.json",
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__uninstall.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G2.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/uninstall.g5.md metadata (iter27 purge.rs)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/ontology/features/uninstall.g5.md metadata (iter27 purge.rs); iteration-72 rule-4a re-audit (G2): full, support mutation-checked (mutations G2-m45, G2-m46)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "uninstall.purge.as-built#3",
@@ -1089,10 +1261,14 @@
      ],
      "evidence": [
       ".g5/uplift/consolidated/iter27/run.json",
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__uninstall.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G2.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/uninstall.g5.md metadata (iter27 purge.rs)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/ontology/features/uninstall.g5.md metadata (iter27 purge.rs); iteration-72 rule-4a re-audit (G2): full, support mutation-checked (mutations G2-m45; instance-scoped)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked",
+     "instance_scoped": true
     }
    ]
   },
@@ -1146,10 +1322,12 @@
      ],
      "evidence": [
       "playbook-uplift/models/verus/results/uninstall.json",
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__uninstall.json"
      ],
-     "basis": "new:iteration-70 (premise PN; F-UNIN-3 witness shows `uninstall IPM` by external name bypasses the guard)",
-     "assessed_in": "iteration-70"
+     "basis": "new:iteration-70 (premise PN; F-UNIN-3 witness shows `uninstall IPM` by external name bypasses the guard); iteration-72 rule-4a re-audit (G2): full, support control (control playbook-uplift/models/verus/results/uninstall.json impl-no-exit-flag)",
+     "assessed_in": "iteration-72",
+     "support": "control"
     }
    ]
   }

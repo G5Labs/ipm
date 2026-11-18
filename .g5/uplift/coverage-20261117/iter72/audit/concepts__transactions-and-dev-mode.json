@@ -1,0 +1,310 @@
+{
+ "page": ".g5/ontology/concepts/transactions-and-dev-mode.g5.md",
+ "auditor": "G1",
+ "entries": [
+  {
+   "id": "transaction#1",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "load_general fail_end restores the level snapshot; update_steps rollback on failure; crate lnm_exit rollback loop and theorem_tlevel",
+   "product": "",
+   "mutations": [],
+   "control": "playbook-uplift/models/verus/controls/load_general.json + results/load_general.json: no-rollback-on-failure; playbook-uplift/models/verus/controls/update_steps.json + results/update_steps.json: no-rollback-on-failure; .g5/Verus_verification/results/verus/20261113T22*-final-r3-control-04 (no rollback loop) rejected",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "transaction#2",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "load_general fail_end restores the snapshot taken before the dependency steps (witness_two_deps_txn_parent_fails)",
+   "product": "",
+   "mutations": [],
+   "control": "playbook-uplift/models/verus/controls/load_general.json + results/load_general.json: no-rollback-on-failure killed inv_dep, inv_activate",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "transaction.rollback-scope#2",
+   "verdict": "partial",
+   "support": "inspection",
+   "deciding": "failkeep.rs kept/happened from per-kind tables phase(k), external(k) and hist_committed(fail, dev) = fail==0 || dev",
+   "product": "",
+   "mutations": [],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "Rule 4a: which effects survive (FileCopy kept, deferred copy absent) and the history Committed bit are written down as per-kind/per-case tables (failkeep.rs phase, external, hist_committed), not computed from the transaction scope of each writer. Needs a writer model: each effect written at its phase inside or outside the load transaction, rollback restoring the journaled store.",
+   "note": "Committed half is computed by the crate for load (theorem_commit_sound) but the obligation contrasts file effects with the database"
+  },
+  {
+   "id": "transaction.rollback-scope#7",
+   "verdict": "partial",
+   "support": "inspection",
+   "deciding": "failkeep.rs constant per-kind table (external(k), phase(k))",
+   "product": "",
+   "mutations": [],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "Rule 4a (review-71): which kinds roll back (Mapping, WebApp) and which remain (CPF, FileCopy, LocExport) is a constant table, not derived from where each writer runs relative to the load transaction (Utils/Module.cls LoadNewModule boundary; Config.Map*, Security.Applications, iris merge, file writes).",
+   "note": "settled by review-71"
+  },
+  {
+   "id": "transaction.opt-out#1",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "crate etx(c)/lnm_begin: NoTransaction opens no TSTART, so an Activate failure keeps the writes (case_c27); l1_alts",
+   "product": "",
+   "mutations": [],
+   "control": ".g5/Verus_verification/results/verus/20261113T22*-final-r3-control-13 (NoTransaction ignored) rejected at case_c27 and the transaction-depth lemmas",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "transaction.opt-out#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "crate lnm_begin (txm==2): with_jrn(false), no TSTART; lnm_exit/terminate restore jprev; jrn_ok invariant and theorem_tlevel",
+   "product": "",
+   "mutations": [
+    "G1-c12"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "transaction.flag-sources#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "defmods.rs merged: command-line value over stored default modifiers, then the module <Default> (effective); loadtx merge_key",
+   "product": "Main.cls Shell dispatcher; Storage/Module.cls ExecutePhases",
+   "mutations": [
+    "G1-m33"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": "review-71 part B: #1 merges two precedence sites (master split)"
+  },
+  {
+   "id": "transaction.flag-sources#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "loadtx.rs merge_key: parent value when present (Some(false) included), else own",
+   "product": "Utils/Module.cls:1166-1169",
+   "mutations": [
+    "G1-m30"
+   ],
+   "control": "",
+   "instance_scoped": true,
+   "gap": "",
+   "note": "asserted on the concrete pair Some(false)/Some(true)"
+  },
+  {
+   "id": "transaction.flag-sources#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "loadtx.rs merge_key own value when the parent is absent",
+   "product": "",
+   "mutations": [
+    "G1-m31"
+   ],
+   "control": "",
+   "instance_scoped": true,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "transaction.flag-sources#4",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "loadtx.rs entry_depth = parent depth + (own transaction ? 1 : 0)",
+   "product": "",
+   "mutations": [
+    "G1-m32"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "transaction.flag-sources#8",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "loadtx.rs entry_depth keeps the parent depth for a NoTransaction child (refutes the intent)",
+   "product": "",
+   "mutations": [
+    "G1-m32"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "dev-mode#4",
+   "verdict": "full",
+   "support": "inspection",
+   "deciding": "crate devdef/devval (param from -dev/-nodev) and the stored-mode carry; L1 dev_mode compared by the explorer (bounded)",
+   "product": "",
+   "mutations": [],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": "no Verus case has -nodev (devf 2); support is the recorded explorer run (cargo, not re-run)"
+  },
+  {
+   "id": "dev-mode#5",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "update_steps param_dev: Main:Install sets the parameter from -dev for a top-level install; developer_sources effective_mode",
+   "product": "Main.cls#L2558,#L2623",
+   "mutations": [
+    "G1-m38",
+    "G1-m28"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "dev-mode#6",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "update_steps param_dev: a registry update passes DeveloperMode=1 only for a snapshot with -dev (LoadModuleReference #L128-L136), so update -dev of a release rolls back (refutes)",
+   "product": "Utils/Module.cls LoadModuleReference #L128-L136",
+   "mutations": [
+    "G1-m37"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "dev-mode#9",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "update_steps run developer mode: parameter when typed, else the stored DeveloperMode; crate explorer",
+   "product": "",
+   "mutations": [],
+   "control": "playbook-uplift/models/verus/controls/update_steps.json + results/update_steps.json: stored-dev-ignored killed inst_lemma_pf5",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "dev-mode.source-files#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "developer_sources.rs effective_mode/module_reload/resource_write: developer reinstall writes mode, root, MODULE and class ^Sources entries",
+   "product": "Lifecycle/Base.cls %Reload",
+   "mutations": [
+    "G1-m28"
+   ],
+   "control": "",
+   "instance_scoped": true,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "dev-mode.source-files#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "developer_sources.rs overwrite_guard from the stored developer flag and typed args; refused world unchanged",
+   "product": "Utils/Module.cls:109",
+   "mutations": [
+    "G1-m26"
+   ],
+   "control": "",
+   "instance_scoped": true,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "dev-mode.source-files#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "developer_sources.rs selected_directory (category dir if the file is under it, else the source root) vs declared_relative (configured layout, no fallback)",
+   "product": "",
+   "mutations": [
+    "G1-m27",
+    "G1-m29"
+   ],
+   "control": "",
+   "instance_scoped": true,
+   "gap": "",
+   "note": "directory existence is a fixture-file membership provider"
+  },
+  {
+   "id": "dev-mode.source-files#4",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "developer_sources.rs explicit layout: selected_directory and declared_relative agree on src/code",
+   "product": "",
+   "mutations": [
+    "G1-m27"
+   ],
+   "control": "",
+   "instance_scoped": true,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "dev-mode.overwrite-guard#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "developer_sources.rs overwrite_guard = !PermitDowngrade && top install && stored developer && no -dev",
+   "product": "Utils/Module.cls:109",
+   "mutations": [
+    "G1-m26"
+   ],
+   "control": "",
+   "instance_scoped": true,
+   "gap": "",
+   "note": "the guard is top-install only (guard_neighbor top_install=false passes); review-71 D2 (normal-mode parent replaces a dev dependency) contradicts the unqualified text"
+  },
+  {
+   "id": "dev-mode.keep-on-failure#1",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "crate: developer mode commits at C1/C2 and runs phases outside a transaction, so an Activate failure keeps record, resources and DeveloperMode (case_c26)",
+   "product": "",
+   "mutations": [],
+   "control": ".g5/Verus_verification/results/verus/20261113T22*-final-r3-control-12 (dev phases inside a transaction) and 01 rejected at case_c26",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "dev-mode.keep-on-failure#3",
+   "verdict": "full",
+   "support": "inspection",
+   "deciding": "crate: dependency loads of a -dev parent run inside T2 and roll back together (case_c33 single dependency); two-dependency case by the explorer (bounded)",
+   "product": "",
+   "mutations": [],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": "no Verus case with two dependencies where the second fails; support is the recorded explorer run"
+  },
+  {
+   "id": "dev-mode.not-propagated#1",
+   "verdict": "full",
+   "support": "inspection",
+   "deciding": "crate devval for a dependency = snapshot && -dev; L1 dep_installed dev; explorer (bounded)",
+   "product": "Utils/Module.cls LoadModuleReference #L128-L136",
+   "mutations": [],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": "no Verus case asserts a dependency DeveloperMode; the recorded explorer run covers it; update_steps param_dev computes the same rule (G1-m37 kills its registry branch)"
+  }
+ ]
+}

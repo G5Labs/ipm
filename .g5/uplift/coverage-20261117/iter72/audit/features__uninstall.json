@@ -1,0 +1,319 @@
+{
+ "page": ".g5/ontology/features/uninstall.g5.md",
+ "auditor": "G2",
+ "entries": [
+  {
+   "id": "uninstall#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "consolidated/iter10/errors.rs and iter11/deletion.rs compute what remains from the hook status and the editing lock; playbook uninstall.rs computes the clean",
+   "product": "src/cls/IPM/Lifecycle/Base.cls:345,385-388",
+   "mutations": [
+    "G2-m27",
+    "G2-m28",
+    "G2-m31"
+   ],
+   "control": "playbook-uplift/models/verus/results/uninstall.json impl-code-not-collected",
+   "instance_scoped": false,
+   "note": "refuted promise"
+  },
+  {
+   "id": "uninstall#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "playbook-uplift/models/verus/uninstall.rs::dep_step fails after a nested Clean deleted IPM classes; nothing undoes the earlier deletions",
+   "mutations": [
+    "G2-m54"
+   ],
+   "instance_scoped": false
+  },
+  {
+   "id": "uninstall.cleanup#1",
+   "verdict": "partial",
+   "support": "control",
+   "deciding": "playbook-uplift/models/verus/uninstall.rs::clean_code/record_delete compute code, record and stored-manifest removal; consolidated/iter63/cleanup.rs::remains is a per-kind constant table",
+   "control": "playbook-uplift/models/verus/results/uninstall.json impl-code-not-collected, impl-record-delete-keeps-manifest",
+   "instance_scoped": false,
+   "gap": "Sync-baseline removal (and compiled forms) rest only on the per-kind constant table cleanup.rs::remains (Baseline => false); no model computes the FileHash cascade with the module record.",
+   "note": "review-71 part B: #1 merges code, record, manifest and baseline, and the manifest part is refuted for -recurse dependencies (uninstall.recurse#1); split is for the master"
+  },
+  {
+   "id": "uninstall.cleanup#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "playbook-uplift/models/verus/uninstall.rs::clean_step kills a global only when named (Global attribute) and not Preserve",
+   "product": "src/cls/IPM/ResourceProcessor/Default/Global.cls:76-80",
+   "mutations": [
+    "G2-m53"
+   ],
+   "instance_scoped": false,
+   "note": "consolidated/iter63/cleanup.rs::globals_by_declaration is a constant table entry"
+  },
+  {
+   "id": "uninstall.cleanup#5",
+   "verdict": "partial",
+   "support": "inspection",
+   "deciding": "consolidated/iter63/cleanup.rs::remains constant table (DeclaredMapping => true)",
+   "instance_scoped": false,
+   "gap": "Rests on the constant per-kind table cleanup.rs::remains (review-71); no model computes that Reload-added mappings are never removed by any uninstall path, with or without -purge."
+  },
+  {
+   "id": "uninstall.cleanup#6",
+   "verdict": "partial",
+   "support": "inspection",
+   "deciding": "consolidated/iter63/cleanup.rs::remains constant table (SourcesEntry => true)",
+   "instance_scoped": false,
+   "gap": "Rests on the constant per-kind table cleanup.rs::remains (review-71); no model computes that developer-mode ^Sources entries survive uninstall."
+  },
+  {
+   "id": "uninstall.package-ownership#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "consolidated/iter9/ownership.rs::children excludes names claimed by other references (protects/claimed)",
+   "mutations": [
+    "G2-m40"
+   ],
+   "instance_scoped": false
+  },
+  {
+   "id": "uninstall.package-ownership#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "consolidated/iter9/ownership.rs::module_children unions each own reference (a class selects itself)",
+   "mutations": [
+    "G2-m41"
+   ],
+   "instance_scoped": false
+  },
+  {
+   "id": "uninstall.package-ownership#4",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "consolidated/iter9/ownership.rs::clean removes module_children only",
+   "mutations": [
+    "G2-m40"
+   ],
+   "instance_scoped": false
+  },
+  {
+   "id": "uninstall.class-delete-error#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "consolidated/iter11/deletion.rs::delete_class fails under the editing lock; uninstall warns and continues (product: Delete error -> WARNING)",
+   "product": "src/cls/IPM/Lifecycle/Base.cls:383-388",
+   "mutations": [
+    "G2-m31"
+   ],
+   "instance_scoped": false
+  },
+  {
+   "id": "uninstall.class-delete-error#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "consolidated/iter11/deletion.rs::delete_class removes an unlocked class",
+   "mutations": [
+    "G2-m32"
+   ],
+   "instance_scoped": false
+  },
+  {
+   "id": "uninstall.dependents#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "playbook-uplift/models/verus/uninstall.rs::check_skip/code_dependent: only dependents whose graph built protect the target (unresolvable dependent bypass)",
+   "product": "src/cls/IPM/Utils/Module.cls:460-499; Lifecycle/Base.cls:258-302",
+   "mutations": [
+    "G2-m60"
+   ],
+   "control": "playbook-uplift/models/verus/results/uninstall.json impl-dependents-only-nested (kills unin_witness_blocked_deletes_webapp, unin_refines_dependents_protect)",
+   "instance_scoped": false,
+   "note": "refuted promise"
+  },
+  {
+   "id": "uninstall.dependents#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "playbook-uplift/models/verus/uninstall.rs::exec_clean returns OK with skip when check_skip holds (product quits %Clean with $$$OK)",
+   "product": "src/cls/IPM/Lifecycle/Base.cls:321-325",
+   "mutations": [
+    "G2-m55"
+   ],
+   "instance_scoped": false,
+   "note": "refuted promise; webapp.rs::uninstall ok:true is a constant and earns nothing alone"
+  },
+  {
+   "id": "uninstall.dependents.as-built#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "playbook-uplift/models/verus/uninstall.rs::before_clean deletes web applications before check_skip",
+   "product": "src/cls/IPM/Storage/Module.cls ExecutePhases #L587-L600",
+   "mutations": [
+    "G2-m56"
+   ],
+   "instance_scoped": false
+  },
+  {
+   "id": "uninstall.dependents.as-built#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "playbook-uplift/models/verus/uninstall.rs::check_skip branch returns OK and keeps the record",
+   "mutations": [
+    "G2-m55"
+   ],
+   "control": "playbook-uplift/models/verus/results/uninstall.json impl-dependents-only-nested",
+   "instance_scoped": false
+  },
+  {
+   "id": "uninstall.dependents.as-built#3",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "playbook-uplift/models/verus/uninstall.rs::clean_res touches only the target's resources (unin_refines_only_own)",
+   "control": "playbook-uplift/models/verus/results/uninstall.json impl-filecopy-deletes-all-copies, premise-drop-pf",
+   "instance_scoped": false
+  },
+  {
+   "id": "uninstall.dependents.as-built#4",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "consolidated/iter5/webapp.rs::blocked = !force && dependents > 0 && level > 0 (CheckBeforeClean condition)",
+   "mutations": [
+    "G2-m33"
+   ],
+   "instance_scoped": false
+  },
+  {
+   "id": "uninstall.dependents.as-built#5",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "playbook-uplift/models/verus/uninstall.rs::record_delete removes only the target record (unin_refines_only_own)",
+   "control": "playbook-uplift/models/verus/results/uninstall.json impl-record-delete-wrong-module",
+   "instance_scoped": false
+  },
+  {
+   "id": "uninstall.recurse#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "playbook-uplift/models/verus/uninstall.rs::dep_step removes only the dependency record (NameDelete), leaving the stored manifest",
+   "mutations": [
+    "G2-m57"
+   ],
+   "control": "playbook-uplift/models/verus/results/uninstall.json impl-record-delete-keeps-manifest",
+   "instance_scoped": false,
+   "note": "refuted promise"
+  },
+  {
+   "id": "uninstall.recurse#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "playbook-uplift/models/verus/uninstall.rs::check_skip applies the dependents check at every level > 0 including nested -recurse cleans",
+   "mutations": [
+    "G2-m58"
+   ],
+   "instance_scoped": false
+  },
+  {
+   "id": "uninstall.child-error#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "consolidated/iter10/errors.rs::uninstall discards the resolve status (product: do ResolveChildren) and deletes only resolved children",
+   "product": "src/cls/IPM/Lifecycle/Base.cls:345",
+   "mutations": [
+    "G2-m27",
+    "G2-m28"
+   ],
+   "instance_scoped": false
+  },
+  {
+   "id": "uninstall.child-error#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "consolidated/iter10/errors.rs::package returns the resolve status",
+   "mutations": [
+    "G2-m29"
+   ],
+   "instance_scoped": false
+  },
+  {
+   "id": "uninstall.child-error#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "consolidated/iter10/errors.rs::resolve returns the enumerated children on success",
+   "mutations": [
+    "G2-m30"
+   ],
+   "instance_scoped": false
+  },
+  {
+   "id": "uninstall.all#4",
+   "verdict": "partial",
+   "support": "mutation-checked",
+   "deciding": "consolidated/iter2/readers.rs::uninstall_all_step: work-graph removal computed from force/provider_ok; stored_module_retained is the input provider_retained",
+   "mutations": [
+    "G2-m52"
+   ],
+   "instance_scoped": false,
+   "gap": "Whether the failed provider leaves the stored module row is the input provider_retained, not computed from the failure; only the work-graph removal is computed (G2-m52)."
+  },
+  {
+   "id": "uninstall.global#1",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "playbook-uplift/models/verus/uninstall.rs::check_skip (gs && !p.global)",
+   "product": "src/cls/IPM/Lifecycle/Base.cls:258-302",
+   "control": "playbook-uplift/models/verus/results/uninstall.json impl-no-global-scope-skip",
+   "instance_scoped": false
+  },
+  {
+   "id": "uninstall.purge#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "consolidated/iter27/purge.rs: -purge sets the top-level Purge key while the installer callback reads Configure.Purge; class delete keeps the extent",
+   "mutations": [
+    "G2-m45",
+    "G2-m46"
+   ],
+   "instance_scoped": false,
+   "note": "refuted promise; the class-delete keeps-data relation is a provider premise qualified natively"
+  },
+  {
+   "id": "uninstall.purge.as-built#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "consolidated/iter27/purge.rs::uninstall deletes no extent for a module without an installer, whatever the flag",
+   "mutations": [
+    "G2-m47"
+   ],
+   "instance_scoped": true
+  },
+  {
+   "id": "uninstall.purge.as-built#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "consolidated/iter27/purge.rs::command_data/unconfigure key paths",
+   "mutations": [
+    "G2-m45",
+    "G2-m46"
+   ],
+   "instance_scoped": false
+  },
+  {
+   "id": "uninstall.purge.as-built#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "consolidated/iter27/purge.rs::unconfigure deletes the extent iff Configure.Purge is nonzero and an installer exists",
+   "mutations": [
+    "G2-m45"
+   ],
+   "instance_scoped": true
+  },
+  {
+   "id": "uninstall.ipm#2",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "playbook-uplift/models/verus/uninstall.rs::main_uninstall prompts and sets the exit flag only for the exact name zpm",
+   "product": "src/cls/IPM/Main.cls:2712-2746",
+   "control": "playbook-uplift/models/verus/results/uninstall.json impl-no-exit-flag",
+   "instance_scoped": false
+  }
+ ]
+}

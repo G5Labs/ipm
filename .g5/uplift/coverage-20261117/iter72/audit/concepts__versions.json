@@ -1,0 +1,278 @@
+{
+ "page": ".g5/ontology/concepts/versions.g5.md",
+ "auditor": "G6",
+ "entries": [
+  {
+   "id": "version.order#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "semver.rs follows: release vs release compares core_gt over number()-parsed major/minor/patch",
+   "product": "",
+   "mutations": [
+    "G6-m42",
+    "G6-m98"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": "No native compares 1.10.0 with 1.9.0; multi-digit numeric parsing is pinned through number() by the prerelease natives (beta.11 vs beta.2). Some kills were recorded as \"invalid\" by the first mutate.py version. Mutation recorded as \"invalid\" by the first mutate.py version; its log shows a by(compute) assertion that simplifies to false, so the mutant is killed."
+  },
+  {
+   "id": "version.order#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "follows: same core, prerelease vs release -> release follows",
+   "product": "",
+   "mutations": [
+    "G6-m44"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": "Mutation recorded as \"invalid\" by the first mutate.py version; its log shows a by(compute) assertion that simplifies to false, so the mutant is killed."
+  },
+  {
+   "id": "version.order#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "follows: same core and pre, snapshot(b) && !snapshot(a)",
+   "product": "",
+   "mutations": [
+    "G6-m45"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": "Mutation recorded as \"invalid\" by the first mutate.py version; its log shows a by(compute) assertion that simplifies to false, so the mutant is killed."
+  },
+  {
+   "id": "version.order#4",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "follows: both prereleases with different cores -> false both ways (general lemma)",
+   "product": "",
+   "mutations": [
+    "G6-m36"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "version.order#5",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "compare_dot per identifier; collates numeric (signed_number) before words, words by lex_gt",
+   "product": "",
+   "mutations": [
+    "G6-m46",
+    "G6-m47"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "version.order#6",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "parse takes pre = text between the first \"-\" and the next \"+\", so a hyphen inside build metadata yields a prerelease (refutes the promise)",
+   "product": "",
+   "mutations": [
+    "G6-m37"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": "Mutation recorded as \"invalid\" by the first mutate.py version; its log shows a by(compute) assertion that simplifies to false, so the mutant is killed."
+  },
+  {
+   "id": "version.post-release#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "follows post branch: same core, pre nonempty follows release",
+   "product": "",
+   "mutations": [
+    "G6-m48"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": "Mutation recorded as \"invalid\" by the first mutate.py version; its log shows a by(compute) assertion that simplifies to false, so the mutant is killed."
+  },
+  {
+   "id": "version.range#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "expression_set/parse_range/expand produce exact, x-range and comparator ranges; range_holds",
+   "product": "",
+   "mutations": [
+    "G6-m49"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "version.range#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "expand year_exact branch -> single Eq comparator",
+   "product": "",
+   "mutations": [
+    "G6-m50"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": "Mutation recorded as \"invalid\" by the first mutate.py version; its log shows a by(compute) assertion that simplifies to false, so the mutant is killed."
+  },
+  {
+   "id": "version.range.partial#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "expand partial branch discards the operator; witnessed: >=1.2 rejects 1.3.0 (refutes intended promise)",
+   "product": "",
+   "mutations": [
+    "G6-m99",
+    "G6-m52b"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": "G6-m52b was an equivalent mutant because missing minor/patch parts already count as wildcards. G6-m99 keeps the operator in the partial branch and is killed by the witnesses at semver.rs:315-318."
+  },
+  {
+   "id": "version.range.partial#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "expand partial non-wildcard -> [>=M.m.0, <M.(m+1).0-0]",
+   "product": "",
+   "mutations": [
+    "G6-m51"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": "Mutation recorded as \"invalid\" by the first mutate.py version; its log shows a by(compute) assertion that simplifies to false, so the mutant is killed."
+  },
+  {
+   "id": "version.range.partial#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "expand partial branch discards caret; witnessed: ^1.2 rejects 1.3.0 (refutes intended promise)",
+   "product": "",
+   "mutations": [
+    "G6-m99",
+    "G6-m52b"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": "G6-m52b was an equivalent mutant because missing minor/patch parts already count as wildcards. G6-m99 keeps the operator in the partial branch and is killed by the witnesses at semver.rs:315-318."
+  },
+  {
+   "id": "version.range.partial#4",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "expand partial branch ignores the operator for <2, >=1.2 and ^1.2",
+   "product": "",
+   "mutations": [
+    "G6-m99",
+    "G6-m52b"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": "G6-m52b was an equivalent mutant because missing minor/patch parts already count as wildcards. G6-m99 keeps the operator in the partial branch and is killed by the witnesses at semver.rs:315-318."
+  },
+  {
+   "id": "version.range.partial#5",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "year_exact(2024.1) -> Eq; 2024.12 and 1.2 take the partial range branch",
+   "product": "",
+   "mutations": [
+    "G6-m50"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": "Mutation recorded as \"invalid\" by the first mutate.py version; its log shows a by(compute) assertion that simplifies to false, so the mutant is killed."
+  },
+  {
+   "id": "version.range.combine#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "intersect keeps best bounds with compare_versions; ties keep the first, so ^1.0.0 AND <2.0.0 admits 2.0.0-beta.1 in one order (refutes the intended promise)",
+   "product": "",
+   "mutations": [
+    "G6-m39"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": "Mutation recorded as \"invalid\" by the first mutate.py version; its log shows a by(compute) assertion that simplifies to false, so the mutant is killed."
+  },
+  {
+   "id": "version.range.combine#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "intersect order dependence via first-wins tie-break; witnessed both orders",
+   "product": "",
+   "mutations": [
+    "G6-m39"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": "Mutation recorded as \"invalid\" by the first mutate.py version; its log shows a by(compute) assertion that simplifies to false, so the mutant is killed."
+  },
+  {
+   "id": "version.range.combine#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "best keeps the current bound when compare_versions == 0 (first_bound_tie_wins)",
+   "product": "",
+   "mutations": [
+    "G6-m39"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": "Mutation recorded as \"invalid\" by the first mutate.py version; its log shows a by(compute) assertion that simplifies to false, so the mutant is killed. The compute witness fails first, so Verus stops before first_bound_tie_wins."
+  },
+  {
+   "id": "version.range.snapshot-intersection#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "intersect exact branch tests bounds against drop_build(exact) -> NoOverlap for 1.0.0+snapshot vs >=1.0.0+snapshot (iter24 intersection_neighbor)",
+   "product": "",
+   "mutations": [
+    "G6-m40",
+    "G6-m41"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": "G6-m40 survives in semver.rs alone. G6-m41, the same mutant run against iter24/snapshot_dependencies.rs, is killed by a compute assertion. Mutation recorded as \"invalid\" by the first mutate.py version; its log shows a by(compute) assertion that simplifies to false, so the mutant is killed."
+  },
+  {
+   "id": "version.range.snapshot-intersection#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "same drop_build in the exact branch; iter24 reuse_neighbor and intersection_neighbor",
+   "product": "",
+   "mutations": [
+    "G6-m41"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": "Mutation recorded as \"invalid\" by the first mutate.py version; its log shows a by(compute) assertion that simplifies to false, so the mutant is killed."
+  }
+ ]
+}

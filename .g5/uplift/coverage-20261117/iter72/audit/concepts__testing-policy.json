@@ -1,0 +1,517 @@
+{
+ "page": ".g5/ontology/concepts/testing-policy.g5.md",
+ "auditor": "G6",
+ "entries": [
+  {
+   "id": "module.resource.scope#1",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "playbook scopes.rs walk/on_phase computes loaded/compiled per resource from Scope, the command phase list (GetCompletePhasesForOne literal lists) and IsInScope; res_present_one proves it equals L1 for every resource and command",
+   "product": "Lifecycle/Base.cls GetCompletePhasesForOne; Storage/ResourceReference.cls IsInScope; Default/Document.cls OnPhase (bindings in scopes.rs header)",
+   "mutations": [],
+   "control": "playbook-uplift/models/verus/controls/scopes.json reload-ignores-scope, own-phase-not-compiled, scope-ignores-phase-list, verify-runs-test-phase (results/scopes.json: killed)",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "module.resource.scope#2",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "scopes.rs exported/export_phases computes inclusion from pParams IncludeTests (explicit) else manifest IncludeTests; res_export general, res_witness_explicit_zero_overrides_manifest instance",
+   "product": "Lifecycle/Base.cls %Export phase list",
+   "mutations": [],
+   "control": "playbook-uplift/models/verus/controls/scopes.json export-ignores-manifest, explicit-param-cannot-drop, scope-ignores-phase-list (results/scopes.json: killed)",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "build.test.selection#1",
+   "verdict": "partial",
+   "support": "mutation-checked",
+   "deciding": "public_repairs.rs valid_test_target = (class nonempty) != (package nonempty)",
+   "product": "",
+   "mutations": [
+    "G6-m15"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "The Package-only case is never exercised: test_neighbors asserts Class-only valid and both/neither invalid only, so a validator refusing Package-only resources (G6-m15) still verifies.",
+   "note": ""
+  },
+  {
+   "id": "build.test.selection#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "repairs4.rs phase_enabled compares stored phase exactly with lower(request); admitted restricts stored values to lowercase test/verify",
+   "product": "",
+   "mutations": [
+    "G6-m20",
+    "G6-m21"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "build.test.selection#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "public_repairs.rs test_selected short-circuits on empty package (Class resource) before Suite/Case",
+   "product": "",
+   "mutations": [
+    "G6-m16"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "build.test.selection#4",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "test_selected requested = Suite path when Suite defined (even empty), else Case",
+   "product": "",
+   "mutations": [
+    "G6-m17"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "build.test.selection#6",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "test_selected raw prefix in either direction; readers.rs raw_prefix_admits_sibling_name",
+   "product": "",
+   "mutations": [
+    "G6-m18"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "build.test.selection#7",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "owns_class requires class == package or prefix package + \".\"",
+   "product": "",
+   "mutations": [
+    "G6-m19"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "build.test.outcome#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "test_outcome.rs failures counts CaseError, MethodError, AssertFailed rows of the log",
+   "product": "src/cls/IPM/Test/Manager.cls:58-99 GetAllTestsStatus",
+   "mutations": [
+    "G6-m01"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "build.test.outcome#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "lifecycle_invoked = every index (product %Test loop has no exit, ADDSC accumulates); all_ok = conjunction; sync_invoked guarded by earlier resource_ok",
+   "product": "src/cls/IPM/Lifecycle/Base.cls:1256-1276 %Test (for loop, $$$ADDSC, no quit)",
+   "mutations": [
+    "G6-m02",
+    "G6-m03"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": "lifecycle_invoked has no guard because the product loop has none; it is a transcription, not a summary. An OnPhase that throws (not returns) would end the loop through the catch; that path is not modelled."
+  },
+  {
+   "id": "build.test.outcome#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "report_written = ran && run_ok && requested && ext_ok (independent of failures); resource_ok fails on unsupported extension",
+   "product": "",
+   "mutations": [
+    "G6-m04",
+    "G6-m05"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": "Which extensions are supported is the input report_ext_ok; the obligation states the consequences of an unsupported one."
+  },
+  {
+   "id": "build.test.outcome#4",
+   "verdict": "partial",
+   "support": "inspection",
+   "deciding": "displayed_lines(slots,start) is defined as suffix_failures(slots,start), so \"printed rows = counted rows\" holds by definition",
+   "product": "src/cls/IPM/Test/Manager.cls:145-171 OutputFailuresForLogIndex skips methods whose status is not \"failed\"; GetAllTestsStatus:72-95 counts method errors and failed assertions without that filter",
+   "mutations": [],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "The FAILED-line printer is not modelled; displayed_lines is defined as the failure count, so equality holds by construction. The product printer filters on method status while the counter does not, so a method error under a non-failed method would be counted but not printed.",
+   "note": ""
+  },
+  {
+   "id": "build.test.outcome.not-fatal#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "resource_ok applies (!fatal || failures==0); exit_code(ok,terminate)",
+   "product": "",
+   "mutations": [
+    "G6-m06",
+    "G6-m14"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "build.test.outcome.empty#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "resource_ok returns true when has_classes is false; ran false",
+   "product": "",
+   "mutations": [
+    "G6-m07"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "build.test.outcome.empty#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "load_fails = selected && suite_named && !suite_dir_exists; resource_ok false and ran false",
+   "product": "",
+   "mutations": [
+    "G6-m08"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "build.test.outcome.nested#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "get_all_status counts suffix_failures after start and truncates to start (nested) or clears (start 0)",
+   "product": "src/cls/IPM/Test/Manager.cls:58-121",
+   "mutations": [
+    "G6-m09",
+    "G6-m10"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "build.test.outcome.nested#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "get_all_status nested branch keeps slots.take(start); parent reader from 0 sees only its slot",
+   "product": "",
+   "mutations": [
+    "G6-m09",
+    "G6-m10"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "build.test.outcome.nested#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "start 0 removes whole list; lemma_suffix_ignores_prefix (general); later reader after failing leftover passes",
+   "product": "",
+   "mutations": [
+    "G6-m10"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "build.test.outcome.nested#5",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "displayed_lines counts slots after start, empty (None) slots contribute 0",
+   "product": "src/cls/IPM/Test/Manager.cls:125-143 OutputFailures (startIndex+1..count, skips \"\")",
+   "mutations": [
+    "G6-m11",
+    "G6-m12"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "devtools.sync.test-stop#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "sync_invoked(i) requires resource_ok of every earlier resource; lifecycle_invoked all",
+   "product": "",
+   "mutations": [
+    "G6-m02",
+    "G6-m03"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "build.test.outcome.exit#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "exit_code = 1 iff !ok && terminate",
+   "product": "",
+   "mutations": [
+    "G6-m13",
+    "G6-m14"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "build.test-output.run-identity#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "report_identity.rs device_index (last tracked ID) and file_index (numerically latest stored) computed over the nested state; nested_identity_neighbors shows 3 vs 4 (refutes the intended promise)",
+   "product": "",
+   "mutations": [
+    "G6-m29",
+    "G6-m31"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "build.test-output.run-identity#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "device_index = last tracked ID, else latest stored",
+   "product": "",
+   "mutations": [
+    "G6-m29",
+    "G6-m30"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "build.test-output.run-identity#4",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "file_index = explicit ID else latest(db) by numeric maximum; symbolic_order_neighbors over any a != b",
+   "product": "",
+   "mutations": [
+    "G6-m31",
+    "G6-m97"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "build.test-output.run-identity#5",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "single-run states: device last tracked == file latest stored",
+   "product": "",
+   "mutations": [
+    "G6-m97"
+   ],
+   "control": "",
+   "instance_scoped": true,
+   "gap": "",
+   "note": "Fixture runs pass_run/fail_run; the obligation itself names a run alone."
+  },
+  {
+   "id": "build.test-output.run-identity#6",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "nested_full_state: device = tracked outer 3 (fail), file = latest stored child 4 (pass), status from tracked slots",
+   "product": "",
+   "mutations": [
+    "G6-m29",
+    "G6-m31"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": "The obligation is an as-built claim about the checked nested sequence; the instance is its scope."
+  },
+  {
+   "id": "build.test-output.run-identity#7",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "file_index returns the explicit ID when given (forwarded())",
+   "product": "",
+   "mutations": [
+    "G6-m32"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "build.test-output.counted-rows#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "summary counts every decoded entry (entries.len()), independent of action",
+   "product": "",
+   "mutations": [
+    "G6-m35"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "build.test-output.counted-rows#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "passed(status) = status != 0",
+   "product": "",
+   "mutations": [
+    "G6-m33"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "build.test-output.counted-rows#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "error(header) uses readers.rs error_present(!passed && category nonempty); classified derives rows from error text and method status separately",
+   "product": "",
+   "mutations": [
+    "G6-m24"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "build.test-output.counted-rows#4",
+   "verdict": "partial",
+   "support": "inspection",
+   "deciding": "pass_run/fail_run fixtures each contain a passing LogMessage duration() entry; counts 3 and 4 follow from it",
+   "product": "",
+   "mutations": [],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "The appended passing duration entry is a fixture-fixed field (written into pass_run/fail_run from the native observation), not produced by a modelled rule; the \"two calls report three\" outcome follows from the fixture.",
+   "note": ""
+  },
+  {
+   "id": "build.test-output.counts#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "readers.rs count_methods failed_methods from method passed flag, not from assertions",
+   "product": "",
+   "mutations": [
+    "G6-m22"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "build.test-output.counts#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "count_methods adds one method and one failed method when case_error",
+   "product": "",
+   "mutations": [
+    "G6-m23"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "build.test-output.counts#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "error_present = !passed && category nonempty; failed count from status",
+   "product": "",
+   "mutations": [
+    "G6-m24"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "build.test-output.counts#4",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "json_file full tree; json_device summary + methods (detail&&verbose) or failures (detail&&!verbose)",
+   "product": "src/cls/IPM/Test/JsonOutput.cls:4-67 (WriteToFileStream %ToJSON of tree; OutputToDevice showDetail/verbose branches)",
+   "mutations": [
+    "G6-m25",
+    "G6-m26"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "build.test-output.counts#5",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "verify_plan: create = !current && !((reuse||skip) && exists); creates_nojournal_parameter = create",
+   "product": "",
+   "mutations": [
+    "G6-m27",
+    "G6-m28"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  }
+ ]
+}

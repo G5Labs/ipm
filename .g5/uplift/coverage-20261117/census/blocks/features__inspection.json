@@ -1,1345 +1,1442 @@
 {
-  "page": ".g5/ontology/features/inspection.g5.md",
-  "blocks": {
-    "inspect": {
-      "body_sha": "06c38ce48c4c6ba7",
-      "status": "enumerated",
-      "units": {
-        "P1": [
-          "inspect#1"
-        ],
-        "B1": [
-          "inspect#2",
-          "inspect#3"
-        ],
-        "B2": [
-          "inspect#4",
-          "inspect#5"
-        ],
-        "B3": [
-          "inspect#6"
-        ],
-        "B4": [
-          "inspect#7",
-          "inspect#8",
-          "inspect#9"
-        ],
-        "B5": [
-          "inspect#10",
-          "inspect#11",
-          "inspect#12"
-        ],
-        "B6": [
-          "inspect#13"
-        ],
-        "B7": [
-          "inspect#14",
-          "inspect#15"
-        ],
-        "B8": [
-          "inspect#16",
-          "inspect#17"
-        ],
-        "B9": [
-          "inspect#18"
-        ],
-        "B10": [
-          "inspect#19"
-        ]
-      },
-      "parent": {
-        "children": [
-          "inspect.help",
-          "inspect.namespace",
-          "inspect.list-installed",
-          "inspect.show",
-          "inspect.webapp.detail",
-          "inspect.dependents",
-          "inspect.list-dependents",
-          "inspect.orphans.ownership",
-          "inspect.orphans.identifier-case"
-        ],
-        "entailment": "Bullets for list-installed, list-dependents, show content, version, zn switching, orphans and help alias their child owners. The no-change frame, search, information, show lookup, -python, info and zn listing are the parent's own obligations, graded directly. No parent obligation is credited by composition."
-      },
-      "obligations": [
-        {
-          "id": "inspect#1",
-          "units": [
-            "P1"
-          ],
-          "text": "Inspection commands show information without changing installed modules or other stores.",
-          "cases": "any inspection command vs a mutating command",
-          "observation": "database, files and configuration before vs after",
-          "grade": "partial",
-          "check": "unchecked",
-          "models": [
-            ".g5/Verus_verification/consolidated/verus/thin_surfaces.rs::inspection_state",
-            ".g5/Verus_verification/consolidated/verus/thin_surfaces.rs::inspection_preserves_stores"
-          ],
-          "evidence": [
-            ".g5/Verus_verification/consolidated/verus/results/thin_surfaces.json",
-            ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
-          ],
-          "basis": "new:iteration-70",
-          "assessed_in": "iteration-70",
-          "gap": "inspection_state is the identity by definition, so the frame is assumed rather than derived from any command body; no inspection command (show, list-installed, search, orphans) is modeled writing nothing while a neighbour writes. orphans and list-dependents -r touch caches/temp globals that are not represented."
-        },
-        {
-          "id": "inspect#2",
-          "units": [
-            "B1"
-          ],
-          "text": "search filters modules to this platform: a deployed artifact without the current platform is hidden unless all are shown.",
-          "cases": "deployed artifact with vs without the current platform",
-          "observation": "catalog visibility",
-          "grade": "full",
-          "check": "proved",
-          "models": [
-            ".g5/Verus_verification/consolidated/iter8/catalog.rs::catalog_visible",
-            ".g5/Verus_verification/consolidated/iter8/catalog.rs::compatible",
-            ".g5/Verus_verification/consolidated/iter8/catalog.rs::platform_neighbors"
-          ],
-          "evidence": [
-            ".g5/uplift/consolidated/iter8/run.json",
-            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
-          ],
-          "basis": "new:iteration-70 (iter8 catalog.rs not linked from this block)",
-          "assessed_in": "iteration-70"
-        },
-        {
-          "id": "inspect#3",
-          "units": [
-            "B1"
-          ],
-          "text": "search lists modules in all (enabled) registries, and -versions shows every version.",
-          "cases": "two registries; with vs without -versions",
-          "observation": "listed repositories; version list",
-          "grade": "partial",
-          "check": "unchecked",
-          "models": [
-            ".g5/Verus_verification/consolidated/iter8/catalog.rs::grouped",
-            ".g5/Verus_verification/consolidated/iter8/catalog.rs::list_neighbors",
-            ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::repo_visited",
-            ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::search_neighbors"
-          ],
-          "evidence": [
-            ".g5/uplift/consolidated/iter8/run.json",
-            ".g5/uplift/consolidated/iter3/INDEX.json",
-            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
-          ],
-          "basis": "new:iteration-70",
-          "assessed_in": "iteration-70",
-          "gap": "grouped is exercised only with all_versions=true (no neighbour where -versions is off and only the latest shows), and repo_visited decides one registry at a time with no aggregation across registries into the printed list (Main.cls::Search / Repo/Manager.cls::SearchRepositoriesForModule)."
-        },
-        {
-          "id": "inspect#4",
-          "units": [
-            "B2"
-          ],
-          "text": "list-installed lists installed modules, optionally as a tree or sorted.",
-          "alias_of": "inspect.list-installed#1",
-          "assessed_in": "iteration-70"
-        },
-        {
-          "id": "inspect#5",
-          "units": [
-            "B2"
-          ],
-          "text": "list-installed -python lists the module's Python packages.",
-          "cases": "module with requirements.txt, -python vs without",
-          "observation": "printed Python package lines",
-          "grade": "absent",
-          "check": "none",
-          "models": [],
-          "evidence": [],
-          "basis": "new:iteration-70",
-          "assessed_in": "iteration-70",
-          "gap": "No model of ListInstalled -python (ListInstPythonLibrariesTest only); contrast with and without the flag."
-        },
-        {
-          "id": "inspect#6",
-          "units": [
-            "B3"
-          ],
-          "text": "list-dependents lists modules that depend on a given module.",
-          "alias_of": "inspect.list-dependents#1",
-          "assessed_in": "iteration-70"
-        },
-        {
-          "id": "inspect#7",
-          "units": [
-            "B4"
-          ],
-          "text": "information lists the installed top-level modules: every installed module, IPM included, that no installed module names as a dependency.",
-          "cases": "top51 (no dependents) vs dep51/mixeddep51 (named as dependencies)",
-          "observation": "listed modules",
-          "grade": "full",
-          "check": "proved",
-          "models": [
-            ".g5/Verus_verification/consolidated/iter51/toplevel.rs::listed",
-            ".g5/Verus_verification/consolidated/iter51/toplevel.rs::is_dep",
-            ".g5/Verus_verification/consolidated/iter51/toplevel.rs::neighbors"
-          ],
-          "evidence": [
-            ".g5/uplift/consolidated/iter51/run.json"
-          ],
-          "basis": "reused:.g5/ontology/features/inspection.g5.md metadata",
-          "assessed_in": "iteration-70"
-        },
-        {
-          "id": "inspect#8",
-          "units": [
-            "B4"
-          ],
-          "text": "information shows the external name, as External (name) with -v.",
-          "cases": "external module with vs without -v",
-          "observation": "label form",
-          "grade": "full",
-          "check": "proved",
-          "models": [
-            ".g5/Verus_verification/consolidated/iter51/toplevel.rs::label_full",
-            ".g5/Verus_verification/consolidated/iter51/toplevel.rs::neighbors"
-          ],
-          "evidence": [
-            ".g5/uplift/consolidated/iter51/run.json"
-          ],
-          "basis": "reused:.g5/ontology/features/inspection.g5.md metadata",
-          "assessed_in": "iteration-70"
-        },
-        {
-          "id": "inspect#9",
-          "units": [
-            "B4"
-          ],
-          "text": "information shows the version without build metadata.",
-          "cases": "module whose version has build metadata",
-          "observation": "printed version",
-          "grade": "partial",
-          "check": "unchecked",
-          "models": [
-            ".g5/Verus_verification/consolidated/iter51/toplevel.rs::shows_build",
-            ".g5/Verus_verification/consolidated/iter51/toplevel.rs::neighbors"
-          ],
-          "evidence": [
-            ".g5/uplift/consolidated/iter51/run.json"
-          ],
-          "basis": "new:iteration-70",
-          "assessed_in": "iteration-70",
-          "gap": "shows_build is the constant false; no version text is modeled, so stripping \"+build\" is asserted, not derived (Main.cls::Information). Contrast: 1.0.0+b1 prints 1.0.0 while 1.0.0-rc.1 keeps its prerelease."
-        },
-        {
-          "id": "inspect#10",
-          "units": [
-            "B5"
-          ],
-          "text": "show looks up stored Name first, then ExternalName; if both could match, Name wins; neither match is an error.",
-          "cases": "name match, external-only match, both, neither",
-          "observation": "selected record; status",
-          "grade": "full",
-          "check": "proved",
-          "models": [
-            ".g5/Verus_verification/consolidated/verus/thin_surfaces.rs::inspection_choice",
-            ".g5/Verus_verification/consolidated/verus/thin_surfaces.rs::inspection_ok"
-          ],
-          "evidence": [
-            ".g5/Verus_verification/consolidated/verus/results/thin_surfaces.json",
-            ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
-          ],
-          "basis": "reused:.g5/ontology/features/inspection.g5.md metadata",
-          "assessed_in": "iteration-70"
-        },
-        {
-          "id": "inspect#11",
-          "units": [
-            "B5"
-          ],
-          "text": "A failed show lookup produces an error naming the missing module and namespace.",
-          "cases": "missing name",
-          "observation": "error text",
-          "grade": "absent",
-          "check": "none",
-          "models": [],
-          "evidence": [
-            ".g5/Verus_verification/consolidated/verus/results/thin_surfaces.json"
-          ],
-          "basis": "new:iteration-70",
-          "assessed_in": "iteration-70",
-          "gap": "inspection_ok gives only the status; the message content (module and namespace) is native/source-only."
-        },
-        {
-          "id": "inspect#12",
-          "units": [
-            "B5"
-          ],
-          "text": "show shows one installed module's details, resources, dependencies and dependents.",
-          "alias_of": "inspect.show#1",
-          "assessed_in": "iteration-70"
-        },
-        {
-          "id": "inspect#13",
-          "units": [
-            "B6"
-          ],
-          "text": "Name and alias lookup use the module datatype's case-insensitive normalization, preserving the selected record and version.",
-          "cases": "stored-name, alias, uppercase-alias and missing-name requests",
-          "observation": "selected record and version",
-          "grade": "partial",
-          "check": "unchecked",
-          "models": [
-            "playbook-uplift/models/verus/uninstall.rs::lookup_m",
-            ".g5/Verus_verification/consolidated/verus/thin_surfaces.rs::inspection_choice"
-          ],
-          "evidence": [
-            "playbook-uplift/models/verus/results/uninstall.json",
-            ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
-          ],
-          "basis": "new:iteration-70",
-          "assessed_in": "iteration-70",
-          "gap": "Both models take normalized keys (ext_key \"upper-cased\") or found-flags as inputs; no model applies the datatype normalization, so \"MyAlias\" vs \"myalias\" selecting the same record is not distinguished from a case-sensitive lookup."
-        },
-        {
-          "id": "inspect#14",
-          "units": [
-            "B7"
-          ],
-          "text": "info shows the IPM environment.",
-          "cases": "info output",
-          "observation": "printed environment fields",
-          "grade": "absent",
-          "check": "none",
-          "models": [],
-          "evidence": [],
-          "basis": "new:iteration-70",
-          "assessed_in": "iteration-70",
-          "gap": "No model of Main.cls::Info output."
-        },
-        {
-          "id": "inspect#15",
-          "units": [
-            "B7"
-          ],
-          "text": "version shows the IPM version.",
-          "alias_of": "inspect.help#5",
-          "assessed_in": "iteration-70"
-        },
-        {
-          "id": "inspect#16",
-          "units": [
-            "B8"
-          ],
-          "text": "namespace (zn) switches to a namespace.",
-          "alias_of": "inspect.namespace#1",
-          "assessed_in": "iteration-70"
-        },
-        {
-          "id": "inspect#17",
-          "units": [
-            "B8"
-          ],
-          "text": "namespace (zn) without a target lists modules by namespace.",
-          "cases": "zn with no argument across namespaces with and without IPM",
-          "observation": "printed namespace/module listing",
-          "grade": "absent",
-          "check": "none",
-          "models": [],
-          "evidence": [],
-          "basis": "new:iteration-70",
-          "assessed_in": "iteration-70",
-          "gap": "nsinit.rs models only the switch decision; the listing (Main.cls::Namespace) is unmodeled."
-        },
-        {
-          "id": "inspect#18",
-          "units": [
-            "B9"
-          ],
-          "text": "orphans lists items in the code database that belong to no module.",
-          "alias_of": "inspect.orphans.ownership#1",
-          "assessed_in": "iteration-70"
-        },
-        {
-          "id": "inspect#19",
-          "units": [
-            "B10"
-          ],
-          "text": "help shows help for the shell or one command.",
-          "alias_of": "inspect.help#1",
-          "assessed_in": "iteration-70"
-        }
-      ]
+ "page": ".g5/ontology/features/inspection.g5.md",
+ "blocks": {
+  "inspect": {
+   "body_sha": "06c38ce48c4c6ba7",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "inspect#1"
+    ],
+    "B1": [
+     "inspect#2",
+     "inspect#3"
+    ],
+    "B2": [
+     "inspect#4",
+     "inspect#5"
+    ],
+    "B3": [
+     "inspect#6"
+    ],
+    "B4": [
+     "inspect#7",
+     "inspect#8",
+     "inspect#9"
+    ],
+    "B5": [
+     "inspect#10",
+     "inspect#11",
+     "inspect#12"
+    ],
+    "B6": [
+     "inspect#13"
+    ],
+    "B7": [
+     "inspect#14",
+     "inspect#15"
+    ],
+    "B8": [
+     "inspect#16",
+     "inspect#17"
+    ],
+    "B9": [
+     "inspect#18"
+    ],
+    "B10": [
+     "inspect#19"
+    ]
+   },
+   "parent": {
+    "children": [
+     "inspect.help",
+     "inspect.namespace",
+     "inspect.list-installed",
+     "inspect.show",
+     "inspect.webapp.detail",
+     "inspect.dependents",
+     "inspect.list-dependents",
+     "inspect.orphans.ownership",
+     "inspect.orphans.identifier-case"
+    ],
+    "entailment": "Bullets for list-installed, list-dependents, show content, version, zn switching, orphans and help alias their child owners. The no-change frame, search, information, show lookup, -python, info and zn listing are the parent's own obligations, graded directly. No parent obligation is credited by composition."
+   },
+   "obligations": [
+    {
+     "id": "inspect#1",
+     "units": [
+      "P1"
+     ],
+     "text": "Inspection commands show information without changing installed modules or other stores.",
+     "cases": "any inspection command vs a mutating command",
+     "observation": "database, files and configuration before vs after",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/thin_surfaces.rs::inspection_state",
+      ".g5/Verus_verification/consolidated/verus/thin_surfaces.rs::inspection_preserves_stores"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/consolidated/verus/results/thin_surfaces.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "inspection_state is the identity by definition, so the frame is assumed rather than derived from any command body; no inspection command (show, list-installed, search, orphans) is modeled writing nothing while a neighbour writes. orphans and list-dependents -r touch caches/temp globals that are not represented."
     },
-    "inspect.help": {
-      "body_sha": "ee5f1ffb025faa61",
-      "status": "enumerated",
-      "units": {
-        "P1": [
-          "inspect.help#1",
-          "inspect.help#2",
-          "inspect.help#3"
-        ],
-        "B1": [
-          "inspect.help#4"
-        ],
-        "B2": [
-          "inspect.help#5",
-          "inspect.help#6"
-        ]
-      },
-      "obligations": [
-        {
-          "id": "inspect.help#1",
-          "units": [
-            "P1"
-          ],
-          "text": "help lists every command with its aliases and summary.",
-          "cases": "help with no argument",
-          "observation": "listing of all commands",
-          "grade": "partial",
-          "check": "unchecked",
-          "models": [
-            ".g5/Verus_verification/consolidated/iter54/helpcmd.rs::help",
-            ".g5/Verus_verification/consolidated/iter54/helpcmd.rs::listed",
-            ".g5/Verus_verification/consolidated/iter54/helpcmd.rs::neighbors"
-          ],
-          "evidence": [
-            ".g5/uplift/consolidated/iter54/run.json"
-          ],
-          "basis": "new:iteration-70",
-          "assessed_in": "iteration-70",
-          "gap": "listed returns the constant COMMANDS() for any listing view; the 39-entry count is a fixture premise checked natively, and aliases/summaries per command are not modeled. A listing that omits a command or its aliases satisfies the rule."
-        },
-        {
-          "id": "inspect.help#2",
-          "units": [
-            "P1"
-          ],
-          "text": "help <command> or one of its aliases shows that command's detailed help.",
-          "cases": "command name vs alias vs empty",
-          "observation": "detailed view selected",
-          "grade": "full",
-          "check": "proved",
-          "models": [
-            ".g5/Verus_verification/consolidated/iter54/helpcmd.rs::help",
-            ".g5/Verus_verification/consolidated/iter54/helpcmd.rs::neighbors"
-          ],
-          "evidence": [
-            ".g5/uplift/consolidated/iter54/run.json"
-          ],
-          "basis": "reused:.g5/ontology/features/inspection.g5.md metadata",
-          "assessed_in": "iteration-70"
-        },
-        {
-          "id": "inspect.help#3",
-          "units": [
-            "P1"
-          ],
-          "text": "Phase commands such as compile also show module-action's flags.",
-          "cases": "compile vs install",
-          "observation": "modifier sections shown",
-          "grade": "full",
-          "check": "proved",
-          "models": [
-            ".g5/Verus_verification/consolidated/iter54/helpcmd.rs::shows_only",
-            ".g5/Verus_verification/consolidated/iter54/helpcmd.rs::shows_dev",
-            ".g5/Verus_verification/consolidated/iter54/helpcmd.rs::neighbors"
-          ],
-          "evidence": [
-            ".g5/uplift/consolidated/iter54/run.json"
-          ],
-          "basis": "reused:.g5/ontology/features/inspection.g5.md metadata",
-          "assessed_in": "iteration-70"
-        },
-        {
-          "id": "inspect.help#4",
-          "units": [
-            "B1"
-          ],
-          "text": "An unknown name, including a different-case name such as INSTALL, prints a warning and the full list.",
-          "cases": "unknown name vs known command; INSTALL vs install",
-          "observation": "warning and listing",
-          "grade": "partial",
-          "check": "unchecked",
-          "models": [
-            ".g5/Verus_verification/consolidated/iter54/helpcmd.rs::help",
-            ".g5/Verus_verification/consolidated/iter54/helpcmd.rs::neighbors"
-          ],
-          "evidence": [
-            ".g5/uplift/consolidated/iter54/run.json"
-          ],
-          "basis": "new:iteration-70",
-          "assessed_in": "iteration-70",
-          "gap": "The Name classification (Cmd/Alias/Unknown) is an input; nothing models the case-sensitive resolution in CLI.cls::%Help, so INSTALL being Unknown is assumed. The unknown->warning+list outcome itself is exercised."
-        },
-        {
-          "id": "inspect.help#5",
-          "units": [
-            "B2"
-          ],
-          "text": "version prints IPM's version per namespace with IPM and each remote registry's version.",
-          "cases": "namespaces with IPM; 0 vs 1 remote registries",
-          "observation": "number and kind of version lines",
-          "grade": "partial",
-          "check": "unchecked",
-          "models": [
-            ".g5/Verus_verification/consolidated/iter54/helpcmd.rs::version_lines",
-            ".g5/Verus_verification/consolidated/iter54/helpcmd.rs::neighbors"
-          ],
-          "evidence": [
-            ".g5/uplift/consolidated/iter54/run.json"
-          ],
-          "basis": "new:iteration-70",
-          "assessed_in": "iteration-70",
-          "gap": "version_lines is exercised only at (1 namespace, 0 registries); the remote-registry branch is outside the iteration's scope (metadata). Contrast: one remote registry adds its version line."
-        },
-        {
-          "id": "inspect.help#6",
-          "units": [
-            "B2"
-          ],
-          "text": "The shell intro names the current registry only when a remote registry is defined.",
-          "cases": "0 vs 1 remote registries",
-          "observation": "intro line presence",
-          "grade": "full",
-          "check": "proved",
-          "models": [
-            ".g5/Verus_verification/consolidated/iter54/helpcmd.rs::intro_current_registry",
-            ".g5/Verus_verification/consolidated/iter54/helpcmd.rs::neighbors"
-          ],
-          "evidence": [
-            ".g5/uplift/consolidated/iter54/run.json"
-          ],
-          "basis": "reused:.g5/ontology/features/inspection.g5.md metadata",
-          "assessed_in": "iteration-70"
-        }
-      ]
+    {
+     "id": "inspect#2",
+     "units": [
+      "B1"
+     ],
+     "text": "search filters modules to this platform: a deployed artifact without the current platform is hidden unless all are shown.",
+     "cases": "deployed artifact with vs without the current platform",
+     "observation": "catalog visibility",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter8/catalog.rs::catalog_visible",
+      ".g5/Verus_verification/consolidated/iter8/catalog.rs::compatible",
+      ".g5/Verus_verification/consolidated/iter8/catalog.rs::platform_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter8/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__inspection.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G7.jsonl"
+     ],
+     "basis": "new:iteration-70 (iter8 catalog.rs not linked from this block); iteration-72 rule-4a re-audit (G7): full, support mutation-checked (mutations G7-m41, G7-m42)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
-    "inspect.namespace": {
-      "body_sha": "c131627f1a1912fb",
-      "status": "enumerated",
-      "units": {
-        "P1": [
-          "inspect.namespace#1"
-        ],
-        "B1": [
-          "inspect.namespace#2"
-        ]
-      },
-      "obligations": [
-        {
-          "id": "inspect.namespace#1",
-          "units": [
-            "P1"
-          ],
-          "text": "zn <name> switches only when IPM is available there; otherwise it prints \"IPM is not enabled\" and leaves the namespace and status unchanged, while an unknown namespace fails the command.",
-          "cases": "known namespace with IPM vs without vs unknown; current namespace",
-          "observation": "switched; status; not-enabled message",
-          "grade": "full",
-          "check": "proved",
-          "models": [
-            ".g5/Verus_verification/consolidated/iter55/nsinit.rs::zn",
-            ".g5/Verus_verification/consolidated/iter55/nsinit.rs::zn_neighbors"
-          ],
-          "evidence": [
-            ".g5/uplift/consolidated/iter55/run.json"
-          ],
-          "basis": "reused:.g5/ontology/features/inspection.g5.md metadata",
-          "assessed_in": "iteration-70"
-        },
-        {
-          "id": "inspect.namespace#2",
-          "units": [
-            "B1"
-          ],
-          "text": "zn <pattern> lists the matching namespaces, marking those without IPM, and switches to the one the user enters; an empty answer keeps the current namespace.",
-          "cases": "pattern with IPM and non-IPM matches; chosen vs empty answer",
-          "observation": "printed list; resulting namespace",
-          "grade": "absent",
-          "check": "none",
-          "models": [],
-          "evidence": [],
-          "basis": "new:iteration-70",
-          "assessed_in": "iteration-70",
-          "gap": "nsinit.rs models only the direct-name decision. Contrast: pattern listing marks the non-IPM namespace and an empty answer keeps the current namespace (Main.cls::Namespace)."
-        }
-      ]
+    {
+     "id": "inspect#3",
+     "units": [
+      "B1"
+     ],
+     "text": "search lists modules in all (enabled) registries, and -versions shows every version.",
+     "cases": "two registries; with vs without -versions",
+     "observation": "listed repositories; version list",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter8/catalog.rs::grouped",
+      ".g5/Verus_verification/consolidated/iter8/catalog.rs::list_neighbors",
+      ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::repo_visited",
+      ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::search_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter8/run.json",
+      ".g5/uplift/consolidated/iter3/INDEX.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-72",
+     "gap": "grouped is exercised only with all_versions=true (no neighbour where -versions is off and only the latest shows), and repo_visited decides one registry at a time with no aggregation across registries into the printed list (Main.cls::Search / Repo/Manager.cls::SearchRepositoriesForModule). As built -versions also lifts the platform filter (Utils/Module.cls:938, review-71 A3), which the block does not say."
     },
-    "inspect.list-installed": {
-      "body_sha": "5b7e2d4ec17c8f96",
-      "status": "enumerated",
-      "units": {
-        "P1": [
-          "inspect.list-installed#1",
-          "inspect.list-installed#2"
-        ],
-        "B1": [
-          "inspect.list-installed#3"
-        ],
-        "B2": [
-          "inspect.list-installed#1",
-          "inspect.list-installed#4",
-          "inspect.list-installed#5"
-        ],
-        "B3": [
-          "inspect.list-installed#6"
-        ]
-      },
-      "obligations": [
-        {
-          "id": "inspect.list-installed#1",
-          "units": [
-            "P1",
-            "B2"
-          ],
-          "text": "list-installed prints IPM first, then the others ordered by displayed name; -s sorts by name or version ascending or descending and IPM stays first.",
-          "cases": "fixture modules under modes name, name-desc, version",
-          "observation": "flat report position",
-          "grade": "full",
-          "check": "proved",
-          "models": [
-            ".g5/Verus_verification/consolidated/iter35/listing.rs::flat_pos",
-            ".g5/Verus_verification/consolidated/iter35/listing.rs::before",
-            ".g5/Verus_verification/consolidated/iter35/listing.rs::sort_neighbors"
-          ],
-          "evidence": [
-            ".g5/uplift/consolidated/iter35/run.json"
-          ],
-          "basis": "reused:.g5/ontology/features/inspection.g5.md metadata",
-          "assessed_in": "iteration-70"
-        },
-        {
-          "id": "inspect.list-installed#2",
-          "units": [
-            "P1"
-          ],
-          "text": "A module with an external name shows as External (name).",
-          "cases": "module with vs without external name",
-          "observation": "printed label",
-          "grade": "absent",
-          "check": "none",
-          "models": [],
-          "evidence": [
-            ".g5/uplift/consolidated/iter35/run.json"
-          ],
-          "basis": "new:iteration-70",
-          "assessed_in": "iteration-70",
-          "gap": "The label is an input field of Mod; no rule renders \"External (name)\" from the stored external name (Main.cls::ListInstalled)."
-        },
-        {
-          "id": "inspect.list-installed#3",
-          "units": [
-            "B1"
-          ],
-          "text": "A developer-mode module is marked (DeveloperMode), and -showsource adds each module's root.",
-          "cases": "dev vs non-dev module; with vs without -showsource",
-          "observation": "printed markers and root",
-          "grade": "absent",
-          "check": "none",
-          "models": [],
-          "evidence": [
-            ".g5/uplift/consolidated/iter35/run.json"
-          ],
-          "basis": "new:iteration-70",
-          "assessed_in": "iteration-70",
-          "gap": "Mod.dev exists but no display function reads it; DisplayModules output (marker, root) is unmodeled."
-        },
-        {
-          "id": "inspect.list-installed#4",
-          "units": [
-            "B2"
-          ],
-          "text": "-s date sorts by install date.",
-          "cases": "modules installed at different times",
-          "observation": "order",
-          "grade": "absent",
-          "check": "none",
-          "models": [],
-          "evidence": [
-            ".g5/uplift/consolidated/iter35/run.json"
-          ],
-          "basis": "new:iteration-70",
-          "assessed_in": "iteration-70",
-          "gap": "Date sort is not assessed (metadata)."
-        },
-        {
-          "id": "inspect.list-installed#5",
-          "units": [
-            "B2"
-          ],
-          "text": "As built (C:D42), -s version compares prereleases of the same version as text, so 1.0.0-rc.10 sorts before 1.0.0-rc.2.",
-          "cases": "rc.10 vs rc.2 of the same version",
-          "observation": "flat position under version sort",
-          "grade": "full",
-          "check": "proved",
-          "models": [
-            ".g5/Verus_verification/consolidated/iter35/listing.rs::version_cmp",
-            ".g5/Verus_verification/consolidated/iter35/listing.rs::pre_key",
-            ".g5/Verus_verification/consolidated/iter35/listing.rs::sort_neighbors"
-          ],
-          "evidence": [
-            ".g5/uplift/consolidated/iter35/run.json"
-          ],
-          "basis": "reused:.g5/ontology/features/inspection.g5.md metadata",
-          "assessed_in": "iteration-70"
-        },
-        {
-          "id": "inspect.list-installed#6",
-          "units": [
-            "B3"
-          ],
-          "text": "-tree ignores -s; it starts from installed modules that no other installed module depends on, in name order, prints each dependency under every module that needs it, and marks an uninstalled one [missing].",
-          "cases": "shared dependency under two parents; dependency uninstalled (cut)",
-          "observation": "tree rows, occurrences and depths",
-          "grade": "full",
-          "check": "proved",
-          "models": [
-            ".g5/Verus_verification/consolidated/iter35/listing.rs::tree",
-            ".g5/Verus_verification/consolidated/iter35/listing.rs::is_root",
-            ".g5/Verus_verification/consolidated/iter35/listing.rs::expand",
-            ".g5/Verus_verification/consolidated/iter35/listing.rs::tree_neighbors"
-          ],
-          "evidence": [
-            ".g5/uplift/consolidated/iter35/run.json"
-          ],
-          "basis": "reused:.g5/ontology/features/inspection.g5.md metadata",
-          "assessed_in": "iteration-70"
-        }
-      ]
+    {
+     "id": "inspect#4",
+     "units": [
+      "B2"
+     ],
+     "text": "list-installed lists installed modules, optionally as a tree or sorted.",
+     "alias_of": "inspect.list-installed#1",
+     "assessed_in": "iteration-70"
     },
-    "inspect.show": {
-      "body_sha": "07b4c564d67c4caf",
-      "status": "enumerated",
-      "units": {
-        "P1": [
-          "inspect.show#1"
-        ],
-        "B1": [
-          "inspect.show#2",
-          "inspect.show#3",
-          "inspect.show#4",
-          "inspect.show#5"
-        ],
-        "B2": [
-          "inspect.show#6"
-        ]
-      },
-      "obligations": [
-        {
-          "id": "inspect.show#1",
-          "units": [
-            "P1"
-          ],
-          "text": "The show summary prints only non-empty blocks (usage, footprint, dependencies, dependents, system requirements).",
-          "cases": "fixture modules a, b, d, h with different empty blocks",
-          "observation": "number of printed blocks",
-          "grade": "full",
-          "check": "proved",
-          "models": [
-            ".g5/Verus_verification/consolidated/iter46/summary.rs::blocks",
-            ".g5/Verus_verification/consolidated/iter46/summary.rs::empty_blocks_omitted",
-            ".g5/Verus_verification/consolidated/iter46/summary.rs::schedule"
-          ],
-          "evidence": [
-            ".g5/uplift/consolidated/iter46/run.json"
-          ],
-          "basis": "reused:.g5/ontology/features/inspection.g5.md metadata",
-          "assessed_in": "iteration-70"
-        },
-        {
-          "id": "inspect.show#2",
-          "units": [
-            "B1"
-          ],
-          "text": "Scoped and unit-test resources are not shown.",
-          "cases": "module with scoped resources",
-          "observation": "shown code count",
-          "grade": "partial",
-          "check": "unchecked",
-          "models": [
-            ".g5/Verus_verification/consolidated/iter46/summary.rs::shown_code",
-            ".g5/Verus_verification/consolidated/iter46/summary.rs::scoped_hidden"
-          ],
-          "evidence": [
-            ".g5/uplift/consolidated/iter46/run.json"
-          ],
-          "basis": "new:iteration-70",
-          "assessed_in": "iteration-70",
-          "gap": "shown_code returns m.code, an input that already excludes scoped resources; scoped_hidden is a tautology. GetSection's filter is not modeled, so a summary listing a scoped resource satisfies the rule."
-        },
-        {
-          "id": "inspect.show#3",
-          "units": [
-            "B1"
-          ],
-          "text": "<Defaults><Parameter> values are not shown in the usage block.",
-          "cases": "module with parameters but no defaults/after-install text",
-          "observation": "usage block presence",
-          "grade": "full",
-          "check": "proved",
-          "models": [
-            ".g5/Verus_verification/consolidated/iter46/summary.rs::usage",
-            ".g5/Verus_verification/consolidated/iter46/summary.rs::parameter_not_listed"
-          ],
-          "evidence": [
-            ".g5/uplift/consolidated/iter46/run.json"
-          ],
-          "basis": "reused:.g5/ontology/features/inspection.g5.md metadata",
-          "assessed_in": "iteration-70"
-        },
-        {
-          "id": "inspect.show#4",
-          "units": [
-            "B1"
-          ],
-          "text": "Keywords are not shown.",
-          "cases": "module with keywords",
-          "observation": "keyword line presence",
-          "grade": "partial",
-          "check": "unchecked",
-          "models": [
-            ".g5/Verus_verification/consolidated/iter46/summary.rs::keywords_shown",
-            ".g5/Verus_verification/consolidated/iter46/summary.rs::schedule"
-          ],
-          "evidence": [
-            ".g5/uplift/consolidated/iter46/run.json"
-          ],
-          "basis": "new:iteration-70",
-          "assessed_in": "iteration-70",
-          "gap": "keywords_shown is the constant false; no reader is modeled."
-        },
-        {
-          "id": "inspect.show#5",
-          "units": [
-            "B1"
-          ],
-          "text": "A FileCopy target is shown as written, before expansion.",
-          "cases": "FileCopy with a {$...} target",
-          "observation": "displayed target text",
-          "grade": "absent",
-          "check": "none",
-          "models": [],
-          "evidence": [
-            ".g5/uplift/consolidated/iter46/run.json"
-          ],
-          "basis": "new:iteration-70",
-          "assessed_in": "iteration-70",
-          "gap": "Not in summary.rs; native-only."
-        },
-        {
-          "id": "inspect.show#6",
-          "units": [
-            "B2"
-          ],
-          "text": "As built (C:D52), a Health=\"false\" system requirement is not shown.",
-          "cases": "Health=false requirement alone vs with Version/Interop",
-          "observation": "system-requirements block and entries",
-          "grade": "full",
-          "check": "proved",
-          "models": [
-            ".g5/Verus_verification/consolidated/iter46/summary.rs::health_entry",
-            ".g5/Verus_verification/consolidated/iter46/summary.rs::health_false_hidden",
-            ".g5/Verus_verification/consolidated/iter46/summary.rs::schedule"
-          ],
-          "evidence": [
-            ".g5/uplift/consolidated/iter46/run.json"
-          ],
-          "basis": "reused:.g5/ontology/features/inspection.g5.md metadata (C:D52; the install refusal belongs to the requirement owner on the manifest page)",
-          "assessed_in": "iteration-70"
-        }
-      ]
+    {
+     "id": "inspect#5",
+     "units": [
+      "B2"
+     ],
+     "text": "list-installed -python lists the module's Python packages.",
+     "cases": "module with requirements.txt, -python vs without",
+     "observation": "printed Python package lines",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "No model of ListInstalled -python (ListInstPythonLibrariesTest only); contrast with and without the flag."
     },
-    "inspect.webapp.detail": {
-      "body_sha": "801fefe834b185fc",
-      "status": "enumerated",
-      "units": {
-        "P1": [
-          "inspect.webapp.detail#1"
-        ],
-        "P2": [
-          "inspect.webapp.detail#2",
-          "inspect.webapp.detail#3"
-        ]
-      },
-      "obligations": [
-        {
-          "id": "inspect.webapp.detail#1",
-          "units": [
-            "P1"
-          ],
-          "text": "The web-app summary shows DispatchClass first, then WSGIAppLocation, then Path or Directory; empty attributes are skipped and nothing shows if all four are empty.",
-          "cases": "all four set; first absent; first two absent; only Directory; none",
-          "observation": "selected detail",
-          "grade": "full",
-          "check": "proved",
-          "models": [
-            ".g5/Verus_verification/consolidated/iter7/inputs.rs::detail",
-            ".g5/Verus_verification/consolidated/iter7/inputs.rs::directory_and_reader_neighbors"
-          ],
-          "evidence": [
-            ".g5/uplift/consolidated/iter7/run.json",
-            ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
-          ],
-          "basis": "reused:.g5/ontology/features/inspection.g5.md metadata ; iteration-70 review: exercising theorem/neighbour locator added",
-          "assessed_in": "iteration-70"
-        },
-        {
-          "id": "inspect.webapp.detail#2",
-          "units": [
-            "P2"
-          ],
-          "text": "The text identifies the selected value as dispatch, wsgi or files at.",
-          "cases": "dispatch vs wsgi vs path/directory selection",
-          "observation": "label kind",
-          "grade": "full",
-          "check": "proved",
-          "models": [
-            ".g5/Verus_verification/consolidated/iter7/inputs.rs::detail",
-            ".g5/Verus_verification/consolidated/iter7/inputs.rs::directory_and_reader_neighbors"
-          ],
-          "evidence": [
-            ".g5/uplift/consolidated/iter7/run.json",
-            ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
-          ],
-          "basis": "reused:.g5/ontology/features/inspection.g5.md metadata ; iteration-70 review: exercising theorem/neighbour locator added",
-          "assessed_in": "iteration-70"
-        },
-        {
-          "id": "inspect.webapp.detail#3",
-          "units": [
-            "P2"
-          ],
-          "text": "The summary reads the declared resource attributes, not a fresh query of effective Security.Applications properties.",
-          "cases": "declared DispatchClass differing from the effective application property",
-          "observation": "displayed value",
-          "grade": "partial",
-          "check": "unchecked",
-          "models": [
-            ".g5/Verus_verification/consolidated/iter7/inputs.rs::detail"
-          ],
-          "evidence": [
-            ".g5/uplift/consolidated/iter7/run.json",
-            ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
-          ],
-          "basis": "new:iteration-70",
-          "assessed_in": "iteration-70",
-          "gap": "detail takes declared attributes as inputs; no neighbour has a differing effective Security.Applications value, so a reader that queries the effective property satisfies the rule."
-        }
-      ]
+    {
+     "id": "inspect#6",
+     "units": [
+      "B3"
+     ],
+     "text": "list-dependents lists modules that depend on a given module.",
+     "alias_of": "inspect.list-dependents#1",
+     "assessed_in": "iteration-70"
     },
-    "inspect.dependents": {
-      "body_sha": "e529f153d1f216b9",
-      "status": "enumerated",
-      "units": {
-        "P1": [
-          "inspect.dependents#1",
-          "inspect.dependents#2"
-        ],
-        "B1": [
-          "inspect.dependents#3"
-        ],
-        "B2": [
-          "inspect.dependents#4"
-        ]
-      },
-      "obligations": [
-        {
-          "id": "inspect.dependents#1",
-          "units": [
-            "P1"
-          ],
-          "text": "As built, show lists only direct, unscoped dependents.",
-          "cases": "one scoped and one unscoped dependent edge to the target",
-          "observation": "listed dependents",
-          "grade": "full",
-          "check": "proved",
-          "models": [
-            ".g5/Verus_verification/consolidated/iter2/readers.rs::direct_dependents",
-            ".g5/Verus_verification/consolidated/iter2/readers.rs::scoped_dependents_are_not_displayed"
-          ],
-          "evidence": [
-            ".g5/uplift/consolidated/iter2/native/receipt.json",
-            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
-          ],
-          "basis": "reused:.g5/ontology/features/inspection.g5.md metadata",
-          "assessed_in": "iteration-70"
-        },
-        {
-          "id": "inspect.dependents#2",
-          "units": [
-            "P1"
-          ],
-          "text": "show hides scoped dependencies from its dependency list.",
-          "cases": "module with a scoped and an unscoped dependency",
-          "observation": "dependency list",
-          "grade": "absent",
-          "check": "none",
-          "models": [],
-          "evidence": [
-            ".g5/uplift/consolidated/iter2/native/receipt.json"
-          ],
-          "basis": "new:iteration-70",
-          "assessed_in": "iteration-70",
-          "gap": "readers.rs filters scoped edges only for dependents; the module's own dependency list (ModuleSummary GetLines) is unmodeled. Contrast: Scope=\"test\" dependency omitted vs plain dependency shown."
-        },
-        {
-          "id": "inspect.dependents#3",
-          "units": [
-            "B1"
-          ],
-          "text": "A missing installed dependency version reads not installed; a present version that fails the requested range reads unsatisfied.",
-          "cases": "empty version; present unsatisfying; present satisfying",
-          "observation": "status text",
-          "grade": "full",
-          "check": "proved",
-          "models": [
-            ".g5/Verus_verification/consolidated/iter2/readers.rs::installed_status",
-            ".g5/Verus_verification/consolidated/iter2/readers.rs::scoped_dependents_are_not_displayed"
-          ],
-          "evidence": [
-            ".g5/uplift/consolidated/iter2/native/receipt.json",
-            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
-          ],
-          "basis": "reused:.g5/ontology/features/inspection.g5.md metadata",
-          "assessed_in": "iteration-70"
-        },
-        {
-          "id": "inspect.dependents#4",
-          "units": [
-            "B2"
-          ],
-          "text": "Requirements-file display skips blank lines and lines starting with # after trimming; inline comments remain.",
-          "cases": "comment line, blank line, line with an inline comment",
-          "observation": "displayed lines",
-          "grade": "partial",
-          "check": "unchecked",
-          "models": [
-            ".g5/Verus_verification/consolidated/iter2/readers.rs::requirements",
-            ".g5/Verus_verification/consolidated/iter2/readers.rs::requirement_comments_are_line_based"
-          ],
-          "evidence": [
-            ".g5/uplift/consolidated/iter2/native/receipt.json",
-            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
-          ],
-          "basis": "new:iteration-70",
-          "assessed_in": "iteration-70",
-          "gap": "Lines carry blank/comment flags as inputs (trimming is not modeled); only the comment-line case is exercised. Blank-line skipping and an inline \"pkg # note\" line being kept are not neighbours."
-        }
-      ]
+    {
+     "id": "inspect#7",
+     "units": [
+      "B4"
+     ],
+     "text": "information lists the installed top-level modules: every installed module, IPM included, that no installed module names as a dependency.",
+     "cases": "top51 (no dependents) vs dep51/mixeddep51 (named as dependencies)",
+     "observation": "listed modules",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter51/toplevel.rs::listed",
+      ".g5/Verus_verification/consolidated/iter51/toplevel.rs::is_dep",
+      ".g5/Verus_verification/consolidated/iter51/toplevel.rs::neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter51/run.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__inspection.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G7.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/inspection.g5.md metadata; iteration-72 rule-4a re-audit (G7): full, support mutation-checked (mutations G7-m43; instance-scoped)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked",
+     "instance_scoped": true
     },
-    "inspect.list-dependents": {
-      "body_sha": "7a5302395da7e4f1",
-      "status": "enumerated",
-      "units": {
-        "P1": [
-          "inspect.list-dependents#1",
-          "inspect.list-dependents#2"
-        ],
-        "B1": [
-          "inspect.list-dependents#3"
-        ],
-        "B2": [
-          "inspect.list-dependents#4"
-        ],
-        "B3": [
-          "inspect.list-dependents#5"
-        ]
-      },
-      "obligations": [
-        {
-          "id": "inspect.list-dependents#1",
-          "units": [
-            "P1"
-          ],
-          "text": "list-dependents <module> lists every installed module whose dependency graph contains the module, directly or through other modules.",
-          "cases": "direct and transitive dependents vs unrelated modules",
-          "observation": "listed modules",
-          "grade": "full",
-          "check": "proved",
-          "models": [
-            ".g5/Verus_verification/consolidated/iter33/dependents.rs::listed",
-            ".g5/Verus_verification/consolidated/iter33/dependents.rs::in_graph",
-            ".g5/Verus_verification/consolidated/iter33/dependents.rs::flat_neighbors"
-          ],
-          "evidence": [
-            ".g5/uplift/consolidated/iter33/run.json"
-          ],
-          "basis": "reused:.g5/ontology/features/inspection.g5.md metadata",
-          "assessed_in": "iteration-70"
-        },
-        {
-          "id": "inspect.list-dependents#2",
-          "units": [
-            "P1"
-          ],
-          "text": "A version argument keeps only dependents whose graph resolves the module to that version.",
-          "cases": "version filter matching vs not matching",
-          "observation": "listed modules",
-          "grade": "full",
-          "check": "proved",
-          "models": [
-            ".g5/Verus_verification/consolidated/iter33/dependents.rs::listed",
-            ".g5/Verus_verification/consolidated/iter33/dependents.rs::node_ver",
-            ".g5/Verus_verification/consolidated/iter33/dependents.rs::flat_neighbors"
-          ],
-          "evidence": [
-            ".g5/uplift/consolidated/iter33/run.json"
-          ],
-          "basis": "reused:.g5/ontology/features/inspection.g5.md metadata",
-          "assessed_in": "iteration-70"
-        },
-        {
-          "id": "inspect.list-dependents#3",
-          "units": [
-            "B1"
-          ],
-          "text": "With -r <repos> it lists repository manifests instead and ignores installed modules.",
-          "cases": "repository mode vs installed mode",
-          "observation": "listed roots",
-          "grade": "full",
-          "check": "proved",
-          "models": [
-            ".g5/Verus_verification/consolidated/iter33/dependents.rs::is_root",
-            ".g5/Verus_verification/consolidated/iter33/dependents.rs::resolve_repo",
-            ".g5/Verus_verification/consolidated/iter33/dependents.rs::repo_neighbors"
-          ],
-          "evidence": [
-            ".g5/uplift/consolidated/iter33/run.json"
-          ],
-          "basis": "reused:.g5/ontology/features/inspection.g5.md metadata",
-          "assessed_in": "iteration-70"
-        },
-        {
-          "id": "inspect.list-dependents#4",
-          "units": [
-            "B2"
-          ],
-          "text": "A dependent whose graph cannot be resolved is printed as a warning instead of a dependent; with the module absent, installed requirements on it can make every dependent's graph fail this way.",
-          "cases": "target removed vs present",
-          "observation": "warnings vs listed lines",
-          "grade": "full",
-          "check": "proved",
-          "models": [
-            ".g5/Verus_verification/consolidated/iter33/dependents.rs::warned",
-            ".g5/Verus_verification/consolidated/iter33/dependents.rs::graph_ok",
-            ".g5/Verus_verification/consolidated/iter33/dependents.rs::removed_target_neighbors"
-          ],
-          "evidence": [
-            ".g5/uplift/consolidated/iter33/run.json"
-          ],
-          "basis": "reused:.g5/ontology/features/inspection.g5.md metadata",
-          "assessed_in": "iteration-70"
-        },
-        {
-          "id": "inspect.list-dependents#5",
-          "units": [
-            "B3"
-          ],
-          "text": "As built (C:D38), -t prints only the module and modules between it and the top of each graph, never a module that is itself the top of a graph.",
-          "cases": "tree for a target with depth-1 and depth-2 dependents",
-          "observation": "printed tree nodes",
-          "grade": "full",
-          "check": "proved",
-          "models": [
-            ".g5/Verus_verification/consolidated/iter33/dependents.rs::tree_has",
-            ".g5/Verus_verification/consolidated/iter33/dependents.rs::tree_path_has",
-            ".g5/Verus_verification/consolidated/iter33/dependents.rs::tree_omits_roots"
-          ],
-          "evidence": [
-            ".g5/uplift/consolidated/iter33/run.json"
-          ],
-          "basis": "reused:.g5/ontology/features/inspection.g5.md metadata",
-          "assessed_in": "iteration-70"
-        }
-      ]
+    {
+     "id": "inspect#8",
+     "units": [
+      "B4"
+     ],
+     "text": "information shows the external name, as External (name) with -v.",
+     "cases": "external module with vs without -v",
+     "observation": "label form",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter51/toplevel.rs::label_full",
+      ".g5/Verus_verification/consolidated/iter51/toplevel.rs::neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter51/run.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__inspection.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G7.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/inspection.g5.md metadata; iteration-72 rule-4a re-audit (G7): full, support mutation-checked (mutations G7-m44)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
-    "inspect.orphans.ownership": {
-      "body_sha": "ed750442f90290fc",
-      "status": "enumerated",
-      "units": {
-        "P1": [
-          "inspect.orphans.ownership#1"
-        ],
-        "B1": [
-          "inspect.orphans.ownership#2"
-        ],
-        "B2": [
-          "inspect.orphans.ownership#3"
-        ],
-        "B3": [
-          "inspect.orphans.ownership#4"
-        ],
-        "B4": "excluded: scope statement of the observations (ordinary compiled nonstub classes in the default code database; other types, mapped/system items and query lifetimes outside; inherited P:F-UNIN-7)"
-      },
-      "obligations": [
-        {
-          "id": "inspect.orphans.ownership#1",
-          "units": [
-            "P1"
-          ],
-          "text": "orphans -type CLS subtracts classes whose home-module lookup returns an installed module, so a class can disappear from the list while its code stays callable.",
-          "cases": "free vs claimed/naming/exact worlds",
-          "observation": "visible orphan rows; class payload",
-          "grade": "full",
-          "check": "proved",
-          "models": [
-            ".g5/Verus_verification/consolidated/iter20/ownership.rs::visible",
-            ".g5/Verus_verification/consolidated/iter20/ownership.rs::printed",
-            ".g5/Verus_verification/consolidated/iter20/ownership.rs::payload",
-            ".g5/Verus_verification/consolidated/iter20/ownership.rs::normal_neighbors"
-          ],
-          "evidence": [
-            ".g5/uplift/consolidated/iter20/run.json",
-            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
-          ],
-          "basis": "reused:.g5/ontology/features/inspection.g5.md metadata",
-          "assessed_in": "iteration-70"
-        },
-        {
-          "id": "inspect.orphans.ownership#2",
-          "units": [
-            "B1"
-          ],
-          "text": "Loading an unrelated module that explicitly declares a controlled class creates its ownership and removes that class from orphan output; another unclaimed class stays visible.",
-          "cases": "claimed world: Loose claimed, Named unclaimed",
-          "observation": "visibility; home name",
-          "grade": "full",
-          "check": "proved",
-          "models": [
-            ".g5/Verus_verification/consolidated/iter20/ownership.rs::claimed",
-            ".g5/Verus_verification/consolidated/iter20/ownership.rs::normal_neighbors",
-            ".g5/Verus_verification/consolidated/iter20/ownership.rs::cursor_neighbor"
-          ],
-          "evidence": [
-            ".g5/uplift/consolidated/iter20/run.json",
-            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
-          ],
-          "basis": "reused:.g5/ontology/features/inspection.g5.md metadata",
-          "assessed_in": "iteration-70"
-        },
-        {
-          "id": "inspect.orphans.ownership#3",
-          "units": [
-            "B2"
-          ],
-          "text": "A module whose name matches a class/package prefix supplies its home even with no resources, hiding the class without a resource reference.",
-          "cases": "naming world vs claimed world for Named",
-          "observation": "visibility; has_ref; home name",
-          "grade": "full",
-          "check": "proved",
-          "models": [
-            ".g5/Verus_verification/consolidated/iter20/ownership.rs::naming_pass",
-            ".g5/Verus_verification/consolidated/iter20/ownership.rs::normal_neighbors"
-          ],
-          "evidence": [
-            ".g5/uplift/consolidated/iter20/run.json",
-            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
-          ],
-          "basis": "reused:.g5/ontology/features/inspection.g5.md metadata",
-          "assessed_in": "iteration-70"
-        },
-        {
-          "id": "inspect.orphans.ownership#4",
-          "units": [
-            "B3"
-          ],
-          "text": "Explicit resource ownership is checked before the module-name fallback; a later explicit claim changes the home from the naming module to the declaring module while the class stays hidden.",
-          "cases": "exact vs naming worlds; priority rows",
-          "observation": "home name; visibility",
-          "grade": "full",
-          "check": "proved",
-          "models": [
-            ".g5/Verus_verification/consolidated/iter20/ownership.rs::home",
-            ".g5/Verus_verification/consolidated/iter20/ownership.rs::ref_pass",
-            ".g5/Verus_verification/consolidated/iter20/ownership.rs::priority_neighbor",
-            ".g5/Verus_verification/consolidated/iter20/ownership.rs::normal_neighbors"
-          ],
-          "evidence": [
-            ".g5/uplift/consolidated/iter20/run.json",
-            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
-          ],
-          "basis": "reused:.g5/ontology/features/inspection.g5.md metadata",
-          "assessed_in": "iteration-70"
-        }
-      ]
+    {
+     "id": "inspect#9",
+     "units": [
+      "B4"
+     ],
+     "text": "information shows the version without build metadata.",
+     "cases": "module whose version has build metadata",
+     "observation": "printed version",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter51/toplevel.rs::shows_build",
+      ".g5/Verus_verification/consolidated/iter51/toplevel.rs::neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter51/run.json"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "shows_build is the constant false; no version text is modeled, so stripping \"+build\" is asserted, not derived (Main.cls::Information). Contrast: 1.0.0+b1 prints 1.0.0 while 1.0.0-rc.1 keeps its prerelease."
     },
-    "inspect.orphans.identifier-case": {
-      "body_sha": "77e18afdcc0acfe0",
-      "status": "enumerated",
-      "units": {
-        "P1": [
-          "inspect.orphans.identifier-case#1"
-        ],
-        "B1": [
-          "inspect.orphans.identifier-case#2"
-        ],
-        "B2": [
-          "inspect.orphans.identifier-case#3"
-        ]
-      },
-      "obligations": [
-        {
-          "id": "inspect.orphans.identifier-case#1",
-          "units": [
-            "P1"
-          ],
-          "text": "The catalog and CLI return class names ending in lowercase .cls; the home-module API tests uppercase CLS literally before taking the ancestor-package path and does not normalize the extension.",
-          "cases": "lowercase vs uppercase extension input",
-          "observation": "candidate list and resulting resource name",
-          "grade": "full",
-          "check": "proved",
-          "models": [
-            ".g5/Verus_verification/consolidated/iter20/ownership.rs::candidates",
-            ".g5/Verus_verification/consolidated/iter20/ownership.rs::cursor_neighbor",
-            ".g5/Verus_verification/consolidated/iter20/ownership.rs::extension_neighbor"
-          ],
-          "evidence": [
-            ".g5/uplift/consolidated/iter20/run.json",
-            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
-          ],
-          "basis": "reused:.g5/ontology/features/inspection.g5.md metadata",
-          "assessed_in": "iteration-70"
-        },
-        {
-          "id": "inspect.orphans.identifier-case#2",
-          "units": [
-            "B1"
-          ],
-          "text": "In the direct naming-only lookup, lowercase input returns the full .cls resource name and uppercase input returns the matching .PKG name; both select the same naming module and no resource-reference object.",
-          "cases": "naming world, lower vs upper",
-          "observation": "home resource, module, ref_id",
-          "grade": "full",
-          "check": "proved",
-          "models": [
-            ".g5/Verus_verification/consolidated/iter20/ownership.rs::home",
-            ".g5/Verus_verification/consolidated/iter20/ownership.rs::extension_neighbor"
-          ],
-          "evidence": [
-            ".g5/uplift/consolidated/iter20/run.json",
-            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
-          ],
-          "basis": "reused:.g5/ontology/features/inspection.g5.md metadata",
-          "assessed_in": "iteration-70"
-        },
-        {
-          "id": "inspect.orphans.identifier-case#3",
-          "units": [
-            "B2"
-          ],
-          "text": "Explicit claims in the selected cases resolve in both forms through the stored-name lookup.",
-          "cases": "exact world, lower vs upper",
-          "observation": "home resource and ref_id",
-          "grade": "full",
-          "check": "proved",
-          "models": [
-            ".g5/Verus_verification/consolidated/iter20/ownership.rs::lookup_ref",
-            ".g5/Verus_verification/consolidated/iter20/ownership.rs::extension_neighbor"
-          ],
-          "evidence": [
-            ".g5/uplift/consolidated/iter20/run.json",
-            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
-          ],
-          "basis": "reused:.g5/ontology/features/inspection.g5.md metadata (generic SQL collation and package/stub spellings stay outside, as the block states)",
-          "assessed_in": "iteration-70"
-        }
-      ]
+    {
+     "id": "inspect#10",
+     "units": [
+      "B5"
+     ],
+     "text": "show looks up stored Name first, then ExternalName; if both could match, Name wins; neither match is an error.",
+     "cases": "name match, external-only match, both, neither",
+     "observation": "selected record; status",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/thin_surfaces.rs::inspection_choice",
+      ".g5/Verus_verification/consolidated/verus/thin_surfaces.rs::inspection_ok"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/consolidated/verus/results/thin_surfaces.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__inspection.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G7.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/inspection.g5.md metadata; iteration-72 rule-4a re-audit (G7): full, support mutation-checked (mutations G7-m45)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
+    },
+    {
+     "id": "inspect#11",
+     "units": [
+      "B5"
+     ],
+     "text": "A failed show lookup produces an error naming the missing module and namespace.",
+     "cases": "missing name",
+     "observation": "error text",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [
+      ".g5/Verus_verification/consolidated/verus/results/thin_surfaces.json"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "inspection_ok gives only the status; the message content (module and namespace) is native/source-only."
+    },
+    {
+     "id": "inspect#12",
+     "units": [
+      "B5"
+     ],
+     "text": "show shows one installed module's details, resources, dependencies and dependents.",
+     "alias_of": "inspect.show#1",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "inspect#13",
+     "units": [
+      "B6"
+     ],
+     "text": "Name and alias lookup use the module datatype's case-insensitive normalization, preserving the selected record and version.",
+     "cases": "stored-name, alias, uppercase-alias and missing-name requests",
+     "observation": "selected record and version",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      "playbook-uplift/models/verus/uninstall.rs::lookup_m",
+      ".g5/Verus_verification/consolidated/verus/thin_surfaces.rs::inspection_choice"
+     ],
+     "evidence": [
+      "playbook-uplift/models/verus/results/uninstall.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "Both models take normalized keys (ext_key \"upper-cased\") or found-flags as inputs; no model applies the datatype normalization, so \"MyAlias\" vs \"myalias\" selecting the same record is not distinguished from a case-sensitive lookup."
+    },
+    {
+     "id": "inspect#14",
+     "units": [
+      "B7"
+     ],
+     "text": "info shows the IPM environment.",
+     "cases": "info output",
+     "observation": "printed environment fields",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "No model of Main.cls::Info output."
+    },
+    {
+     "id": "inspect#15",
+     "units": [
+      "B7"
+     ],
+     "text": "version shows the IPM version.",
+     "alias_of": "inspect.help#5",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "inspect#16",
+     "units": [
+      "B8"
+     ],
+     "text": "namespace (zn) switches to a namespace.",
+     "alias_of": "inspect.namespace#1",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "inspect#17",
+     "units": [
+      "B8"
+     ],
+     "text": "namespace (zn) without a target lists modules by namespace.",
+     "cases": "zn with no argument across namespaces with and without IPM",
+     "observation": "printed namespace/module listing",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "nsinit.rs models only the switch decision; the listing (Main.cls::Namespace) is unmodeled."
+    },
+    {
+     "id": "inspect#18",
+     "units": [
+      "B9"
+     ],
+     "text": "orphans lists items in the code database that belong to no module.",
+     "alias_of": "inspect.orphans.ownership#1",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "inspect#19",
+     "units": [
+      "B10"
+     ],
+     "text": "help shows help for the shell or one command.",
+     "alias_of": "inspect.help#1",
+     "assessed_in": "iteration-70"
     }
+   ]
+  },
+  "inspect.help": {
+   "body_sha": "ee5f1ffb025faa61",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "inspect.help#1",
+     "inspect.help#2",
+     "inspect.help#3"
+    ],
+    "B1": [
+     "inspect.help#4"
+    ],
+    "B2": [
+     "inspect.help#5",
+     "inspect.help#6"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "inspect.help#1",
+     "units": [
+      "P1"
+     ],
+     "text": "help lists every command with its aliases and summary.",
+     "cases": "help with no argument",
+     "observation": "listing of all commands",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter54/helpcmd.rs::help",
+      ".g5/Verus_verification/consolidated/iter54/helpcmd.rs::listed",
+      ".g5/Verus_verification/consolidated/iter54/helpcmd.rs::neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter54/run.json"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "listed returns the constant COMMANDS() for any listing view; the 39-entry count is a fixture premise checked natively, and aliases/summaries per command are not modeled. A listing that omits a command or its aliases satisfies the rule."
+    },
+    {
+     "id": "inspect.help#2",
+     "units": [
+      "P1"
+     ],
+     "text": "help <command> or one of its aliases shows that command's detailed help.",
+     "cases": "command name vs alias vs empty",
+     "observation": "detailed view selected",
+     "grade": "partial",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter54/helpcmd.rs::help",
+      ".g5/Verus_verification/consolidated/iter54/helpcmd.rs::neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter54/run.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__inspection.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G7.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/inspection.g5.md metadata; iteration-72 rule-4a re-audit (G7): partial, support mutation-checked (mutations G7-m53)",
+     "assessed_in": "iteration-72",
+     "gap": "Rule 4a (iteration-72): command and alias resolution (tCommandStruct lookup, then the alias subscript 1, CLI.cls:26-31) is taken as input: Name::Alias(c) already carries the resolved command, so a resolver that maps an alias to the wrong command or misses it is unrepresented; the per-kind view is an outcome table"
+    },
+    {
+     "id": "inspect.help#3",
+     "units": [
+      "P1"
+     ],
+     "text": "Phase commands such as compile also show module-action's flags.",
+     "cases": "compile vs install",
+     "observation": "modifier sections shown",
+     "grade": "partial",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter54/helpcmd.rs::shows_only",
+      ".g5/Verus_verification/consolidated/iter54/helpcmd.rs::shows_dev",
+      ".g5/Verus_verification/consolidated/iter54/helpcmd.rs::neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter54/run.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__inspection.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G7.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/inspection.g5.md metadata; iteration-72 rule-4a re-audit (G7): partial, support mutation-checked (mutations G7-m54)",
+     "assessed_in": "iteration-72",
+     "gap": "Rule 4a (iteration-72): membership in STANDARDPHASES (CLI.cls:39) is not modelled; phase_shortcut is a constant naming only compile, so the claim for every other phase command (reload, validate, activate, test, package, verify, ...) has no counterpart and the model would say they do not show module-action flags"
+    },
+    {
+     "id": "inspect.help#4",
+     "units": [
+      "B1"
+     ],
+     "text": "An unknown name, including a different-case name such as INSTALL, prints a warning and the full list.",
+     "cases": "unknown name vs known command; INSTALL vs install",
+     "observation": "warning and listing",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter54/helpcmd.rs::help",
+      ".g5/Verus_verification/consolidated/iter54/helpcmd.rs::neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter54/run.json"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "The Name classification (Cmd/Alias/Unknown) is an input; nothing models the case-sensitive resolution in CLI.cls::%Help, so INSTALL being Unknown is assumed. The unknown->warning+list outcome itself is exercised."
+    },
+    {
+     "id": "inspect.help#5",
+     "units": [
+      "B2"
+     ],
+     "text": "version prints IPM's version per namespace with IPM and each remote registry's version.",
+     "cases": "namespaces with IPM; 0 vs 1 remote registries",
+     "observation": "number and kind of version lines",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter54/helpcmd.rs::version_lines",
+      ".g5/Verus_verification/consolidated/iter54/helpcmd.rs::neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter54/run.json"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "version_lines is exercised only at (1 namespace, 0 registries); the remote-registry branch is outside the iteration's scope (metadata). Contrast: one remote registry adds its version line."
+    },
+    {
+     "id": "inspect.help#6",
+     "units": [
+      "B2"
+     ],
+     "text": "The shell intro names the current registry only when a remote registry is defined.",
+     "cases": "0 vs 1 remote registries",
+     "observation": "intro line presence",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter54/helpcmd.rs::intro_current_registry",
+      ".g5/Verus_verification/consolidated/iter54/helpcmd.rs::neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter54/run.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__inspection.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G7.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/inspection.g5.md metadata; iteration-72 rule-4a re-audit (G7): full, support mutation-checked (mutations G7-m52)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
+    }
+   ]
+  },
+  "inspect.namespace": {
+   "body_sha": "c131627f1a1912fb",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "inspect.namespace#1"
+    ],
+    "B1": [
+     "inspect.namespace#2"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "inspect.namespace#1",
+     "units": [
+      "P1"
+     ],
+     "text": "zn <name> switches only when IPM is available there; otherwise it prints \"IPM is not enabled\" and leaves the namespace and status unchanged, while an unknown namespace fails the command.",
+     "cases": "known namespace with IPM vs without vs unknown; current namespace",
+     "observation": "switched; status; not-enabled message",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter55/nsinit.rs::zn",
+      ".g5/Verus_verification/consolidated/iter55/nsinit.rs::zn_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter55/run.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__inspection.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G7.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/inspection.g5.md metadata; iteration-72 rule-4a re-audit (G7): full, support mutation-checked (mutations G7-m55, G7-m56)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
+    },
+    {
+     "id": "inspect.namespace#2",
+     "units": [
+      "B1"
+     ],
+     "text": "zn <pattern> lists the matching namespaces, marking those without IPM, and switches to the one the user enters; an empty answer keeps the current namespace.",
+     "cases": "pattern with IPM and non-IPM matches; chosen vs empty answer",
+     "observation": "printed list; resulting namespace",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "nsinit.rs models only the direct-name decision. Contrast: pattern listing marks the non-IPM namespace and an empty answer keeps the current namespace (Main.cls::Namespace)."
+    }
+   ]
+  },
+  "inspect.list-installed": {
+   "body_sha": "5b7e2d4ec17c8f96",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "inspect.list-installed#1",
+     "inspect.list-installed#2"
+    ],
+    "B1": [
+     "inspect.list-installed#3"
+    ],
+    "B2": [
+     "inspect.list-installed#1",
+     "inspect.list-installed#4",
+     "inspect.list-installed#5"
+    ],
+    "B3": [
+     "inspect.list-installed#6"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "inspect.list-installed#1",
+     "units": [
+      "P1",
+      "B2"
+     ],
+     "text": "list-installed prints IPM first, then the others ordered by displayed name; -s sorts by name or version ascending or descending and IPM stays first.",
+     "cases": "fixture modules under modes name, name-desc, version",
+     "observation": "flat report position",
+     "grade": "partial",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter35/listing.rs::flat_pos",
+      ".g5/Verus_verification/consolidated/iter35/listing.rs::before",
+      ".g5/Verus_verification/consolidated/iter35/listing.rs::sort_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter35/run.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__inspection.json"
+     ],
+     "basis": "reused:.g5/ontology/features/inspection.g5.md metadata; iteration-72 rule-4a re-audit (G7): partial, support inspection",
+     "assessed_in": "iteration-72",
+     "gap": "Rule 4a (iteration-72): version-desc and the date sort modes are not modelled (Main.cls:3040-3044; listing.rs before() has modes 0-2 only); review-71 settled"
+    },
+    {
+     "id": "inspect.list-installed#2",
+     "units": [
+      "P1"
+     ],
+     "text": "A module with an external name shows as External (name).",
+     "cases": "module with vs without external name",
+     "observation": "printed label",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [
+      ".g5/uplift/consolidated/iter35/run.json"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "The label is an input field of Mod; no rule renders \"External (name)\" from the stored external name (Main.cls::ListInstalled)."
+    },
+    {
+     "id": "inspect.list-installed#3",
+     "units": [
+      "B1"
+     ],
+     "text": "A developer-mode module is marked (DeveloperMode), and -showsource adds each module's root.",
+     "cases": "dev vs non-dev module; with vs without -showsource",
+     "observation": "printed markers and root",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [
+      ".g5/uplift/consolidated/iter35/run.json"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "Mod.dev exists but no display function reads it; DisplayModules output (marker, root) is unmodeled."
+    },
+    {
+     "id": "inspect.list-installed#4",
+     "units": [
+      "B2"
+     ],
+     "text": "-s date sorts by install date.",
+     "cases": "modules installed at different times",
+     "observation": "order",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [
+      ".g5/uplift/consolidated/iter35/run.json"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "Date sort is not assessed (metadata)."
+    },
+    {
+     "id": "inspect.list-installed#5",
+     "units": [
+      "B2"
+     ],
+     "text": "As built (C:D42), -s version compares prereleases of the same version as text, so 1.0.0-rc.10 sorts before 1.0.0-rc.2.",
+     "cases": "rc.10 vs rc.2 of the same version",
+     "observation": "flat position under version sort",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter35/listing.rs::version_cmp",
+      ".g5/Verus_verification/consolidated/iter35/listing.rs::pre_key",
+      ".g5/Verus_verification/consolidated/iter35/listing.rs::sort_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter35/run.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__inspection.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G7.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/inspection.g5.md metadata; iteration-72 rule-4a re-audit (G7): full, support mutation-checked (mutations G7-m57; instance-scoped)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked",
+     "instance_scoped": true
+    },
+    {
+     "id": "inspect.list-installed#6",
+     "units": [
+      "B3"
+     ],
+     "text": "-tree ignores -s; it starts from installed modules that no other installed module depends on, in name order, prints each dependency under every module that needs it, and marks an uninstalled one [missing].",
+     "cases": "shared dependency under two parents; dependency uninstalled (cut)",
+     "observation": "tree rows, occurrences and depths",
+     "grade": "partial",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter35/listing.rs::tree",
+      ".g5/Verus_verification/consolidated/iter35/listing.rs::is_root",
+      ".g5/Verus_verification/consolidated/iter35/listing.rs::expand",
+      ".g5/Verus_verification/consolidated/iter35/listing.rs::tree_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter35/run.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__inspection.json"
+     ],
+     "basis": "reused:.g5/ontology/features/inspection.g5.md metadata; iteration-72 rule-4a re-audit (G7): partial, support inspection (instance-scoped)",
+     "assessed_in": "iteration-72",
+     "gap": "Rule 4a (iteration-72): the [missing] marker is not represented (a missing dependency yields the same Row as an installed leaf; cut() only shows it is still printed), and \"-tree ignores -s\" holds by construction because tree() takes no sort input rather than being checked against ListInstalled dispatch; sibling order is outside the one-dependency fixture"
+    }
+   ]
+  },
+  "inspect.show": {
+   "body_sha": "07b4c564d67c4caf",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "inspect.show#1"
+    ],
+    "B1": [
+     "inspect.show#2",
+     "inspect.show#3",
+     "inspect.show#4",
+     "inspect.show#5"
+    ],
+    "B2": [
+     "inspect.show#6"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "inspect.show#1",
+     "units": [
+      "P1"
+     ],
+     "text": "The show summary prints only non-empty blocks (usage, footprint, dependencies, dependents, system requirements).",
+     "cases": "fixture modules a, b, d, h with different empty blocks",
+     "observation": "number of printed blocks",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter46/summary.rs::blocks",
+      ".g5/Verus_verification/consolidated/iter46/summary.rs::empty_blocks_omitted",
+      ".g5/Verus_verification/consolidated/iter46/summary.rs::schedule"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter46/run.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__inspection.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G7.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/inspection.g5.md metadata; iteration-72 rule-4a re-audit (G7): full, support mutation-checked (mutations G7-m58; instance-scoped)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked",
+     "instance_scoped": true
+    },
+    {
+     "id": "inspect.show#2",
+     "units": [
+      "B1"
+     ],
+     "text": "Scoped and unit-test resources are not shown.",
+     "cases": "module with scoped resources",
+     "observation": "shown code count",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter46/summary.rs::shown_code",
+      ".g5/Verus_verification/consolidated/iter46/summary.rs::scoped_hidden"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter46/run.json"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "shown_code returns m.code, an input that already excludes scoped resources; scoped_hidden is a tautology. GetSection's filter is not modeled, so a summary listing a scoped resource satisfies the rule."
+    },
+    {
+     "id": "inspect.show#3",
+     "units": [
+      "B1"
+     ],
+     "text": "<Defaults><Parameter> values are not shown in the usage block.",
+     "cases": "module with parameters but no defaults/after-install text",
+     "observation": "usage block presence",
+     "grade": "partial",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter46/summary.rs::usage",
+      ".g5/Verus_verification/consolidated/iter46/summary.rs::parameter_not_listed"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter46/run.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__inspection.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G7.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/inspection.g5.md metadata; iteration-72 rule-4a re-audit (G7): partial, support inspection (mutations G7-m60)",
+     "assessed_in": "iteration-72",
+     "gap": "Rule 4a (iteration-72): the product filter that excludes <Parameter> entries (ModuleSummary.cls:72-74, %IsA(\"...ModuleSetting.Default\")) has no counterpart: Default and Parameter counts are separate inputs, so dropping the filter cannot be expressed; the theorem holds by construction"
+    },
+    {
+     "id": "inspect.show#4",
+     "units": [
+      "B1"
+     ],
+     "text": "Keywords are not shown.",
+     "cases": "module with keywords",
+     "observation": "keyword line presence",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter46/summary.rs::keywords_shown",
+      ".g5/Verus_verification/consolidated/iter46/summary.rs::schedule"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter46/run.json"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "keywords_shown is the constant false; no reader is modeled."
+    },
+    {
+     "id": "inspect.show#5",
+     "units": [
+      "B1"
+     ],
+     "text": "A FileCopy target is shown as written, before expansion.",
+     "cases": "FileCopy with a {$...} target",
+     "observation": "displayed target text",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [
+      ".g5/uplift/consolidated/iter46/run.json"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "Not in summary.rs; native-only."
+    },
+    {
+     "id": "inspect.show#6",
+     "units": [
+      "B2"
+     ],
+     "text": "As built (C:D52), a Health=\"false\" system requirement is not shown.",
+     "cases": "Health=false requirement alone vs with Version/Interop",
+     "observation": "system-requirements block and entries",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter46/summary.rs::health_entry",
+      ".g5/Verus_verification/consolidated/iter46/summary.rs::health_false_hidden",
+      ".g5/Verus_verification/consolidated/iter46/summary.rs::schedule"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter46/run.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__inspection.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G7.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/inspection.g5.md metadata (C:D52; the install refusal belongs to the requirement owner on the manifest page); iteration-72 rule-4a re-audit (G7): full, support mutation-checked (mutations G7-m59)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
+    }
+   ]
+  },
+  "inspect.webapp.detail": {
+   "body_sha": "801fefe834b185fc",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "inspect.webapp.detail#1"
+    ],
+    "P2": [
+     "inspect.webapp.detail#2",
+     "inspect.webapp.detail#3"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "inspect.webapp.detail#1",
+     "units": [
+      "P1"
+     ],
+     "text": "The web-app summary shows DispatchClass first, then WSGIAppLocation, then Path or Directory; empty attributes are skipped and nothing shows if all four are empty.",
+     "cases": "all four set; first absent; first two absent; only Directory; none",
+     "observation": "selected detail",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter7/inputs.rs::detail",
+      ".g5/Verus_verification/consolidated/iter7/inputs.rs::directory_and_reader_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter7/run.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__inspection.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G7.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/inspection.g5.md metadata ; iteration-70 review: exercising theorem/neighbour locator added; iteration-72 rule-4a re-audit (G7): full, support mutation-checked (mutations G7-m75)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
+    },
+    {
+     "id": "inspect.webapp.detail#2",
+     "units": [
+      "P2"
+     ],
+     "text": "The text identifies the selected value as dispatch, wsgi or files at.",
+     "cases": "dispatch vs wsgi vs path/directory selection",
+     "observation": "label kind",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter7/inputs.rs::detail",
+      ".g5/Verus_verification/consolidated/iter7/inputs.rs::directory_and_reader_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter7/run.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__inspection.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G7.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/inspection.g5.md metadata ; iteration-70 review: exercising theorem/neighbour locator added; iteration-72 rule-4a re-audit (G7): full, support mutation-checked (mutations G7-m75)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
+    },
+    {
+     "id": "inspect.webapp.detail#3",
+     "units": [
+      "P2"
+     ],
+     "text": "The summary reads the declared resource attributes, not a fresh query of effective Security.Applications properties.",
+     "cases": "declared DispatchClass differing from the effective application property",
+     "observation": "displayed value",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter7/inputs.rs::detail"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter7/run.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "detail takes declared attributes as inputs; no neighbour has a differing effective Security.Applications value, so a reader that queries the effective property satisfies the rule."
+    }
+   ]
+  },
+  "inspect.dependents": {
+   "body_sha": "e529f153d1f216b9",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "inspect.dependents#1",
+     "inspect.dependents#2"
+    ],
+    "B1": [
+     "inspect.dependents#3"
+    ],
+    "B2": [
+     "inspect.dependents#4"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "inspect.dependents#1",
+     "units": [
+      "P1"
+     ],
+     "text": "As built, show lists only direct, unscoped dependents.",
+     "cases": "one scoped and one unscoped dependent edge to the target",
+     "observation": "listed dependents",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter2/readers.rs::direct_dependents",
+      ".g5/Verus_verification/consolidated/iter2/readers.rs::scoped_dependents_are_not_displayed"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter2/native/receipt.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__inspection.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G7.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/inspection.g5.md metadata; iteration-72 rule-4a re-audit (G7): full, support mutation-checked (mutations G7-m61; instance-scoped)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked",
+     "instance_scoped": true
+    },
+    {
+     "id": "inspect.dependents#2",
+     "units": [
+      "P1"
+     ],
+     "text": "show hides scoped dependencies from its dependency list.",
+     "cases": "module with a scoped and an unscoped dependency",
+     "observation": "dependency list",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [
+      ".g5/uplift/consolidated/iter2/native/receipt.json"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "readers.rs filters scoped edges only for dependents; the module's own dependency list (ModuleSummary GetLines) is unmodeled. Contrast: Scope=\"test\" dependency omitted vs plain dependency shown."
+    },
+    {
+     "id": "inspect.dependents#3",
+     "units": [
+      "B1"
+     ],
+     "text": "A missing installed dependency version reads not installed; a present version that fails the requested range reads unsatisfied.",
+     "cases": "empty version; present unsatisfying; present satisfying",
+     "observation": "status text",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter2/readers.rs::installed_status",
+      ".g5/Verus_verification/consolidated/iter2/readers.rs::scoped_dependents_are_not_displayed"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter2/native/receipt.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__inspection.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G7.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/inspection.g5.md metadata; iteration-72 rule-4a re-audit (G7): full, support mutation-checked (mutations G7-m62)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
+    },
+    {
+     "id": "inspect.dependents#4",
+     "units": [
+      "B2"
+     ],
+     "text": "Requirements-file display skips blank lines and lines starting with # after trimming; inline comments remain.",
+     "cases": "comment line, blank line, line with an inline comment",
+     "observation": "displayed lines",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter2/readers.rs::requirements",
+      ".g5/Verus_verification/consolidated/iter2/readers.rs::requirement_comments_are_line_based"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter2/native/receipt.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "Lines carry blank/comment flags as inputs (trimming is not modeled); only the comment-line case is exercised. Blank-line skipping and an inline \"pkg # note\" line being kept are not neighbours."
+    }
+   ]
+  },
+  "inspect.list-dependents": {
+   "body_sha": "7a5302395da7e4f1",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "inspect.list-dependents#1",
+     "inspect.list-dependents#2"
+    ],
+    "B1": [
+     "inspect.list-dependents#3"
+    ],
+    "B2": [
+     "inspect.list-dependents#4"
+    ],
+    "B3": [
+     "inspect.list-dependents#5"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "inspect.list-dependents#1",
+     "units": [
+      "P1"
+     ],
+     "text": "list-dependents <module> lists every installed module whose dependency graph contains the module, directly or through other modules.",
+     "cases": "direct and transitive dependents vs unrelated modules",
+     "observation": "listed modules",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter33/dependents.rs::listed",
+      ".g5/Verus_verification/consolidated/iter33/dependents.rs::in_graph",
+      ".g5/Verus_verification/consolidated/iter33/dependents.rs::flat_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter33/run.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__inspection.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G7.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/inspection.g5.md metadata; iteration-72 rule-4a re-audit (G7): full, support mutation-checked (mutations G7-m46; instance-scoped)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked",
+     "instance_scoped": true
+    },
+    {
+     "id": "inspect.list-dependents#2",
+     "units": [
+      "P1"
+     ],
+     "text": "A version argument keeps only dependents whose graph resolves the module to that version.",
+     "cases": "version filter matching vs not matching",
+     "observation": "listed modules",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter33/dependents.rs::listed",
+      ".g5/Verus_verification/consolidated/iter33/dependents.rs::node_ver",
+      ".g5/Verus_verification/consolidated/iter33/dependents.rs::flat_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter33/run.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__inspection.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G7.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/inspection.g5.md metadata; iteration-72 rule-4a re-audit (G7): full, support mutation-checked (mutations G7-m47; instance-scoped)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked",
+     "instance_scoped": true
+    },
+    {
+     "id": "inspect.list-dependents#3",
+     "units": [
+      "B1"
+     ],
+     "text": "With -r <repos> it lists repository manifests instead and ignores installed modules.",
+     "cases": "repository mode vs installed mode",
+     "observation": "listed roots",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter33/dependents.rs::is_root",
+      ".g5/Verus_verification/consolidated/iter33/dependents.rs::resolve_repo",
+      ".g5/Verus_verification/consolidated/iter33/dependents.rs::repo_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter33/run.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__inspection.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G7.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/inspection.g5.md metadata; iteration-72 rule-4a re-audit (G7): full, support mutation-checked (mutations G7-m48; instance-scoped)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked",
+     "instance_scoped": true
+    },
+    {
+     "id": "inspect.list-dependents#4",
+     "units": [
+      "B2"
+     ],
+     "text": "A dependent whose graph cannot be resolved is printed as a warning instead of a dependent; with the module absent, installed requirements on it can make every dependent's graph fail this way.",
+     "cases": "target removed vs present",
+     "observation": "warnings vs listed lines",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter33/dependents.rs::warned",
+      ".g5/Verus_verification/consolidated/iter33/dependents.rs::graph_ok",
+      ".g5/Verus_verification/consolidated/iter33/dependents.rs::removed_target_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter33/run.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__inspection.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G7.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/inspection.g5.md metadata; iteration-72 rule-4a re-audit (G7): full, support mutation-checked (mutations G7-m49, G7-m50; instance-scoped)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked",
+     "instance_scoped": true
+    },
+    {
+     "id": "inspect.list-dependents#5",
+     "units": [
+      "B3"
+     ],
+     "text": "As built (C:D38), -t prints only the module and modules between it and the top of each graph, never a module that is itself the top of a graph.",
+     "cases": "tree for a target with depth-1 and depth-2 dependents",
+     "observation": "printed tree nodes",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter33/dependents.rs::tree_has",
+      ".g5/Verus_verification/consolidated/iter33/dependents.rs::tree_path_has",
+      ".g5/Verus_verification/consolidated/iter33/dependents.rs::tree_omits_roots"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter33/run.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__inspection.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G7.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/inspection.g5.md metadata; iteration-72 rule-4a re-audit (G7): full, support mutation-checked (mutations G7-m51; instance-scoped)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked",
+     "instance_scoped": true
+    }
+   ]
+  },
+  "inspect.orphans.ownership": {
+   "body_sha": "ed750442f90290fc",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "inspect.orphans.ownership#1"
+    ],
+    "B1": [
+     "inspect.orphans.ownership#2"
+    ],
+    "B2": [
+     "inspect.orphans.ownership#3"
+    ],
+    "B3": [
+     "inspect.orphans.ownership#4"
+    ],
+    "B4": "excluded: scope statement of the observations (ordinary compiled nonstub classes in the default code database; other types, mapped/system items and query lifetimes outside; inherited P:F-UNIN-7)"
+   },
+   "obligations": [
+    {
+     "id": "inspect.orphans.ownership#1",
+     "units": [
+      "P1"
+     ],
+     "text": "orphans -type CLS subtracts classes whose home-module lookup returns an installed module, so a class can disappear from the list while its code stays callable.",
+     "cases": "free vs claimed/naming/exact worlds",
+     "observation": "visible orphan rows; class payload",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter20/ownership.rs::visible",
+      ".g5/Verus_verification/consolidated/iter20/ownership.rs::printed",
+      ".g5/Verus_verification/consolidated/iter20/ownership.rs::payload",
+      ".g5/Verus_verification/consolidated/iter20/ownership.rs::normal_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter20/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__inspection.json"
+     ],
+     "basis": "reused:.g5/ontology/features/inspection.g5.md metadata; iteration-72 rule-4a re-audit (G7): full, support control (control .g5/uplift/consolidated/iter20/proofs/controls/ownership.rs/orphans-predicate-inverted, empty-module-removes-physical-code (both rejected); instance-scoped)",
+     "assessed_in": "iteration-72",
+     "support": "control",
+     "instance_scoped": true
+    },
+    {
+     "id": "inspect.orphans.ownership#2",
+     "units": [
+      "B1"
+     ],
+     "text": "Loading an unrelated module that explicitly declares a controlled class creates its ownership and removes that class from orphan output; another unclaimed class stays visible.",
+     "cases": "claimed world: Loose claimed, Named unclaimed",
+     "observation": "visibility; home name",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter20/ownership.rs::claimed",
+      ".g5/Verus_verification/consolidated/iter20/ownership.rs::normal_neighbors",
+      ".g5/Verus_verification/consolidated/iter20/ownership.rs::cursor_neighbor"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter20/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__inspection.json"
+     ],
+     "basis": "reused:.g5/ontology/features/inspection.g5.md metadata; iteration-72 rule-4a re-audit (G7): full, support control (control .g5/uplift/consolidated/iter20/proofs/controls/ownership.rs/imported-reference-has-wrong-owner, orphans-predicate-inverted (rejected); instance-scoped)",
+     "assessed_in": "iteration-72",
+     "support": "control",
+     "instance_scoped": true
+    },
+    {
+     "id": "inspect.orphans.ownership#3",
+     "units": [
+      "B2"
+     ],
+     "text": "A module whose name matches a class/package prefix supplies its home even with no resources, hiding the class without a resource reference.",
+     "cases": "naming world vs claimed world for Named",
+     "observation": "visibility; has_ref; home name",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter20/ownership.rs::naming_pass",
+      ".g5/Verus_verification/consolidated/iter20/ownership.rs::normal_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter20/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__inspection.json"
+     ],
+     "basis": "reused:.g5/ontology/features/inspection.g5.md metadata; iteration-72 rule-4a re-audit (G7): full, support control (control .g5/uplift/consolidated/iter20/proofs/controls/ownership.rs/naming-fallback-disabled, shortest-naming-prefix-first (rejected); instance-scoped)",
+     "assessed_in": "iteration-72",
+     "support": "control",
+     "instance_scoped": true
+    },
+    {
+     "id": "inspect.orphans.ownership#4",
+     "units": [
+      "B3"
+     ],
+     "text": "Explicit resource ownership is checked before the module-name fallback; a later explicit claim changes the home from the naming module to the declaring module while the class stays hidden.",
+     "cases": "exact vs naming worlds; priority rows",
+     "observation": "home name; visibility",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter20/ownership.rs::home",
+      ".g5/Verus_verification/consolidated/iter20/ownership.rs::ref_pass",
+      ".g5/Verus_verification/consolidated/iter20/ownership.rs::priority_neighbor",
+      ".g5/Verus_verification/consolidated/iter20/ownership.rs::normal_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter20/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__inspection.json"
+     ],
+     "basis": "reused:.g5/ontology/features/inspection.g5.md metadata; iteration-72 rule-4a re-audit (G7): full, support control (control .g5/uplift/consolidated/iter20/proofs/controls/ownership.rs/naming-precedes-explicit-reference, naming-clears-prior-reference (rejected); instance-scoped)",
+     "assessed_in": "iteration-72",
+     "support": "control",
+     "instance_scoped": true
+    }
+   ]
+  },
+  "inspect.orphans.identifier-case": {
+   "body_sha": "77e18afdcc0acfe0",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "inspect.orphans.identifier-case#1"
+    ],
+    "B1": [
+     "inspect.orphans.identifier-case#2"
+    ],
+    "B2": [
+     "inspect.orphans.identifier-case#3"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "inspect.orphans.identifier-case#1",
+     "units": [
+      "P1"
+     ],
+     "text": "The catalog and CLI return class names ending in lowercase .cls; the home-module API tests uppercase CLS literally before taking the ancestor-package path and does not normalize the extension.",
+     "cases": "lowercase vs uppercase extension input",
+     "observation": "candidate list and resulting resource name",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter20/ownership.rs::candidates",
+      ".g5/Verus_verification/consolidated/iter20/ownership.rs::cursor_neighbor",
+      ".g5/Verus_verification/consolidated/iter20/ownership.rs::extension_neighbor"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter20/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__inspection.json"
+     ],
+     "basis": "reused:.g5/ontology/features/inspection.g5.md metadata; iteration-72 rule-4a re-audit (G7): full, support control (control .g5/uplift/consolidated/iter20/proofs/controls/ownership.rs/lower-extension-takes-CLS-package-branch, upper-extension-loses-package-branch, lower-identifier-silently-uppercased (rejected); instance-scoped)",
+     "assessed_in": "iteration-72",
+     "support": "control",
+     "instance_scoped": true
+    },
+    {
+     "id": "inspect.orphans.identifier-case#2",
+     "units": [
+      "B1"
+     ],
+     "text": "In the direct naming-only lookup, lowercase input returns the full .cls resource name and uppercase input returns the matching .PKG name; both select the same naming module and no resource-reference object.",
+     "cases": "naming world, lower vs upper",
+     "observation": "home resource, module, ref_id",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter20/ownership.rs::home",
+      ".g5/Verus_verification/consolidated/iter20/ownership.rs::extension_neighbor"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter20/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__inspection.json"
+     ],
+     "basis": "reused:.g5/ontology/features/inspection.g5.md metadata; iteration-72 rule-4a re-audit (G7): full, support control (control .g5/uplift/consolidated/iter20/proofs/controls/ownership.rs/lower-extension-takes-CLS-package-branch (rejected); instance-scoped)",
+     "assessed_in": "iteration-72",
+     "support": "control",
+     "instance_scoped": true
+    },
+    {
+     "id": "inspect.orphans.identifier-case#3",
+     "units": [
+      "B2"
+     ],
+     "text": "Explicit claims in the selected cases resolve in both forms through the stored-name lookup.",
+     "cases": "exact world, lower vs upper",
+     "observation": "home resource and ref_id",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter20/ownership.rs::lookup_ref",
+      ".g5/Verus_verification/consolidated/iter20/ownership.rs::extension_neighbor"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter20/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__inspection.json"
+     ],
+     "basis": "reused:.g5/ontology/features/inspection.g5.md metadata (generic SQL collation and package/stub spellings stay outside, as the block states); iteration-72 rule-4a re-audit (G7): full, support control (control .g5/uplift/consolidated/iter20/proofs/controls/ownership.rs/lower-SQL-lookup-does-not-match-declaration (rejected); instance-scoped)",
+     "assessed_in": "iteration-72",
+     "support": "control",
+     "instance_scoped": true
+    }
+   ]
   }
+ }
 }

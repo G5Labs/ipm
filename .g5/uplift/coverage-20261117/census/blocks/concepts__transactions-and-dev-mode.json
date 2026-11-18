@@ -37,10 +37,12 @@
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
       "playbook-uplift/models/verus/results/update_steps.json",
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
-      ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json"
+      ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/concepts__transactions-and-dev-mode.json"
      ],
-     "basis": "new:iteration-70 (P load_general/update_steps were not linked from this block; G crate is the coverage-map link)",
-     "assessed_in": "iteration-70"
+     "basis": "new:iteration-70 (P load_general/update_steps were not linked from this block; G crate is the coverage-map link); iteration-72 rule-4a re-audit (G1): full, support control (control playbook-uplift/models/verus/controls/load_general.json + results/load_general.json: no-rollback-on-failure; playbook-uplift/models/verus/controls/update_steps.json + results/update_steps.json: no-rollback-on-failure; .g5/Verus_verification/results/verus/20261113T22*-final-r3-control-04 (no rollback loop) rejected)",
+     "assessed_in": "iteration-72",
+     "support": "control"
     },
     {
      "id": "transaction#2",
@@ -61,10 +63,12 @@
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
       ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
       ".g5/Verus_verification/cases/cases.json",
-      ".g5/Verus_verification/results/verus/20261113T223110Z-cases-asbuilt-r3/receipt.json"
+      ".g5/Verus_verification/results/verus/20261113T223110Z-cases-asbuilt-r3/receipt.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/concepts__transactions-and-dev-mode.json"
      ],
-     "basis": "new:iteration-70 (G cases B1-C31/C36 agree: dependencies absent after the parent failure)",
-     "assessed_in": "iteration-70"
+     "basis": "new:iteration-70 (G cases B1-C31/C36 agree: dependencies absent after the parent failure); iteration-72 rule-4a re-audit (G1): full, support control (control playbook-uplift/models/verus/controls/load_general.json + results/load_general.json: no-rollback-on-failure killed inv_dep, inv_activate)",
+     "assessed_in": "iteration-72",
+     "support": "control"
     }
    ],
    "parent": {
@@ -131,7 +135,7 @@
      "text": "A failing load that rolled its module record back keeps a FileCopy target copied before the failure, while a deferred copy not yet reached leaves no file; the history Committed bit reflects only the database.",
      "cases": "failure after Activate copy (fail point 3) vs failure at Compile before the deferred copy (fail point 2); history bit",
      "observation": "copied file, module record, history Committed",
-     "grade": "full",
+     "grade": "partial",
      "check": "proved",
      "models": [
       ".g5/Verus_verification/consolidated/iter64/failkeep.rs::late_failure_keeps_external_effects",
@@ -139,10 +143,12 @@
       ".g5/Verus_verification/consolidated/iter64/failkeep.rs::hist_committed"
      ],
      "evidence": [
-      ".g5/uplift/consolidated/iter64/run.json"
+      ".g5/uplift/consolidated/iter64/run.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/concepts__transactions-and-dev-mode.json"
      ],
-     "basis": "reused:transaction.rollback-scope metadata (iter64)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:transaction.rollback-scope metadata (iter64); iteration-72 rule-4a re-audit (G1): partial, support inspection",
+     "assessed_in": "iteration-72",
+     "gap": "Rule 4a (iteration-72): Rule 4a: which effects survive (FileCopy kept, deferred copy absent) and the history Committed bit are written down as per-kind/per-case tables (failkeep.rs phase, external, hist_committed), not computed from the transaction scope of each writer. Needs a writer model: each effect written at its phase inside or outside the load transaction, rollback restoring the journaled store."
     },
     {
      "id": "transaction.rollback-scope#3",
@@ -192,17 +198,19 @@
      "text": "A normal-mode rollback also undoes declared <Mapping> entries and a web application created during the load, while a CPF merge, FileCopy targets and the localization export file written in Activate remain.",
      "cases": "normal load failing after Activate: Mapping, WebApp vs CPF, File, LocExport; success neighbour keeps all",
      "observation": "mapping, web application, CPF configuration, copied file and export file after the command",
-     "grade": "full",
+     "grade": "partial",
      "check": "proved",
      "models": [
       ".g5/Verus_verification/consolidated/iter64/failkeep.rs::late_failure_keeps_external_effects",
       ".g5/Verus_verification/consolidated/iter64/failkeep.rs::success_keeps_all_but_nondev_sources"
      ],
      "evidence": [
-      ".g5/uplift/consolidated/iter64/run.json"
+      ".g5/uplift/consolidated/iter64/run.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/concepts__transactions-and-dev-mode.json"
      ],
-     "basis": "reused:transaction.rollback-scope metadata (iter64)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:transaction.rollback-scope metadata (iter64); iteration-72 rule-4a re-audit (G1): partial, support inspection",
+     "assessed_in": "iteration-72",
+     "gap": "Rule 4a (iteration-72): Rule 4a (review-71): which kinds roll back (Mapping, WebApp) and which remain (CPF, FileCopy, LocExport) is a constant table, not derived from where each writer runs relative to the load transaction (Utils/Module.cls LoadNewModule boundary; Config.Map*, Security.Applications, iris merge, file writes)."
     }
    ]
   },
@@ -248,10 +256,12 @@
       ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
       ".g5/Verus_verification/cases/cases.json",
       ".g5/Verus_verification/results/verus/20261113T223110Z-cases-asbuilt-r3/receipt.json",
-      ".g5/Verus_verification/results/verus/20261113T223500Z-control-13-notransaction-ignored/receipt.json"
+      ".g5/Verus_verification/results/verus/20261113T223500Z-control-13-notransaction-ignored/receipt.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/concepts__transactions-and-dev-mode.json"
      ],
-     "basis": "reused:coverage-map transaction.opt-out (G crate; control 13 detected)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:coverage-map transaction.opt-out (G crate; control 13 detected); iteration-72 rule-4a re-audit (G1): full, support control (control .g5/Verus_verification/results/verus/20261113T22*-final-r3-control-13 (NoTransaction ignored) rejected at case_c27 and the transaction-depth lemmas)",
+     "assessed_in": "iteration-72",
+     "support": "control"
     },
     {
      "id": "transaction.opt-out#2",
@@ -273,10 +283,12 @@
       ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
       ".g5/Verus_verification/cases/cases.json",
       ".g5/Verus_verification/results/verus/20261113T223110Z-cases-asbuilt-r3/receipt.json",
-      ".g5/Verus_verification/results/verus/20261113T223452Z-asbuilt-invariants-nojournal/receipt.json"
+      ".g5/Verus_verification/results/verus/20261113T223452Z-asbuilt-invariants-nojournal/receipt.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/concepts__transactions-and-dev-mode.json"
      ],
-     "basis": "reused:coverage-map transaction.opt-out (G crate invariant: journaling off exactly while a NoJournal LoadNewModule holds its JournalManager)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:coverage-map transaction.opt-out (G crate invariant: journaling off exactly while a NoJournal LoadNewModule holds its JournalManager); iteration-72 rule-4a re-audit (G1): full, support mutation-checked (mutations G1-c12)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "transaction.opt-out#3",
@@ -335,7 +347,8 @@
    "status": "enumerated",
    "units": {
     "P1": [
-     "transaction.flag-sources#1"
+     "transaction.flag-sources#1",
+     "transaction.flag-sources#10"
     ],
     "B1": "excluded: undecided alternatives (open questions dependency-defaults and dependency-no-transaction)",
     "B2": [
@@ -344,12 +357,14 @@
     "B3": [
      "transaction.flag-sources#3",
      "transaction.flag-sources#4",
-     "transaction.flag-sources#5"
+     "transaction.flag-sources#5",
+     "transaction.flag-sources#11"
     ],
     "B4": "excluded: status statement (settled source/native facts; the open questions concern policy)",
     "B5": [
      "transaction.flag-sources#6",
-     "transaction.flag-sources#7"
+     "transaction.flag-sources#7",
+     "transaction.flag-sources#12"
     ],
     "B6": [
      "transaction.flag-sources#8"
@@ -364,23 +379,25 @@
      "units": [
       "P1"
      ],
-     "text": "NoTransaction/NoJournal can come from the command line, the namespace default modifiers or the module <Defaults>; a command-line value wins over the other two.",
-     "cases": "same key given on the command line vs stored default modifier vs module <Defaults>",
-     "observation": "effective flag value at LoadNewModule",
+     "text": "NoTransaction/NoJournal can come from the command line, the namespace default modifiers or the module <Defaults>; a command-line value wins over a stored default modifier.",
+     "cases": "same key on the command line vs stored default modifier",
+     "observation": "effective flag value in the command data",
      "grade": "full",
      "check": "proved",
      "models": [
       ".g5/Verus_verification/consolidated/iter50/defmods.rs::merged",
-      ".g5/Verus_verification/consolidated/iter50/defmods.rs::command_line_wins",
-      ".g5/Verus_verification/consolidated/verus/loadtx.rs::merge_key",
-      ".g5/Verus_verification/consolidated/verus/loadtx.rs::explicit_false_parent_overrides_child"
+      ".g5/Verus_verification/consolidated/iter50/defmods.rs::command_line_wins"
      ],
      "evidence": [
       ".g5/uplift/consolidated/iter50/run.json",
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/concepts__transactions-and-dev-mode.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G1.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/receipts/index.jsonl"
      ],
-     "basis": "new:iteration-70 (composition: defmods.merged puts the command line over stored defaults in the shell; loadtx.merge_key puts the command data over the module own <Defaults> at LoadNewModule)",
-     "assessed_in": "iteration-70"
+     "basis": "new:iteration-70 (composition: defmods.merged puts the command line over stored defaults in the shell; loadtx.merge_key puts the command data over the module own <Defaults> at LoadNewModule); iteration-72 rule-4a re-audit (G1): full, support mutation-checked (mutations G1-m33); iteration-72 (review-71 B): split; the shell site (Main.cls:1067-1069) stays here and the LoadNewModule site is #10",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "transaction.flag-sources#2",
@@ -398,10 +415,14 @@
       ".g5/Verus_verification/consolidated/verus/loadtx.rs::explicit_false_parent_overrides_child"
      ],
      "evidence": [
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/concepts__transactions-and-dev-mode.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G1.jsonl"
      ],
-     "basis": "reused:transaction.flag-sources metadata (extension loadtx)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:transaction.flag-sources metadata (extension loadtx); iteration-72 rule-4a re-audit (G1): full, support mutation-checked (mutations G1-m30; instance-scoped)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked",
+     "instance_scoped": true
     },
     {
      "id": "transaction.flag-sources#3",
@@ -418,10 +439,14 @@
       ".g5/Verus_verification/consolidated/verus/loadtx.rs::explicit_false_parent_overrides_child"
      ],
      "evidence": [
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/concepts__transactions-and-dev-mode.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G1.jsonl"
      ],
-     "basis": "reused:transaction.flag-sources metadata (extension loadtx)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:transaction.flag-sources metadata (extension loadtx); iteration-72 rule-4a re-audit (G1): full, support mutation-checked (mutations G1-m31; instance-scoped)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked",
+     "instance_scoped": true
     },
     {
      "id": "transaction.flag-sources#4",
@@ -438,10 +463,13 @@
       ".g5/Verus_verification/consolidated/verus/loadtx.rs::entry_depth"
      ],
      "evidence": [
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/concepts__transactions-and-dev-mode.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G1.jsonl"
      ],
-     "basis": "reused:extension loadtx",
-     "assessed_in": "iteration-70"
+     "basis": "reused:extension loadtx; iteration-72 rule-4a re-audit (G1): full, support mutation-checked (mutations G1-m32)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "transaction.flag-sources#5",
@@ -495,8 +523,8 @@
      "units": [
       "B6"
      ],
-     "text": "Working assumption (intended): a module that declares NoTransaction must not run inside a transaction opened for its parent, so the change runs without one.",
-     "cases": "child NoTransaction inside an open parent transaction",
+     "text": "Working assumption (intended): a module that declares NoTransaction must not run inside a transaction opened for its parent, so the change runs without one and a failure may leave a partial install.",
+     "cases": "child NoTransaction inside an open parent transaction; child failure after a write",
      "observation": "transaction depth of the child activation",
      "grade": "full",
      "check": "refuted",
@@ -504,10 +532,13 @@
       ".g5/Verus_verification/consolidated/verus/loadtx.rs::no_transaction_child_does_not_cancel_parent"
      ],
      "evidence": [
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/concepts__transactions-and-dev-mode.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G1.jsonl"
      ],
-     "basis": "new:iteration-70 (as built the child stays at the parent depth > 0; the intended promise is contradicted)",
-     "assessed_in": "iteration-70"
+     "basis": "new:iteration-70 (as built the child stays at the parent depth > 0; the intended promise is contradicted); iteration-72 rule-4a re-audit (G1): full, support mutation-checked (mutations G1-m32); iteration-72 (review-71 B): \"partial install\" restored to the text",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "transaction.flag-sources#9",
@@ -524,6 +555,69 @@
      "basis": "new:iteration-70",
      "assessed_in": "iteration-70",
      "gap": "No model of a NoJournal dependency with its own dependencies (G crate: leaf dependencies only; loadtx: disjoint writes). Missing: dep D (NoJournal) requiring E, parent fails: E rolled back while D stays."
+    },
+    {
+     "id": "transaction.flag-sources#10",
+     "units": [
+      "P1"
+     ],
+     "text": "A command-line NoTransaction/NoJournal value wins over the module's own <Defaults> (LoadNewModule merges the <Defaults> first and the command parameters over them, Utils/Module.cls:1166-1167).",
+     "cases": "command parameter Some(false) vs <Defaults> Some(true); command absent",
+     "observation": "effective flag of the activation",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/loadtx.rs::merge_key",
+      ".g5/Verus_verification/consolidated/verus/loadtx.rs::effective",
+      ".g5/Verus_verification/consolidated/verus/loadtx.rs::explicit_false_parent_overrides_child"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/mutations/M.jsonl"
+     ],
+     "basis": "new:iteration-72 (review-71 B): split from #1. Mutation M-m07 (the <Defaults> value wins) killed.",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
+    },
+    {
+     "id": "transaction.flag-sources#11",
+     "units": [
+      "B3"
+     ],
+     "text": "Process journaling is restored when the NoJournal child activation ends (\"during that activation\").",
+     "cases": "journaled parent write after a NoJournal dependency activation, parent rolled back",
+     "observation": "that write after the rollback",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/reviews/review-71.md"
+     ],
+     "basis": "new:iteration-72 (review-71 B)",
+     "assessed_in": "iteration-72",
+     "gap": "loadtx takes Write.journal per write as an input. The JournalManager restore (Utils/Module.cls:1191-1193, journaling switched back when the manager object closes) is not modeled."
+    },
+    {
+     "id": "transaction.flag-sources#12",
+     "units": [
+      "B5"
+     ],
+     "text": "Working assumption: a module's <Defaults> apply whenever that module is installed, including as a dependency.",
+     "cases": "dependency <Defaults> NoJournal=1 under a parent with NoJournal absent vs given as 0",
+     "observation": "effective flag of the dependency",
+     "grade": "full",
+     "check": "refuted",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/loadtx.rs::merge_key",
+      ".g5/Verus_verification/consolidated/verus/loadtx.rs::explicit_false_parent_overrides_child"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/mutations/M.jsonl"
+     ],
+     "basis": "new:iteration-72 (review-71 B): refuted as built, because a parent parameter that exists, even 0, overrides the dependency's own <Defaults> (merge_key(Some(false), Some(true)) == Some(false)). Mutation M-m07 (child wins) killed.",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     }
    ]
   },
@@ -619,10 +713,12 @@
      "evidence": [
       ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
       ".g5/Verus_verification/cases/cases.json",
-      ".g5/Verus_verification/results/verus/20261113T223110Z-cases-asbuilt-r3/receipt.json"
+      ".g5/Verus_verification/results/verus/20261113T223110Z-cases-asbuilt-r3/receipt.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/concepts__transactions-and-dev-mode.json"
      ],
-     "basis": "reused:coverage-map dev-mode (G cases B1-C02, B1-C20, B1-C21 computed by the L2 transcription)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:coverage-map dev-mode (G cases B1-C02, B1-C20, B1-C21 computed by the L2 transcription); iteration-72 rule-4a re-audit (G1): full, support inspection",
+     "assessed_in": "iteration-72",
+     "support": "inspection"
     },
     {
      "id": "dev-mode#5",
@@ -641,10 +737,13 @@
      "evidence": [
       "playbook-uplift/models/verus/results/update_steps.json",
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/concepts__transactions-and-dev-mode.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G1.jsonl"
      ],
-     "basis": "new:iteration-70",
-     "assessed_in": "iteration-70"
+     "basis": "new:iteration-70; iteration-72 rule-4a re-audit (G1): full, support mutation-checked (mutations G1-m38, G1-m28)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "dev-mode#6",
@@ -661,10 +760,13 @@
      ],
      "evidence": [
       "playbook-uplift/models/verus/results/update_steps.json",
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/concepts__transactions-and-dev-mode.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G1.jsonl"
      ],
-     "basis": "new:iteration-70 (F-INST-5: update -dev from a registry runs without developer mode; a failing step rolls back to the old version, not in developer mode)",
-     "assessed_in": "iteration-70"
+     "basis": "new:iteration-70 (F-INST-5: update -dev from a registry runs without developer mode; a failing step rolls back to the old version, not in developer mode); iteration-72 rule-4a re-audit (G1): full, support mutation-checked (mutations G1-m37)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "dev-mode#7",
@@ -718,10 +820,12 @@
       ".g5/Verus_verification/cases/cases.json",
       ".g5/Verus_verification/results/verus/20261113T223110Z-cases-asbuilt-r3/receipt.json",
       "playbook-uplift/models/verus/results/update_steps.json",
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/concepts__transactions-and-dev-mode.json"
      ],
-     "basis": "reused:coverage-map dev-mode.sticky (G case B1-C20 computed by L2: lnm_devsave keeps the stored mode when DeveloperMode is undefined)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:coverage-map dev-mode.sticky (G case B1-C20 computed by L2: lnm_devsave keeps the stored mode when DeveloperMode is undefined); iteration-72 rule-4a re-audit (G1): full, support control (control playbook-uplift/models/verus/controls/update_steps.json + results/update_steps.json: stored-dev-ignored killed inst_lemma_pf5)",
+     "assessed_in": "iteration-72",
+     "support": "control"
     }
    ],
    "parent": {
@@ -769,10 +873,14 @@
      ],
      "evidence": [
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
-      ".g5/uplift/consolidated/iter25/HANDOFF.md"
+      ".g5/uplift/consolidated/iter25/HANDOFF.md",
+      ".g5/uplift/coverage-20261117/iter72/audit/concepts__transactions-and-dev-mode.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G1.jsonl"
      ],
-     "basis": "reused:dev-mode.source-files metadata (iter25)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:dev-mode.source-files metadata (iter25); iteration-72 rule-4a re-audit (G1): full, support mutation-checked (mutations G1-m28; instance-scoped)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked",
+     "instance_scoped": true
     },
     {
      "id": "dev-mode.source-files#2",
@@ -790,10 +898,14 @@
       ".g5/Verus_verification/consolidated/iter25/developer_sources.rs::lifecycle_staged"
      ],
      "evidence": [
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/concepts__transactions-and-dev-mode.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G1.jsonl"
      ],
-     "basis": "reused:dev-mode.source-files metadata (iter25)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:dev-mode.source-files metadata (iter25); iteration-72 rule-4a re-audit (G1): full, support mutation-checked (mutations G1-m26; instance-scoped)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked",
+     "instance_scoped": true
     },
     {
      "id": "dev-mode.source-files#3",
@@ -810,10 +922,14 @@
       ".g5/Verus_verification/consolidated/iter25/developer_sources.rs::reader_neighbor"
      ],
      "evidence": [
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/concepts__transactions-and-dev-mode.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G1.jsonl"
      ],
-     "basis": "reused:dev-mode.source-files metadata (iter25)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:dev-mode.source-files metadata (iter25); iteration-72 rule-4a re-audit (G1): full, support mutation-checked (mutations G1-m27, G1-m29; instance-scoped)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked",
+     "instance_scoped": true
     },
     {
      "id": "dev-mode.source-files#4",
@@ -830,10 +946,14 @@
       ".g5/Verus_verification/consolidated/iter25/developer_sources.rs::layout_neighbor"
      ],
      "evidence": [
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/concepts__transactions-and-dev-mode.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G1.jsonl"
      ],
-     "basis": "reused:dev-mode.source-files metadata (iter25)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:dev-mode.source-files metadata (iter25); iteration-72 rule-4a re-audit (G1): full, support mutation-checked (mutations G1-m27; instance-scoped)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked",
+     "instance_scoped": true
     },
     {
      "id": "dev-mode.source-files#5",
@@ -889,10 +1009,14 @@
       ".g5/Verus_verification/consolidated/iter25/developer_sources.rs::refusal_neighbor"
      ],
      "evidence": [
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/concepts__transactions-and-dev-mode.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G1.jsonl"
      ],
-     "basis": "new:iteration-70 (coverage map says \"not modeled\"; iteration25 models the guard)",
-     "assessed_in": "iteration-70"
+     "basis": "new:iteration-70 (coverage map says \"not modeled\"; iteration25 models the guard); iteration-72 rule-4a re-audit (G1): full, support mutation-checked (mutations G1-m26; instance-scoped)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked",
+     "instance_scoped": true
     },
     {
      "id": "dev-mode.overwrite-guard#2",
@@ -971,10 +1095,12 @@
       ".g5/Verus_verification/cases/cases.json",
       ".g5/Verus_verification/results/verus/20261113T223110Z-cases-asbuilt-r3/receipt.json",
       ".g5/uplift/consolidated/iter64/run.json",
-      ".g5/Verus_verification/results/verus/20261113T223459Z-control-12-dev-phases-in-transaction/receipt.json"
+      ".g5/Verus_verification/results/verus/20261113T223459Z-control-12-dev-phases-in-transaction/receipt.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/concepts__transactions-and-dev-mode.json"
      ],
-     "basis": "reused:coverage-map dev-mode.keep-on-failure (G crate; control 12 detected)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:coverage-map dev-mode.keep-on-failure (G crate; control 12 detected); iteration-72 rule-4a re-audit (G1): full, support control (control .g5/Verus_verification/results/verus/20261113T22*-final-r3-control-12 (dev phases inside a transaction) and 01 rejected at case_c26)",
+     "assessed_in": "iteration-72",
+     "support": "control"
     },
     {
      "id": "dev-mode.keep-on-failure#2",
@@ -1003,10 +1129,12 @@
      "evidence": [
       ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
       ".g5/Verus_verification/cases/cases.json",
-      ".g5/Verus_verification/results/verus/20261113T223110Z-cases-asbuilt-r3/receipt.json"
+      ".g5/Verus_verification/results/verus/20261113T223110Z-cases-asbuilt-r3/receipt.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/concepts__transactions-and-dev-mode.json"
      ],
-     "basis": "reused:coverage-map dev-mode.keep-on-failure (G cases B1-C37: dep1 rolled back with dep2; B1-C38: dependencies kept after their commit)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:coverage-map dev-mode.keep-on-failure (G cases B1-C37: dep1 rolled back with dep2; B1-C38: dependencies kept after their commit); iteration-72 rule-4a re-audit (G1): full, support inspection",
+     "assessed_in": "iteration-72",
+     "support": "inspection"
     }
    ]
   },
@@ -1037,10 +1165,12 @@
      "evidence": [
       ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
       ".g5/Verus_verification/cases/cases.json",
-      ".g5/Verus_verification/results/verus/20261113T223110Z-cases-asbuilt-r3/receipt.json"
+      ".g5/Verus_verification/results/verus/20261113T223110Z-cases-asbuilt-r3/receipt.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/concepts__transactions-and-dev-mode.json"
      ],
-     "basis": "reused:coverage-map dev-mode.not-propagated (G cases B1-C38 dependency normal, B1-C39 snapshot neighbour)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:coverage-map dev-mode.not-propagated (G cases B1-C38 dependency normal, B1-C39 snapshot neighbour); iteration-72 rule-4a re-audit (G1): full, support inspection",
+     "assessed_in": "iteration-72",
+     "support": "inspection"
     },
     {
      "id": "dev-mode.not-propagated#2",

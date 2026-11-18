@@ -30,10 +30,12 @@
      ],
      "evidence": [
       "playbook-uplift/models/verus/results/update_steps.json",
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__update.json"
      ],
-     "basis": "new:iteration-70",
-     "assessed_in": "iteration-70"
+     "basis": "new:iteration-70; iteration-72 rule-4a re-audit (G2): full, support control (control playbook-uplift/models/verus/results/update_steps.json run-test-ignores-status, flag-not-reset-per-class, seeding-skips-failed-steps)",
+     "assessed_in": "iteration-72",
+     "support": "control"
     },
     {
      "id": "update#2",
@@ -43,13 +45,19 @@
      "text": "Without a version, update moves to the latest available version.",
      "cases": "update with vs without a version; offers 1.1.0 and 1.2.0",
      "observation": "installed version",
-     "grade": "absent",
-     "check": "none",
-     "models": [],
-     "evidence": [],
-     "basis": "new:iteration-70",
-     "assessed_in": "iteration-70",
-     "gap": "No model of Main.cls::Update version selection; update_steps takes the target version op.to as an input. Contrast: with 1.1.0 and 1.2.0 offered, update m installs 1.2.0."
+     "grade": "partial",
+     "check": "refuted",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter34/versions.rs::installed",
+      ".g5/Verus_verification/consolidated/iter34/versions.rs::fixture_neighbors",
+      ".g5/Verus_verification/consolidated/iter34/versions.rs::releases_agree"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter72/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-72 (review-71 A2)",
+     "assessed_in": "iteration-72",
+     "gap": "Update without a version calls Install (Main.cls:4445-4449), whose choice versions.rs::installed computes from the offered versions (Main.cls:2603 takes GetAt(1) of the SQL-ordered results). With releases only the order is semantic (releases_agree). With prereleases enabled fixture_neighbors shows the install picks 2.0.0-beta.1 while the semantic maximum is 2.0.0, which refutes \"latest\". The Update -> Install routing is source reading only, and no theorem states the installed version after update."
     },
     {
      "id": "update#3",
@@ -118,10 +126,13 @@
      ],
      "evidence": [
       "playbook-uplift/models/verus/results/update_steps.json",
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__update.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G2.jsonl"
      ],
-     "basis": "new:iteration-70",
-     "assessed_in": "iteration-70"
+     "basis": "new:iteration-70; iteration-72 rule-4a re-audit (G2): full, support mutation-checked (mutations G2-m05)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "update.refusal#2",
@@ -320,7 +331,7 @@
      "text": "Each V<major> class in the update package lists its step methods in order; update walks classes ascending, the all-member list before the primary-only list, each in author order.",
      "cases": "steps across two classes and both lists",
      "observation": "order of steps run",
-     "grade": "full",
+     "grade": "partial",
      "check": "proved",
      "models": [
       "playbook-uplift/models/verus/update_steps.rs::wf",
@@ -328,10 +339,13 @@
      ],
      "evidence": [
       "playbook-uplift/models/verus/results/update_steps.json",
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__update.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G2.jsonl"
      ],
-     "basis": "new:iteration-70",
-     "assessed_in": "iteration-70"
+     "basis": "new:iteration-70; iteration-72 rule-4a re-audit (G2): partial, support mutation-checked (mutations G2-m59)",
+     "assessed_in": "iteration-72",
+     "gap": "Rule 4a (iteration-72): The walk order (classes ascending, all-member list before primary-only, author order) is the premise wf on the input step sequence; inst_ok_update_runs_in_walk_order only shows the log follows the given sequence, and class_list (class-number map) is not connected to the walk. Weakening wf to distinct keys (G2-m59) fails only the helper inst_lemma_flag_step, which needs class contiguity for the newStepToApply flag: the order is assumed there, not derived."
     },
     {
      "id": "update.steps#2",
@@ -351,10 +365,12 @@
      ],
      "evidence": [
       "playbook-uplift/models/verus/results/update_steps.json",
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__update.json"
      ],
-     "basis": "new:iteration-70",
-     "assessed_in": "iteration-70"
+     "basis": "new:iteration-70; iteration-72 rule-4a re-audit (G2): full, support control (control playbook-uplift/models/verus/results/update_steps.json step-failure-reported-ok)",
+     "assessed_in": "iteration-72",
+     "support": "control"
     },
     {
      "id": "update.steps#3",
@@ -371,10 +387,12 @@
      ],
      "evidence": [
       "playbook-uplift/models/verus/results/update_steps.json",
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__update.json"
      ],
-     "basis": "new:iteration-70",
-     "assessed_in": "iteration-70"
+     "basis": "new:iteration-70; iteration-72 rule-4a re-audit (G2): full, support control (control playbook-uplift/models/verus/results/update_steps.json no-rollback-on-failure (kills inst_witness_failed_update_repeats_effects))",
+     "assessed_in": "iteration-72",
+     "support": "control"
     },
     {
      "id": "update.steps#4",
@@ -394,10 +412,12 @@
      ],
      "evidence": [
       "playbook-uplift/models/verus/results/update_steps.json",
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__update.json"
      ],
-     "basis": "new:iteration-70",
-     "assessed_in": "iteration-70"
+     "basis": "new:iteration-70; iteration-72 rule-4a re-audit (G2): full, support control (control playbook-uplift/models/verus/results/update_steps.json run-test-ignores-status)",
+     "assessed_in": "iteration-72",
+     "support": "control"
     },
     {
      "id": "update.steps#5",
@@ -415,10 +435,12 @@
      ],
      "evidence": [
       "playbook-uplift/models/verus/results/update_steps.json",
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__update.json"
      ],
-     "basis": "new:iteration-70",
-     "assessed_in": "iteration-70"
+     "basis": "new:iteration-70; iteration-72 rule-4a re-audit (G2): full, support control (control playbook-uplift/models/verus/results/update_steps.json seeding-tests-typed-flag)",
+     "assessed_in": "iteration-72",
+     "support": "control"
     },
     {
      "id": "update.steps#6",
@@ -456,10 +478,13 @@
      ],
      "evidence": [
       "playbook-uplift/models/verus/results/update_steps.json",
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__update.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G2.jsonl"
      ],
-     "basis": "new:iteration-70",
-     "assessed_in": "iteration-70"
+     "basis": "new:iteration-70; iteration-72 rule-4a re-audit (G2): full, support mutation-checked (mutations G2-m06)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     }
    ]
   },
@@ -501,10 +526,14 @@
      ],
      "evidence": [
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
-      ".g5/uplift/consolidated/iter11/run.json"
+      ".g5/uplift/consolidated/iter11/run.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__update.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G2.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/update.g5.md metadata (iter11 shared_steps.rs)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/ontology/features/update.g5.md metadata (iter11 shared_steps.rs); iteration-72 rule-4a re-audit (G2): full, support mutation-checked (mutations G2-m34; instance-scoped)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked",
+     "instance_scoped": true
     },
     {
      "id": "update.steps.shared-execution#2",
@@ -522,10 +551,14 @@
      ],
      "evidence": [
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
-      ".g5/uplift/consolidated/iter11/run.json"
+      ".g5/uplift/consolidated/iter11/run.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__update.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G2.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/update.g5.md metadata (iter11 shared_steps.rs)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/ontology/features/update.g5.md metadata (iter11 shared_steps.rs); iteration-72 rule-4a re-audit (G2): full, support mutation-checked (mutations G2-m35; instance-scoped)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked",
+     "instance_scoped": true
     },
     {
      "id": "update.steps.shared-execution#3",
@@ -544,10 +577,13 @@
      ],
      "evidence": [
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
-      ".g5/uplift/consolidated/iter11/run.json"
+      ".g5/uplift/consolidated/iter11/run.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__update.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G2.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/update.g5.md metadata (iter11 shared_steps.rs)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/ontology/features/update.g5.md metadata (iter11 shared_steps.rs); iteration-72 rule-4a re-audit (G2): full, support mutation-checked (mutations G2-m36)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     }
    ]
   },
@@ -573,7 +609,7 @@
      "text": "A saved update-step record is unique by class and method within its kind, not by module; registering the key for another module moves its home and keeps completion and status.",
      "cases": "module 1 seeds, module 2 registers the same key",
      "observation": "row home, completed, ok",
-     "grade": "full",
+     "grade": "partial",
      "check": "proved",
      "models": [
       ".g5/Verus_verification/consolidated/iter9/ownership.rs::get_add",
@@ -582,10 +618,13 @@
      ],
      "evidence": [
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
-      ".g5/uplift/consolidated/iter9/INDEX.md"
+      ".g5/uplift/consolidated/iter9/INDEX.md",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__update.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G2.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/update.g5.md metadata (iter9 ownership.rs)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/ontology/features/update.g5.md metadata (iter9 ownership.rs); iteration-72 rule-4a re-audit (G2): partial, support mutation-checked (mutations G2-m38)",
+     "assessed_in": "iteration-72",
+     "gap": "Rule 4a (iteration-72): Uniqueness by key and the home move are computed, but \"keeps completion and status\" is never exercised: the neighbours only call seed, which re-marks the row completed and ok, so G2-m38 (get_add resets completion) survives."
     },
     {
      "id": "update.steps.records#2",
@@ -605,10 +644,13 @@
      ],
      "evidence": [
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
-      "playbook-uplift/models/verus/results/update_steps.json"
+      "playbook-uplift/models/verus/results/update_steps.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__update.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G2.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/update.g5.md metadata (iter9) plus iter11/update_steps for the run",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/ontology/features/update.g5.md metadata (iter9) plus iter11/update_steps for the run; iteration-72 rule-4a re-audit (G2): full, support mutation-checked (mutations G2-m37; control playbook-uplift/models/verus/results/update_steps.json run-test-ignores-status)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "update.steps.records#3",
@@ -626,10 +668,13 @@
       ".g5/Verus_verification/consolidated/iter9/ownership.rs::cascade_neighbors"
      ],
      "evidence": [
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__update.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G2.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/update.g5.md metadata (iter9 ownership.rs)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/ontology/features/update.g5.md metadata (iter9 ownership.rs); iteration-72 rule-4a re-audit (G2): full, support mutation-checked (mutations G2-m39)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     }
    ]
   }

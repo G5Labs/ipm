@@ -1,0 +1,386 @@
+{
+ "page": ".g5/ontology/features/inspection.g5.md",
+ "auditor": "G7",
+ "entries": [
+  {
+   "id": "inspect#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter8/catalog.rs::catalog_visible = show_all || compatible(a,current); compatible = !deployed || platforms contains current",
+   "product": "src/cls/IPM/Utils/Module.cls:935-940",
+   "mutations": [
+    "G7-m41",
+    "G7-m42"
+   ],
+   "control": null,
+   "instance_scoped": false,
+   "note": "show_all is the -versions modifier (pShowAllVersions); the ontology text never says -versions lifts the platform filter (review-71 A3 inspect B1)"
+  },
+  {
+   "id": "inspect#7",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter51/toplevel.rs::listed = !is_dep(deps, name)",
+   "product": null,
+   "mutations": [
+    "G7-m43"
+   ],
+   "control": null,
+   "instance_scoped": true,
+   "note": "fixture names; IPM-included case is not a separate neighbour; case-insensitive comparison is a lowercase-storage premise"
+  },
+  {
+   "id": "inspect#8",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter51/toplevel.rs::label_full = external && verbose",
+   "product": null,
+   "mutations": [
+    "G7-m44"
+   ],
+   "control": null,
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "inspect#10",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/verus/thin_surfaces.rs::inspection_choice (Name, then ExternalName, else Missing) from the two lookup results; inspection_ok",
+   "product": null,
+   "mutations": [
+    "G7-m45"
+   ],
+   "control": null,
+   "instance_scoped": false,
+   "note": "ensures restates the body; the lookups themselves are inputs named by the obligation"
+  },
+  {
+   "id": "inspect.help#2",
+   "verdict": "partial",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter54/helpcmd.rs::help maps an input Name kind (Cmd(c)/Alias(c)/Unknown/Structural) to a view",
+   "product": "src/cls/IPM/CLI.cls:15-42",
+   "mutations": [
+    "G7-m53"
+   ],
+   "instance_scoped": false,
+   "gap": "command and alias resolution (tCommandStruct lookup, then the alias subscript 1, CLI.cls:26-31) is taken as input: Name::Alias(c) already carries the resolved command, so a resolver that maps an alias to the wrong command or misses it is unrepresented; the per-kind view is an outcome table",
+   "note": "",
+   "control": null
+  },
+  {
+   "id": "inspect.help#3",
+   "verdict": "partial",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter54/helpcmd.rs::shows_only = module-action or phase_shortcut(c); phase_shortcut is the constant c == COMPILE",
+   "product": "src/cls/IPM/CLI.cls:38-41",
+   "mutations": [
+    "G7-m54"
+   ],
+   "instance_scoped": false,
+   "gap": "membership in STANDARDPHASES (CLI.cls:39) is not modelled; phase_shortcut is a constant naming only compile, so the claim for every other phase command (reload, validate, activate, test, package, verify, ...) has no counterpart and the model would say they do not show module-action flags",
+   "note": "",
+   "control": null
+  },
+  {
+   "id": "inspect.help#6",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter54/helpcmd.rs::intro_current_registry = remote_registries > 0",
+   "product": "src/cls/IPM/Main.cls BuildIntroMessages",
+   "mutations": [
+    "G7-m52"
+   ],
+   "control": null,
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "inspect.namespace#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter55/nsinit.rs::zn branches on namespace existence and IsIPMEnabled (inputs named by the obligation), transcribing Main.cls::Namespace",
+   "product": "src/cls/IPM/Main.cls:1199-1213",
+   "mutations": [
+    "G7-m55",
+    "G7-m56"
+   ],
+   "control": null,
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "inspect.list-installed#1",
+   "verdict": "partial",
+   "support": "inspection",
+   "deciding": ".g5/Verus_verification/consolidated/iter35/listing.rs::flat_pos/before over modes name, name-desc, version",
+   "product": "src/cls/IPM/Main.cls:3040-3044",
+   "mutations": [],
+   "instance_scoped": false,
+   "gap": "version-desc and the date sort modes are not modelled (Main.cls:3040-3044; listing.rs before() has modes 0-2 only); review-71 settled",
+   "note": "settled by review-71 A1",
+   "control": null
+  },
+  {
+   "id": "inspect.list-installed#5",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter35/listing.rs::version_cmp compares prerelease keys as text (pre_key, cmp_text)",
+   "product": null,
+   "mutations": [
+    "G7-m57"
+   ],
+   "control": null,
+   "instance_scoped": true,
+   "note": "G7-m57 tool verdict invalid because the by(compute) assertion reports \"expression simplifies to false\" (no results line); the mutant is rejected, so it counts as killed"
+  },
+  {
+   "id": "inspect.list-installed#6",
+   "verdict": "partial",
+   "support": "inspection",
+   "deciding": ".g5/Verus_verification/consolidated/iter35/listing.rs::tree/is_root/expand: roots by name, each dependency under each parent; cut() prints the missing module with no children",
+   "product": "src/cls/IPM/Main.cls ListInstalled/PrintTree",
+   "mutations": [],
+   "instance_scoped": true,
+   "gap": "the [missing] marker is not represented (a missing dependency yields the same Row as an installed leaf; cut() only shows it is still printed), and \"-tree ignores -s\" holds by construction because tree() takes no sort input rather than being checked against ListInstalled dispatch; sibling order is outside the one-dependency fixture",
+   "note": "",
+   "control": null
+  },
+  {
+   "id": "inspect.show#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter46/summary.rs::blocks counts each block present only when its content count is nonzero",
+   "product": "src/cls/IPM/General/ModuleSummary.cls AddList/AddBlock",
+   "mutations": [
+    "G7-m58"
+   ],
+   "control": null,
+   "instance_scoped": true,
+   "note": ""
+  },
+  {
+   "id": "inspect.show#3",
+   "verdict": "partial",
+   "support": "inspection",
+   "deciding": ".g5/Verus_verification/consolidated/iter46/summary.rs::usage reads after_lines and defaults counts; parameters is a separate input never read",
+   "product": "src/cls/IPM/General/ModuleSummary.cls:72-78",
+   "mutations": [
+    "G7-m60"
+   ],
+   "instance_scoped": false,
+   "gap": "the product filter that excludes <Parameter> entries (ModuleSummary.cls:72-74, %IsA(\"...ModuleSetting.Default\")) has no counterpart: Default and Parameter counts are separate inputs, so dropping the filter cannot be expressed; the theorem holds by construction",
+   "note": "G7-m60 (killed) adds an invented dependency, like the empty-file calibration",
+   "control": null
+  },
+  {
+   "id": "inspect.show#6",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter46/summary.rs::health_entry = health == Some(true)",
+   "product": "src/cls/IPM/General/ModuleSummary.cls:325",
+   "mutations": [
+    "G7-m59"
+   ],
+   "control": null,
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "inspect.webapp.detail#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter7/inputs.rs::detail picks DispatchClass, then WSGIAppLocation, then Path, then Directory, else Empty",
+   "product": null,
+   "mutations": [
+    "G7-m75"
+   ],
+   "control": null,
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "inspect.webapp.detail#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter7/inputs.rs::detail returns the Dispatch/Wsgi/Files variant that names the label kind",
+   "product": null,
+   "mutations": [
+    "G7-m75"
+   ],
+   "control": null,
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "inspect.dependents#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter2/readers.rs::direct_dependents keeps edges to the target that are not scoped",
+   "product": null,
+   "mutations": [
+    "G7-m61"
+   ],
+   "control": null,
+   "instance_scoped": true,
+   "note": "\"direct\" follows from the edge-list query shape (transitive edges never have the target); only scoped vs unscoped is exercised"
+  },
+  {
+   "id": "inspect.dependents#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter2/readers.rs::installed_status from version emptiness and the range result (input named by the obligation)",
+   "product": null,
+   "mutations": [
+    "G7-m62"
+   ],
+   "control": null,
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "inspect.list-dependents#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter33/dependents.rs::listed uses in_graph over the resolved dependency chain (transitive)",
+   "product": null,
+   "mutations": [
+    "G7-m46"
+   ],
+   "control": null,
+   "instance_scoped": true,
+   "note": "G7-m46 tool verdict invalid because the by(compute) assertion reports \"expression simplifies to false\" (no results line); the mutant is rejected, so it counts as killed"
+  },
+  {
+   "id": "inspect.list-dependents#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter33/dependents.rs::listed filters on node_ver at the target depth",
+   "product": null,
+   "mutations": [
+    "G7-m47"
+   ],
+   "control": null,
+   "instance_scoped": true,
+   "note": "G7-m47 tool verdict invalid because the by(compute) assertion reports \"expression simplifies to false\" (no results line); the mutant is rejected, so it counts as killed"
+  },
+  {
+   "id": "inspect.list-dependents#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter33/dependents.rs::is_root/resolve_repo: repository manifests with dependencies, installed state ignored",
+   "product": null,
+   "mutations": [
+    "G7-m48"
+   ],
+   "control": null,
+   "instance_scoped": true,
+   "note": "G7-m48 tool verdict invalid because the by(compute) assertion reports \"expression simplifies to false\" (no results line); the mutant is rejected, so it counts as killed"
+  },
+  {
+   "id": "inspect.list-dependents#4",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter33/dependents.rs::warned = root && !graph_ok; acceptable() applies installed requirements outside the graph",
+   "product": null,
+   "mutations": [
+    "G7-m49",
+    "G7-m50"
+   ],
+   "control": null,
+   "instance_scoped": true,
+   "note": "G7-m49/G7-m50 tool verdict invalid because the by(compute) assertion reports \"expression simplifies to false\" (no results line); the mutant is rejected, so it counts as killed"
+  },
+  {
+   "id": "inspect.list-dependents#5",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter33/dependents.rs::tree_path_has walks parent edges below the root only",
+   "product": null,
+   "mutations": [
+    "G7-m51"
+   ],
+   "control": null,
+   "instance_scoped": true,
+   "note": "G7-m51 tool verdict invalid because the by(compute) assertion reports \"expression simplifies to false\" (no results line); the mutant is rejected, so it counts as killed"
+  },
+  {
+   "id": "inspect.orphans.ownership#1",
+   "verdict": "full",
+   "support": "control",
+   "deciding": ".g5/Verus_verification/consolidated/iter20/ownership.rs::filter drops a class when home(...).module is some; payload unchanged",
+   "product": null,
+   "mutations": [],
+   "control": ".g5/uplift/consolidated/iter20/proofs/controls/ownership.rs/orphans-predicate-inverted, empty-module-removes-physical-code (both rejected)",
+   "instance_scoped": true,
+   "note": ""
+  },
+  {
+   "id": "inspect.orphans.ownership#2",
+   "verdict": "full",
+   "support": "control",
+   "deciding": ".g5/Verus_verification/consolidated/iter20/ownership.rs::import_refs + ref_pass give the declaring module as home; claimed() world",
+   "product": null,
+   "mutations": [],
+   "control": ".g5/uplift/consolidated/iter20/proofs/controls/ownership.rs/imported-reference-has-wrong-owner, orphans-predicate-inverted (rejected)",
+   "instance_scoped": true,
+   "note": ""
+  },
+  {
+   "id": "inspect.orphans.ownership#3",
+   "verdict": "full",
+   "support": "control",
+   "deciding": ".g5/Verus_verification/consolidated/iter20/ownership.rs::naming_pass supplies a home from a module named like the class prefix",
+   "product": null,
+   "mutations": [],
+   "control": ".g5/uplift/consolidated/iter20/proofs/controls/ownership.rs/naming-fallback-disabled, shortest-naming-prefix-first (rejected)",
+   "instance_scoped": true,
+   "note": ""
+  },
+  {
+   "id": "inspect.orphans.ownership#4",
+   "verdict": "full",
+   "support": "control",
+   "deciding": ".g5/Verus_verification/consolidated/iter20/ownership.rs::home runs ref_pass before naming_pass",
+   "product": null,
+   "mutations": [],
+   "control": ".g5/uplift/consolidated/iter20/proofs/controls/ownership.rs/naming-precedes-explicit-reference, naming-clears-prior-reference (rejected)",
+   "instance_scoped": true,
+   "note": ""
+  },
+  {
+   "id": "inspect.orphans.identifier-case#1",
+   "verdict": "full",
+   "support": "control",
+   "deciding": ".g5/Verus_verification/consolidated/iter20/ownership.rs::candidates: uppercase CLS tries identifier then package; lowercase repeats the identifier (literal case-sensitive branch)",
+   "product": null,
+   "mutations": [],
+   "control": ".g5/uplift/consolidated/iter20/proofs/controls/ownership.rs/lower-extension-takes-CLS-package-branch, upper-extension-loses-package-branch, lower-identifier-silently-uppercased (rejected)",
+   "instance_scoped": true,
+   "note": ""
+  },
+  {
+   "id": "inspect.orphans.identifier-case#2",
+   "verdict": "full",
+   "support": "control",
+   "deciding": ".g5/Verus_verification/consolidated/iter20/ownership.rs::home via naming_pass returns cs[i] (full .cls for lower, .PKG for upper), ref_id None",
+   "product": null,
+   "mutations": [],
+   "control": ".g5/uplift/consolidated/iter20/proofs/controls/ownership.rs/lower-extension-takes-CLS-package-branch (rejected)",
+   "instance_scoped": true,
+   "note": ""
+  },
+  {
+   "id": "inspect.orphans.identifier-case#3",
+   "verdict": "full",
+   "support": "control",
+   "deciding": ".g5/Verus_verification/consolidated/iter20/ownership.rs::lookup_ref through lookup_key (selected SQL collation port) resolves both forms",
+   "product": null,
+   "mutations": [],
+   "control": ".g5/uplift/consolidated/iter20/proofs/controls/ownership.rs/lower-SQL-lookup-does-not-match-declaration (rejected)",
+   "instance_scoped": true,
+   "note": "lookup_key is a two-row collation port; the obligation is itself scoped to the selected cases"
+  }
+ ]
+}

@@ -1,0 +1,447 @@
+{
+ "page": ".g5/ontology/features/load.g5.md",
+ "auditor": "G2",
+ "entries": [
+  {
+   "id": "load#1",
+   "verdict": "full",
+   "support": "control",
+   "deciding": ".g5/Verus_verification/crates/ipm-load-history/src/model.rs lnm_step computes module presence/resources from guard, manifest, dependency and phase steps; playbook-uplift/models/verus/load_general.rs::honest ties Success to worked(cfg)",
+   "product": "src/cls/IPM/Utils/Module.cls:1158-1363",
+   "control": ".g5/Verus_verification/results/verus/20261113T223844Z-final-r3-control-07-verus (case_c01); playbook-uplift/models/verus/results/load_general.json ok-recorded-as-failure, dep-failure-recorded-as-success",
+   "instance_scoped": false
+  },
+  {
+   "id": "load#2",
+   "verdict": "full",
+   "support": "inspection",
+   "deciding": ".g5/Verus_verification/crates/ipm-load-history/src/model.rs lnm_deps fails the top LoadNewModule when !all_found(c) before any dependency loads; l1_verdict 6",
+   "product": "src/cls/IPM/Utils/Module.cls:1323-1333",
+   "instance_scoped": false,
+   "note": "no recorded control alters all_found; crate not rebuilt (cargo) so no mutation run; explorer survey compares L2 with L1 over 5,850 configurations"
+  },
+  {
+   "id": "load.core#3",
+   "verdict": "full",
+   "support": "control",
+   "deciding": ".g5/Verus_verification/crates/ipm-load-history/src/model.rs pc order (guard pc2, manifest pc4, deps pc11, phases pc14-28) decides what each failure point leaves",
+   "product": "src/cls/IPM/Utils/Module.cls:1213-1346",
+   "control": ".g5/Verus_verification/results/verus/20261113T223928Z-final-r3-control-08-verus (case_c11 refusal), .g5/Verus_verification/results/verus/20261113T224226Z-final-r3-control-12-verus (case_c26)",
+   "instance_scoped": false,
+   "note": "only Activate can fail in the model, so Initialize/Validate/Compile order is not separately observed; the stated cases (refusal, dependency failure, Activate failure) are covered"
+  },
+  {
+   "id": "load.core#4",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "playbook-uplift/models/verus/update_steps.rs::step_phases sends only Kind::Update to the lock/walk; run_ok requires an empty log for install/load",
+   "product": "src/cls/IPM/Lifecycle/Base.cls:1923-1936",
+   "mutations": [
+    "G2-m01"
+   ],
+   "instance_scoped": false
+  },
+  {
+   "id": "load.options#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "playbook-uplift/models/verus/update_steps.rs::dev_run/param_dev compute the run developer mode from the typed -dev/-nodev; end_ok checks d.dev == want_dev",
+   "product": "src/cls/IPM/Utils/Module.cls:1298-1307",
+   "mutations": [
+    "G2-m02"
+   ],
+   "instance_scoped": false
+  },
+  {
+   "id": "load.options#2",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "playbook-uplift/models/verus/update_steps.rs::dev_run falls back to the stored DeveloperMode when no flag is typed",
+   "product": "src/cls/IPM/Utils/Module.cls:1298-1307",
+   "control": "playbook-uplift/models/verus/results/update_steps.json stored-dev-ignored (killed inst_lemma_pf5)",
+   "instance_scoped": false
+  },
+  {
+   "id": "load.dependencies#1",
+   "verdict": "full",
+   "support": "inspection",
+   "deciding": ".g5/Verus_verification/crates/ipm-load-history/src/model.rs runs lnm_deps (pc11) before the phases (pc14-28); case_c33 shows a -dev dependency failure leaves the manifest without resources",
+   "product": "src/cls/IPM/Utils/Module.cls:1323-1346",
+   "instance_scoped": false,
+   "note": "order is the step sequence; no recorded control reorders it and the crate is not rebuilt"
+  },
+  {
+   "id": "load.dependencies#3",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "playbook-uplift/models/verus/load_general.rs::step_dep sends a failing dependency to fail_end of the parent; honest requires Success iff worked",
+   "product": "src/cls/IPM/Utils/Module.cls:1323-1339",
+   "control": "playbook-uplift/models/verus/results/load_general.json dep-failure-recorded-as-success (inv_dep), no-rollback-on-failure",
+   "instance_scoped": false
+  },
+  {
+   "id": "load.dependencies.local-repo#6",
+   "verdict": "partial",
+   "support": "mutation-checked",
+   "deciding": "consolidated/verus/temp_repo.rs::on_new is a three-branch table over the inputs skip/cache_ok; cleanup computes its warning from rows",
+   "product": "src/cls/IPM/Repo/Filesystem/Definition.cls:117 BuildCache (its rollback is an environment premise in the model)",
+   "mutations": [
+    "G2-m07"
+   ],
+   "instance_scoped": false,
+   "gap": "The missing repository row after a failed cache creation is written into on_new's failure branch (BuildCache rollback is an environment premise, not modelled), and cleanup's warning about the missing row is never exercised: mutant G2-m07 (cleanup never warns) survives; the success neighbour is not asserted."
+  },
+  {
+   "id": "load.dependencies.local-repo#7",
+   "verdict": "full",
+   "support": "control",
+   "deciding": ".g5/Verus_verification/crates/ipm-load-history/src/model.rs: the top step runs CleanUp after the final TCOMMIT and SetCommitted, so cleanup_fails yields status error with the module kept (case_c29)",
+   "product": "src/cls/IPM/Main.cls LoadInternal CleanUp after LoadNewModule",
+   "control": ".g5/Verus_verification/results/verus/20261113T223548Z-final-r3-control-02-verus (kills case_c29)",
+   "instance_scoped": false,
+   "note": "temp_repo.rs::postcommit_cleanup is a constant (committed:true, parent = input) and earns no credit by itself"
+  },
+  {
+   "id": "load.dependencies.local-repo#9",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "consolidated/verus/temp_repo.rs::better compares version then repository id and ignores local/sort",
+   "mutations": [
+    "G2-m08"
+   ],
+   "instance_scoped": false
+  },
+  {
+   "id": "load.refusal#1",
+   "verdict": "full",
+   "support": "control",
+   "deciding": ".g5/Verus_verification/crates/ipm-load-history/src/model.rs::guard_refuses and the path check refuse before any module write in every mode; playbook-uplift/models/verus/update_steps.rs::refuses/step_guard",
+   "product": "src/cls/IPM/Utils/Module.cls:1213-1222",
+   "control": ".g5/Verus_verification/results/verus/20261113T223928Z-final-r3-control-08-verus, .g5/Verus_verification/results/verus/20261113T224012Z-final-r3-control-09-verus; playbook-uplift/models/verus/results/update_steps.json downgrade-allowed, guard-ignores-force",
+   "instance_scoped": false,
+   "note": "path refusal case by inspection (no control removes the path check)"
+  },
+  {
+   "id": "load.refusal#2",
+   "verdict": "full",
+   "support": "inspection",
+   "deciding": ".g5/Verus_verification/crates/ipm-load-history/src/model.rs::lnm_load mf==4 writes the module record then fails; under NoTransaction nothing rolls it back (case_c52)",
+   "product": "src/cls/IPM/Utils/Module.cls:1251-1260",
+   "instance_scoped": false,
+   "note": "refuted promise; control-13 (NoTransaction ignored) stops Verus at case_c27 before case_c52 is evaluated, so no control is recorded against c52"
+  },
+  {
+   "id": "load.refusal#3",
+   "verdict": "full",
+   "support": "inspection",
+   "deciding": ".g5/Verus_verification/crates/ipm-load-history/src/model.rs: the guard at pc2 fails before set_com at pc3, so a version refusal never marks Committed; theorem_commit_sound (Committed=0 means unchanged) is general",
+   "product": "src/cls/IPM/Utils/Module.cls:1213-1226",
+   "instance_scoped": false,
+   "note": "controls 08/09 remove the refusal itself, not the Committed marking order"
+  },
+  {
+   "id": "load.refusal#4",
+   "verdict": "full",
+   "support": "inspection",
+   "deciding": ".g5/Verus_verification/crates/ipm-load-history/src/model.rs: under NoTransaction set_com runs at pc3 before the manifest import, so a manifest refusal reads Committed=1 (case_c08, case_c09)",
+   "product": "src/cls/IPM/Utils/Module.cls:1224-1226",
+   "instance_scoped": false,
+   "note": "control-03 (no SetCommitted under NoTransaction) alters this branch but Verus stops at case_c27 before c08/c09"
+  },
+  {
+   "id": "load.refusal.manifest#2",
+   "verdict": "full",
+   "support": "inspection",
+   "deciding": ".g5/Verus_verification/crates/ipm-load-history/src/model.rs::lnm_load mf==4 writes the record before the multiple-documents refusal (case_c52)",
+   "product": "src/cls/IPM/Utils/Module.cls:1251-1260",
+   "instance_scoped": false
+  },
+  {
+   "id": "load.refusal.downgrade#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "consolidated/verus/semver.rs::follows (transcribed Follows) returns false for two prereleases of different cores, so load_refused(2.0.0-beta, 1.0.0-rc) is false",
+   "mutations": [
+    "G2-m17"
+   ],
+   "instance_scoped": false
+  },
+  {
+   "id": "load.refusal.downgrade#2",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "playbook-uplift/models/verus/update_steps.rs::refuses (older) and .g5/Verus_verification/crates/ipm-load-history/src/model.rs::guard_refuses compute the downgrade refusal for every flag combination",
+   "product": "src/cls/IPM/Utils/Module.cls:1213-1216",
+   "mutations": [
+    "G2-m12"
+   ],
+   "control": "playbook-uplift/models/verus/results/update_steps.json downgrade-allowed; .g5/Verus_verification/results/verus/20261113T223928Z-final-r3-control-08-verus",
+   "instance_scoped": false
+  },
+  {
+   "id": "load.refusal.downgrade#4",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "consolidated/verus/semver.rs::follows prerelease branch",
+   "mutations": [
+    "G2-m17"
+   ],
+   "instance_scoped": false
+  },
+  {
+   "id": "load.refusal.update-required#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "playbook-uplift/models/verus/update_steps.rs::refuses third disjunct (newer && has_pkg && !force && !dev)",
+   "product": "src/cls/IPM/Utils/Module.cls:1218-1222",
+   "mutations": [
+    "G2-m03"
+   ],
+   "control": "playbook-uplift/models/verus/results/update_steps.json guard-ignores-force; .g5/Verus_verification/results/verus/20261113T224012Z-final-r3-control-09-verus",
+   "instance_scoped": false
+  },
+  {
+   "id": "load.refusal.update-required#3",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "playbook-uplift/models/verus/update_steps.rs::refuses lets -force through and step_phases seeds the new steps (Activate) instead of running them",
+   "product": "src/cls/IPM/Lifecycle/Module.cls:122-127",
+   "control": "playbook-uplift/models/verus/results/update_steps.json guard-ignores-force, force-install-not-seeded",
+   "instance_scoped": false
+  },
+  {
+   "id": "load.refusal.update-required#4",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "playbook-uplift/models/verus/update_steps.rs::refuses reads dev_guard(op) (typed -dev parameter)",
+   "product": "src/cls/IPM/Utils/Module.cls:1219",
+   "mutations": [
+    "G2-m04"
+   ],
+   "instance_scoped": false
+  },
+  {
+   "id": "load.refusal.requirements#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "consolidated/iter3/resources.rs::requirement_failures computes SYSNamespace failure from the namespace; the crate composes the refusal consequence (sysreq input)",
+   "mutations": [
+    "G2-m18"
+   ],
+   "instance_scoped": false
+  },
+  {
+   "id": "load.refusal.requirements#3",
+   "verdict": "full",
+   "support": "inspection",
+   "deciding": ".g5/Verus_verification/crates/ipm-load-history/src/model.rs: the requirements check (pc10) runs after the developer-mode manifest commit (pc7-9), so a -dev refusal keeps the manifest (case_c23)",
+   "product": "src/cls/IPM/Utils/Module.cls:1309-1321",
+   "instance_scoped": false
+  },
+  {
+   "id": "load.same-version#1",
+   "verdict": "partial",
+   "support": "mutation-checked",
+   "deciding": "consolidated/iter18/reloading.rs::reload admits an equal version through the constant skip_equal_load=false and a literal-1.0.0 comparator; successful_selected_load replaces the payload",
+   "product": "src/cls/IPM/Utils/Module.cls:1213-1222",
+   "mutations": [
+    "G2-m11",
+    "G2-m12"
+   ],
+   "instance_scoped": false,
+   "gap": "In the cited reloading.rs the equal-version admission is the constant skip_equal_load=false plus a literal 1.0.0 comparator, not the product guard (Utils/Module.cls:1213-1222), and the strict-downgrade neighbour is unassessed there. update_steps.rs::refuses does compute it (G2-m12 killed) but is not cited and carries no payload/supplier observation."
+  },
+  {
+   "id": "load.reload.root#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "consolidated/iter7/inputs.rs::reload/reload_status: root = explicit, else the stored root only when developer",
+   "mutations": [
+    "G2-m13"
+   ],
+   "instance_scoped": false
+  },
+  {
+   "id": "load.reload.root#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "consolidated/iter7/inputs.rs::reload/reload_status: reload_status requires env_ok before anything else",
+   "mutations": [
+    "G2-m14"
+   ],
+   "instance_scoped": false
+  },
+  {
+   "id": "load.reload.root#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "consolidated/iter7/inputs.rs::reload/reload_status: reads_manifest requires root != 0",
+   "mutations": [
+    "G2-m15"
+   ],
+   "instance_scoped": false
+  },
+  {
+   "id": "load.reload.root#4",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "consolidated/iter7/inputs.rs::reload/reload_status: reload_status fails a missing manifest under a root",
+   "mutations": [
+    "G2-m16"
+   ],
+   "instance_scoped": false
+  },
+  {
+   "id": "load.outcome#1",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "playbook-uplift/models/verus/load_general.rs::fail_end restores the outermost snapshot (dependencies included) for a transactional failure; honest requires unchanged",
+   "product": "src/cls/IPM/Utils/Module.cls:1356-1361",
+   "control": "playbook-uplift/models/verus/results/load_general.json no-rollback-on-failure, caller-rollback-keeps-db; .g5/Verus_verification/results/verus/20261113T223717Z-final-r3-control-04-verus",
+   "instance_scoped": false,
+   "note": "consolidated/iter64/failkeep.rs is a constant per-kind table and earns no credit here"
+  },
+  {
+   "id": "load.outcome#2",
+   "verdict": "full",
+   "support": "control",
+   "deciding": ".g5/Verus_verification/crates/ipm-load-history/src/model.rs::etx/lnm_begin open no transaction under NoTransaction/NoJournal so failures keep writes (case_c27)",
+   "control": ".g5/Verus_verification/results/verus/20261113T224310Z-final-r3-control-13-verus (kills case_c27)",
+   "instance_scoped": false
+  },
+  {
+   "id": "load.outcome#4",
+   "verdict": "full",
+   "support": "control",
+   "deciding": ".g5/Verus_verification/crates/ipm-load-history/src/model.rs::kill/terminate restore tx[0] (end_rollback)",
+   "control": ".g5/Verus_verification/results/verus/20261113T224141Z-final-r3-control-11-verus (case_c45), .g5/Verus_verification/results/verus/20261113T223800Z-final-r3-control-06-verus",
+   "instance_scoped": false
+  },
+  {
+   "id": "load.outcome#5",
+   "verdict": "partial",
+   "support": "inspection",
+   "deciding": ".g5/Verus_verification/crates/ipm-load-history/src/model.rs::kill computes dv = ns when no snapshot is open (NoTransaction)",
+   "instance_scoped": false,
+   "gap": "No case, theorem or control checks the NoTransaction/NoJournal process end: l1_alts_kill gives any_alt (unconstrained) for txm != 0, so a kill model that rolled back NoTransaction writes would still pass."
+  },
+  {
+   "id": "load.outcome#7",
+   "verdict": "partial",
+   "support": "inspection",
+   "deciding": "consolidated/verus/partial_compile.rs::compile keeps everything iff all_ok || mode != Transaction",
+   "instance_scoped": false,
+   "gap": "Rollback is the per-mode formula keep = all_ok || mode != Transaction (transaction scope written down, not a snapshot/rollback), and all_ok is an input not derived from the per-resource compiler results."
+  },
+  {
+   "id": "load.outcome#8",
+   "verdict": "partial",
+   "support": "inspection",
+   "deciding": "consolidated/verus/partial_compile.rs::compile passes the input CompilerOutcome through when keep holds",
+   "instance_scoped": false,
+   "gap": "The descriptor/callable split is the input CompilerOutcome (declared IRIS premise) and what survives NoTransaction or the developer commit is the per-mode formula keep, not derived from a transaction model."
+  },
+  {
+   "id": "load.outcome.dev#1",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "playbook-uplift/models/verus/update_steps.rs::step_manifest commits (snap None) only when dev_run; .g5/Verus_verification/crates/ipm-load-history/src/model.rs lnm_b tcommit at pc7 when dev && transactions",
+   "product": "src/cls/IPM/Utils/Module.cls:1309-1319",
+   "control": "playbook-uplift/models/verus/results/update_steps.json manifest-commits-always",
+   "instance_scoped": false
+  },
+  {
+   "id": "load.outcome.dev#2",
+   "verdict": "full",
+   "support": "control",
+   "deciding": ".g5/Verus_verification/crates/ipm-load-history/src/model.rs lnm_b/lnm_b2: TSTART after the first commit, dependencies, TCOMMIT only when every dependency loaded; lnm_exit rolls back the open level",
+   "product": "src/cls/IPM/Utils/Module.cls:1318-1339",
+   "control": ".g5/Verus_verification/results/verus/20261113T223717Z-final-r3-control-04-verus (no rollback loop)",
+   "instance_scoped": false
+  },
+  {
+   "id": "load.outcome.dev#3",
+   "verdict": "full",
+   "support": "control",
+   "deciding": ".g5/Verus_verification/crates/ipm-load-history/src/model.rs lnm_b2: developer-mode phases run after TCOMMIT with no open level (case_c26)",
+   "control": ".g5/Verus_verification/results/verus/20261113T224226Z-final-r3-control-12-verus (kills case_c26)",
+   "instance_scoped": false
+  },
+  {
+   "id": "load.outcome.dev#4",
+   "verdict": "full",
+   "support": "control",
+   "deciding": ".g5/Verus_verification/crates/ipm-load-history/src/model.rs lnm_b: the developer commits fire only when etx(c)==0",
+   "control": ".g5/Verus_verification/results/verus/20261113T224310Z-final-r3-control-13-verus",
+   "instance_scoped": false
+  },
+  {
+   "id": "load.outcome.dev.early-failure#1",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "playbook-uplift/models/verus/update_steps.rs::refuses and .g5/Verus_verification/crates/ipm-load-history/src/model.rs::guard_refuses refuse before the developer commit (case_c11)",
+   "control": "playbook-uplift/models/verus/results/update_steps.json downgrade-allowed; .g5/Verus_verification/results/verus/20261113T223928Z-final-r3-control-08-verus",
+   "instance_scoped": false
+  },
+  {
+   "id": "load.outcome.dev.early-failure#2",
+   "verdict": "full",
+   "support": "inspection",
+   "deciding": ".g5/Verus_verification/crates/ipm-load-history/src/model.rs::lnm_load fails a refused manifest (mf 2/3/4) before lnm_devsave/commit at pc7, so lnm_exit rolls everything back",
+   "instance_scoped": false,
+   "note": "bounded explorer covers it; no recorded control targets this case specifically"
+  },
+  {
+   "id": "load.status#1",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "playbook-uplift/models/verus/load_general.rs::honest (ok implies top and every dependency installed; ok iff worked) and .g5/Verus_verification/crates/ipm-load-history/src/proofs.rs::theorem_top_record_complete",
+   "control": "playbook-uplift/models/verus/results/load_general.json ok-recorded-as-failure, dep-failure-recorded-as-success; .g5/Verus_verification/results/verus/20261113T223844Z-final-r3-control-07-verus",
+   "instance_scoped": false
+  },
+  {
+   "id": "load.status#2",
+   "verdict": "full",
+   "support": "inspection",
+   "deciding": ".g5/Verus_verification/crates/ipm-load-history/src/model.rs: cleanup failure after the final commit (case_c29) returns an error with the module kept",
+   "instance_scoped": false,
+   "note": "refuted promise; the counterexample is computed by the crate L2. attr_evaluator.rs::after_message (module/committed constants) earns nothing"
+  },
+  {
+   "id": "load.status.after-commit#1",
+   "verdict": "full",
+   "support": "inspection",
+   "deciding": ".g5/Verus_verification/crates/ipm-load-history/src/model.rs case_c29 (cleanup after commit) computes an error status over a kept load",
+   "instance_scoped": false,
+   "note": "refuted by the computed cleanup case; the after-install-message case rests on constants in attr_evaluator.rs::after_message"
+  },
+  {
+   "id": "load.status.after-commit#3",
+   "verdict": "partial",
+   "support": "control",
+   "deciding": ".g5/Verus_verification/crates/ipm-load-history/src/model.rs case_c29 computes the cleanup case; consolidated/verus/attr_evaluator.rs::after_message sets module/committed/history_finalized to true constants",
+   "control": ".g5/Verus_verification/results/verus/20261113T223548Z-final-r3-control-02-verus (case_c29)",
+   "instance_scoped": false,
+   "gap": "The after-install-message case rests on attr_evaluator.rs::after_message, whose module, committed and history_finalized fields are constants; only status/history_success are computed from the message error. Only the cleanup case is computed (crate case_c29)."
+  },
+  {
+   "id": "load.status.after-commit#4",
+   "verdict": "partial",
+   "support": "inspection",
+   "deciding": "consolidated/verus/temp_repo.rs::dependency_result is an outcome table over (dev, failed_manager)",
+   "product": "src/cls/IPM/Utils/Module.cls:1347-1361",
+   "instance_scoped": false,
+   "gap": "temp_repo.rs:45-48 dependency_result is an outcome table; no model injects a failure after a dependency commits (Utils/Module.cls:1347-1361), so the parent rollback to its first commit is not computed."
+  },
+  {
+   "id": "load.after-install-message#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "consolidated/verus/attr_evaluator.rs::evaluate returns raw unchanged when it has no '{'",
+   "mutations": [
+    "G2-m09"
+   ],
+   "instance_scoped": false
+  }
+ ]
+}

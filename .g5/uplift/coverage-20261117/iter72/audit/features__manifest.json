@@ -1,0 +1,470 @@
+{
+ "page": ".g5/ontology/features/manifest.g5.md",
+ "auditor": "G6",
+ "entries": [
+  {
+   "id": "module.identity.document#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "document.rs save: update(record,text) then record := updated on success, unchanged on refusal",
+   "product": "",
+   "mutations": [
+    "G6-m65"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "module.identity.document#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "update Valid replaces version with the parsed version, no ordering check",
+   "product": "",
+   "mutations": [
+    "G6-m65",
+    "G6-m66"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "module.identity.document#4",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "update Empty sets version SNAP and keeps other record fields (transcribes the empty-stream branch of UpdatePersistentFromStream)",
+   "product": "",
+   "mutations": [
+    "G6-m67"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "module.identity.document#5",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "delete clears record and doc, leaves classes",
+   "product": "",
+   "mutations": [
+    "G6-m68"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "module.identity.document#6",
+   "verdict": "partial",
+   "support": "mutation-checked",
+   "deciding": "save failure branch writes doc := Text::Empty and keeps the record",
+   "product": "",
+   "mutations": [
+    "G6-m69"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "The emptied text after a refused save is written into the failure branch (premise: Clear runs outside the transaction and the rollback discards the write); the Clear/TSTART/rollback sequence is not modelled, so C:D44 holds by construction.",
+   "note": ""
+  },
+  {
+   "id": "module.identity.document#7",
+   "verdict": "partial",
+   "support": "mutation-checked",
+   "deciding": "update Valid sets imported_name := r.name, so the name-mismatch guard is unreachable",
+   "product": "",
+   "mutations": [
+    "G6-m70"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "The imported name is fixed to the record name by premise (import onto an existing object keeps its Name); the guard exists but its deciding value is a constant, so acceptance under the old name holds by construction (same pattern as resolve_bounded).",
+   "note": ""
+  },
+  {
+   "id": "module.requirement.values#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "iter3/resources.rs requirement_failures: ExcludeHealth iff health Off and environment Health",
+   "product": "",
+   "mutations": [
+    "G6-m75"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "module.requirement.values#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "requirement_failures: NeedHealth iff health On and environment not Health",
+   "product": "",
+   "mutations": [
+    "G6-m71",
+    "G6-m72"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": "Review-71 thought no NeedHealth neighbour was exercised. requirement_neighbors :186 (non-Health instance, NeedHealth present) and :180 (Health instance, no NeedHealth) cover both sides, and both mutants are killed."
+  },
+  {
+   "id": "module.requirement.values#4",
+   "verdict": "partial",
+   "support": "mutation-checked",
+   "deciding": "interop failure = (Interoperability==1 || health On) && !namespace interoperability",
+   "product": "",
+   "mutations": [
+    "G6-m73"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "Only the interoperability-off namespace is exercised with Health=true (:180, :186); the \"on\" neighbour (Health=true on an interoperability-enabled namespace, no failure) is never asserted, so a rule failing Health=true regardless of the namespace (G6-m73) verifies.",
+   "note": ""
+  },
+  {
+   "id": "module.requirement.values#6",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "Interoperability=2 (disabled) adds no failure on an enabled namespace",
+   "product": "",
+   "mutations": [
+    "G6-m74"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "module.requirement.values#7",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "SYSNamespace failure iff flag and namespace != %SYS",
+   "product": "",
+   "mutations": [
+    "G6-m76"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "module.parameter#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "iter36 installer.rs: installer variables from param_* (Parameter, -D), Invoke arguments from custom_* (Default, -D)",
+   "product": "",
+   "mutations": [
+    "G6-m86"
+   ],
+   "control": "",
+   "instance_scoped": true,
+   "gap": "",
+   "note": "Mutation recorded as \"invalid\" by the first mutate.py version; its log shows a by(compute) assertion that simplifies to false, so the mutant is killed. Fixture module m36a declares greeting only as <Default> and mode as <Parameter>."
+  },
+  {
+   "id": "module.parameter#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "param_mode/param_greeting/custom_greeting = or(-D value, declared value); attr_evaluator parameter_precedence general",
+   "product": "",
+   "mutations": [
+    "G6-m87",
+    "G6-m88"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "module.parameter.expressions#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "attr_evaluator evaluate returns raw unchanged when it has no \"{\", else the pipeline result",
+   "product": "",
+   "mutations": [
+    "G6-m79"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "module.parameter.expressions#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "name_matches compares lower(pattern) with lower(name)",
+   "product": "",
+   "mutations": [
+    "G6-m80"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "module.parameter.expressions#5",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "system_expression transcribes the name switch (namespace/ns, namespaceLower lowered, mgrDir); replace_refs prefers local over system",
+   "product": "",
+   "mutations": [
+    "G6-m82",
+    "G6-m83"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "module.parameter.expressions#6",
+   "verdict": "partial",
+   "support": "mutation-checked",
+   "deciding": "macro_value returns definitions[name] when defined, else empty",
+   "product": "",
+   "mutations": [
+    "G6-m77"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "Only the undefined-macro case is exercised (undefined_macro_is_empty); no theorem asserts that a defined macro yields its value, so a macro_value returning nothing for defined macros (G6-m77) verifies.",
+   "note": ""
+  },
+  {
+   "id": "module.parameter.expressions#8",
+   "verdict": "partial",
+   "support": "mutation-checked",
+   "deciding": "evaluate_expression = expression(interpreter(strip_leading(raw))), expression(None) = empty",
+   "product": "",
+   "mutations": [
+    "G6-m78"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "The success case is never asserted to yield the interpreter value (expression_strips_leading_blank compares the function with itself); an expression() that always returns nothing (G6-m78) verifies. The interpreter result is an input (provider).",
+   "note": ""
+  },
+  {
+   "id": "module.parameter.expressions#9",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "evaluate brace gate precedes macro/parameter/expression pipeline; brace-free value keeps generated_macro_class false",
+   "product": "",
+   "mutations": [
+    "G6-m79"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "module.parameter.expressions#11",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "env_config replacement fails on \"$\" not followed by 0/1 (ICU replacement syntax transcribed); matched_dollar_can_fail",
+   "product": "",
+   "mutations": [
+    "G6-m85"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "module.parameter.expressions#12",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "name_matches treats \".\" in the pattern as a wildcard",
+   "product": "",
+   "mutations": [
+    "G6-m81"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "module.parameter.expressions#13",
+   "verdict": "partial",
+   "support": "inspection",
+   "deciding": "resolve_bounded returns circular_error false on every branch",
+   "product": "src/cls/IPM/Storage/ModuleSetting/Default.cls:66-75",
+   "mutations": [],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "Settled by review-71: resolve_bounded sets circular_error false on every branch (attr_evaluator.rs:178,181), so declared_cycle_error_is_unreachable holds by construction; the product loop and its guard (Default.cls:69-75) are not modelled.",
+   "note": ""
+  },
+  {
+   "id": "module.parameter.literal-values#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "regex_replace_match quotes backslashes before ICU replacement; backslash_quote_is_inverse general",
+   "product": "",
+   "mutations": [
+    "G6-m84"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "module.parameter.literal-values#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "replacement of a matched value containing \"$5\" returns None (error); unmatched keeps text",
+   "product": "",
+   "mutations": [
+    "G6-m85"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "module.parameter.cycles#1",
+   "verdict": "partial",
+   "support": "inspection",
+   "deciding": "resolve_bounded returns circular_error false on every branch",
+   "product": "src/cls/IPM/Storage/ModuleSetting/Default.cls:69-75",
+   "mutations": [],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "Settled by review-71: resolve_bounded returns circular_error false on every branch (attr_evaluator.rs:178,181), so declared_cycle_error_is_unreachable is true by construction; the product loop and its circular-reference guard are not modelled.",
+   "note": ""
+  },
+  {
+   "id": "module.list.delimiter#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "inputs.rs delimiter(None) = comma; split at the delimiter",
+   "product": "",
+   "mutations": [
+    "G6-m95"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "module.list.delimiter#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "split only at the configured delimiter (pipe keeps commas)",
+   "product": "",
+   "mutations": [
+    "G6-m96"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "module.env#4",
+   "verdict": "partial",
+   "support": "mutation-checked",
+   "deciding": "env_config load_file fails when read_parse_ok is false (input)",
+   "product": "",
+   "mutations": [
+    "G6-m94"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "Settled by review-71: no theorem or control covers the readable-file case; a loader that always fails (G6-m94) still verifies (env_config.rs:121-141). Readability is an input.",
+   "note": ""
+  },
+  {
+   "id": "module.env#5",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "merge_value: atoms replace, containers merge key by key keeping old-only keys; load_files folds in order",
+   "product": "",
+   "mutations": [
+    "G6-m89",
+    "G6-m90"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "module.env#7",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "compile_single(config_empty) = !config_empty; generator_visible same process",
+   "product": "",
+   "mutations": [
+    "G6-m91"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "module.env#9",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "merge_value merges arrays by index (array containers use the same keyed merge)",
+   "product": "",
+   "mutations": [
+    "G6-m90",
+    "G6-m92"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "module.env#10",
+   "verdict": "partial",
+   "support": "mutation-checked",
+   "deciding": "load_files stops at the first failed file and returns empty config; failure is the input read_parse_ok",
+   "product": "",
+   "mutations": [
+    "G6-m94"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "Settled by review-71 (same weakness as module.env#4): the success branch of load_file is never exercised with a readable file, so a loader that always fails verifies (G6-m94); file readability/parse success is an input.",
+   "note": ""
+  },
+  {
+   "id": "module.env#11",
+   "verdict": "partial",
+   "support": "mutation-checked",
+   "deciding": "generator_visible(same_process, value) = value if same process else None; singleton_get",
+   "product": "",
+   "mutations": [
+    "G6-m93"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "Fresh-worker emptiness is a two-case table in generator_visible; the process-private storage of the configuration is not modelled, so \"a fresh worker starts empty\" is written down rather than derived.",
+   "note": ""
+  }
+ ]
+}

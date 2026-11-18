@@ -1,0 +1,278 @@
+{
+ "page": ".g5/ontology/operations/namespaces.g5.md",
+ "auditor": "G7",
+ "entries": [
+  {
+   "id": "namespace.enable#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "playbook-uplift/models/verus/ns_mapping.rs::map_code_one skips a target when installed(s,t) (IPMInstalled), else adds pkg/rtn mappings only when absent; enable_map activates the non-local targets",
+   "product": "src/cls/IPM/Main.cls:3633-3651",
+   "mutations": [
+    "G7-m01"
+   ],
+   "control": null,
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "namespace.enable#4",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "playbook-uplift/models/verus/ns_mapping.rs::repo_mapped evaluates mapped_from on s1, the state after the code loop with nothing yet activated (GetMapInfo computed before batch activation); refuted by nsp_witness_repos_second_run",
+   "product": "src/cls/IPM/Main.cls:3654-3698",
+   "mutations": [
+    "G7-m02"
+   ],
+   "control": null,
+   "instance_scoped": false,
+   "note": "refuted as intended promise; mutation reading GetMapInfo after activation kills the first-run witness"
+  },
+  {
+   "id": "namespace.enable#10",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "playbook-uplift/models/verus/ns_mapping.rs::mapped_from keeps the last source (y <= x) among sources sharing the target database; tie witness nsp_witness_repos_tie_other_source",
+   "product": "src/cls/IPM/Main.cls:4106-4120",
+   "mutations": [
+    "G7-m03"
+   ],
+   "control": null,
+   "instance_scoped": false,
+   "note": "refuted working assumption"
+  },
+  {
+   "id": "namespace.enable.mapping-results#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "playbook-uplift/models/verus/ns_mapping.rs::repo_mapped on the pre-activation state; .g5/Verus_verification/consolidated/iter12/namespaces.rs::selected_namespace_neighbors asserts !repo_visible(first) and repo_visible(second)",
+   "product": "src/cls/IPM/Main.cls:3654-3698",
+   "mutations": [
+    "G7-m02"
+   ],
+   "control": null,
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "namespace.enable.mapping-results#2",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "playbook-uplift/models/verus/ns_mapping.rs::repo_mapped requires !rows_at(glo_dest(target)); .g5/Verus_verification/consolidated/iter12/namespaces.rs::own_skip/own_visible neighbours (rows true vs cleared)",
+   "product": "src/cls/IPM/Main.cls:3667-3672",
+   "mutations": [],
+   "control": "playbook-uplift/models/verus/controls/ns_mapping.json repo-loop-ignores-rows (killed, results/ns_mapping.json)",
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "namespace.enable.mapping-results#4",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter12/namespaces.rs::request returns s unchanged when preview, enable_map otherwise; .g5/Verus_verification/consolidated/iter13/batch.rs::visit writes no cfg under preview",
+   "product": "src/cls/IPM/Main.cls:3643-3646,3678-3681",
+   "mutations": [
+    "G7-m04",
+    "G7-m09"
+   ],
+   "control": null,
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "namespace.enable.mapping-results#5",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter12/namespaces.rs::request refuses repos && !map with state unchanged; preview_and_refusal over arbitrary s",
+   "product": "src/cls/IPM/Main.cls:3607-3609",
+   "mutations": [
+    "G7-m05"
+   ],
+   "control": null,
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "namespace.enable.partial-batch#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter13/batch.rs::run activates only when the scan succeeded; visit inserts cfg for each existing target before reaching a missing one",
+   "product": "src/cls/IPM/Main.cls:3636-3698 ($namespace switch throws on a missing namespace)",
+   "mutations": [
+    "G7-m06"
+   ],
+   "control": null,
+   "instance_scoped": true,
+   "note": "instance-scoped: late() fixture [1,9]; covers the stated contrast"
+  },
+  {
+   "id": "namespace.enable.partial-batch#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter13/batch.rs::publish unions the marked namespaces into active; retry() fixture",
+   "product": null,
+   "mutations": [
+    "G7-m07"
+   ],
+   "control": null,
+   "instance_scoped": true,
+   "note": ""
+  },
+  {
+   "id": "namespace.enable.partial-batch#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter13/batch.rs::visit stops at the first missing namespace with no further inserts; first_bad() fixture",
+   "product": null,
+   "mutations": [
+    "G7-m08"
+   ],
+   "control": null,
+   "instance_scoped": true,
+   "note": ""
+  },
+  {
+   "id": "namespace.enable.partial-batch#4",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter13/batch.rs::visit under preview leaves cfg unchanged and still fails on a missing namespace; preview_bad() fixture",
+   "product": null,
+   "mutations": [
+    "G7-m09"
+   ],
+   "control": null,
+   "instance_scoped": true,
+   "note": ""
+  },
+  {
+   "id": "namespace.enable.partial-batch#5",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter13/batch.rs::run publishes only scan.marked; other() fixture keeps the pending target inactive",
+   "product": null,
+   "mutations": [
+    "G7-m10"
+   ],
+   "control": null,
+   "instance_scoped": true,
+   "note": ""
+  },
+  {
+   "id": "namespace.unmap#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "playbook-uplift/models/verus/ns_mapping.rs::unmap_one passes RtnType::Other to remove_rtn (caller passes 1 in pType) so the %IPM.* routine mapping stays; refuted by nsp_witness_unmap_leaves_routines",
+   "product": "src/cls/IPM/Main.cls:3992-3998; Utils/Module.cls:1707-1724",
+   "mutations": [
+    "G7-m11"
+   ],
+   "control": null,
+   "instance_scoped": false,
+   "note": "refuted intended promise"
+  },
+  {
+   "id": "namespace.unmap#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "playbook-uplift/models/verus/ns_mapping.rs::unmap_one clears the repo mapping for listed targets; .g5/Verus_verification/consolidated/iter12/namespaces.rs::unmapped neighbour",
+   "product": "src/cls/IPM/Main.cls:3980",
+   "mutations": [
+    "G7-m13"
+   ],
+   "control": null,
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "namespace.unmap.routine-result#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "playbook-uplift/models/verus/ns_mapping.rs::unmap_one clears pkg and repo and calls remove_rtn(.., Other)",
+   "product": "src/cls/IPM/Main.cls:3992-3998",
+   "mutations": [
+    "G7-m11"
+   ],
+   "control": null,
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "namespace.unmap.routine-result#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "playbook-uplift/models/verus/ns_mapping.rs::has_ipm after unmap resolves pkg_dest through the kept routine mapping; selected_namespace_neighbors asserts has_ipm(unmapped(),2)",
+   "product": null,
+   "mutations": [
+    "G7-m11"
+   ],
+   "control": null,
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "namespace.unmap.routine-result#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "playbook-uplift/models/verus/ns_mapping.rs::unmap_one keeps c1 (repo cleared only) when repos_only",
+   "product": "src/cls/IPM/Main.cls:3983-3988",
+   "mutations": [
+    "G7-m12"
+   ],
+   "control": null,
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "namespace.unmap.routine-result#4",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter12/namespaces.rs::repo_visible reads the fixture catalog at glo_dest(act) (mapping-resolved database)",
+   "product": null,
+   "mutations": [
+    "G7-m14"
+   ],
+   "control": null,
+   "instance_scoped": true,
+   "note": "instance-scoped: catalog fixture; the three stated states are asserted"
+  },
+  {
+   "id": "namespace.mapped-refusal#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "playbook-uplift/models/verus/ns_mapping.rs::install_zpm returns s unchanged when listed(s,n) (CheckModuleNamespace)",
+   "product": "src/cls/IPM/Main.cls:2534-2540",
+   "mutations": [
+    "G7-m17"
+   ],
+   "control": "playbook-uplift/models/verus/controls/ns_mapping.json install-zpm-no-guard (killed)",
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "namespace.mapped-refusal#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "playbook-uplift/models/verus/ns_mapping.rs::installer adds mappings only when absent, so in a mapped namespace the code lands in the source database; witnesses installer_in_mapped vs fresh_install",
+   "product": "preload/cls/IPM/Installer.cls:25-39",
+   "mutations": [
+    "G7-m15"
+   ],
+   "control": null,
+   "instance_scoped": false,
+   "note": "refuted intended promise"
+  },
+  {
+   "id": "namespace.version.mapped-reader#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "playbook-uplift/models/verus/ns_mapping.rs::check_ipm_version reads the current namespace record; .g5/Verus_verification/consolidated/iter12/namespaces.rs::requirement neighbours (source passes, mapped target fails)",
+   "product": "src/cls/IPM/Storage/SystemRequirements.cls:85-99",
+   "mutations": [
+    "G7-m16"
+   ],
+   "control": null,
+   "instance_scoped": true,
+   "note": "version ranks are fixture integers; the stated contrast is asserted"
+  }
+ ]
+}

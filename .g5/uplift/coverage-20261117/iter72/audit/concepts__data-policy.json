@@ -1,0 +1,269 @@
+{
+ "page": ".g5/ontology/concepts/data-policy.g5.md",
+ "auditor": "G1",
+ "entries": [
+  {
+   "id": "module.resource#2",
+   "verdict": "partial",
+   "support": "inspection",
+   "deciding": "record.rs load_changed: struct update replacing resource/dependency counts, leaving old_class_defined and dep_installed untouched by construction",
+   "product": "Utils/Module.cls LoadNewModule (load path)",
+   "mutations": [],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "Rule 4a: that dropped code and the dropped dependency stay installed holds by construction (load_changed never touches them; no model of the reload/clean step that could remove them), and the record lists are nat counts, not the resources. Needs the load writer over resource and dependency sets with the (absent) cleanup of dropped entries.",
+   "note": ""
+  },
+  {
+   "id": "module.resource.identity#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "resources.rs resource_save_allowed(new_object, unique, existing)",
+   "product": "Storage/ResourceReference unique index",
+   "mutations": [
+    "G1-m34"
+   ],
+   "control": "",
+   "instance_scoped": true,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "module.resource.identity#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "resources.rs load_project: provider_called requires can_install = eligible && (already_marked || save_ok)",
+   "product": "",
+   "mutations": [
+    "G1-m35"
+   ],
+   "control": "",
+   "instance_scoped": true,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "module.resource.identity#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "resources.rs load_project marked_deployed (object) vs project_database (row, only on a successful save)",
+   "product": "",
+   "mutations": [
+    "G1-m36"
+   ],
+   "control": "",
+   "instance_scoped": true,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "history.namespace#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "history.rs details keyed by (namespace, id); local_id_collision_is_scoped",
+   "product": "",
+   "mutations": [
+    "G1-m06"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "repo.origin.installed#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "provenance.rs show_repository/listed_for_repository read the saved supplier, not w.repos",
+   "product": "Main.cls GetListModules; ModuleSummary",
+   "mutations": [
+    "G1-m19",
+    "G1-m21"
+   ],
+   "control": "",
+   "instance_scoped": true,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "repo.origin.installed#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "provenance.rs select: the qualified repository decides root and payload",
+   "product": "",
+   "mutations": [
+    "G1-m20"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "repo.origin.installed#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "provenance.rs select over the current repos for a new install; saved receipts unchanged by configure/delete",
+   "product": "",
+   "mutations": [
+    "G1-m20",
+    "G1-m21"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "repo.origin.installed#4",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "provenance.rs local_load writes an empty supplier",
+   "product": "",
+   "mutations": [
+    "G1-m18"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "repo.origin.installed#5",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "provenance.rs history rows keep their own source triple (qualified_receipt details(q.root)); reader_neighbors after local load",
+   "product": "",
+   "mutations": [
+    "G1-m21",
+    "G1-m23"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "repo.origin.same-version#1",
+   "verdict": "partial",
+   "support": "inspection",
+   "deciding": "reloading.rs reload: admission by existing_equal with follows_plain_equal (a literal table for 1.0.0 only) and skip_equal_load = false (constant)",
+   "product": "Utils/Module.cls LoadNewModule #L1213-1222",
+   "mutations": [],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "Rule 4a: the decision that an equal version is loaded again is written down: the LoadNewModule version guard is a literal per-case table (follows_plain_equal defined only for 1.0.0 vs 1.0.0) and the absence of an equal-version skip is the constant skip_equal_load=false. The supplier/payload effects are computed (select). Reuse a computed version guard (update_steps inst_step_guard or semver Follows) to make it full.",
+   "note": ""
+  },
+  {
+   "id": "repo.origin.same-version#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "reloading.rs save_successful_history inserts a new receipt at next_id; old_receipts_survive",
+   "product": "",
+   "mutations": [
+    "G1-m24"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "repo.origin.same-version#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "reloading.rs reload: select returns None for a missing repository, so the world is unchanged (missing_qualifier_preserves_selected_projection)",
+   "product": "",
+   "mutations": [
+    "G1-m25"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "history.fields.source-snapshot#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "provenance.rs history_detail reads the saved source triple; config_changes_preserve_receipts",
+   "product": "",
+   "mutations": [
+    "G1-m21"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "history.fields.source-snapshot#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "provenance.rs qualified_receipt saves source, moniker and details(q.root) per action",
+   "product": "",
+   "mutations": [
+    "G1-m23"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "history.fields.source-snapshot#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "provenance.rs source_view gated on Action=install (source_shown); local_load receipt has an empty triple",
+   "product": "General/History.cls SourceToString",
+   "mutations": [
+    "G1-m22"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "history.locked#1",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "crate persist_row/user_edit: a finalized row is not changed (the UPDATE trigger); theorem_r2, fin_stable",
+   "product": "",
+   "mutations": [],
+   "control": ".g5/Verus_verification/results/verus/20261113T22*-final-r3-control-10 (no trigger) rejected at lemma_top_step, lemma_lmr_step, lemma_mono_*; 07 (no Finalized flag) rejected at case_c01, lemma_top_step",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "history.locked#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "crate terminate(): %OnClose persists the top row (Finalized) without TimeEnd (case_c46 terminate) (refutes the assumption)",
+   "product": "",
+   "mutations": [
+    "G1-c05"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "history.retention#4",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "history.rs purge: once per day with HistoryRetain > 0, the marker is set after the delete whether or not rows matched",
+   "product": "General/History.cls:162-180 AutoPurgeOldHistory",
+   "mutations": [
+    "G1-m09"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  }
+ ]
+}

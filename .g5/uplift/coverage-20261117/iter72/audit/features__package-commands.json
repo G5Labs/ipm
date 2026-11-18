@@ -1,0 +1,43 @@
+{
+ "page": ".g5/ontology/features/package-commands.g5.md",
+ "auditor": "G5",
+ "entries": [
+  {
+   "id": "ipm.shell.forms#1",
+   "verdict": "partial",
+   "support": "inspection",
+   "deciding": "iter5 entry_forms.rs::outcome(form, ok) per-form outcome table; only ShellTerminate reads ok",
+   "product": "Main.cls::Shell, LanguageExtensions",
+   "mutations": [],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "The exclusivity claim (\"only Shell lets a script see a failure\") rests on constant rows for the command and function forms. How the arguments reach Shell and the terminate flag are not computed.",
+   "note": ""
+  },
+  {
+   "id": "ipm.shell.forms#2",
+   "verdict": "partial",
+   "support": "inspection",
+   "deciding": "iter5 entry_forms.rs::outcome(ZpmCommand / ZpmCommandWithFlag) constant rows",
+   "product": "Main.cls::LanguageExtensions (%ZLANGC00 passes one argument)",
+   "mutations": [],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "That ,1 does not reach Shell is written down as a constant row. The %ZLANGC00 argument passing is not modelled.",
+   "note": ""
+  },
+  {
+   "id": "ipm.shell.forms#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "iter5 entry_forms.rs::function_returns_value(pinned_body()) = case-sensitive \"Do ##class\" match",
+   "product": "Main.cls::UpdateLanguageExtensions, LanguageExtensions (lowercase body)",
+   "mutations": [
+    "G5-m35"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "note": "pinned_body transcribes the product source text"
+  }
+ ]
+}

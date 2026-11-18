@@ -1,0 +1,177 @@
+{
+ "page": ".g5/ontology/features/packaging-deployed-code.g5.md",
+ "auditor": "G7",
+ "entries": [
+  {
+   "id": "module.deployed#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter3/resources.rs::deploy: existing class with the parameter decides by parameter == 1, else the resource Tri over the default; .g5/Verus_verification/consolidated/iter4/repairs4.rs::deploy",
+   "product": null,
+   "mutations": [
+    "G7-m84"
+   ],
+   "control": null,
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "module.deployed#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter4/repairs4.rs::deploy_by_default transcribes the DEPLOYBYDEFAULT class parameter literals (Module false, DeployedModule true)",
+   "product": null,
+   "mutations": [
+    "G7-m85"
+   ],
+   "control": null,
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "module.deployed#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter3/resources.rs::deploy requires class_type && class_exists && parameter present",
+   "product": null,
+   "mutations": [
+    "G7-m83"
+   ],
+   "control": null,
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "module.deployed#4",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter4/repairs4.rs::deploy uses deploy_by_default only for Explicit::Missing",
+   "product": null,
+   "mutations": [
+    "G7-m86"
+   ],
+   "control": null,
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "module.deployed.project-load#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter3/resources.rs::load_project eligible = deploy && (deployable_type || path_name) && !generated && !preload && project_exists",
+   "product": null,
+   "mutations": [
+    "G7-m87"
+   ],
+   "control": null,
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "module.deployed.project-load#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter3/resources.rs::load_project marks Deployed on eligibility before the save; project_database keeps before when the save fails; provider not called",
+   "product": null,
+   "mutations": [
+    "G7-m88"
+   ],
+   "control": null,
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "module.deployed.project-load#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter3/resources.rs::load_project ok requires install_ok; project_database true after a successful save",
+   "product": null,
+   "mutations": [
+    "G7-m89"
+   ],
+   "control": null,
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "module.deployed.project-load#4",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter3/resources.rs::load_project marker only after a successful install; a set marker skips the provider",
+   "product": null,
+   "mutations": [
+    "G7-m90"
+   ],
+   "control": null,
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "module.deployed.project-load#5",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter3/resources.rs::resource_save_allowed refuses a new object whose unique name exists",
+   "product": null,
+   "mutations": [
+    "G7-m91"
+   ],
+   "control": null,
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "module.deployed.project-load#6",
+   "verdict": "partial",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter3/resources.rs::check_project prunes missing items; final_export takes the check status as the input project_check_ok",
+   "product": null,
+   "mutations": [
+    "G7-m92"
+   ],
+   "instance_scoped": false,
+   "gap": "pruning is computed but the check status is a free input unrelated to the pruning, so \"returns success after removing items\" is not derived from the product check",
+   "note": "",
+   "control": null
+  },
+  {
+   "id": "build.package.deployed-status#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter3/resources.rs::export_item never reads deployed_ok (the helper status is overwritten with OK, Document.cls:256-257) and falls back to source",
+   "product": "src/cls/IPM/ResourceProcessor/Default/Document.cls:256-260",
+   "mutations": [
+    "G7-m93"
+   ],
+   "control": null,
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "build.package.deployed-status#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter3/resources.rs::export_item ok = !source_format || source_ok on the source path",
+   "product": null,
+   "mutations": [
+    "G7-m94"
+   ],
+   "control": null,
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "build.package.deployed-status#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter3/resources.rs::final_export = item.ok && project_check_ok (a successful check is the stated condition)",
+   "product": null,
+   "mutations": [
+    "G7-m95",
+    "G7-m93"
+   ],
+   "control": null,
+   "instance_scoped": false,
+   "note": ""
+  }
+ ]
+}

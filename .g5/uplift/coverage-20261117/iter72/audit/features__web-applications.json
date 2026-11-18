@@ -1,0 +1,310 @@
+{
+ "page": ".g5/ontology/features/web-applications.g5.md",
+ "auditor": "G7",
+ "entries": [
+  {
+   "id": "module.webapp#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter61/webappphases.rs::load creates Some(apply(base, d)) when no app exists; .g5/Verus_verification/consolidated/iter5/webapp.rs::install_app inserts declared",
+   "product": "src/cls/IPM/ResourceProcessor/WebApplication.cls CreateOrUpdateWebApp",
+   "mutations": [
+    "G7-m67"
+   ],
+   "control": null,
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "module.webapp#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter61/webappphases.rs::uninstall deletes only when owner == m; .g5/Verus_verification/consolidated/iter5/webapp.rs::uninstall removes the declared name",
+   "product": null,
+   "mutations": [
+    "G7-m64",
+    "G7-m68"
+   ],
+   "control": null,
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "module.webapp#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter5/webapp.rs::merged keeps undeclared keys of an existing app (lemma_adoption_keeps_undeclared general)",
+   "product": null,
+   "mutations": [
+    "G7-m63"
+   ],
+   "control": null,
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "module.webapp#4",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter5/webapp.rs::uninstall removes the adopted app by its declared name",
+   "product": null,
+   "mutations": [
+    "G7-m68"
+   ],
+   "control": null,
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "module.webapp#5",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter61/webappphases.rs::load/apply rewrite declared properties; .g5/Verus_verification/consolidated/iter5/webapp.rs::merged keeps undeclared edits",
+   "product": null,
+   "mutations": [
+    "G7-m66",
+    "G7-m67",
+    "G7-m63"
+   ],
+   "control": null,
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "module.webapp#6",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter61/webappphases.rs::load refuses when another module owns the name (owner state)",
+   "product": null,
+   "mutations": [
+    "G7-m65"
+   ],
+   "control": null,
+   "instance_scoped": false,
+   "note": "iter5 refused_at_import is the identity on its input and carries no weight"
+  },
+  {
+   "id": "module.webapp#9",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter61/webappphases.rs::apply keeps the old value for an attribute no longer declared",
+   "product": null,
+   "mutations": [
+    "G7-m66"
+   ],
+   "control": null,
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "module.webapp#10",
+   "verdict": "partial",
+   "support": "inspection",
+   "deciding": ".g5/Verus_verification/consolidated/iter61/webappphases.rs::compile_only is the identity",
+   "product": null,
+   "mutations": [],
+   "instance_scoped": false,
+   "gap": "compile_only(s) = s writes the outcome down; neither -only phase selection nor the processor phase filter (OnBeforePhase acts on Activate/Configure and Clean/Unconfigure) is modelled, so a compile that touched the app has no counterpart",
+   "note": "",
+   "control": null
+  },
+  {
+   "id": "module.webapp.upgrade#1",
+   "verdict": "partial",
+   "support": "inspection",
+   "deciding": ".g5/Verus_verification/consolidated/iter5/webapp.rs::upgrade_drops_declaration is the identity on apps; uninstall takes declared_name None as input",
+   "product": null,
+   "mutations": [
+    "G7-m68"
+   ],
+   "instance_scoped": false,
+   "gap": "the upgrade step is written as the identity, so how update/install treats a resource dropped from the new manifest is not modelled; that the installed version no longer declares the app is the input None; only the uninstall half (deletes only declared names) is computed",
+   "note": "",
+   "control": null
+  },
+  {
+   "id": "module.webapp.validation#1",
+   "verdict": "partial",
+   "support": "inspection",
+   "deciding": ".g5/Verus_verification/consolidated/iter5/webapp.rs::validate_dispatches is the constant false",
+   "product": null,
+   "mutations": [],
+   "instance_scoped": false,
+   "gap": "the as-built pass-through rests on the constant validate_dispatches() = false; the lifecycle %Validate dispatch (Lifecycle/Base.cls) that skips the processor OnPhase(\"Validate\") check is not modelled",
+   "note": "",
+   "control": null
+  },
+  {
+   "id": "module.webapp.provider-status#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter7/inputs.rs::differs: some declared key differs from the old value, absent old read as 0 (empty)",
+   "product": null,
+   "mutations": [
+    "G7-m69"
+   ],
+   "control": null,
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "module.webapp.provider-status#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter7/inputs.rs::app_status = modify_ok when differs, else true (Modify result is the stated condition)",
+   "product": null,
+   "mutations": [
+    "G7-m70"
+   ],
+   "control": null,
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "module.webapp.failure#1",
+   "verdict": "partial",
+   "support": "inspection",
+   "deciding": ".g5/Verus_verification/consolidated/iter5/webapp.rs::failed_after_activate returns before when transaction, after otherwise",
+   "product": null,
+   "mutations": [],
+   "instance_scoped": false,
+   "gap": "rollback is a two-row outcome table on the transaction flag; the %SYS Security.Applications write inside the load transaction and TROLLBACK are not modelled, so the removal is written down, not derived",
+   "note": "",
+   "control": null
+  },
+  {
+   "id": "module.webapp.failure#2",
+   "verdict": "partial",
+   "support": "inspection",
+   "deciding": ".g5/Verus_verification/consolidated/iter5/webapp.rs::failed_after_activate without transaction keeps after_activate and module_recorded true",
+   "product": null,
+   "mutations": [],
+   "instance_scoped": false,
+   "gap": "same outcome table: with -DNoTransaction=1 the kept application and module record are table entries, not derived from the absence of a transaction around the writes",
+   "note": "",
+   "control": null
+  },
+  {
+   "id": "module.webapp.package#2",
+   "verdict": "partial",
+   "support": "inspection",
+   "deciding": ".g5/Verus_verification/consolidated/iter8/webapps.rs::package_app = webapp_export_handled() || has_source_document; webapp_export_handled is the constant true",
+   "product": null,
+   "mutations": [
+    "G7-m82"
+   ],
+   "instance_scoped": false,
+   "gap": "preservation of the declaration in the package rests on the constant webapp_export_handled() = true; the export of WebApplication declarations into the packaged module.xml is not modelled (the archive carries the declared PathExpr verbatim)",
+   "note": "",
+   "control": null
+  },
+  {
+   "id": "module.webapp.package#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter8/webapps.rs::evaluate_path evaluates a Csp path against the installation CSP root; reinstall inserts the evaluated path",
+   "product": null,
+   "mutations": [
+    "G7-m81"
+   ],
+   "control": null,
+   "instance_scoped": false,
+   "note": "that the archive carries the {$cspdir} expression rests on package#2 (constant export)"
+  },
+  {
+   "id": "module.csp.directory#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter7/inputs.rs::csp_directory/csp_path give root + resource when neither Directory nor DispatchClass",
+   "product": null,
+   "mutations": [
+    "G7-m72"
+   ],
+   "control": null,
+   "instance_scoped": false,
+   "note": "normalization of the root is a premise"
+  },
+  {
+   "id": "module.csp.directory#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter7/inputs.rs::csp_directory sets the -1 sentinel for DispatchClass alone; csp_after_before clears it",
+   "product": null,
+   "mutations": [
+    "G7-m73",
+    "G7-m74"
+   ],
+   "control": null,
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "module.csp.directory#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter7/inputs.rs::csp_directory explicit Directory first",
+   "product": null,
+   "mutations": [
+    "G7-m71"
+   ],
+   "control": null,
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "module.csp.lifecycle#1",
+   "verdict": "partial",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter57/cspapp.rs::load sets app Some(...); uninstall sets app None",
+   "product": null,
+   "mutations": [
+    "G7-m76",
+    "G7-m80"
+   ],
+   "instance_scoped": false,
+   "gap": "creating an application when none exists is never exercised: G7-m76 (load only updates an existing app) survives; only update of an existing app (takeover_resets_undeclared) and deletion are asserted",
+   "note": "",
+   "control": null
+  },
+  {
+   "id": "module.csp.lifecycle#3",
+   "verdict": "partial",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter57/cspapp.rs::load copies source_files into deploy_files when has_deploy",
+   "product": null,
+   "mutations": [
+    "G7-m77",
+    "G7-m78"
+   ],
+   "instance_scoped": false,
+   "gap": "the no-DeployPath case is never exercised: G7-m77 (copy even without DeployPath) survives; only the recopy with DeployPath is asserted",
+   "note": "",
+   "control": null
+  },
+  {
+   "id": "module.csp.lifecycle#4",
+   "verdict": "partial",
+   "support": "inspection",
+   "deciding": ".g5/Verus_verification/consolidated/iter57/cspapp.rs::load writes admin_desc/admin_timeout as the constant false",
+   "product": null,
+   "mutations": [],
+   "instance_scoped": false,
+   "gap": "the reset of undeclared properties is written as constants; the processor building the full ATTRIBUTES property array with defaults for undeclared properties (CreateOrUpdateCSPApp) is not modelled",
+   "note": "",
+   "control": null
+  },
+  {
+   "id": "module.csp.lifecycle#5",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter57/cspapp.rs::uninstall purges the deploy files with DeployPath, else the source files (Directory = DeployPath or source folder)",
+   "product": null,
+   "mutations": [
+    "G7-m79"
+   ],
+   "control": null,
+   "instance_scoped": false,
+   "note": ""
+  }
+ ]
+}

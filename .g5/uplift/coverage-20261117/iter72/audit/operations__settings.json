@@ -1,0 +1,289 @@
+{
+ "page": ".g5/ontology/operations/settings.g5.md",
+ "auditor": "G7",
+ "entries": [
+  {
+   "id": "settings#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter41/settings.rs::delete writes the stored default (first write) for keys other than TestReportFormat; playbook-uplift/models/verus/settings.rs::reset uses default_value; witness repo_witness_delete_restores_first_value against factory()",
+   "product": "src/cls/IPM/Repo/UniversalSettings.cls:87-110",
+   "mutations": [
+    "G7-m25"
+   ],
+   "control": ".g5/uplift/consolidated/iter41/HANDOFF.md controls reset-uses-factory-empty, first-write-not-default",
+   "instance_scoped": false,
+   "note": "refuted intended promise; iter41 controls reset-uses-factory-empty, first-write-not-default also rejected"
+  },
+  {
+   "id": "settings.print#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter7/inputs.rs::config_line prints Value(key, effective) when the key is configurable",
+   "product": "src/cls/IPM/Repo/UniversalSettings.cls:77-85",
+   "mutations": [
+    "G7-m39",
+    "G7-m40"
+   ],
+   "control": null,
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "settings.print#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter7/inputs.rs::config_line/config_get_called: unknown key gives NotFound and no value request",
+   "product": "src/cls/IPM/Repo/UniversalSettings.cls:77-85",
+   "mutations": [
+    "G7-m40"
+   ],
+   "control": null,
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "settings.writes#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::set_value keeps old when !overwrite and current nonempty",
+   "product": "src/cls/IPM/Repo/UniversalSettings.cls:166-182",
+   "mutations": [
+    "G7-m22"
+   ],
+   "control": null,
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "settings.writes#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::set_value guard tests current.len()>0, so an empty current accepts the write under overwrite off",
+   "product": "src/cls/IPM/Repo/UniversalSettings.cls:171",
+   "mutations": [
+    "G7-m23"
+   ],
+   "control": null,
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "settings.writes#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::set_value keeps old.first once set; playbook-uplift/models/verus/settings.rs::set_value same",
+   "product": "src/cls/IPM/Repo/UniversalSettings.cls:178-180",
+   "mutations": [
+    "G7-m24"
+   ],
+   "control": "iter41 control first-write-not-default",
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "settings.writes#4",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter41/settings.rs::delete restores the first stored value (general theorems delete_restores_first_write / delete_restores_seed); playbook-uplift/models/verus/settings.rs witness",
+   "product": "src/cls/IPM/Repo/UniversalSettings.cls:99-103",
+   "mutations": [
+    "G7-m25"
+   ],
+   "control": null,
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "settings.writes#5",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "playbook-uplift/models/verus/settings.rs::reset branches: TestReportFormat -> empty, ModuleRoot -> mroot_default (transcribes the product literal NormalizeDirectory(DataDirectory()_\"ipm/\")), else stored default; repo_refines_config_delete compares with factory()",
+   "product": "src/cls/IPM/Repo/UniversalSettings.cls:94-100",
+   "mutations": [
+    "G7-m26",
+    "G7-m27"
+   ],
+   "control": null,
+   "instance_scoped": false,
+   "note": "iter41 delete has no ModuleRoot branch (index 11 unobserved); the playbook model carries this obligation"
+  },
+  {
+   "id": "settings.report-format#1",
+   "verdict": "partial",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::format_valid (lowercase compare against json/yaml/toon or empty); playbook-uplift/models/verus/settings.rs::valid_trf code table",
+   "product": "src/cls/IPM/Repo/UniversalSettings.cls:225-232",
+   "mutations": [
+    "G7-m18",
+    "G7-m30",
+    "G7-m19",
+    "G7-m20"
+   ],
+   "instance_scoped": false,
+   "gap": "YAML and TOON acceptance is never exercised: mutants dropping both (G7-m18 on public_repairs.rs, G7-m30 on playbook settings.rs) still verify; only empty, JSON in any case and an invalid value are asserted",
+   "note": "case-insensitivity (G7-m19) and stored spelling (G7-m20) are killed",
+   "control": null
+  },
+  {
+   "id": "settings.report-format#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter41/settings.rs::set refuses an invalid TestReportFormat with slots (value and default) unchanged; .g5/Verus_verification/consolidated/iter3/public_repairs.rs::set_format returns None; playbook-uplift/models/verus/settings.rs::repo_config_errors_unchanged",
+   "product": "src/cls/IPM/Repo/UniversalSettings.cls:122-125",
+   "mutations": [
+    "G7-m21"
+   ],
+   "control": "iter41 control format-not-validated",
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "settings.analytics#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter41/settings.rs::analytics_disabled(v): v <= 0 (0 disabled, 1 enabled)",
+   "product": "src/cls/IPM/Repo/Remote/PackageService.cls:251; Repo/UniversalSettings.cls:208-211",
+   "mutations": [
+    "G7-m29"
+   ],
+   "control": null,
+   "instance_scoped": false,
+   "note": "the send gate itself (CollectAnalytics early return) is a one-line negation of the reader; observation is the analytics-available decision"
+  },
+  {
+   "id": "settings.analytics#2",
+   "verdict": "partial",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter41/settings.rs::analytics_disabled treats every text code (>= 1000) as disabled",
+   "product": "src/cls/IPM/Repo/Remote/PackageService.cls:251",
+   "mutations": [
+    "G7-m28"
+   ],
+   "instance_scoped": true,
+   "gap": "the deciding computation for text, ObjectScript numeric coercion in the consumer test, is a premise encoded as the code range v >= 1000; negative numbers and text with a leading positive number (which coerce to nonzero and keep analytics on) are outside the model, so the general \"not a positive number\" claim rests on the yes/0/1 instances",
+   "note": "iter41 control analytics-text-enabled also rejected; as built \"-1\" keeps analytics on, contradicting the ontology wording",
+   "control": null
+  },
+  {
+   "id": "settings.default-modifiers#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter50/defmods.rs::merged(stored, cmd) puts stored values under command data; effective() over the module default",
+   "product": "src/cls/IPM/Main.cls:1066-1070",
+   "mutations": [
+    "G7-m32"
+   ],
+   "control": null,
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "settings.default-modifiers#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "playbook-uplift/models/verus/settings.rs::pct_db maps every namespace to one database for the ^% global; witness repo_witness_dm_shared",
+   "product": "src/cls/IPM/Main.cls (macro $$$ZPMDefaultModifiers = ^%IPM.DefaultModifiers)",
+   "mutations": [
+    "G7-m38"
+   ],
+   "control": null,
+   "instance_scoped": false,
+   "note": "refuted intended promise; rests on the native-observed IRIS premise that a ^% global is one store for every namespace (nc-repo-env-percent-global-shared); the product decision is the global name, a literal"
+  },
+  {
+   "id": "settings.default-modifiers#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter50/defmods.rs::default_modifiers -set stores merged(stored, data); set_appends_and_overwrites general",
+   "product": "src/cls/IPM/Main.cls:1691-1693",
+   "mutations": [
+    "G7-m34"
+   ],
+   "control": null,
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "settings.default-modifiers#5",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter50/defmods.rs::default_modifiers -delete stores empty(); delete_restores_manifest",
+   "product": "src/cls/IPM/Main.cls:1695",
+   "mutations": [
+    "G7-m35"
+   ],
+   "control": null,
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "settings.default-modifiers#6",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter50/defmods.rs::default_modifiers refuses unless exactly one of set/get/delete",
+   "product": null,
+   "mutations": [
+    "G7-m36"
+   ],
+   "control": null,
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "settings.default-modifiers#7",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter50/defmods.rs::merged prefers cmd[k]; command_line_wins general",
+   "product": null,
+   "mutations": [
+    "G7-m33"
+   ],
+   "control": null,
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "settings.default-modifiers#9",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter50/defmods.rs::verbose_load reads merged(stored,cmd)[Verbose]; schedule asserts stored 1 alone gives verbose and cmd 0 overrides",
+   "product": null,
+   "mutations": [
+    "G7-m32",
+    "G7-m33"
+   ],
+   "control": null,
+   "instance_scoped": true,
+   "note": "-quiet represented as command Verbose=0 (parser premise)"
+  },
+  {
+   "id": "settings.default-modifiers#10",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter50/defmods.rs::merged(stored, data) on -set: data value replaces, absent data keeps stored (set_appends_and_overwrites)",
+   "product": null,
+   "mutations": [
+    "G7-m33",
+    "G7-m34"
+   ],
+   "control": null,
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "settings.default-modifiers#11",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": ".g5/Verus_verification/consolidated/iter50/defmods.rs::effective: merged data over the manifest Default; stored_beats_manifest / delete_restores_manifest",
+   "product": "src/cls/IPM/Storage/Module.cls ExecutePhases",
+   "mutations": [
+    "G7-m37",
+    "G7-m35"
+   ],
+   "control": null,
+   "instance_scoped": false,
+   "note": ""
+  }
+ ]
+}

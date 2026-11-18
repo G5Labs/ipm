@@ -93,10 +93,13 @@
      "evidence": [
       "playbook-uplift/models/verus/results/sync_baseline.json",
       ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
-      ".g5/uplift/consolidated/iter32/run.json"
+      ".g5/uplift/consolidated/iter32/run.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G5.jsonl"
      ],
-     "basis": "new:iteration-68 (sync_baseline.rs was not linked from this block)",
-     "assessed_in": "iteration-68"
+     "basis": "new:iteration-68 (sync_baseline.rs was not linked from this block); iteration-72 rule-4a re-audit (G5): full, support mutation-checked (mutations G5-m47; control playbook-uplift/models/verus/controls/sync_baseline.json (results/sync_baseline.json, all killed; old strings present in the current model): sync-not-dev-reports-success, sync-ignores-retry-marks, sync-commit-without-load)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "devtools.sync#2",
@@ -135,10 +138,12 @@
       ".g5/Verus_verification/consolidated/iter32/sync.rs::order"
      ],
      "evidence": [
-      ".g5/uplift/consolidated/iter32/run.json"
+      ".g5/uplift/consolidated/iter32/run.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json"
      ],
-     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
-     "assessed_in": "iteration-68"
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata; iteration-72 rule-4a re-audit (G5): full, support control (control .g5/Verus_verification/consolidated/iter32/cases.json: dev-edge-filter-removed, row-order-only (rejected, uplift/consolidated/iter32/HANDOFF.md))",
+     "assessed_in": "iteration-72",
+     "support": "control"
     },
     {
      "id": "devtools.sync#4",
@@ -156,10 +161,13 @@
       ".g5/Verus_verification/consolidated/iter32/sync.rs::pass"
      ],
      "evidence": [
-      ".g5/uplift/consolidated/iter32/run.json"
+      ".g5/uplift/consolidated/iter32/run.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json"
      ],
-     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
-     "assessed_in": "iteration-68"
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata; iteration-72 rule-4a re-audit (G5): full, support control (control .g5/Verus_verification/consolidated/iter32/cases.json: dev-edge-filter-removed, row-order-only; instance-scoped)",
+     "assessed_in": "iteration-72",
+     "support": "control",
+     "instance_scoped": true
     },
     {
      "id": "devtools.sync#5",
@@ -169,17 +177,20 @@
      "text": "-delete removes server items whose files were deleted (and their baselines).",
      "cases": "-delete with a deleted compilable file vs without",
      "observation": "presence of the server document; baseline row",
-     "grade": "full",
+     "grade": "partial",
      "check": "proved",
      "models": [
       ".g5/Verus_verification/consolidated/iter32/sync.rs::delete_flag_removes_compilable",
       ".g5/Verus_verification/consolidated/iter32/sync.rs::delete_schedule"
      ],
      "evidence": [
-      ".g5/uplift/consolidated/iter32/run.json"
+      ".g5/uplift/consolidated/iter32/run.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G5.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
-     "assessed_in": "iteration-68"
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata; iteration-72 rule-4a re-audit (G5): partial, support mutation-checked (mutations G5-m01; control .g5/Verus_verification/consolidated/iter32/cases.json: delete-keeps-document (document half))",
+     "assessed_in": "iteration-72",
+     "gap": "Rule 4a (iteration-72): The baseline row removal is never asserted. G5-m01, which keeps the baseline row of a deleted file, survives. Only server-document presence is observed."
     },
     {
      "id": "devtools.sync#6",
@@ -218,10 +229,12 @@
       ".g5/Verus_verification/consolidated/iter32/sync.rs::delete_schedule"
      ],
      "evidence": [
-      ".g5/uplift/consolidated/iter32/run.json"
+      ".g5/uplift/consolidated/iter32/run.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json"
      ],
-     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
-     "assessed_in": "iteration-68"
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata; iteration-72 rule-4a re-audit (G5): full, support control (control .g5/Verus_verification/consolidated/iter32/cases.json: delete-without-flag)",
+     "assessed_in": "iteration-72",
+     "support": "control"
     },
     {
      "id": "devtools.sync#8",
@@ -251,17 +264,19 @@
      "text": "A changed module.xml is reloaded first, so files of a newly declared resource are synced as new.",
      "cases": "manifest adding SyncE.PKG vs unchanged manifest",
      "observation": "new resource file loaded and counted as updated",
-     "grade": "full",
+     "grade": "partial",
      "check": "proved",
      "models": [
       ".g5/Verus_verification/consolidated/iter32/sync.rs::manifest_change",
       ".g5/Verus_verification/consolidated/iter32/sync.rs::delete_schedule"
      ],
      "evidence": [
-      ".g5/uplift/consolidated/iter32/run.json"
+      ".g5/uplift/consolidated/iter32/run.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json"
      ],
-     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
-     "assessed_in": "iteration-68"
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata; iteration-72 rule-4a re-audit (G5): partial, support inspection (control .g5/Verus_verification/consolidated/iter32/cases.json: new-resource-needs-baseline (only the \"synced as new\" half))",
+     "assessed_in": "iteration-72",
+     "gap": "Rule 4a (iteration-72): The manifest reload (module.xml change detection and its ordering before routing) is applied by hand in the fixture (manifest_change), not computed. No assertion contrasts an unchanged manifest."
     },
     {
      "id": "devtools.sync#10",
@@ -271,17 +286,19 @@
      "text": "Within the scanned folders sync finds files at any depth and any extension case, except under .git, __pycache__ and node_modules.",
      "cases": "depth/extension-case variation vs file under a skipped directory",
      "observation": "file loaded or untouched",
-     "grade": "full",
+     "grade": "partial",
      "check": "proved",
      "models": [
       ".g5/Verus_verification/consolidated/iter45/scan.rs::depth_and_case_do_not_matter",
       ".g5/Verus_verification/consolidated/iter45/scan.rs::skipped_directory_never_synced"
      ],
      "evidence": [
-      ".g5/uplift/consolidated/iter45/run.json"
+      ".g5/uplift/consolidated/iter45/run.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json"
      ],
-     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
-     "assessed_in": "iteration-68"
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata; iteration-72 rule-4a re-audit (G5): partial, support inspection (control .g5/Verus_verification/consolidated/iter45/cases.json: skip-dirs-walked, uppercase-ext-ignored (they add a dependency that is absent by construction))",
+     "assessed_in": "iteration-72",
+     "gap": "Rule 4a (iteration-72): The skipped-directory test is an input (skip_dir). The names .git, __pycache__ and node_modules, the recursive walk and extension case folding are not modelled. Depth and case independence holds by construction because the fields are unused."
     },
     {
      "id": "devtools.sync#11",
@@ -297,10 +314,12 @@
       ".g5/Verus_verification/consolidated/iter45/scan.rs::unreadable_fails_then_retries"
      ],
      "evidence": [
-      ".g5/uplift/consolidated/iter45/run.json"
+      ".g5/uplift/consolidated/iter45/run.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json"
      ],
-     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
-     "assessed_in": "iteration-68"
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata; iteration-72 rule-4a re-audit (G5): full, support control (control .g5/Verus_verification/consolidated/iter45/cases.json: unreadable-ignored)",
+     "assessed_in": "iteration-72",
+     "support": "control"
     },
     {
      "id": "devtools.sync#12",
@@ -318,10 +337,13 @@
       ".g5/Verus_verification/consolidated/iter65/moderefresh.rs::refreshes"
      ],
      "evidence": [
-      ".g5/uplift/consolidated/iter65/run.json"
+      ".g5/uplift/consolidated/iter65/run.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G5.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
-     "assessed_in": "iteration-68"
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata; iteration-72 rule-4a re-audit (G5): full, support mutation-checked (mutations G5-m28, G5-m29)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "devtools.sync#13",
@@ -368,17 +390,19 @@
      "text": "As built (C:D36), a module whose class files sit directly under SourcesRoot loads, but sync never sees edits or deletions and reports \"Nothing to sync\".",
      "cases": "flat layout vs conventional layout; edit and deletion",
      "observation": "sync nothing flag; server value; later load",
-     "grade": "full",
+     "grade": "partial",
      "check": "proved",
      "models": [
       ".g5/Verus_verification/consolidated/iter32/sync.rs::flat_schedule",
       ".g5/Verus_verification/consolidated/iter32/sync.rs::flat_layout_loads_but_is_not_synced"
      ],
      "evidence": [
-      ".g5/uplift/consolidated/iter32/run.json"
+      ".g5/uplift/consolidated/iter32/run.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json"
      ],
-     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
-     "assessed_in": "iteration-68"
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata; iteration-72 rule-4a re-audit (G5): partial, support inspection (control .g5/Verus_verification/consolidated/iter32/cases.json: scan-uses-load-fallback (mutates the table entry))",
+     "assessed_in": "iteration-72",
+     "gap": "Rule 4a (iteration-72): Whether sync scans a file is the layout boolean itself, a per-case table. The scanned path {SourcesRoot}/{Directory} compared with the file location, and the load fallback to {SourcesRoot}/, are not computed."
     },
     {
      "id": "devtools.sync#16",
@@ -397,10 +421,13 @@
      ],
      "evidence": [
       "playbook-uplift/models/verus/results/sync_baseline.json",
-      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G5.jsonl"
      ],
-     "basis": "new:iteration-68",
-     "assessed_in": "iteration-68"
+     "basis": "new:iteration-68; iteration-72 rule-4a re-audit (G5): full, support mutation-checked (mutations G5-m46; control playbook-uplift/models/verus/controls/sync_baseline.json (results/sync_baseline.json, all killed; old strings present in the current model): first-sync-loads, compile-stamps-on-failure)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "devtools.sync#17",
@@ -428,10 +455,12 @@
      ],
      "evidence": [
       "playbook-uplift/models/verus/results/sync_baseline.json",
-      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json"
      ],
-     "basis": "new:iteration-68",
-     "assessed_in": "iteration-68"
+     "basis": "new:iteration-68; iteration-72 rule-4a re-audit (G5): full, support control (control playbook-uplift/models/verus/controls/sync_baseline.json (results/sync_baseline.json, all killed; old strings present in the current model): no-premise-out, no-premise-out-reload, edit-updates-baseline, compile-stamps-on-failure)",
+     "assessed_in": "iteration-72",
+     "support": "control"
     },
     {
      "id": "devtools.sync#19",
@@ -441,7 +470,7 @@
      "text": "A test failure after successful sync activation happens after the hash commit and does not undo it.",
      "cases": "tests pass vs fail after a successful load/compile",
      "observation": "baseline rows and command status",
-     "grade": "full",
+     "grade": "partial",
      "check": "proved",
      "models": [
       "playbook-uplift/models/verus/sync_baseline.rs::sync_state",
@@ -450,10 +479,12 @@
      ],
      "evidence": [
       "playbook-uplift/models/verus/results/sync_baseline.json",
-      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json"
      ],
-     "basis": "new:iteration-68",
-     "assessed_in": "iteration-68"
+     "basis": "new:iteration-68; iteration-72 rule-4a re-audit (G5): partial, support control (control playbook-uplift/models/verus/controls/sync_baseline.json (results/sync_baseline.json, all killed; old strings present in the current model): sync-test-failure-reports-success (status half only))",
+     "assessed_in": "iteration-72",
+     "gap": "Rule 4a (iteration-72): That a failing test does not undo the hash commit holds by signature, because sync_state has no tests_ok input. No test step after CommitChanges is modelled, and no theorem contrasts the baseline rows when tests pass and when they fail."
     },
     {
      "id": "devtools.sync#20",
@@ -487,10 +518,12 @@
      ],
      "evidence": [
       "playbook-uplift/models/verus/results/sync_baseline.json",
-      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json"
      ],
-     "basis": "new:iteration-68",
-     "assessed_in": "iteration-68"
+     "basis": "new:iteration-68; iteration-72 rule-4a re-audit (G5): full, support control (control playbook-uplift/models/verus/controls/sync_baseline.json (results/sync_baseline.json, all killed; old strings present in the current model): no-premise-out, compile-stamps-on-failure, edit-updates-baseline)",
+     "assessed_in": "iteration-72",
+     "support": "control"
     }
    ],
    "parent": {
@@ -533,10 +566,12 @@
      ],
      "evidence": [
       "playbook-uplift/models/verus/results/sync_baseline.json",
-      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json"
      ],
-     "basis": "new:iteration-68 (block metadata names no model; control sync-ignores-retry-marks killed)",
-     "assessed_in": "iteration-68"
+     "basis": "new:iteration-68 (block metadata names no model; control sync-ignores-retry-marks killed); iteration-72 rule-4a re-audit (G5): full, support control (control playbook-uplift/models/verus/controls/sync_baseline.json (results/sync_baseline.json, all killed; old strings present in the current model): sync-no-markfailed, sync-ignores-retry-marks, failed-sync-rewrites-baseline, commit-keeps-retry-mark)",
+     "assessed_in": "iteration-72",
+     "support": "control"
     },
     {
      "id": "devtools.sync.retry#2",
@@ -586,10 +621,13 @@
      ],
      "evidence": [
       ".g5/uplift/consolidated/iter4/run_all.json",
-      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G5.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
-     "assessed_in": "iteration-68"
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata; iteration-72 rule-4a re-audit (G5): full, support mutation-checked (mutations G5-m07, G5-m04, G5-m03)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "devtools.sync.compile-after-resolve#2",
@@ -607,10 +645,13 @@
      ],
      "evidence": [
       ".g5/uplift/consolidated/iter4/run_all.json",
-      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G5.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
-     "assessed_in": "iteration-68"
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata; iteration-72 rule-4a re-audit (G5): full, support mutation-checked (mutations G5-m04)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "devtools.sync.compile-after-resolve#3",
@@ -653,10 +694,13 @@
      "evidence": [
       ".g5/uplift/consolidated/iter4/run_all.json",
       ".g5/uplift/consolidated/iter26/run.json",
-      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G5.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata plus new:iteration-68 link to sync_summary.rs for which sync activates the summary",
-     "assessed_in": "iteration-68"
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata plus new:iteration-68 link to sync_summary.rs for which sync activates the summary; iteration-72 rule-4a re-audit (G5): full, support mutation-checked (mutations G5-m05; control .g5/Verus_verification/consolidated/iter26/cases.json: named-sync-begins, empty-list-sync-begins)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "devtools.sync.compile-after-resolve#5",
@@ -666,7 +710,7 @@
      "text": "Only already-defined class files and all non-class files are recompiled; resources compiled from a deployed project are skipped without a warning.",
      "cases": "undefined class vs routine vs CompileFromProject resource",
      "observation": "compile called; warning count",
-     "grade": "full",
+     "grade": "partial",
      "check": "proved",
      "models": [
       ".g5/Verus_verification/consolidated/iter4/sync_compile.rs::sync_compile_neighbors",
@@ -675,10 +719,13 @@
      ],
      "evidence": [
       ".g5/uplift/consolidated/iter4/run_all.json",
-      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G5.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
-     "assessed_in": "iteration-68"
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata; iteration-72 rule-4a re-audit (G5): partial, support mutation-checked (mutations G5-m02, G5-m03, G5-m06)",
+     "assessed_in": "iteration-72",
+     "gap": "Rule 4a (iteration-72): The rule that skips a deployed-project resource in the compile set is never exercised. The only project neighbour has resolve_ok false, so G5-m02, which compiles project resources, survives. The warning half (G5-m03) and the undefined-class/routine split (G5-m06) are killed."
     }
    ]
   },
@@ -711,10 +758,13 @@
      ],
      "evidence": [
       ".g5/uplift/consolidated/iter7/run.json",
-      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G5.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
-     "assessed_in": "iteration-68"
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata; iteration-72 rule-4a re-audit (G5): full, support mutation-checked (mutations G5-m31)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "devtools.sync.empty-hash#2",
@@ -790,10 +840,13 @@
      ],
      "evidence": [
       ".g5/uplift/consolidated/iter4/run_all.json",
-      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G5.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
-     "assessed_in": "iteration-68"
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata; iteration-72 rule-4a re-audit (G5): full, support mutation-checked (mutations G5-m32, G5-m33)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "devtools.sync.test-paths#2",
@@ -810,10 +863,13 @@
      ],
      "evidence": [
       ".g5/uplift/consolidated/iter4/run_all.json",
-      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G5.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
-     "assessed_in": "iteration-68"
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata; iteration-72 rule-4a re-audit (G5): full, support mutation-checked (mutations G5-m33)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "devtools.sync.test-paths#3",
@@ -830,10 +886,13 @@
      ],
      "evidence": [
       ".g5/uplift/consolidated/iter4/run_all.json",
-      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G5.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
-     "assessed_in": "iteration-68"
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata; iteration-72 rule-4a re-audit (G5): full, support mutation-checked (mutations G5-m32)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "devtools.sync.test-paths#4",
@@ -892,10 +951,13 @@
      ],
      "evidence": [
       ".g5/uplift/consolidated/iter26/run.json",
-      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G5.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
-     "assessed_in": "iteration-68"
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata; iteration-72 rule-4a re-audit (G5): full, support control (mutations G5-m09; control .g5/Verus_verification/consolidated/iter26/cases.json: named-sync-begins, empty-list-sync-begins)",
+     "assessed_in": "iteration-72",
+     "support": "control"
     },
     {
      "id": "devtools.sync.skipped-tracking#2",
@@ -931,10 +993,12 @@
      ],
      "evidence": [
       ".g5/uplift/consolidated/iter26/run.json",
-      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json"
      ],
-     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
-     "assessed_in": "iteration-68"
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata; iteration-72 rule-4a re-audit (G5): full, support control (control .g5/Verus_verification/consolidated/iter26/cases.json: inactive-records, active-does-not-record, counter-not-incremented, counter-global-module, counter-wrong-module-key, row-*, counter-resets-each-call, duplicate-class-deduplicated)",
+     "assessed_in": "iteration-72",
+     "support": "control"
     },
     {
      "id": "devtools.sync.skipped-tracking#4",
@@ -954,10 +1018,12 @@
      ],
      "evidence": [
       ".g5/uplift/consolidated/iter26/run.json",
-      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json"
      ],
-     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
-     "assessed_in": "iteration-68"
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata; iteration-72 rule-4a re-audit (G5): full, support control (control .g5/Verus_verification/consolidated/iter26/cases.json: report-forces-module-order, report-skips-first-sequence, report-stops-before-last-row, begin-retains-counts, begin-retains-rows, end-only-deactivates, finish-does-not-clear)",
+     "assessed_in": "iteration-72",
+     "support": "control"
     },
     {
      "id": "devtools.sync.skipped-tracking#5",
@@ -993,10 +1059,13 @@
      "evidence": [
       ".g5/uplift/consolidated/iter26/run.json",
       "playbook-uplift/models/verus/results/sync_baseline.json",
-      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G5.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata plus new:iteration-68 reload via sync_baseline",
-     "assessed_in": "iteration-68"
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata plus new:iteration-68 reload via sync_baseline; iteration-72 rule-4a re-audit (G5): full, support mutation-checked (mutations G5-m09; control .g5/Verus_verification/consolidated/iter26/cases.json: verify-phase-treated-as-test, test-phase-recorded-as-skip, finish-does-not-clear)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     }
    ]
   },
@@ -1115,10 +1184,12 @@
       ".g5/Verus_verification/consolidated/iter44/comments.rs::without_source_control_nothing_changes"
      ],
      "evidence": [
-      ".g5/uplift/consolidated/iter44/run.json"
+      ".g5/uplift/consolidated/iter44/run.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json"
      ],
-     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
-     "assessed_in": "iteration-68"
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata; iteration-72 rule-4a re-audit (G5): full, support control (control .g5/Verus_verification/consolidated/iter44/cases.json: no-source-control-ok)",
+     "assessed_in": "iteration-72",
+     "support": "control"
     },
     {
      "id": "devtools.authoring#7",
@@ -1128,7 +1199,7 @@
      "text": "Comments before Name and inside dependencies are kept; as built (C:D50) comments before each resource and the module's last comment are dropped.",
      "cases": "comment anchored at Name/dependency vs resource vs trailing",
      "observation": "comment present after arrange",
-     "grade": "full",
+     "grade": "partial",
      "check": "proved",
      "models": [
       ".g5/Verus_verification/consolidated/iter44/comments.rs::leading_and_dependency_comments_kept",
@@ -1136,10 +1207,12 @@
       ".g5/Verus_verification/consolidated/iter44/comments.rs::trailing_comment_dropped"
      ],
      "evidence": [
-      ".g5/uplift/consolidated/iter44/run.json"
+      ".g5/uplift/consolidated/iter44/run.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json"
      ],
-     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
-     "assessed_in": "iteration-68"
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata; iteration-72 rule-4a re-audit (G5): partial, support control (control .g5/Verus_verification/consolidated/iter44/cases.json: resource-path-unchanged, trailing-attached-to-parent, dependency-comments-dropped (they mutate table entries))",
+     "assessed_in": "iteration-72",
+     "gap": "Rule 4a (iteration-72): Which anchors survive is a per-case table of path codes. The XPath of each comment anchor, the re-export to /Module/Resources/Resource and the discard of a last child at the parent end tag are not computed."
     },
     {
      "id": "devtools.authoring#8",
@@ -1287,10 +1360,12 @@
       ".g5/Verus_verification/consolidated/iter53/generator.rs::stored_author"
      ],
      "evidence": [
-      ".g5/uplift/consolidated/iter53/run.json"
+      ".g5/uplift/consolidated/iter53/run.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json"
      ],
-     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
-     "assessed_in": "iteration-68"
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata; iteration-72 rule-4a re-audit (G5): full, support control (control .g5/Verus_verification/consolidated/iter53/cases.json: author-args-in-order)",
+     "assessed_in": "iteration-72",
+     "support": "control"
     },
     {
      "id": "devtools.authoring.generate#7",
@@ -1307,10 +1382,13 @@
       ".g5/Verus_verification/consolidated/iter53/generator.rs::export_neighbors"
      ],
      "evidence": [
-      ".g5/uplift/consolidated/iter53/run.json"
+      ".g5/uplift/consolidated/iter53/run.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G5.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
-     "assessed_in": "iteration-68"
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata; iteration-72 rule-4a re-audit (G5): full, support mutation-checked (mutations G5-m48, G5-m49)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "devtools.authoring.generate#8",
@@ -1327,10 +1405,12 @@
       ".g5/Verus_verification/consolidated/iter53/generator.rs::export_neighbors"
      ],
      "evidence": [
-      ".g5/uplift/consolidated/iter53/run.json"
+      ".g5/uplift/consolidated/iter53/run.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json"
      ],
-     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
-     "assessed_in": "iteration-68"
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata; iteration-72 rule-4a re-audit (G5): full, support control (control .g5/Verus_verification/consolidated/iter53/cases.json: routines-honour-ignore, routines-prefix-mask)",
+     "assessed_in": "iteration-72",
+     "support": "control"
     },
     {
      "id": "devtools.authoring.generate#9",
@@ -1387,7 +1467,7 @@
      "text": "import loads class files and compiles them; a directory is searched recursively unless -norecurse; -nocompile loads without compiling.",
      "cases": "subdirectory item with/without -norecurse; -nocompile",
      "observation": "defined / compiled",
-     "grade": "full",
+     "grade": "partial",
      "check": "proved",
      "models": [
       ".g5/Verus_verification/consolidated/iter49/importcmd.rs::norecurse_skips_subdirectories",
@@ -1395,10 +1475,13 @@
       ".g5/Verus_verification/consolidated/iter49/importcmd.rs::selected"
      ],
      "evidence": [
-      ".g5/uplift/consolidated/iter49/run.json"
+      ".g5/uplift/consolidated/iter49/run.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G5.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
-     "assessed_in": "iteration-68"
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata; iteration-72 rule-4a re-audit (G5): partial, support mutation-checked (mutations G5-m10; control .g5/Verus_verification/consolidated/iter49/cases.json: norecurse-ignored, nocompile-ignored)",
+     "assessed_in": "iteration-72",
+     "gap": "Rule 4a (iteration-72): The recursive case (a subdirectory item imported without -norecurse) is never asserted. G5-m10, which never recurses, survives. The -norecurse and -nocompile halves are controlled."
     },
     {
      "id": "devtools.authoring.import#2",
@@ -1414,10 +1497,12 @@
       ".g5/Verus_verification/consolidated/iter49/importcmd.rs::one_bad_item_fails_command_but_keeps_good"
      ],
      "evidence": [
-      ".g5/uplift/consolidated/iter49/run.json"
+      ".g5/uplift/consolidated/iter49/run.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json"
      ],
-     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
-     "assessed_in": "iteration-68"
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata; iteration-72 rule-4a re-audit (G5): full, support control (control .g5/Verus_verification/consolidated/iter49/cases.json: bad-item-rolls-back-good, compile-error-ignored)",
+     "assessed_in": "iteration-72",
+     "support": "control"
     },
     {
      "id": "devtools.authoring.import#3",
@@ -1427,17 +1512,20 @@
      "text": "A missing path fails before anything loads.",
      "cases": "missing vs existing path",
      "observation": "status; items defined; source-control actions",
-     "grade": "full",
+     "grade": "partial",
      "check": "proved",
      "models": [
       ".g5/Verus_verification/consolidated/iter49/importcmd.rs::missing_path_fails",
       ".g5/Verus_verification/consolidated/iter49/importcmd.rs::selected"
      ],
      "evidence": [
-      ".g5/uplift/consolidated/iter49/run.json"
+      ".g5/uplift/consolidated/iter49/run.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G5.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
-     "assessed_in": "iteration-68"
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata; iteration-72 rule-4a re-audit (G5): partial, support mutation-checked (mutations G5-m11)",
+     "assessed_in": "iteration-72",
+     "gap": "Rule 4a (iteration-72): The obligation observes the items defined, but defined() for a missing path is never asserted. G5-m11, which selects items for a missing path, survives. Only the status and the missing source-control calls are pinned."
     },
     {
      "id": "devtools.authoring.import#4",
@@ -1455,10 +1543,12 @@
       ".g5/Verus_verification/consolidated/iter49/importcmd.rs::added"
      ],
      "evidence": [
-      ".g5/uplift/consolidated/iter49/run.json"
+      ".g5/uplift/consolidated/iter49/run.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json"
      ],
-     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
-     "assessed_in": "iteration-68"
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata; iteration-72 rule-4a re-audit (G5): full, support control (control .g5/Verus_verification/consolidated/iter49/cases.json: sc-all-added)",
+     "assessed_in": "iteration-72",
+     "support": "control"
     },
     {
      "id": "devtools.authoring.import#5",
@@ -1488,7 +1578,8 @@
    "status": "enumerated",
    "units": {
     "P1": [
-     "devtools.authoring.module-version#1"
+     "devtools.authoring.module-version#1",
+     "devtools.authoring.module-version#7"
     ],
     "B1": [
      "devtools.authoring.module-version#2"
@@ -1510,22 +1601,23 @@
      "units": [
       "P1"
      ],
-     "text": "module-version changes the version in the stored manifest and the installed record together, or changes neither.",
-     "cases": "success vs failure of checkout, save or manifest rewrite after the record is set",
+     "text": "On success, module-version sets the stored manifest and the installed record to the same new version.",
+     "cases": "successful bump",
      "observation": "record and stored manifest versions",
-     "grade": "partial",
-     "check": "unchecked",
+     "grade": "full",
+     "check": "proved",
      "models": [
       ".g5/Verus_verification/consolidated/verus/owners.rs::module_version",
-      ".g5/Verus_verification/consolidated/verus/owners.rs::update_version"
+      ".g5/Verus_verification/consolidated/verus/owners.rs::update_version",
+      ".g5/Verus_verification/consolidated/verus/owners.rs::witnessed_owners_distinctions"
      ],
      "evidence": [
-      ".g5/Verus_verification/consolidated/verus/owners-results.json",
-      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/mutations/M.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
-     "assessed_in": "iteration-68",
-     "gap": "All-or-nothing is assumed by the spec (state s unless ok). No theorem or control exercises a failure after the record save (Main.cls:4011-4099 transaction rollback), and the rollback was not run natively. Contrast: UpdateVersion fails after the record save, and both versions must read the old value."
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata; iteration-72 (review-71 B): split, failure half is #7. Mutation M-m14 (success sets the record only) killed.",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "devtools.authoring.module-version#2",
@@ -1535,7 +1627,7 @@
      "text": "major, minor and patch bump that part and reset later parts; -prerelease and -build then set those parts.",
      "cases": "each bump kind; with pre/build",
      "observation": "resulting version",
-     "grade": "full",
+     "grade": "partial",
      "check": "proved",
      "models": [
       ".g5/Verus_verification/consolidated/verus/owners.rs::bump",
@@ -1545,10 +1637,13 @@
      ],
      "evidence": [
       ".g5/Verus_verification/consolidated/verus/owners-results.json",
-      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G5.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
-     "assessed_in": "iteration-68"
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata; iteration-72 rule-4a re-audit (G5): partial, support mutation-checked (mutations G5-m13, G5-m14)",
+     "assessed_in": "iteration-72",
+     "gap": "Rule 4a (iteration-72): Bumping is pinned (G5-m13 killed), but applying -prerelease and -build is never asserted. G5-m14, which drops -prerelease from module_version, survives, and with_pre is only checked to preserve build."
     },
     {
      "id": "devtools.authoring.module-version#3",
@@ -1558,7 +1653,7 @@
      "text": "A version that is not higher than the current one is refused unless -force is given.",
      "cases": "not-higher with/without -force",
      "observation": "status; versions",
-     "grade": "full",
+     "grade": "partial",
      "check": "proved",
      "models": [
       ".g5/Verus_verification/consolidated/verus/owners.rs::module_version",
@@ -1567,10 +1662,12 @@
      ],
      "evidence": [
       ".g5/Verus_verification/consolidated/verus/owners-results.json",
-      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json"
      ],
-     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
-     "assessed_in": "iteration-68"
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata; iteration-72 rule-4a re-audit (G5): partial, support inspection",
+     "assessed_in": "iteration-72",
+     "gap": "Rule 4a (iteration-72): Settled by review-71 part B: only the equal-version case is exercised. A lower version, with and without -force, is never asserted."
     },
     {
      "id": "devtools.authoring.module-version#4",
@@ -1587,10 +1684,13 @@
      ],
      "evidence": [
       ".g5/Verus_verification/consolidated/verus/owners-results.json",
-      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G5.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
-     "assessed_in": "iteration-68"
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata; iteration-72 rule-4a re-audit (G5): full, support mutation-checked (mutations G5-m12)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "devtools.authoring.module-version#5",
@@ -1600,7 +1700,7 @@
      "text": "The module.xml file the module was loaded from is not changed (whether it should be is open).",
      "cases": "successful bump",
      "observation": "disk manifest version",
-     "grade": "full",
+     "grade": "partial",
      "check": "proved",
      "models": [
       ".g5/Verus_verification/consolidated/verus/owners.rs::stored_version_does_not_write_disk",
@@ -1608,10 +1708,12 @@
      ],
      "evidence": [
       ".g5/Verus_verification/consolidated/verus/owners-results.json",
-      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json"
      ],
-     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
-     "assessed_in": "iteration-68"
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata; iteration-72 rule-4a re-audit (G5): partial, support inspection (control .g5/Verus_verification/consolidated/verus/owners-results.json negative control writes-disk (adds a write; does not remove a product branch))",
+     "assessed_in": "iteration-72",
+     "gap": "Rule 4a (iteration-72): Settled by review-71 part B: the property holds by construction because no modelled branch writes the module.xml file, so there is no product write branch to mutate."
     },
     {
      "id": "devtools.authoring.module-version#6",
@@ -1631,8 +1733,29 @@
       ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
      ],
      "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
-     "assessed_in": "iteration-68",
-     "gap": "The disk-unchanged half is proved (see #5). The source-control handoff (StudioDocument/Module.cls::UpdateVersion through the extension) is only an error input (checkout), so no rule shows the hook receiving the new version."
+     "assessed_in": "iteration-72",
+     "gap": "The disk-unchanged half is proved (see #5). The source-control handoff (StudioDocument/Module.cls::UpdateVersion through the extension) is only an error input (checkout), so no rule shows the hook receiving the new version. As built only CheckOut is called (Main.cls:4080-4084), so review-71 B notes the hand-off may be false as built."
+    },
+    {
+     "id": "devtools.authoring.module-version#7",
+     "units": [
+      "P1"
+     ],
+     "text": "When a step after the record save fails, neither the record nor the stored manifest changes.",
+     "cases": "checkout, save or manifest rewrite failure after the record is set vs success",
+     "observation": "record and stored manifest versions",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/owners.rs::module_version"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/mutations/M.jsonl"
+     ],
+     "basis": "new:iteration-72 (review-71 B): split from #1",
+     "assessed_in": "iteration-72",
+     "gap": "module_version returns state s on every error, so the transaction rollback (Main.cls:4076-4096) is written down, not modeled. M-m16 (a rewrite failure keeps the new record) survives (rule 4a). Rollback not run natively."
     }
    ]
   },
@@ -1682,7 +1805,7 @@
      "text": "generate keeps classes under the chosen tests folder out of application resources, even when that folder is inside the source folder.",
      "cases": "class under tests folder (inside src, outside src) vs elsewhere",
      "observation": "membership in written application resources",
-     "grade": "full",
+     "grade": "partial",
      "check": "proved",
      "models": [
       ".g5/Verus_verification/consolidated/iter6/workflows.rs::application_item",
@@ -1697,10 +1820,13 @@
       ".g5/uplift/coverage-20261117/iter69/replay/receipt.json",
       ".g5/uplift/coverage-20261117/iter69/native/20261118T014707781494Z/observations.json",
       ".g5/uplift/coverage-20261117/iter69/receipts/index.jsonl",
-      ".g5/uplift/consolidated/iter6/run.json"
+      ".g5/uplift/consolidated/iter6/run.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G5.jsonl"
      ],
-     "basis": "new:iteration-69",
-     "assessed_in": "iteration-69"
+     "basis": "new:iteration-69; iteration-72 rule-4a re-audit (G5): partial, support mutation-checked (mutations G5-m23; control .g5/Verus_verification/coverage-20261117/iter69/grouping.rs control tests-not-excluded (killed only by instance assertions, review-71 C2))",
+     "assessed_in": "iteration-72",
+     "gap": "Rule 4a (iteration-72): The tests-folder membership is computed only in iter6::application_item, which has no source-folder scan. The grouping.rs writer takes in_tests as an input, and the two are not composed. The inside-src case is exercised only with in_tests fixed by the fixture (m4)."
     },
     {
      "id": "devtools.generate.resources#2",
@@ -1710,7 +1836,7 @@
      "text": "Tests are written as UnitTest entries with Phase=\"test\", named by the tests folder and directory, with the package their classes share.",
      "cases": "tests folder outside src (m1) vs inside src (m4); test classes at two depths under one top-level package",
      "observation": "UnitTest Name, Package, Phase attributes",
-     "grade": "full",
+     "grade": "partial",
      "check": "proved",
      "models": [
       ".g5/Verus_verification/coverage-20261117/iter69/grouping.rs::test_entries",
@@ -1723,11 +1849,13 @@
       ".g5/uplift/coverage-20261117/iter69/proofs/models.json",
       ".g5/uplift/coverage-20261117/iter69/replay/receipt.json",
       ".g5/uplift/coverage-20261117/iter69/native/20261118T014707781494Z/observations.json",
-      ".g5/uplift/coverage-20261117/iter69/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter69/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json"
      ],
-     "basis": "new:iteration-69",
-     "assessed_in": "iteration-69",
-     "note": "Package and directory are modeled through the same group function as application classes; Phase=\"test\" and ProcessorClass UnitTest are unconditional constants in AddPackages and are checked by exact string match natively (m1, m4)."
+     "basis": "new:iteration-69; iteration-72 rule-4a re-audit (G5): partial, support inspection",
+     "assessed_in": "iteration-72",
+     "note": "Package and directory are modeled through the same group function as application classes; Phase=\"test\" and ProcessorClass UnitTest are unconditional constants in AddPackages and are checked by exact string match natively (m1, m4).",
+     "gap": "Rule 4a (iteration-72): Settled by review-71 C1: TestEntry has only directory and package (grouping.rs:32). The UnitTest Name (/src/tests/ when tests sit inside src) and Phase=\"test\" are checked only by the native string match."
     },
     {
      "id": "devtools.generate.resources#3",
@@ -1748,10 +1876,12 @@
       ".g5/uplift/coverage-20261117/iter69/proofs/models.json",
       ".g5/uplift/coverage-20261117/iter69/replay/receipt.json",
       ".g5/uplift/coverage-20261117/iter69/native/20261118T014707781494Z/observations.json",
-      ".g5/uplift/coverage-20261117/iter69/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter69/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json"
      ],
-     "basis": "new:iteration-69",
-     "assessed_in": "iteration-69"
+     "basis": "new:iteration-69; iteration-72 rule-4a re-audit (G5): full, support control (control .g5/Verus_verification/coverage-20261117/iter69/grouping.rs iter69 control missing-source-continues (rejected by tests_and_status))",
+     "assessed_in": "iteration-72",
+     "support": "control"
     },
     {
      "id": "devtools.generate.resources#4",
@@ -1774,10 +1904,13 @@
       ".g5/uplift/coverage-20261117/iter69/replay/receipt.json",
       ".g5/uplift/coverage-20261117/iter69/native/20261118T014707781494Z/observations.json",
       ".g5/uplift/coverage-20261117/iter69/receipts/index.jsonl",
-      ".g5/uplift/consolidated/iter6/run.json"
+      ".g5/uplift/consolidated/iter6/run.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G5.jsonl"
      ],
-     "basis": "new:iteration-69",
-     "assessed_in": "iteration-69"
+     "basis": "new:iteration-69; iteration-72 rule-4a re-audit (G5): full, support mutation-checked (mutations G5-m22, G5-m27)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "devtools.generate.resources#5",
@@ -1787,7 +1920,7 @@
      "text": "Files with unsupported extensions, and files whose class or routine name cannot be read, are skipped; a class whose name can be read is listed even if its body does not compile (whether invalid source should fail is open).",
      "cases": "loadable .cls vs headerless .cls vs body-broken .cls vs .txt",
      "observation": "membership in written resources",
-     "grade": "full",
+     "grade": "partial",
      "check": "proved",
      "models": [
       ".g5/Verus_verification/coverage-20261117/iter69/grouping.rs::supported",
@@ -1799,11 +1932,13 @@
       ".g5/uplift/coverage-20261117/iter69/proofs/models.json",
       ".g5/uplift/coverage-20261117/iter69/replay/receipt.json",
       ".g5/uplift/coverage-20261117/iter69/native/20261118T014707781494Z/observations.json",
-      ".g5/uplift/coverage-20261117/iter69/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter69/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json"
      ],
-     "basis": "new:iteration-69",
-     "assessed_in": "iteration-69",
-     "note": "The listing result is a provider input (File.listed). Native m1 and m5 observed it: a headerless file is not listed, and a class header with a broken body is listed. Controls listing-ignored and unsupported-kept are rejected."
+     "basis": "new:iteration-69; iteration-72 rule-4a re-audit (G5): partial, support control (control .g5/Verus_verification/coverage-20261117/iter69/grouping.rs iter69 controls unsupported-kept, listing-ignored (instance kills only; unsupported-kept survives the general proofs per review-71 C2); instance-scoped)",
+     "assessed_in": "iteration-72",
+     "note": "The listing result is a provider input (File.listed). Native m1 and m5 observed it: a headerless file is not listed, and a class header with a broken body is listed. Controls listing-ignored and unsupported-kept are rejected.",
+     "gap": "Rule 4a (iteration-72): Headerless versus body-broken, the case the obligation names, is decided by `listed`, a fixture-fixed provider input (m5: Ig2 listed, Ig3 not). The unsupported-extension rule is pinned only by instance assertions."
     },
     {
      "id": "devtools.generate.resources#6",
@@ -1836,11 +1971,14 @@
       ".g5/uplift/coverage-20261117/iter69/proofs/models.json",
       ".g5/uplift/coverage-20261117/iter69/replay/receipt.json",
       ".g5/uplift/coverage-20261117/iter69/native/20261118T014707781494Z/observations.json",
-      ".g5/uplift/coverage-20261117/iter69/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter69/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json"
      ],
-     "basis": "new:iteration-69",
-     "assessed_in": "iteration-69",
-     "note": "Controls directory-only-key and top-level-only-key are rejected."
+     "basis": "new:iteration-69; iteration-72 rule-4a re-audit (G5): full, support control (control .g5/Verus_verification/coverage-20261117/iter69/grouping.rs iter69 controls directory-only-key (fails general proofs), top-level-only-key (killed only by instance N5b); instance-scoped)",
+     "assessed_in": "iteration-72",
+     "note": "Controls directory-only-key and top-level-only-key are rejected.",
+     "support": "control",
+     "instance_scoped": true
     },
     {
      "id": "devtools.generate.resources#8",
@@ -1864,11 +2002,13 @@
       ".g5/uplift/coverage-20261117/iter69/proofs/models.json",
       ".g5/uplift/coverage-20261117/iter69/replay/receipt.json",
       ".g5/uplift/coverage-20261117/iter69/native/20261118T014707781494Z/observations.json",
-      ".g5/uplift/coverage-20261117/iter69/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter69/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json"
      ],
-     "basis": "new:iteration-69",
-     "assessed_in": "iteration-69",
-     "note": "group_characterized proves, for every file sequence, that the name is a package of every member and the deepest such, so it does not depend on file order. Controls name-top-level-only and seed-with-top-level are rejected. Flipped field m1.Ia1.B.PKG@cls is rejected."
+     "basis": "new:iteration-69; iteration-72 rule-4a re-audit (G5): full, support control (control .g5/Verus_verification/coverage-20261117/iter69/grouping.rs iter69 controls name-top-level-only, seed-with-top-level)",
+     "assessed_in": "iteration-72",
+     "note": "group_characterized proves, for every file sequence, that the name is a package of every member and the deepest such, so it does not depend on file order. Controls name-top-level-only and seed-with-top-level are rejected. Flipped field m1.Ia1.B.PKG@cls is rejected.",
+     "support": "control"
     },
     {
      "id": "devtools.generate.resources#9",
@@ -1891,11 +2031,13 @@
       ".g5/uplift/coverage-20261117/iter69/proofs/models.json",
       ".g5/uplift/coverage-20261117/iter69/replay/receipt.json",
       ".g5/uplift/coverage-20261117/iter69/native/20261118T014707781494Z/observations.json",
-      ".g5/uplift/coverage-20261117/iter69/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter69/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json"
      ],
-     "basis": "new:iteration-69",
-     "assessed_in": "iteration-69",
-     "note": "Control directory-keeps-whole-path is rejected. Native: Directory cls/mac/inc/x/y and none for m2a, m2b, m2e."
+     "basis": "new:iteration-69; iteration-72 rule-4a re-audit (G5): full, support control (control .g5/Verus_verification/coverage-20261117/iter69/grouping.rs iter69 control directory-keeps-whole-path)",
+     "assessed_in": "iteration-72",
+     "note": "Control directory-keeps-whole-path is rejected. Native: Directory cls/mac/inc/x/y and none for m2a, m2b, m2e.",
+     "support": "control"
     },
     {
      "id": "devtools.generate.resources#10",
@@ -1918,11 +2060,13 @@
       ".g5/uplift/coverage-20261117/iter69/proofs/models.json",
       ".g5/uplift/coverage-20261117/iter69/replay/receipt.json",
       ".g5/uplift/coverage-20261117/iter69/native/20261118T014707781494Z/observations.json",
-      ".g5/uplift/coverage-20261117/iter69/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter69/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json"
      ],
-     "basis": "new:iteration-69",
-     "assessed_in": "iteration-69",
-     "note": "Control drop-leftovers is rejected. Native names keep the listing's extension case: Ir69.MAC, Ii69.INC, but Ir2a.cls."
+     "basis": "new:iteration-69; iteration-72 rule-4a re-audit (G5): full, support control (control .g5/Verus_verification/coverage-20261117/iter69/grouping.rs iter69 control drop-leftovers)",
+     "assessed_in": "iteration-72",
+     "note": "Control drop-leftovers is rejected. Native names keep the listing's extension case: Ir69.MAC, Ii69.INC, but Ir2a.cls.",
+     "support": "control"
     },
     {
      "id": "devtools.generate.resources#11",
@@ -1944,11 +2088,14 @@
       ".g5/uplift/coverage-20261117/iter69/proofs/models.json",
       ".g5/uplift/coverage-20261117/iter69/replay/receipt.json",
       ".g5/uplift/coverage-20261117/iter69/native/20261118T014707781494Z/observations.json",
-      ".g5/uplift/coverage-20261117/iter69/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter69/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json"
      ],
-     "basis": "new:iteration-69",
-     "assessed_in": "iteration-69",
-     "note": "Control tests-leftovers-kept is rejected. Native m1 (Ih69, Inopkg69), m4 (Ihelp69, Inopkg69b). Whether the UnitTest processor loads them at test time was not checked."
+     "basis": "new:iteration-69; iteration-72 rule-4a re-audit (G5): full, support control (control .g5/Verus_verification/coverage-20261117/iter69/grouping.rs iter69 control tests-leftovers-kept; instance-scoped)",
+     "assessed_in": "iteration-72",
+     "note": "Control tests-leftovers-kept is rejected. Native m1 (Ih69, Inopkg69), m4 (Ihelp69, Inopkg69b). Whether the UnitTest processor loads them at test time was not checked.",
+     "support": "control",
+     "instance_scoped": true
     },
     {
      "id": "devtools.generate.resources#12",
@@ -1970,11 +2117,13 @@
       ".g5/uplift/coverage-20261117/iter69/proofs/models.json",
       ".g5/uplift/coverage-20261117/iter69/replay/receipt.json",
       ".g5/uplift/coverage-20261117/iter69/native/20261118T014707781494Z/observations.json",
-      ".g5/uplift/coverage-20261117/iter69/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter69/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json"
      ],
-     "basis": "new:iteration-69",
-     "assessed_in": "iteration-69",
-     "note": "Proved for every entry sequence. Native counts m1 (7), m3 (Id1.B.PKG once)."
+     "basis": "new:iteration-69; iteration-72 rule-4a re-audit (G5): full, support control (control .g5/Verus_verification/coverage-20261117/iter69/grouping.rs iter69 control writer-keys-by-directory)",
+     "assessed_in": "iteration-72",
+     "note": "Proved for every entry sequence. Native counts m1 (7), m3 (Id1.B.PKG once).",
+     "support": "control"
     },
     {
      "id": "devtools.generate.resources#13",
@@ -1997,11 +2146,13 @@
       ".g5/uplift/coverage-20261117/iter69/proofs/models.json",
       ".g5/uplift/coverage-20261117/iter69/replay/receipt.json",
       ".g5/uplift/coverage-20261117/iter69/native/20261118T014707781494Z/observations.json",
-      ".g5/uplift/coverage-20261117/iter69/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter69/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json"
      ],
-     "basis": "new:iteration-69",
-     "assessed_in": "iteration-69",
-     "note": "As-built claim proved; it refutes the promise that every packaged application class is covered by a written resource. Control writer-keys-by-directory is rejected; flipped fields m3.Id1.B.PKG@x and class.Id1.B.C are rejected."
+     "basis": "new:iteration-69; iteration-72 rule-4a re-audit (G5): full, support control (control .g5/Verus_verification/coverage-20261117/iter69/grouping.rs iter69 control writer-keys-by-directory; replay focused-flip1)",
+     "assessed_in": "iteration-72",
+     "note": "As-built claim proved; it refutes the promise that every packaged application class is covered by a written resource. Control writer-keys-by-directory is rejected; flipped fields m3.Id1.B.PKG@x and class.Id1.B.C are rejected.",
+     "support": "control"
     },
     {
      "id": "devtools.generate.resources#14",
@@ -2025,11 +2176,14 @@
       ".g5/uplift/coverage-20261117/iter69/proofs/models.json",
       ".g5/uplift/coverage-20261117/iter69/replay/receipt.json",
       ".g5/uplift/coverage-20261117/iter69/native/20261118T014707781494Z/observations.json",
-      ".g5/uplift/coverage-20261117/iter69/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter69/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json"
      ],
-     "basis": "new:iteration-69",
-     "assessed_in": "iteration-69",
-     "note": "The reader model covers the directory choice of Document.%OnNew/OnPhase (Directory, else the extension folder when it exists, else the source root). It does not model the extension fallback seen in the error text (.xml) or routine-specific folders (rtn). Control reader-root-before-ext-dir is rejected."
+     "basis": "new:iteration-69; iteration-72 rule-4a re-audit (G5): full, support control (control .g5/Verus_verification/coverage-20261117/iter69/grouping.rs iter69 control reader-root-before-ext-dir; instance-scoped)",
+     "assessed_in": "iteration-72",
+     "note": "The reader model covers the directory choice of Document.%OnNew/OnPhase (Directory, else the extension folder when it exists, else the source root). It does not model the extension fallback seen in the error text (.xml) or routine-specific folders (rtn). Control reader-root-before-ext-dir is rejected.",
+     "support": "control",
+     "instance_scoped": true
     }
    ]
   },
@@ -2070,10 +2224,13 @@
      ],
      "evidence": [
       ".g5/uplift/consolidated/iter8/run.json",
-      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G5.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
-     "assessed_in": "iteration-68"
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata; iteration-72 rule-4a re-audit (G5): full, support mutation-checked (mutations G5-m18)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "devtools.generate.webapps#2",
@@ -2105,7 +2262,7 @@
      "text": "The installed namespace and app-default marker are left out so installation can choose them.",
      "cases": "provider namespace / NamespaceDefault present",
      "observation": "keys absent",
-     "grade": "full",
+     "grade": "partial",
      "check": "proved",
      "models": [
       ".g5/Verus_verification/consolidated/iter8/webapps.rs::generated_props",
@@ -2114,10 +2271,13 @@
      ],
      "evidence": [
       ".g5/uplift/consolidated/iter8/run.json",
-      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G5.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
-     "assessed_in": "iteration-68"
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata; iteration-72 rule-4a re-audit (G5): partial, support mutation-checked (mutations G5-m16)",
+     "assessed_in": "iteration-72",
+     "gap": "Rule 4a (iteration-72): The app-default marker (NamespaceDefault) case is never exercised. G5-m16, which keeps NamespaceDefault, survives. Only Namespace is asserted absent."
     },
     {
      "id": "devtools.generate.webapps#4",
@@ -2127,7 +2287,7 @@
      "text": "A file-serving app with no dispatch class gets a Path; an old path under the CSP root becomes {$cspdir}...; dispatch-only apps get no file path.",
      "cases": "dispatch vs none; path under root vs not",
      "observation": "generated Path expression",
-     "grade": "full",
+     "grade": "partial",
      "check": "proved",
      "models": [
       ".g5/Verus_verification/consolidated/iter8/webapps.rs::generated_path",
@@ -2136,10 +2296,13 @@
      ],
      "evidence": [
       ".g5/uplift/consolidated/iter8/run.json",
-      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G5.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
-     "assessed_in": "iteration-68"
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata; iteration-72 rule-4a re-audit (G5): partial, support mutation-checked (mutations G5-m17)",
+     "assessed_in": "iteration-72",
+     "gap": "Rule 4a (iteration-72): The path-not-under-CSP-root case (a Literal path) is never asserted. G5-m17, which makes every path {$cspdir}-relative, survives. The dispatch and under-root cases are pinned."
     },
     {
      "id": "devtools.generate.webapps#5",
@@ -2181,10 +2344,13 @@
      ],
      "evidence": [
       ".g5/uplift/consolidated/iter8/run.json",
-      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G5.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
-     "assessed_in": "iteration-68"
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata; iteration-72 rule-4a re-audit (G5): full, support mutation-checked (mutations G5-m19)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     }
    ]
   },
@@ -2218,10 +2384,13 @@
      ],
      "evidence": [
       ".g5/uplift/consolidated/iter7/run.json",
-      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G5.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
-     "assessed_in": "iteration-68"
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata; iteration-72 rule-4a re-audit (G5): full, support mutation-checked (mutations G5-m30)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "devtools.generate.cors#2",
@@ -2275,10 +2444,13 @@
      ],
      "evidence": [
       ".g5/uplift/consolidated/iter28/run.json",
-      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json"
      ],
-     "basis": "new:iteration-68",
-     "assessed_in": "iteration-68"
+     "basis": "new:iteration-68; iteration-72 rule-4a re-audit (G5): full, support control (control .g5/Verus_verification/consolidated/iter28/cases.json: root-array-accepted, commands-object-accepted, unsupported-extension-treated-as-txt, missing-file-ignored; instance-scoped)",
+     "assessed_in": "iteration-72",
+     "support": "control",
+     "instance_scoped": true
     },
     {
      "id": "devtools.scripting#2",
@@ -2358,10 +2530,13 @@
      ],
      "evidence": [
       ".g5/uplift/consolidated/iter28/run.json",
-      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json"
      ],
-     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
-     "assessed_in": "iteration-68"
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata; iteration-72 rule-4a re-audit (G5): full, support control (control .g5/Verus_verification/consolidated/iter28/cases.json: json-skips-preflight, json-ignores-later-unknown, txt-does-not-trim, txt-keeps-blank-line, txt-reverses-line-order; instance-scoped)",
+     "assessed_in": "iteration-72",
+     "support": "control",
+     "instance_scoped": true
     },
     {
      "id": "devtools.scripting.file-sequence#2",
@@ -2380,10 +2555,12 @@
      ],
      "evidence": [
       ".g5/uplift/consolidated/iter28/run.json",
-      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json"
      ],
-     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
-     "assessed_in": "iteration-68"
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata; iteration-72 rule-4a re-audit (G5): full, support control (control .g5/Verus_verification/consolidated/iter28/cases.json: continue-after-shell-error, rollback-earlier-success, runtime-fault-loses-side-effect, settings-write-dropped, settings-write-uses-first-value)",
+     "assessed_in": "iteration-72",
+     "support": "control"
     },
     {
      "id": "devtools.scripting.file-sequence#3",
@@ -2402,10 +2579,12 @@
      ],
      "evidence": [
       ".g5/uplift/consolidated/iter28/run.json",
-      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json"
      ],
-     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
-     "assessed_in": "iteration-68"
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata; iteration-72 rule-4a re-audit (G5): full, support control (control .g5/Verus_verification/consolidated/iter28/cases.json: dry-run-executes-shell, dry-run-skips-json-validation, dry-run-attempts-command, txt-prevalidates-known-unknown)",
+     "assessed_in": "iteration-72",
+     "support": "control"
     }
    ]
   },
@@ -2429,17 +2608,19 @@
      "text": "exec runs ObjectScript in the current namespace; data changes persist; a runtime or syntax error fails the command.",
      "cases": "global set vs runtime error vs syntax error",
      "observation": "status; global value",
-     "grade": "full",
+     "grade": "partial",
      "check": "proved",
      "models": [
       ".g5/Verus_verification/consolidated/iter55/nsinit.rs::exec",
       ".g5/Verus_verification/consolidated/iter55/nsinit.rs::exec_neighbors"
      ],
      "evidence": [
-      ".g5/uplift/consolidated/iter55/run.json"
+      ".g5/uplift/consolidated/iter55/run.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json"
      ],
-     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
-     "assessed_in": "iteration-68"
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata; iteration-72 rule-4a re-audit (G5): partial, support control (control .g5/Verus_verification/consolidated/iter55/cases.json: exec-keeps-namespace-change (mutates a table entry))",
+     "assessed_in": "iteration-72",
+     "gap": "Rule 4a (iteration-72): The exec outcome (ok, global set) is a per-expression-kind table. The xecute of the expression under `new $namespace` and the trapping of runtime and syntax errors are not modelled."
     },
     {
      "id": "devtools.exec#2",
@@ -2449,16 +2630,18 @@
      "text": "As built (C:D56), changing the namespace inside exec has no lasting effect.",
      "cases": "set $namespace expression",
      "observation": "$namespace after the command",
-     "grade": "full",
+     "grade": "partial",
      "check": "proved",
      "models": [
       ".g5/Verus_verification/consolidated/iter55/nsinit.rs::exec_neighbors"
      ],
      "evidence": [
-      ".g5/uplift/consolidated/iter55/run.json"
+      ".g5/uplift/consolidated/iter55/run.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json"
      ],
-     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
-     "assessed_in": "iteration-68"
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata; iteration-72 rule-4a re-audit (G5): partial, support control (control .g5/Verus_verification/consolidated/iter55/cases.json: exec-keeps-namespace-change)",
+     "assessed_in": "iteration-72",
+     "gap": "Rule 4a (iteration-72): That the namespace change does not persist is a constant table entry. `new $namespace` and the restore on exit are not modelled."
     }
    ]
   },
@@ -2506,10 +2689,12 @@
       ".g5/Verus_verification/consolidated/iter55/nsinit.rs::init_neighbors"
      ],
      "evidence": [
-      ".g5/uplift/consolidated/iter55/run.json"
+      ".g5/uplift/consolidated/iter55/run.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json"
      ],
-     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
-     "assessed_in": "iteration-68"
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata; iteration-72 rule-4a re-audit (G5): full, support control (control .g5/Verus_verification/consolidated/iter55/cases.json: dangling-kept, init-activates-composite)",
+     "assessed_in": "iteration-72",
+     "support": "control"
     },
     {
      "id": "devtools.init#3",
@@ -2525,10 +2710,12 @@
       ".g5/Verus_verification/consolidated/iter55/nsinit.rs::init_neighbors"
      ],
      "evidence": [
-      ".g5/uplift/consolidated/iter55/run.json"
+      ".g5/uplift/consolidated/iter55/run.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json"
      ],
-     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
-     "assessed_in": "iteration-68"
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata; iteration-72 rule-4a re-audit (G5): full, support control (control .g5/Verus_verification/consolidated/iter55/cases.json: init-activates-composite)",
+     "assessed_in": "iteration-72",
+     "support": "control"
     }
    ]
   }

@@ -95,7 +95,7 @@
      "text": "Without credentials the filter must give a name or at least one @property.",
      "cases": "repo-only filter vs name filter",
      "observation": "parse_fields result",
-     "grade": "full",
+     "grade": "partial",
      "check": "proved",
      "models": [
       ".g5/Verus_verification/consolidated/iter3/artifacts.rs::parse_fields",
@@ -103,10 +103,13 @@
      ],
      "evidence": [
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
-      ".g5/uplift/consolidated/iter3/proofs/models.json"
+      ".g5/uplift/consolidated/iter3/proofs/models.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__artifact-download.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G4.jsonl"
      ],
-     "basis": "reused:artifact-download metadata (iter3 artifacts.rs; control repo-only-filter-admitted rejected)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:artifact-download metadata (iter3 artifacts.rs; control repo-only-filter-admitted rejected); iteration-72 rule-4a re-audit (G4): partial, support mutation-checked (mutations G4-m06, G4-m07)",
+     "assessed_in": "iteration-72",
+     "gap": "Rule 4a (iteration-72): rule 4a: the @property-only filter is never exercised; dropping the property alternative (G4-m06) verifies. The repo-only refusal is pinned (m07)."
     },
     {
      "id": "artifact.filter#2",
@@ -116,7 +119,7 @@
      "text": "Unsupported keys or operators fail instead of silently broadening the search.",
      "cases": "unknown key; array condition vs supported key",
      "observation": "parse result",
-     "grade": "full",
+     "grade": "partial",
      "check": "proved",
      "models": [
       ".g5/Verus_verification/consolidated/iter3/artifacts.rs::parse_field",
@@ -125,10 +128,13 @@
      ],
      "evidence": [
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
-      ".g5/uplift/consolidated/iter3/proofs/models.json"
+      ".g5/uplift/consolidated/iter3/proofs/models.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__artifact-download.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G4.jsonl"
      ],
-     "basis": "reused:artifact-download metadata (iter3 artifacts.rs)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:artifact-download metadata (iter3 artifacts.rs); iteration-72 rule-4a re-audit (G4): partial, support mutation-checked (mutations G4-m08, G4-m09)",
+     "assessed_in": "iteration-72",
+     "gap": "Rule 4a (iteration-72): rule 4a: the array condition is never exercised (G4-m08 accepting arrays verifies) and the unknown-key refusal is pinned only through the name/property requirement (G4-m09 ignoring unknown keys verifies in artifacts.rs; it is caught only by the uncited iter3 native_bridge.rs key filter-4)."
     },
     {
      "id": "artifact.filter#3",
@@ -138,7 +144,7 @@
      "text": "Allowed keys are repo, name, path, type and @property; type, when supplied, must be file.",
      "cases": "type=file vs other type value",
      "observation": "parse result",
-     "grade": "full",
+     "grade": "partial",
      "check": "proved",
      "models": [
       ".g5/Verus_verification/consolidated/iter3/artifacts.rs::parse_field",
@@ -146,10 +152,13 @@
      ],
      "evidence": [
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
-      ".g5/uplift/consolidated/iter3/proofs/models.json"
+      ".g5/uplift/consolidated/iter3/proofs/models.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__artifact-download.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G4.jsonl"
      ],
-     "basis": "reused:artifact-download metadata (iter3 artifacts.rs; control nonfile-type-admitted rejected)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:artifact-download metadata (iter3 artifacts.rs; control nonfile-type-admitted rejected); iteration-72 rule-4a re-audit (G4): partial, support mutation-checked (mutations G4-m10, G4-m11)",
+     "assessed_in": "iteration-72",
+     "gap": "Rule 4a (iteration-72): rule 4a: type=file is never exercised as accepted; refusing every type (G4-m10) verifies. Rejecting other type values is pinned (m11)."
     },
     {
      "id": "artifact.filter#4",
@@ -159,7 +168,7 @@
      "text": "A condition is a plain value or an object with exactly one $eq; only name and path allow $match; arrays, nested operator values and multiple operators are refused.",
      "cases": "$match on repo vs name; two operators; non-text operand; array",
      "observation": "condition result",
-     "grade": "full",
+     "grade": "partial",
      "check": "proved",
      "models": [
       ".g5/Verus_verification/consolidated/iter3/artifacts.rs::condition",
@@ -167,10 +176,13 @@
      ],
      "evidence": [
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
-      ".g5/uplift/consolidated/iter3/proofs/models.json"
+      ".g5/uplift/consolidated/iter3/proofs/models.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__artifact-download.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G4.jsonl"
      ],
-     "basis": "reused:artifact-download metadata (iter3 artifacts.rs; controls multi-operator-object-admitted, match-allowed-on-repository rejected)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:artifact-download metadata (iter3 artifacts.rs; controls multi-operator-object-admitted, match-allowed-on-repository rejected); iteration-72 rule-4a re-audit (G4): partial, support mutation-checked (mutations G4-m12, G4-m13, G4-m08)",
+     "assessed_in": "iteration-72",
+     "gap": "Rule 4a (iteration-72): rule 4a: arrays are never exercised (G4-m08 verifies). Two operators (m12), $match on other keys (m13) and missing operand are pinned."
     },
     {
      "id": "artifact.filter#5",
@@ -188,10 +200,13 @@
      ],
      "evidence": [
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
-      ".g5/uplift/consolidated/iter3/proofs/models.json"
+      ".g5/uplift/consolidated/iter3/proofs/models.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__artifact-download.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G4.jsonl"
      ],
-     "basis": "reused:artifact-download metadata (iter3 artifacts.rs; controls dot-treated-as-wildcard, star-cannot-be-empty rejected)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:artifact-download metadata (iter3 artifacts.rs; controls dot-treated-as-wildcard, star-cannot-be-empty rejected); iteration-72 rule-4a re-audit (G4): full, support mutation-checked (mutations G4-m14, G4-m15, G4-m16)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     }
    ]
   },
@@ -233,10 +248,13 @@
      ],
      "evidence": [
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
-      ".g5/uplift/consolidated/iter3/proofs/models.json"
+      ".g5/uplift/consolidated/iter3/proofs/models.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__artifact-download.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G4.jsonl"
      ],
-     "basis": "reused:artifact-download metadata (iter3 artifacts.rs; guard-lost controls rejected)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:artifact-download metadata (iter3 artifacts.rs; guard-lost controls rejected); iteration-72 rule-4a re-audit (G4): full, support mutation-checked (mutations G4-m17, G4-m18, G4-m19)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "artifact.selection#2",
@@ -255,10 +273,13 @@
      ],
      "evidence": [
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
-      ".g5/uplift/consolidated/iter3/proofs/models.json"
+      ".g5/uplift/consolidated/iter3/proofs/models.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__artifact-download.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G4.jsonl"
      ],
-     "basis": "reused:artifact-download metadata (iter3 artifacts.rs; controls selects-first-not-newest, tie-selects-last rejected)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:artifact-download metadata (iter3 artifacts.rs; controls selects-first-not-newest, tie-selects-last rejected); iteration-72 rule-4a re-audit (G4): full, support mutation-checked (mutations G4-m21, G4-m22)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "artifact.selection#3",
@@ -298,10 +319,13 @@
      ],
      "evidence": [
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
-      ".g5/uplift/consolidated/iter3/proofs/models.json"
+      ".g5/uplift/consolidated/iter3/proofs/models.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__artifact-download.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G4.jsonl"
      ],
-     "basis": "reused:artifact-download metadata (iter3 artifacts.rs; control properties-guard-lost rejected)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:artifact-download metadata (iter3 artifacts.rs; control properties-guard-lost rejected); iteration-72 rule-4a re-audit (G4): full, support mutation-checked (mutations G4-m23, G4-m24)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "artifact.selection#5",
@@ -340,10 +364,13 @@
      ],
      "evidence": [
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
-      ".g5/uplift/consolidated/iter3/proofs/models.json"
+      ".g5/uplift/consolidated/iter3/proofs/models.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__artifact-download.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G4.jsonl"
      ],
-     "basis": "reused:artifact-download metadata (iter3 artifacts.rs)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:artifact-download metadata (iter3 artifacts.rs); iteration-72 rule-4a re-audit (G4): full, support mutation-checked (mutations G4-m20, G4-m19)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "artifact.selection#7",
@@ -377,10 +404,13 @@
      ],
      "evidence": [
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
-      ".g5/uplift/consolidated/iter3/proofs/models.json"
+      ".g5/uplift/consolidated/iter3/proofs/models.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__artifact-download.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G4.jsonl"
      ],
-     "basis": "reused:artifact-download metadata (iter3 artifacts.rs; control authenticated-response-is-sorted-locally rejected)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:artifact-download metadata (iter3 artifacts.rs; control authenticated-response-is-sorted-locally rejected); iteration-72 rule-4a re-audit (G4): full, support mutation-checked (mutations G4-m25)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     }
    ]
   },
@@ -439,10 +469,13 @@
      ],
      "evidence": [
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
-      ".g5/uplift/consolidated/iter3/proofs/models.json"
+      ".g5/uplift/consolidated/iter3/proofs/models.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__artifact-download.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G4.jsonl"
      ],
-     "basis": "reused:artifact-download metadata (iter3 artifacts.rs; controls developer-suppresses-auth-error, developer-suppresses-extraction rejected)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:artifact-download metadata (iter3 artifacts.rs; controls developer-suppresses-auth-error, developer-suppresses-extraction rejected); iteration-72 rule-4a re-audit (G4): full, support mutation-checked (mutations G4-m26, G4-m27, G4-m28)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "artifact.failure#3",
@@ -533,10 +566,13 @@
      ],
      "evidence": [
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
-      ".g5/uplift/consolidated/iter3/proofs/models.json"
+      ".g5/uplift/consolidated/iter3/proofs/models.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__artifact-download.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G4.jsonl"
      ],
-     "basis": "reused:artifact-download metadata (iter3 artifacts.rs; C:D18: failed read returns ok in dev and non-dev; control as-built-checks-read-status rejected)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:artifact-download metadata (iter3 artifacts.rs; C:D18: failed read returns ok in dev and non-dev; control as-built-checks-read-status rejected); iteration-72 rule-4a re-audit (G4): full, support mutation-checked (mutations G4-m29)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "artifact.archive-admission#2",
@@ -555,10 +591,13 @@
      ],
      "evidence": [
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
-      ".g5/uplift/consolidated/iter3/proofs/models.json"
+      ".g5/uplift/consolidated/iter3/proofs/models.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__artifact-download.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G4.jsonl"
      ],
-     "basis": "reused:artifact-download metadata (iter3 artifacts.rs)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:artifact-download metadata (iter3 artifacts.rs); iteration-72 rule-4a re-audit (G4): full, support mutation-checked (mutations G4-m29)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "artifact.archive-admission#3",
@@ -576,10 +615,13 @@
      ],
      "evidence": [
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
-      ".g5/uplift/consolidated/iter3/proofs/models.json"
+      ".g5/uplift/consolidated/iter3/proofs/models.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__artifact-download.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G4.jsonl"
      ],
-     "basis": "reused:artifact-download metadata (iter3 artifacts.rs)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:artifact-download metadata (iter3 artifacts.rs); iteration-72 rule-4a re-audit (G4): full, support mutation-checked (mutations G4-m30, G4-m31)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     }
    ]
   },
@@ -610,7 +652,7 @@
      "text": "Activate reuses an existing local artifact folder without checking its contents or contacting the server.",
      "cases": "local folder present vs absent",
      "observation": "download requested; copy called",
-     "grade": "full",
+     "grade": "partial",
      "check": "proved",
      "models": [
       ".g5/Verus_verification/consolidated/iter3/artifacts.rs::activate",
@@ -618,10 +660,13 @@
      ],
      "evidence": [
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
-      ".g5/uplift/consolidated/iter3/proofs/models.json"
+      ".g5/uplift/consolidated/iter3/proofs/models.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__artifact-download.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G4.jsonl"
      ],
-     "basis": "reused:artifact-download metadata (iter3 artifacts.rs; control existing-directory-is-refetched rejected)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:artifact-download metadata (iter3 artifacts.rs; control existing-directory-is-refetched rejected); iteration-72 rule-4a re-audit (G4): partial, support mutation-checked (mutations G4-m32, G4-m33, G4-m34)",
+     "assessed_in": "iteration-72",
+     "gap": "Rule 4a (iteration-72): rule 4a: the absent-folder neighbour never asserts that a download is requested; request_download:false (G4-m32) verifies. The present-folder side is pinned (m33, m34)."
     },
     {
      "id": "artifact.local-content#2",
@@ -655,10 +700,13 @@
      ],
      "evidence": [
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
-      ".g5/uplift/consolidated/iter3/proofs/models.json"
+      ".g5/uplift/consolidated/iter3/proofs/models.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__artifact-download.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G4.jsonl"
      ],
-     "basis": "reused:artifact-download metadata (iter3 artifacts.rs; control cached-file-overwritten rejected)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:artifact-download metadata (iter3 artifacts.rs; control cached-file-overwritten rejected); iteration-72 rule-4a re-audit (G4): full, support mutation-checked (mutations G4-m04, G4-m05)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "artifact.local-content#4",
@@ -676,10 +724,13 @@
      ],
      "evidence": [
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
-      ".g5/uplift/consolidated/iter3/proofs/models.json"
+      ".g5/uplift/consolidated/iter3/proofs/models.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__artifact-download.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G4.jsonl"
      ],
-     "basis": "reused:artifact-download metadata (iter3 artifacts.rs; control overlay-deletes-unrelated-files rejected)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:artifact-download metadata (iter3 artifacts.rs; control overlay-deletes-unrelated-files rejected); iteration-72 rule-4a re-audit (G4): full, support mutation-checked (mutations G4-m35, G4-m36)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "artifact.local-content#5",

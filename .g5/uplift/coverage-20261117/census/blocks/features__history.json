@@ -35,12 +35,16 @@
     "P1": [
      "history.actions#1",
      "history.actions#2",
-     "history.actions#3"
+     "history.actions#3",
+     "history.actions#6",
+     "history.actions#7"
     ],
     "B1": [
      "history.actions#1",
      "history.actions#2",
-     "history.actions#3"
+     "history.actions#3",
+     "history.actions#6",
+     "history.actions#7"
     ],
     "B2": [
      "history.actions#4"
@@ -70,10 +74,12 @@
      "evidence": [
       ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
       ".g5/Verus_verification/results/verus/20261113T223451Z-asbuilt-invariants-default/receipt.json",
-      ".g5/Verus_verification/coverage-map.md"
+      ".g5/Verus_verification/coverage-map.md",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__history.json"
      ],
-     "basis": "reused:.g5/Verus_verification/coverage-map.md (history.actions: load supported)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/Verus_verification/coverage-map.md (history.actions: load supported); iteration-72 rule-4a re-audit (G1): full, support mutation-checked (mutations G1-c01)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "history.actions#2",
@@ -81,18 +87,22 @@
       "P1",
       "B1"
      ],
-     "text": "Every install and update attempt, including failed and refused ones, is recorded.",
-     "cases": "install / update attempt that succeeds, fails or is refused (no module name, not found)",
+     "text": "Every install and update attempt that reaches its History init is recorded, including failed ones and refusals after the init (for example install with no module name).",
+     "cases": "reinstall success vs failure (each one row); install with no name or an unknown name; update reaching Install",
      "observation": "History row with Action install or update",
-     "grade": "absent",
-     "check": "none",
-     "models": [],
-     "evidence": [
-      ".g5/Verus_verification/coverage-map.md"
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter22/reinstall.rs::history_neighbor",
+      ".g5/Verus_verification/consolidated/iter22/reinstall.rs::reinstall",
+      ".g5/Verus_verification/consolidated/iter22/reinstall.rs::begin_install"
      ],
-     "basis": "new:iteration-70",
-     "assessed_in": "iteration-70",
-     "gap": "No formal model of Main.cls::Install (HistoryTemp.InstallInit before the name check, Main.cls:2565-2566) or of the update path record creation. The crate binds only Main:Load. Contrast: install of an unknown name and an update refused by the version check must each leave one error row, against a successful install row."
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-72 (review-71 A2); text narrowed: refusals that throw before the init are history.actions#6 and #7",
+     "assessed_in": "iteration-72",
+     "gap": "reinstall.rs computes the install-record delta: a successful and a failed reinstall each add one record (history_neighbor), but the failed rows are FailedInstallFieldsUnknown. Plain install (no name, unknown name, not found; InstallInit at Main.cls:2565-2566 precedes the name check) and the update path (UpdateInit, Main.cls:4432) are not modeled."
     },
     {
      "id": "history.actions#3",
@@ -144,6 +154,49 @@
      "basis": "new:iteration-70",
      "assessed_in": "iteration-70",
      "gap": "No model of the Main.cls command dispatch to HistoryTemp. The playbook uninstall.rs clean_cmd (`<module> clean`, Clean.Level 0, Recurse 1) reuses exec_clean, whose dep_step pushes History rows for cleaned dependencies, and no theorem examines clean's history effect. Contrast: `<module> clean` on a module with a dependency, and `sync`, must leave the History row count unchanged."
+    },
+    {
+     "id": "history.actions#6",
+     "units": [
+      "P1",
+      "B1"
+     ],
+     "text": "Intended: a refused reinstall is recorded too. As built, reinstall of a module that is not installed throws before any History row (Main.cls:2685-2687).",
+     "cases": "reinstall of a name that is not installed vs reinstalls that reach Install (success, failure)",
+     "observation": "install record count",
+     "grade": "full",
+     "check": "refuted",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter22/reinstall.rs::reinstall",
+      ".g5/Verus_verification/consolidated/iter22/reinstall.rs::history_neighbor",
+      ".g5/Verus_verification/consolidated/iter22/reinstall.rs::begin_install"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/mutations/M.jsonl"
+     ],
+     "basis": "new:iteration-72 (review-71 A2): reinstall() checks installed_name before begin_install; history_neighbor asserts record_delta 0 for missing() against 1 for the failed and successful reinstalls. Mutation M-m06 (enter install before the check) killed.",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
+    },
+    {
+     "id": "history.actions#7",
+     "units": [
+      "P1",
+      "B1"
+     ],
+     "text": "Intended: a refused update is recorded too. As built, update with -PermitDowngrade or of a module that is not installed throws before HistoryTemp.UpdateInit writes any row (Main.cls:4415-4423).",
+     "cases": "update of a not-installed module vs an update reaching Install",
+     "observation": "History row count",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/reviews/review-71.md"
+     ],
+     "basis": "new:iteration-72 (review-71 A2)",
+     "assessed_in": "iteration-72",
+     "gap": "No model of Main.cls::Update. Source reading (review-71 A2) shows both refusals throw before UpdateInit at Main.cls:4432. Contrast: update of a not-installed module leaves the History row count unchanged, against an update that reaches Install and adds one row."
     }
    ]
   },
@@ -189,10 +242,12 @@
      ],
      "evidence": [
       ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
-      ".g5/Verus_verification/results/verus/20261113T223451Z-asbuilt-invariants-default/receipt.json"
+      ".g5/Verus_verification/results/verus/20261113T223451Z-asbuilt-invariants-default/receipt.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__history.json"
      ],
-     "basis": "reused:.g5/Verus_verification/coverage-map.md (history.record: theorem_top_record_durable, theorem_top_record_complete)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/Verus_verification/coverage-map.md (history.record: theorem_top_record_durable, theorem_top_record_complete); iteration-72 rule-4a re-audit (G1): full, support mutation-checked (mutations G1-c01, G1-c02, G1-c03)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "history.record#2",
@@ -232,10 +287,12 @@
       ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
       ".g5/Verus_verification/results/verus/20261113T223451Z-asbuilt-invariants-default/receipt.json",
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
-      "playbook-uplift/models/verus/results/load_general.json"
+      "playbook-uplift/models/verus/results/load_general.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__history.json"
      ],
-     "basis": "new:iteration-70 (playbook load_general.rs honest(): Ended <=> top_row.ended; rerun with --rlimit 30)",
-     "assessed_in": "iteration-70"
+     "basis": "new:iteration-70 (playbook load_general.rs honest(): Ended <=> top_row.ended; rerun with --rlimit 30); iteration-72 rule-4a re-audit (G1): full, support control (mutations G1-c04; control crate control-11 (death keeps transaction) rejected at case_c45_kill_dep_record_lost; load_general control crash-records-success)",
+     "assessed_in": "iteration-72",
+     "support": "control"
     },
     {
      "id": "history.record#4",
@@ -265,10 +322,12 @@
      "evidence": [
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
       "playbook-uplift/models/verus/results/load_general.json",
-      ".g5/Verus_verification/results/verus/20261113T223456Z-asbuilt-l1-end/receipt.json"
+      ".g5/Verus_verification/results/verus/20261113T223456Z-asbuilt-l1-end/receipt.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__history.json"
      ],
-     "basis": "new:iteration-70 (scope: top-level load, no caller transaction; the load_general premises exclude only crashes in the commit window and the developer-mode dependency phase, where the Committed clause fails)",
-     "assessed_in": "iteration-70"
+     "basis": "new:iteration-70 (scope: top-level load, no caller transaction; the load_general premises exclude only crashes in the commit window and the developer-mode dependency phase, where the Committed clause fails); iteration-72 rule-4a re-audit (G1): full, support control (control playbook-uplift/models/verus/controls/load_general.json + results/load_general.json: crash-records-success killed inv_crash, inv_instance_crash)",
+     "assessed_in": "iteration-72",
+     "support": "control"
     },
     {
      "id": "history.record#6",
@@ -288,10 +347,12 @@
      "evidence": [
       ".g5/Verus_verification/results/verus/20261113T223456Z-asbuilt-l1-end/receipt.json",
       ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
-      ".g5/Verus_verification/coverage-map.md"
+      ".g5/Verus_verification/coverage-map.md",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__history.json"
      ],
-     "basis": "reused:.g5/Verus_verification/coverage-map.md (history.record: confirmed violation D10); asbuilt-l1-end violates H-RECORD-FIELDS",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/Verus_verification/coverage-map.md (history.record: confirmed violation D10); asbuilt-l1-end violates H-RECORD-FIELDS; iteration-72 rule-4a re-audit (G1): full, support mutation-checked (mutations G1-c04)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "history.record#7",
@@ -351,10 +412,12 @@
      "evidence": [
       ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
-      "playbook-uplift/models/verus/results/load_general.json"
+      "playbook-uplift/models/verus/results/load_general.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__history.json"
      ],
-     "basis": "reused:.g5/Verus_verification/coverage-map.md (history.record.abnormal-end, Q-08: confirmed violation C4R); load_general new:iteration-70",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/Verus_verification/coverage-map.md (history.record.abnormal-end, Q-08: confirmed violation C4R); load_general new:iteration-70; iteration-72 rule-4a re-audit (G1): full, support control (mutations G1-c05; control playbook-uplift/models/verus/controls/load_general.json + results/load_general.json: fix-without-dev-persist, instance-crash-runs-onclose rejected)",
+     "assessed_in": "iteration-72",
+     "support": "control"
     }
    ]
   },
@@ -440,10 +503,12 @@
      ],
      "evidence": [
       ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
-      ".g5/Verus_verification/coverage-map.md"
+      ".g5/Verus_verification/coverage-map.md",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__history.json"
      ],
-     "basis": "reused:.g5/Verus_verification/coverage-map.md (history.fields Package rule V7, confirmed violation D9)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/Verus_verification/coverage-map.md (history.fields Package rule V7, confirmed violation D9); iteration-72 rule-4a re-audit (G1): full, support mutation-checked (mutations G1-c08; control crate control-08/09 (guards removed) also reject case_c11/c15)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "history.fields#3",
@@ -485,10 +550,13 @@
      ],
      "evidence": [
       ".g5/uplift/consolidated/iter38/run.json",
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__history.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G1.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/history.g5.md metadata (iteration38 render.rs)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/ontology/features/history.g5.md metadata (iteration38 render.rs); iteration-72 rule-4a re-audit (G1): full, support mutation-checked (mutations G1-m10)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "history.fields#5",
@@ -530,10 +598,13 @@
      ],
      "evidence": [
       ".g5/uplift/consolidated/iter38/run.json",
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__history.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G1.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/history.g5.md metadata (iteration38 render.rs; controls source-shown-for-all, uninstall-shows-source rejected)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/ontology/features/history.g5.md metadata (iteration38 render.rs; controls source-shown-for-all, uninstall-shows-source rejected); iteration-72 rule-4a re-audit (G1): full, support mutation-checked (mutations G1-m11)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "history.fields#7",
@@ -553,10 +624,12 @@
      "evidence": [
       ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
-      "playbook-uplift/models/verus/results/load_general.json"
+      "playbook-uplift/models/verus/results/load_general.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__history.json"
      ],
-     "basis": "new:iteration-70 (load only)",
-     "assessed_in": "iteration-70"
+     "basis": "new:iteration-70 (load only); iteration-72 rule-4a re-audit (G1): full, support mutation-checked (mutations G1-c02)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "history.fields#8",
@@ -594,10 +667,12 @@
      "evidence": [
       ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
-      "playbook-uplift/models/verus/results/load_general.json"
+      "playbook-uplift/models/verus/results/load_general.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__history.json"
      ],
-     "basis": "reused:.g5/Verus_verification/coverage-map.md (history.fields: Success supported)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/Verus_verification/coverage-map.md (history.fields: Success supported); iteration-72 rule-4a re-audit (G1): full, support mutation-checked (mutations G1-c03; control playbook-uplift/models/verus/controls/load_general.json + results/load_general.json: crash-records-success, ok-recorded-as-failure)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "history.fields#10",
@@ -718,10 +793,12 @@
      ],
      "evidence": [
       ".g5/Verus_verification/results/verus/20261113T223453Z-asbuilt-l1-normal-conforming-domain/receipt.json",
-      ".g5/Verus_verification/coverage-map.md"
+      ".g5/Verus_verification/coverage-map.md",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__history.json"
      ],
-     "basis": "new:iteration-70 (explorer L1-END-NORMAL, exhaustive within <=2 leaf dependencies, conforming domain; phases 14-28 bound to the five names in BINDINGS.md)",
-     "assessed_in": "iteration-70"
+     "basis": "new:iteration-70 (explorer L1-END-NORMAL, exhaustive within <=2 leaf dependencies, conforming domain; phases 14-28 bound to the five names in BINDINGS.md); iteration-72 rule-4a re-audit (G1): full, support mutation-checked (mutations G1-c09)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "history.phases#3",
@@ -780,10 +857,12 @@
      ],
      "evidence": [
       ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
-      ".g5/Verus_verification/coverage-map.md"
+      ".g5/Verus_verification/coverage-map.md",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__history.json"
      ],
-     "basis": "reused:.g5/Verus_verification/coverage-map.md (history.phases: case_c28_phase_left_open, confirmed violation D6 under Q-14)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/Verus_verification/coverage-map.md (history.phases: case_c28_phase_left_open, confirmed violation D6 under Q-14); iteration-72 rule-4a re-audit (G1): full, support mutation-checked (mutations G1-c10)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     }
    ]
   },
@@ -822,10 +901,12 @@
      ],
      "evidence": [
       ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
-      ".g5/Verus_verification/results/verus/20261113T223451Z-asbuilt-invariants-default/receipt.json"
+      ".g5/Verus_verification/results/verus/20261113T223451Z-asbuilt-invariants-default/receipt.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__history.json"
      ],
-     "basis": "reused:.g5/Verus_verification/coverage-map.md (history.survives-rollback: top-level supported)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/Verus_verification/coverage-map.md (history.survives-rollback: top-level supported); iteration-72 rule-4a re-audit (G1): full, support inspection",
+     "assessed_in": "iteration-72",
+     "support": "inspection"
     },
     {
      "id": "history.survives-rollback#2",
@@ -846,10 +927,12 @@
       ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
       ".g5/Verus_verification/results/verus/20261113T223456Z-asbuilt-r3-dep/receipt.json",
       ".g5/Verus_verification/results/verus/20261113T223457Z-asbuilt-dep-clauses/receipt.json",
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__history.json"
      ],
-     "basis": "reused:.g5/Verus_verification/coverage-map.md (confirmed violation D1); load_general new:iteration-70",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/Verus_verification/coverage-map.md (confirmed violation D1); load_general new:iteration-70; iteration-72 rule-4a re-audit (G1): full, support mutation-checked (mutations G1-c06)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "history.survives-rollback#3",
@@ -868,10 +951,12 @@
      ],
      "evidence": [
       ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__history.json"
      ],
-     "basis": "reused:.g5/Verus_verification/coverage-map.md",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/Verus_verification/coverage-map.md; iteration-72 rule-4a re-audit (G1): full, support mutation-checked (mutations G1-c06)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "history.survives-rollback#4",
@@ -891,10 +976,12 @@
      "evidence": [
       ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
-      "playbook-uplift/models/verus/results/load_general.json"
+      "playbook-uplift/models/verus/results/load_general.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__history.json"
      ],
-     "basis": "reused:.g5/Verus_verification/coverage-map.md (history.committed.nested, Q-06b: confirmed deviation)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/Verus_verification/coverage-map.md (history.committed.nested, Q-06b: confirmed deviation); iteration-72 rule-4a re-audit (G1): full, support control (control playbook-uplift/models/verus/controls/load_general.json + results/load_general.json: caller-rollback-keeps-db killed g_caller_rollback_leaves_no_trace)",
+     "assessed_in": "iteration-72",
+     "support": "control"
     }
    ],
    "parent": {
@@ -936,10 +1023,12 @@
      "evidence": [
       ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
       ".g5/Verus_verification/results/verus/20261113T223458Z-control-06-iristemp-rolled-back/receipt.json",
-      ".g5/Verus_verification/results/verus/20261113T223800Z-final-r3-control-06-verus/receipt.json"
+      ".g5/Verus_verification/results/verus/20261113T223800Z-final-r3-control-06-verus/receipt.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__history.json"
      ],
-     "basis": "reused:.g5/Verus_verification/coverage-map.md (P-02, P-06a, P-07; control 06 detected)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/Verus_verification/coverage-map.md (P-02, P-06a, P-07; control 06 detected); iteration-72 rule-4a re-audit (G1): full, support control (control .g5/Verus_verification/results/verus/20261113T22*-final-r3-control-06 (IRISTEMP rolled back) rejected at lemma_kill_inv, lemma_terminate_inv, lemma_lnm0_d, lemma_lnm1_d)",
+     "assessed_in": "iteration-72",
+     "support": "control"
     },
     {
      "id": "history.survives-rollback.temp-copy#2",
@@ -956,10 +1045,12 @@
       ".g5/Verus_verification/crates/ipm-load-history/src/cases.rs::case_c45_terminate_dep_record_lost"
      ],
      "evidence": [
-      ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json"
+      ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__history.json"
      ],
-     "basis": "reused:.g5/ontology/features/history.g5.md metadata (B1 cases C44-C48 T and K variants)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/ontology/features/history.g5.md metadata (B1 cases C44-C48 T and K variants); iteration-72 rule-4a re-audit (G1): full, support mutation-checked (mutations G1-c04)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "history.survives-rollback.temp-copy#3",
@@ -1010,10 +1101,12 @@
      ],
      "evidence": [
       ".g5/Verus_verification/results/verus/20261113T223453Z-asbuilt-l1-normal-conforming-domain/receipt.json",
-      ".g5/Verus_verification/coverage-map.md"
+      ".g5/Verus_verification/coverage-map.md",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__history.json"
      ],
-     "basis": "new:iteration-70 (explorer L1-END-NORMAL exhaustive within <=2 leaf dependencies, conforming domain; loss under parent rollback is history.survives-rollback#2)",
-     "assessed_in": "iteration-70"
+     "basis": "new:iteration-70 (explorer L1-END-NORMAL exhaustive within <=2 leaf dependencies, conforming domain; loss under parent rollback is history.survives-rollback#2); iteration-72 rule-4a re-audit (G1): full, support mutation-checked (mutations G1-c07)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     }
    ],
    "parent": {
@@ -1060,10 +1153,12 @@
      "evidence": [
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
       "playbook-uplift/models/verus/results/load_general.json",
-      ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json"
+      ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__history.json"
      ],
-     "basis": "new:iteration-70 (as built every existing dependency row has Success = own outcome; under a parent rollback the as-built row is lost (history.survives-rollback#2) and the value is shown only for the repair variant repair103_c31)",
-     "assessed_in": "iteration-70"
+     "basis": "new:iteration-70 (as built every existing dependency row has Success = own outcome; under a parent rollback the as-built row is lost (history.survives-rollback#2) and the value is shown only for the repair variant repair103_c31); iteration-72 rule-4a re-audit (G1): full, support control (control playbook-uplift/models/verus/controls/load_general.json + results/load_general.json: dep-failure-recorded-as-success killed inv_dep)",
+     "assessed_in": "iteration-72",
+     "support": "control"
     },
     {
      "id": "history.dependencies.parent-rollback#2",
@@ -1073,7 +1168,7 @@
      "text": "A dependency's Committed describes its kept database writes.",
      "cases": "dependency installed and kept vs rolled back with the parent",
      "observation": "dependency row Committed vs module store",
-     "grade": "full",
+     "grade": "partial",
      "check": "proved",
      "models": [
       "playbook-uplift/models/verus/load_general.rs::honest",
@@ -1083,10 +1178,12 @@
      "evidence": [
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
       "playbook-uplift/models/verus/results/load_general.json",
-      ".g5/Verus_verification/results/verus/20261113T223457Z-asbuilt-dep-clauses/receipt.json"
+      ".g5/Verus_verification/results/verus/20261113T223457Z-asbuilt-dep-clauses/receipt.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__history.json"
      ],
-     "basis": "new:iteration-70 (honest(): dep row committed => installed, uncommitted => unchanged, under premises P1c, P2, P3, PC)",
-     "assessed_in": "iteration-70"
+     "basis": "new:iteration-70 (honest(): dep row committed => installed, uncommitted => unchanged, under premises P1c, P2, P3, PC); iteration-72 rule-4a re-audit (G1): partial, support mutation-checked (mutations G1-c13)",
+     "assessed_in": "iteration-72",
+     "gap": "Rule 4a (iteration-72): Committed of a dependency row is not pinned: crate mutant G1-c13 (dependency LoadNewModule never marks its log committed) verifies 263/0; load_general takes it from a per-outcome table. Needs a Verus case/theorem on the crate dependency row Committed vs the dependency module store (e.g. -dev parent fails after C2, case_c46 dependency row Committed=1 with dependency kept)"
     },
     {
      "id": "history.dependencies.parent-rollback#3",
@@ -1119,7 +1216,8 @@
     ],
     "B1": [
      "history.committed#4",
-     "history.committed#5"
+     "history.committed#5",
+     "history.committed#15"
     ],
     "B2": [
      "history.committed#6"
@@ -1128,7 +1226,8 @@
      "history.committed#7"
     ],
     "B4": [
-     "history.committed#8"
+     "history.committed#8",
+     "history.committed#16"
     ],
     "B5": [
      "history.committed#9"
@@ -1169,10 +1268,12 @@
       ".g5/Verus_verification/results/verus/20261113T223451Z-asbuilt-invariants-default/receipt.json",
       ".g5/Verus_verification/results/verus/20261113T223451Z-asbuilt-invariants-notx/receipt.json",
       ".g5/Verus_verification/results/verus/20261113T223452Z-asbuilt-invariants-nojournal/receipt.json",
-      ".g5/Verus_verification/results/verus/20261113T223632Z-final-r3-control-03-verus/receipt.json"
+      ".g5/Verus_verification/results/verus/20261113T223632Z-final-r3-control-03-verus/receipt.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__history.json"
      ],
-     "basis": "reused:.g5/Verus_verification/coverage-map.md (theorem_commit_sound, controls 01-03 detected)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/Verus_verification/coverage-map.md (theorem_commit_sound, controls 01-03 detected); iteration-72 rule-4a re-audit (G1): full, support control (control .g5/Verus_verification/results/verus/20261113T22*-final-r3-control-01/02/03 (each SetCommitted removed) rejected at lemma_lnm0_a/b/d; playbook-uplift/models/verus/controls/load_general.json + results/load_general.json: dev-no-setcommitted)",
+     "assessed_in": "iteration-72",
+     "support": "control"
     },
     {
      "id": "history.committed#2",
@@ -1190,10 +1291,12 @@
      ],
      "evidence": [
       ".g5/Verus_verification/results/verus/20261113T223456Z-asbuilt-commit-exact/receipt.json",
-      ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json"
+      ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__history.json"
      ],
-     "basis": "reused:.g5/Verus_verification/coverage-map.md (\"Committed implies changed\": confirmed violation D12)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/Verus_verification/coverage-map.md (\"Committed implies changed\": confirmed violation D12); iteration-72 rule-4a re-audit (G1): full, support mutation-checked (mutations G1-c11)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "history.committed#3",
@@ -1223,7 +1326,7 @@
      "text": "A successful top-level action is committed.",
      "cases": "returned OK vs error",
      "observation": "Committed on the row",
-     "grade": "full",
+     "grade": "partial",
      "check": "proved",
      "models": [
       "playbook-uplift/models/verus/load_general.rs::honest",
@@ -1233,10 +1336,12 @@
      "evidence": [
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
       "playbook-uplift/models/verus/results/load_general.json",
-      ".g5/Verus_verification/results/verus/20261113T223451Z-asbuilt-invariants-default/receipt.json"
+      ".g5/Verus_verification/results/verus/20261113T223451Z-asbuilt-invariants-default/receipt.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__history.json"
      ],
-     "basis": "new:iteration-70 (honest(): top_row.ok => committed; explorer ISOK-REDUNDANT)",
-     "assessed_in": "iteration-70"
+     "basis": "new:iteration-70 (honest(): top_row.ok => committed; explorer ISOK-REDUNDANT); iteration-72 rule-4a re-audit (G1): partial, support inspection (control crate control-05 (Finalize ISOK term removed) survives for load)",
+     "assessed_in": "iteration-72",
+     "gap": "Rule 4a (iteration-72): Claims every action, but only load is modelled; install/update/uninstall Committed on success is not represented (uninstall Committed comes from AbstractHistory.cls:131, update/install via Utils/Module.cls SetCommitted)."
     },
     {
      "id": "history.committed#5",
@@ -1254,10 +1359,12 @@
      ],
      "evidence": [
       ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
-      ".g5/Verus_verification/results/verus/20261113T223457Z-asbuilt-dep-clauses/receipt.json"
+      ".g5/Verus_verification/results/verus/20261113T223457Z-asbuilt-dep-clauses/receipt.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__history.json"
      ],
-     "basis": "reused:.g5/Verus_verification/coverage-map.md (undone dependency records are lost rather than uncommitted, B2 D1)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/Verus_verification/coverage-map.md (undone dependency records are lost rather than uncommitted, B2 D1); iteration-72 rule-4a re-audit (G1): full, support mutation-checked (mutations G1-c06)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "history.committed#6",
@@ -1278,10 +1385,13 @@
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
       "playbook-uplift/models/verus/results/load_general.json",
       ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
-      ".g5/Verus_verification/results/verus/20261113T223453Z-asbuilt-l1-normal-conforming-domain/receipt.json"
+      ".g5/Verus_verification/results/verus/20261113T223453Z-asbuilt-l1-normal-conforming-domain/receipt.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__history.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G1.jsonl"
      ],
-     "basis": "new:iteration-70 (honest(): committed and mode != NoTxn => manifest kept; transactional failure => unchanged)",
-     "assessed_in": "iteration-70"
+     "basis": "new:iteration-70 (honest(): committed and mode != NoTxn => manifest kept; transactional failure => unchanged); iteration-72 rule-4a re-audit (G1): full, support mutation-checked (mutations G1-m39)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "history.committed#7",
@@ -1299,18 +1409,20 @@
      ],
      "evidence": [
       ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
-      ".g5/Verus_verification/results/verus/20261113T223505Z-final-r3-control-01-verus/receipt.json"
+      ".g5/Verus_verification/results/verus/20261113T223505Z-final-r3-control-01-verus/receipt.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__history.json"
      ],
-     "basis": "reused:.g5/Verus_verification/coverage-map.md (load.outcome.dev: case_c26)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/Verus_verification/coverage-map.md (load.outcome.dev: case_c26); iteration-72 rule-4a re-audit (G1): full, support control (control .g5/Verus_verification/results/verus/20261113T22*-final-r3-control-01 (no SetCommitted C1) rejected at case_c26 and lemma_lnm0_b; .g5/Verus_verification/results/verus/20261113T22*-final-r3-control-12 rejected at case_c26)",
+     "assessed_in": "iteration-72",
+     "support": "control"
     },
     {
      "id": "history.committed#8",
      "units": [
       "B4"
      ],
-     "text": "A failure with -DNoTransaction=1 or -DNoJournal=1 is committed once the action has started writing.",
-     "cases": "NoTransaction / NoJournal Activate failure after writes vs refusal before writes",
+     "text": "A failure with -DNoTransaction=1 is committed once the action has started writing.",
+     "cases": "NoTransaction Activate failure after writes vs refusal before writes",
      "observation": "Committed",
      "grade": "full",
      "check": "proved",
@@ -1322,10 +1434,12 @@
       ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
       ".g5/Verus_verification/results/verus/20261113T223451Z-asbuilt-invariants-notx/receipt.json",
       ".g5/Verus_verification/results/verus/20261113T223452Z-asbuilt-invariants-nojournal/receipt.json",
-      ".g5/Verus_verification/results/verus/20261113T223454Z-asbuilt-l1-ns-all-conforming-domain/receipt.json"
+      ".g5/Verus_verification/results/verus/20261113T223454Z-asbuilt-l1-ns-all-conforming-domain/receipt.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__history.json"
      ],
-     "basis": "reused:.g5/Verus_verification/coverage-map.md (load.outcome: case_c27)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/Verus_verification/coverage-map.md (load.outcome: case_c27); iteration-72 rule-4a re-audit (G1): full, support control (control .g5/Verus_verification/results/verus/20261113T22*-final-r3-control-03 (no SetCommitted notx) and 13 (NoTransaction ignored) rejected at case_c27, lemma_lnm0_a); iteration-72 (review-71 B): split, NoJournal is #16",
+     "assessed_in": "iteration-72",
+     "support": "control"
     },
     {
      "id": "history.committed#9",
@@ -1343,10 +1457,12 @@
      ],
      "evidence": [
       ".g5/Verus_verification/results/verus/20261113T223456Z-asbuilt-commit-exact/receipt.json",
-      ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json"
+      ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__history.json"
      ],
-     "basis": "reused:.g5/ontology/features/history.g5.md metadata (D12 contradicts the last bullet)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/ontology/features/history.g5.md metadata (D12 contradicts the last bullet); iteration-72 rule-4a re-audit (G1): full, support mutation-checked (mutations G1-c11)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "history.committed#10",
@@ -1375,10 +1491,13 @@
      "evidence": [
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
       ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
-      ".g5/Verus_verification/consolidated/iter23/model-lane/controls/receipt.json"
+      ".g5/Verus_verification/consolidated/iter23/model-lane/controls/receipt.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__history.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G1.jsonl"
      ],
-     "basis": "new:iteration-70",
-     "assessed_in": "iteration-70"
+     "basis": "new:iteration-70; iteration-72 rule-4a re-audit (G1): full, support mutation-checked (mutations G1-m01; control .g5/Verus_verification/results/verus/20261113T22*-final-r3-control-02 (no SetCommitted C3) rejected at case_c29)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "history.committed#12",
@@ -1405,10 +1524,13 @@
      ],
      "evidence": [
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
-      "playbook-uplift/models/verus/results/load_general.json"
+      "playbook-uplift/models/verus/results/load_general.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__history.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G1.jsonl"
      ],
-     "basis": "new:iteration-70",
-     "assessed_in": "iteration-70"
+     "basis": "new:iteration-70; iteration-72 rule-4a re-audit (G1): full, support mutation-checked (mutations G1-m41, G1-m40)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "history.committed#14",
@@ -1427,6 +1549,49 @@
      "basis": "new:iteration-70",
      "assessed_in": "iteration-70",
      "gap": "Per-module <Defaults> flags are not representable in the crate (D14, Q-22) and load_general has one mode per command. Contrast: parent default mode fails after a NoJournal dependency wrote; parent row Committed=1 because the dependency's writes survived."
+    },
+    {
+     "id": "history.committed#16",
+     "units": [
+      "B4"
+     ],
+     "text": "A failure with -DNoJournal=1 is committed once the action has started writing.",
+     "cases": "NoJournal failure after writes vs refusal before writes",
+     "observation": "Committed vs kept writes",
+     "grade": "full",
+     "check": "bounded",
+     "models": [
+      ".g5/Verus_verification/crates/ipm-load-history/src/model.rs::set_com",
+      ".g5/Verus_verification/crates/ipm-load-history/src/proofs.rs::theorem_commit_sound"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/results/verus/20261113T223113Z-asbuilt-invariants-nojournal/receipt.json",
+      ".g5/Verus_verification/results/verus/20261113T223457Z-control-03-no-setcommitted-notx/receipt.json"
+     ],
+     "basis": "new:iteration-72 (review-71 B): split from #8. The NoJournal explorer run (1,950 configurations, not truncated) checks COMMIT-SOUND (Committed=0 implies nothing kept), whose contrapositive is this obligation. Control 03 (no SetCommitted before writes, txms 1 and 2) is reported as a violation.",
+     "assessed_in": "iteration-72",
+     "support": "control"
+    },
+    {
+     "id": "history.committed#15",
+     "units": [
+      "B1"
+     ],
+     "text": "A successful dependency under a successful parent reads Committed=1.",
+     "cases": "dependency and parent both succeed vs parent rolls back",
+     "observation": "dependency row Committed",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::dep_rec",
+      ".g5/Verus_verification/crates/ipm-load-history/src/model.rs::set_com"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/reviews/review-71.md"
+     ],
+     "basis": "new:iteration-72 (review-71 B)",
+     "assessed_in": "iteration-72",
+     "gap": "contract.rs::dep_rec expects committed-iff-kept for dependency rows and model.rs sets Committed at the dependency commit, but no named case or reported explorer configuration isolates a successful dependency under a successful parent."
     }
    ],
    "parent": {
@@ -1444,7 +1609,9 @@
    "status": "enumerated",
    "units": {
     "P1": [
-     "history.committed.marking#1"
+     "history.committed.marking#1",
+     "history.committed.marking#3",
+     "history.committed.marking#4"
     ],
     "B1": [
      "history.committed.marking#2"
@@ -1456,7 +1623,7 @@
      "units": [
       "P1"
      ],
-     "text": "IPM sets Committed at each commit, or just before the first write when there is no transaction, and does not derive it afterwards from developer mode and the final status.",
+     "text": "For load, IPM sets Committed at each commit, or just before the first write when there is no transaction, and does not derive it afterwards from developer mode and the final status.",
      "cases": "each SetCommitted site removed (controls 01 C1, 02 C3, 03 no-transaction) vs as built; Finalize ISOK term removed (control 05 survives)",
      "observation": "Committed vs kept writes",
      "grade": "full",
@@ -1470,10 +1637,17 @@
       ".g5/Verus_verification/results/verus/20261113T223505Z-final-r3-control-01-verus/receipt.json",
       ".g5/Verus_verification/results/verus/20261113T223548Z-final-r3-control-02-verus/receipt.json",
       ".g5/Verus_verification/results/verus/20261113T223632Z-final-r3-control-03-verus/receipt.json",
-      ".g5/Verus_verification/results/verus/20261113T223451Z-asbuilt-invariants-default/receipt.json"
+      ".g5/Verus_verification/results/verus/20261113T223451Z-asbuilt-invariants-default/receipt.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__history.json",
+      ".g5/Verus_verification/results/verus/20261113T223457Z-control-01-no-setcommitted-c1/receipt.json",
+      ".g5/Verus_verification/results/verus/20261113T223457Z-control-02-no-setcommitted-c3/receipt.json",
+      ".g5/Verus_verification/results/verus/20261113T223457Z-control-03-no-setcommitted-notx/receipt.json",
+      ".g5/Verus_verification/results/verus/20261113T223113Z-asbuilt-invariants-nojournal/receipt.json",
+      ".g5/Verus_verification/coverage-map.md"
      ],
-     "basis": "reused:.g5/Verus_verification/coverage-map.md (marking: SetCommitted sites bound) and models/commit-soundness/manifest.json",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/Verus_verification/coverage-map.md (marking: SetCommitted sites bound); iteration-72 (review-71 A3): narrowed to load, the only caller the crate models. Controls 01-03 remove each SetCommitted site and COMMIT-SOUND reports a violation; the explorer check ISOK-REDUNDANT shows an OK Finalize finds Committed already set.",
+     "assessed_in": "iteration-72",
+     "support": "control"
     },
     {
      "id": "history.committed.marking#2",
@@ -1483,6 +1657,48 @@
      "text": "Working assumption: a no-write refusal is uncommitted; the early marker is a defect.",
      "alias_of": "history.committed#9",
      "assessed_in": "iteration-70"
+    },
+    {
+     "id": "history.committed.marking#3",
+     "units": [
+      "P1"
+     ],
+     "text": "For install and update, IPM sets Committed at each commit or before the first write without a transaction (the shared LoadNewModule sites), not from the final status.",
+     "cases": "install / update success, failure after a commit, refusal",
+     "observation": "Committed vs kept writes",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/crates/ipm-load-history/src/model.rs::set_com",
+      ".g5/Verus_verification/crates/ipm-load-history/src/proofs.rs::theorem_commit_sound"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/reviews/review-71.md"
+     ],
+     "basis": "new:iteration-72 (review-71 A3)",
+     "assessed_in": "iteration-72",
+     "gap": "The SetCommitted sites (Utils/Module.cls:1227,1313,1350) are inside LoadNewModule, which the crate models only under the Main:Load caller. Main:Install and Main:Update are not modeled."
+    },
+    {
+     "id": "history.committed.marking#4",
+     "units": [
+      "P1"
+     ],
+     "text": "P1 applied to uninstall: Committed is set when changes are kept, not derived from the final status. As built, uninstall never calls SetCommitted and Finalize sets Committed = Committed || ISOK(status) (General/AbstractHistory.cls:131).",
+     "cases": "uninstall that fails after deleting resources vs one that succeeds",
+     "observation": "Committed on the uninstall row",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/history.rs::finalize"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/reviews/review-71.md"
+     ],
+     "basis": "new:iteration-72 (review-71 A3)",
+     "assessed_in": "iteration-72",
+     "gap": "history.rs::finalize computes Committed || status OK as AbstractHistory.cls:131 does, but no theorem exercises a row that never had SetCommitted (uninstall), and the uninstall.rs rows carry no Committed field. The contradiction is source-confirmed, not modeled. Contrast: an uninstall that fails after deleting a resource reads Committed=0 although it kept changes, against a successful one that reads 1."
     }
    ]
   },
@@ -1544,10 +1760,12 @@
       ".g5/Verus_verification/crates/ipm-load-history/src/cases.rs::case_c11_downgrade_refused"
      ],
      "evidence": [
-      ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json"
+      ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__history.json"
      ],
-     "basis": "reused:.g5/Verus_verification/coverage-map.md (vs-success: covered by the cases with failure plus commit)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/Verus_verification/coverage-map.md (vs-success: covered by the cases with failure plus commit); iteration-72 rule-4a re-audit (G1): full, support control (control .g5/Verus_verification/results/verus/20261113T22*-final-r3-control-01 rejected at case_c26; 03 and 13 rejected at case_c27)",
+     "assessed_in": "iteration-72",
+     "support": "control"
     }
    ]
   },
@@ -1829,10 +2047,13 @@
       ".g5/Verus_verification/consolidated/verus/history.rs::invalid_first_key_widens_delete"
      ],
      "evidence": [
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__history.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G1.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/history.g5.md metadata (extension history.rs::where_prefix; G:D2)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/ontology/features/history.g5.md metadata (extension history.rs::where_prefix; G:D2); iteration-72 rule-4a re-audit (G1): full, support mutation-checked (mutations G1-m02, G1-m03)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "history.read.filter#5",
@@ -1863,7 +2084,7 @@
      "text": "As built, ConstructSQLWhere walks the keys (in IRIS collation order) and stops at the first absent value or name outside [A-Za-z][A-Za-z0-9]*, keeping earlier predicates and ignoring that key and every later one.",
      "cases": "valid then invalid key; invalid first key; absent value",
      "observation": "effective predicate list",
-     "grade": "full",
+     "grade": "partial",
      "check": "proved",
      "models": [
       ".g5/Verus_verification/consolidated/verus/history.rs::where_prefix",
@@ -1872,10 +2093,13 @@
       ".g5/Verus_verification/consolidated/verus/history.rs::valid_column"
      ],
      "evidence": [
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__history.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G1.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/history.g5.md metadata (history.rs::where_prefix); key order is the collation-ordered input sequence (premise)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/ontology/features/history.g5.md metadata (history.rs::where_prefix); key order is the collation-ordered input sequence (premise); iteration-72 rule-4a re-audit (G1): partial, support mutation-checked (mutations G1-m04, G1-m03)",
+     "assessed_in": "iteration-72",
+     "gap": "Rule 4a (iteration-72): The absent-value stop is never exercised: mutant G1-m04 (where_prefix ignores value_present) verifies. The IRIS collation order of the keys is an input sequence, not modelled. Add a theorem with a key whose value is absent (e.g. valid key, absent value, valid key) and an ordering premise."
     },
     {
      "id": "history.read.filter#7",
@@ -1893,10 +2117,13 @@
       ".g5/Verus_verification/consolidated/verus/history.rs::valid_single_key_deletes_only_matches"
      ],
      "evidence": [
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__history.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G1.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/history.g5.md metadata (history.rs)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/ontology/features/history.g5.md metadata (history.rs); iteration-72 rule-4a re-audit (G1): full, support mutation-checked (mutations G1-m02, G1-m03)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "history.read.filter#8",
@@ -1932,10 +2159,13 @@
       ".g5/Verus_verification/consolidated/verus/history.rs::underscore_column_is_invalid"
      ],
      "evidence": [
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__history.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G1.jsonl"
      ],
-     "basis": "new:iteration-70",
-     "assessed_in": "iteration-70"
+     "basis": "new:iteration-70; iteration-72 rule-4a re-audit (G1): full, support mutation-checked (mutations G1-m02, G1-m03)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "history.read.filter#10",
@@ -2005,10 +2235,13 @@
       ".g5/Verus_verification/consolidated/verus/history.rs::local_id_collision_is_scoped"
      ],
      "evidence": [
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__history.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G1.jsonl"
      ],
-     "basis": "new:iteration-70",
-     "assessed_in": "iteration-70"
+     "basis": "new:iteration-70; iteration-72 rule-4a re-audit (G1): full, support mutation-checked (mutations G1-m06)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "history.read.details#2",
@@ -2027,10 +2260,13 @@
      ],
      "evidence": [
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
-      ".g5/Verus_verification/consolidated/iter23/model-lane/controls/receipt.json"
+      ".g5/Verus_verification/consolidated/iter23/model-lane/controls/receipt.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__history.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G1.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/history.g5.md metadata (iteration23; control details-decodes rejected)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/ontology/features/history.g5.md metadata (iteration23; control details-decodes rejected); iteration-72 rule-4a re-audit (G1): full, support mutation-checked (mutations G1-m13)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "history.read.details#3",
@@ -2074,10 +2310,13 @@
      ],
      "evidence": [
       ".g5/uplift/consolidated/iter38/run.json",
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__history.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G1.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/history.g5.md metadata (iteration38; controls phase-success-from-record, phase-duration-always rejected); error-text decoding is a provider premise",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/ontology/features/history.g5.md metadata (iteration38; controls phase-success-from-record, phase-duration-always rejected); error-text decoding is a provider premise; iteration-72 rule-4a re-audit (G1): full, support mutation-checked (mutations G1-m12)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     }
    ]
   },
@@ -2114,10 +2353,13 @@
      ],
      "evidence": [
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
-      ".g5/Verus_verification/consolidated/iter23/model-lane/controls/receipt.json"
+      ".g5/Verus_verification/consolidated/iter23/model-lane/controls/receipt.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__history.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G1.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/history.g5.md metadata (iteration23; controls success-summary-uses-raw, error-summary-uses-raw rejected)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/ontology/features/history.g5.md metadata (iteration23; controls success-summary-uses-raw, error-summary-uses-raw rejected); iteration-72 rule-4a re-audit (G1): full, support mutation-checked (mutations G1-m14)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "history.read.status-bytes#2",
@@ -2136,10 +2378,13 @@
      ],
      "evidence": [
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
-      ".g5/Verus_verification/consolidated/iter23/model-lane/controls/receipt.json"
+      ".g5/Verus_verification/consolidated/iter23/model-lane/controls/receipt.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__history.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G1.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/history.g5.md metadata (iteration23; cleanup-* controls rejected)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/ontology/features/history.g5.md metadata (iteration23; cleanup-* controls rejected); iteration-72 rule-4a re-audit (G1): full, support mutation-checked (mutations G1-m13, G1-m15)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "history.read.status-bytes#3",
@@ -2157,10 +2402,13 @@
      ],
      "evidence": [
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
-      ".g5/Verus_verification/consolidated/iter23/model-lane/controls/receipt.json"
+      ".g5/Verus_verification/consolidated/iter23/model-lane/controls/receipt.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__history.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G1.jsonl"
      ],
-     "basis": "reused:iteration23 HANDOFF",
-     "assessed_in": "iteration-70"
+     "basis": "reused:iteration23 HANDOFF; iteration-72 rule-4a re-audit (G1): full, support mutation-checked (mutations G1-m16)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "history.read.status-bytes#4",
@@ -2178,10 +2426,13 @@
      ],
      "evidence": [
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
-      ".g5/Verus_verification/consolidated/iter23/model-lane/controls/receipt.json"
+      ".g5/Verus_verification/consolidated/iter23/model-lane/controls/receipt.json",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__history.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G1.jsonl"
      ],
-     "basis": "reused:iteration23 HANDOFF",
-     "assessed_in": "iteration-70"
+     "basis": "reused:iteration23 HANDOFF; iteration-72 rule-4a re-audit (G1): full, support mutation-checked (mutations G1-m15, G1-m17)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     }
    ]
   },
@@ -2234,10 +2485,13 @@
       ".g5/Verus_verification/consolidated/verus/history.rs::success_to_string"
      ],
      "evidence": [
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__history.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G1.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/history.g5.md metadata (history.rs::success_to_string; C:D12)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/ontology/features/history.g5.md metadata (history.rs::success_to_string; C:D12); iteration-72 rule-4a re-audit (G1): full, support mutation-checked (mutations G1-m08)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "history.read.unfinished#3",
@@ -2253,10 +2507,13 @@
       ".g5/Verus_verification/consolidated/verus/history.rs::unfinished_row_displays_error00"
      ],
      "evidence": [
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__history.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G1.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/history.g5.md metadata",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/ontology/features/history.g5.md metadata; iteration-72 rule-4a re-audit (G1): full, support mutation-checked (mutations G1-m08)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     }
    ]
   },
@@ -2411,10 +2668,13 @@
       ".g5/Verus_verification/consolidated/verus/history.rs::programmatic_global"
      ],
      "evidence": [
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__history.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G1.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/history.g5.md metadata (history.rs::programmatic_global; G:D20)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/ontology/features/history.g5.md metadata (history.rs::programmatic_global; G:D20); iteration-72 rule-4a re-audit (G1): full, support mutation-checked (mutations G1-m07)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "history.read.api#3",
@@ -2448,10 +2708,13 @@
       ".g5/Verus_verification/consolidated/verus/history.rs::global_programmatic_repeats_caller"
      ],
      "evidence": [
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__history.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G1.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/history.g5.md metadata",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/ontology/features/history.g5.md metadata; iteration-72 rule-4a re-audit (G1): full, support mutation-checked (mutations G1-m07)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "history.read.api#6",
@@ -2533,10 +2796,13 @@
       ".g5/Verus_verification/consolidated/verus/history.rs::delete"
      ],
      "evidence": [
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__history.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G1.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/history.g5.md metadata (history.rs::delete; G:D2)",
-     "assessed_in": "iteration-70"
+     "basis": "reused:.g5/ontology/features/history.g5.md metadata (history.rs::delete; G:D2); iteration-72 rule-4a re-audit (G1): full, support mutation-checked (mutations G1-m03)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "history.delete#2",
@@ -2606,10 +2872,13 @@
       ".g5/Verus_verification/consolidated/verus/history.rs::invalid_first_key_widens_delete"
      ],
      "evidence": [
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__history.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G1.jsonl"
      ],
-     "basis": "new:iteration-70 (-confirm is not in the model; its part is #8)",
-     "assessed_in": "iteration-70"
+     "basis": "new:iteration-70 (-confirm is not in the model; its part is #8); iteration-72 rule-4a re-audit (G1): full, support mutation-checked (mutations G1-m03)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "history.delete#6",
@@ -2644,10 +2913,13 @@
       ".g5/Verus_verification/consolidated/verus/history.rs::earlier_filter_remains_effective"
      ],
      "evidence": [
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter72/audit/features__history.json",
+      ".g5/uplift/coverage-20261117/iter72/mutations/G1.jsonl"
      ],
-     "basis": "new:iteration-70",
-     "assessed_in": "iteration-70"
+     "basis": "new:iteration-70; iteration-72 rule-4a re-audit (G1): full, support mutation-checked (mutations G1-m05)",
+     "assessed_in": "iteration-72",
+     "support": "mutation-checked"
     },
     {
      "id": "history.delete#8",

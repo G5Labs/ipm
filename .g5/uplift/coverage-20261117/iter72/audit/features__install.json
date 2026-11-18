@@ -1,0 +1,193 @@
+{
+ "page": ".g5/ontology/features/install.g5.md",
+ "auditor": "G2",
+ "entries": [
+  {
+   "id": "install#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "consolidated/iter18/reloading.rs::reload via iter16 provenance select: the qualifier selects one repository; unknown qualifier fails without fallback",
+   "mutations": [
+    "G2-m10"
+   ],
+   "instance_scoped": true,
+   "note": "literal 1.0.0 qualified requests only"
+  },
+  {
+   "id": "install#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "consolidated/iter15/oras.rs range matching (ranged vs pinned) and iter34/versions.rs::installed with E::Exact/E::MajorX",
+   "mutations": [
+    "G2-m50",
+    "G2-m49"
+   ],
+   "instance_scoped": true,
+   "note": "the range case is distinguished in oras.rs (G2-m50 killed); versions.rs's MajorX(1) neighbour does not distinguish it (G2-m49, see result), exact case distinguished by repo_d"
+  },
+  {
+   "id": "install#4",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "consolidated/iter34/versions.rs::installed takes the SQL-ordered first row, semver_max the index order",
+   "mutations": [
+    "G2-m48"
+   ],
+   "instance_scoped": false
+  },
+  {
+   "id": "install.package#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "consolidated/iter15/oras.rs::compatible/manager filter deployed rows by the current platform",
+   "mutations": [
+    "G2-m51"
+   ],
+   "instance_scoped": true
+  },
+  {
+   "id": "reinstall#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "consolidated/iter24/snapshot_dependencies.rs::accumulated adds the installed-version lower bound, so the exact snapshot request ANDed with >=snapshot has no overlap",
+   "mutations": [
+    "G2-m42"
+   ],
+   "instance_scoped": false,
+   "note": "refuted promise"
+  },
+  {
+   "id": "reinstall#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "consolidated/iter24/snapshot_dependencies.rs::reuse keeps an installed snapshot unless force_snapshots; params maps -shallow to force_snapshots=false",
+   "mutations": [
+    "G2-m43"
+   ],
+   "instance_scoped": false
+  },
+  {
+   "id": "reinstall.selection#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "consolidated/iter22/reinstall.rs::installed_request + search over enabled, defined repositories",
+   "mutations": [
+    "G2-m19"
+   ],
+   "instance_scoped": true
+  },
+  {
+   "id": "reinstall.selection#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "consolidated/iter22/reinstall.rs::prefer via temp_repo select (version, then older repository id)",
+   "mutations": [
+    "G2-m20"
+   ],
+   "instance_scoped": true
+  },
+  {
+   "id": "reinstall.selection#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "consolidated/iter22/reinstall.rs::eligible requires the repository definition; search returns None after deletion",
+   "mutations": [
+    "G2-m21"
+   ],
+   "instance_scoped": true
+  },
+  {
+   "id": "reinstall.selection#4",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "consolidated/iter22/reinstall.rs::successful_selected writes the selected supplier; earlier records untouched",
+   "mutations": [
+    "G2-m22"
+   ],
+   "instance_scoped": true
+  },
+  {
+   "id": "reinstall.selection#5",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "consolidated/iter22/reinstall.rs::installed_request requests the installed version",
+   "mutations": [
+    "G2-m23"
+   ],
+   "instance_scoped": true,
+   "note": "installed versions limited to the literals 1.0.0 and 2.0.0"
+  },
+  {
+   "id": "reinstall.snapshot-dependencies#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "consolidated/iter24/snapshot_dependencies.rs::accumulated/build (NoOverlap from expr_and)",
+   "mutations": [
+    "G2-m42"
+   ],
+   "instance_scoped": true
+  },
+  {
+   "id": "reinstall.snapshot-dependencies#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "consolidated/iter24/snapshot_dependencies.rs::build (shallow reuses; default NoOverlap keeps payload 1)",
+   "mutations": [
+    "G2-m42",
+    "G2-m43"
+   ],
+   "instance_scoped": true
+  },
+  {
+   "id": "reinstall.snapshot-dependencies#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "consolidated/iter24/snapshot_dependencies.rs::accumulated skips the lower bound under permit_downgrade",
+   "mutations": [
+    "G2-m44"
+   ],
+   "instance_scoped": true
+  },
+  {
+   "id": "reinstall.history#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "consolidated/iter22/reinstall.rs::begin_install increments install records on delegation",
+   "mutations": [
+    "G2-m24"
+   ],
+   "instance_scoped": true
+  },
+  {
+   "id": "reinstall.history#2",
+   "verdict": "partial",
+   "support": "mutation-checked",
+   "deciding": "consolidated/iter22/reinstall.rs::begin_install runs before search, so a no-repository failure adds one record",
+   "mutations": [
+    "G2-m24"
+   ],
+   "instance_scoped": false,
+   "gap": "Record creation is computed (G2-m24), but the record's Success field is not modelled: the outcome is the label HistoryEffect::FailedInstallFieldsUnknown, so \"a failed record\" (vs a successful one) is not distinguished."
+  },
+  {
+   "id": "reinstall.history#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "consolidated/iter22/reinstall.rs::reinstall checks installed_name before begin_install",
+   "mutations": [
+    "G2-m25"
+   ],
+   "instance_scoped": true
+  },
+  {
+   "id": "reinstall.history#4",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "consolidated/iter22/reinstall.rs::successful_selected stores the original command text and the selected supplier",
+   "mutations": [
+    "G2-m26"
+   ],
+   "instance_scoped": true
+  }
+ ]
+}

@@ -1,0 +1,145 @@
+{
+ "page": ".g5/ontology/features/update.g5.md",
+ "auditor": "G2",
+ "entries": [
+  {
+   "id": "update#1",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "playbook-uplift/models/verus/update_steps.rs::step_walk runs every due step (run_needed) after the manifest moves to the target version; end_ok",
+   "product": "src/cls/IPM/Storage/Module.cls:178-197",
+   "control": "playbook-uplift/models/verus/results/update_steps.json run-test-ignores-status, flag-not-reset-per-class, seeding-skips-failed-steps",
+   "instance_scoped": false
+  },
+  {
+   "id": "update.refusal#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "playbook-uplift/models/verus/update_steps.rs::refuses first disjunct (update && top && not installed)",
+   "product": "src/cls/IPM/Main.cls:4423",
+   "mutations": [
+    "G2-m05"
+   ],
+   "instance_scoped": false
+  },
+  {
+   "id": "update.steps#1",
+   "verdict": "partial",
+   "support": "mutation-checked",
+   "deciding": "playbook-uplift/models/verus/update_steps.rs::step_walk walks the input sequence steps in order; wf is a premise on that sequence",
+   "product": "src/cls/IPM/General/Update/VersionBase.cls:34-60",
+   "mutations": [
+    "G2-m59"
+   ],
+   "instance_scoped": false,
+   "gap": "The walk order (classes ascending, all-member list before primary-only, author order) is the premise wf on the input step sequence; inst_ok_update_runs_in_walk_order only shows the log follows the given sequence, and class_list (class-number map) is not connected to the walk. Weakening wf to distinct keys (G2-m59) fails only the helper inst_lemma_flag_step, which needs class contiguity for the newStepToApply flag: the order is assumed there, not derived."
+  },
+  {
+   "id": "update.steps#2",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "playbook-uplift/models/verus/update_steps.rs::step_walk on a throwing step finishes Failed with the log ending at that step",
+   "control": "playbook-uplift/models/verus/results/update_steps.json step-failure-reported-ok",
+   "instance_scoped": false
+  },
+  {
+   "id": "update.steps#3",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "playbook-uplift/models/verus/update_steps.rs::finish(Failed) restores the transaction snapshot so the retry finds the steps due again (inst_witness_failed_update_repeats_effects)",
+   "control": "playbook-uplift/models/verus/results/update_steps.json no-rollback-on-failure (kills inst_witness_failed_update_repeats_effects)",
+   "instance_scoped": false
+  },
+  {
+   "id": "update.steps#4",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "playbook-uplift/models/verus/update_steps.rs::run_needed/due decide from the step record (end, ok)",
+   "product": "src/cls/IPM/Storage/Module.cls:190",
+   "control": "playbook-uplift/models/verus/results/update_steps.json run-test-ignores-status",
+   "instance_scoped": false
+  },
+  {
+   "id": "update.steps#5",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "playbook-uplift/models/verus/update_steps.rs::step_phases seeds only when the stored DeveloperMode is off, so a dev install leaves steps due (refutes the assumption)",
+   "product": "src/cls/IPM/Lifecycle/Module.cls:122-127",
+   "control": "playbook-uplift/models/verus/results/update_steps.json seeding-tests-typed-flag",
+   "instance_scoped": false
+  },
+  {
+   "id": "update.steps#7",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "playbook-uplift/models/verus/update_steps.rs::step_lock finishes OK on a lock timeout (refutes the assumption)",
+   "product": "src/cls/IPM/Storage/Module.cls:105-108",
+   "mutations": [
+    "G2-m06"
+   ],
+   "instance_scoped": false
+  },
+  {
+   "id": "update.steps.shared-execution#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "consolidated/iter11/shared_steps.rs::lock_key per module; one row per key",
+   "mutations": [
+    "G2-m34"
+   ],
+   "instance_scoped": true
+  },
+  {
+   "id": "update.steps.shared-execution#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "consolidated/iter11/shared_steps.rs::finish snapshot save writes the run snapshot home",
+   "mutations": [
+    "G2-m35"
+   ],
+   "instance_scoped": true
+  },
+  {
+   "id": "update.steps.shared-execution#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "consolidated/iter11/shared_steps.rs::begin returns OK without starting when the module lock is held",
+   "mutations": [
+    "G2-m36"
+   ],
+   "instance_scoped": false
+  },
+  {
+   "id": "update.steps.records#1",
+   "verdict": "partial",
+   "support": "mutation-checked",
+   "deciding": "consolidated/iter9/ownership.rs::get_add keys by (class, method, kind), moves home, keeps completed/ok",
+   "mutations": [
+    "G2-m38"
+   ],
+   "instance_scoped": false,
+   "gap": "Uniqueness by key and the home move are computed, but \"keeps completion and status\" is never exercised: the neighbours only call seed, which re-marks the row completed and ok, so G2-m38 (get_add resets completion) survives."
+  },
+  {
+   "id": "update.steps.records#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "consolidated/iter11/shared_steps.rs::begin due = !complete || !ok; iter9 seed keeps a completed ok record",
+   "mutations": [
+    "G2-m37"
+   ],
+   "control": "playbook-uplift/models/verus/results/update_steps.json run-test-ignores-status",
+   "instance_scoped": false
+  },
+  {
+   "id": "update.steps.records#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "consolidated/iter9/ownership.rs::delete_module removes records whose home is the deleted module",
+   "mutations": [
+    "G2-m39"
+   ],
+   "instance_scoped": false
+  }
+ ]
+}

@@ -1,0 +1,757 @@
+{
+ "page": ".g5/ontology/architecture/package-sources.g5.md",
+ "auditor": "G4",
+ "entries": [
+  {
+   "id": "repo.filesystem#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "owners.rs::scan computes depth==0 || entry depth <= Depth; scanned_keys folds it over the scan",
+   "product": "src/cls/IPM/Repo/Filesystem/Definition.cls:329 (ScanDirectory depth guard)",
+   "mutations": [
+    "G4-m82",
+    "G4-m83"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": "m82/m83 killed by by(compute) witnesses in witnessed_owners_distinctions (logged invalid, see G4-reclassified.json)"
+  },
+  {
+   "id": "repo.filesystem#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "owners.rs::build_cache replaces the cache with scanned_keys when purge, else unions",
+   "product": "Definition.cls:132-141 (purge delete inside BuildCache)",
+   "mutations": [
+    "G4-m84"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": "m84 (always union) survives owners.rs alone and is killed by the cited owners_native.rs::native_115 (run on the mutant copy; G4-reclassified.json)"
+  },
+  {
+   "id": "repo.filesystem#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "owners.rs::add_cache maps an unreadable manifest to Skipped, transcribing AddCacheItem:195-199 (Load error -> quit OK)",
+   "product": "Definition.cls:195-199",
+   "mutations": [
+    "G4-m85"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "repo.filesystem#4",
+   "verdict": "partial",
+   "support": "mutation-checked",
+   "deciding": "owners.rs::build_cache ok includes !scanned_error; failed_cache_preserves_rows covers \"changes nothing\"",
+   "product": "Definition.cls:221-224, 175-179 (HandleSaveError status aggregated, trollback)",
+   "mutations": [
+    "G4-m86"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "rule 4a: no theorem or neighbour links an invalid-name entry to a failed refresh; scanned_error is witnessed alone and a mutant whose ok ignores scanned_error (G4-m86) survives owners.rs and owners_native.rs. \"Changes nothing on failure\" is proved (failed_cache_preserves_rows).",
+   "note": ""
+  },
+  {
+   "id": "repo.filesystem#5",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "owners.rs::build_cache ok requires !(exists && purge && other_holds); foreign_lock_refuses_refresh",
+   "product": "Definition.cls:133-135 (LockClassId on refresh of an existing repository)",
+   "mutations": [
+    "G4-m88"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": "\"after a timeout\" is not modelled (provider timing)"
+  },
+  {
+   "id": "repo.filesystem#6",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "boundaries.rs::close_lock/commit compute held from immediate flag and transaction depth; cache_return uses immediate=true",
+   "product": "Definition.cls:134 (LockManager %New() default)",
+   "mutations": [
+    "G4-m90",
+    "G4-m91",
+    "G4-m92",
+    "G4-m93"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": "m90/m93 killed by by(compute) witness (G4-reclassified.json)"
+  },
+  {
+   "id": "repo.filesystem#8",
+   "verdict": "partial",
+   "support": "mutation-checked",
+   "deciding": "refutation rests on build_cache failing the whole build for an InvalidName entry",
+   "product": "Definition.cls:221-224",
+   "mutations": [
+    "G4-m86"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "rule 4a: the refutation (as built the whole refresh fails, so the valid module is not offered) is not established by any theorem or neighbour: a mutant implementing the intended skip (ok ignores scanned_error, G4-m86) still verifies. Needs a neighbour build_cache([valid, invalid-name]) -> !ok with the valid key absent.",
+   "note": ""
+  },
+  {
+   "id": "repo.filesystem.duplicates#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "duplicates.rs::key = (root, name, version) from the parsed manifest",
+   "product": "",
+   "mutations": [
+    "G4-m94"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "repo.filesystem.duplicates#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "duplicates.rs::add_valid keeps the existing row when the key is present; first_row_survives over fold",
+   "product": "Repo/Filesystem/Cache.cls:84-107 (KeyNotUnique on RootNameVersion treated as OK)",
+   "mutations": [
+    "G4-m95"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "repo.filesystem.duplicates#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "duplicates.rs::add_valid appends Warning{key, retained: existing row subdir, duplicate: entry subdir}",
+   "product": "Cache.cls:101-104",
+   "mutations": [
+    "G4-m96",
+    "G4-m101"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "repo.filesystem.duplicates#4",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "duplicates.rs::add_valid ok:true on the duplicate branch transcribes HandleSaveError setting tSC=OK for the RootNameVersion key",
+   "product": "Cache.cls:106-107",
+   "mutations": [
+    "G4-m97"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "repo.filesystem.duplicates#5",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "duplicates.rs::service_manifest/service_directory both read lookup(b,k); two_readers_open_same_row",
+   "product": "",
+   "mutations": [
+    "G4-m99"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "repo.filesystem.duplicates#6",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "duplicates.rs::install_directory reads the disk at the retained row subdir",
+   "product": "",
+   "mutations": [
+    "G4-m100"
+   ],
+   "control": "",
+   "instance_scoped": true,
+   "gap": "",
+   "note": "general reader definition, distinctions asserted on fixtures single_a/ab_a_first/ab_b_first/ba_b_first"
+  },
+  {
+   "id": "repo.filesystem.duplicates#7",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "admission over ab/ba scan orders through add_valid/fold",
+   "product": "",
+   "mutations": [
+    "G4-m95",
+    "G4-m101"
+   ],
+   "control": "",
+   "instance_scoped": true,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "repo.filesystem.mutable-source#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "temporal.rs::actual_directory_load reads the current directory manifest/payload at the cached row subdir",
+   "product": "",
+   "mutations": [
+    "G4-m102"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "repo.filesystem.mutable-source#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "temporal.rs::install selects by cached row, loads current files, no request-version revalidation",
+   "product": "",
+   "mutations": [
+    "G4-m102",
+    "G4-m103"
+   ],
+   "control": "",
+   "instance_scoped": true,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "repo.filesystem.mutable-source#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "temporal.rs::configure_same_repo rebuilds the cache from current files; install refuses a key absent from the cache",
+   "product": "",
+   "mutations": [
+    "G4-m104"
+   ],
+   "control": "",
+   "instance_scoped": true,
+   "gap": "",
+   "note": "G4-m105 (removing the no-downgrade guard in eligible_actual) survives; that guard is not part of this obligation"
+  },
+  {
+   "id": "repo.oras#5",
+   "verdict": "partial",
+   "support": "mutation-checked",
+   "deciding": "thin_surfaces.rs::oras_available body = its own ensures (2xx, or 401 with WWW-Authenticate, with transport)",
+   "product": "",
+   "mutations": [
+    "G4-m127",
+    "G4-m128"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "rule 4a: the only formal statement is the exec body restated as its ensures; no neighbour assertion pins 200 / 401+header / headerless 401 / 403 / transport failure, so changing spec and body together (403+header accepted, G4-m128) verifies. The cases are checked only by the native print harness in main().",
+   "note": ""
+  },
+  {
+   "id": "repo.oras.integrity#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "iter2 registry.rs::last_tag selects tags[len-1]",
+   "product": "",
+   "mutations": [
+    "G4-m66"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": "review-71: obligation text drops the \"pull without a tag\" condition (master to add)"
+  },
+  {
+   "id": "repo.oras.integrity#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "iter15 oras.rs::get_all sorts unique raw tags with insert_tag over tag_rank",
+   "product": "",
+   "mutations": [
+    "G4-m43"
+   ],
+   "control": "",
+   "instance_scoped": true,
+   "gap": "",
+   "note": "comparator rank() is defined only for literal 1.0.0/2.0.0 (bounded domain); m43 killed by by(compute)"
+  },
+  {
+   "id": "repo.oras.integrity#3",
+   "verdict": "partial",
+   "support": "mutation-checked",
+   "deciding": "iter2 registry.rs::verify_layers skips non-tar layers and compares the first tar layer size && digest",
+   "product": "",
+   "mutations": [
+    "G4-m67",
+    "G4-m68",
+    "G4-m69",
+    "G4-m75"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "rule 4a: the mismatch neighbour fails size and digest together, so a digest-only (G4-m67) or size-only (G4-m68) check verifies. First-tar control (m69) and non-tar skip (m75) are killed. Needs a size-match/digest-mismatch neighbour and the converse.",
+   "note": ""
+  },
+  {
+   "id": "repo.oras.integrity#5",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "iter2 registry.rs::pull status_ok conjoins hash_ok while stream_set does not",
+   "product": "",
+   "mutations": [
+    "G4-m71"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "repo.oras.integrity#6",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "iter68 as_built.rs::observe archive_released = pull status_ok (hash computed from size_matches && blob==declared_blob)",
+   "product": "",
+   "mutations": [
+    "G4-m114",
+    "G4-m117"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": "G4-m117 (loader_entered:true) survives; loader_entered is the same status_ok value and the released-archive observation is pinned"
+  },
+  {
+   "id": "repo.oras.archive-boundary#2",
+   "verdict": "partial",
+   "support": "mutation-checked",
+   "deciding": "iter68 as_built.rs::observe installed_root_replaced = status_ok && writable root",
+   "product": "",
+   "mutations": [
+    "G4-m115",
+    "G4-m116",
+    "G4-m117"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "rule 4a: only the size-mismatch side is asserted. The matching archive on a writable root (root replaced, G4-m115 never-replace survives) and a digest-only mismatch (G4-m116 size-only check survives) are never exercised, nor is loader_entered on rejection (G4-m117).",
+   "note": ""
+  },
+  {
+   "id": "repo.oras.archive-boundary#4",
+   "verdict": "partial",
+   "support": "inspection",
+   "deciding": "iter68 as_built.rs::changed_tag fixture; observe never reads metadata_manifest or pull_manifest",
+   "product": "",
+   "mutations": [],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "rule 4a: holds by construction. The descriptor the hash is checked against (declared_blob) is a fixture field, not derived from the pull manifest versus the metadata manifest, so a reader that validates against the metadata manifest has no representation to mutate. Needs declared_blob computed from the manifest fetched at pull time.",
+   "note": ""
+  },
+  {
+   "id": "repo.oras.signed-admission#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "iter68 admission.rs::authorized/protected_admission compute admission from target, policy, signer, manifest digest and observed descriptor",
+   "product": "",
+   "mutations": [
+    "G4-m106",
+    "G4-m107",
+    "G4-m108",
+    "G4-m113"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": "proposed design (issue #281); no product code"
+  },
+  {
+   "id": "repo.oras.signed-admission#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "admission.rs::continue_from_metadata requires same target, policy and manifest digest as the resolution",
+   "product": "",
+   "mutations": [
+    "G4-m111",
+    "G4-m112"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "repo.oras.signed-admission#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "admission.rs::protected_admission may_extract/may_replace_root require verified bytes; use_manifest only authorization",
+   "product": "",
+   "mutations": [
+    "G4-m108",
+    "G4-m109"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "repo.oras.signed-admission#4",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "admission.rs::authorized compares full policy (identity and revision), target and manifest digest",
+   "product": "",
+   "mutations": [
+    "G4-m110",
+    "G4-m107"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "repo.oras.tag-decode#1",
+   "verdict": "partial",
+   "support": "mutation-checked",
+   "deciding": "iter15 oras.rs::tag_for/encode/joined",
+   "product": "",
+   "mutations": [
+    "G4-m37",
+    "G4-m41",
+    "G4-m42"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "rule 4a: the source-artifact case (tag_for with deployed=false) is never exercised; a mutant that leaves source tags unencoded (G4-m37) verifies. Deployed encoding and the __ separator are pinned (m41, m42).",
+   "note": ""
+  },
+  {
+   "id": "repo.oras.tag-decode#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "oras.rs::parse/decode with general codec_roundtrip for underscore-free versions",
+   "product": "",
+   "mutations": [
+    "G4-m40",
+    "G4-m41"
+   ],
+   "control": "",
+   "instance_scoped": true,
+   "gap": "",
+   "note": "suffix splitting (parse) is witnessed on fixed tags only"
+  },
+  {
+   "id": "repo.oras.tag-decode#3",
+   "verdict": "partial",
+   "support": "mutation-checked",
+   "deciding": "oras.rs::tag_for and catalog.rs::tag_for refuse deployed without platform",
+   "product": "",
+   "mutations": [
+    "G4-m38",
+    "G4-m39"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "rule 4a: the source-package neighbour is never exercised in either model; refusing source packages too (G4-m38 in oras.rs, G4-m39 in catalog.rs) verifies.",
+   "note": ""
+  },
+  {
+   "id": "repo.oras.platform-selection#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "iter8 catalog.rs::compatible/install_candidate = !deployed || platforms contains current",
+   "product": "",
+   "mutations": [
+    "G4-m133",
+    "G4-m137"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "repo.oras.platform-selection#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "catalog.rs::catalog_visible and reported_platform",
+   "product": "",
+   "mutations": [
+    "G4-m133",
+    "G4-m136",
+    "G4-m138"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "repo.oras.platform-selection#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "catalog.rs::compatible short-circuits on !deployed",
+   "product": "",
+   "mutations": [
+    "G4-m134"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "repo.oras.platform-selection#4",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "catalog.rs::catalog_visible = show_all || compatible; install_candidate = compatible",
+   "product": "",
+   "mutations": [
+    "G4-m135",
+    "G4-m136",
+    "G4-m137"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "repo.oras.platform-selection#5",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "catalog.rs::tag_for(Deployed(version, selected platform))",
+   "product": "",
+   "mutations": [
+    "G4-m139",
+    "G4-m138"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "repo.oras.selection-modes#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "oras.rs::add_group/gather append platforms in input order per encoded key",
+   "product": "",
+   "mutations": [
+    "G4-m44"
+   ],
+   "control": "",
+   "instance_scoped": true,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "repo.oras.selection-modes#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "oras.rs::prefer = compatible partition then incompatible",
+   "product": "",
+   "mutations": [
+    "G4-m45"
+   ],
+   "control": "",
+   "instance_scoped": true,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "repo.oras.selection-modes#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "oras.rs::produce (Dependencies enumerates) then manager filters and records current platform",
+   "product": "",
+   "mutations": [
+    "G4-m46",
+    "G4-m48",
+    "G4-m51"
+   ],
+   "control": "",
+   "instance_scoped": true,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "repo.oras.selection-modes#4",
+   "verdict": "partial",
+   "support": "mutation-checked",
+   "deciding": "oras.rs::normal_consumer computes status/payload/tag from service+manager; dependency/consumer record fields are constants on each branch",
+   "product": "",
+   "mutations": [],
+   "control": "",
+   "instance_scoped": true,
+   "gap": "rule 4a: \"leaves neither consumer nor dependency record\" is written down (dependency:false, consumer:false on the failure branch, equal to ok) by a comment-level composition with the load contract, not derived from load/rollback state. Status, payload and tag are computed.",
+   "note": ""
+  },
+  {
+   "id": "repo.oras.selection-modes#5",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "oras.rs::produce row fields by Mode (platforms, all_tags, enumeration)",
+   "product": "",
+   "mutations": [
+    "G4-m49",
+    "G4-m50",
+    "G4-m51"
+   ],
+   "control": "",
+   "instance_scoped": true,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "repo.oras.selection-modes#6",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "oras.rs::display(show_all) vs manager on the AllTags row",
+   "product": "",
+   "mutations": [
+    "G4-m46",
+    "G4-m52"
+   ],
+   "control": "",
+   "instance_scoped": true,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "repo.oras.selection-modes#7",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "oras.rs::manager selected = c when deployed and platforms contain current",
+   "product": "",
+   "mutations": [
+    "G4-m48"
+   ],
+   "control": "",
+   "instance_scoped": true,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "repo.oras.selection-modes#8",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "oras.rs::metadata_tag uses platforms[0]",
+   "product": "",
+   "mutations": [
+    "G4-m53"
+   ],
+   "control": "",
+   "instance_scoped": true,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "repo.oras.build-readers#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "oras.rs::deep_fields/pair_order compare encoded vs decoded keys",
+   "product": "",
+   "mutations": [
+    "G4-m55",
+    "G4-m56"
+   ],
+   "control": "",
+   "instance_scoped": true,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "repo.oras.build-readers#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "oras.rs::same_base_insert last writer wins; deep_service_first_version",
+   "product": "",
+   "mutations": [
+    "G4-m54",
+    "G4-m55"
+   ],
+   "control": "",
+   "instance_scoped": true,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "repo.publish-cache#1",
+   "verdict": "partial",
+   "support": "mutation-checked",
+   "deciding": "iter2 registry.rs::remote_cache returns cached availability without reading enabled",
+   "product": "",
+   "mutations": [
+    "G4-m72",
+    "G4-m73"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "rule 4a: \"without rechecking availability\" is not observed: provider_called on the retained-available branch is never asserted, so a re-probing mutant (G4-m73) verifies. Rechecking Enabled is pinned (m72).",
+   "note": ""
+  },
+  {
+   "id": "repo.publish-cache#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "registry.rs::remote_cache unavailable_cached branch",
+   "product": "",
+   "mutations": [
+    "G4-m76"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "repo.publish-cache#3",
+   "verdict": "partial",
+   "support": "mutation-checked",
+   "deciding": "registry.rs::oras_cache = enabled && provider_available",
+   "product": "",
+   "mutations": [
+    "G4-m77",
+    "G4-m78"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "rule 4a: the probe is never varied; oras_cache ignoring provider_available (G4-m77) verifies. Rereading Enabled is pinned (m78).",
+   "note": ""
+  },
+  {
+   "id": "repo.publish-cache#4",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "registry.rs::capability and manager_status",
+   "product": "",
+   "mutations": [
+    "G4-m79",
+    "G4-m80",
+    "G4-m81"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  }
+ ]
+}

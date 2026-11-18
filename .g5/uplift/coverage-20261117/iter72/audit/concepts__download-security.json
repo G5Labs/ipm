@@ -1,0 +1,179 @@
+{
+ "page": ".g5/ontology/concepts/download-security.g5.md",
+ "auditor": "G4",
+ "entries": [
+  {
+   "id": "repo.remote.download#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "iter4 registry.rs::bytes_request target = returned URL origin",
+   "product": "Repo/Remote/PackageService.cls GetModule",
+   "mutations": [
+    "G4-m57"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "repo.remote.download#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "iter4 registry.rs::bytes_request credentials from the repository config regardless of origin",
+   "product": "Repo/Http/PackageService.cls:55-72",
+   "mutations": [
+    "G4-m58"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "repo.remote.download.redirect#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "iter5 redirect.rs::as_built_sends true on every hop, transcribing the literal FollowRedirect=1 with headers on the request",
+   "product": "Repo/Http/PackageService.cls:33",
+   "mutations": [
+    "G4-m124"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "repo.remote.download.redirect#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "redirect.rs::s14_sends (first-hop) vs s14b_sends (per-hop) proposals",
+   "product": "",
+   "mutations": [
+    "G4-m125",
+    "G4-m126"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "repo.remote.download.integrity#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "iter4 registry.rs::integrity_ok exact compare with the lowercased digest",
+   "product": "Repo/Remote/PackageService.cls:134-137",
+   "mutations": [
+    "G4-m59"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "repo.remote.download.integrity#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "registry.rs::install escapes before analytics on any non-Accepted download; token_stored requires Accepted",
+   "product": "Utils/Module.cls:172-195 (CollectAnalytics after the load)",
+   "mutations": [
+    "G4-m61",
+    "G4-m62"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "repo.remote.download.integrity#3",
+   "verdict": "partial",
+   "support": "mutation-checked",
+   "deciding": "registry.rs::integrity_ok empty-hash skip; install(Accepted, gzip_ok=false, has_manifest=false)",
+   "product": "",
+   "mutations": [
+    "G4-m60",
+    "G4-m64"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "rule 4a: \"extract to nothing\" is a fixture input (gzip_ok=false, has_manifest=false), not derived from the archive reader (iter3 artifacts.rs::header_action); removing the gzip decision (G4-m64) verifies. Empty-hash skip (m60) and report-before-failure are pinned.",
+   "note": ""
+  },
+  {
+   "id": "repo.remote.download.integrity#4",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "registry.rs::get_module variant and message_has_status",
+   "product": "",
+   "mutations": [
+    "G4-m63",
+    "G4-m65"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "repo.remote.download.token#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "registry.rs::token_stored = Accepted && token nonempty",
+   "product": "Repo/Remote/PackageService.cls:136-142",
+   "mutations": [
+    "G4-m62"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "artifact.authentication#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "iter3 artifacts.rs::auth: token, else complete Basic, else anonymous",
+   "product": "ResourceProcessor/ArtifactoryTarball.cls:120,194-201",
+   "mutations": [
+    "G4-m01",
+    "G4-m02"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "artifact.authentication#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "artifacts.rs::bytes_request anonymous (RetrieveArtifact sets no credential) and provider_status derived from the request",
+   "product": "ArtifactoryTarball.cls:480-489",
+   "mutations": [
+    "G4-m03"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "artifact.authentication#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "artifacts.rs::save_download keeps old unless status 200",
+   "product": "ArtifactoryTarball.cls:495-519",
+   "mutations": [
+    "G4-m04"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  }
+ ]
+}

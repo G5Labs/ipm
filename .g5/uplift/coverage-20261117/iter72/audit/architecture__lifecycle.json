@@ -1,0 +1,684 @@
+{
+ "page": ".g5/ontology/architecture/lifecycle.g5.md",
+ "auditor": "G3",
+ "entries": [
+  {
+   "id": "lifecycle#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "iter30/phases.rs ordered_from emits each rank 0..17 that any requested chain contains, in PHASES order",
+   "product": "src/cls/IPM/Lifecycle/Base.cls::GetCompletePhases",
+   "mutations": [
+    "G3-m01"
+   ],
+   "instance_scoped": true,
+   "note": "only the out-of-order instance (activate initialize) is proved; mutation logged as \"invalid\" by the first mutate.py classifier, but its log is a by(compute) assertion failure (\"simplifies to false\"/\"evaluates to false\"), so it counts as killed",
+   "control": "",
+   "gap": ""
+  },
+  {
+   "id": "lifecycle#3",
+   "verdict": "partial",
+   "support": "inspection",
+   "deciding": "iter30/phases.rs step: RELOAD sets source, COMPILE sets compiled; iter65/moderefresh.rs on_reload per-kind table",
+   "mutations": [
+    "G3-m02"
+   ],
+   "instance_scoped": false,
+   "gap": "Reload not compiling is written into the per-phase step and the per-kind on_reload table; mutant G3-m02 (Reload also compiles) survives every phases.rs theorem, and no theorem contrasts reload with compile on a compiled value",
+   "note": "survivor G3-m02",
+   "product": "",
+   "control": ""
+  },
+  {
+   "id": "lifecycle#4",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "phases.rs step ACTIVATE pushes Activate then the nested CONFIGURE START line; compile hooks untouched",
+   "product": "src/cls/IPM/Lifecycle/Module.cls %Activate calls Configure",
+   "mutations": [
+    "G3-m03"
+   ],
+   "instance_scoped": false,
+   "note": "transcribes the literal nested call; review-71 D1 (Configure runs twice for \"activate configure\") is outside this claim",
+   "control": "",
+   "gap": ""
+  },
+  {
+   "id": "lifecycle.chain#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "complete_plan unions in_chain over requested tokens (chain table transcribes GetCompletePhasesForOne literal lists)",
+   "product": "src/cls/IPM/Lifecycle/Base.cls::GetCompletePhasesForOne",
+   "mutations": [
+    "G3-m04"
+   ],
+   "instance_scoped": true,
+   "note": "compile instance only; mutation logged as \"invalid\" by the first mutate.py classifier, but its log is a by(compute) assertion failure (\"simplifies to false\"/\"evaluates to false\"), so it counts as killed",
+   "control": "",
+   "gap": ""
+  },
+  {
+   "id": "lifecycle.chain#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "in_chain(7) = build set {Initialize,Reload,*,Validate,Compile,Activate}; load/install = Activate chain",
+   "product": "src/cls/IPM/Utils/Module.cls:1345 ($select(isUpdate:\"ApplyUpdateSteps\",1:\"Activate\"))",
+   "mutations": [
+    "G3-m05",
+    "G3-m01"
+   ],
+   "instance_scoped": false,
+   "note": "load/install mapping to the Activate chain is a product literal; crate theorem_reachable_inv judged by inspection; mutation logged as \"invalid\" by the first mutate.py classifier, but its log is a by(compute) assertion failure (\"simplifies to false\"/\"evaluates to false\"), so it counts as killed",
+   "control": "",
+   "gap": ""
+  },
+  {
+   "id": "lifecycle.chain#4",
+   "verdict": "partial",
+   "support": "inspection",
+   "deciding": "iter65/moderefresh.rs on_reload/on_compile/on_activate per-kind tables",
+   "instance_scoped": false,
+   "gap": "which phase makes each kind visible is a per-kind table; the processors' own phase hooks (Document/Default and Global load at Reload, compiled kinds at Compile, FileCopy and WebApplication in Activate) are not modelled, so moving a processor's work to another phase leaves the theorems intact",
+   "product": "",
+   "mutations": [],
+   "control": "",
+   "note": ""
+  },
+  {
+   "id": "lifecycle.chain#5",
+   "verdict": "partial",
+   "support": "inspection",
+   "deciding": "moderefresh.rs refreshes(k,dev,2) = dev && (on_reload(k) || on_compile(k)) with on_activate table",
+   "instance_scoped": false,
+   "gap": "compile leaving Activate-time kinds stale rests on the per-kind on_activate table and a hand-written compile formula, not on composing the iter30 compile chain (no Activate) with modelled FileCopy/WebApplication Activate hooks",
+   "product": "",
+   "mutations": [],
+   "control": "",
+   "note": ""
+  },
+  {
+   "id": "lifecycle.initialize#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "initialize(w, root_param=true) sets boot := disk; order before Reload from phases.rs rank 1 < 2",
+   "product": "src/cls/IPM/Lifecycle/Base.cls:598-605",
+   "mutations": [
+    "G3-m16"
+   ],
+   "instance_scoped": false,
+   "control": "",
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "lifecycle.initialize#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "initialize skips (boot unchanged, skipped) when no RootDirectory parameter",
+   "product": "src/cls/IPM/Lifecycle/Base.cls:598-607",
+   "mutations": [
+    "G3-m14"
+   ],
+   "instance_scoped": false,
+   "note": "which commands supply RootDirectory is an input (LoadNewModule vs module action)",
+   "control": "",
+   "gap": ""
+  },
+  {
+   "id": "lifecycle.initialize#3",
+   "verdict": "partial",
+   "support": "inspection",
+   "deciding": "initialize broken-preload branch returns ok=true (tSC kept apart from status, Base.cls:601-612); ordinary_compile_ok(broken) = !broken",
+   "product": "src/cls/IPM/Lifecycle/Base.cls:584-612",
+   "mutations": [
+    "G3-m15"
+   ],
+   "instance_scoped": false,
+   "gap": "the contrasting half (the same error in an ordinary resource fails the load) is the written-down ordinary_compile_ok(broken)=!broken; the Compile phase status check that fails the load is not modelled or composed; the preload half is mutation-checked (G3-m15 killed)",
+   "control": "",
+   "note": ""
+  },
+  {
+   "id": "lifecycle.document#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "docphase.rs document: deps_run = recurse && dep, marks = own(dep) + own(m)",
+   "product": "src/cls/IPM/Lifecycle/Base.cls::%Document",
+   "mutations": [
+    "G3-m17",
+    "G3-m18"
+   ],
+   "instance_scoped": true,
+   "note": "fixture modules d66/m66",
+   "control": "",
+   "gap": ""
+  },
+  {
+   "id": "lifecycle.document#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "document: fails = any hook fails; marks emptied when it fails (one-transaction rollback branch)",
+   "product": "src/cls/IPM/Lifecycle/Base.cls::%Document TSTART/TROLLBACK",
+   "mutations": [
+    "G3-m19"
+   ],
+   "instance_scoped": true,
+   "control": "",
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "lifecycle.document#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "document refuses when recurse && dependency not installed, before any marks",
+   "mutations": [
+    "G3-m20"
+   ],
+   "instance_scoped": true,
+   "product": "",
+   "control": "",
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "lifecycle.document#4",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "document marks come only from hooks (own); adding an IPM-generated mark breaks phase_generates_nothing",
+   "mutations": [
+    "G3-m21"
+   ],
+   "instance_scoped": false,
+   "note": "as-built absence claim; holds because %Document has no generation step, and a mutant adding one is killed",
+   "product": "",
+   "control": "",
+   "gap": ""
+  },
+  {
+   "id": "lifecycle.module-action#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "execute(plan(tokens)) on the module selected by selected_module",
+   "mutations": [
+    "G3-m22",
+    "G3-m06"
+   ],
+   "instance_scoped": false,
+   "note": "master is handling the review-71 A3 finding that update is dispatched to Main::Update before the phase check (Main.cls:1118); this obligation covers phase words only; mutation logged as \"invalid\" by the first mutate.py classifier, but its log is a by(compute) assertion failure (\"simplifies to false\"/\"evaluates to false\"), so it counts as killed",
+   "product": "",
+   "control": "",
+   "gap": ""
+  },
+  {
+   "id": "lifecycle.alias#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "workflows.rs selected_module: internal map, then external map, else None",
+   "mutations": [
+    "G3-m22"
+   ],
+   "instance_scoped": true,
+   "product": "",
+   "control": "",
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "lifecycle.alias#2",
+   "verdict": "partial",
+   "support": "inspection",
+   "deciding": "workflows.rs custom_hook(selected_phases, p) = selected_phases.contains(p)",
+   "instance_scoped": false,
+   "gap": "the ordinary-load phase list is a fixture input (seq![1,2,3]) and uninstall's phase list is not modelled at all; only selection membership is computed (phases.rs would compute load's plan but is not cited here)",
+   "product": "",
+   "mutations": [],
+   "control": "",
+   "note": ""
+  },
+  {
+   "id": "lifecycle.only#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "plan(tokens, only=true) = only_plan (single_step of the one name), complete plan otherwise",
+   "product": "src/cls/IPM/Lifecycle/Base.cls::MatchSinglePhase",
+   "mutations": [
+    "G3-m06"
+   ],
+   "instance_scoped": true,
+   "note": "mutation logged as \"invalid\" by the first mutate.py classifier, but its log is a by(compute) assertion failure (\"simplifies to false\"/\"evaluates to false\"), so it counts as killed",
+   "control": "",
+   "gap": ""
+  },
+  {
+   "id": "lifecycle.only#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "only_plan: two or more names give INVALID (comma-joined name matches no phase)",
+   "mutations": [
+    "G3-m07"
+   ],
+   "instance_scoped": false,
+   "note": "refuted intended promise; the as-built rule is computed from the token count, abstracting $listtostring under the no-comma premise",
+   "product": "",
+   "control": "",
+   "gap": ""
+  },
+  {
+   "id": "lifecycle.only#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "only_plan len>1 -> INVALID; execute stops before any phase",
+   "mutations": [
+    "G3-m07",
+    "G3-m06"
+   ],
+   "instance_scoped": false,
+   "product": "",
+   "control": "",
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "lifecycle.custom#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "complete_plan: a single non-standard name runs as single_step (CUSTOM)",
+   "mutations": [
+    "G3-m11"
+   ],
+   "instance_scoped": false,
+   "note": "mutation logged as \"invalid\" by the first mutate.py classifier, but its log is a by(compute) assertion failure (\"simplifies to false\"/\"evaluates to false\"), so it counts as killed",
+   "product": "",
+   "control": "",
+   "gap": ""
+  },
+  {
+   "id": "lifecycle.custom#4",
+   "verdict": "partial",
+   "support": "inspection",
+   "deciding": "complete_plan / only_plan single_step",
+   "mutations": [
+    "G3-m12"
+   ],
+   "instance_scoped": false,
+   "gap": "the -only cases (custom alone with -only runs; custom beside a standard phase with -only fails) are never asserted; mutant G3-m12 (custom alone with -only fails) survives",
+   "note": "survivor G3-m12",
+   "product": "",
+   "control": ""
+  },
+  {
+   "id": "lifecycle.custom#5",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "complete_plan: with two tokens the custom name contributes no chain rank and is dropped",
+   "mutations": [
+    "G3-m08"
+   ],
+   "instance_scoped": false,
+   "note": "mutation logged as \"invalid\" by the first mutate.py classifier, but its log is a by(compute) assertion failure (\"simplifies to false\"/\"evaluates to false\"), so it counts as killed",
+   "product": "",
+   "control": "",
+   "gap": ""
+  },
+  {
+   "id": "lifecycle.custom#6",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "single_step(UNKNOWN)=INVALID alone; any_chain gives no rank for UNKNOWN beside a standard phase",
+   "mutations": [
+    "G3-m09",
+    "G3-m10b"
+   ],
+   "instance_scoped": false,
+   "note": "G3-m10 (refuse whole command) hung in by(compute) and was terminated; G3-m10b replaces it",
+   "product": "",
+   "control": "",
+   "gap": ""
+  },
+  {
+   "id": "lifecycle.custom#7",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "as-built custom phase dropped beside reload (custom_and_unknown_neighbors) refutes the intended rule",
+   "mutations": [
+    "G3-m08"
+   ],
+   "instance_scoped": false,
+   "note": "refuted working assumption; mutation logged as \"invalid\" by the first mutate.py classifier, but its log is a by(compute) assertion failure (\"simplifies to false\"/\"evaluates to false\"), so it counts as killed",
+   "product": "",
+   "control": "",
+   "gap": ""
+  },
+  {
+   "id": "lifecycle.custom#8",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "as-built plan(compile bogus) == plan(compile) refutes refuse-before-any-phase",
+   "mutations": [
+    "G3-m10b",
+    "G3-m09"
+   ],
+   "instance_scoped": false,
+   "note": "refuted working assumption",
+   "product": "",
+   "control": "",
+   "gap": ""
+  },
+  {
+   "id": "module.lifecycle-class#1",
+   "verdict": "partial",
+   "support": "inspection",
+   "deciding": "record.rs resolve(name, compiled): Named when the named class is compiled, else Module",
+   "product": "src/cls/IPM/Storage/Module.cls::LifecycleGet",
+   "mutations": [
+    "G3-m24",
+    "G3-m25"
+   ],
+   "instance_scoped": false,
+   "gap": "the no-LifecycleClass case (resolve(None, _) = Module) is never asserted; mutant G3-m25 (None -> a named class) survives; the compiled/not-compiled branch is mutation-checked (G3-m24 killed)",
+   "note": "survivor G3-m25",
+   "control": ""
+  },
+  {
+   "id": "module.lifecycle-class#4",
+   "verdict": "partial",
+   "support": "inspection",
+   "deciding": "record.rs compiled_at_refresh(preload, installed_before, exists) = exists && (preload || installed_before)",
+   "instance_scoped": false,
+   "gap": "whether the class is compiled when the lifecycle is resolved is a written formula; the resolution points in ExecutePhases relative to Initialize (preload compile) and Compile are a premise, so moving resolution after Compile leaves the theorems intact",
+   "product": "",
+   "mutations": [],
+   "control": "",
+   "note": ""
+  },
+  {
+   "id": "module.lifecycle-class#6",
+   "verdict": "partial",
+   "support": "inspection",
+   "deciding": "record.rs unknown(name) = resolve(Some(name), false) = Module",
+   "product": "src/cls/IPM/Storage/Module.cls:1443-1446",
+   "instance_scoped": false,
+   "gap": "record.rs:21 returns only the lifecycle class, so \"without a warning\" is never observed; the stored LifecycleClass overwrite to Module (Storage/Module.cls:1443-1446) is not modelled (review-71 A1, settled)",
+   "mutations": [],
+   "control": "",
+   "note": ""
+  },
+  {
+   "id": "module.invoke#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "public_repairs.rs invoke_checked(Unset, status_return) = status_return; invoke_ok",
+   "mutations": [
+    "G3-m29"
+   ],
+   "instance_scoped": true,
+   "product": "",
+   "control": "",
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "module.invoke#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "invoke_checked(Off, _) = false",
+   "mutations": [
+    "G3-m26"
+   ],
+   "instance_scoped": true,
+   "product": "",
+   "control": "",
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "module.invoke#4",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "invoke_checked(On, _) = true",
+   "mutations": [
+    "G3-m27"
+   ],
+   "instance_scoped": true,
+   "product": "",
+   "control": "",
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "module.invoke#5",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "invoke_ok requires !threw",
+   "mutations": [
+    "G3-m28"
+   ],
+   "instance_scoped": true,
+   "product": "",
+   "control": "",
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "module.invoke#6",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "invoke_selected: actual = custom when nonempty, else normal",
+   "mutations": [
+    "G3-m30"
+   ],
+   "instance_scoped": true,
+   "product": "",
+   "control": "",
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "lifecycle.installer#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "installer.rs load: install_call then configure_call (transcribes %Configure call order)",
+   "product": "src/cls/IPM/Lifecycle/Base.cls:530-537",
+   "mutations": [
+    "G3-m31"
+   ],
+   "instance_scoped": true,
+   "note": "mutation logged as \"invalid\" by the first mutate.py classifier, but its log is a by(compute) assertion failure (\"simplifies to false\"/\"evaluates to false\"), so it counts as killed",
+   "control": "",
+   "gap": ""
+  },
+  {
+   "id": "lifecycle.installer#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "installer.rs uninstall: Unconfigure then UnInstall calls",
+   "product": "src/cls/IPM/Lifecycle/Base.cls::%Unconfigure, Lifecycle/Module.cls::%Clean",
+   "mutations": [
+    "G3-m32"
+   ],
+   "instance_scoped": true,
+   "note": "mutation logged as \"invalid\" by the first mutate.py classifier, but its log is a by(compute) assertion failure (\"simplifies to false\"/\"evaluates to false\"), so it counts as killed",
+   "control": "",
+   "gap": ""
+  },
+  {
+   "id": "lifecycle.installer#4",
+   "verdict": "partial",
+   "support": "inspection",
+   "deciding": "installer.rs load: installer && c.fail -> ok=false, calls=[ROLLED_BACK]",
+   "instance_scoped": false,
+   "gap": "the failure branch is a written outcome (ok false, a single rolled-back record); the status check between OnInstallComponent and OnConfigureComponent is not modelled, and \"OnConfigureComponent not called\" cannot be told apart from \"called then rolled back\" at the observation",
+   "product": "",
+   "mutations": [],
+   "control": "",
+   "note": ""
+  },
+  {
+   "id": "lifecycle.installer#6",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "installer.rs load/uninstall: callbacks only when m.installer",
+   "mutations": [
+    "G3-m33"
+   ],
+   "instance_scoped": false,
+   "note": "mutation logged as \"invalid\" by the first mutate.py classifier, but its log is a by(compute) assertion failure (\"simplifies to false\"/\"evaluates to false\"), so it counts as killed",
+   "product": "",
+   "control": "",
+   "gap": ""
+  },
+  {
+   "id": "lifecycle.installer#7",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "installer.rs upgrade(c) = or(d_upgrade, 0), independent of installed_before",
+   "product": "src/cls/IPM/Lifecycle/Base.cls:523 ($get(pParams(\"Configure\",\"IsUpgrade\"),0))",
+   "mutations": [
+    "G3-m34"
+   ],
+   "instance_scoped": false,
+   "note": "transcribes a product literal default; no other writer exists; mutation logged as \"invalid\" by the first mutate.py classifier, but its log is a by(compute) assertion failure (\"simplifies to false\"/\"evaluates to false\"), so it counts as killed",
+   "control": "",
+   "gap": ""
+  },
+  {
+   "id": "lifecycle.installer.parameters#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "param_mode = -D else <Parameter>; param_greeting ignores <Default>; custom_greeting = -D else <Default>",
+   "product": "src/cls/IPM/Storage/Module.cls::GetDefaultParameters, Storage/ModuleSetting/Default.cls::GetCustomParameters",
+   "mutations": [
+    "G3-m35",
+    "G3-m36"
+   ],
+   "instance_scoped": false,
+   "note": "G3-m35 logged invalid by the first classifier but its log is a by(compute) assertion failure, so killed; G3-m36 killed",
+   "control": "",
+   "gap": ""
+  },
+  {
+   "id": "lifecycle.source-control#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "schooks.rs run_phases: Before p, nested phase events, After p per phase",
+   "mutations": [
+    "G3-m37"
+   ],
+   "instance_scoped": true,
+   "note": "G3-m37 logged invalid (\"simplifies to `14 == 16`, which evaluates to false\") but is a compute assertion failure, so killed",
+   "product": "",
+   "control": "",
+   "gap": ""
+  },
+  {
+   "id": "lifecycle.source-control#4",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "schooks.rs active(c): Composite with IPM primary only",
+   "product": "src/cls/IPM/ExtensionBase/SourceControl/Interface.cls::%GetClass",
+   "mutations": [
+    "G3-m38"
+   ],
+   "instance_scoped": false,
+   "control": "",
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "lifecycle.source-control#5",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "run_phases: failing Before hook ends the run with only that Before event and ok=false",
+   "mutations": [
+    "G3-m39"
+   ],
+   "instance_scoped": true,
+   "product": "",
+   "control": "",
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "lifecycle.source-control#6",
+   "verdict": "partial",
+   "support": "inspection",
+   "deciding": "schooks.rs observe: root is the constant 0",
+   "product": "src/cls/IPM/Lifecycle/Base.cls::%Reload root comparison",
+   "instance_scoped": false,
+   "gap": "the root-change call count is the constant 0 in observe; the comparison in %Reload of the already-stored root with the new root, and the stored root changing, are not modelled",
+   "mutations": [],
+   "control": "",
+   "note": ""
+  },
+  {
+   "id": "lifecycle.source-control.editor#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "composite.rs user_action: type 1 -> primary, menu of other -> owner, else nobody",
+   "mutations": [
+    "G3-m42"
+   ],
+   "instance_scoped": true,
+   "product": "",
+   "control": "",
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "lifecycle.source-control.editor#4",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "composite.rs editable = AND of primary and other Editable",
+   "mutations": [
+    "G3-m40"
+   ],
+   "instance_scoped": true,
+   "product": "",
+   "control": "",
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "lifecycle.source-control.editor#5",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "composite.rs read_only asks the primary only (loop over [primary, other] stops at the primary's false)",
+   "mutations": [
+    "G3-m41"
+   ],
+   "instance_scoped": true,
+   "note": "the loop is collapsed to primary-only under the premise that the list starts with the primary",
+   "product": "",
+   "control": "",
+   "gap": ""
+  },
+  {
+   "id": "lifecycle.source-control.editor#6",
+   "verdict": "partial",
+   "support": "inspection",
+   "deciding": "composite.rs configure_ok(others_exist) = true; create_ok = others_exist",
+   "instance_scoped": false,
+   "gap": "configure success is the constant true; SetSubExtensionClasses's name validation whose result is discarded is not modelled, so a configure that rejects a nonexistent class leaves the theorems intact",
+   "product": "",
+   "mutations": [],
+   "control": "",
+   "note": ""
+  },
+  {
+   "id": "lifecycle.source-control.editor#7",
+   "verdict": "partial",
+   "support": "inspection",
+   "deciding": "composite.rs primary_after_set(old,new,new_is_class)",
+   "mutations": [
+    "G3-m43"
+   ],
+   "instance_scoped": false,
+   "gap": "only the empty-name case is asserted; the class-name case (primary replaced) is never exercised, and mutant G3-m43 (primary never changes) survives",
+   "note": "survivor G3-m43",
+   "product": "",
+   "control": ""
+  }
+ ]
+}

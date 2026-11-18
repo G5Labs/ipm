@@ -1,0 +1,704 @@
+{
+ "page": ".g5/ontology/features/resources.g5.md",
+ "auditor": "G3",
+ "entries": [
+  {
+   "id": "module.processor.defaults#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "resources.rs defaults_step skips keys in the explicit set",
+   "mutations": [
+    "G3-m44"
+   ],
+   "instance_scoped": false,
+   "note": "G3-m87 control: processor_class_matches always true survives, so default class matching is never exercised (outside this obligation's stated cases)",
+   "product": "",
+   "control": "",
+   "gap": ""
+  },
+  {
+   "id": "module.processor.defaults#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "apply_defaults folds rules in declaration order; later writer wins",
+   "mutations": [
+    "G3-m45"
+   ],
+   "instance_scoped": true,
+   "product": "",
+   "control": "",
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "module.processor.defaults#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "defaults_step tests satisfies(props, conditions) on the current map",
+   "mutations": [
+    "G3-m46",
+    "G3-m45"
+   ],
+   "instance_scoped": true,
+   "product": "",
+   "control": "",
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "module.processor.default-sweep#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "inputs.rs sweep: one replace pass per key in key order",
+   "mutations": [
+    "G3-m47"
+   ],
+   "instance_scoped": true,
+   "note": "parameter-name order is the given key sequence",
+   "product": "",
+   "control": "",
+   "gap": ""
+  },
+  {
+   "id": "module.placement#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "mappings.rs needs_map = !nomapping && !global && !default_dest && !map",
+   "product": "src/cls/IPM/ResourceProcessor/Default/Document.cls::OnPhase, Package.cls::OnConfigureMappings",
+   "mutations": [
+    "G3-m48"
+   ],
+   "instance_scoped": false,
+   "control": "",
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "module.placement#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "needs_map on !default_dest; load sets code location from map/default_dest",
+   "mutations": [
+    "G3-m49"
+   ],
+   "instance_scoped": false,
+   "product": "",
+   "control": "",
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "module.placement#4",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "load: code = 1 if mapped or default destination else 2 (stored where the package resolves)",
+   "mutations": [
+    "G3-m48"
+   ],
+   "instance_scoped": false,
+   "note": "compiler storage location is a native-qualified premise",
+   "product": "",
+   "control": "",
+   "gap": ""
+  },
+  {
+   "id": "module.placement#5",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "mappings.rs uninstall keeps map (no uninstall path removes it)",
+   "mutations": [
+    "G3-m50"
+   ],
+   "instance_scoped": false,
+   "note": "as-built absence; a mutant that removes the mapping is killed",
+   "product": "",
+   "control": "",
+   "gap": ""
+  },
+  {
+   "id": "module.placement#6",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "uninstall: GlobalScope module skipped without -global; code resolving elsewhere kept unless -global",
+   "product": "src/cls/IPM/Lifecycle/Base.cls::%Clean",
+   "mutations": [
+    "G3-m51",
+    "G3-m52"
+   ],
+   "instance_scoped": false,
+   "control": "",
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "module.global.roundtrip#1",
+   "verdict": "partial",
+   "support": "inspection",
+   "deciding": "workflows.rs global_path(sources, directory, name) with None -> gbl",
+   "product": "src/cls/IPM/ResourceProcessor/Default/Global.cls:107-108",
+   "mutations": [
+    "M-m01"
+   ],
+   "instance_scoped": false,
+   "gap": "only the no-Directory branch is asserted; a declared Directory is never exercised (mutant M-m01, which ignores a declared Directory, survives) and an explicitly empty Directory gives gbl/ in the product but drops the segment in the model (review-71 A1, settled)",
+   "note": "survivor M-m01 (builder calibration run)",
+   "control": ""
+  },
+  {
+   "id": "module.global.roundtrip#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "reload_global reads the value at global_path(sources, ...) written by package_global",
+   "mutations": [
+    "G3-m23"
+   ],
+   "instance_scoped": true,
+   "product": "",
+   "control": "",
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "module.processor.deepsee#2",
+   "verdict": "partial",
+   "support": "inspection",
+   "deciding": "dfiitems.rs matched_intended(ext) vs matched_unix(ext) outcome tables",
+   "product": "src/cls/IPM/ResourceProcessor/Default/DeepSeeItem.cls:88-93",
+   "instance_scoped": false,
+   "gap": "the refutation rests on matched_unix, a per-extension outcome table; the wildcard pattern string built at DeepSeeItem.cls:89-91 (missing \";\" on Unix) and FindFiles matching are not computed",
+   "mutations": [],
+   "control": "",
+   "note": ""
+  },
+  {
+   "id": "module.processor.deepsee#3",
+   "verdict": "partial",
+   "support": "inspection",
+   "deciding": "dfiitems.rs matched_unix(ext) = ext==0 || ext==3",
+   "product": "src/cls/IPM/ResourceProcessor/Default/DeepSeeItem.cls:88-93",
+   "instance_scoped": false,
+   "gap": "which extensions load is a per-extension outcome table; the concatenated wildcard string (tName.xml;tName.dfi + tName.XML;tName.DFI with no separator) is not built or matched, so a product fix adding the \";\" would leave the theorems intact",
+   "mutations": [],
+   "control": "",
+   "note": ""
+  },
+  {
+   "id": "module.processor.deepsee#4",
+   "verdict": "partial",
+   "support": "inspection",
+   "deciding": "dfiitems.rs removed_by_uninstall(i) = !i.wildcard",
+   "product": "src/cls/IPM/ResourceProcessor/Default/DeepSeeItem.cls::OnResolveChildren",
+   "instance_scoped": false,
+   "gap": "removal is a per-kind formula (explicit vs wildcard); OnResolveChildren opening the folder item by name (and dropping names it cannot open) is not modelled",
+   "mutations": [],
+   "control": "",
+   "note": ""
+  },
+  {
+   "id": "module.processor.deepsee#5",
+   "verdict": "partial",
+   "support": "inspection",
+   "deciding": "dfiitems.rs present_after_uninstall = loaded && !removed_by_uninstall",
+   "instance_scoped": false,
+   "gap": "composes the two outcome tables (matched_unix, removed_by_uninstall); neither the wildcard load nor OnResolveChildren is computed",
+   "product": "",
+   "mutations": [],
+   "control": "",
+   "note": ""
+  },
+  {
+   "id": "module.processor.interoperability#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "interopres.rs candidates_find: declared, then i14y, then misc, else root",
+   "product": "src/cls/IPM/ResourceProcessor/Default/Interoperability.cls:14-25",
+   "mutations": [
+    "G3-m53",
+    "G3-m54",
+    "G3-m55"
+   ],
+   "instance_scoped": true,
+   "note": "transcribes the literal DirectoryGet branch chain",
+   "control": "",
+   "gap": ""
+  },
+  {
+   "id": "module.processor.localized-messages#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "locmsgs.rs load: unwritable root -> (state unchanged, false)",
+   "mutations": [
+    "G3-m56"
+   ],
+   "instance_scoped": false,
+   "note": "direct transcription of the export status check; rollback of the load is the native-qualified premise",
+   "product": "",
+   "control": "",
+   "gap": ""
+  },
+  {
+   "id": "module.processor.localized-messages#4",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "locmsgs.rs uninstall clears doc/module only, keeps msgs and export",
+   "product": "src/cls/IPM/Lifecycle/Base.cls::%Clean",
+   "mutations": [
+    "G3-m57"
+   ],
+   "instance_scoped": false,
+   "note": "as-built absence; killed when uninstall clears them",
+   "control": "",
+   "gap": ""
+  },
+  {
+   "id": "module.processor.localized-messages.legacy#4",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "legacymsgs.rs children(Single(i)) = [i]; survives_uninstall = generated && !child",
+   "product": "src/cls/IPM/ResourceProcessor/LegacyLocalizedMessages.cls:174-176",
+   "mutations": [
+    "G3-m58"
+   ],
+   "instance_scoped": false,
+   "note": "single form transcribes the literal elseif branch",
+   "control": "",
+   "gap": ""
+  },
+  {
+   "id": "module.processor.localized-messages.legacy#5",
+   "verdict": "partial",
+   "support": "inspection",
+   "deciding": "legacymsgs.rs children(Mapped(incs)) by entry count: 1 -> [incs[0]], 2+ -> [GARBAGE]",
+   "product": "src/cls/IPM/ResourceProcessor/LegacyLocalizedMessages.cls:164-172",
+   "instance_scoped": false,
+   "gap": "the mapped-form child name is a per-count outcome table; $piece(includeFiles,\":\",2) of the whole attribute (LegacyLocalizedMessages.cls:169) is not computed, so the GARBAGE name is written down rather than derived",
+   "mutations": [],
+   "control": "",
+   "note": ""
+  },
+  {
+   "id": "module.processor.copy#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "copy.rs copy_one copies child(c,pkg) classes with a source",
+   "mutations": [
+    "G3-m59"
+   ],
+   "instance_scoped": true,
+   "note": "\"other packages untouched\" is only in fixture_schedule; mutation logged as \"invalid\" by the first mutate.py classifier, but its log is a by(compute) assertion failure (\"simplifies to false\"/\"evaluates to false\"), so it counts as killed",
+   "product": "",
+   "control": "",
+   "gap": ""
+  },
+  {
+   "id": "module.processor.copy#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "copy_one: overwrite true replaces an existing target",
+   "mutations": [
+    "G3-m61"
+   ],
+   "instance_scoped": false,
+   "note": "mutation logged as \"invalid\" by the first mutate.py classifier, but its log is a by(compute) assertion failure (\"simplifies to false\"/\"evaluates to false\"), so it counts as killed",
+   "product": "",
+   "control": "",
+   "gap": ""
+  },
+  {
+   "id": "module.processor.copy#4",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "copy_one: overwrite false only fills missing targets",
+   "mutations": [
+    "G3-m60"
+   ],
+   "instance_scoped": false,
+   "note": "mutation logged as \"invalid\" by the first mutate.py classifier, but its log is a by(compute) assertion failure (\"simplifies to false\"/\"evaluates to false\"), so it counts as killed",
+   "product": "",
+   "control": "",
+   "gap": ""
+  },
+  {
+   "id": "module.processor.copy#5",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "child excludes owned classes from copy and delete",
+   "product": "src/cls/IPM/ResourceProcessor/Copy.cls::OnResolveChildren",
+   "mutations": [
+    "G3-m62"
+   ],
+   "instance_scoped": false,
+   "note": "mutation logged as \"invalid\" by the first mutate.py classifier, but its log is a by(compute) assertion failure (\"simplifies to false\"/\"evaluates to false\"), so it counts as killed",
+   "control": "",
+   "gap": ""
+  },
+  {
+   "id": "module.processor.copy#6",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "copy.rs uninstall deletes every child of the package present in the target",
+   "mutations": [
+    "G3-m63",
+    "G3-m62"
+   ],
+   "instance_scoped": false,
+   "note": "mutation logged as \"invalid\" by the first mutate.py classifier, but its log is a by(compute) assertion failure (\"simplifies to false\"/\"evaluates to false\"), so it counts as killed",
+   "product": "",
+   "control": "",
+   "gap": ""
+  },
+  {
+   "id": "module.processor.file-copy#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "protection.rs copy then clean (unprotected, no keep) -> absent",
+   "mutations": [
+    "G3-m71"
+   ],
+   "instance_scoped": true,
+   "note": "iter63/cleanup.rs filecopy_keep (constant remains table) is supplementary; the grade rests on protection.rs",
+   "product": "",
+   "control": "",
+   "gap": ""
+  },
+  {
+   "id": "module.processor.file-copy#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "protection.rs clean: keep -> files unchanged (both kinds); thin_surfaces clean_removes",
+   "mutations": [
+    "G3-m69"
+   ],
+   "instance_scoped": false,
+   "product": "",
+   "control": "",
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "module.processor.file-copy#4",
+   "verdict": "partial",
+   "support": "inspection",
+   "deciding": "protection.rs unix_copy: let clear=false in every branch",
+   "product": "src/cls/IPM/Utils/File.cls:163-165",
+   "mutations": [
+    "G3-m86"
+   ],
+   "instance_scoped": false,
+   "gap": "unrelated entries survive by the constant clear=false; delete_matching has no effect in the model and CopyDir's overlay/delete-first semantics are not modelled, so the refutation rests on the native flag0/flag1 observation; mutant G3-m86 (overlay literal replaced by the flag) is killed only through payload assertions, never the sentinel",
+   "control": "",
+   "note": ""
+  },
+  {
+   "id": "module.processor.file-copy#11",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "thin_surfaces.rs file_copy_observation: !mkdir_ok || !source_exists -> (false, target_before)",
+   "mutations": [
+    "G3-m72"
+   ],
+   "instance_scoped": false,
+   "note": "exec function whose ensures restates the body; the present/missing contrast is in main's native replay",
+   "product": "",
+   "control": "",
+   "gap": ""
+  },
+  {
+   "id": "module.processor.file-copy.protection#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "protection.rs protected = exact_marker || ancestor_of_root",
+   "product": "src/cls/IPM/ResourceProcessor/FileCopy.cls IsProtectedDirectory",
+   "mutations": [
+    "G3-m64"
+   ],
+   "instance_scoped": true,
+   "control": "",
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "module.processor.file-copy.protection#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "ancestor_of_root: target is a prefix of a root (whole segments)",
+   "mutations": [
+    "G3-m65"
+   ],
+   "instance_scoped": true,
+   "product": "",
+   "control": "",
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "module.processor.file-copy.protection#4",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "clean evaluates protected on the files at Clean time (marker_write between load and Clean)",
+   "mutations": [
+    "G3-m64",
+    "G3-m68"
+   ],
+   "instance_scoped": true,
+   "product": "",
+   "control": "",
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "module.processor.file-copy.protection#5",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "lifecycle_neighbors added/removed-marker histories through clean",
+   "mutations": [
+    "G3-m64",
+    "G3-m68"
+   ],
+   "instance_scoped": true,
+   "product": "",
+   "control": "",
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "module.processor.file-copy.protection#7",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "clean: file kind removes payload only, regardless of protection",
+   "mutations": [
+    "G3-m67"
+   ],
+   "instance_scoped": true,
+   "product": "",
+   "control": "",
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "module.processor.file-copy.protection#8",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "protected checks exact_marker only, not nested_marker",
+   "mutations": [
+    "G3-m66",
+    "G3-m64"
+   ],
+   "instance_scoped": true,
+   "product": "",
+   "control": "",
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "module.processor.file-copy.unix-overlay#1",
+   "verdict": "partial",
+   "support": "inspection",
+   "deciding": "protection.rs unix_args (overlay literal true) and unix_copy with constant clear=false",
+   "product": "src/cls/IPM/Utils/File.cls:163-165",
+   "mutations": [
+    "G3-m86"
+   ],
+   "instance_scoped": false,
+   "gap": "keeping unrelated entries is the constant clear=false in both unix_copy branches; the delete-first flag has no modelled effect and CopyDir semantics are not modelled, so the as-built claim rests on the native observation; G3-m86 (overlay follows the flag) is killed only through payload assertions",
+   "control": "",
+   "note": ""
+  },
+  {
+   "id": "module.processor.file-copy.unix-overlay#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "delete_first = Directory && !overlay && !protected; clean skips protected targets",
+   "mutations": [
+    "G3-m70",
+    "G3-m68"
+   ],
+   "instance_scoped": true,
+   "product": "",
+   "control": "",
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "module.processor.cpf#2",
+   "verdict": "partial",
+   "support": "inspection",
+   "deciding": "cpfmerge.rs merges_in: Before -> before point, After -> after point",
+   "mutations": [
+    "G3-m73"
+   ],
+   "instance_scoped": false,
+   "gap": "only the When=\"After\" timing is asserted (after_is_not_before); the When=\"Before\" side is never exercised, and mutant G3-m73 (Before merges at both points) survives",
+   "note": "survivor G3-m73",
+   "product": "",
+   "control": ""
+  },
+  {
+   "id": "module.processor.cpf#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "merges_in: a custom CPF merges only when its custom phase runs",
+   "mutations": [
+    "G3-m75"
+   ],
+   "instance_scoped": true,
+   "product": "",
+   "control": "",
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "module.processor.cpf#4",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "merged_by over the executed phase list; merges_in requires c.phase == p",
+   "mutations": [
+    "G3-m76"
+   ],
+   "instance_scoped": true,
+   "product": "",
+   "control": "",
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "module.processor.cpf#5",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "ok = !merged || valid",
+   "mutations": [
+    "G3-m77"
+   ],
+   "instance_scoped": true,
+   "note": "instance acceptance (valid) is an external premise named by the obligation",
+   "product": "",
+   "control": "",
+   "gap": ""
+  },
+  {
+   "id": "module.processor.cpf-effects#1",
+   "verdict": "partial",
+   "support": "inspection",
+   "deciding": "boundaries.rs cpf_do_merge: config_role = provider_role input, ok from exit; rollback_cpf / thin_surfaces rollback resets database only",
+   "instance_scoped": false,
+   "gap": "configuration is an input independent of status by construction, and which state rollback restores (database, not configuration) is written into rollback; as with failkeep, the transaction scope is not derived from a modelled writer",
+   "product": "",
+   "mutations": [],
+   "control": "",
+   "note": ""
+  },
+  {
+   "id": "module.system-setting#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "inputs.rs system_value writes value when system_target(raw, phase) (Compile, CSP.<name>)",
+   "mutations": [
+    "G3-m78",
+    "G3-m79"
+   ],
+   "instance_scoped": true,
+   "product": "",
+   "control": "",
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "module.system-setting#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "system_value keeps old outside Compile",
+   "mutations": [
+    "G3-m78"
+   ],
+   "instance_scoped": true,
+   "product": "",
+   "control": "",
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "module.python.explicit-wheel#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "python.rs wheel Initialize branch independent of bypass",
+   "mutations": [
+    "G3-m80"
+   ],
+   "instance_scoped": true,
+   "product": "",
+   "control": "",
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "module.python.explicit-wheel#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "requirements_called requires !bypass",
+   "mutations": [
+    "G3-m81"
+   ],
+   "instance_scoped": true,
+   "product": "",
+   "control": "",
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "module.python.explicit-wheel#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "wheel_path = root + directory + name",
+   "mutations": [
+    "G3-m82"
+   ],
+   "instance_scoped": true,
+   "product": "",
+   "control": "",
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "module.python.explicit-wheel#5",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "wheel failure branch: ok = (module is zpm), handled false",
+   "mutations": [
+    "G3-m83"
+   ],
+   "instance_scoped": true,
+   "product": "",
+   "control": "",
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "module.python.explicit-wheel#6",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "wheel Clean branch: handled, installed unchanged",
+   "mutations": [
+    "G3-m84"
+   ],
+   "instance_scoped": true,
+   "product": "",
+   "control": "",
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "module.python.explicit-wheel#7",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "wheel: failed pip with the wheel present gives installed None",
+   "mutations": [
+    "G3-m85"
+   ],
+   "instance_scoped": true,
+   "product": "",
+   "control": "",
+   "gap": "",
+   "note": ""
+  }
+ ]
+}

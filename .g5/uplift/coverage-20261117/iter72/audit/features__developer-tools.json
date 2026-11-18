@@ -1,0 +1,812 @@
+{
+ "page": ".g5/ontology/features/developer-tools.g5.md",
+ "auditor": "G5",
+ "entries": [
+  {
+   "id": "devtools.sync#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "sync_baseline.rs::detected computes selection from hash vs disk, SyncFailed and TestPending; sync_state refuses !m.dev",
+   "product": "General/Sync/Pipeline.cls:29-31; Storage/FileHash.cls:228-336",
+   "mutations": [
+    "G5-m47"
+   ],
+   "control": "playbook-uplift/models/verus/controls/sync_baseline.json (results/sync_baseline.json, all killed; old strings present in the current model): sync-not-dev-reports-success, sync-ignores-retry-marks, sync-commit-without-load",
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "devtools.sync#3",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "iter32 sync.rs::order computed by repeated pass with ready_deps restricted to developer-mode modules",
+   "product": "Utils/Module.cls::GetDevModeModulesInDependencyOrder",
+   "mutations": [],
+   "control": ".g5/Verus_verification/consolidated/iter32/cases.json: dev-edge-filter-removed, row-order-only (rejected, uplift/consolidated/iter32/HANDOFF.md)",
+   "instance_scoped": false,
+   "note": "refutation by the tx/ty counterexample"
+  },
+  {
+   "id": "devtools.sync#4",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "iter32 sync.rs::ready_deps ignores non-developer dependencies; pass emits in row order",
+   "product": "Utils/Module.cls::GetDevModeModulesInDependencyOrder",
+   "mutations": [],
+   "control": ".g5/Verus_verification/consolidated/iter32/cases.json: dev-edge-filter-removed, row-order-only",
+   "instance_scoped": true,
+   "note": "general as-built rule shown on the six-module fixture only"
+  },
+  {
+   "id": "devtools.sync#5",
+   "verdict": "partial",
+   "support": "mutation-checked",
+   "deciding": "iter32 sync.rs::sync_file with del && deleted sets ns None for compilable files and base None",
+   "product": "General/Sync/Pipeline.cls::SyncApplyDeletes",
+   "mutations": [
+    "G5-m01"
+   ],
+   "control": ".g5/Verus_verification/consolidated/iter32/cases.json: delete-keeps-document (document half)",
+   "instance_scoped": false,
+   "gap": "The baseline row removal is never asserted. G5-m01, which keeps the baseline row of a deleted file, survives. Only server-document presence is observed.",
+   "note": ""
+  },
+  {
+   "id": "devtools.sync#7",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "iter32 sync.rs::sync_file deletes only when del && deleted",
+   "product": "General/Sync/Pipeline.cls::SyncApplyDeletes",
+   "mutations": [],
+   "control": ".g5/Verus_verification/consolidated/iter32/cases.json: delete-without-flag",
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "devtools.sync#9",
+   "verdict": "partial",
+   "support": "inspection",
+   "deciding": "iter32 sync.rs::manifest_change is a fixture function that re-routes file 3 and routes file 4 before the sync",
+   "product": "General/Sync/Pipeline.cls::SyncCheckModuleXml, SyncCommitModuleXml",
+   "mutations": [],
+   "control": ".g5/Verus_verification/consolidated/iter32/cases.json: new-resource-needs-baseline (only the \"synced as new\" half)",
+   "instance_scoped": false,
+   "gap": "The manifest reload (module.xml change detection and its ordering before routing) is applied by hand in the fixture (manifest_change), not computed. No assertion contrasts an unchanged manifest.",
+   "note": ""
+  },
+  {
+   "id": "devtools.sync#10",
+   "verdict": "partial",
+   "support": "inspection",
+   "deciding": "iter45 scan.rs::walked = !skip_dir; depth and upper_ext are unused fields",
+   "product": "Storage/FileHash.cls::WalkAndHashDirs, NormalizePath",
+   "mutations": [],
+   "control": ".g5/Verus_verification/consolidated/iter45/cases.json: skip-dirs-walked, uppercase-ext-ignored (they add a dependency that is absent by construction)",
+   "instance_scoped": false,
+   "gap": "The skipped-directory test is an input (skip_dir). The names .git, __pycache__ and node_modules, the recursive walk and extension case folding are not modelled. Depth and case independence holds by construction because the fields are unused.",
+   "note": ""
+  },
+  {
+   "id": "devtools.sync#11",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "iter45 scan.rs::sync fails when a changed walked file is unreadable and commits nothing; changed() re-detects it",
+   "product": "General/Sync/Pipeline.cls::Run",
+   "mutations": [],
+   "control": ".g5/Verus_verification/consolidated/iter45/cases.json: unreadable-ignored",
+   "instance_scoped": false,
+   "note": "readable is an environment input named by the obligation"
+  },
+  {
+   "id": "devtools.sync#12",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "iter65 moderefresh.rs::sync_support(kind) transcribes each processor class SupportsSync() override; refreshes(k,dev,3) = dev && sync_support(k)",
+   "product": "ResourceProcessor/Abstract.cls:225 (0), AbstractCompilable.cls:25 (1); General/Sync/Pipeline.cls:272",
+   "mutations": [
+    "G5-m28",
+    "G5-m29"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "note": "a per-kind table that transcribes the product per-class constant"
+  },
+  {
+   "id": "devtools.sync#15",
+   "verdict": "partial",
+   "support": "inspection",
+   "deciding": "iter32 sync.rs::scanned(conventional) = conventional and loads(conventional, declared) = conventional || !declared",
+   "product": "ResourceProcessor/Default/Document.cls::GetSyncDirectory, OnPhase",
+   "mutations": [],
+   "control": ".g5/Verus_verification/consolidated/iter32/cases.json: scan-uses-load-fallback (mutates the table entry)",
+   "instance_scoped": false,
+   "gap": "Whether sync scans a file is the layout boolean itself, a per-case table. The scanned path {SourcesRoot}/{Directory} compared with the file location, and the load fallback to {SourcesRoot}/, are not computed.",
+   "note": ""
+  },
+  {
+   "id": "devtools.sync#16",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "sync_baseline.rs::compile_dev stamps only when ok && !skip; sync_state stamps when no baseline exists",
+   "product": "Lifecycle/Base.cls:1235-1244",
+   "mutations": [
+    "G5-m46"
+   ],
+   "control": "playbook-uplift/models/verus/controls/sync_baseline.json (results/sync_baseline.json, all killed; old strings present in the current model): first-sync-loads, compile-stamps-on-failure",
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "devtools.sync#18",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "sync_baseline.rs compile_dev/reload record no baseline on failure, reload or -skip-sync; detected then sees the reverted bytes as unchanged",
+   "product": "Lifecycle/Base.cls %Reload, %Compile",
+   "mutations": [],
+   "control": "playbook-uplift/models/verus/controls/sync_baseline.json (results/sync_baseline.json, all killed; old strings present in the current model): no-premise-out, no-premise-out-reload, edit-updates-baseline, compile-stamps-on-failure",
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "devtools.sync#19",
+   "verdict": "partial",
+   "support": "control",
+   "deciding": "sync_baseline.rs::sync_ok fails on !tests_ok; sync_state has no tests_ok parameter",
+   "product": "General/Sync/Pipeline.cls:205-208",
+   "mutations": [],
+   "control": "playbook-uplift/models/verus/controls/sync_baseline.json (results/sync_baseline.json, all killed; old strings present in the current model): sync-test-failure-reports-success (status half only)",
+   "instance_scoped": false,
+   "gap": "That a failing test does not undo the hash commit holds by signature, because sync_state has no tests_ok input. No test step after CommitChanges is modelled, and no theorem contrasts the baseline rows when tests pass and when they fail.",
+   "note": ""
+  },
+  {
+   "id": "devtools.sync#21",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "sync_baseline.rs witness: compile_dev(fail) records no mark, detected after an exact revert is false",
+   "product": "Lifecycle/Base.cls:1235-1244; Storage/FileHash.cls:341-362",
+   "mutations": [],
+   "control": "playbook-uplift/models/verus/controls/sync_baseline.json (results/sync_baseline.json, all killed; old strings present in the current model): no-premise-out, compile-stamps-on-failure, edit-updates-baseline",
+   "instance_scoped": false,
+   "note": "refuted by the counterexample"
+  },
+  {
+   "id": "devtools.sync.retry#1",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "sync_baseline.rs::fail_one sets failed when a row exists; detected includes f.failed",
+   "product": "Storage/FileHash.cls:420-460",
+   "mutations": [],
+   "control": "playbook-uplift/models/verus/controls/sync_baseline.json (results/sync_baseline.json, all killed; old strings present in the current model): sync-no-markfailed, sync-ignores-retry-marks, failed-sync-rewrites-baseline, commit-keeps-retry-mark",
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "devtools.sync.compile-after-resolve#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "iter4 sync_compile.rs::warned = eligible && !resolve_ok; contributed only when resolve_ok; ok = !called || compile_ok",
+   "product": "General/Sync/Pipeline.cls::SyncCompile",
+   "mutations": [
+    "G5-m07",
+    "G5-m04",
+    "G5-m03"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "devtools.sync.compile-after-resolve#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "iter4 sync_compile.rs::sync_compile: called = compile set non-empty; ok = !called || compile_ok",
+   "product": "General/Sync/Pipeline.cls::SyncCompile",
+   "mutations": [
+    "G5-m04"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "devtools.sync.compile-after-resolve#4",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "iter4 sync_compile.rs retained = summary_active ? warnings : 0, composed with iter26 sync_summary.rs::begins (no module argument and modules found)",
+   "product": "General/Sync/Summary.cls::AddWarning; Main.cls::Sync",
+   "mutations": [
+    "G5-m05"
+   ],
+   "control": ".g5/Verus_verification/consolidated/iter26/cases.json: named-sync-begins, empty-list-sync-begins",
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "devtools.sync.compile-after-resolve#5",
+   "verdict": "partial",
+   "support": "mutation-checked",
+   "deciding": "iter4 sync_compile.rs::eligible excludes from_project; kept() keeps defined classes and all non-class children",
+   "product": "General/Sync/Pipeline.cls::SyncCompile",
+   "mutations": [
+    "G5-m02",
+    "G5-m03",
+    "G5-m06"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "The rule that skips a deployed-project resource in the compile set is never exercised. The only project neighbour has resolve_ok false, so G5-m02, which compiles project resources, survives. The warning half (G5-m03) and the undefined-class/routine split (G5-m06) are killed.",
+   "note": ""
+  },
+  {
+   "id": "devtools.sync.empty-hash#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "iter7 inputs.rs::stamp refuses an empty hash before open/save and keeps old",
+   "product": "Storage/FileHash.cls::StampOneFileWithHash",
+   "mutations": [
+    "G5-m31"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "devtools.sync.test-paths#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "iter4 repairs4.rs::package_rel_path strips dir by has_prefix (plain text prefix)",
+   "product": "Storage/FileHash.cls (test path to class name)",
+   "mutations": [
+    "G5-m32",
+    "G5-m33"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "devtools.sync.test-paths#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "iter4 repairs4.rs::package_rel_path returns rel unchanged when not prefixed",
+   "product": "",
+   "mutations": [
+    "G5-m33"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "devtools.sync.test-paths#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "iter4 repairs4.rs::has_prefix has no folder boundary, so tests/unitX is stripped",
+   "product": "",
+   "mutations": [
+    "G5-m32"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "devtools.sync.skipped-tracking#1",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "iter26 sync_summary.rs::begins(module_argument, ordered) = arg empty && modules; callback_selected requires a test phase",
+   "product": "Main.cls::Sync; General/Sync/Summary.cls::Begin",
+   "mutations": [
+    "G5-m09"
+   ],
+   "control": ".g5/Verus_verification/consolidated/iter26/cases.json: named-sync-begins, empty-list-sync-begins",
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "devtools.sync.skipped-tracking#3",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "iter26 sync_summary.rs::add_skipped increments the per-module counter and stores the class only while active",
+   "product": "General/Sync/Summary.cls::AddSkipped",
+   "mutations": [],
+   "control": ".g5/Verus_verification/consolidated/iter26/cases.json: inactive-records, active-does-not-record, counter-not-incremented, counter-global-module, counter-wrong-module-key, row-*, counter-resets-each-call, duplicate-class-deduplicated",
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "devtools.sync.skipped-tracking#4",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "iter26 sync_summary.rs::report walks names then sequence; begin/end clear; finish ends when started",
+   "product": "General/Sync/Summary.cls::Report, Begin, End",
+   "mutations": [],
+   "control": ".g5/Verus_verification/consolidated/iter26/cases.json: report-forces-module-order, report-skips-first-sequence, report-stops-before-last-row, begin-retains-counts, begin-retains-rows, end-only-deactivates, finish-does-not-clear",
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "devtools.sync.skipped-tracking#6",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "iter26 sync_summary.rs caller projection (start, record_selected, report, finish) and callback_selected; sync_baseline.rs reload of the changed file",
+   "product": "General/Sync/Pipeline.cls; ResourceProcessor/Test.cls::OnSync",
+   "mutations": [
+    "G5-m09"
+   ],
+   "control": ".g5/Verus_verification/consolidated/iter26/cases.json: verify-phase-treated-as-test, test-phase-recorded-as-skip, finish-does-not-clear",
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "devtools.authoring#6",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "iter44 comments.rs::arrange fails and rewrites nothing without a source-control class",
+   "product": "Utils/Module.cls::ExportDocumentForObject (GetStatus gate)",
+   "mutations": [],
+   "control": ".g5/Verus_verification/consolidated/iter44/cases.json: no-source-control-ok",
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "devtools.authoring#7",
+   "verdict": "partial",
+   "support": "control",
+   "deciding": "iter44 comments.rs::exported(p) is a fixed set of path codes {1,2,3}; kept(None) = false",
+   "product": "Utils/XMLCommentHandler.cls; Utils/Module.cls::ExportDocumentForObject",
+   "mutations": [],
+   "control": ".g5/Verus_verification/consolidated/iter44/cases.json: resource-path-unchanged, trailing-attached-to-parent, dependency-comments-dropped (they mutate table entries)",
+   "instance_scoped": false,
+   "gap": "Which anchors survive is a per-case table of path codes. The XPath of each comment anchor, the re-export to /Module/Resources/Resource and the discard of a last child at the parent end tag are not computed.",
+   "note": ""
+  },
+  {
+   "id": "devtools.authoring.generate#6",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "iter53 generator.rs::stored_author passes (license, copyright) into set_author_props(p_copy, p_license)",
+   "product": "Main.cls::GenerateModuleXML; Storage/ModuleTemplate.cls::SetAuthorProps",
+   "mutations": [],
+   "control": ".g5/Verus_verification/consolidated/iter53/cases.json: author-args-in-order",
+   "instance_scoped": false,
+   "note": "argument-order transcription"
+  },
+  {
+   "id": "devtools.authoring.generate#7",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "iter53 generator.rs::exported: class = prefix_mask && !prefix_ignore",
+   "product": "Storage/ModuleTemplate.cls::ExportResources",
+   "mutations": [
+    "G5-m48",
+    "G5-m49"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "note": "prefix/substring predicates are inputs (named ObjectScript string premise)"
+  },
+  {
+   "id": "devtools.authoring.generate#8",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "iter53 generator.rs::exported: routine = contains_mask, ignore list not consulted",
+   "product": "Storage/ModuleTemplate.cls::ExportOneResource",
+   "mutations": [],
+   "control": ".g5/Verus_verification/consolidated/iter53/cases.json: routines-honour-ignore, routines-prefix-mask",
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "devtools.authoring.import#1",
+   "verdict": "partial",
+   "support": "mutation-checked",
+   "deciding": "iter49 importcmd.rs::selected (Dir: !sub || recurse); compiled requires c.compile",
+   "product": "Main.cls::Import",
+   "mutations": [
+    "G5-m10"
+   ],
+   "control": ".g5/Verus_verification/consolidated/iter49/cases.json: norecurse-ignored, nocompile-ignored",
+   "instance_scoped": false,
+   "gap": "The recursive case (a subdirectory item imported without -norecurse) is never asserted. G5-m10, which never recurses, survives. The -norecurse and -nocompile halves are controlled.",
+   "note": ""
+  },
+  {
+   "id": "devtools.authoring.import#2",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "iter49 importcmd.rs::load_fails over selected uncompilable items; compiled per item",
+   "product": "Main.cls::Import",
+   "mutations": [],
+   "control": ".g5/Verus_verification/consolidated/iter49/cases.json: bad-item-rolls-back-good, compile-error-ignored",
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "devtools.authoring.import#3",
+   "verdict": "partial",
+   "support": "mutation-checked",
+   "deciding": "iter49 importcmd.rs::ok(Missing) = false, user_actions(Missing) = 0",
+   "product": "Main.cls::Import",
+   "mutations": [
+    "G5-m11"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "The obligation observes the items defined, but defined() for a missing path is never asserted. G5-m11, which selects items for a missing path, survives. Only the status and the missing source-control calls are pinned.",
+   "note": ""
+  },
+  {
+   "id": "devtools.authoring.import#4",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "iter49 importcmd.rs::after_save/added split by in_sc after a successful load",
+   "product": "Main.cls::Import",
+   "mutations": [],
+   "control": ".g5/Verus_verification/consolidated/iter49/cases.json: sc-all-added",
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "devtools.authoring.module-version#2",
+   "verdict": "partial",
+   "support": "mutation-checked",
+   "deciding": "verus/owners.rs::bump computes the core parts; module_version applies with_pre/with_build",
+   "product": "Main.cls::ModuleVersion",
+   "mutations": [
+    "G5-m13",
+    "G5-m14"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "Bumping is pinned (G5-m13 killed), but applying -prerelease and -build is never asserted. G5-m14, which drops -prerelease from module_version, survives, and with_pre is only checked to preserve build.",
+   "note": ""
+  },
+  {
+   "id": "devtools.authoring.module-version#3",
+   "verdict": "partial",
+   "support": "inspection",
+   "deciding": "verus/owners.rs::module_version NotHigher branch",
+   "product": "Main.cls::ModuleVersion",
+   "mutations": [],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "Settled by review-71 part B: only the equal-version case is exercised. A lower version, with and without -force, is never asserted.",
+   "note": ""
+  },
+  {
+   "id": "devtools.authoring.module-version#4",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "verus/owners.rs::module_version: !force && !follows(candidate, record) gives NotHigher, including candidate == record",
+   "product": "Main.cls::ModuleVersion",
+   "mutations": [
+    "G5-m12"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "note": "refuted intended promise; as-built refusal computed via semver::follows"
+  },
+  {
+   "id": "devtools.authoring.module-version#5",
+   "verdict": "partial",
+   "support": "inspection",
+   "deciding": "verus/owners.rs::update_version never writes disk",
+   "product": "Main.cls::ModuleVersion",
+   "mutations": [],
+   "control": ".g5/Verus_verification/consolidated/verus/owners-results.json negative control writes-disk (adds a write; does not remove a product branch)",
+   "instance_scoped": false,
+   "gap": "Settled by review-71 part B: the property holds by construction because no modelled branch writes the module.xml file, so there is no product write branch to mutate.",
+   "note": ""
+  },
+  {
+   "id": "devtools.generate.resources#1",
+   "verdict": "partial",
+   "support": "mutation-checked",
+   "deciding": "iter6 workflows.rs::application_item computes tests exclusion by path prefix; iter69 grouping.rs::kept takes in_tests as an input",
+   "product": "Storage/ModuleTemplate.cls::ReadItems (excludeDir)",
+   "mutations": [
+    "G5-m23"
+   ],
+   "control": ".g5/Verus_verification/coverage-20261117/iter69/grouping.rs control tests-not-excluded (killed only by instance assertions, review-71 C2)",
+   "instance_scoped": false,
+   "gap": "The tests-folder membership is computed only in iter6::application_item, which has no source-folder scan. The grouping.rs writer takes in_tests as an input, and the two are not composed. The inside-src case is exercised only with in_tests fixed by the fixture (m4).",
+   "note": ""
+  },
+  {
+   "id": "devtools.generate.resources#2",
+   "verdict": "partial",
+   "support": "inspection",
+   "deciding": "iter69 grouping.rs::test_entries (TestEntry has dir and package only)",
+   "product": "Storage/ModuleTemplate.cls::AddPackages",
+   "mutations": [],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "Settled by review-71 C1: TestEntry has only directory and package (grouping.rs:32). The UnitTest Name (/src/tests/ when tests sit inside src) and Phase=\"test\" are checked only by the native string match.",
+   "note": ""
+  },
+  {
+   "id": "devtools.generate.resources#3",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "iter69 grouping.rs::generate returns None when !src_exists",
+   "product": "Storage/ModuleTemplate.cls::ReadItems throw",
+   "mutations": [],
+   "control": ".g5/Verus_verification/coverage-20261117/iter69/grouping.rs iter69 control missing-source-continues (rejected by tests_and_status)",
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "devtools.generate.resources#4",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "iter69 grouping.rs::generate tests only when tests_exist; iter6 test_item requires test_dir_exists",
+   "product": "Storage/ModuleTemplate.cls (tests folder check)",
+   "mutations": [
+    "G5-m22",
+    "G5-m27"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "devtools.generate.resources#5",
+   "verdict": "partial",
+   "support": "control",
+   "deciding": "iter69 grouping.rs::kept = supported(ext) && !in_tests && listed",
+   "product": "Storage/ModuleTemplate.cls::ReadItems; $system.OBJ.Load list",
+   "mutations": [],
+   "control": ".g5/Verus_verification/coverage-20261117/iter69/grouping.rs iter69 controls unsupported-kept, listing-ignored (instance kills only; unsupported-kept survives the general proofs per review-71 C2)",
+   "instance_scoped": true,
+   "gap": "Headerless versus body-broken, the case the obligation names, is decided by `listed`, a fixture-fixed provider input (m5: Ig2 listed, Ig3 not). The unsupported-extension rule is pinned only by instance assertions.",
+   "note": ""
+  },
+  {
+   "id": "devtools.generate.resources#7",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "iter69 grouping.rs::in_group keys by (directory, top-level)",
+   "product": "Storage/ModuleTemplate.cls::GroupClasses",
+   "mutations": [],
+   "control": ".g5/Verus_verification/coverage-20261117/iter69/grouping.rs iter69 controls directory-only-key (fails general proofs), top-level-only-key (killed only by instance N5b)",
+   "instance_scoped": true,
+   "note": "instances N1, N2 and N5b cover the three stated cases"
+  },
+  {
+   "id": "devtools.generate.resources#8",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "iter69 grouping.rs::group folds SharedPackage; group_characterized proves the deepest common package",
+   "product": "Storage/ModuleTemplate.cls::SharedPackage",
+   "mutations": [],
+   "control": ".g5/Verus_verification/coverage-20261117/iter69/grouping.rs iter69 controls name-top-level-only, seed-with-top-level",
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "devtools.generate.resources#9",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "iter69 grouping.rs::directory removes one path segment per package segment",
+   "product": "Storage/ModuleTemplate.cls::ReadItems",
+   "mutations": [],
+   "control": ".g5/Verus_verification/coverage-20261117/iter69/grouping.rs iter69 control directory-keeps-whole-path",
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "devtools.generate.resources#10",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "iter69 grouping.rs::singles writes kept non-grouped files with their own name; singles_exact general",
+   "product": "Storage/ModuleTemplate.cls::ProcessResources",
+   "mutations": [],
+   "control": ".g5/Verus_verification/coverage-20261117/iter69/grouping.rs iter69 control drop-leftovers",
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "devtools.generate.resources#11",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "iter69 grouping.rs::generate never merges singles(ts); test_entries only from grouped keys",
+   "product": "Storage/ModuleTemplate.cls::AddPackages (tests)",
+   "mutations": [],
+   "control": ".g5/Verus_verification/coverage-20261117/iter69/grouping.rs iter69 control tests-leftovers-kept",
+   "instance_scoped": true,
+   "note": ""
+  },
+  {
+   "id": "devtools.generate.resources#12",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "iter69 grouping.rs::collapse keyed by same_key (name, ext); writer_one_entry_per_name general",
+   "product": "Storage/Module.cls::CalculatedResourcesGet; ResourceReference.cls::GetSortKey",
+   "mutations": [],
+   "control": ".g5/Verus_verification/coverage-20261117/iter69/grouping.rs iter69 control writer-keys-by-directory",
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "devtools.generate.resources#13",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "iter69 grouping.rs::same_name_two_directories_keeps_one general + m3/n5 instances; loads_class replayed natively",
+   "product": "Storage/Module.cls::CalculatedResourcesGet",
+   "mutations": [],
+   "control": ".g5/Verus_verification/coverage-20261117/iter69/grouping.rs iter69 control writer-keys-by-directory; replay focused-flip1",
+   "instance_scoped": false,
+   "note": "which directory wins rests on the hand-written key order (review-71 C3); the obligation does not claim which"
+  },
+  {
+   "id": "devtools.generate.resources#14",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "iter69 grouping.rs::reader_dir prefers the extension directory when it exists; reader_finds path = dir + package",
+   "product": "ResourceProcessor/Default/Document.cls::OnBeforePhase, OnPhase",
+   "mutations": [],
+   "control": ".g5/Verus_verification/coverage-20261117/iter69/grouping.rs iter69 control reader-root-before-ext-dir",
+   "instance_scoped": true,
+   "note": ""
+  },
+  {
+   "id": "devtools.generate.webapps#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "iter8 webapps.rs::generated_props always inserts Key::Authentication",
+   "product": "Storage/ModuleTemplate.cls (web app export)",
+   "mutations": [
+    "G5-m18"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "devtools.generate.webapps#3",
+   "verdict": "partial",
+   "support": "mutation-checked",
+   "deciding": "iter8 webapps.rs::skipped(k) set {Namespace, Name, Path, NamespaceDefault}",
+   "product": "",
+   "mutations": [
+    "G5-m16"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "The app-default marker (NamespaceDefault) case is never exercised. G5-m16, which keeps NamespaceDefault, survives. Only Namespace is asserted absent.",
+   "note": ""
+  },
+  {
+   "id": "devtools.generate.webapps#4",
+   "verdict": "partial",
+   "support": "mutation-checked",
+   "deciding": "iter8 webapps.rs::generated_path / manifest_path (CSP-root prefix gives Csp, otherwise Literal)",
+   "product": "",
+   "mutations": [
+    "G5-m17"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "The path-not-under-CSP-root case (a Literal path) is never asserted. G5-m17, which makes every path {$cspdir}-relative, survives. The dispatch and under-root cases are pinned.",
+   "note": ""
+  },
+  {
+   "id": "devtools.generate.webapps#6",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "iter8 webapps.rs::jwt_prompt key mapping; generated_props prefers prompt values",
+   "product": "",
+   "mutations": [
+    "G5-m19"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "devtools.generate.cors#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "iter7 inputs.rs::cors_calls stops at the first provider rejection; cors_ok conjunction; split by delimiter",
+   "product": "Storage/ModuleTemplate.cls CORS validation",
+   "mutations": [
+    "G5-m30"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "devtools.scripting#1",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "iter28 script.rs::prepare dispatches on extension and decoded shape",
+   "product": "Main.cls::ProcessRunFromFile",
+   "mutations": [],
+   "control": ".g5/Verus_verification/consolidated/iter28/cases.json: root-array-accepted, commands-object-accepted, unsupported-extension-treated-as-txt, missing-file-ignored",
+   "instance_scoped": true,
+   "note": "decode_json is a fixture-byte adapter (named %FromJSON premise)"
+  },
+  {
+   "id": "devtools.scripting.file-sequence#1",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "iter28 script.rs::lines/trim and validate_all before render_all",
+   "product": "Main.cls::ProcessRunFromFile",
+   "mutations": [],
+   "control": ".g5/Verus_verification/consolidated/iter28/cases.json: json-skips-preflight, json-ignores-later-unknown, txt-does-not-trim, txt-keeps-blank-line, txt-reverses-line-order",
+   "instance_scoped": true,
+   "note": ""
+  },
+  {
+   "id": "devtools.scripting.file-sequence#2",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "iter28 script.rs::execute stops at the first shell error and keeps world effects",
+   "product": "Main.cls::ProcessRunFromFile",
+   "mutations": [],
+   "control": ".g5/Verus_verification/consolidated/iter28/cases.json: continue-after-shell-error, rollback-earlier-success, runtime-fault-loses-side-effect, settings-write-dropped, settings-write-uses-first-value",
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "devtools.scripting.file-sequence#3",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "iter28 script.rs::execute(dry) lists without shell; planned = prepare regardless of dry",
+   "product": "Main.cls::ProcessRunFromFile",
+   "mutations": [],
+   "control": ".g5/Verus_verification/consolidated/iter28/cases.json: dry-run-executes-shell, dry-run-skips-json-validation, dry-run-attempts-command, txt-prevalidates-known-unknown",
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "devtools.exec#1",
+   "verdict": "partial",
+   "support": "control",
+   "deciding": "iter55 nsinit.rs::exec(e) is a per-expression-kind outcome table",
+   "product": "Main.cls::ExecuteCOS",
+   "mutations": [],
+   "control": ".g5/Verus_verification/consolidated/iter55/cases.json: exec-keeps-namespace-change (mutates a table entry)",
+   "instance_scoped": false,
+   "gap": "The exec outcome (ok, global set) is a per-expression-kind table. The xecute of the expression under `new $namespace` and the trapping of runtime and syntax errors are not modelled.",
+   "note": ""
+  },
+  {
+   "id": "devtools.exec#2",
+   "verdict": "partial",
+   "support": "control",
+   "deciding": "iter55 nsinit.rs::exec(SetNamespace).namespace_changed = false (table entry)",
+   "product": "Main.cls::ExecuteCOS (new $namespace)",
+   "mutations": [],
+   "control": ".g5/Verus_verification/consolidated/iter55/cases.json: exec-keeps-namespace-change",
+   "instance_scoped": false,
+   "gap": "That the namespace change does not persist is a constant table entry. `new $namespace` and the restore on exit are not modelled.",
+   "note": ""
+  },
+  {
+   "id": "devtools.init#2",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "iter55 nsinit.rs::init_quiet cleans dangling, wraps plain, activates the composite on -extension",
+   "product": "Main.cls::Init",
+   "mutations": [],
+   "control": ".g5/Verus_verification/consolidated/iter55/cases.json: dangling-kept, init-activates-composite",
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "devtools.init#3",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "iter55 nsinit.rs::init_quiet keeps a plain class active and sets claims_enabled = wrapped",
+   "product": "Main.cls::Init",
+   "mutations": [],
+   "control": ".g5/Verus_verification/consolidated/iter55/cases.json: init-activates-composite",
+   "instance_scoped": false,
+   "note": ""
+  }
+ ]
+}

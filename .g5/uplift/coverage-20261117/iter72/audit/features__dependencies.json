@@ -1,0 +1,178 @@
+{
+ "page": ".g5/ontology/features/dependencies.g5.md",
+ "auditor": "G6",
+ "entries": [
+  {
+   "id": "deps#4",
+   "verdict": "partial",
+   "support": "mutation-checked",
+   "deciding": "dep_resolve.rs active(ph,q) = no scope or ph contains scope",
+   "product": "",
+   "mutations": [
+    "G6-m58"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "No theorem, witness or control distinguishes a phase-scoped requirement inside vs outside the command phase set: active() is shared by L1 and L2, so a resolver that resolves scoped requirements in every command (G6-m58) still verifies.",
+   "note": ""
+  },
+  {
+   "id": "deps.installed#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "installed.rs reference_ok checks sat_all against installed modules requirements (graph members excluded)",
+   "product": "",
+   "mutations": [
+    "G6-m53"
+   ],
+   "control": "",
+   "instance_scoped": true,
+   "gap": "",
+   "note": "Fixture domain A, B, P with fixed ranges and three offers."
+  },
+  {
+   "id": "deps.installed#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "resolve_b: keep installed B if it satisfies, else first (highest) offer meeting parent range, installed ranges and floor; dep_resolve floor_ok general",
+   "product": "",
+   "mutations": [
+    "G6-m54"
+   ],
+   "control": "playbook-uplift/models/verus/controls/dep_resolve.json ignore-installed-requirements, no-downgrade-floor (killed)",
+   "instance_scoped": true,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "deps.installed#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "install_b explicit literal then reference_ok with no graph; refusal keeps world",
+   "product": "",
+   "mutations": [
+    "G6-m53"
+   ],
+   "control": "",
+   "instance_scoped": true,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "deps.installed#4",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "top_choice(None) = highest offer cand(0) regardless of requirements; refused though cand(1) satisfies",
+   "product": "",
+   "mutations": [
+    "G6-m57",
+    "G6-m55"
+   ],
+   "control": "",
+   "instance_scoped": true,
+   "gap": "",
+   "note": "G6-m55 survived because it was an equivalent mutant (checked against an empty world); G6-m57 is the meaningful fallback mutant and is killed."
+  },
+  {
+   "id": "deps.installed#5",
+   "verdict": "partial",
+   "support": "mutation-checked",
+   "deciding": "load_b_directory(w,v) = done(b := v), an unconditional success",
+   "product": "",
+   "mutations": [
+    "G6-m56"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "The directory-load outcome is a constant success; the load <directory> call path (which callers reach LoadModuleReference and its installed-requirement check) is not modelled, so \"not checked\" holds by construction (G6-m56 only shows that adding a check is noticed).",
+   "note": ""
+  },
+  {
+   "id": "deps.installed#7",
+   "verdict": "partial",
+   "support": "mutation-checked",
+   "deciding": "load_b_directory constant success; A keeps its range unchanged",
+   "product": "",
+   "mutations": [
+    "G6-m56"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "Same constant as deps.installed#5: no warning and kept requirements follow from load_b_directory being written as unconditional success; the directory-load path and its message output are not modelled.",
+   "note": ""
+  },
+  {
+   "id": "deps.lockfile#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "lockfile.rs add_dependency copies the stored installed module; public_repo restricts fields to allowed(kind) (transcribed per-kind field mapping)",
+   "product": "",
+   "mutations": [
+    "G6-m60",
+    "G6-m61"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "deps.lockfile#5",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "thin_surfaces dependency_status = dependencies_ok (lock_write_ok ignored), lock_written requires lock_write_ok",
+   "product": "src/cls/IPM/Utils/Module.cls:1416-1421 (try CreateLockFileForModule catch write)",
+   "mutations": [
+    "G6-m59"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": "The product swallows the error with a literal try/catch, so ignoring lock_write_ok is a transcription."
+  },
+  {
+   "id": "deps.lockfile.content#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "add_dependency inserts installed[r.name] (reference version 999 ignored); Map keyed by name keeps one entry",
+   "product": "",
+   "mutations": [
+    "G6-m61"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "deps.lockfile.content#2",
+   "verdict": "partial",
+   "support": "mutation-checked",
+   "deciding": "walk keeps the cursor and skips blocked nodes (computed); json_keys returns the dependency keys in the order of its natural_keys argument",
+   "product": "",
+   "mutations": [
+    "G6-m63",
+    "G6-m64"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "Graph order is computed, but JSON key serialization order is the natural_keys input (a provider contract checked natively); \"keys in name order, so a parent can precede its leaf\" is supplied rather than derived.",
+   "note": ""
+  },
+  {
+   "id": "deps.lockfile.content#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "add_repo inserts each repository once (keyed), build adds the base repository, public_repo drops credential fields by kind",
+   "product": "",
+   "mutations": [
+    "G6-m60",
+    "G6-m62"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  }
+ ]
+}

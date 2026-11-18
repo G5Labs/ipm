@@ -1,0 +1,319 @@
+{
+ "page": ".g5/ontology/features/build-and-publish.g5.md",
+ "auditor": "G5",
+ "entries": [
+  {
+   "id": "build.test#1",
+   "verdict": "partial",
+   "support": "control",
+   "deciding": "iter40 unittests.rs::test hard-codes ran + 1 and leaves vran",
+   "product": "ResourceProcessor/Test.cls::OnPhase (phase match)",
+   "mutations": [],
+   "control": ".g5/Verus_verification/consolidated/iter40/cases.json: verify-resource-runs-in-test (mutates the constant)",
+   "instance_scoped": false,
+   "gap": "Which UnitTest resource runs is hard-coded: test() increments the test resource counter and never the verify counter. Phase is not an input, and selection by phase is a premise.",
+   "note": ""
+  },
+  {
+   "id": "build.test#2",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "playbook scopes.rs::in_scope(r, phase list) and on_phase over the command phase list",
+   "product": "ResourceProcessor/Default/Document.cls; Lifecycle phase lists",
+   "mutations": [],
+   "control": "playbook-uplift/models/verus/controls/scopes.json: scope-ignores-phase-list, verify-runs-test-phase, reload-ignores-scope (all killed)",
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "build.test#4",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "iter40 unittests.rs::load defines test classes iff dev",
+   "product": "ResourceProcessor/Test.cls::OnAfterPhase",
+   "mutations": [],
+   "control": ".g5/Verus_verification/consolidated/iter40/cases.json: non-dev-reload-loads-tests",
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "build.test#5",
+   "verdict": "partial",
+   "support": "control",
+   "deciding": "iter40 unittests.rs::load_dir sets both packages defined; test sets t_compiled and ran",
+   "product": "Test/Manager.cls::LoadTestDirectory; ResourceProcessor/Test.cls::OnPhase",
+   "mutations": [],
+   "control": ".g5/Verus_verification/consolidated/iter40/cases.json: load-only-own-package (mutates the constant)",
+   "instance_scoped": false,
+   "gap": "The directory contents are fixture-fixed (both packages share the one directory), so load_dir is a constant. Compiling and running only the resource's own package is a constant, and no package outside the directory is modelled.",
+   "note": ""
+  },
+  {
+   "id": "build.test#6",
+   "verdict": "partial",
+   "support": "mutation-checked",
+   "deciding": "iter40 unittests.rs::do_delete(l) decided after load_dir (always false); uninstall clears all test classes",
+   "product": "ResourceProcessor/Test.cls::OnPhase (deletion check after LoadTestDirectory)",
+   "mutations": [
+    "G5-m08"
+   ],
+   "control": ".g5/Verus_verification/consolidated/iter40/cases.json: delete-checked-before-load, uninstall-keeps-tests",
+   "instance_scoped": false,
+   "gap": "That the test phase never deletes is computed (G5-m08 killed), but the stated end point \"until uninstall\" is a constant clear-all. Resolving test children at uninstall, including verify-only packages, is not modelled.",
+   "note": ""
+  },
+  {
+   "id": "build.test-output#5",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "verus/thin_surfaces.rs::report_result: file_written independent of the summary; status needs the summary class",
+   "product": "Test/Abstract.cls::ToFile then summary",
+   "mutations": [
+    "G5-m15"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "build.test-output#7",
+   "verdict": "partial",
+   "support": "inspection",
+   "deciding": "iter47 formats.rs::json_text = identity; toon/yaml text = drop_cr, drop_leading_spaces, trailing LF",
+   "product": "Test/YamlOutput.cls, ToonOutput.cls::WriteToFileStream",
+   "mutations": [],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "The CR loss and the YAML clip and indentation behaviour are native-observed premises written as spec functions. They are not derived from WriteToFileStream, BuildYaml or the reader, so a mutation of the product branch has no counterpart.",
+   "note": ""
+  },
+  {
+   "id": "build.test-output#8",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "iter47 formats.rs::toon_rows = asserts + error row + status row when no assertions",
+   "product": "Test/ToonOutput.cls::BuildToonRows:83-101",
+   "mutations": [
+    "G5-m34"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "build.package#5",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "playbook scopes.rs::export_phases(param, manifest) and exported; iter10 scope.rs::export_phases",
+   "product": "Lifecycle/Base.cls %Export",
+   "mutations": [],
+   "control": "playbook-uplift/models/verus/controls/scopes.json: export-ignores-manifest, explicit-param-cannot-drop; .g5/Verus_verification/consolidated/iter10/cases.json: ignore-include-flag, ignore-explicit-zero",
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "build.package.test-path#1",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "iter10 scope.rs::unit_children returned_scope = Phase; references checks declared and returned scopes; copied by directory prefix",
+   "product": "ResourceProcessor/Test.cls::OnResolveChildren; Lifecycle/Base.cls export",
+   "mutations": [],
+   "control": ".g5/Verus_verification/consolidated/iter10/cases.json: ignore-resource-scope, ignore-returned-scope, lose-phase-producer, lose-file-payload, directory-prefix-not-normalized",
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "build.package.test-path#4",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "iter10 scope.rs::unit_children has no path; references re-adds the path after scope checks",
+   "product": "Lifecycle/Base.cls export",
+   "mutations": [],
+   "control": ".g5/Verus_verification/consolidated/iter10/cases.json: omit-path-readdition, ignore-include-flag, ignore-explicit-zero",
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "build.package.include-refresh#1",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "iter10 scope.rs::refresh_include(old, incoming); command override only in package()",
+   "product": "Storage/Module.cls UpdatePersistentFromStream",
+   "mutations": [],
+   "control": ".g5/Verus_verification/consolidated/iter10/cases.json: omitted-clears-stored-include, explicit-false-does-not-reset, command-writes-stored-include",
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "build.package.include-refresh#2",
+   "verdict": "full",
+   "support": "control",
+   "deciding": "iter10 scope.rs::refresh_include keeps stored true when omitted",
+   "product": "Storage/Module.cls UpdatePersistentFromStream",
+   "mutations": [],
+   "control": ".g5/Verus_verification/consolidated/iter10/cases.json: omitted-clears-stored-include, command-writes-stored-include",
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "build.archive.empty-file#1",
+   "verdict": "partial",
+   "support": "mutation-checked",
+   "deciding": "iter6 workflows.rs::creates_file = !end_header && regular (size not read)",
+   "product": "Utils/FileBinaryTar.cls:181-188",
+   "mutations": [
+    "M-m02"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "Settled by review-71 A1: the model has no counterpart of the product size==0 write branch (FileBinaryTar.cls:181-188), and creates_file never reads size. The invented size mutation M-m02 is killed, but there is no product branch to mutate.",
+   "note": ""
+  },
+  {
+   "id": "build.archive.empty-file#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "iter6 workflows.rs::next_header rounds the payload to 512-byte blocks; end_header = empty name",
+   "product": "Utils/FileBinaryTar.cls (header loop)",
+   "mutations": [
+    "G5-m25",
+    "G5-m26"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "build.copy.overlap#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "iter6 workflows.rs::overlap = below(a,b) || below(b,a) || alias; copy_ok",
+   "product": "Utils/File.cls CopyDir guard",
+   "mutations": [
+    "G5-m24"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "build.publish.external-identity#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "iter8 webapps.rs::published_key selects external when use_external",
+   "product": "Main.cls::Publish",
+   "mutations": [
+    "G5-m20"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "build.publish.external-identity#2",
+   "verdict": "partial",
+   "support": "inspection",
+   "deciding": "iter8 webapps.rs::archive_manifest_name returns internal for every input (constant)",
+   "product": "Lifecycle/Base.cls package export",
+   "mutations": [],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "That the archived manifest keeps the internal name is a constant function. No package-export step writes the manifest name, so nothing computes it.",
+   "note": ""
+  },
+  {
+   "id": "build.publish.external-identity#4",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "iter8 webapps.rs::published_key selects internal when !use_external",
+   "product": "Main.cls::Publish",
+   "mutations": [
+    "G5-m21"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "build.publish.partial-effects#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "iter2 registry.rs::write_prefix/delete_prefix apply completed calls in sequence without compensation",
+   "product": "Repo/Oras/PublishService.cls::PushOras, DeleteTags",
+   "mutations": [
+    "G5-m44",
+    "G5-m45"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "note": "the number of completed calls is an environment input"
+  },
+  {
+   "id": "build.publish.partial-effects#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "iter2 registry.rs::oras_publish status needs cleanup_ok; remote_written from provider_written",
+   "product": "Repo/Oras/PublishService.cls::PublishModule",
+   "mutations": [
+    "G5-m38"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "build.publish.partial-effects#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "iter2 registry.rs::publish_lifecycle status needs local_export_ok for a new version; version assigned in memory",
+   "product": "Lifecycle/Base.cls %Publish",
+   "mutations": [
+    "G5-m39"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "note": ""
+  },
+  {
+   "id": "build.publish.partial-effects#4",
+   "verdict": "partial",
+   "support": "mutation-checked",
+   "deciding": "iter2 registry.rs::remote_publish (credentials, status == 200); remote_delete(authorized input, status == 200)",
+   "product": "Repo/Remote/PublishService.cls",
+   "mutations": [
+    "G5-m40",
+    "G5-m43"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "The credential requirement for deletion is never exercised, and remote_delete takes `authorized` as an input. G5-m43, a delete without credentials, survives. The status-200 rule for publish and delete and the publish credential rule are pinned (G5-m40).",
+   "note": ""
+  },
+  {
+   "id": "build.publish.partial-effects#5",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "iter2 registry.rs::oras_delete_enabled() = true transcribes the product constant",
+   "product": "Repo/Oras/PublishService.cls:64-70 (return 1)",
+   "mutations": [
+    "G5-m41"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "note": "constant in the product itself"
+  },
+  {
+   "id": "build.publish.partial-effects#6",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "iter2 registry.rs::publish_lifecycle/oras_publish: remote_written from provider_written independent of provider_ok",
+   "product": "Repo/Remote/PublishService.cls",
+   "mutations": [
+    "G5-m42"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "note": ""
+  }
+ ]
+}

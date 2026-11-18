@@ -1,0 +1,263 @@
+{
+ "page": ".g5/ontology/features/artifact-download.g5.md",
+ "auditor": "G4",
+ "entries": [
+  {
+   "id": "artifact.filter#1",
+   "verdict": "partial",
+   "support": "mutation-checked",
+   "deciding": "artifacts.rs::parse_fields final check name.is_some() || props nonempty",
+   "product": "ArtifactoryTarball.cls:345",
+   "mutations": [
+    "G4-m06",
+    "G4-m07"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "rule 4a: the @property-only filter is never exercised; dropping the property alternative (G4-m06) verifies. The repo-only refusal is pinned (m07).",
+   "note": ""
+  },
+  {
+   "id": "artifact.filter#2",
+   "verdict": "partial",
+   "support": "mutation-checked",
+   "deciding": "artifacts.rs::parse_field (Key::Other -> None) and condition (Array -> None)",
+   "product": "ArtifactoryTarball.cls:336-373",
+   "mutations": [
+    "G4-m08",
+    "G4-m09"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "rule 4a: the array condition is never exercised (G4-m08 accepting arrays verifies) and the unknown-key refusal is pinned only through the name/property requirement (G4-m09 ignoring unknown keys verifies in artifacts.rs; it is caught only by the uncited iter3 native_bridge.rs key filter-4).",
+   "note": ""
+  },
+  {
+   "id": "artifact.filter#3",
+   "verdict": "partial",
+   "support": "mutation-checked",
+   "deciding": "artifacts.rs::parse_field Key::Type accepts only \"file\"",
+   "product": "",
+   "mutations": [
+    "G4-m10",
+    "G4-m11"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "rule 4a: type=file is never exercised as accepted; refusing every type (G4-m10) verifies. Rejecting other type values is pinned (m11).",
+   "note": ""
+  },
+  {
+   "id": "artifact.filter#4",
+   "verdict": "partial",
+   "support": "mutation-checked",
+   "deciding": "artifacts.rs::condition: scalar, or one $eq/$match(name,path) with a text operand",
+   "product": "",
+   "mutations": [
+    "G4-m12",
+    "G4-m13",
+    "G4-m08"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "rule 4a: arrays are never exercised (G4-m08 verifies). Two operators (m12), $match on other keys (m13) and missing operand are pinned.",
+   "note": ""
+  },
+  {
+   "id": "artifact.filter#5",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "artifacts.rs::wildcard",
+   "product": "",
+   "mutations": [
+    "G4-m14",
+    "G4-m15",
+    "G4-m16"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "artifact.selection#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "artifacts.rs::accepted conjoins repo, name, path, properties",
+   "product": "",
+   "mutations": [
+    "G4-m17",
+    "G4-m18",
+    "G4-m19"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "artifact.selection#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "artifacts.rs::choose_candidate/newest strict later()",
+   "product": "",
+   "mutations": [
+    "G4-m21",
+    "G4-m22"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "artifact.selection#4",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "artifacts.rs::properties requires the key and membership",
+   "product": "",
+   "mutations": [
+    "G4-m23",
+    "G4-m24"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "artifact.selection#6",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "artifacts.rs::accepted maps an empty folder to \".\"",
+   "product": "",
+   "mutations": [
+    "G4-m20",
+    "G4-m19"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "artifact.selection#8",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "artifacts.rs::authenticated_first takes row 0 unsorted",
+   "product": "ArtifactoryTarball.cls:233-246",
+   "mutations": [
+    "G4-m25"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "artifact.failure#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "artifacts.rs::download: SearchOrFetchError ok = dev && anonymous; ExtractError never suppressed (transcribes the try/catch around only the anonymous branch and the Extract call outside it)",
+   "product": "ArtifactoryTarball.cls:146-168",
+   "mutations": [
+    "G4-m26",
+    "G4-m27",
+    "G4-m28"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "artifact.archive-admission#1",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "artifacts.rs::header_action ignores read status (Stop on empty name); refutation of the intended rejection",
+   "product": "",
+   "mutations": [
+    "G4-m29"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": "check refuted; mutant that honours the status is rejected by failed_read_is_not_rejected"
+  },
+  {
+   "id": "artifact.archive-admission#2",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "artifacts.rs::header_action/artifact_first_header for dev and non-dev",
+   "product": "",
+   "mutations": [
+    "G4-m29"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "artifact.archive-admission#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "artifacts.rs::header_action expected != stored -> Reject, else Entry",
+   "product": "",
+   "mutations": [
+    "G4-m30",
+    "G4-m31"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": "checksum arithmetic is a native port"
+  },
+  {
+   "id": "artifact.local-content#1",
+   "verdict": "partial",
+   "support": "mutation-checked",
+   "deciding": "artifacts.rs::activate request_download = phase && !local_directory",
+   "product": "",
+   "mutations": [
+    "G4-m32",
+    "G4-m33",
+    "G4-m34"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "rule 4a: the absent-folder neighbour never asserts that a download is requested; request_download:false (G4-m32) verifies. The present-folder side is pinned (m33, m34).",
+   "note": ""
+  },
+  {
+   "id": "artifact.local-content#3",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "artifacts.rs::save_download keeps an existing file and ignores non-200",
+   "product": "",
+   "mutations": [
+    "G4-m04",
+    "G4-m05"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  },
+  {
+   "id": "artifact.local-content#4",
+   "verdict": "full",
+   "support": "mutation-checked",
+   "deciding": "artifacts.rs::copy_export overlay over union of domains, siblings framed",
+   "product": "",
+   "mutations": [
+    "G4-m35",
+    "G4-m36"
+   ],
+   "control": "",
+   "instance_scoped": false,
+   "gap": "",
+   "note": ""
+  }
+ ]
+}
