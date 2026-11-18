@@ -1,0 +1,29 @@
+verification results:: 52 verified, 2 errors
+error: postcondition not satisfied
+   --> name_not_checked.rs:549:9
+    |
+540 | / pub proof fn catalog_checks_installed_artifact(
+541 | |     config: Config, listing: Listing, reg: Registry, annots: Map<int, Annot>, g: Group, c: Text, n: int,
+542 | |     package_matches: bool,
+543 | | )
+    | |_- at the end of the function body
+...
+549 | /         ({
+550 | |             let row = catalog_row(config, listing, reg, annots, g, c, n, package_matches);
+551 | |             &&& install_tag(g, row->deployed, c) == Some(row->checked_tag)
+552 | |             &&& signed_manifest(config, listing, row->checked_tag, reg) == Some(row->checked)
+553 | |             &&& annot_of(annots, row->checked.digest).deployed == row->deployed
+554 | |             &&& (package_matches || annot_of(annots, row->checked.digest).names.contains(n))
+555 | |         }),
+    | |__________^ failed this postcondition
+
+error: postcondition not satisfied
+   --> name_not_checked.rs:697:9
+    |
+694 | pub proof fn platform_alias_neighbours()
+    | ---------------------------------------- at the end of the function body
+...
+697 |         catalog_row(n_config(), n_listing(), n_registry(), n_annots(), two_variants(), here(), 701, false) is Skipped,
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: aborting due to 2 previous errors

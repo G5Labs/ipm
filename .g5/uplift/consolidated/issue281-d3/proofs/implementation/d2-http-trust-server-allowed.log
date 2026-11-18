@@ -1,0 +1,93 @@
+verification results:: 49 verified, 5 errors
+error: postcondition not satisfied
+   --> d2_http_trust_server_allowed.rs:382:9
+    |
+379 |   pub proof fn accepted_root_is_authentic(config: Config, contact: Contact, listing: Listing, tag: Text)
+    |   ------------------------------------------------------------------------------------------------------ at the end of the function body
+...
+382 | /         trusted_row(config, listing, tag) is Some ==> transport_allowed(config) && match listing {
+383 | |             Listing::Verified { server, root, rows, true_rows, names_safe } => root == contact.authentic_root,
+384 | |             _ => false,
+385 | |         },
+    | |_________^ failed this postcondition
+
+error: postcondition not satisfied
+   --> d2_http_trust_server_allowed.rs:395:9
+    |
+395 | /         ({
+396 | |             let outcome = retrieve(config, listing, tag, manifest, parsed, blob);
+397 | |             let decision = protected_admission(
+398 | |                 abs_target(config, path, tag), abs_policy(config, contact, snapshot), abs_manifest(manifest, parsed),
+...   |
+403 | |             &&& (outcome is Stream ==> outcome->package == abs_observed(blob))
+404 | |         }),
+    | |__________^ failed this postcondition
+405 |   {
+406 | /     match listing {
+407 | |         Listing::Verified { server, root, rows, true_rows, names_safe } => lemma_select_is_docker_row(rows, tag),
+408 | |         _ => {},
+409 | |     }
+    | |_____- at the end of the function body
+
+note: function body check: not all errors may have been reported; rerun with a higher value for --multiple-errors to find other potential errors in this function
+   --> d2_http_trust_server_allowed.rs:439:1
+    |
+439 | / pub proof fn failures_refuse(
+440 | |     config: Config, contact: Contact, path: int, tag: Text, snapshot: int, listing: Listing,
+441 | |     manifest: Received, parsed: Parsed, blob: Received,
+442 | | )
+    | |_^
+
+error: postcondition not satisfied
+   --> d2_http_trust_server_allowed.rs:447:9
+    |
+447 |           retrieve(config, listing, tag, manifest, parsed, blob) is Refused,
+    |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+...
+451 | /     match listing {
+452 | |         Listing::Verified { server, root, rows, true_rows, names_safe } => lemma_select_is_docker_row(rows, tag),
+453 | |         _ => {},
+454 | |     }
+    | |_____- at the end of the function body
+
+error: postcondition not satisfied
+   --> d2_http_trust_server_allowed.rs:449:9
+    |
+449 |           !effects(retrieve(config, listing, tag, manifest, parsed, blob)).consumer_unpacks,
+    |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+450 |   {
+451 | /     match listing {
+452 | |         Listing::Verified { server, root, rows, true_rows, names_safe } => lemma_select_is_docker_row(rows, tag),
+453 | |         _ => {},
+454 | |     }
+    | |_____- at the end of the function body
+
+error: postcondition not satisfied
+   --> d2_http_trust_server_allowed.rs:504:9
+    |
+504 | /         match signed_manifest(config, listing, tag, reg) {
+505 | |             Some(read) => match resolve(abs_target(config, path, tag), abs_policy(config, contact, snapshot),
+506 | |                     Manifest { digest: read.digest, package: None },
+507 | |                     abs_evidence(config, contact, path, tag, snapshot, listing)) {
+...   |
+511 | |             None => true,
+512 | |         },
+    | |_________^ failed this postcondition
+513 |   {
+514 | /     match listing {
+515 | |         Listing::Verified { server, root, rows, true_rows, names_safe } => lemma_select_is_docker_row(rows, tag),
+516 | |         _ => {},
+517 | |     }
+    | |_____- at the end of the function body
+
+error: postcondition not satisfied
+   --> d2_http_trust_server_allowed.rs:700:9
+    |
+694 |   pub proof fn platform_alias_neighbours()
+    |   ---------------------------------------- at the end of the function body
+...
+700 | /         catalog_row(Config { scheme: Scheme::Http, ..n_config() }, n_listing(), n_registry(), n_annots(), two_variants(),
+701 | |             here(), 702, false) is Skipped,
+    | |__________________________________________^ failed this postcondition
+
+error: aborting due to 6 previous errors

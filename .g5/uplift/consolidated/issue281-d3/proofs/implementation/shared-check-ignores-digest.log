@@ -1,0 +1,91 @@
+verification results:: 49 verified, 5 errors
+error: postcondition not satisfied
+   --> shared_check_ignores_digest.rs:395:9
+    |
+395 | /         ({
+396 | |             let outcome = retrieve(config, listing, tag, manifest, parsed, blob);
+397 | |             let decision = protected_admission(
+398 | |                 abs_target(config, path, tag), abs_policy(config, contact, snapshot), abs_manifest(manifest, parsed),
+...   |
+403 | |             &&& (outcome is Stream ==> outcome->package == abs_observed(blob))
+404 | |         }),
+    | |__________^ failed this postcondition
+405 |   {
+406 | /     match listing {
+407 | |         Listing::Verified { server, root, rows, true_rows, names_safe } => lemma_select_is_docker_row(rows, tag),
+408 | |         _ => {},
+409 | |     }
+    | |_____- at the end of the function body
+
+error: postcondition not satisfied
+   --> shared_check_ignores_digest.rs:488:9
+    |
+484 | / pub proof fn one_check_for_manifest_and_package(
+485 | |     config: Config, listing: Listing, tag: Text, manifest: Received, parsed: Parsed, blob: Received,
+486 | | )
+    | |_- at the end of the function body
+487 |       ensures
+488 | /         retrieve(config, listing, tag, manifest, parsed, blob) is Stream ==>
+489 | |             match (trusted_row(config, listing, tag), package_layer(parsed)) {
+490 | |                 (Some(row), Some(layer)) =>
+491 | |                     manifest.digest == row.digest && manifest.size == row.size
+492 | |                     && blob.digest == layer.digest && blob.size == layer.size,
+493 | |                 _ => false,
+494 | |             },
+    | |_____________^ failed this postcondition
+
+error: postcondition not satisfied
+   --> shared_check_ignores_digest.rs:504:9
+    |
+504 | /         match signed_manifest(config, listing, tag, reg) {
+505 | |             Some(read) => match resolve(abs_target(config, path, tag), abs_policy(config, contact, snapshot),
+506 | |                     Manifest { digest: read.digest, package: None },
+507 | |                     abs_evidence(config, contact, path, tag, snapshot, listing)) {
+...   |
+511 | |             None => true,
+512 | |         },
+    | |_________^ failed this postcondition
+513 |   {
+514 | /     match listing {
+515 | |         Listing::Verified { server, root, rows, true_rows, names_safe } => lemma_select_is_docker_row(rows, tag),
+516 | |         _ => {},
+517 | |     }
+    | |_____- at the end of the function body
+
+error: postcondition not satisfied
+   --> shared_check_ignores_digest.rs:567:9
+    |
+567 | /         ({
+568 | |             let (catalog_listing, after) = lookup(cache, key_for(repo, config, gun), first, first_timed_out);
+569 | |             let (payload_listing, _) = lookup(after, key_for(repo, config, gun), second, second_timed_out);
+570 | |             let row = catalog_row(config, catalog_listing, reg, annots, g, c, n, package_matches);
+...   |
+574 | |                     && (package_matches || annot_of(annots, manifest.digest).names.contains(n))
+575 | |         }),
+    | |__________^ failed this postcondition
+...
+579 | /     if row is Offered && compatible(row->deployed, g.platforms, c) {
+580 | |         catalog_checks_installed_artifact(config, catalog_listing, reg, annots, g, c, n, package_matches);
+581 | |     }
+    | |_____- at the end of the function body
+
+error: postcondition not satisfied
+   --> shared_check_ignores_digest.rs:592:9
+    |
+586 | / pub proof fn snapshot_pins_metadata_and_payload(
+587 | |     cache: Cache, repo: int, config: Config, gun: int, tag: Text,
+588 | |     first: Listing, second: Listing, first_timed_out: bool, second_timed_out: bool,
+589 | |     manifest: Received, parsed: Parsed, blob: Received,
+590 | | )
+    | |_- at the end of the function body
+591 |       ensures
+592 | /         ({
+593 | |             let (metadata_listing, after) = lookup(cache, key_for(repo, config, gun), first, first_timed_out);
+594 | |             let (payload_listing, _) = lookup(after, key_for(repo, config, gun), second, second_timed_out);
+595 | |             &&& payload_listing == metadata_listing
+...   |
+600 | |                     })
+601 | |         }),
+    | |__________^ failed this postcondition
+
+error: aborting due to 5 previous errors

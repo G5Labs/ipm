@@ -1,0 +1,34 @@
+verification results:: 4 verified, 3 errors
+error: postcondition not satisfied
+  --> any_repo_type_accepts.rs:90:13
+   |
+89 | pub proof fn only_oras_takes_trust(t: Table, m: Mods)
+   | ----------------------------------------------------- at the end of the function body
+90 |     ensures configure(t, m).1 && !(m.trust is Absent) ==> m.kind is Oras
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: postcondition not satisfied
+  --> any_repo_type_accepts.rs:97:9
+   |
+94 |   pub proof fn set_trust_is_stored_https(t: Table, m: Mods, url: Url)
+   |   ------------------------------------------------------------------- at the end of the function body
+...
+97 | /         configure(t, m).1 ==> url.scheme is Https && url.valid
+98 | |             && configure(t, m).0.target == Some(Repo { kind: m.kind, trust: url.canonical,
+99 | |                 publish: m.publish || match t.target { Some(r) => r.publish, None => false } }),
+   | |_______________________________________________________________________________________________^ failed this postcondition
+
+error: postcondition not satisfied
+   --> any_repo_type_accepts.rs:132:9
+    |
+125 |   pub proof fn neighbours()
+    |   ------------------------- at the end of the function body
+...
+132 | /         ({
+133 | |             let t = Table { target: None, other_publishes: true };
+134 | |             let m = Mods { kind: Kind::Filesystem, trust: TrustMod::Set { url: Url { scheme: Scheme::Https, valid: true, canonica...
+135 | |             configure(t, m) == (t, false)
+136 | |         }),
+    | |__________^ failed this postcondition
+
+error: aborting due to 3 previous errors

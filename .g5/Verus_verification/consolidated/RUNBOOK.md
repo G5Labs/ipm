@@ -44,3 +44,10 @@ The selected report identity claim connects `ReportTestResults`' tracked device 
 - `python3 .g5/Verus_verification/consolidated/iter70/run.py` verifies `implementation.rs` (24 obligations, 15 controls) and `settings.rs` (4 obligations, 2 controls). It resolves 52 member bindings, compiles the changed classes and their subclasses into `IPM_IRIS_CONTAINER`, and runs both `OrasContentTrust` test classes.
 - `--check` names stale proofs, correspondence or native receipts. Run `common30/freshness.py` with it, because a new production file outside the runner's list is caught only by that census.
 - The reverse lookup for this PR combined `iter67/project_map.py --member` per changed member with the shared freshness gate. Neither alone covered the PR ([calibration](../../uplift/consolidated/iter70/HANDOFF.md#reverse-lookup-and-its-calibration)).
+
+## ORAS signed admission, #281 D3+
+
+[The #281 D3+ handoff](../../uplift/consolidated/issue281-d3/HANDOFF.md) supersedes the consolidated iteration 70 models for #281. They are kept unchanged. Its models are in `issue281-d3/`. Its names avoid the coverage run's iteration numbers, which overlap the consolidated iterations 69 and 70.
+
+- `python3 .g5/Verus_verification/consolidated/issue281-d3/run.py --proofs-only` verifies `implementation.rs`, `invocations.rs`, `configuration.rs` and `settings.rs`. Each control in `controls.json` must be rejected at the theorems it names, through a failed postcondition or assertion.
+- `--adjacent` replays the inherited and neighbouring models the change affects, `--bindings` resolves the member bindings, `--native-only` compiles the changed classes into `IPM_IRIS_CONTAINER` and runs the test classes in `native-expected.json`, and `--publish` writes the viewer entries. `--check` names every stale receipt.

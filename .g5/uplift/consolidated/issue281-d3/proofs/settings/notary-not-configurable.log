@@ -1,0 +1,26 @@
+verification results:: 6 verified, 1 errors
+note: function body check: not all errors may have been reported; rerun with a higher value for --multiple-errors to find other potential errors in this function
+   --> notary_not_configurable.rs:107:1
+    |
+107 | pub proof fn notary_set_then_delete_finds_on_path(slots: Seq<Slot>, first: int, last: int)
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: postcondition not satisfied
+   --> notary_not_configurable.rs:110:9
+    |
+107 | pub proof fn notary_set_then_delete_finds_on_path(slots: Seq<Slot>, first: int, last: int)
+    | ------------------------------------------------------------------------------------------ at the end of the function body
+...
+110 |         set(slots, NOTARY(), first).updated,
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: postcondition not satisfied
+   --> notary_not_configurable.rs:111:9
+    |
+107 | pub proof fn notary_set_then_delete_finds_on_path(slots: Seq<Slot>, first: int, last: int)
+    | ------------------------------------------------------------------------------------------ at the end of the function body
+...
+111 |         verifier(set(set(slots, NOTARY(), first).slots, NOTARY(), last).slots) == (Verifier::Configured { path: last }),
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: aborting due to 2 previous errors

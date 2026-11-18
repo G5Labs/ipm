@@ -1,0 +1,38 @@
+verification results:: 52 verified, 2 errors
+error: postcondition not satisfied
+   --> payload_looks_up_again.rs:567:9
+    |
+567 | /         ({
+568 | |             let (catalog_listing, after) = lookup(cache, key_for(repo, config, gun), first, first_timed_out);
+569 | |             let (payload_listing, _) = lookup(after, key_for(repo, config, gun), second, second_timed_out);
+570 | |             let row = catalog_row(config, catalog_listing, reg, annots, g, c, n, package_matches);
+...   |
+574 | |                     && (package_matches || annot_of(annots, manifest.digest).names.contains(n))
+575 | |         }),
+    | |__________^ failed this postcondition
+...
+579 | /     if row is Offered && compatible(row->deployed, g.platforms, c) {
+580 | |         catalog_checks_installed_artifact(config, catalog_listing, reg, annots, g, c, n, package_matches);
+581 | |     }
+    | |_____- at the end of the function body
+
+error: postcondition not satisfied
+   --> payload_looks_up_again.rs:592:9
+    |
+586 | / pub proof fn snapshot_pins_metadata_and_payload(
+587 | |     cache: Cache, repo: int, config: Config, gun: int, tag: Text,
+588 | |     first: Listing, second: Listing, first_timed_out: bool, second_timed_out: bool,
+589 | |     manifest: Received, parsed: Parsed, blob: Received,
+590 | | )
+    | |_- at the end of the function body
+591 |       ensures
+592 | /         ({
+593 | |             let (metadata_listing, after) = lookup(cache, key_for(repo, config, gun), first, first_timed_out);
+594 | |             let (payload_listing, _) = lookup(after, key_for(repo, config, gun), second, second_timed_out);
+595 | |             &&& payload_listing == metadata_listing
+...   |
+600 | |                     })
+601 | |         }),
+    | |__________^ failed this postcondition
+
+error: aborting due to 2 previous errors

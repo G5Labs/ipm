@@ -1,0 +1,26 @@
+verification results:: 6 verified, 1 errors
+note: function body check: not all errors may have been reported; rerun with a higher value for --multiple-errors to find other potential errors in this function
+  --> module_root_empty_accepted.rs:93:1
+   |
+93 | pub proof fn module_root_refuses_empty(slots: Seq<Slot>)
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: postcondition not satisfied
+  --> module_root_empty_accepted.rs:95:13
+   |
+93 | pub proof fn module_root_refuses_empty(slots: Seq<Slot>)
+   | -------------------------------------------------------- at the end of the function body
+94 |     requires MODULE_ROOT() < slots.len()
+95 |     ensures set(slots, MODULE_ROOT(), -1).error, set(slots, MODULE_ROOT(), -1).slots == slots
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: postcondition not satisfied
+  --> module_root_empty_accepted.rs:95:50
+   |
+93 | pub proof fn module_root_refuses_empty(slots: Seq<Slot>)
+   | -------------------------------------------------------- at the end of the function body
+94 |     requires MODULE_ROOT() < slots.len()
+95 |     ensures set(slots, MODULE_ROOT(), -1).error, set(slots, MODULE_ROOT(), -1).slots == slots
+   |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: aborting due to 2 previous errors

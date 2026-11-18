@@ -1,0 +1,17 @@
+verification results:: 53 verified, 1 errors
+error: postcondition not satisfied
+   --> stall_not_recorded.rs:645:9
+    |
+636 | / pub proof fn timeout_stalls_server(
+637 | |     cache: Cache, repo: int, server: int, gun: int, other_gun: int, first: Listing, second: Listing,
+638 | |     second_timed_out: bool,
+639 | | )
+    | |_- at the end of the function body
+...
+645 | /         ({
+646 | |             let (_, after) = lookup(cache, Key { repo, server, gun }, first, true);
+647 | |             lookup(after, Key { repo, server, gun: other_gun }, second, second_timed_out).0 is Failed
+648 | |         }),
+    | |__________^ failed this postcondition
+
+error: aborting due to 1 previous error

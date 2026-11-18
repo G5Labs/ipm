@@ -1,0 +1,318 @@
+{
+  "implementation.rs": {
+    "d2-http-trust-server-allowed": {
+      "replace": [
+        "pub open spec fn transport_allowed(config: Config) -> bool {\n    config.scheme is Https\n}",
+        "pub open spec fn transport_allowed(config: Config) -> bool {\n    true\n}"
+      ],
+      "expect": [
+        "accepted_root_is_authentic",
+        "platform_alias_neighbours"
+      ]
+    },
+    "d2-metadata-from-first-platform": {
+      "replace": [
+        "            let t = checked_tag(g, deployed, c);",
+        "            let t = metadata_tag(g);"
+      ],
+      "expect": [
+        "catalog_checks_installed_artifact",
+        "platform_alias_neighbours"
+      ]
+    },
+    "deployed-disagreement-accepted": {
+      "replace": [
+        "                    if annot_of(annots, m.digest).deployed != deployed {",
+        "                    if false {"
+      ],
+      "expect": [
+        "catalog_checks_installed_artifact"
+      ]
+    },
+    "name-not-checked": {
+      "replace": [
+        "                    } else if !package_matches && !annot_of(annots, m.digest).names.contains(n) {",
+        "                    } else if false {"
+      ],
+      "expect": [
+        "catalog_checks_installed_artifact",
+        "platform_alias_neighbours"
+      ]
+    },
+    "shared-check-ignores-digest": {
+      "replace": [
+        "    received.digest == expected.digest && received.size == expected.size\n}",
+        "    received.size == expected.size\n}"
+      ],
+      "expect": [
+        "stream_refines_admission",
+        "one_check_for_manifest_and_package",
+        "signed_manifest_is_authorized"
+      ]
+    },
+    "shared-check-ignores-size": {
+      "replace": [
+        "    received.digest == expected.digest && received.size == expected.size\n}",
+        "    received.digest == expected.digest\n}"
+      ],
+      "expect": [
+        "stream_refines_admission",
+        "one_check_for_manifest_and_package"
+      ]
+    },
+    "manifest-not-checked": {
+      "replace": [
+        "            if bytes_match(row_descriptor(row), manifest) {",
+        "            if true {"
+      ],
+      "expect": [
+        "stream_refines_admission",
+        "one_check_for_manifest_and_package"
+      ]
+    },
+    "package-not-checked": {
+      "replace": [
+        "                        if bytes_match(layer, blob) {",
+        "                        if true {"
+      ],
+      "expect": [
+        "stream_refines_admission",
+        "one_check_for_manifest_and_package"
+      ]
+    },
+    "catalog-metadata-unverified": {
+      "replace": [
+        "            if reg.by_digest.contains_key(row.digest) && bytes_match(row_descriptor(row), reg.by_digest[row.digest]) {",
+        "            if reg.by_digest.contains_key(row.digest) {"
+      ],
+      "expect": [
+        "signed_manifest_is_authorized"
+      ]
+    },
+    "first-of-several-package-layers": {
+      "replace": [
+        "pub open spec fn package_layer(parsed: Parsed) -> Option<Descriptor> {\n    if parsed.package_layers.len() == 1 {",
+        "pub open spec fn package_layer(parsed: Parsed) -> Option<Descriptor> {\n    if parsed.package_layers.len() >= 1 {"
+      ],
+      "expect": [
+        "stream_refines_admission"
+      ]
+    },
+    "provider-pull-unpacks": {
+      "replace": [
+        "Effects { provider_unpacked: false,",
+        "Effects { provider_unpacked: true,"
+      ],
+      "expect": [
+        "stream_refines_admission",
+        "failures_refuse"
+      ]
+    },
+    "cached-timestamp-kept": {
+      "replace": [
+        "    notary_list(reachable, false, answer, cached)",
+        "    notary_list(reachable, true, answer, cached)"
+      ],
+      "expect": [
+        "outage_refuses"
+      ]
+    },
+    "untrusted-delegation-accepted": {
+      "replace": [
+        "    match role { Role::Releases => true, Role::Targets => true, Role::Other => false }",
+        "    match role { Role::Releases => true, Role::Targets => true, Role::Other => true }"
+      ],
+      "expect": [
+        "lemma_select_is_docker_row"
+      ]
+    },
+    "wrong-server-invoked": {
+      "replace": [
+        "pub open spec fn invoked_server(config: Config) -> int {\n    config.trust_server\n}",
+        "pub open spec fn invoked_server(config: Config) -> int {\n    config.registry\n}"
+      ],
+      "expect": [
+        "stream_refines_admission",
+        "failures_refuse"
+      ]
+    },
+    "unsafe-target-names-accepted": {
+      "replace": [
+        "                if names_safe { select(rows, tag) } else { None },",
+        "                select(rows, tag),"
+      ],
+      "expect": [
+        "stream_refines_admission"
+      ]
+    },
+    "payload-looks-up-again": {
+      "replace": [
+        "    if cache.entries.contains_key(key) {\n        (cache.entries[key], cache)",
+        "    if false {\n        (cache.entries[key], cache)"
+      ],
+      "expect": [
+        "snapshot_pins_metadata_and_payload",
+        "offered_name_is_installed_artifact"
+      ]
+    },
+    "snapshot-ignores-trust-server": {
+      "replace": [
+        "    Key { repo, server: config.trust_server, gun }",
+        "    Key { repo, server: 0, gun }"
+      ],
+      "expect": [
+        "snapshot_keyed_by_server"
+      ]
+    },
+    "stall-reuses-other-listing": {
+      "replace": [
+        "        (Listing::Failed, cache)\n",
+        "        (cache.entries[Key { gun: 0, ..key }], cache)\n"
+      ],
+      "expect": [
+        "stalled_server_only_refuses"
+      ]
+    },
+    "stall-not-recorded": {
+      "replace": [
+        "            stalled: if timed_out { cache.stalled.insert((key.repo, key.server)) } else { cache.stalled },",
+        "            stalled: cache.stalled,"
+      ],
+      "expect": [
+        "timeout_stalls_server"
+      ]
+    }
+  },
+  "invocations.rs": {
+    "d2-shared-unlocked-directory": {
+      "replace": [
+        "pub open spec fn d3() -> Design { Design { private_dirs: true, locked: true } }",
+        "pub open spec fn d3() -> Design { Design { private_dirs: false, locked: false } }"
+      ],
+      "expect": [
+        "step_inv",
+        "shared_directory_accepts_without_reaching_server"
+      ]
+    },
+    "timestamp-seeded": {
+      "replace": [
+        "                dir_ts: s.dir_ts.update(dir(d, i) as int, false),",
+        "                dir_ts: s.dir_ts.update(dir(d, i) as int, true),"
+      ],
+      "expect": [
+        "step_inv",
+        "shared_directory_accepts_without_reaching_server"
+      ]
+    },
+    "pins-written-on-failure": {
+      "replace": [
+        "                pin_root: if c.accepted { c.result_version } else { s.pin_root },",
+        "                pin_root: c.result_version,"
+      ],
+      "expect": [
+        "step_inv"
+      ]
+    },
+    "unlocked": {
+      "replace": [
+        "pub open spec fn d3() -> Design { Design { private_dirs: true, locked: true } }",
+        "pub open spec fn d3() -> Design { Design { private_dirs: true, locked: false } }"
+      ],
+      "expect": [
+        "step_inv",
+        "unlocked_pins_move_back"
+      ]
+    }
+  },
+  "configuration.rs": {
+    "d2-http-accepted": {
+      "replace": [
+        "    if url.scheme is Https && url.valid && url.canonical != 0 { Some(url.canonical) } else { None }",
+        "    if url.valid && url.canonical != 0 { Some(url.canonical) } else { None }"
+      ],
+      "expect": [
+        "set_trust_is_stored_https",
+        "http_refused",
+        "neighbours"
+      ]
+    },
+    "trust-checked-after-publish": {
+      "replace": [
+        "    } else if trust_refused(m) {\n        (t, false)",
+        "    } else if trust_refused(m) {\n        (after_publish(t, m), false)"
+      ],
+      "expect": [
+        "refusal_changes_nothing",
+        "http_refused",
+        "neighbours"
+      ]
+    },
+    "any-repo-type-accepts": {
+      "replace": [
+        "pub open spec fn type_refused(m: Mods) -> bool { !(m.trust is Absent) && !supports_trust(m.kind) }",
+        "pub open spec fn type_refused(m: Mods) -> bool { false }"
+      ],
+      "expect": [
+        "only_oras_takes_trust",
+        "set_trust_is_stored_https",
+        "neighbours"
+      ]
+    },
+    "copy-drops-trust": {
+      "replace": [
+        "pub open spec fn copied(r: Repo) -> Repo { r }",
+        "pub open spec fn copied(r: Repo) -> Repo { Repo { trust: 0, ..r } }"
+      ],
+      "expect": [
+        "consumers_keep_trust"
+      ]
+    },
+    "verification-allows-http": {
+      "replace": [
+        "pub open spec fn verification_allowed(stored: Url) -> bool { stored.scheme is Https }",
+        "pub open spec fn verification_allowed(stored: Url) -> bool { true }"
+      ],
+      "expect": [
+        "http_refused"
+      ]
+    }
+  },
+  "settings.rs": {
+    "d2-module-root-not-excepted": {
+      "replace": [
+        "    if k == TRF() || k == NOTARY() { Some(-1) } else if k == MODULE_ROOT() { Some(ROOT()) } else { None }",
+        "    if k == TRF() || k == NOTARY() { Some(-1) } else { None }"
+      ],
+      "expect": [
+        "module_root_delete_computes"
+      ]
+    },
+    "notary-reset-uses-stored-default": {
+      "replace": [
+        "    if k == TRF() || k == NOTARY() { Some(-1) } else if k == MODULE_ROOT() { Some(ROOT()) } else { None }",
+        "    if k == TRF() { Some(-1) } else if k == MODULE_ROOT() { Some(ROOT()) } else { None }"
+      ],
+      "expect": [
+        "notary_set_then_delete_finds_on_path"
+      ]
+    },
+    "notary-not-configurable": {
+      "replace": [
+        "pub open spec fn configurable(k: int) -> bool { 0 <= k < 13 }",
+        "pub open spec fn configurable(k: int) -> bool { 0 <= k < 12 }"
+      ],
+      "expect": [
+        "notary_set_then_delete_finds_on_path"
+      ]
+    },
+    "module-root-empty-accepted": {
+      "replace": [
+        "    else if k == MODULE_ROOT() && v == -1 { Out { error: true, ..out(slots) } }\n",
+        ""
+      ],
+      "expect": [
+        "module_root_refuses_empty"
+      ]
+    }
+  }
+}

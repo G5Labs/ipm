@@ -100,8 +100,9 @@ A protected repository offers and installs only packages whose tag is signed on 
 
 `repo -o -name <repo> -trust-server <url>` sets the trust server of one ORAS repository, and an empty value removes it.
 
-- The URL must use http or https and is stored in canonical form.
-- `repo -list`, `repo -copy-from` and lock files keep it with the repository's other settings.
+- The URL must use https, as docker requires of a trust server, and is stored in canonical form.
+- A refused value changes nothing, including which repository `-publish 1` would have made the default.
+- `repo -list`, `repo -copy-from` and lock files keep it with the repository's other settings. A stored value that does not use https, such as one copied from an older definition, fails every check.
 - Other repository types refuse `-trust-server`, because they would not check it.
 - `config set NotaryExecutable <path>` names the verifier when `notary` is not on the PATH. `config delete NotaryExecutable` goes back to the PATH.
 
@@ -110,8 +111,8 @@ A protected repository offers and installs only packages whose tag is signed on 
 
 IPM checks signatures with the `notary` CLI, the reference Docker Content Trust client, and accepts a tag as `docker pull` does: signed in `targets/releases`, or else in `targets`.
 
-- The first check of a repository pins the root key its trust server presents. Later trust data must chain to that root.
-- Pins are kept per trust server in `ipm/content-trust/` under the IRIS manager directory.
+- notary reaches the trust server over TLS and checks its certificate. The first check of a repository therefore pins the root key an authenticated trust server presents, as docker does. Later trust data must chain to that root.
+- Pins are kept per trust server in `ipm/content-trust/` under the IRIS manager directory, so every namespace of the instance uses the same pins.
 - A signature only in another delegation role does not count.
 
 <a id="repo.oras.signed-admission.freshness"></a>
@@ -119,7 +120,8 @@ IPM checks signatures with the `notary` CLI, the reference Docker Content Trust 
 
 Each check must reach the trust server. An unreachable server, a verifier that cannot run, or trust data that fails verification refuses the check instead of using cached trust data.
 
-- notary would fall back to unexpired cached trust data, so IPM removes the cached timestamp before each check.
+- notary would fall back to unexpired cached trust data. Each check therefore runs notary in a trust directory of its own, which starts from the pinned trust data without its timestamp. notary must download a current timestamp, and no other check can supply one.
+- Checks of one repository on one trust server run one at a time across the instance. Only a successful check replaces the pinned trust data, which never includes a timestamp.
 - A server with no trust data for the repository means nothing in it is signed.
 - A check that does not finish in time fails. For the rest of that command, the repo's other checks on that trust server fail without waiting again.
 
@@ -129,6 +131,7 @@ Each check must reach the trust server. An unreachable server, a verifier that c
 A protected repository offers only signed versions and reads their metadata, such as module.xml and platform, from the signed manifests.
 
 - Version ranges, build labels, platform tags and external names choose among the signed versions as they would among all versions.
+- An offered version's name, external name and other metadata come from the signed manifest of the artifact install would retrieve on this platform. A version whose artifacts disagree on whether it is deployed is not offered.
 - When a named lookup skips unsigned versions, IPM warns which ones.
 - Another enabled repository can still supply a version the protected one does not offer, as with any version a repository lacks.
 
@@ -142,6 +145,7 @@ Within one shell command, IPM checks a repository's trust data once and uses tha
 
 IPM downloads the signed manifest and its package by digest, without the ORAS client's pull, and checks their size and digest before anything unpacks them.
 
+- One check of size and digest serves both the manifest and the package.
 - The signed manifest must have exactly one package layer.
 - Other layers are never downloaded or unpacked.
 - A failed check deletes the download and leaves the installed module as it was.
@@ -284,7 +288,7 @@ Iteration75 neighbours: [oras_integrity.rs](../../Verus_verification/coverage-20
 - user-facing-behavior, security
 - Expands: [ORAS integrity](#repo.oras.integrity).
 
-[As-built model and receipts](../../uplift/consolidated/iter68/HANDOFF.md) trace the bundled provider, IPM's status gate, installed files, history and a live dependency consumer. [Pinned source bindings](../../uplift/consolidated/iter68/exact-bindings.json) include the installed wheel implementation. The #281 candidate leaves this path unchanged for repositories without a trust server. The unprotected control in `OrasContentTrust.cls::TestNothingUnpackedBeforeVerification` reproduces the provider unpacking a directory layer before IPM's size check ([iteration 70](../../uplift/consolidated/iter70/HANDOFF.md)).
+[As-built model and receipts](../../uplift/consolidated/iter68/HANDOFF.md) trace the bundled provider, IPM's status gate, installed files, history and a live dependency consumer. [Pinned source bindings](../../uplift/consolidated/iter68/exact-bindings.json) include the installed wheel implementation. The #281 candidate leaves this path unchanged for repositories without a trust server. The unprotected control in `OrasContentTrust.cls::TestNothingUnpackedBeforeVerification` reproduces the provider unpacking a directory layer before IPM's size check ([#281 D3+](../../uplift/consolidated/issue281-d3/HANDOFF.md)).
 
 State machines: [ORAS archive boundary](../../Verus_verification/models/iter68-as-built/manifest.json)
 
@@ -298,20 +302,20 @@ Iteration75 neighbours: [oras_integrity.rs](../../Verus_verification/coverage-20
 - Expands: [ORAS archive boundary](#repo.oras.archive-boundary).
 - Children: [configuration](#repo.oras.signed-admission.configuration), [verifier](#repo.oras.signed-admission.verifier), [freshness](#repo.oras.signed-admission.freshness), [catalog](#repo.oras.signed-admission.catalog), [snapshot](#repo.oras.signed-admission.snapshot), [bytes](#repo.oras.signed-admission.bytes), [refusal](#repo.oras.signed-admission.refusal).
 
-Authority: [issue #281](https://github.com/intersystems/ipm/issues/281), its 13 March 2025 external-signing comment and its 14 March 2025 trust-server proposal. Formal contract: [admission.rs::protected_admission](../../Verus_verification/consolidated/iter68/admission.rs), refined by [implementation.rs::stream_refines_admission](../../Verus_verification/consolidated/iter70/implementation.rs). Implementation: `Repo/Oras/ContentTrust.cls`, `Repo/Oras/PackageService.cls::GetModule`, `::GetModuleManifest`, `::AddModulesFromTags`. Tests: `OrasContentTrust.cls` (integration and unit). [Iteration 70 re-verification](../../uplift/consolidated/iter70/HANDOFF.md) supersedes [iteration 69](../../uplift/consolidated/iter69/HANDOFF.md).
+Authority: [issue #281](https://github.com/intersystems/ipm/issues/281), its 13 March 2025 external-signing comment and its 14 March 2025 trust-server proposal. Formal contract: [admission.rs::protected_admission](../../Verus_verification/consolidated/iter68/admission.rs), refined by [implementation.rs::stream_refines_admission](../../Verus_verification/consolidated/issue281-d3/implementation.rs). Implementation: `Repo/Oras/ContentTrust.cls`, `Repo/Oras/PackageService.cls::GetModule`, `::GetModuleManifest`, `::AddModulesFromTags`. Tests: `OrasContentTrust.cls` (integration and unit). [#281 D3+ handoff](../../uplift/consolidated/issue281-d3/HANDOFF.md) and [product bindings](../../uplift/consolidated/issue281-d3/bindings.json). It supersedes the #281 re-verification in [consolidated iteration 70](../../uplift/consolidated/iter70/HANDOFF.md), which superseded [consolidated iteration 69](../../uplift/consolidated/iter69/HANDOFF.md). These consolidated iterations are not the coverage run's iterations 69 and 70.
 
-State machines: [Proposed signed admission](../../Verus_verification/models/iter68-admission/manifest.json), [Implemented signed admission](../../Verus_verification/models/iter70-implementation/manifest.json); [implementation · iter69](../../Verus_verification/models/iter69-implementation/manifest.json)
+State machines: [Proposed signed admission](../../Verus_verification/models/iter68-admission/manifest.json), [implementation · #281 D3+](../../Verus_verification/models/issue281-d3-implementation/manifest.json); superseded [implementation · consolidated iter70](../../Verus_verification/models/iter70-implementation/manifest.json), [implementation · consolidated iter69](../../Verus_verification/models/iter69-implementation/manifest.json)
 
 ### repo.oras.signed-admission.configuration
 
 - human-provided
 - user-facing-behavior, security
-- test-coverage
+- design-verified
 - Expands: [signed admission](#repo.oras.signed-admission).
 
-Source: the 14 March 2025 issue comment asks for the trust server as an additional ORAS repository argument. The flag and setting names, the refusal for other repository types and the `config delete` reset are implementation choices. Implementation: `Repo/Oras/Definition.cls` `TrustServer`, `OnConfigure`, `NormalizeTrustServer`, `GetPackageService`, `GetPublishService`, `LockFileMapping`; `Repo/Definition.cls` `Configure`, `TRUSTSERVERSUPPORTED`; `Repo/UniversalSettings.cls` `NotaryExecutable`, `ResetToDefault`. Formal: [settings.rs::notary_set_then_delete_finds_on_path](../../Verus_verification/consolidated/iter70/settings.rs), controls `notary-reset-uses-stored-default` and `notary-not-configurable`. The repository-type refusal is tested natively only. Test: `OrasContentTrust.cls::TestRepoConfiguration`, which also reads a definition saved without the new storage slot.
+Source: the 14 March 2025 issue comment asks for the trust server as an additional ORAS repository argument. Docker requires an https trust server ([docker/cli trust.go](https://github.com/docker/cli/blob/v27.5.1/cli/trust/trust.go#L59-L72)). The flag and setting names, the refusal for other repository types and the `config delete` reset are implementation choices. Formal: [configuration.rs](../../Verus_verification/consolidated/issue281-d3/configuration.rs) `refusal_changes_nothing`, `only_oras_takes_trust`, `set_trust_is_stored_https`, `http_refused`, `consumers_keep_trust`, controls `d2-http-accepted`, `trust-checked-after-publish`, `any-repo-type-accepts`, `copy-drops-trust`, `verification-allows-http`; [settings.rs](../../Verus_verification/consolidated/issue281-d3/settings.rs) `notary_set_then_delete_finds_on_path`. Implementation: `Repo/Oras/Definition.cls` `TrustServer`, `OnConfigure`, `NormalizeTrustServer`, `GetPackageService`, `GetPublishService`, `LockFileMapping`; `Repo/Definition.cls` `Configure`, `TRUSTSERVERSUPPORTED`; `Repo/UniversalSettings.cls` `NotaryExecutable`, `ResetToDefault`; `Repo/Oras/ContentTrust.cls::LookUpSignedTargets` for a stored value that is not https. Tests: `OrasContentTrust.cls::TestRepoConfiguration`, which also reads a definition saved without the new storage slot, and `::TestRefusedTrustServerChangesNothing`.
 
-State machines: [implementation · iter70](../../Verus_verification/models/iter70-implementation/manifest.json), [settings · iter70](../../Verus_verification/models/iter70-settings/manifest.json); [implementation · iter69](../../Verus_verification/models/iter69-implementation/manifest.json)
+State machines: [configuration · #281 D3+](../../Verus_verification/models/issue281-d3-configuration/manifest.json), [settings · #281 D3+](../../Verus_verification/models/issue281-d3-settings/manifest.json); superseded [settings · consolidated iter70](../../Verus_verification/models/iter70-settings/manifest.json)
 
 ### repo.oras.signed-admission.verifier
 
@@ -320,9 +324,9 @@ State machines: [implementation · iter70](../../Verus_verification/models/iter7
 - design-verified
 - Expands: [signed admission](#repo.oras.signed-admission).
 
-The issue leaves the library or executable open and notes that docker-py lacks Docker Content Trust. notary v0.6.1 is the last release with Linux, macOS and Windows binaries. Formal: [implementation.rs::only_trusted_roles](../../Verus_verification/consolidated/iter70/implementation.rs), control `untrusted-delegation-accepted`. IPM chooses which server notary asks (`invoked_server`, control `wrong-server-invoked`). That notary checks the answer against the root pinned for that server is the premise `notary_verified`, not an IPM check. Implementation: `Repo/Oras/ContentTrust.cls` `LookUpSignedTargets`, `ParseTargets`, `TrustDirectory`. Tests: `TestTrustedRoles`, `TestReplacedRootRefused`, and in `TestSignedInstall` a signature for the same manifest in another repository. Root pinning beyond trust on first use is available through `trust_pinning` in the IRIS user's notary configuration, which notary honors alongside IPM's `-d` and `-s` (a wrong pin was refused in iteration 70). A private CA for an https trust server would use `remote_server.root_ca` there, which is not exercised.
+The issue leaves the library or executable open and notes that docker-py lacks Docker Content Trust. notary v0.6.1 is the last release with Linux, macOS and Windows binaries. Formal: [implementation.rs](../../Verus_verification/consolidated/issue281-d3/implementation.rs) `only_trusted_roles`, control `untrusted-delegation-accepted`; `accepted_root_is_authentic`, control `d2-http-trust-server-allowed`. IPM decides the transport (`transport_allowed`) and which server notary asks (`invoked_server`, control `wrong-server-invoked`). That notary checks the server certificate (`tls_authenticated`) and the answer against the pinned or first presented root (`notary_verified`) are premises, not IPM checks. Implementation: `Repo/Oras/ContentTrust.cls` `LookUpSignedTargets`, `ParseTargets`, `TrustDirectory`. Tests: `TestTrustedRoles`, `TestReplacedRootRefused`, `TestRepoConfiguration` (http refused), and in `TestSignedInstall` a signature for the same manifest in another repository. Root pinning beyond trust on first use is available through `trust_pinning` in the IRIS user's notary configuration, which notary honors alongside IPM's `-d` and `-s`. A private CA for the trust server is trusted through the system certificate store, as in the test image, or `remote_server.root_ca` there. Pinning before first use is an open question: [root pinning](../../Verus_verification/open_questions.md#repo.oras.signed-admission.root-pinning).
 
-State machines: [implementation · iter70](../../Verus_verification/models/iter70-implementation/manifest.json); [implementation · iter69](../../Verus_verification/models/iter69-implementation/manifest.json)
+State machines: [implementation · #281 D3+](../../Verus_verification/models/issue281-d3-implementation/manifest.json)
 
 ### repo.oras.signed-admission.freshness
 
@@ -331,9 +335,9 @@ State machines: [implementation · iter70](../../Verus_verification/models/iter7
 - design-verified
 - Expands: [signed admission](#repo.oras.signed-admission).
 
-Formal: [implementation.rs::outage_refuses](../../Verus_verification/consolidated/iter70/implementation.rs), control `cached-timestamp-kept`; `::stalled_server_only_refuses` and `::timeout_stalls_server`, controls `stall-reuses-other-listing` and `stall-not-recorded`. notary 0.7.0 source `client/tufclient.go::downloadTimestamp` uses the cached timestamp after a network error. Removing the cached timestamp also drops notary's timestamp version floor, while the cached snapshot's version floor should still refuse an older snapshot. That reading of notary's TUF client is not exercised here. Tests: `TestVerifierUnavailableRefused` gives a server that is down a copy of valid cached trust data, and sets a missing verifier. `TestStalledTrustServerRefused` covers the deadline and the next repository failing at once. Two processes checking one repository at once share the cache, so one can briefly see the other's fresh timestamp. Without the `timeout` program, as on Windows, notary runs without a deadline.
+Formal: [invocations.rs](../../Verus_verification/consolidated/issue281-d3/invocations.rs) `accepted_check_fetched_itself` over every interleaving of checks of one repository, with `shared_directory_accepts_without_reaching_server` as the witness against the shared directory, and `unlocked_pins_move_back` against an unlocked pin store. Controls `d2-shared-unlocked-directory`, `timestamp-seeded`, `pins-written-on-failure`, `unlocked`. [implementation.rs](../../Verus_verification/consolidated/issue281-d3/implementation.rs) `outage_refuses`, control `cached-timestamp-kept`; `stalled_server_only_refuses` and `timeout_stalls_server`, controls `stall-reuses-other-listing` and `stall-not-recorded`. notary 0.6.1 source `client/tufclient.go::downloadTimestamp` uses the cached timestamp after a network error. Implementation: `Repo/Oras/ContentTrust.cls` `LookUpSignedTargets`, `SeedTrustDirectory`, `KeepTrustData`, `SignedTargets`. Tests: `TestVerifierUnavailableRefused` gives a server that is down a copy of valid pinned and cached trust data, and sets a missing verifier. `TestConcurrentCheckUsesOwnTimestamp` holds a timestamp written by another check in the pin store while the server is down. `TestStalledTrustServerRefused` covers the deadline and the next repository failing at once. Without the `timeout` program, as on Windows, notary runs without a deadline.
 
-State machines: [implementation · iter70](../../Verus_verification/models/iter70-implementation/manifest.json); [implementation · iter69](../../Verus_verification/models/iter69-implementation/manifest.json)
+State machines: [invocations · #281 D3+](../../Verus_verification/models/issue281-d3-invocations/manifest.json), [implementation · #281 D3+](../../Verus_verification/models/issue281-d3-implementation/manifest.json)
 
 ### repo.oras.signed-admission.catalog
 
@@ -342,9 +346,9 @@ State machines: [implementation · iter70](../../Verus_verification/models/iter7
 - design-verified
 - Expands: [signed admission](#repo.oras.signed-admission).
 
-docker pull with content trust also lists signed targets rather than registry tags for `--all-tags`. Selecting from signed tags keeps the registry from steering selection toward an older signed version by hiding tags. Formal: [implementation.rs::catalog_offers_only_authorized](../../Verus_verification/consolidated/iter70/implementation.rs) and `::catalog_and_payload_read_one_manifest`, controls `catalog-offers-registry-tags` and `catalog-metadata-by-tag`; `::plan_and_payload_share_identity`. Implementation: `Repo/Oras/PackageService.cls::AddModulesFromTags`, `::TrustedManifest`, `::GetModuleManifest`, `::WarnUnsignedVersions`. Tests: `TestSignedInstall`, `TestBuildAndPlatformSelection`, `TestExternalNameDependency`, `TestProtectedDependency`. A namespace-wide rule that only protected repositories may supply a module is outside the issue. Supplier fallback is an open question: [supplier policy](../../Verus_verification/open_questions.md#repo.oras.signed-admission.supplier-policy).
+docker pull with content trust also lists signed targets rather than registry tags for `--all-tags`. Selecting from signed tags keeps the registry from steering selection toward an older signed version by hiding tags. Formal: [implementation.rs](../../Verus_verification/consolidated/issue281-d3/implementation.rs) `signed_manifest_is_authorized`, `catalog_checks_installed_artifact` and `offered_name_is_installed_artifact`, composed with iteration15's `metadata_tag` and `tag_for` ([oras.rs](../../Verus_verification/consolidated/iter15/oras.rs)), with `platform_alias_neighbours` for two signed variants that give different external names. Controls `d2-metadata-from-first-platform`, `deployed-disagreement-accepted`, `name-not-checked`, `catalog-metadata-unverified`. Implementation: `Repo/Oras/PackageService.cls::AddModulesFromTags`, `::TrustedManifest`, `::GetModuleManifest`, `::WarnUnsignedVersions`; `Repo/Manager.cls::SearchRepositoriesForModule` and `::TagForReference` choose the installed artifact. Tests: `TestSignedInstall`, `TestBuildAndPlatformSelection`, `TestExternalNameDependency`, `TestExternalNameOfInstalledPlatform`, `TestProtectedDependency`. A namespace-wide rule that only protected repositories may supply a module is outside the issue. Supplier fallback is an open question: [supplier policy](../../Verus_verification/open_questions.md#repo.oras.signed-admission.supplier-policy).
 
-State machines: [implementation · iter70](../../Verus_verification/models/iter70-implementation/manifest.json); [implementation · iter69](../../Verus_verification/models/iter69-implementation/manifest.json)
+State machines: [implementation · #281 D3+](../../Verus_verification/models/issue281-d3-implementation/manifest.json)
 
 ### repo.oras.signed-admission.snapshot
 
@@ -353,9 +357,9 @@ State machines: [implementation · iter70](../../Verus_verification/models/iter7
 - design-verified
 - Expands: [signed admission](#repo.oras.signed-admission).
 
-Formal: [implementation.rs::snapshot_pins_metadata_and_payload](../../Verus_verification/consolidated/iter70/implementation.rs) and `::snapshot_keyed_by_server`, controls `payload-looks-up-again` and `snapshot-ignores-trust-server`. Implementation: `Repo/Oras/ContentTrust.cls::SignedTargets` keeps the outcome in the shell command's repo lookup state, keyed by repository name, trust server and repository. Code outside a shell command checks again on each call. No production install path runs outside one. Tests: `TestSignedArtifactIsTheOneInstalled`, `TestSnapshotWithinCommand`.
+Formal: [implementation.rs](../../Verus_verification/consolidated/issue281-d3/implementation.rs) `snapshot_pins_metadata_and_payload`, `snapshot_keyed_by_server` and `offered_name_is_installed_artifact`, controls `payload-looks-up-again` and `snapshot-ignores-trust-server`. Implementation: `Repo/Oras/ContentTrust.cls::SignedTargets` keeps the outcome in the shell command's repo lookup state, keyed by repository name, trust server and repository. Code outside a shell command checks again on each call. No production install path runs outside one. Tests: `TestSignedArtifactIsTheOneInstalled`, `TestSnapshotWithinCommand`.
 
-State machines: [implementation · iter70](../../Verus_verification/models/iter70-implementation/manifest.json); [implementation · iter69](../../Verus_verification/models/iter69-implementation/manifest.json)
+State machines: [implementation · #281 D3+](../../Verus_verification/models/issue281-d3-implementation/manifest.json)
 
 ### repo.oras.signed-admission.bytes
 
@@ -364,9 +368,9 @@ State machines: [implementation · iter70](../../Verus_verification/models/iter7
 - design-verified
 - Expands: [signed admission](#repo.oras.signed-admission).
 
-Formal: [implementation.rs::stream_refines_admission](../../Verus_verification/consolidated/iter70/implementation.rs), controls `manifest-digest-unchecked`, `first-of-several-package-layers`, `package-digest-unchecked`, `package-size-unchecked`, `provider-pull-unpacks`. Implementation: `Repo/Oras/PackageService.cls` `GetTrustedModule`, `TrustedManifest`, `FetchTrustedManifest`, `PackageLayer`, `DownloadTrustedBlob`. Tests: `TestMismatchedContentRefused`, `TestWrongBytesRefused`, `TestNothingUnpackedBeforeVerification`, whose unprotected control shows the ORAS pull unpacking a directory layer.
+Formal: [implementation.rs](../../Verus_verification/consolidated/issue281-d3/implementation.rs) `stream_refines_admission`, `one_check_for_manifest_and_package`, controls `shared-check-ignores-digest`, `shared-check-ignores-size`, `manifest-not-checked`, `package-not-checked`, `first-of-several-package-layers`, `provider-pull-unpacks`. Implementation: `Repo/Oras/PackageService.cls` `GetTrustedModule`, `TrustedManifest`, `FetchTrustedManifest`, `PackageLayer`, `DownloadTrustedBlob` and the `read_verified` helper both downloads use. Tests: `TestMismatchedContentRefused`, `TestWrongBytesRefused`, `TestNothingUnpackedBeforeVerification`, whose unprotected control shows the ORAS pull unpacking a directory layer.
 
-State machines: [implementation · iter70](../../Verus_verification/models/iter70-implementation/manifest.json); [implementation · iter69](../../Verus_verification/models/iter69-implementation/manifest.json)
+State machines: [implementation · #281 D3+](../../Verus_verification/models/issue281-d3-implementation/manifest.json)
 
 ### repo.oras.signed-admission.refusal
 
@@ -375,9 +379,9 @@ State machines: [implementation · iter70](../../Verus_verification/models/iter7
 - design-verified
 - Expands: [signed admission](#repo.oras.signed-admission).
 
-Formal: [implementation.rs::failures_refuse](../../Verus_verification/consolidated/iter70/implementation.rs). Implementation: refusals throw from `GetModule`, which `Utils/Module.cls::LoadModuleReference` turns into a failed status before `LoadModuleFromArchive`. Tests check history, callable code and installed version after refusals in `TestReplacedRootRefused`, `TestVerifierUnavailableRefused`, `TestUpdateAndReinstall` and `TestSignedArtifactIsTheOneInstalled`.
+Formal: [implementation.rs](../../Verus_verification/consolidated/issue281-d3/implementation.rs) `failures_refuse`. The loader's history and commit rules for a failed `GetModule` are the coverage run's [actions.rs](../../Verus_verification/coverage-20261117/iter74/actions.rs) `install_refusal_uncommitted`, replayed for this change. Implementation: refusals throw from `GetModule`, which `Utils/Module.cls::LoadModuleReference` turns into a failed status before `LoadModuleFromArchive`. Tests check history, callable code and installed version after refusals in `TestReplacedRootRefused`, `TestVerifierUnavailableRefused`, `TestUpdateAndReinstall` and `TestSignedArtifactIsTheOneInstalled`.
 
-State machines: [implementation · iter70](../../Verus_verification/models/iter70-implementation/manifest.json); [implementation · iter69](../../Verus_verification/models/iter69-implementation/manifest.json)
+State machines: [implementation · #281 D3+](../../Verus_verification/models/issue281-d3-implementation/manifest.json)
 
 ### repo.oras.tag-decode
 

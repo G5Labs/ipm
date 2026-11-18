@@ -2,7 +2,7 @@
  "page": ".g5/ontology/operations/settings.g5.md",
  "blocks": {
   "settings": {
-   "body_sha": "763ba93fd64e80ab",
+   "body_sha": "23dd038f56cf28a7",
    "status": "enumerated",
    "units": {
     "P1": [
@@ -25,18 +25,21 @@
      "settings#9"
     ],
     "T5": [
-     "settings#10"
+     "settings#15"
     ],
     "T6": [
-     "settings#11"
+     "settings#10"
     ],
     "T7": [
-     "settings#12"
+     "settings#11"
     ],
     "T8": [
-     "settings#13"
+     "settings#12"
     ],
     "T9": [
+     "settings#13"
+    ],
+    "T10": [
      "settings#14"
     ]
    },
@@ -169,20 +172,22 @@
      "cases": "config delete ModuleRoot vs other keys",
      "observation": "ModuleRoot value after delete",
      "grade": "partial",
-     "check": "unchecked",
+     "check": "proved",
      "models": [
-      "playbook-uplift/models/verus/settings.rs::reset",
+      ".g5/Verus_verification/consolidated/issue281-d3/settings.rs::module_root_delete_computes",
       "playbook-uplift/models/verus/settings.rs::factory",
+      "playbook-uplift/models/verus/settings.rs::mroot_default",
       "playbook-uplift/models/verus/settings.rs::repo_refines_config_delete",
-      "playbook-uplift/models/verus/settings.rs::mroot_default"
+      "playbook-uplift/models/verus/settings.rs::reset"
      ],
      "evidence": [
-      "playbook-uplift/models/verus/results/settings.json",
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/consolidated/issue281-d3/proofs/models.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      "playbook-uplift/models/verus/results/settings.json"
      ],
-     "basis": "new:iteration-70 (playbook reset/factory give ModuleRoot its computed default on delete regardless of premise PS)",
+     "basis": "new:iteration-70 (playbook reset/factory give ModuleRoot its computed default on delete regardless of premise PS); issue281-d3 settings.rs module_root_delete_computes proves the computed reset",
      "assessed_in": "iteration-70",
-     "gap": "The reset branch is proved, but the fresh-install value is not: get_value of an absent node is empty, and the installer/UniversalSettings default computation for ModuleRoot (NormalizeDirectory(DataDirectory()_\"ipm/\")) is an abstract constant mroot_default. Contrast: `config get ModuleRoot` on a fresh install prints <mgr>/ipm/ rather than empty."
+     "gap": "The computed reset is proved by issue281-d3 settings.rs; the installer seeding the default is not modeled."
     },
     {
      "id": "settings#9",
@@ -208,7 +213,7 @@
     {
      "id": "settings#10",
      "units": [
-      "T5"
+      "T6"
      ],
      "text": "PipCaller and UseStandalonePip pick which pip IPM runs.",
      "alias_of": "module.python#6",
@@ -217,7 +222,7 @@
     {
      "id": "settings#11",
      "units": [
-      "T6"
+      "T7"
      ],
      "text": "PublishTimeout bounds how long publishing may take.",
      "cases": "publish exceeding vs within the timeout",
@@ -233,7 +238,7 @@
     {
      "id": "settings#12",
      "units": [
-      "T7"
+      "T8"
      ],
      "text": "SemVerPostRelease defaults to 0 (the ordering rule of x.y.z-w is owned by version.post-release in concepts/versions).",
      "cases": "fresh install vs after config set/delete",
@@ -249,7 +254,7 @@
     {
      "id": "settings#13",
      "units": [
-      "T8"
+      "T9"
      ],
      "text": "TerminalPrompt sets what the shell prompt shows.",
      "cases": "TerminalPrompt set vs unset",
@@ -265,12 +270,21 @@
     {
      "id": "settings#14",
      "units": [
-      "T9"
+      "T10"
      ],
      "text": "TestReportFormat sets the default format of test summaries.",
      "alias_of": "build.test-output#3",
      "basis": "iteration-70 review: restates the format selection owned by build-and-publish build.test-output#3 (counted once there)",
      "assessed_in": "iteration-70"
+    },
+    {
+     "id": "settings#15",
+     "units": [
+      "T5"
+     ],
+     "text": "NotaryExecutable names the notary CLI for protected ORAS repositories; empty finds notary on the PATH and config delete empties it.",
+     "alias_of": "repo.oras.signed-admission.configuration#6",
+     "assessed_in": "issue281-d3"
     }
    ],
    "parent": {
@@ -372,7 +386,7 @@
    ]
   },
   "settings.writes": {
-   "body_sha": "24e67b560ec7f2e9",
+   "body_sha": "cf3efb43dc0c1568",
    "status": "enumerated",
    "units": {
     "P1": [
@@ -492,27 +506,32 @@
      "units": [
       "B1"
      ],
-     "text": "TestReportFormat and ModuleRoot have explicit reset rules (empty and the computed <data directory>/ipm/).",
+     "text": "TestReportFormat, ModuleRoot and NotaryExecutable have explicit reset rules (empty, the computed <data directory>/ipm/, empty).",
      "cases": "delete of TestReportFormat / ModuleRoot vs other keys",
      "observation": "value after delete",
      "grade": "full",
      "check": "proved",
      "models": [
-      "playbook-uplift/models/verus/settings.rs::reset",
+      ".g5/Verus_verification/consolidated/issue281-d3/settings.rs::explicit_reset",
+      ".g5/Verus_verification/consolidated/issue281-d3/settings.rs::module_root_delete_computes",
+      ".g5/Verus_verification/consolidated/issue281-d3/settings.rs::notary_set_then_delete_finds_on_path",
+      ".g5/Verus_verification/consolidated/issue281-d3/settings.rs::report_format_delete_empties",
+      ".g5/Verus_verification/consolidated/iter41/settings.rs::delete",
+      ".g5/Verus_verification/consolidated/iter41/settings.rs::schedule",
       "playbook-uplift/models/verus/settings.rs::factory",
       "playbook-uplift/models/verus/settings.rs::repo_refines_config_delete",
-      ".g5/Verus_verification/consolidated/iter41/settings.rs::delete",
-      ".g5/Verus_verification/consolidated/iter41/settings.rs::schedule"
+      "playbook-uplift/models/verus/settings.rs::reset"
      ],
      "evidence": [
-      "playbook-uplift/models/verus/results/settings.json",
+      ".g5/uplift/consolidated/issue281-d3/proofs/models.json",
       ".g5/uplift/consolidated/iter41/run.json",
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
       ".g5/uplift/coverage-20261117/iter72/audit/operations__settings.json",
       ".g5/uplift/coverage-20261117/iter72/mutations/G7.jsonl",
-      ".g5/uplift/coverage-20261117/iter72/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter72/receipts/index.jsonl",
+      "playbook-uplift/models/verus/results/settings.json"
      ],
-     "basis": "new:iteration-70 (playbook reset has both branches; repo_refines_config_delete holds for them without premise PS); iteration-72 rule-4a re-audit (G7): full, support mutation-checked (mutations G7-m26, G7-m27)",
+     "basis": "new:iteration-70 (playbook reset has both branches; repo_refines_config_delete holds for them without premise PS); iteration-72 rule-4a re-audit (G7): full, support mutation-checked (mutations G7-m26, G7-m27); NotaryExecutable added by #281, issue281-d3 settings.rs",
      "assessed_in": "iteration-72",
      "support": "mutation-checked"
     }

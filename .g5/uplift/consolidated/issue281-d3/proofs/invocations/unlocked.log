@@ -1,0 +1,44 @@
+verification results:: 5 verified, 2 errors
+note: function body check: not all errors may have been reported; rerun with a higher value for --multiple-errors to find other potential errors in this function
+   --> unlocked.rs:135:1
+    |
+135 | pub proof fn step_inv(s: St, e: Ev)
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: postcondition not satisfied
+   --> unlocked.rs:138:9
+    |
+138 |           inv(step(d3(), s, e)),
+    |           ^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+...
+143 | /     match e {
+144 | |         Ev::Start(i) => {
+145 | |             if may_start(d3(), s, i) {
+146 | |                 assert forall|j: int| 0 <= j < t.checks.len() && active((#[trigger] t.checks[j]).phase)
+...   |
+162 | |         },
+163 | |     }
+    | |_____- at the end of the function body
+
+error: assertion failed
+   --> unlocked.rs:147:29
+    |
+147 |                     implies t.lock == Some(j as nat) && t.checks[j].read_version == t.pin_root by {
+    |                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ assertion failed
+
+error: postcondition not satisfied
+   --> unlocked.rs:228:9
+    |
+224 | pub proof fn unlocked_pins_move_back()
+    | -------------------------------------- at the end of the function body
+...
+228 |         run(d3(), s0(), crossing_writes()).pin_root == 2,
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: function body check: Resource limit (rlimit) exceeded; consider rerunning with --profile for more details
+   --> unlocked.rs:224:1
+    |
+224 | pub proof fn unlocked_pins_move_back()
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: aborting due to 4 previous errors

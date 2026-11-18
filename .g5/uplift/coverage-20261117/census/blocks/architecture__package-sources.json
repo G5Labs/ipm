@@ -932,7 +932,7 @@
    ]
   },
   "repo.oras.archive-boundary": {
-   "body_sha": "a4608f4070c8d5cd",
+   "body_sha": "739d52cd498f0b9d",
    "status": "enumerated",
    "units": {
     "P1": [
@@ -952,7 +952,7 @@
      "units": [
       "P1"
      ],
-     "text": "As built, the ORAS client can unpack a directory layer in its staging area before IPM checks the package archive.",
+     "text": "For a repository without a trust server, the ORAS client can unpack a directory layer in its staging area before IPM checks the package archive.",
      "cases": "size mismatch with a provider that extracts before IPM validation",
      "observation": "staging directory contents",
      "grade": "partial",
@@ -965,7 +965,7 @@
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
       ".g5/uplift/consolidated/iter68/proofs/models.json"
      ],
-     "basis": "reused:package-sources metadata (iter68 as_built.rs)",
+     "basis": "reused:package-sources metadata (iter68 as_built.rs); scope narrowed to repositories without a trust server by #281 (issue281-d3)",
      "assessed_in": "iteration-70",
      "gap": "Trace.provider_extracts is a provider input, so the model shows only that IPM does not gate it (control provider-unpacks-only-after-validation rejected). That the bundled oras-py client extracts before PackageService.cls::VerifyModuleHashAndSize runs is native evidence only. Missing: a model of the client pull step ordering (download, extract directory layer, return) relative to the IPM hash/size check."
     },
@@ -1056,19 +1056,30 @@
    ]
   },
   "repo.oras.signed-admission": {
-   "body_sha": "a204af95893643fa",
    "status": "enumerated",
    "units": {
     "P1": [
      "repo.oras.signed-admission#1"
     ],
     "B1": [
-     "repo.oras.signed-admission#2",
-     "repo.oras.signed-admission#3"
+     "repo.oras.signed-admission#2"
     ],
     "B2": [
-     "repo.oras.signed-admission#4"
-    ]
+     "repo.oras.signed-admission#3"
+    ],
+    "B3": "excluded: scope boundary of the per-repository rule; checking other sources or installed modules is outside issue #281 (packet, choices left to the implementation)"
+   },
+   "parent": {
+    "children": [
+     "repo.oras.signed-admission.configuration",
+     "repo.oras.signed-admission.verifier",
+     "repo.oras.signed-admission.freshness",
+     "repo.oras.signed-admission.catalog",
+     "repo.oras.signed-admission.snapshot",
+     "repo.oras.signed-admission.bytes",
+     "repo.oras.signed-admission.refusal"
+    ],
+    "entailment": "P1 composes catalog#1 (only signed versions offered), bytes#1 (checked before unpacking) and refusal#1; B1 and B2 are graded directly."
    },
    "obligations": [
     {
@@ -1076,101 +1087,66 @@
      "units": [
       "P1"
      ],
-     "text": "Proposed (issue #281): when verification is configured for an ORAS repository, IPM must verify the publisher's authorization for the selected artifact (target, policy, signer, manifest digest) before unpacking it.",
-     "cases": "authorized evidence for this target/policy/manifest vs missing, rejected, unavailable or mismatched evidence",
-     "observation": "may_extract / may_replace_root",
+     "text": "A protected repository offers and installs only packages whose tag is signed on its trust server, and each package is checked before it is unpacked.",
+     "cases": "signed vs unsigned tag; verified vs mismatched bytes; refusal before any unpacking",
+     "observation": "offered rows, returned stream, may_extract",
      "grade": "full",
      "check": "proved",
      "models": [
-      ".g5/Verus_verification/consolidated/iter68/admission.rs::authorized",
-      ".g5/Verus_verification/consolidated/iter68/admission.rs::protected_admission",
-      ".g5/Verus_verification/consolidated/iter68/admission.rs::extraction_binds_scope_and_bytes",
-      ".g5/Verus_verification/consolidated/iter68/admission.rs::authorized_artifact_can_continue"
+      ".g5/Verus_verification/consolidated/issue281-d3/implementation.rs::stream_refines_admission",
+      ".g5/Verus_verification/consolidated/issue281-d3/implementation.rs::signed_manifest_is_authorized",
+      ".g5/Verus_verification/consolidated/issue281-d3/implementation.rs::failures_refuse"
      ],
      "evidence": [
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
-      ".g5/uplift/consolidated/iter68/proofs/models.json",
-      ".g5/uplift/coverage-20261117/iter72/audit/architecture__package-sources.json",
-      ".g5/uplift/coverage-20261117/iter72/mutations/G4.jsonl"
+      ".g5/uplift/consolidated/issue281-d3/proofs/models.json"
      ],
-     "basis": "reused:package-sources metadata (iter68 admission.rs, 8 verified, 11 controls rejected). Design contract only: the pinned product has no verifier or configuration, so this grades the proposed rule, not product behaviour; iteration-72 rule-4a re-audit (G4): full, support mutation-checked (mutations G4-m106, G4-m107, G4-m108, G4-m113)",
-     "assessed_in": "iteration-72",
-     "support": "mutation-checked"
+     "basis": "composed:repo.oras.signed-admission.catalog#1,repo.oras.signed-admission.bytes#1,repo.oras.signed-admission.refusal#1; new:issue281-d3 (Verus, 32 controls rejected at named theorems)",
+     "assessed_in": "issue281-d3"
     },
     {
      "id": "repo.oras.signed-admission#2",
      "units": [
       "B1"
      ],
-     "text": "Proposed: dependencies resolved from protected repositories use metadata and bytes from the same authorized manifest.",
-     "cases": "resolution and admission with same vs different target/policy/manifest digest",
-     "observation": "continue_from_metadata",
-     "grade": "full",
+     "text": "Every retrieval through a protected repository is checked: install, reinstall, update, dependencies and the dependencies of a local load.",
+     "cases": "each caller of GetModule, GetModuleManifest and AddModulesFromTags",
+     "observation": "which callers reach the protected branch",
+     "grade": "partial",
      "check": "proved",
      "models": [
-      ".g5/Verus_verification/consolidated/iter68/admission.rs::resolve",
-      ".g5/Verus_verification/consolidated/iter68/admission.rs::continue_from_metadata",
-      ".g5/Verus_verification/consolidated/iter68/admission.rs::resolution_preserves_metadata_identity",
-      ".g5/Verus_verification/consolidated/iter68/admission.rs::authorized_resolution_has_a_success_path"
+      ".g5/Verus_verification/consolidated/issue281-d3/implementation.rs::stream_refines_admission",
+      ".g5/Verus_verification/consolidated/issue281-d3/implementation.rs::offered_name_is_installed_artifact"
      ],
      "evidence": [
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
-      ".g5/uplift/consolidated/iter68/proofs/models.json",
-      ".g5/uplift/coverage-20261117/iter72/audit/architecture__package-sources.json",
-      ".g5/uplift/coverage-20261117/iter72/mutations/G4.jsonl"
+      ".g5/uplift/consolidated/issue281-d3/proofs/models.json"
      ],
-     "basis": "reused:package-sources metadata (iter68 admission.rs; design contract); iteration-72 rule-4a re-audit (G4): full, support mutation-checked (mutations G4-m111, G4-m112)",
-     "assessed_in": "iteration-72",
-     "support": "mutation-checked"
+     "basis": "new:issue281-d3 (Verus, 32 controls rejected at named theorems)",
+     "assessed_in": "issue281-d3",
+     "gap": "The models take the retrieval call as given. The caller sweep (install, reinstall, update, dependency planning, local load) is source inspection plus native TestUpdateAndReinstall and TestProtectedDependency, not a formal rule."
     },
     {
      "id": "repo.oras.signed-admission#3",
      "units": [
-      "B1"
-     ],
-     "text": "Proposed: failed verification stops before unpacking or replacing the installed directory; verified metadata with bad bytes allows only metadata use.",
-     "cases": "unauthorized vs authorized with bad bytes vs authorized with verified bytes",
-     "observation": "use_manifest, may_extract, may_replace_root",
-     "grade": "full",
-     "check": "proved",
-     "models": [
-      ".g5/Verus_verification/consolidated/iter68/admission.rs::trust_failure_has_no_consumer_effect",
-      ".g5/Verus_verification/consolidated/iter68/admission.rs::verified_manifest_with_bad_bytes_only_allows_metadata"
-     ],
-     "evidence": [
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
-      ".g5/uplift/consolidated/iter68/proofs/models.json",
-      ".g5/uplift/coverage-20261117/iter72/audit/architecture__package-sources.json",
-      ".g5/uplift/coverage-20261117/iter72/mutations/G4.jsonl"
-     ],
-     "basis": "reused:package-sources metadata (iter68 admission.rs; controls extraction-before-admission, root-replacement-before-admission, trust-outage-allows-metadata rejected); iteration-72 rule-4a re-audit (G4): full, support mutation-checked (mutations G4-m108, G4-m109)",
-     "assessed_in": "iteration-72",
-     "support": "mutation-checked"
-    },
-    {
-     "id": "repo.oras.signed-admission#4",
-     "units": [
       "B2"
      ],
-     "text": "Proposed: each admission decision is scoped to the selected repository and policy revision; cached evidence for another target, policy revision or manifest digest is not reused.",
-     "cases": "old vs new target/policy/manifest digest",
-     "observation": "use_manifest",
-     "grade": "full",
+     "text": "A repository without a trust server behaves as before.",
+     "cases": "TrustServer empty vs set",
+     "observation": "GetModule, GetModuleManifest, AddModulesFromTags take the unchanged branch",
+     "grade": "partial",
      "check": "proved",
      "models": [
-      ".g5/Verus_verification/consolidated/iter68/admission.rs::cached_evidence_cannot_cross_identity"
+      ".g5/Verus_verification/consolidated/iter68/as_built.rs::observe",
+      ".g5/Verus_verification/coverage-20261117/iter75/oras_integrity.rs::pull_effects"
      ],
      "evidence": [
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
-      ".g5/uplift/consolidated/iter68/proofs/models.json",
-      ".g5/uplift/coverage-20261117/iter72/audit/architecture__package-sources.json",
-      ".g5/uplift/coverage-20261117/iter72/mutations/G4.jsonl"
+      ".g5/uplift/consolidated/issue281-d3/adjacent/models.json"
      ],
-     "basis": "reused:package-sources metadata (iter68 admission.rs; control reuse-old-policy-revision rejected). Open decisions in B2 (trust format, signer policy, unprotected fallback) are not graded; iteration-72 rule-4a re-audit (G4): full, support mutation-checked (mutations G4-m110, G4-m107)",
-     "assessed_in": "iteration-72",
-     "support": "mutation-checked"
+     "basis": "reused:iter68 as_built.rs and coverage iter75 oras_integrity.rs replayed on the candidate (.g5/uplift/consolidated/issue281-d3/adjacent/models.json)",
+     "assessed_in": "issue281-d3",
+     "gap": "The dispatch on an empty TrustServer is not modeled; the unprotected bodies are byte-identical to the pre-PR product and their inherited models replay, with native Oras and OrasDeployedPlatformFilter suites."
     }
-   ]
+   ],
+   "body_sha": "43d174e854177b9c"
   },
   "repo.oras.tag-decode": {
    "body_sha": "6b75b81ef3b13c88",
@@ -1894,6 +1870,713 @@
      "support": "mutation-checked"
     }
    ]
+  },
+  "repo.oras.signed-admission.configuration": {
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "repo.oras.signed-admission.configuration#1"
+    ],
+    "B1": [
+     "repo.oras.signed-admission.configuration#2"
+    ],
+    "B2": [
+     "repo.oras.signed-admission.configuration#3"
+    ],
+    "B3": [
+     "repo.oras.signed-admission.configuration#4"
+    ],
+    "B4": [
+     "repo.oras.signed-admission.configuration#5"
+    ],
+    "B5": [
+     "repo.oras.signed-admission.configuration#6"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "repo.oras.signed-admission.configuration#1",
+     "units": [
+      "P1"
+     ],
+     "text": "repo -o -name R -trust-server URL sets the trust server of one ORAS repository, and an empty value removes it.",
+     "cases": "set, clear, absent",
+     "observation": "stored TrustServer",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/issue281-d3/configuration.rs::set_trust_is_stored_https",
+      ".g5/Verus_verification/consolidated/issue281-d3/configuration.rs::clear_removes_trust",
+      ".g5/Verus_verification/consolidated/issue281-d3/configuration.rs::configure"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/issue281-d3/proofs/models.json"
+     ],
+     "basis": "new:issue281-d3 (Verus, 32 controls rejected at named theorems)",
+     "assessed_in": "issue281-d3"
+    },
+    {
+     "id": "repo.oras.signed-admission.configuration#2",
+     "units": [
+      "B1"
+     ],
+     "text": "The trust server URL must use https and is stored in canonical form.",
+     "cases": "https valid, http, other scheme, invalid",
+     "observation": "command status and stored value",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/issue281-d3/configuration.rs::set_trust_is_stored_https",
+      ".g5/Verus_verification/consolidated/issue281-d3/configuration.rs::http_refused",
+      ".g5/Verus_verification/consolidated/issue281-d3/configuration.rs::normalize"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/issue281-d3/proofs/models.json"
+     ],
+     "basis": "new:issue281-d3 (Verus, 32 controls rejected at named theorems)",
+     "assessed_in": "issue281-d3"
+    },
+    {
+     "id": "repo.oras.signed-admission.configuration#3",
+     "units": [
+      "B2"
+     ],
+     "text": "A refused value changes nothing, including the default deployment flag -publish 1 would have moved.",
+     "cases": "refusal with and without -publish 1",
+     "observation": "whole repository table",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/issue281-d3/configuration.rs::refusal_changes_nothing",
+      ".g5/Verus_verification/consolidated/issue281-d3/configuration.rs::neighbours"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/issue281-d3/proofs/models.json"
+     ],
+     "basis": "new:issue281-d3 (Verus, 32 controls rejected at named theorems)",
+     "assessed_in": "issue281-d3"
+    },
+    {
+     "id": "repo.oras.signed-admission.configuration#4",
+     "units": [
+      "B3"
+     ],
+     "text": "repo -list, repo -copy-from and lock files keep the trust server; a stored value that is not https fails every check.",
+     "cases": "package service, publish service, copy, lock entry; stored http value",
+     "observation": "carried value; verification refusal",
+     "grade": "partial",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/issue281-d3/configuration.rs::consumers_keep_trust",
+      ".g5/Verus_verification/consolidated/issue281-d3/configuration.rs::http_refused",
+      ".g5/Verus_verification/consolidated/issue281-d3/implementation.rs::transport_allowed"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/issue281-d3/proofs/models.json"
+     ],
+     "basis": "new:issue281-d3 (Verus, 32 controls rejected at named theorems)",
+     "assessed_in": "issue281-d3",
+     "gap": "Carrying the value is transcribed as identity functions (rule 4a); %ConstructClone, the JSON lock mapping and repo -list display are native-tested (TestRepoConfiguration), not modeled."
+    },
+    {
+     "id": "repo.oras.signed-admission.configuration#5",
+     "units": [
+      "B4"
+     ],
+     "text": "Other repository types refuse -trust-server without being created or changed.",
+     "cases": "ORAS vs remote vs filesystem",
+     "observation": "command status, repository table",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/issue281-d3/configuration.rs::only_oras_takes_trust",
+      ".g5/Verus_verification/consolidated/issue281-d3/configuration.rs::refusal_changes_nothing",
+      ".g5/Verus_verification/consolidated/issue281-d3/configuration.rs::neighbours"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/issue281-d3/proofs/models.json"
+     ],
+     "basis": "new:issue281-d3 (Verus, 32 controls rejected at named theorems)",
+     "assessed_in": "issue281-d3"
+    },
+    {
+     "id": "repo.oras.signed-admission.configuration#6",
+     "units": [
+      "B5"
+     ],
+     "text": "config set NotaryExecutable names the verifier; config delete NotaryExecutable returns to notary on the PATH.",
+     "cases": "set first/last path, delete",
+     "observation": "verifier invoked",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/issue281-d3/settings.rs::notary_set_then_delete_finds_on_path"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/issue281-d3/proofs/models.json"
+     ],
+     "basis": "new:issue281-d3 (Verus, 32 controls rejected at named theorems)",
+     "assessed_in": "issue281-d3"
+    }
+   ],
+   "body_sha": "c7fe10ee43eeee5b"
+  },
+  "repo.oras.signed-admission.verifier": {
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "repo.oras.signed-admission.verifier#1"
+    ],
+    "B1": [
+     "repo.oras.signed-admission.verifier#2"
+    ],
+    "B2": [
+     "repo.oras.signed-admission.verifier#3"
+    ],
+    "B3": [
+     "repo.oras.signed-admission.verifier#4"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "repo.oras.signed-admission.verifier#1",
+     "units": [
+      "P1"
+     ],
+     "text": "A tag is accepted as docker pull accepts it: signed in targets/releases, or else in targets.",
+     "cases": "releases, targets, other role, first row per tag",
+     "observation": "selected row",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/issue281-d3/implementation.rs::only_trusted_roles",
+      ".g5/Verus_verification/consolidated/issue281-d3/implementation.rs::lemma_select_is_docker_row"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/issue281-d3/proofs/models.json"
+     ],
+     "basis": "new:issue281-d3 (Verus, 32 controls rejected at named theorems)",
+     "assessed_in": "issue281-d3"
+    },
+    {
+     "id": "repo.oras.signed-admission.verifier#2",
+     "units": [
+      "B1"
+     ],
+     "text": "notary reaches the trust server over TLS and checks its certificate, so the first check pins the root an authenticated trust server presents; later trust data chains to it.",
+     "cases": "https vs http, pinned vs first use, presented vs authentic root",
+     "observation": "root a listing was accepted under",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/issue281-d3/implementation.rs::accepted_root_is_authentic",
+      ".g5/Verus_verification/consolidated/issue281-d3/implementation.rs::transport_allowed",
+      ".g5/Verus_verification/consolidated/issue281-d3/implementation.rs::platform_alias_neighbours"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/issue281-d3/proofs/models.json"
+     ],
+     "basis": "new:issue281-d3 (Verus, 32 controls rejected at named theorems); premises tls_authenticated, notary_verified, pins_authentic",
+     "assessed_in": "issue281-d3"
+    },
+    {
+     "id": "repo.oras.signed-admission.verifier#3",
+     "units": [
+      "B2"
+     ],
+     "text": "Pins are kept per trust server under the IRIS manager directory, so every namespace of the instance uses the same pins.",
+     "cases": "two namespaces, two trust servers",
+     "observation": "pin directory used",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [
+      ".g5/uplift/consolidated/issue281-d3/proofs/models.json"
+     ],
+     "basis": "native: TestVerifierUnavailableRefused reads TrustDirectory; the directory key and namespace sharing are not modeled",
+     "assessed_in": "issue281-d3",
+     "gap": "No formal rule distinguishes the pin directory per trust server or its sharing across namespaces."
+    },
+    {
+     "id": "repo.oras.signed-admission.verifier#4",
+     "units": [
+      "B3"
+     ],
+     "text": "A signature only in another delegation role does not count.",
+     "cases": "targets/other only",
+     "observation": "tag not trusted",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/issue281-d3/implementation.rs::only_trusted_roles",
+      ".g5/Verus_verification/consolidated/issue281-d3/implementation.rs::trusted_role"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/issue281-d3/proofs/models.json"
+     ],
+     "basis": "new:issue281-d3 (Verus, 32 controls rejected at named theorems)",
+     "assessed_in": "issue281-d3"
+    }
+   ],
+   "body_sha": "181ba58ddde42036"
+  },
+  "repo.oras.signed-admission.freshness": {
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "repo.oras.signed-admission.freshness#1"
+    ],
+    "B1": [
+     "repo.oras.signed-admission.freshness#2"
+    ],
+    "B2": [
+     "repo.oras.signed-admission.freshness#3"
+    ],
+    "B3": [
+     "repo.oras.signed-admission.freshness#4"
+    ],
+    "B4": [
+     "repo.oras.signed-admission.freshness#5"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "repo.oras.signed-admission.freshness#1",
+     "units": [
+      "P1"
+     ],
+     "text": "Each check must reach the trust server; an unreachable server, a verifier that cannot run or failed verification refuses instead of using cached trust data.",
+     "cases": "reachable, unreachable with valid cached data, verifier missing",
+     "observation": "listing outcome",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/issue281-d3/implementation.rs::outage_refuses",
+      ".g5/Verus_verification/consolidated/issue281-d3/implementation.rs::failures_refuse",
+      ".g5/Verus_verification/consolidated/issue281-d3/invocations.rs::accepted_check_fetched_itself"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/issue281-d3/proofs/models.json"
+     ],
+     "basis": "new:issue281-d3 (Verus, 32 controls rejected at named theorems)",
+     "assessed_in": "issue281-d3"
+    },
+    {
+     "id": "repo.oras.signed-admission.freshness#2",
+     "units": [
+      "B1"
+     ],
+     "text": "Each check runs notary in its own trust directory seeded with the pins but no timestamp, so no other check can supply one.",
+     "cases": "every interleaving of checks of one repository, shared vs private directory",
+     "observation": "accepted implies own fetch",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/issue281-d3/invocations.rs::accepted_check_fetched_itself",
+      ".g5/Verus_verification/consolidated/issue281-d3/invocations.rs::step_inv",
+      ".g5/Verus_verification/consolidated/issue281-d3/invocations.rs::shared_directory_accepts_without_reaching_server"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/issue281-d3/proofs/models.json"
+     ],
+     "basis": "new:issue281-d3 (Verus, 32 controls rejected at named theorems)",
+     "assessed_in": "issue281-d3"
+    },
+    {
+     "id": "repo.oras.signed-admission.freshness#3",
+     "units": [
+      "B2"
+     ],
+     "text": "Checks of one repository on one trust server run one at a time, only a successful check replaces the pins, and the pins never include a timestamp.",
+     "cases": "locked vs unlocked, accepted vs refused finish",
+     "observation": "pinned root version",
+     "grade": "partial",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/issue281-d3/invocations.rs::step_inv",
+      ".g5/Verus_verification/consolidated/issue281-d3/invocations.rs::run_inv",
+      ".g5/Verus_verification/consolidated/issue281-d3/invocations.rs::unlocked_pins_move_back"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/issue281-d3/proofs/models.json"
+     ],
+     "basis": "new:issue281-d3 (Verus, 32 controls rejected at named theorems)",
+     "assessed_in": "issue281-d3",
+     "gap": "The pin store itself is abstracted to its root version; that it never holds timestamp.json is represented by seeding never carrying one (control timestamp-seeded), not by a modeled pin file set."
+    },
+    {
+     "id": "repo.oras.signed-admission.freshness#4",
+     "units": [
+      "B3"
+     ],
+     "text": "A server with no trust data for the repository means nothing in it is signed.",
+     "cases": "NoTrustData",
+     "observation": "no tag offered or retrieved",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/issue281-d3/implementation.rs::failures_refuse",
+      ".g5/Verus_verification/consolidated/issue281-d3/implementation.rs::abs_evidence"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/issue281-d3/proofs/models.json"
+     ],
+     "basis": "new:issue281-d3 (Verus, 32 controls rejected at named theorems)",
+     "assessed_in": "issue281-d3"
+    },
+    {
+     "id": "repo.oras.signed-admission.freshness#5",
+     "units": [
+      "B4"
+     ],
+     "text": "A check that does not finish in time fails, and the repo's other checks on that trust server fail at once for the rest of the command.",
+     "cases": "timeout, later repository on same server, other server",
+     "observation": "listing outcome",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/issue281-d3/implementation.rs::stalled_server_only_refuses",
+      ".g5/Verus_verification/consolidated/issue281-d3/implementation.rs::timeout_stalls_server"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/issue281-d3/proofs/models.json"
+     ],
+     "basis": "new:issue281-d3 (Verus, 32 controls rejected at named theorems)",
+     "assessed_in": "issue281-d3"
+    }
+   ],
+   "body_sha": "768e3fae807f893d"
+  },
+  "repo.oras.signed-admission.catalog": {
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "repo.oras.signed-admission.catalog#1"
+    ],
+    "B1": [
+     "repo.oras.signed-admission.catalog#2"
+    ],
+    "B2": [
+     "repo.oras.signed-admission.catalog#3"
+    ],
+    "B3": [
+     "repo.oras.signed-admission.catalog#4"
+    ],
+    "B4": [
+     "repo.oras.signed-admission.catalog#5"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "repo.oras.signed-admission.catalog#1",
+     "units": [
+      "P1"
+     ],
+     "text": "A protected repository offers only signed versions and reads their metadata from the signed manifests.",
+     "cases": "signed vs unsigned tag; manifest bytes matching vs not",
+     "observation": "offered row and its metadata source",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/issue281-d3/implementation.rs::signed_manifest_is_authorized",
+      ".g5/Verus_verification/consolidated/issue281-d3/implementation.rs::catalog_row"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/issue281-d3/proofs/models.json"
+     ],
+     "basis": "new:issue281-d3 (Verus, 32 controls rejected at named theorems)",
+     "assessed_in": "issue281-d3"
+    },
+    {
+     "id": "repo.oras.signed-admission.catalog#2",
+     "units": [
+      "B1"
+     ],
+     "text": "Version ranges, build labels, platform tags and external names choose among signed versions as among all versions.",
+     "cases": "range, build label, platform tag over the signed tag list",
+     "observation": "selected version",
+     "grade": "partial",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/issue281-d3/implementation.rs::catalog_checks_installed_artifact",
+      ".g5/Verus_verification/consolidated/iter15/oras.rs::selected_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/issue281-d3/proofs/models.json"
+     ],
+     "basis": "new:issue281-d3 (Verus, 32 controls rejected at named theorems); iteration15 replayed",
+     "assessed_in": "issue281-d3",
+     "gap": "Range and build filtering are modeled by iteration15 over registry tags; their application to the signed tag list (SortTags of SignedTargets) is not modeled."
+    },
+    {
+     "id": "repo.oras.signed-admission.catalog#3",
+     "units": [
+      "B2"
+     ],
+     "text": "An offered version's name, external name and other metadata come from the signed manifest of the artifact install would retrieve on this platform; disagreeing deployed flags are not offered.",
+     "cases": "two signed platform variants with different external names; deployed flags agreeing vs not",
+     "observation": "offered under a name",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/issue281-d3/implementation.rs::catalog_checks_installed_artifact",
+      ".g5/Verus_verification/consolidated/issue281-d3/implementation.rs::offered_name_is_installed_artifact",
+      ".g5/Verus_verification/consolidated/issue281-d3/implementation.rs::platform_alias_neighbours"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/issue281-d3/proofs/models.json"
+     ],
+     "basis": "new:issue281-d3 (Verus, 32 controls rejected at named theorems)",
+     "assessed_in": "issue281-d3"
+    },
+    {
+     "id": "repo.oras.signed-admission.catalog#4",
+     "units": [
+      "B3"
+     ],
+     "text": "When a named lookup skips unsigned versions, IPM warns which ones.",
+     "cases": "unsigned matching versions present vs not",
+     "observation": "warning text",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [
+      ".g5/uplift/consolidated/issue281-d3/proofs/models.json"
+     ],
+     "basis": "native: TestSignedInstall asserts the warning",
+     "assessed_in": "issue281-d3",
+     "gap": "WarnUnsignedVersions is not modeled."
+    },
+    {
+     "id": "repo.oras.signed-admission.catalog#5",
+     "units": [
+      "B4"
+     ],
+     "text": "Another enabled repository can still supply a version the protected one does not offer.",
+     "cases": "protected repository offers nothing vs another repository offers",
+     "observation": "supplier",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [
+      ".g5/uplift/consolidated/issue281-d3/proofs/models.json"
+     ],
+     "basis": "open question repo.oras.signed-admission.supplier-policy; working assumption",
+     "assessed_in": "issue281-d3",
+     "gap": "Cross-repository supplier selection with a protected repository is not modeled."
+    }
+   ],
+   "body_sha": "1caba40c441b79cf"
+  },
+  "repo.oras.signed-admission.snapshot": {
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "repo.oras.signed-admission.snapshot#1"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "repo.oras.signed-admission.snapshot#1",
+     "units": [
+      "P1"
+     ],
+     "text": "Within one shell command a repository's trust data is checked once and that answer serves selection, planning and download; a re-signed tag cannot change what the command installs.",
+     "cases": "second lookup with a different fresh listing; other trust server",
+     "observation": "manifest consumed",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/issue281-d3/implementation.rs::snapshot_pins_metadata_and_payload",
+      ".g5/Verus_verification/consolidated/issue281-d3/implementation.rs::snapshot_keyed_by_server",
+      ".g5/Verus_verification/consolidated/issue281-d3/implementation.rs::offered_name_is_installed_artifact"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/issue281-d3/proofs/models.json"
+     ],
+     "basis": "new:issue281-d3 (Verus, 32 controls rejected at named theorems); premise: RepoLookupState lives for one shell command",
+     "assessed_in": "issue281-d3"
+    }
+   ],
+   "body_sha": "3385af850d26bce0"
+  },
+  "repo.oras.signed-admission.bytes": {
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "repo.oras.signed-admission.bytes#1"
+    ],
+    "B1": [
+     "repo.oras.signed-admission.bytes#2"
+    ],
+    "B2": [
+     "repo.oras.signed-admission.bytes#3"
+    ],
+    "B3": [
+     "repo.oras.signed-admission.bytes#4"
+    ],
+    "B4": [
+     "repo.oras.signed-admission.bytes#5"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "repo.oras.signed-admission.bytes#1",
+     "units": [
+      "P1"
+     ],
+     "text": "The signed manifest and its package are downloaded by digest and their size and digest checked before anything unpacks them.",
+     "cases": "matching, wrong digest, wrong size for manifest and package",
+     "observation": "stream returned, may_extract",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/issue281-d3/implementation.rs::stream_refines_admission",
+      ".g5/Verus_verification/consolidated/issue281-d3/implementation.rs::retrieve"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/issue281-d3/proofs/models.json"
+     ],
+     "basis": "new:issue281-d3 (Verus, 32 controls rejected at named theorems)",
+     "assessed_in": "issue281-d3"
+    },
+    {
+     "id": "repo.oras.signed-admission.bytes#2",
+     "units": [
+      "B1"
+     ],
+     "text": "One check of size and digest serves both the manifest and the package.",
+     "cases": "digest-only and size-only checks",
+     "observation": "both downloads refused",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/issue281-d3/implementation.rs::one_check_for_manifest_and_package",
+      ".g5/Verus_verification/consolidated/issue281-d3/implementation.rs::bytes_match"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/issue281-d3/proofs/models.json"
+     ],
+     "basis": "new:issue281-d3 (Verus, 32 controls rejected at named theorems)",
+     "assessed_in": "issue281-d3"
+    },
+    {
+     "id": "repo.oras.signed-admission.bytes#3",
+     "units": [
+      "B2"
+     ],
+     "text": "The signed manifest must have exactly one package layer.",
+     "cases": "zero, one, two package layers",
+     "observation": "refusal",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/issue281-d3/implementation.rs::stream_refines_admission",
+      ".g5/Verus_verification/consolidated/issue281-d3/implementation.rs::package_layer"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/issue281-d3/proofs/models.json"
+     ],
+     "basis": "new:issue281-d3 (Verus, 32 controls rejected at named theorems)",
+     "assessed_in": "issue281-d3"
+    },
+    {
+     "id": "repo.oras.signed-admission.bytes#4",
+     "units": [
+      "B3"
+     ],
+     "text": "Other layers are never downloaded or unpacked.",
+     "cases": "manifest with a directory layer",
+     "observation": "provider unpacking",
+     "grade": "partial",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/issue281-d3/implementation.rs::effects",
+      ".g5/Verus_verification/consolidated/issue281-d3/implementation.rs::stream_refines_admission"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/issue281-d3/proofs/models.json"
+     ],
+     "basis": "new:issue281-d3 (Verus, 32 controls rejected at named theorems)",
+     "assessed_in": "issue281-d3",
+     "gap": "provider_unpacked is a transcribed constant (rule 4a); native TestNothingUnpackedBeforeVerification distinguishes it against the unprotected pull."
+    },
+    {
+     "id": "repo.oras.signed-admission.bytes#5",
+     "units": [
+      "B4"
+     ],
+     "text": "A failed check deletes the download and leaves the installed module as it was.",
+     "cases": "mismatched package",
+     "observation": "download file, installed module",
+     "grade": "partial",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/issue281-d3/implementation.rs::failures_refuse"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/issue281-d3/proofs/models.json"
+     ],
+     "basis": "new:issue281-d3 (Verus, 32 controls rejected at named theorems)",
+     "assessed_in": "issue281-d3",
+     "gap": "Deleting the download is not modeled; native TestNothingUnpackedBeforeVerification and TestWrongBytesRefused observe it."
+    }
+   ],
+   "body_sha": "41e7e113bae364f1"
+  },
+  "repo.oras.signed-admission.refusal": {
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "repo.oras.signed-admission.refusal#1"
+    ],
+    "B1": [
+     "repo.oras.signed-admission.refusal#2"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "repo.oras.signed-admission.refusal#1",
+     "units": [
+      "P1"
+     ],
+     "text": "A refused check fails the command, history records it as failed, the rejected lifecycle does not run, and an installed version stays usable.",
+     "cases": "refusal from GetModule during install, update, reinstall",
+     "observation": "status, history row, lifecycle, installed code",
+     "grade": "partial",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/issue281-d3/implementation.rs::failures_refuse",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::install_refusal_uncommitted"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/issue281-d3/proofs/models.json",
+      ".g5/uplift/consolidated/issue281-d3/adjacent/models.json"
+     ],
+     "basis": "new:issue281-d3 (Verus, 32 controls rejected at named theorems); coverage iter74 replayed",
+     "assessed_in": "issue281-d3",
+     "gap": "Installed code staying usable is observed natively (AssertRevision), not modeled."
+    },
+    {
+     "id": "repo.oras.signed-admission.refusal#2",
+     "units": [
+      "B1"
+     ],
+     "text": "-force, -dev and the other install options do not skip the check.",
+     "cases": "force, dev",
+     "observation": "refusal",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [
+      ".g5/uplift/consolidated/issue281-d3/proofs/models.json"
+     ],
+     "basis": "native: TestReplacedRootRefused, TestProtectedDependency",
+     "assessed_in": "issue281-d3",
+     "gap": "No model input distinguishes install options."
+    }
+   ],
+   "body_sha": "95a1c40974e18317"
   }
  }
 }

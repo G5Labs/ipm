@@ -93,9 +93,9 @@ Findings: [P:F-REPO-4 — e2e reproduced](../../Verus_verification/bugs_issues.m
 
 Iteration41: [settings.rs](../../Verus_verification/consolidated/iter41/settings.rs) `set`, `delete`, `delete_restores_first_write`, `unknown_key_reports_ok`, `invalid_format_refused_with_ok`, `analytics_disabled` ([handoff](../../uplift/consolidated/iter41/HANDOFF.md)).
 
-Iteration70: [settings.rs](../../Verus_verification/consolidated/iter70/settings.rs) revises iteration41 for the 13th key, NotaryExecutable, whose `delete` empties it like TestReportFormat ([handoff](../../uplift/consolidated/iter70/HANDOFF.md)). Iteration41's theorems are unchanged and still describe the other 12 keys.
+#281 D3+: [settings.rs](../../Verus_verification/consolidated/issue281-d3/settings.rs) covers the 13 keys after #281 adds NotaryExecutable. Its `delete_restores_first_write` and `delete_restores_seed` exclude every key with its own reset rule, `module_root_delete_computes` gives ModuleRoot's computed `<data directory>/ipm/`, and `notary_set_then_delete_finds_on_path` gives NotaryExecutable's empty value ([handoff](../../uplift/consolidated/issue281-d3/HANDOFF.md)). It supersedes the #281 [consolidated iteration 70 settings.rs](../../Verus_verification/consolidated/iter70/settings.rs), whose generic reset theorem wrongly covered ModuleRoot. Iteration41's theorems hold for its 12-key model. Their generic reset theorem does not describe ModuleRoot, which iteration41 left outside its native scope.
 
-State machines: [settings · iter41](../../Verus_verification/models/iter41-settings/manifest.json), [settings · iter70](../../Verus_verification/models/iter70-settings/manifest.json), [settings · inherited playbook](../../Verus_verification/models/playbook-settings/manifest.json)
+State machines: [settings · iter41](../../Verus_verification/models/iter41-settings/manifest.json), [settings · #281 D3+](../../Verus_verification/models/issue281-d3-settings/manifest.json), [settings · inherited playbook](../../Verus_verification/models/playbook-settings/manifest.json); superseded [settings · consolidated iter70](../../Verus_verification/models/iter70-settings/manifest.json)
 
 ### settings.print
 
@@ -115,9 +115,9 @@ State machines: [inputs · iter7](../../Verus_verification/models/iter7-inputs/m
 - agent
 - Expands: [Settings](#settings).
 
-Sources: `Repo/UniversalSettings.cls::{SetValue,GetValue,GetDefaultValue,ResetToDefault}`. Verus `public_repairs.rs::{set_value,setting_neighbors}`. Native nonempty refusal, empty acceptance and first-default persistence are distinct observations. Cross-process concurrency and failed storage writes remain open.
+Sources: `Repo/UniversalSettings.cls::{SetValue,GetValue,GetDefaultValue,ResetToDefault}`. Verus `public_repairs.rs::{set_value,setting_neighbors}`. Native nonempty refusal, empty acceptance and first-default persistence are distinct observations. Cross-process concurrency and failed storage writes remain open. The reset rules of TestReportFormat, ModuleRoot and NotaryExecutable are in the #281 D3+ [settings.rs](../../Verus_verification/consolidated/issue281-d3/settings.rs) `explicit_reset`.
 
-State machines: [settings · iter70](../../Verus_verification/models/iter70-settings/manifest.json)
+State machines: [settings · #281 D3+](../../Verus_verification/models/issue281-d3-settings/manifest.json)
 
 ### settings.report-format
 

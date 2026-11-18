@@ -1,0 +1,32 @@
+verification results:: 4 verified, 3 errors
+error: postcondition not satisfied
+  --> trust_checked_after_publish.rs:85:13
+   |
+84 | pub proof fn refusal_changes_nothing(t: Table, m: Mods)
+   | ------------------------------------------------------- at the end of the function body
+85 |     ensures !configure(t, m).1 ==> configure(t, m).0 == t
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: postcondition not satisfied
+   --> trust_checked_after_publish.rs:111:33
+    |
+109 | pub proof fn http_refused(t: Table, m: Mods, url: Url)
+    | ------------------------------------------------------ at the end of the function body
+110 |     requires m.trust == (TrustMod::Set { url }), url.scheme is Http
+111 |     ensures !configure(t, m).1, configure(t, m).0 == t, !verification_allowed(url)
+    |                                 ^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: postcondition not satisfied
+   --> trust_checked_after_publish.rs:127:9
+    |
+125 |   pub proof fn neighbours()
+    |   ------------------------- at the end of the function body
+126 |       ensures
+127 | /         ({
+128 | |             let t = Table { target: None, other_publishes: true };
+129 | |             let m = Mods { kind: Kind::Oras, trust: TrustMod::Set { url: Url { scheme: Scheme::Http, valid: true, canonical: 7 } ...
+130 | |             configure(t, m) == (t, false)
+131 | |         }),
+    | |__________^ failed this postcondition
+
+error: aborting due to 3 previous errors

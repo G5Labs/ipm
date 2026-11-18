@@ -1,0 +1,37 @@
+verification results:: 52 verified, 2 errors
+error: postcondition not satisfied
+   --> catalog_metadata_unverified.rs:504:9
+    |
+504 | /         match signed_manifest(config, listing, tag, reg) {
+505 | |             Some(read) => match resolve(abs_target(config, path, tag), abs_policy(config, contact, snapshot),
+506 | |                     Manifest { digest: read.digest, package: None },
+507 | |                     abs_evidence(config, contact, path, tag, snapshot, listing)) {
+...   |
+511 | |             None => true,
+512 | |         },
+    | |_________^ failed this postcondition
+513 |   {
+514 | /     match listing {
+515 | |         Listing::Verified { server, root, rows, true_rows, names_safe } => lemma_select_is_docker_row(rows, tag),
+516 | |         _ => {},
+517 | |     }
+    | |_____- at the end of the function body
+
+error: postcondition not satisfied
+   --> catalog_metadata_unverified.rs:567:9
+    |
+567 | /         ({
+568 | |             let (catalog_listing, after) = lookup(cache, key_for(repo, config, gun), first, first_timed_out);
+569 | |             let (payload_listing, _) = lookup(after, key_for(repo, config, gun), second, second_timed_out);
+570 | |             let row = catalog_row(config, catalog_listing, reg, annots, g, c, n, package_matches);
+...   |
+574 | |                     && (package_matches || annot_of(annots, manifest.digest).names.contains(n))
+575 | |         }),
+    | |__________^ failed this postcondition
+...
+579 | /     if row is Offered && compatible(row->deployed, g.platforms, c) {
+580 | |         catalog_checks_installed_artifact(config, catalog_listing, reg, annots, g, c, n, package_matches);
+581 | |     }
+    | |_____- at the end of the function body
+
+error: aborting due to 2 previous errors

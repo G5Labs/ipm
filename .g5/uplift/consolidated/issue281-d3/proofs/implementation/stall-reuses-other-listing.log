@@ -1,0 +1,50 @@
+verification results:: 52 verified, 2 errors
+note: function body check: not all errors may have been reported; rerun with a higher value for --multiple-errors to find other potential errors in this function
+   --> stall_reuses_other_listing.rs:621:1
+    |
+621 | / pub proof fn stalled_server_only_refuses(
+622 | |     cache: Cache, key: Key, fresh: Listing, timed_out: bool, config: Config, tag: Text,
+623 | |     manifest: Received, parsed: Parsed, blob: Received,
+624 | | )
+    | |_^
+
+error: postcondition not satisfied
+   --> stall_reuses_other_listing.rs:629:9
+    |
+621 | / pub proof fn stalled_server_only_refuses(
+622 | |     cache: Cache, key: Key, fresh: Listing, timed_out: bool, config: Config, tag: Text,
+623 | |     manifest: Received, parsed: Parsed, blob: Received,
+624 | | )
+    | |_- at the end of the function body
+...
+629 |           lookup(cache, key, fresh, timed_out).0 is Failed,
+    |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: postcondition not satisfied
+   --> stall_reuses_other_listing.rs:630:9
+    |
+621 | / pub proof fn stalled_server_only_refuses(
+622 | |     cache: Cache, key: Key, fresh: Listing, timed_out: bool, config: Config, tag: Text,
+623 | |     manifest: Received, parsed: Parsed, blob: Received,
+624 | | )
+    | |_- at the end of the function body
+...
+630 |           retrieve(config, lookup(cache, key, fresh, timed_out).0, tag, manifest, parsed, blob) is Refused,
+    |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: postcondition not satisfied
+   --> stall_reuses_other_listing.rs:645:9
+    |
+636 | / pub proof fn timeout_stalls_server(
+637 | |     cache: Cache, repo: int, server: int, gun: int, other_gun: int, first: Listing, second: Listing,
+638 | |     second_timed_out: bool,
+639 | | )
+    | |_- at the end of the function body
+...
+645 | /         ({
+646 | |             let (_, after) = lookup(cache, Key { repo, server, gun }, first, true);
+647 | |             lookup(after, Key { repo, server, gun: other_gun }, second, second_timed_out).0 is Failed
+648 | |         }),
+    | |__________^ failed this postcondition
+
+error: aborting due to 3 previous errors

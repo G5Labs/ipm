@@ -3201,7 +3201,7 @@ default_assumption: yes. A trust server limits only what its own repository offe
 
 - Working assumption: no. notary reads trust data anonymously, so every check against a trust server that requires a login fails, and nothing installs from that repository.
 - Alternative and implications: pass credentials to notary through `NOTARY_AUTH`, either the repository's own or separate trust-server credentials. That supports servers such as Artifactory's, but sending registry credentials to another service needs an explicit rule.
-- The current behavior fails closed: every check against such a server fails, so the repository offers nothing. notary reads the IRIS user's notary configuration alongside IPM's arguments, so an https trust server with a private CA should work through `remote_server.root_ca` there. That is not exercised.
+- The current behavior fails closed: every check against such a server fails, so the repository offers nothing. A trust server whose certificate comes from a private CA works when the CA is in the system certificate store, as the test image does, or through `remote_server.root_ca` in the IRIS user's notary configuration.
 
 Disposition: open. Implemented assumption: [verifier](../ontology/architecture/package-sources.g5.md#repo.oras.signed-admission.verifier).
 
@@ -3228,8 +3228,8 @@ default_assumption: no. notary reads trust data anonymously, so a trust server t
 
 [Q · repo.oras.signed-admission.root-pinning]
 
-- Working assumption: no. As with docker, the first check of a repository trusts the root key the server presents and pins it. Administrators who need more can pin roots in notary's own `trust_pinning` configuration for the IRIS user.
-- Alternative and implications: add a repository argument for a root key or CA. A compromised trust server could then not plant a root at first contact, but every protected repository would need that key before it works.
+- Working assumption: no. As with docker, the trust server must use https, and the first check of a repository pins the root key the authenticated server presents. Administrators who need more can pin roots in notary's own `trust_pinning` configuration for the IRIS user.
+- Alternative and implications: add a repository argument for a root key or CA. A compromised trust server, as opposed to an impersonated one, could then not plant a root at first contact, but every protected repository would need that key before it works.
 
 Disposition: open. Implemented assumption: [verifier](../ontology/architecture/package-sources.g5.md#repo.oras.signed-admission.verifier).
 
@@ -3248,5 +3248,5 @@ answer:
   rationale: ""
   answered_by: null
   answered_at: null
-default_assumption: no. As with docker, the first check of a repository pins the root key the server presents.
+default_assumption: no. As with docker, the trust server must use https and the first check of a repository pins the root key it presents.
 ```

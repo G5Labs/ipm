@@ -1,0 +1,26 @@
+verification results:: 5 verified, 2 errors
+error: postcondition not satisfied
+   --> timestamp_seeded.rs:138:9
+    |
+138 |           inv(step(d3(), s, e)),
+    |           ^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+...
+143 | /     match e {
+144 | |         Ev::Start(i) => {
+145 | |             if may_start(d3(), s, i) {
+146 | |                 assert forall|j: int| 0 <= j < t.checks.len() && active((#[trigger] t.checks[j]).phase)
+...   |
+162 | |         },
+163 | |     }
+    | |_____- at the end of the function body
+
+error: postcondition not satisfied
+   --> timestamp_seeded.rs:212:9
+    |
+208 | pub proof fn shared_directory_accepts_without_reaching_server()
+    | --------------------------------------------------------------- at the end of the function body
+...
+212 |         !run(d3(), s0(), overlap()).checks[1].accepted,
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: aborting due to 2 previous errors

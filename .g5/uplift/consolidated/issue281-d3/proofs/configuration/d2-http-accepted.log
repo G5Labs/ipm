@@ -1,0 +1,50 @@
+verification results:: 4 verified, 3 errors
+error: postcondition not satisfied
+  --> d2_http_accepted.rs:97:9
+   |
+94 |   pub proof fn set_trust_is_stored_https(t: Table, m: Mods, url: Url)
+   |   ------------------------------------------------------------------- at the end of the function body
+...
+97 | /         configure(t, m).1 ==> url.scheme is Https && url.valid
+98 | |             && configure(t, m).0.target == Some(Repo { kind: m.kind, trust: url.canonical,
+99 | |                 publish: m.publish || match t.target { Some(r) => r.publish, None => false } }),
+   | |_______________________________________________________________________________________________^ failed this postcondition
+
+note: function body check: not all errors may have been reported; rerun with a higher value for --multiple-errors to find other potential errors in this function
+   --> d2_http_accepted.rs:109:1
+    |
+109 | pub proof fn http_refused(t: Table, m: Mods, url: Url)
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: postcondition not satisfied
+   --> d2_http_accepted.rs:111:13
+    |
+109 | pub proof fn http_refused(t: Table, m: Mods, url: Url)
+    | ------------------------------------------------------ at the end of the function body
+110 |     requires m.trust == (TrustMod::Set { url }), url.scheme is Http
+111 |     ensures !configure(t, m).1, configure(t, m).0 == t, !verification_allowed(url)
+    |             ^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: postcondition not satisfied
+   --> d2_http_accepted.rs:111:33
+    |
+109 | pub proof fn http_refused(t: Table, m: Mods, url: Url)
+    | ------------------------------------------------------ at the end of the function body
+110 |     requires m.trust == (TrustMod::Set { url }), url.scheme is Http
+111 |     ensures !configure(t, m).1, configure(t, m).0 == t, !verification_allowed(url)
+    |                                 ^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: postcondition not satisfied
+   --> d2_http_accepted.rs:127:9
+    |
+125 |   pub proof fn neighbours()
+    |   ------------------------- at the end of the function body
+126 |       ensures
+127 | /         ({
+128 | |             let t = Table { target: None, other_publishes: true };
+129 | |             let m = Mods { kind: Kind::Oras, trust: TrustMod::Set { url: Url { scheme: Scheme::Http, valid: true, canonical: 7 } ...
+130 | |             configure(t, m) == (t, false)
+131 | |         }),
+    | |__________^ failed this postcondition
+
+error: aborting due to 4 previous errors
