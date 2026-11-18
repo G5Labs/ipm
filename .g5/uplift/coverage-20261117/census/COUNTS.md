@@ -2,9 +2,9 @@
 
 Inventory blocks: 265. Status: enumerated 258, structural 7, unenumerated 0, stale 0.
 
-Assessed obligations: 1097 (full 583, partial 350, absent 164, unassessed 0).
-Design checks on assessed obligations: proved 623, bounded 19, refuted 64, unchecked 227, none 164. Full with a passing (proved or bounded) check: 524.
-Assessed-scope coverage: 0.5314 (upper bound with unassessed 0.5314). Whole-foundation coverage: 0.5314.
+Assessed obligations: 1100 (full 587, partial 349, absent 164, unassessed 0).
+Design checks on assessed obligations: proved 627, bounded 19, refuted 64, unchecked 226, none 164. Full with a passing (proved or bounded) check: 528.
+Assessed-scope coverage: 0.5336 (upper bound with unassessed 0.5336). Whole-foundation coverage: 0.5336.
 
 | Page | Blocks | Unenumerated or stale | Full | Partial | Absent | Unassessed |
 |---|---|---|---|---|---|---|
@@ -19,7 +19,7 @@ Assessed-scope coverage: 0.5314 (upper bound with unassessed 0.5314). Whole-foun
 | features/artifact-download.g5.md | 6 | 0 | 12 | 10 | 5 | 0 |
 | features/build-and-publish.g5.md | 12 | 0 | 19 | 24 | 4 | 0 |
 | features/dependencies.g5.md | 5 | 0 | 8 | 12 | 3 | 0 |
-| features/developer-tools.g5.md | 18 | 0 | 48 | 32 | 14 | 0 |
+| features/developer-tools.g5.md | 18 | 0 | 52 | 31 | 14 | 0 |
 | features/history.g5.md | 24 | 0 | 51 | 28 | 27 | 0 |
 | features/inspection.g5.md | 10 | 0 | 25 | 16 | 10 | 0 |
 | features/install.g5.md | 7 | 0 | 17 | 5 | 2 | 0 |
@@ -150,7 +150,7 @@ Assessed-scope coverage: 0.5314 (upper bound with unassessed 0.5314). Whole-foun
 | devtools.authoring.generate | enumerated | 3 | 2 | 2 | 0 | 0.4286 |
 | devtools.authoring.import | enumerated | 2 | 3 | 0 | 0 | 0.4 |
 | devtools.authoring.module-version | enumerated | 2 | 5 | 0 | 0 | 0.2857 |
-| devtools.generate.resources | enumerated | 10 | 3 | 0 | 0 | 0.7692 |
+| devtools.generate.resources | enumerated | 14 | 2 | 0 | 0 | 0.875 |
 | devtools.generate.webapps | enumerated | 2 | 4 | 0 | 0 | 0.3333 |
 | devtools.generate.cors | enumerated | 1 | 0 | 1 | 0 | 0.5 |
 | devtools.scripting | enumerated | 1 | 0 | 0 | 0 | 1.0 |

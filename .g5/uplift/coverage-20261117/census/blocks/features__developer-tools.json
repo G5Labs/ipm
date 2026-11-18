@@ -1418,27 +1418,28 @@
       "B2"
      ],
      "text": "Exported items are exported first and then become resources of the generated manifest.",
-     "cases": "exported routine vs not exported",
-     "observation": "resource present in manifest",
+     "cases": "exported class, dotted and undotted routine and include file (x1-x4); DFI item",
+     "observation": "export file path and resource present in manifest",
      "grade": "partial",
-     "check": "unchecked",
+     "check": "proved",
      "models": [
       ".g5/Verus_verification/consolidated/iter53/generator.rs::exported",
-      ".g5/Verus_verification/coverage-20261117/iter69/grouping.rs::singles",
-      ".g5/Verus_verification/coverage-20261117/iter69/grouping.rs::group",
-      ".g5/Verus_verification/coverage-20261117/iter69/grouping.rs::directory"
+      ".g5/Verus_verification/coverage-20261117/iter73/grouping.rs::exported",
+      ".g5/Verus_verification/coverage-20261117/iter73/grouping.rs::export_layout",
+      ".g5/Verus_verification/coverage-20261117/iter73/grouping.rs::singles_exact",
+      ".g5/Verus_verification/coverage-20261117/iter73/grouping.rs::class_written_before_collapse"
      ],
      "evidence": [
       ".g5/uplift/consolidated/iter53/run.json",
-      ".g5/uplift/coverage-20261117/iter69/run.json",
-      ".g5/uplift/coverage-20261117/iter69/proofs/models.json",
-      ".g5/uplift/coverage-20261117/iter69/replay/receipt.json",
-      ".g5/uplift/coverage-20261117/iter69/native/20261118T014707781494Z/observations.json",
-      ".g5/uplift/coverage-20261117/iter69/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter73/run.json",
+      ".g5/uplift/coverage-20261117/iter73/proofs/models.json",
+      ".g5/uplift/coverage-20261117/iter73/replay/receipt.json",
+      ".g5/uplift/coverage-20261117/iter73/native/20261118T034517721195Z/observations.json",
+      ".g5/uplift/coverage-20261117/iter73/predictions.md"
      ],
-     "basis": "new:iteration-69",
-     "assessed_in": "iteration-69",
-     "gap": "iter53 exported() decides which items are exported, and iter69 grouping.rs decides how files in the source folder become resources. The step between them is unmodeled: ExportOneResource's file placement (classes in package folders under cls/, routines flat under mac/). Native iter53 t3 shows the exported routine written as G53E.Rout.MAC without a Directory (the C:D73 pattern). The export-to-load round trip has no committed receipt."
+     "basis": "iteration-73 rule-4a regrade: the placement step is now modeled (exported transcribes Expfilename) and exported classes, routines and include files become resources by the general grouping theorems; native x1-x4. iter53 exported() still decides which items are exported; the two models are joined by documentation, not one proof.",
+     "assessed_in": "iteration-73",
+     "gap": "DFI items are exported to dfi/ but ReadItems lists only cls, mac, inc and int, so by the model they never become resources (unsupported_never_written); this is source-only, with no native DFI case. The selection (iter53) and placement (iter73) models are composed by documentation only."
     }
    ]
   },
@@ -1760,39 +1761,44 @@
    ]
   },
   "devtools.generate.resources": {
-   "body_sha": "bc896f1ee05fe235",
+   "body_sha": "3f47b28d1cd06246",
    "status": "enumerated",
    "units": {
     "P1": [
-     "devtools.generate.resources#1",
-     "devtools.generate.resources#2"
+     "devtools.generate.resources#16",
+     "devtools.generate.resources#15"
     ],
     "B1": [
      "devtools.generate.resources#3",
      "devtools.generate.resources#4"
     ],
     "B2": [
-     "devtools.generate.resources#5"
+     "devtools.generate.resources#1",
+     "devtools.generate.resources#2"
     ],
     "B3": [
+     "devtools.generate.resources#5"
+    ],
+    "B4": [
      "devtools.generate.resources#7",
      "devtools.generate.resources#8"
     ],
-    "B4": [
+    "B5": [
      "devtools.generate.resources#9"
     ],
-    "B5": [
+    "B6": [
      "devtools.generate.resources#10",
      "devtools.generate.resources#11"
     ],
-    "B6": [
+    "B7": [
      "devtools.generate.resources#12",
      "devtools.generate.resources#13"
     ],
-    "B7": [
-     "devtools.generate.resources#14"
-    ],
     "B8": [
+     "devtools.generate.resources#14",
+     "devtools.generate.resources#17"
+    ],
+    "B9": [
      "devtools.generate.resources#6"
     ]
    },
@@ -1800,62 +1806,59 @@
     {
      "id": "devtools.generate.resources#1",
      "units": [
-      "P1"
+      "B2"
      ],
-     "text": "generate keeps classes under the chosen tests folder out of application resources, even when that folder is inside the source folder.",
-     "cases": "class under tests folder (inside src, outside src) vs elsewhere",
+     "text": "Classes under the chosen tests folder stay out of application resources, even when that folder is inside the source folder.",
+     "cases": "class under tests folder inside src (m4) vs tests outside src (m1) vs ordinary source class",
      "observation": "membership in written application resources",
-     "grade": "partial",
+     "grade": "full",
      "check": "proved",
      "models": [
-      ".g5/Verus_verification/consolidated/iter6/workflows.rs::application_item",
-      ".g5/Verus_verification/consolidated/iter6/workflows.rs::below",
-      ".g5/Verus_verification/coverage-20261117/iter69/grouping.rs::kept",
-      ".g5/Verus_verification/coverage-20261117/iter69/grouping.rs::leftovers_and_skips",
-      ".g5/Verus_verification/coverage-20261117/iter69/grouping.rs::tests_and_status"
+      ".g5/Verus_verification/coverage-20261117/iter73/grouping.rs::under_tests",
+      ".g5/Verus_verification/coverage-20261117/iter73/grouping.rs::kept",
+      ".g5/Verus_verification/coverage-20261117/iter73/grouping.rs::tests_folder_files_never_written",
+      ".g5/Verus_verification/coverage-20261117/iter73/grouping.rs::generate"
      ],
      "evidence": [
-      ".g5/uplift/coverage-20261117/iter69/run.json",
-      ".g5/uplift/coverage-20261117/iter69/proofs/models.json",
-      ".g5/uplift/coverage-20261117/iter69/replay/receipt.json",
-      ".g5/uplift/coverage-20261117/iter69/native/20261118T014707781494Z/observations.json",
-      ".g5/uplift/coverage-20261117/iter69/receipts/index.jsonl",
-      ".g5/uplift/consolidated/iter6/run.json",
-      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json",
-      ".g5/uplift/coverage-20261117/iter72/mutations/G5.jsonl"
+      ".g5/uplift/coverage-20261117/iter73/run.json",
+      ".g5/uplift/coverage-20261117/iter73/proofs/models.json",
+      ".g5/uplift/coverage-20261117/iter73/replay/receipt.json",
+      ".g5/uplift/coverage-20261117/iter73/native/20261118T034517721195Z/observations.json",
+      ".g5/uplift/coverage-20261117/iter73/predictions.md"
      ],
-     "basis": "new:iteration-69; iteration-72 rule-4a re-audit (G5): partial, support mutation-checked (mutations G5-m23; control .g5/Verus_verification/coverage-20261117/iter69/grouping.rs control tests-not-excluded (killed only by instance assertions, review-71 C2))",
-     "assessed_in": "iteration-72",
-     "gap": "Rule 4a (iteration-72): The tests-folder membership is computed only in iter6::application_item, which has no source-folder scan. The grouping.rs writer takes in_tests as an input, and the two are not composed. The inside-src case is exercised only with in_tests fixed by the fixture (m4)."
+     "basis": "iteration-73 rule-4a regrade: the tests-folder test is computed from the tests answer and the file path (under_tests: the module-relative path starts with the tests folder), not an input. tests_folder_files_never_written holds for every file sequence; controls tests-not-excluded and tests-prefix-from-scan-folder are rejected by the general theorems alone; native m4 (inside) and m1 (outside).",
+     "assessed_in": "iteration-73",
+     "support": "control",
+     "note": "Premise: ReadItems compares the normalized absolute path with the normalized tests directory (trailing \"/\"), which is a segment prefix test. Case-insensitive file systems and symbolic links are outside the model."
     },
     {
      "id": "devtools.generate.resources#2",
      "units": [
-      "P1"
+      "B2"
      ],
-     "text": "Tests are written as UnitTest entries with Phase=\"test\", named by the tests folder and directory, with the package their classes share.",
-     "cases": "tests folder outside src (m1) vs inside src (m4); test classes at two depths under one top-level package",
-     "observation": "UnitTest Name, Package, Phase attributes",
-     "grade": "partial",
+     "text": "Tests are written as UnitTest entries with Phase=\"test\", each named by the tests folder and directory and carrying the package its classes share.",
+     "cases": "tests folder outside src (m1, Name /tests/) vs inside src (m4, Name /src/tests/); source classes get no UnitTest",
+     "observation": "UnitTest Name, processor, Package and Phase in module.xml and after load",
+     "grade": "full",
      "check": "proved",
      "models": [
-      ".g5/Verus_verification/coverage-20261117/iter69/grouping.rs::test_entries",
-      ".g5/Verus_verification/coverage-20261117/iter69/grouping.rs::group",
-      ".g5/Verus_verification/coverage-20261117/iter69/grouping.rs::group_characterized",
-      ".g5/Verus_verification/coverage-20261117/iter69/grouping.rs::tests_and_status"
+      ".g5/Verus_verification/coverage-20261117/iter73/grouping.rs::add_packages",
+      ".g5/Verus_verification/coverage-20261117/iter73/grouping.rs::test_entry",
+      ".g5/Verus_verification/coverage-20261117/iter73/grouping.rs::test_class_has_unittest_entry",
+      ".g5/Verus_verification/coverage-20261117/iter73/grouping.rs::source_listing_adds_no_unittest",
+      ".g5/Verus_verification/coverage-20261117/iter73/grouping.rs::group_characterized"
      ],
      "evidence": [
-      ".g5/uplift/coverage-20261117/iter69/run.json",
-      ".g5/uplift/coverage-20261117/iter69/proofs/models.json",
-      ".g5/uplift/coverage-20261117/iter69/replay/receipt.json",
-      ".g5/uplift/coverage-20261117/iter69/native/20261118T014707781494Z/observations.json",
-      ".g5/uplift/coverage-20261117/iter69/receipts/index.jsonl",
-      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json"
+      ".g5/uplift/coverage-20261117/iter73/run.json",
+      ".g5/uplift/coverage-20261117/iter73/proofs/models.json",
+      ".g5/uplift/coverage-20261117/iter73/replay/receipt.json",
+      ".g5/uplift/coverage-20261117/iter73/native/20261118T034517721195Z/observations.json",
+      ".g5/uplift/coverage-20261117/iter73/predictions.md"
      ],
-     "basis": "new:iteration-69; iteration-72 rule-4a re-audit (G5): partial, support inspection",
-     "assessed_in": "iteration-72",
-     "note": "Package and directory are modeled through the same group function as application classes; Phase=\"test\" and ProcessorClass UnitTest are unconditional constants in AddPackages and are checked by exact string match natively (m1, m4).",
-     "gap": "Rule 4a (iteration-72): Settled by review-71 C1: TestEntry has only directory and package (grouping.rs:32). The UnitTest Name (/src/tests/ when tests sit inside src) and Phase=\"test\" are checked only by the native string match."
+     "basis": "iteration-73 rule-4a regrade: TestEntry now carries Name (tests folder + directory), processor, Package and Phase, decided by the AddPackages tests-folder branch (add_packages). test_class_has_unittest_entry holds for every tests listing; controls tests-branch-swapped, unittest-name-without-folder and unittest-phase-other are rejected by the general theorems alone. Native m1 and m4 observe each field separately in module.xml and read the entry back after load; flips m4.unittest.name, m4.unittest.phase and m1.unittest.package are rejected.",
+     "assessed_in": "iteration-73",
+     "support": "control",
+     "note": "Phase=\"test\" and ProcessorClass UnitTest are constants inside the tests branch of AddPackages; the model decides them through that branch. UnitTest entries are kept out of the collapse because their GetSortKey includes the object reference (inspection; no native case has two UnitTest entries with one Name)."
     },
     {
      "id": "devtools.generate.resources#3",
@@ -1868,19 +1871,18 @@
      "grade": "full",
      "check": "proved",
      "models": [
-      ".g5/Verus_verification/coverage-20261117/iter69/grouping.rs::generate",
-      ".g5/Verus_verification/coverage-20261117/iter69/grouping.rs::tests_and_status"
+      ".g5/Verus_verification/coverage-20261117/iter73/grouping.rs::generate",
+      ".g5/Verus_verification/coverage-20261117/iter73/grouping.rs::missing_source_writes_nothing"
      ],
      "evidence": [
-      ".g5/uplift/coverage-20261117/iter69/run.json",
-      ".g5/uplift/coverage-20261117/iter69/proofs/models.json",
-      ".g5/uplift/coverage-20261117/iter69/replay/receipt.json",
-      ".g5/uplift/coverage-20261117/iter69/native/20261118T014707781494Z/observations.json",
-      ".g5/uplift/coverage-20261117/iter69/receipts/index.jsonl",
-      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json"
+      ".g5/uplift/coverage-20261117/iter73/run.json",
+      ".g5/uplift/coverage-20261117/iter73/proofs/models.json",
+      ".g5/uplift/coverage-20261117/iter73/replay/receipt.json",
+      ".g5/uplift/coverage-20261117/iter73/native/20261118T034517721195Z/observations.json",
+      ".g5/uplift/coverage-20261117/iter73/predictions.md"
      ],
-     "basis": "new:iteration-69; iteration-72 rule-4a re-audit (G5): full, support control (control .g5/Verus_verification/coverage-20261117/iter69/grouping.rs iter69 control missing-source-continues (rejected by tests_and_status))",
-     "assessed_in": "iteration-72",
+     "basis": "iteration-73 rule-4a regrade: full, general theorem missing_source_writes_nothing; control missing-source-continues rejected by the general theorems alone; native m6.",
+     "assessed_in": "iteration-73",
      "support": "control"
     },
     {
@@ -1915,35 +1917,35 @@
     {
      "id": "devtools.generate.resources#5",
      "units": [
-      "B2"
+      "B3"
      ],
-     "text": "Files with unsupported extensions, and files whose class or routine name cannot be read, are skipped; a class whose name can be read is listed even if its body does not compile (whether invalid source should fail is open).",
-     "cases": "loadable .cls vs headerless .cls vs body-broken .cls vs .txt",
-     "observation": "membership in written resources",
+     "text": "Files with unsupported extensions, and files whose class or routine name cannot be read, are skipped; a class whose name can be read is listed even if its body does not compile.",
+     "cases": "unsupported .txt (m1); headerless class (Ig3) vs body-broken class (Ig2) (m5)",
+     "observation": "resource membership",
      "grade": "partial",
      "check": "proved",
      "models": [
-      ".g5/Verus_verification/coverage-20261117/iter69/grouping.rs::supported",
-      ".g5/Verus_verification/coverage-20261117/iter69/grouping.rs::kept",
-      ".g5/Verus_verification/coverage-20261117/iter69/grouping.rs::leftovers_and_skips"
+      ".g5/Verus_verification/coverage-20261117/iter73/grouping.rs::supported",
+      ".g5/Verus_verification/coverage-20261117/iter73/grouping.rs::kept",
+      ".g5/Verus_verification/coverage-20261117/iter73/grouping.rs::unsupported_never_written",
+      ".g5/Verus_verification/coverage-20261117/iter73/grouping.rs::unlisted_never_written"
      ],
      "evidence": [
-      ".g5/uplift/coverage-20261117/iter69/run.json",
-      ".g5/uplift/coverage-20261117/iter69/proofs/models.json",
-      ".g5/uplift/coverage-20261117/iter69/replay/receipt.json",
-      ".g5/uplift/coverage-20261117/iter69/native/20261118T014707781494Z/observations.json",
-      ".g5/uplift/coverage-20261117/iter69/receipts/index.jsonl",
-      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json"
+      ".g5/uplift/coverage-20261117/iter73/run.json",
+      ".g5/uplift/coverage-20261117/iter73/proofs/models.json",
+      ".g5/uplift/coverage-20261117/iter73/replay/receipt.json",
+      ".g5/uplift/coverage-20261117/iter73/native/20261118T034517721195Z/observations.json",
+      ".g5/uplift/coverage-20261117/iter73/predictions.md"
      ],
-     "basis": "new:iteration-69; iteration-72 rule-4a re-audit (G5): partial, support control (control .g5/Verus_verification/coverage-20261117/iter69/grouping.rs iter69 controls unsupported-kept, listing-ignored (instance kills only; unsupported-kept survives the general proofs per review-71 C2); instance-scoped)",
-     "assessed_in": "iteration-72",
-     "note": "The listing result is a provider input (File.listed). Native m1 and m5 observed it: a headerless file is not listed, and a class header with a broken body is listed. Controls listing-ignored and unsupported-kept are rejected.",
-     "gap": "Rule 4a (iteration-72): Headerless versus body-broken, the case the obligation names, is decided by `listed`, a fixture-fixed provider input (m5: Ig2 listed, Ig3 not). The unsupported-extension rule is pinned only by instance assertions."
+     "basis": "iteration-73 rule-4a regrade: the extension filter and the skip of unlisted files are general theorems; controls unsupported-kept and listing-ignored are rejected by the general theorems alone.",
+     "assessed_in": "iteration-73",
+     "support": "control",
+     "gap": "Whether a name can be read is the provider result of $system.OBJ.Load list-only (File.listed), a fixture-fixed input. The headerless-versus-body-broken distinction the obligation states is observed natively (m5) but not decided by the model."
     },
     {
      "id": "devtools.generate.resources#6",
      "units": [
-      "B8"
+      "B9"
      ],
      "text": "Working assumption: generation skips an invalid source file and may produce a manifest without it.",
      "alias_of": "devtools.generate.resources#5",
@@ -1952,238 +1954,306 @@
     {
      "id": "devtools.generate.resources#7",
      "units": [
-      "B3"
+      "B4"
      ],
-     "text": "Classes are grouped into one package resource per (directory, top-level package); different top-level packages or different directories give separate resources.",
-     "cases": "same dir + same top-level; same dir + different top-level (A.X, E.Y); different dirs + same top-level (Id2 in x and y)",
-     "observation": "number and identity of .PKG resources",
+     "text": "Classes are grouped into one package resource per (directory, top-level package); different top-level packages or directories give different resources.",
+     "cases": "A.X + E.Y (two top levels), Id2 in x and y (two directories), A.B.C + A.B.D (one group)",
+     "observation": "written package entries",
      "grade": "full",
      "check": "proved",
      "models": [
-      ".g5/Verus_verification/coverage-20261117/iter69/grouping.rs::in_group",
-      ".g5/Verus_verification/coverage-20261117/iter69/grouping.rs::group",
-      ".g5/Verus_verification/coverage-20261117/iter69/grouping.rs::group_characterized",
-      ".g5/Verus_verification/coverage-20261117/iter69/grouping.rs::class_written_before_collapse",
-      ".g5/Verus_verification/coverage-20261117/iter69/grouping.rs::grouping_names"
+      ".g5/Verus_verification/coverage-20261117/iter73/grouping.rs::in_group",
+      ".g5/Verus_verification/coverage-20261117/iter73/grouping.rs::group_key_separates",
+      ".g5/Verus_verification/coverage-20261117/iter73/grouping.rs::group_key_joins",
+      ".g5/Verus_verification/coverage-20261117/iter73/grouping.rs::class_in_own_group",
+      ".g5/Verus_verification/coverage-20261117/iter73/instances.rs::grouping_names"
      ],
      "evidence": [
-      ".g5/uplift/coverage-20261117/iter69/run.json",
-      ".g5/uplift/coverage-20261117/iter69/proofs/models.json",
-      ".g5/uplift/coverage-20261117/iter69/replay/receipt.json",
-      ".g5/uplift/coverage-20261117/iter69/native/20261118T014707781494Z/observations.json",
-      ".g5/uplift/coverage-20261117/iter69/receipts/index.jsonl",
-      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json"
+      ".g5/uplift/coverage-20261117/iter73/run.json",
+      ".g5/uplift/coverage-20261117/iter73/proofs/models.json",
+      ".g5/uplift/coverage-20261117/iter73/replay/receipt.json",
+      ".g5/uplift/coverage-20261117/iter73/native/20261118T034517721195Z/observations.json",
+      ".g5/uplift/coverage-20261117/iter73/predictions.md"
      ],
-     "basis": "new:iteration-69; iteration-72 rule-4a re-audit (G5): full, support control (control .g5/Verus_verification/coverage-20261117/iter69/grouping.rs iter69 controls directory-only-key (fails general proofs), top-level-only-key (killed only by instance N5b); instance-scoped)",
-     "assessed_in": "iteration-72",
-     "note": "Controls directory-only-key and top-level-only-key are rejected.",
-     "support": "control",
-     "instance_scoped": true
+     "basis": "iteration-73 rule-4a regrade: group_key_separates and group_key_joins pin the key for every file sequence; controls top-level-only-key and directory-only-key are rejected by the general theorems alone (review-71 C2); native m1, m3.",
+     "assessed_in": "iteration-73",
+     "support": "control"
     },
     {
      "id": "devtools.generate.resources#8",
      "units": [
-      "B3"
+      "B4"
      ],
-     "text": "Each group's resource is named by the deepest package all its classes share (A.B.C+A.B.D -> A.B.PKG; A.B.C+A.D.E -> A.PKG; A.B.C alone -> A.B.PKG).",
-     "cases": "classes sharing only the top level vs sharing a deeper package vs a single class",
-     "observation": "resource Name <package>.PKG",
+     "text": "Each group's resource is named by the deepest package all its classes share (classes A.B.C + A.B.D -> A.B.PKG; A.B.C + A.D.E -> A.PKG; A.B.C alone -> A.B.PKG).",
+     "cases": "N1, N3, N4 neighbours; m1 Ia1, Ia2, Ia3",
+     "observation": "package entry names",
      "grade": "full",
      "check": "proved",
      "models": [
-      ".g5/Verus_verification/coverage-20261117/iter69/grouping.rs::shared",
-      ".g5/Verus_verification/coverage-20261117/iter69/grouping.rs::group",
-      ".g5/Verus_verification/coverage-20261117/iter69/grouping.rs::lemma_shared_prefix",
-      ".g5/Verus_verification/coverage-20261117/iter69/grouping.rs::group_characterized",
-      ".g5/Verus_verification/coverage-20261117/iter69/grouping.rs::grouping_names"
+      ".g5/Verus_verification/coverage-20261117/iter73/grouping.rs::group",
+      ".g5/Verus_verification/coverage-20261117/iter73/grouping.rs::shared",
+      ".g5/Verus_verification/coverage-20261117/iter73/grouping.rs::group_characterized",
+      ".g5/Verus_verification/coverage-20261117/iter73/instances.rs::grouping_names"
      ],
      "evidence": [
-      ".g5/uplift/coverage-20261117/iter69/run.json",
-      ".g5/uplift/coverage-20261117/iter69/proofs/models.json",
-      ".g5/uplift/coverage-20261117/iter69/replay/receipt.json",
-      ".g5/uplift/coverage-20261117/iter69/native/20261118T014707781494Z/observations.json",
-      ".g5/uplift/coverage-20261117/iter69/receipts/index.jsonl",
-      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json"
+      ".g5/uplift/coverage-20261117/iter73/run.json",
+      ".g5/uplift/coverage-20261117/iter73/proofs/models.json",
+      ".g5/uplift/coverage-20261117/iter73/replay/receipt.json",
+      ".g5/uplift/coverage-20261117/iter73/native/20261118T034517721195Z/observations.json",
+      ".g5/uplift/coverage-20261117/iter73/predictions.md"
      ],
-     "basis": "new:iteration-69; iteration-72 rule-4a re-audit (G5): full, support control (control .g5/Verus_verification/coverage-20261117/iter69/grouping.rs iter69 controls name-top-level-only, seed-with-top-level)",
-     "assessed_in": "iteration-72",
-     "note": "group_characterized proves, for every file sequence, that the name is a package of every member and the deepest such, so it does not depend on file order. Controls name-top-level-only and seed-with-top-level are rejected. Flipped field m1.Ia1.B.PKG@cls is rejected.",
+     "basis": "iteration-73 rule-4a regrade: group_characterized (deepest shared package, independent of file order) for every file sequence; controls name-top-level-only and seed-with-top-level rejected by the general theorems alone; native m1.",
+     "assessed_in": "iteration-73",
      "support": "control"
     },
     {
      "id": "devtools.generate.resources#9",
      "units": [
-      "B4"
+      "B5"
      ],
-     "text": "A resource's Directory is the folder that holds its package folders, relative to the source folder, and is left out when that folder is the source folder.",
-     "cases": "cls/A/B/C.cls -> cls; x/... -> x; root class or flat file -> none",
+     "text": "For a file stored in package folders, a resource's Directory is the folder that holds those package folders, relative to the source folder, and is left out when that folder is the source folder itself.",
+     "cases": "cls/A/B/C.cls -> cls; x/Id1/B/C.cls -> x; a/b/Im7/Y.cls -> a/b; a root class -> none",
      "observation": "Directory attribute",
      "grade": "full",
      "check": "proved",
      "models": [
-      ".g5/Verus_verification/coverage-20261117/iter69/grouping.rs::directory",
-      ".g5/Verus_verification/coverage-20261117/iter69/grouping.rs::pkg_len",
-      ".g5/Verus_verification/coverage-20261117/iter69/grouping.rs::package_layout_round_trip",
-      ".g5/Verus_verification/coverage-20261117/iter69/grouping.rs::leftovers_and_skips"
+      ".g5/Verus_verification/coverage-20261117/iter73/grouping.rs::directory",
+      ".g5/Verus_verification/coverage-20261117/iter73/grouping.rs::layout_ok",
+      ".g5/Verus_verification/coverage-20261117/iter73/grouping.rs::layout_directory",
+      ".g5/Verus_verification/coverage-20261117/iter73/grouping.rs::package_layout_round_trip"
      ],
      "evidence": [
-      ".g5/uplift/coverage-20261117/iter69/run.json",
-      ".g5/uplift/coverage-20261117/iter69/proofs/models.json",
-      ".g5/uplift/coverage-20261117/iter69/replay/receipt.json",
-      ".g5/uplift/coverage-20261117/iter69/native/20261118T014707781494Z/observations.json",
-      ".g5/uplift/coverage-20261117/iter69/receipts/index.jsonl",
-      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json"
+      ".g5/uplift/coverage-20261117/iter73/run.json",
+      ".g5/uplift/coverage-20261117/iter73/proofs/models.json",
+      ".g5/uplift/coverage-20261117/iter73/replay/receipt.json",
+      ".g5/uplift/coverage-20261117/iter73/native/20261118T034517721195Z/observations.json",
+      ".g5/uplift/coverage-20261117/iter73/predictions.md"
      ],
-     "basis": "new:iteration-69; iteration-72 rule-4a re-audit (G5): full, support control (control .g5/Verus_verification/coverage-20261117/iter69/grouping.rs iter69 control directory-keeps-whole-path)",
-     "assessed_in": "iteration-72",
-     "note": "Control directory-keeps-whole-path is rejected. Native: Directory cls/mac/inc/x/y and none for m2a, m2b, m2e.",
+     "basis": "iteration-73 rule-4a regrade: layout_directory and package_layout_round_trip hold for every file in package layout; control directory-keeps-whole-path rejected by the general theorems alone; native m1, m3, m7 (Directory a/b), m2e.",
+     "assessed_in": "iteration-73",
      "support": "control"
     },
     {
      "id": "devtools.generate.resources#10",
      "units": [
-      "B5"
+      "B6"
      ],
      "text": "Routines, include files and classes without a package are written one by one under their own names.",
-     "cases": "routine, include, package-less class vs packaged class",
-     "observation": "individual Resource entries",
+     "cases": "Ir69.MAC, Ii69.INC (m1), Ir2a.cls (m2a), IxbRtn, IxcInc (x2, x3)",
+     "observation": "individual resource entries",
      "grade": "full",
      "check": "proved",
      "models": [
-      ".g5/Verus_verification/coverage-20261117/iter69/grouping.rs::single",
-      ".g5/Verus_verification/coverage-20261117/iter69/grouping.rs::singles",
-      ".g5/Verus_verification/coverage-20261117/iter69/grouping.rs::singles_exact",
-      ".g5/Verus_verification/coverage-20261117/iter69/grouping.rs::leftovers_and_skips"
+      ".g5/Verus_verification/coverage-20261117/iter73/grouping.rs::singles",
+      ".g5/Verus_verification/coverage-20261117/iter73/grouping.rs::singles_exact"
      ],
      "evidence": [
-      ".g5/uplift/coverage-20261117/iter69/run.json",
-      ".g5/uplift/coverage-20261117/iter69/proofs/models.json",
-      ".g5/uplift/coverage-20261117/iter69/replay/receipt.json",
-      ".g5/uplift/coverage-20261117/iter69/native/20261118T014707781494Z/observations.json",
-      ".g5/uplift/coverage-20261117/iter69/receipts/index.jsonl",
-      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json"
+      ".g5/uplift/coverage-20261117/iter73/run.json",
+      ".g5/uplift/coverage-20261117/iter73/proofs/models.json",
+      ".g5/uplift/coverage-20261117/iter73/replay/receipt.json",
+      ".g5/uplift/coverage-20261117/iter73/native/20261118T034517721195Z/observations.json",
+      ".g5/uplift/coverage-20261117/iter73/predictions.md"
      ],
-     "basis": "new:iteration-69; iteration-72 rule-4a re-audit (G5): full, support control (control .g5/Verus_verification/coverage-20261117/iter69/grouping.rs iter69 control drop-leftovers)",
-     "assessed_in": "iteration-72",
-     "note": "Control drop-leftovers is rejected. Native names keep the listing's extension case: Ir69.MAC, Ii69.INC, but Ir2a.cls.",
+     "basis": "iteration-73 rule-4a regrade: singles_exact for every file sequence; control drop-leftovers rejected by the general theorems alone; native m1, m2a, m2e, x1-x4.",
+     "assessed_in": "iteration-73",
      "support": "control"
     },
     {
      "id": "devtools.generate.resources#11",
      "units": [
-      "B5"
+      "B6"
      ],
      "text": "Routines and package-less classes in the tests folder are written nowhere.",
-     "cases": "tests-folder routine and package-less class vs tests-folder packaged class",
+     "cases": "Ih69.mac, Inopkg69.cls (m1); Ihelp69, Inopkg69b (m4)",
      "observation": "absence from resources and UnitTest entries",
      "grade": "full",
      "check": "proved",
      "models": [
-      ".g5/Verus_verification/coverage-20261117/iter69/grouping.rs::test_entries",
-      ".g5/Verus_verification/coverage-20261117/iter69/grouping.rs::generate",
-      ".g5/Verus_verification/coverage-20261117/iter69/grouping.rs::tests_and_status"
+      ".g5/Verus_verification/coverage-20261117/iter73/grouping.rs::generate",
+      ".g5/Verus_verification/coverage-20261117/iter73/grouping.rs::tests_listing_never_resources",
+      ".g5/Verus_verification/coverage-20261117/iter73/grouping.rs::add_packages"
      ],
      "evidence": [
-      ".g5/uplift/coverage-20261117/iter69/run.json",
-      ".g5/uplift/coverage-20261117/iter69/proofs/models.json",
-      ".g5/uplift/coverage-20261117/iter69/replay/receipt.json",
-      ".g5/uplift/coverage-20261117/iter69/native/20261118T014707781494Z/observations.json",
-      ".g5/uplift/coverage-20261117/iter69/receipts/index.jsonl",
-      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json"
+      ".g5/uplift/coverage-20261117/iter73/run.json",
+      ".g5/uplift/coverage-20261117/iter73/proofs/models.json",
+      ".g5/uplift/coverage-20261117/iter73/replay/receipt.json",
+      ".g5/uplift/coverage-20261117/iter73/native/20261118T034517721195Z/observations.json",
+      ".g5/uplift/coverage-20261117/iter73/predictions.md"
      ],
-     "basis": "new:iteration-69; iteration-72 rule-4a re-audit (G5): full, support control (control .g5/Verus_verification/coverage-20261117/iter69/grouping.rs iter69 control tests-leftovers-kept; instance-scoped)",
-     "assessed_in": "iteration-72",
-     "note": "Control tests-leftovers-kept is rejected. Native m1 (Ih69, Inopkg69), m4 (Ihelp69, Inopkg69b). Whether the UnitTest processor loads them at test time was not checked.",
-     "support": "control",
-     "instance_scoped": true
+     "basis": "iteration-73 rule-4a regrade: tests_listing_never_resources holds for every tests listing (no longer instance-scoped); control tests-leftovers-kept rejected by the general theorems alone; native m1, m4.",
+     "assessed_in": "iteration-73",
+     "support": "control"
     },
     {
      "id": "devtools.generate.resources#12",
      "units": [
-      "B6"
+      "B7"
      ],
      "text": "module.xml keeps one resource per name.",
-     "cases": "two written entries with one name vs distinct names",
-     "observation": "Resource entries in the written module.xml",
+     "cases": "same name in two directories vs different names",
+     "observation": "count of entries per (name, extension)",
      "grade": "full",
      "check": "proved",
      "models": [
-      ".g5/Verus_verification/coverage-20261117/iter69/grouping.rs::same_key",
-      ".g5/Verus_verification/coverage-20261117/iter69/grouping.rs::collapse",
-      ".g5/Verus_verification/coverage-20261117/iter69/grouping.rs::writer_one_entry_per_name"
+      ".g5/Verus_verification/coverage-20261117/iter73/grouping.rs::collapse",
+      ".g5/Verus_verification/coverage-20261117/iter73/grouping.rs::writer_one_entry_per_name",
+      ".g5/Verus_verification/coverage-20261117/iter73/grouping.rs::collapse_kept_is_last"
      ],
      "evidence": [
-      ".g5/uplift/coverage-20261117/iter69/run.json",
-      ".g5/uplift/coverage-20261117/iter69/proofs/models.json",
-      ".g5/uplift/coverage-20261117/iter69/replay/receipt.json",
-      ".g5/uplift/coverage-20261117/iter69/native/20261118T014707781494Z/observations.json",
-      ".g5/uplift/coverage-20261117/iter69/receipts/index.jsonl",
-      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json"
+      ".g5/uplift/coverage-20261117/iter73/run.json",
+      ".g5/uplift/coverage-20261117/iter73/proofs/models.json",
+      ".g5/uplift/coverage-20261117/iter73/replay/receipt.json",
+      ".g5/uplift/coverage-20261117/iter73/native/20261118T034517721195Z/observations.json",
+      ".g5/uplift/coverage-20261117/iter73/predictions.md"
      ],
-     "basis": "new:iteration-69; iteration-72 rule-4a re-audit (G5): full, support control (control .g5/Verus_verification/coverage-20261117/iter69/grouping.rs iter69 control writer-keys-by-directory)",
-     "assessed_in": "iteration-72",
-     "note": "Proved for every entry sequence. Native counts m1 (7), m3 (Id1.B.PKG once).",
+     "basis": "iteration-73 rule-4a regrade: writer_one_entry_per_name for every entry list; controls writer-keys-by-directory and collapse-keeps-first rejected by the general theorems alone; native m3, m7, m8 count fields.",
+     "assessed_in": "iteration-73",
      "support": "control"
     },
     {
      "id": "devtools.generate.resources#13",
      "units": [
-      "B6"
+      "B7"
      ],
-     "text": "As built (C:D72), when one package sits in two directories, only one directory's resource is kept and the other directory's classes are missing from the module.",
-     "cases": "Id1.B in x and y vs Id2.B in x and Id2.D in y",
-     "observation": "written entries; classes compiled after load",
+     "text": "As built (C:D72), when groups from two directories get the same package name, only one directory's resource is kept and the other directory's classes are missing from the module while load reports success.",
+     "cases": "Id1.B in x and y (m3), Im7 in a and a/b (m7), Im8 in a and ab (m8) vs Id2.B in x with Id2.D in y",
+     "observation": "written entries, load result, classes compiled after load",
      "grade": "full",
      "check": "proved",
      "models": [
-      ".g5/Verus_verification/coverage-20261117/iter69/grouping.rs::same_name_two_directories_keeps_one",
-      ".g5/Verus_verification/coverage-20261117/iter69/grouping.rs::same_package_two_directories_loses_class",
-      ".g5/Verus_verification/coverage-20261117/iter69/grouping.rs::m3_keeps_one_directory",
-      ".g5/Verus_verification/coverage-20261117/iter69/grouping.rs::loads_class"
+      ".g5/Verus_verification/coverage-20261117/iter73/grouping.rs::same_name_two_directories_keeps_one",
+      ".g5/Verus_verification/coverage-20261117/iter73/grouping.rs::collapse_earlier_key_loses",
+      ".g5/Verus_verification/coverage-20261117/iter73/grouping.rs::class_loads_when_no_clash",
+      ".g5/Verus_verification/coverage-20261117/iter73/grouping.rs::layout_loads",
+      ".g5/Verus_verification/coverage-20261117/iter73/instances.rs::collapse_winners"
      ],
      "evidence": [
-      ".g5/uplift/coverage-20261117/iter69/run.json",
-      ".g5/uplift/coverage-20261117/iter69/proofs/models.json",
-      ".g5/uplift/coverage-20261117/iter69/replay/receipt.json",
-      ".g5/uplift/coverage-20261117/iter69/native/20261118T014707781494Z/observations.json",
-      ".g5/uplift/coverage-20261117/iter69/receipts/index.jsonl",
-      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json"
+      ".g5/uplift/coverage-20261117/iter73/run.json",
+      ".g5/uplift/coverage-20261117/iter73/proofs/models.json",
+      ".g5/uplift/coverage-20261117/iter73/replay/receipt.json",
+      ".g5/uplift/coverage-20261117/iter73/native/20261118T034517721195Z/observations.json",
+      ".g5/uplift/coverage-20261117/iter73/predictions.md"
      ],
-     "basis": "new:iteration-69; iteration-72 rule-4a re-audit (G5): full, support control (control .g5/Verus_verification/coverage-20261117/iter69/grouping.rs iter69 control writer-keys-by-directory; replay focused-flip1)",
-     "assessed_in": "iteration-72",
-     "note": "As-built claim proved; it refutes the promise that every packaged application class is covered by a written resource. Control writer-keys-by-directory is rejected; flipped fields m3.Id1.B.PKG@x and class.Id1.B.C are rejected.",
-     "support": "control"
+     "basis": "iteration-73 rule-4a regrade: as-built claim proved for every file sequence (same_name_two_directories_keeps_one); which directory is dropped is derived from the $order key strings (collapse_earlier_key_loses, premise keys_sorted); the no-clash neighbour loads every class (class_loads_when_no_clash). Controls writer-keys-by-directory, collapse-keeps-first, keys-sorted-descending rejected by the general theorems; key-separator controls rejected by instances. m7/m8 winners predicted before the run. Flips m3.Id1.B.PKG@y, m7.Im7.PKG@a, m8.Im8.PKG@ab, class.Id1.B.C, class.Im7.Y rejected.",
+     "assessed_in": "iteration-73",
+     "support": "control",
+     "note": "Refutes the promise that every packaged application class is covered by a written resource. Premise: IRIS iterates non-numeric local subscripts in character-code order (keys_sorted), observed by m3, m7, m8."
     },
     {
      "id": "devtools.generate.resources#14",
      "units": [
-      "B7"
+      "B8"
      ],
-     "text": "As built (C:D73), load cannot find a class without a package in the source folder when a cls folder also exists, or a class file named with dots outside package folders, so the load fails.",
-     "cases": "root class with cls folder (m2a) vs without (m2e); flat file (m2b) vs package layout (m1, m3, m4)",
-     "observation": "load success; classes compiled",
+     "text": "As built (C:D73), load fails for a class without a package in the source folder when a cls folder also exists, and for a class file named with dots outside package folders.",
+     "cases": "root class with cls folder (m2a) vs without (m2e); flat class file (m2b) vs package layout (m1)",
+     "observation": "load result",
      "grade": "full",
      "check": "proved",
      "models": [
-      ".g5/Verus_verification/coverage-20261117/iter69/grouping.rs::reader_dir",
-      ".g5/Verus_verification/coverage-20261117/iter69/grouping.rs::reader_finds",
-      ".g5/Verus_verification/coverage-20261117/iter69/grouping.rs::load_ok",
-      ".g5/Verus_verification/coverage-20261117/iter69/grouping.rs::load_resolution",
-      ".g5/Verus_verification/coverage-20261117/iter69/grouping.rs::package_layout_round_trip"
+      ".g5/Verus_verification/coverage-20261117/iter73/grouping.rs::reader_dir",
+      ".g5/Verus_verification/coverage-20261117/iter73/grouping.rs::reader_directory_rule",
+      ".g5/Verus_verification/coverage-20261117/iter73/grouping.rs::root_class_beside_cls_folder",
+      ".g5/Verus_verification/coverage-20261117/iter73/grouping.rs::load_ok",
+      ".g5/Verus_verification/coverage-20261117/iter73/grouping.rs::layout_loads"
      ],
      "evidence": [
-      ".g5/uplift/coverage-20261117/iter69/run.json",
-      ".g5/uplift/coverage-20261117/iter69/proofs/models.json",
-      ".g5/uplift/coverage-20261117/iter69/replay/receipt.json",
-      ".g5/uplift/coverage-20261117/iter69/native/20261118T014707781494Z/observations.json",
-      ".g5/uplift/coverage-20261117/iter69/receipts/index.jsonl",
-      ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json"
+      ".g5/uplift/coverage-20261117/iter73/run.json",
+      ".g5/uplift/coverage-20261117/iter73/proofs/models.json",
+      ".g5/uplift/coverage-20261117/iter73/replay/receipt.json",
+      ".g5/uplift/coverage-20261117/iter73/native/20261118T034517721195Z/observations.json",
+      ".g5/uplift/coverage-20261117/iter73/predictions.md"
      ],
-     "basis": "new:iteration-69; iteration-72 rule-4a re-audit (G5): full, support control (control .g5/Verus_verification/coverage-20261117/iter69/grouping.rs iter69 control reader-root-before-ext-dir; instance-scoped)",
-     "assessed_in": "iteration-72",
-     "note": "The reader model covers the directory choice of Document.%OnNew/OnPhase (Directory, else the extension folder when it exists, else the source root). It does not model the extension fallback seen in the error text (.xml) or routine-specific folders (rtn). Control reader-root-before-ext-dir is rejected.",
+     "basis": "iteration-73 rule-4a regrade: root_class_beside_cls_folder and reader_directory_rule hold for every file; control reader-root-before-ext-dir rejected by the general theorems alone; flips m2a.load.ok and m2b.load.ok rejected.",
+     "assessed_in": "iteration-73",
      "support": "control",
-     "instance_scoped": true
+     "note": "The flat-class-file case (m2b) is instance-scoped: it rests on the replayed native case, with the general reader rule; the obligation names that case only."
+    },
+    {
+     "id": "devtools.generate.resources#15",
+     "units": [
+      "P1"
+     ],
+     "text": "If a module.xml already exists, generate first renames it to module_<timestamp>.xml before writing the new one.",
+     "cases": "existing module.xml (m8) vs none (m7)",
+     "observation": "backup file count and content; content of the new module.xml",
+     "grade": "partial",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/coverage-20261117/iter73/grouping.rs::save_file",
+      ".g5/Verus_verification/coverage-20261117/iter73/grouping.rs::save_keeps_previous",
+      ".g5/Verus_verification/coverage-20261117/iter73/instances.rs::m8_disk",
+      ".g5/Verus_verification/coverage-20261117/iter73/instances.rs::m7_disk"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter73/run.json",
+      ".g5/uplift/coverage-20261117/iter73/proofs/models.json",
+      ".g5/uplift/coverage-20261117/iter73/replay/receipt.json",
+      ".g5/uplift/coverage-20261117/iter73/native/20261118T034517721195Z/observations.json",
+      ".g5/uplift/coverage-20261117/iter73/predictions.md"
+     ],
+     "basis": "iteration-73 rule-4a regrade: the Exists branch of SaveFile is modeled (save_file); control no-backup is rejected by save_keeps_previous; native m8 has one backup holding the old content and m7 none; flip m8.backup.old rejected.",
+     "assessed_in": "iteration-73",
+     "support": "control",
+     "gap": "The backup name module_<%PosixTime>.xml (observed module_1154716478026513909.xml) is native-only, and the model represents the backup as a list entry, not a file name. A failed rename (throws, nothing written) is unmodeled."
+    },
+    {
+     "id": "devtools.generate.resources#16",
+     "units": [
+      "P1"
+     ],
+     "text": "generate writes a module.xml that declares the source folder's files as resources: one package resource per group of classes, one resource per other routine, include file or package-less class, and UnitTest entries for the tests folder.",
+     "cases": "packaged classes, leftovers, tests-folder classes (m1, m4)",
+     "observation": "written resources and UnitTest entries",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/coverage-20261117/iter73/grouping.rs::generate",
+      ".g5/Verus_verification/coverage-20261117/iter73/grouping.rs::add_packages",
+      ".g5/Verus_verification/coverage-20261117/iter73/grouping.rs::singles"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter73/run.json",
+      ".g5/uplift/coverage-20261117/iter73/proofs/models.json",
+      ".g5/uplift/coverage-20261117/iter73/replay/receipt.json",
+      ".g5/uplift/coverage-20261117/iter73/native/20261118T034517721195Z/observations.json",
+      ".g5/uplift/coverage-20261117/iter73/predictions.md"
+     ],
+     "basis": "iteration-73 rule-4a regrade: composed from #7 (one package resource per group), #10 (leftovers one by one) and #2 (UnitTest entries); generate is their concatenation, so the lead holds exactly when the three do.",
+     "assessed_in": "iteration-73",
+     "support": "composition",
+     "composed": [
+      "devtools.generate.resources#7",
+      "devtools.generate.resources#10",
+      "devtools.generate.resources#2"
+     ]
+    },
+    {
+     "id": "devtools.generate.resources#17",
+     "units": [
+      "B8"
+     ],
+     "text": "As built (C:D73), generate -export writes routines and include files flat into their extension folder, so one with dots in its name gets no Directory and load of the generated module fails.",
+     "cases": "dotted routine Ixa.R.Rtn (x1) and include Ixd.I.Inc (x4) vs undotted IxbRtn (x2) and IxcInc (x3)",
+     "observation": "export file paths, written entries, load result, items present after load",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/coverage-20261117/iter73/grouping.rs::exported",
+      ".g5/Verus_verification/coverage-20261117/iter73/grouping.rs::export_layout",
+      ".g5/Verus_verification/coverage-20261117/iter73/grouping.rs::export_dotted_item_fails_load",
+      ".g5/Verus_verification/coverage-20261117/iter73/grouping.rs::export_round_trip_loads",
+      ".g5/Verus_verification/coverage-20261117/iter73/instances.rs::export_round_trips"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter73/run.json",
+      ".g5/uplift/coverage-20261117/iter73/proofs/models.json",
+      ".g5/uplift/coverage-20261117/iter73/replay/receipt.json",
+      ".g5/uplift/coverage-20261117/iter73/native/20261118T034517721195Z/observations.json",
+      ".g5/uplift/coverage-20261117/iter73/predictions.md"
+     ],
+     "basis": "iteration-73 rule-4a regrade: Expfilename placement transcribed (exported); export_layout and export_dotted_item_fails_load hold for every source tree; controls export-nests-all and export-classes-flat rejected by the general theorems alone. Native x1-x4 predicted before reading Expfilename and before the run; flips x1.load.ok, x4.load.ok, x2.load.ok, x1.file.Ixa.R.Rtn.flat, x1.Ixa.R.Rtn.MAC rejected.",
+     "assessed_in": "iteration-73",
+     "support": "control"
     }
    ]
   },

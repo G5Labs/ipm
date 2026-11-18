@@ -1,0 +1,364 @@
+{
+ "verus_dir": ".g5/Verus_verification/coverage-20261117/iter73",
+ "changed_files": [
+  "grouping.rs",
+  "instances.rs",
+  "cases.json",
+  "make_cases.py",
+  "run.py",
+  "publish.py",
+  "native/**",
+  "../common/harness.py"
+ ],
+ "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+ "supersedes": ".g5/uplift/coverage-20261117/iter69/bindings.json (kept as history; its rows stay valid for iter69 grouping.rs)",
+ "rows": [
+  {
+   "id": "S73-01",
+   "owner": ".g5/ontology/features/developer-tools.g5.md#devtools.generate.resources",
+   "model": "grouping.rs",
+   "symbols": [
+    "under_tests",
+    "kept",
+    "tests_folder_files_never_written",
+    "unsupported_never_written",
+    "unlisted_never_written",
+    "supported"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "ReadResources"
+    ],
+    [
+     "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "ReadItems"
+    ]
+   ],
+   "reader": [
+    [
+     "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "ProcessResources"
+    ]
+   ],
+   "roles": [
+    {
+     "symbol": "under_tests",
+     "file": "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "member": "ReadResources",
+     "lines": "398",
+     "role": "decide",
+     "note": "testsDir = tests folder normalized under the module folder; passed to ReadItems as excludeDir"
+    },
+    {
+     "symbol": "under_tests",
+     "file": "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "member": "ReadItems",
+     "lines": "468",
+     "role": "decide",
+     "note": "skip a file whose absolute path starts with excludeDir (segment prefix after normalization)"
+    },
+    {
+     "symbol": "supported",
+     "file": "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "member": "ReadItems",
+     "lines": "458-463",
+     "role": "decide",
+     "note": "extension filter cls, mac, inc, int (case-insensitive)"
+    }
+   ],
+   "scope": "Tests-folder exclusion computed from the tests answer and the file path, not an input; extension filter and unlisted skip. General theorems; controls tests-not-excluded, tests-prefix-from-scan-folder, unsupported-kept, listing-ignored rejected by the general theorems alone. Native m1, m4, m5.",
+   "change": "rebinds iter69 S69 rows for these members; in_tests is no longer an input"
+  },
+  {
+   "id": "S73-02",
+   "owner": ".g5/ontology/features/developer-tools.g5.md#devtools.generate.resources",
+   "model": "grouping.rs",
+   "symbols": [
+    "in_group",
+    "group",
+    "group_key_separates",
+    "group_key_joins",
+    "group_characterized",
+    "class_loads_when_no_clash",
+    "layout_loads"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "GroupClasses"
+    ],
+    [
+     "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "SharedPackage"
+    ],
+    [
+     "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "ReadItems"
+    ]
+   ],
+   "reader": [
+    [
+     "src/cls/IPM/ResourceProcessor/Default/Document.cls",
+     "OnPhase"
+    ]
+   ],
+   "roles": [
+    {
+     "symbol": "in_group",
+     "file": "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "member": "GroupClasses",
+     "lines": "494-515",
+     "role": "decide",
+     "note": "key (\"/\"_Directory, top-level package)"
+    },
+    {
+     "symbol": "class_loads_when_no_clash",
+     "file": "src/cls/IPM/ResourceProcessor/Default/Document.cls",
+     "member": "OnPhase",
+     "lines": "70-150",
+     "role": "observe",
+     "note": "reader finds package-layout files under Directory"
+    }
+   ],
+   "scope": "Grouping key pinned for every file sequence; positive theorem: without a group-name clash and with files in package folders, every kept class is written and found by load.",
+   "change": "same members as iter69; general key and positive theorems added"
+  },
+  {
+   "id": "S73-03",
+   "owner": ".g5/ontology/features/developer-tools.g5.md#devtools.generate.resources",
+   "model": "grouping.rs",
+   "symbols": [
+    "add_packages",
+    "test_entry",
+    "test_entries",
+    "test_class_has_unittest_entry",
+    "source_listing_adds_no_unittest"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "AddPackages"
+    ],
+    [
+     "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "RelativeFolder"
+    ]
+   ],
+   "reader": [
+    [
+     "src/cls/IPM/Storage/ResourceReference.cls",
+     "GetSortKey"
+    ],
+    [
+     "src/cls/IPM/Storage/Module.cls",
+     "CalculatedResourcesGet"
+    ]
+   ],
+   "roles": [
+    {
+     "symbol": "add_packages",
+     "file": "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "member": "AddPackages",
+     "lines": "426-437",
+     "role": "decide",
+     "note": "branch testsFolder=\"\" (PKG resource) or tests folder (UnitTest: Name \"/\"_RelativeFolder(testsFolder_directoryKey)_\"/\", ProcessorClass UnitTest, Package, Phase \"test\")"
+    },
+    {
+     "symbol": "test_entries",
+     "file": "src/cls/IPM/Storage/ResourceReference.cls",
+     "member": "GetSortKey",
+     "lines": "512-514",
+     "role": "observe",
+     "note": "names starting with \"/\" sort by name plus OREF, so UnitTest entries are not collapsed (inspection)"
+    }
+   ],
+   "scope": "UnitTest Name, processor, Package and Phase decided by the tests-folder branch; native fields in module.xml and after load (m1, m4).",
+   "change": "TestEntry gains name, processor and phase (review-71 C1)"
+  },
+  {
+   "id": "S73-04",
+   "owner": ".g5/ontology/features/developer-tools.g5.md#devtools.generate.resources",
+   "model": "grouping.rs",
+   "symbols": [
+    "order_key",
+    "lex_lt",
+    "keys_sorted",
+    "collapse",
+    "collapse_kept_is_last",
+    "collapse_earlier_key_loses"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "AddPackages"
+    ],
+    [
+     "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "ProcessResources"
+    ],
+    [
+     "src/cls/IPM/Utils/CodeGeneration.cls",
+     "BuildRelationshipSorter"
+    ]
+   ],
+   "reader": [
+    [
+     "src/cls/IPM/Storage/Module.cls",
+     "CalculatedResourcesGet"
+    ],
+    [
+     "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "SaveFile"
+    ]
+   ],
+   "roles": [
+    {
+     "symbol": "order_key",
+     "file": "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "member": "AddPackages",
+     "lines": "427-428",
+     "role": "decide",
+     "note": "TemplateResources key \"pkg:\"_directoryKey_\":\"_package"
+    },
+    {
+     "symbol": "keys_sorted",
+     "file": "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "member": "ProcessResources",
+     "lines": "532-547",
+     "role": "decide",
+     "note": "resources created in $order of the keys (premise: character-code order of non-numeric local subscripts)"
+    },
+    {
+     "symbol": "collapse",
+     "file": "src/cls/IPM/Utils/CodeGeneration.cls",
+     "member": "BuildRelationshipSorter",
+     "lines": "8-16",
+     "role": "decide",
+     "note": "SetAt by sort key: a later element replaces an earlier one"
+    }
+   ],
+   "scope": "Which directory wins the writer collapse, derived from the key strings under the $order premise. Native m3, m7, m8 (m7/m8 predicted before the run).",
+   "change": "replaces the hand-written key order of iter69 (review-71 C3)"
+  },
+  {
+   "id": "S73-05",
+   "owner": ".g5/ontology/features/developer-tools.g5.md#devtools.authoring.generate",
+   "model": "grouping.rs",
+   "symbols": [
+    "exported",
+    "export_layout",
+    "export_dotted_item_fails_load",
+    "export_round_trip_loads"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "Expfilename"
+    ],
+    [
+     "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "ExportOneResource"
+    ],
+    [
+     "src/cls/IPM/Main.cls",
+     "GenerateModuleXML"
+    ]
+   ],
+   "reader": [
+    [
+     "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "ReadItems"
+    ],
+    [
+     "src/cls/IPM/ResourceProcessor/Default/Document.cls",
+     "%OnNew"
+    ],
+    [
+     "src/cls/IPM/ResourceProcessor/Default/Document.cls",
+     "OnPhase"
+    ]
+   ],
+   "roles": [
+    {
+     "symbol": "exported",
+     "file": "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "member": "Expfilename",
+     "lines": "134-137",
+     "role": "write",
+     "note": "<workdir>/<lower-case extension>/"
+    },
+    {
+     "symbol": "exported",
+     "file": "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "member": "Expfilename",
+     "lines": "150-154",
+     "role": "write",
+     "note": "only .cls names become package folders"
+    },
+    {
+     "symbol": "exported",
+     "file": "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "member": "ExportOneResource",
+     "lines": "73, 91, 106",
+     "role": "write",
+     "note": "classes, routines and DFI items placed by Expfilename"
+    },
+    {
+     "symbol": "exported",
+     "file": "src/cls/IPM/Main.cls",
+     "member": "GenerateModuleXML",
+     "lines": "1480-1483",
+     "role": "write",
+     "note": "export into <path>/<source folder> before ReadResources"
+    },
+    {
+     "symbol": "export_dotted_item_fails_load",
+     "file": "src/cls/IPM/ResourceProcessor/Default/Document.cls",
+     "member": "%OnNew",
+     "lines": "469",
+     "role": "observe",
+     "note": "empty Directory defaults to the extension"
+    },
+    {
+     "symbol": "export_dotted_item_fails_load",
+     "file": "src/cls/IPM/ResourceProcessor/Default/Document.cls",
+     "member": "OnPhase",
+     "lines": "145",
+     "role": "observe",
+     "note": "name dots become folders: mac/A/B/Rtn"
+    }
+   ],
+   "scope": "generate -export placement and the export-then-load round trip; C:D73 export trigger. Native x1-x4, predictions before reading Expfilename.",
+   "change": "new behavioral binding for Expfilename and ExportOneResource placement (iter53 bound selection only)"
+  },
+  {
+   "id": "S73-06",
+   "owner": ".g5/ontology/features/developer-tools.g5.md#devtools.generate.resources",
+   "model": "grouping.rs",
+   "symbols": [
+    "save_file",
+    "save_keeps_previous"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "SaveFile"
+    ]
+   ],
+   "reader": [],
+   "roles": [
+    {
+     "symbol": "save_file",
+     "file": "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "member": "SaveFile",
+     "lines": "661-665",
+     "role": "decide",
+     "note": "existing module.xml renamed to module_<%PosixTime>.xml before writing; a failed rename throws"
+    }
+   ],
+   "scope": "module.xml backup. Native m8 (backup holds the old content), m7 (no backup).",
+   "change": "new decision binding on SaveFile"
+  }
+ ]
+}

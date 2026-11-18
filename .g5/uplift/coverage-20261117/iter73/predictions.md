@@ -60,3 +60,20 @@ The ontology predicts only that one directory's resource is kept, not which.
 Existing module.xml (C6): `SaveFile` renames an existing `module.xml` to `module_<UTC timestamp>.xml` before
 writing. Predicted for m8, which starts with a module.xml holding a marker: after `generate`, one
 `module_*.xml` file exists and holds the marker, and the new module.xml does not.
+
+## Results (native receipt `native/20261118T034517721195Z`, first seen in `native/20261118T034334203431Z`)
+
+| Case | Predicted | Observed | Held? |
+| --- | --- | --- | --- |
+| x1 dotted routine | `mac/Ixa.R.Rtn.mac`, `<Resource Name="Ixa.R.Rtn.MAC"/>`, load fails | export log `Ixa.R.Rtn.MAC -> mac/Ixa.R.Rtn.mac`; entry without Directory; `load` fails: "Resource path '/tmp/iter73/x1/src/mac/Ixa/R/Rtn.xml' not found"; neither item back | yes |
+| x2 undotted routine | `mac/IxbRtn.mac`, Directory `mac`, loads | as predicted; class and routine back after load | yes |
+| x3 undotted include | `inc/IxcInc.inc`, Directory `inc`, loads | as predicted | yes |
+| x4 dotted include | `inc/Ixd.I.Inc.inc`, no Directory, load fails | as predicted; error names `.../inc/Ixd/I/Inc.xml` | yes |
+| class placement | `cls/<pkg folders>/Q.cls` (first table: "or `Ixa/P/Q.cls`") | `cls/Ixa/P/Q.cls` | yes (refined prediction) |
+| export target folder | uncertain: source folder or module folder | the answered source folder (`/tmp/iter73/x1/src/`) | resolved |
+| generated INT | skipped | no `int` folder (x1, x2) | yes |
+| m7 collapse | `a` kept, `Im7.Y` missing | `<Resource Directory="a" Name="Im7.PKG"/>` only; `Im7.X` compiled, `Im7.Y` not; load ok | yes; the naive order (`a/b`) is refuted |
+| m8 collapse | `ab` kept, `Im8.X` missing | `<Resource Directory="ab" Name="Im8.PKG"/>` only; `Im8.Y` compiled, `Im8.X` not | yes |
+| m8 backup | one `module_*.xml` with the old marker; new file without it | `module_1154716478026513909.xml` holds the marker; new module.xml does not; m7 has no backup | yes; the timestamp is a `%PosixTime` integer, not a date string |
+
+All 139 native fields equalled the model values written into `cases.json` before the run (the harness asserts `native_expected`).

@@ -132,15 +132,16 @@ Commands for writing modules:
 <a id="devtools.generate.resources"></a>
 [D · devtools.generate.resources]
 
-`generate` keeps classes under the chosen tests folder out of application resources, even when that folder is inside the source folder. It writes those tests as UnitTest entries with Phase="test". Each entry is named by the tests folder and directory and carries the package its classes share.
+`generate` writes a `module.xml` that declares the source folder's files as resources: one package resource for each group of classes, one resource for each other routine, include file or class without a package, and UnitTest entries for the tests folder. If a `module.xml` already exists, it is first renamed to `module_<timestamp>.xml`, where the timestamp is the current time as a number.
 
 - A missing source folder fails before resources are added, and no `module.xml` is written. A missing tests folder adds no tests.
+- Classes under the chosen tests folder stay out of application resources, even when that folder is inside the source folder. They are written as UnitTest entries with Phase="test". Each entry is named by the tests folder and directory and carries the package its classes share.
 - Files with unsupported extensions, and files whose class or routine name cannot be read, are skipped. A class whose name can be read is listed even if its body does not compile. [Whether invalid source should instead fail generation is open](../../Verus_verification/open_questions.md#devtools.generate.invalid-source).
-- Classes are grouped by their directory and top-level package. Each group becomes one package resource, named by the deepest package that all its classes share. For example, A.B.C with A.B.D gives A.B.PKG, A.B.C with A.D.E gives A.PKG, and A.B.C alone gives A.B.PKG.
-- A resource's Directory is the folder that holds its package folders, relative to the source folder. It is left out when that folder is the source folder itself.
+- Classes are grouped by their directory and top-level package. Each group becomes one package resource, named by the deepest package that all its classes share. For example, classes A.B.C and A.B.D give A.B.PKG, classes A.B.C and A.D.E give A.PKG, and class A.B.C alone gives A.B.PKG.
+- For a file stored in package folders, a resource's Directory is the folder that holds those package folders, relative to the source folder. It is left out when that folder is the source folder itself.
 - Routines, include files and classes without a package are written one by one under their own names. Such files in the tests folder are written nowhere.
-- `module.xml` keeps one resource per name. As built, when one package sits in two directories, only one directory's resource is kept and the other directory's classes are missing from the module (defect C:D72).
-- As built, `load` cannot find a class without a package in the source folder when a `cls` folder also exists, or a class file named with dots outside package folders, so the load fails (defect C:D73).
+- `module.xml` keeps one resource per name. As built, when groups from two directories get the same package name, only one directory's resource is kept and the other directory's classes are missing from the module, while `load` reports success (defect C:D72).
+- As built, `load` fails for a file that is not stored in package folders. This covers a class without a package in the source folder when a `cls` folder also exists, and a class file named with dots. It also covers a routine or include file with dots in its name, which is how `generate -export` writes them, so `load` fails on the module that `generate -export` just wrote (defect C:D73).
 
 - Working assumption: Generation skips an invalid source file and may produce a manifest without it.
 
@@ -325,13 +326,15 @@ State machines: [comments · iter44](../../Verus_verification/models/iter44-comm
 - user-facing-behavior
 - Expands: [Authoring commands](#devtools.authoring).
 
-Sources: `Main.cls::GenerateModuleXML`; `Storage/ModuleTemplate.cls`. Model: [generator.rs](../../Verus_verification/consolidated/iter53/generator.rs) `author_swapped`, `export_neighbors`, `grouping_neighbors` ([handoff](../../uplift/consolidated/iter53/HANDOFF.md)).
+Sources: `Main.cls::GenerateModuleXML`; `Storage/ModuleTemplate.cls`. Model: [generator.rs](../../Verus_verification/consolidated/iter53/generator.rs) `author_swapped`, `export_neighbors`, `grouping_neighbors` ([handoff](../../uplift/consolidated/iter53/HANDOFF.md)). Export file placement and the export-then-load round trip: [grouping.rs](../../Verus_verification/coverage-20261117/iter73/grouping.rs) `exported`, `export_layout`, `export_dotted_item_fails_load`, `export_round_trip_loads` ([handoff](../../uplift/coverage-20261117/iter73/HANDOFF.md)).
 
 Findings: [`generate -author` stores the license and copyright answers in each other's fields](../../Verus_verification/bugs_issues.md#c-d54)
 
 Findings: [`generate -export` ignores the ignore list for routines and matches routine masks anywhere in the name](../../Verus_verification/bugs_issues.md#c-d55)
 
-State machines: [generator · iter53](../../Verus_verification/models/iter53-generator/manifest.json)
+Findings: [`generate` writes resources that `load` cannot find for files outside the package folder layout, including dotted routines that `generate -export` writes](../../Verus_verification/bugs_issues.md#c-d73)
+
+State machines: [generator · iter53](../../Verus_verification/models/iter53-generator/manifest.json); [grouping · coverage iter73](../../Verus_verification/models/cov20261117-iter73-grouping/manifest.json)
 
 ### devtools.authoring.import
 
@@ -371,17 +374,17 @@ Open questions: [Should `module-version` also update the `module.xml` file a mod
 - Expands: [Authoring](#devtools.authoring).
 - Children: [Should `generate` report or refuse a source file that cannot load?](../../Verus_verification/open_questions.md#devtools.generate.invalid-source).
 
-Sources: `Storage/ModuleTemplate.cls::{ReadResources,ReadItems,GroupClasses,SharedPackage,AddPackages,ProcessResources,ReadFolder}` → `SaveFile` (through `Storage/Module.cls::CalculatedResourcesGet` and `ResourceReference.cls::GetSortKey`); load reader `ResourceProcessor/Default/Document.cls::{%OnNew,OnPhase}`. Tests: `Generate::{TestTestsUnderSourceFolderAreNotPackaged,TestUnitTestsFromTestsFolder,TestMissingSourceFolderThrows}`. [Iteration 6 index](../../uplift/consolidated/iter6/INDEX.md) S6-01. [Contract](../../Verus_verification/consolidated/iter6/workflows.rs): `application_item`, `test_item`, `template_status`.
+Sources: `Storage/ModuleTemplate.cls::{ReadResources,ReadItems,GroupClasses,SharedPackage,AddPackages,ProcessResources,ReadFolder,ExportOneResource,Expfilename}` → `SaveFile` (through `Storage/Module.cls::CalculatedResourcesGet` and `ResourceReference.cls::GetSortKey`); load reader `ResourceProcessor/Default/Document.cls::{%OnNew,OnPhase}`. Tests: `Generate::{TestTestsUnderSourceFolderAreNotPackaged,TestUnitTestsFromTestsFolder,TestMissingSourceFolderThrows}`. [Iteration 6 index](../../uplift/consolidated/iter6/INDEX.md) S6-01. [Contract](../../Verus_verification/consolidated/iter6/workflows.rs): `application_item`, `test_item`, `template_status`.
 
-Model: [grouping.rs](../../Verus_verification/coverage-20261117/iter69/grouping.rs) `group_characterized` (group name for every file sequence), `grouping_names`, `singles_exact`, `leftovers_and_skips`, `tests_and_status`, `writer_one_entry_per_name`, `same_name_two_directories_keeps_one`, `same_package_two_directories_loses_class`, `package_layout_round_trip`, `load_resolution` ([handoff](../../uplift/coverage-20261117/iter69/HANDOFF.md)). The listing result (`$system.OBJ.Load` list-only) and directory existence are provider inputs, observed natively.
+Model: [grouping.rs](../../Verus_verification/coverage-20261117/iter73/grouping.rs) general theorems `group_key_separates`, `group_key_joins`, `group_characterized`, `tests_folder_files_never_written`, `unsupported_never_written`, `unlisted_never_written`, `singles_exact`, `test_class_has_unittest_entry`, `class_loads_when_no_clash`, `writer_one_entry_per_name`, `same_name_two_directories_keeps_one`, `collapse_earlier_key_loses`, `export_layout`, `export_dotted_item_fails_load`, `root_class_beside_cls_folder`, `save_keeps_previous`; native instances in [instances.rs](../../Verus_verification/coverage-20261117/iter73/instances.rs) ([handoff](../../uplift/coverage-20261117/iter73/HANDOFF.md)). The listing result (`$system.OBJ.Load` list-only), directory existence and the `$order` of TemplateResources keys are provider inputs, observed natively. The earlier [iteration69 model](../../Verus_verification/coverage-20261117/iter69/grouping.rs) is kept as history.
 
-Findings: [`generate` drops a package's classes from one directory when the same package also sits in another](../../Verus_verification/bugs_issues.md#c-d72)
+Findings: [`generate` drops one directory's classes when groups from two directories get the same package name](../../Verus_verification/bugs_issues.md#c-d72)
 
-Findings: [`generate` writes resources that `load` cannot find for a package-less root class beside a `cls` folder and for flat-named files](../../Verus_verification/bugs_issues.md#c-d73)
+Findings: [`generate` writes resources that `load` cannot find for files outside the package folder layout, including dotted routines that `generate -export` writes](../../Verus_verification/bugs_issues.md#c-d73)
 
 Open questions: [Should `generate` report or refuse a source file that cannot load?](../../Verus_verification/open_questions.md#devtools.generate.invalid-source)
 
-State machines: [grouping · coverage iter69](../../Verus_verification/models/cov20261117-iter69-grouping/manifest.json), [generator · iter53](../../Verus_verification/models/iter53-generator/manifest.json), [workflows · iter6](../../Verus_verification/models/iter6-workflows/manifest.json)
+State machines: [grouping · coverage iter73](../../Verus_verification/models/cov20261117-iter73-grouping/manifest.json), [grouping · coverage iter69](../../Verus_verification/models/cov20261117-iter69-grouping/manifest.json), [generator · iter53](../../Verus_verification/models/iter53-generator/manifest.json), [workflows · iter6](../../Verus_verification/models/iter6-workflows/manifest.json)
 
 ### devtools.generate.webapps
 

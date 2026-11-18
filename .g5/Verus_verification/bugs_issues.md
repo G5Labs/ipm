@@ -269,6 +269,23 @@ Reproduced by: e2e reproduced. ordinary explicit-version install reads changed d
 [Governing owner](../ontology/concepts/repositories.g5.md#repo.install.version-request). No product repair or maintainer approval is claimed.
 
 <a id="d3-the-retention-purge-deletes-nothing-and-still-marks-the-days-purge-as-done"></a><!-- historical fragment alias -->
+<a id="c-d72"></a>
+### C:D72: `generate` drops one directory's classes when groups from two directories get the same package name
+
+Severity: High · Decision: Open
+
+Run: Coverage uplift 2026-11-17
+
+Description: `generate` groups each directory's classes by top-level package and names each group by the deepest package that all its classes share. When groups from two directories get the same name, the generated `module.xml` keeps only one of them. The other directory's classes are missing from the module after `load`, and neither `generate` nor `load` reports it. For example, `x` holding classes `A.B.C.X` and `A.B.D.Y` and `y` holding `A.B.E.Z` and `A.B.F.W` both give `A.B`, so one directory is lost. Class `A.B.X` in `x` next to `A.B.C.Y` in `y` gives `A.B` and `A.B.C`, which differ, so the model predicts nothing is lost (not run natively). The directory kept is the one whose key `pkg:/<directory>:<package>` sorts last by character code: `y` over `x`, `a` over `a/b` (because `/` sorts before `:`) and `ab` over `a`.
+
+Severity basis: incorrect results. The module installs without some of its classes while `load` reports success, and this is reproduced end to end.
+
+Found by: native exploration during iteration69 (scratch run, then fixture m3), explained by source review of `Storage/ModuleTemplate.cls::AddPackages` (one `<package>.PKG` per directory) and `Storage/Module.cls::CalculatedResourcesGet`. That method keys resources by `ResourceReference.cls::GetSortKey` (name and extension, not directory), so the resource created later replaces the earlier one. `ProcessResources` creates them in `$order` of the TemplateResources keys. Modeled for every file sequence in [iteration73 grouping.rs](coverage-20261117/iter73/grouping.rs) `writer_one_entry_per_name`, `same_name_two_directories_keeps_one` and `collapse_earlier_key_loses`, with controls `writer-keys-by-directory`, `collapse-keeps-first` and `keys-sorted-descending` ([proof receipt](../uplift/coverage-20261117/iter73/proofs/models.json)). The positive theorem `class_loads_when_no_clash` shows every class is written and loaded when no two directories' groups share a name. The earlier [iteration69 model](coverage-20261117/iter69/grouping.rs) is kept as history.
+
+Reproduced by: E2E reproduced. [Iteration69 native receipt](../uplift/coverage-20261117/iter69/native/20261118T014707781494Z/observations.json) and [iteration73 native receipt](../uplift/coverage-20261117/iter73/native/20261118T034517721195Z/observations.json) on IRIS at `571e04a1`. With `src/x/Id1/B/C.cls` and `src/y/Id1/B/E.cls`, `module.xml` contains only `<Resource Directory="y" Name="Id1.B.PKG"/>`. After `load`, `Id1.B.E` is compiled, `Id1.B.C` is not, and the load reports success (case m3). In iteration73, `src/a/Im7/X.cls` with `src/a/b/Im7/Y.cls` keeps only Directory `a`, so `Im7.Y` is missing (m7), and `src/a/Im8/X.cls` with `src/ab/Im8/Y.cls` keeps only `ab`, so `Im8.X` is missing (m8). Both winners were predicted from the key order before the run ([predictions](../uplift/coverage-20261117/iter73/predictions.md)). Passing neighbour: `Id2.B.C` in `x` and `Id2.D.E` in `y` give two differently named resources and both load. The replay rejects flipped `m3.Id1.B.PKG@y`, `m7.Im7.PKG@a`, `m8.Im8.PKG@ab`, `class.Id1.B.C` and `class.Im7.Y` ([replay receipt](../uplift/coverage-20261117/iter73/replay/receipt.json)).
+
+This contradicts the [resource generation statement](../ontology/features/developer-tools.g5.md#devtools.generate.resources) that each application class with a package is covered by a package resource. A repair could merge same-named groups into one resource, write individual class resources for the clashing groups, or refuse with a message naming both directories. Any repair must keep resource names unique within the manifest. It was not checked.
+
 <a id="g-d3"></a>
 ### G:D3: The retention purge deletes nothing and marks the day's purge done
 
@@ -1158,20 +1175,22 @@ Fresh reproduction on Linux x86-64 IRIS 2026.1: [iteration41 receipt](../uplift/
 
 [Governing owner](../ontology/operations/settings.g5.md#settings). No product repair or maintainer approval is claimed.
 
-<a id="c-d72"></a>
-### C:D72: `generate` drops a package's classes from one directory when the same package also sits in another
+<a id="c-d73"></a>
+### C:D73: `generate` writes resources that `load` cannot find for files outside the package folder layout, including dotted routines that `generate -export` writes
 
 Severity: Medium · Decision: Open
 
 Run: Coverage uplift 2026-11-17
 
-Description: When classes of one package sit in two directories under the source folder, the generated `module.xml` keeps one package resource and drops the other directory's. The classes in the dropped directory are missing from the module, and neither `generate` nor `load` reports it.
+Description: `generate` writes no Directory for a resource whose file is not stored in a package folder layout. `load` then looks in the extension folder (when it exists) or the source root, with the dots of the name turned into folders. It does not find the file and fails. The most ordinary trigger is `generate -export`. It writes every routine and include file flat into `src/mac/` or `src/inc/`, so a routine named `A.B.Rtn` is written as `<Resource Name="A.B.Rtn.MAC"/>`, and `load` of the module that `generate` just wrote fails. The other triggers are a class without a package directly in the source folder when a `cls` folder also exists, and a class file named with dots outside package folders.
 
-Found by: native exploration during iteration69 (scratch run, then fixture m3), explained by source review of `Storage/ModuleTemplate.cls::AddPackages` (one `<package>.PKG` per directory) and `Storage/Module.cls::CalculatedResourcesGet`. That method keys resources by `ResourceReference.cls::GetSortKey` (name and extension, not directory), so the later resource replaces the earlier. Modeled in [iteration69 grouping.rs](coverage-20261117/iter69/grouping.rs) `writer_one_entry_per_name`, `same_name_two_directories_keeps_one` and `same_package_two_directories_loses_class`, with control `writer-keys-by-directory` ([proof receipt](../uplift/coverage-20261117/iter69/proofs/models.json)).
+Severity basis: visible misbehaviour. `load` fails with an error naming the path it looked for, and nothing is installed silently incomplete.
 
-Reproduced by: E2E reproduced. [Iteration69 native receipt](../uplift/coverage-20261117/iter69/native/20261118T014707781494Z/observations.json) on IRIS at `571e04a1`. With `src/x/Id1/B/C.cls` and `src/y/Id1/B/E.cls`, `module.xml` contains only `<Resource Directory="y" Name="Id1.B.PKG"/>` (one entry, none for `x`). After `load`, `Id1.B.E` is compiled and `Id1.B.C` is not, and the load reports success (case m3). Passing neighbour: `Id2.B.C` in `x` and `Id2.D.E` in `y` give two differently named resources and both load. The replay rejects a flipped `m3.Id1.B.PKG@x` and `class.Id1.B.C` ([replay receipt](../uplift/coverage-20261117/iter69/replay/receipt.json)).
+Found by: native exploration during iteration69, explained by source review of `Storage/ModuleTemplate.cls::{ReadItems,Expfilename}` and `ResourceProcessor/Default/Document.cls::{%OnNew,OnPhase}`. `Expfilename` puts each exported item in its lower-case extension folder and splits only class names into package folders. `ReadItems` sets Directory to the leading path pieces left after one piece per package segment, else nothing. The reader turns an empty Directory into the extension folder and the name's dots into subfolders. Modeled for every file sequence in [iteration73 grouping.rs](coverage-20261117/iter73/grouping.rs) `export_layout`, `export_dotted_item_fails_load`, `root_class_beside_cls_folder` and `reader_directory_rule`, with controls `export-nests-all`, `export-classes-flat` and `reader-root-before-ext-dir` ([proof receipt](../uplift/coverage-20261117/iter73/proofs/models.json)).
 
-This contradicts the [resource generation statement](../ontology/features/developer-tools.g5.md#devtools.generate.resources) that each application class with a package is covered by a package resource. A repair could merge same-named groups into one resource, write individual class resources for the clashing groups, or refuse with a message naming both directories. Any repair must keep resource names unique within the manifest. It was not checked.
+Reproduced by: E2E reproduced. [Iteration73 native receipt](../uplift/coverage-20261117/iter73/native/20261118T034517721195Z/observations.json) on IRIS at `571e04a1`. `generate /tmp/iter73/x1 -export 00000,Ixa` exports `Ixa.R.Rtn.MAC -> mac/Ixa.R.Rtn.mac` and writes `<Resource Name="Ixa.R.Rtn.MAC"/>`. After the exported items are removed from the namespace, `load` fails with "Resource path '/tmp/iter73/x1/src/mac/Ixa/R/Rtn.xml' not found", and neither `Ixa.P.Q` nor the routine is back (case x1). The dotted include file `Ixd.I.Inc.INC` fails the same way (x4). These outcomes were predicted before the run ([predictions](../uplift/coverage-20261117/iter73/predictions.md)). Passing neighbours: the undotted routine `IxbRtn` and include file `IxcInc` get Directory `mac` and `inc`, and they load (x2, x3). The [iteration69 native receipt](../uplift/coverage-20261117/iter69/native/20261118T014707781494Z/observations.json), replayed in iteration73, covers the other triggers. `src/Ir2a.cls` beside `src/cls/Ib2a/P/Q.cls` gives `<Resource Name="Ir2a.cls"/>`, and `load` fails with "Resource path '.../src/cls/Ir2a.xml' not found" (m2a). The flat file `src/flat/Ik2b.P.Q.cls` gives `<Resource Name="Ik2b.P.PKG"/>`, and `load` fails (m2b). The same root class without a `cls` folder loads (m2e). The replay rejects flipped `x1.load.ok`, `x4.load.ok`, `x2.load.ok`, `m2a.load.ok`, `m2b.load.ok`, `x1.file.Ixa.R.Rtn.flat` and `x1.Ixa.R.Rtn.MAC` ([replay receipt](../uplift/coverage-20261117/iter73/replay/receipt.json)).
+
+The export case and the root-class case contradict the evident intent of the [resource generation statement](../ontology/features/developer-tools.g5.md#devtools.generate.resources) that the generated manifest describes the source folder so the module loads, and `generate -export` produces the export layout itself. A flat class layout may be outside what IPM supports, so for m2b the intended outcome may be a refusal or warning from `generate` rather than a loadable manifest. Writing a Directory alone would not fix the dotted routines, because the reader still turns the dots into folders. A repair would have `Expfilename` nest dotted routine and include names as it does class names, or warn about files outside the package layout. It was not checked.
 
 <a id="c-d2"></a>
 ### C:D2: When IPM cannot create a load's temporary `.modules` repository, it prints "Failed to clean up repository 'ipm-temp-modules-N'. You may need to manually dele...
@@ -1637,23 +1656,6 @@ Found by: source review of `ExtensionBase/CompositeMethodOverrides.cls::SetSubEx
 Reproduced by: E2E reproduced. [Iteration67 native receipt](../uplift/consolidated/iter67/native/20261116T184753560177Z/observations.json). `SetExtensionClasses("IPMCont.P67",$lb("IPMCont.O67","No.Such67"))` returns OK and stores `No.Such67`, after which creating the composite fails (case s1). Passing neighbour: the same call without the bad name creates the composite (setup).
 
 The trigger is a direct API call rather than an ordinary command, which keeps this Low. It contradicts the [editor statement](../ontology/architecture/lifecycle.g5.md#lifecycle.source-control.editor). A repair would store the validated list or refuse unknown class names. It was not checked.
-
-<a id="c-d73"></a>
-### C:D73: `generate` writes resources that `load` cannot find for a package-less root class beside a `cls` folder and for flat-named files
-
-Severity: Low · Decision: Open
-
-Run: Coverage uplift 2026-11-17
-
-Description: `generate` writes no Directory for a resource whose file is not stored in a package folder layout. `load` then looks in the extension folder (when it exists) or the source root, does not find the file and fails.
-
-Found by: native exploration during iteration69, explained by source review of `Storage/ModuleTemplate.cls::ReadItems` and `ResourceProcessor/Default/Document.cls::%OnNew` and `OnPhase`. `ReadItems` sets Directory to the leading path pieces left after one piece per package segment, else nothing. The reader turns an empty Directory into the extension and searches that folder before the source root. Modeled in [iteration69 grouping.rs](coverage-20261117/iter69/grouping.rs) `load_resolution` and `package_layout_round_trip`, with control `reader-root-before-ext-dir` ([proof receipt](../uplift/coverage-20261117/iter69/proofs/models.json)).
-
-Reproduced by: E2E reproduced. [Iteration69 native receipt](../uplift/coverage-20261117/iter69/native/20261118T014707781494Z/observations.json). `src/Ir2a.cls` beside `src/cls/Ib2a/P/Q.cls` gives `<Resource Name="Ir2a.cls"/>`, and `load` fails with "Resource path '.../src/cls/Ir2a.xml' not found" (case m2a). The flat file `src/flat/Ik2b.P.Q.cls` gives `<Resource Name="Ik2b.P.PKG"/>`, and `load` fails (case m2b). Passing neighbours: the same root class without a `cls` folder loads (m2e), and package-layout trees load (m1, m3, m4).
-
-`generate -export` produces this layout for routines with dots in their names. The [iteration53 native receipt](../uplift/consolidated/iter53/native/20261116T180748958256Z/observations.json) (case t3) shows the routine exported to `src/mac/G53E.Rout.mac` and written as `<Resource Name="G53E.Rout.MAC"/>` with no Directory. A scratch probe outside the committed receipts (iteration69, `/tmp/ipmcov69-explore` cases m2c and m2d) found that `load` looks for the flat routine `src/mac/Ik2d.Rtn.mac` at `src/mac/Ik2d/Rtn.xml`. It fails even with Directory="mac". That export-to-load path is not reproduced in a committed receipt.
-
-The failure is loud, which keeps this Low. A flat layout may be outside what IPM supports, so for m2b the intended outcome may be a refusal or warning from `generate` rather than a loadable manifest. The root-class case contradicts the evident intent of the [resource generation statement](../ontology/features/developer-tools.g5.md#devtools.generate.resources) that the generated manifest describes the source folder so the module loads. A repair would write a Directory that the reader resolves to the file's folder, or warn about files outside the package layout. It was not checked.
 
 <a id="p-f-dep-1"></a>
 ### P:F-DEP-1: `PermitDowngrade` is half implemented: the resolver drops the "≥ installed" bound and picks an older version, then the load refuses any downgrade.
