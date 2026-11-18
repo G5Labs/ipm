@@ -640,7 +640,7 @@ Reproduced by: e2e reproduced. $zpm(version) throws after command; Shell(version
 
 [Executable regression receipt](../uplift/consolidated/findings-audit-iter28/runs/20261116T031653939391Z-params/receipt.json); [Runner](../uplift/consolidated/findings-audit-iter28/run_regressions.py) `params`. The receipt records commands, expected observations, actual readers and provider qualifications.
 
-[Governing owner](../ontology/root.g5.md#ipm.shell.forms). No product repair or maintainer approval is claimed.
+[Governing owner](../ontology/features/package-commands.g5.md#ipm.shell.forms). No product repair or maintainer approval is claimed.
 
 <a id="c-d27"></a>
 ### C:D27: A supported processor returns an error from OnResolveChildren. Package refuses, but uninstall discards the status, deletes module/manifest metadata and leave...
