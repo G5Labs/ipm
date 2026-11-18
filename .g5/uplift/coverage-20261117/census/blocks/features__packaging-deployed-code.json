@@ -1,0 +1,510 @@
+{
+ "page": ".g5/ontology/features/packaging-deployed-code.g5.md",
+ "blocks": {
+  "module.deployed": {
+   "body_sha": "cc4b00bf43559121",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "module.deployed#1"
+    ],
+    "B1": [
+     "module.deployed#2",
+     "module.deployed#3"
+    ],
+    "B2": [
+     "module.deployed#4",
+     "module.deployed#5"
+    ],
+    "B3": [
+     "module.deployed#6",
+     "module.deployed#7",
+     "module.deployed#8"
+    ],
+    "B4": "excluded: pointer to module.deployed.project-load"
+   },
+   "obligations": [
+    {
+     "id": "module.deployed#1",
+     "units": [
+      "P1"
+     ],
+     "text": "An explicit resource Deploy value takes precedence over the lifecycle default, unless a named deployment parameter exists on that class: then only parameter value 1 enables deployment, even when the resource says true.",
+     "cases": "parameter 0/1/2 vs resource true/false vs missing",
+     "observation": "deploy decision",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter4/repairs4.rs::deploy",
+      ".g5/Verus_verification/consolidated/iter4/repairs4.rs::deploy_neighbors",
+      ".g5/Verus_verification/consolidated/iter3/resources.rs::deploy",
+      ".g5/Verus_verification/consolidated/iter3/resources.rs::deployment_precedence"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter4/proofs/models.json",
+      ".g5/uplift/consolidated/iter4/run_all.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter3/gate/receipt.json",
+      ".g5/Verus_verification/consolidated/iter3/run_models.py"
+     ],
+     "basis": "reused:.g5/ontology/features/packaging-deployed-code.g5.md metadata module.deployed (iter3 resources.rs deploy, iter4 repairs4.rs deploy) (controls explicit-false-ignored, explicit-overrides-class-parameter, false-class-parameter-ignored, nonone-class-parameter-is-true rejected)",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.deployed#2",
+     "units": [
+      "B1"
+     ],
+     "text": "The Module lifecycle defaults to false and DeployedModule to true.",
+     "cases": "Module vs DeployedModule with no Deploy attribute",
+     "observation": "deploy decision",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter4/repairs4.rs::deploy_by_default",
+      ".g5/Verus_verification/consolidated/iter4/repairs4.rs::deploy_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter4/proofs/models.json",
+      ".g5/uplift/consolidated/iter4/run_all.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/packaging-deployed-code.g5.md metadata module.deployed (iter3 resources.rs deploy, iter4 repairs4.rs deploy) (control lifecycle-defaults-swapped rejected)",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.deployed#3",
+     "units": [
+      "B1"
+     ],
+     "text": "The class parameter override applies only to an existing class with that parameter.",
+     "cases": "class resource with the parameter vs nonexistent class vs non-class resource",
+     "observation": "deploy decision",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/resources.rs::deploy",
+      ".g5/Verus_verification/consolidated/iter3/resources.rs::deployment_precedence"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter3/gate/receipt.json",
+      ".g5/Verus_verification/consolidated/iter3/run_models.py",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/packaging-deployed-code.g5.md metadata module.deployed (iter3 resources.rs deploy, iter4 repairs4.rs deploy)",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.deployed#4",
+     "units": [
+      "B2"
+     ],
+     "text": "The lifecycle default comes from DEPLOYBYDEFAULT and is used only when the resource has no Deploy attribute.",
+     "cases": "attribute missing vs explicit false/true",
+     "observation": "deploy decision",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter4/repairs4.rs::deploy",
+      ".g5/Verus_verification/consolidated/iter4/repairs4.rs::deploy_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter4/proofs/models.json",
+      ".g5/uplift/consolidated/iter4/run_all.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/packaging-deployed-code.g5.md metadata module.deployed (iter3 resources.rs deploy, iter4 repairs4.rs deploy)",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.deployed#5",
+     "units": [
+      "B2"
+     ],
+     "text": "A custom lifecycle inherits its parent's default unless it sets its own.",
+     "cases": "subclass of DeployedModule without vs with its own DEPLOYBYDEFAULT",
+     "observation": "deploy decision",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter4/repairs4.rs::deploy_by_default"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter4/proofs/models.json",
+      ".g5/uplift/consolidated/iter4/run_all.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/packaging-deployed-code.g5.md metadata module.deployed (iter3 resources.rs deploy, iter4 repairs4.rs deploy)",
+     "assessed_in": "iteration-68",
+     "gap": "Lifecycle::Subclass(b) takes the inherited default as an input, so parameter inheritance is not modeled. Contrast: a Lifecycle/DeployedModule subclass that does not override DEPLOYBYDEFAULT deploys an undeclared resource."
+    },
+    {
+     "id": "module.deployed#6",
+     "units": [
+      "B3"
+     ],
+     "text": "Built-in compiled-only deployment applies to classes and MAC/INT routines; include files and other types keep their source form unless their own processor handles deployment.",
+     "cases": ".cls/.mac/.int vs .inc resource marked Deploy",
+     "observation": "whether the shipped item is compiled-only",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/resources.rs::load_project"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter3/gate/receipt.json",
+      ".g5/Verus_verification/consolidated/iter3/run_models.py",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/packaging-deployed-code.g5.md metadata module.deployed (iter3 resources.rs deploy, iter4 repairs4.rs deploy)",
+     "assessed_in": "iteration-68",
+     "gap": "load_project takes deployable_type as a Boolean input, so type classification (ResourceProcessor/Default/Document.cls) is not modeled. Contrast: Deploy=\"true\" on an .inc ships its source while a .cls ships compiled-only."
+    },
+    {
+     "id": "module.deployed#7",
+     "units": [
+      "B3"
+     ],
+     "text": "IPM picks the package built for the current IRIS version and platform.",
+     "cases": "deployed package with matching vs other platform/version tags",
+     "observation": "selected package",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter15/oras.rs::compatible",
+      ".g5/Verus_verification/consolidated/iter15/oras.rs::group_compatible",
+      ".g5/Verus_verification/consolidated/iter15/oras.rs::selected_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter15/run.json"
+     ],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "iteration15 oras.rs selects by platform suffix within a bounded literal ORAS domain, with the current platform as an input. The IRIS-version component of the build and other repository types are not modeled."
+    },
+    {
+     "id": "module.deployed#8",
+     "units": [
+      "B3"
+     ],
+     "text": "IPM installs deployed code into each resource's mapped database.",
+     "cases": "resource mapped to a different code database vs the namespace default",
+     "observation": "database holding the deployed code",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "No formal rule. Contrast: a package mapped to another code database receives the deployed classes there."
+    }
+   ],
+   "parent": {
+    "children": [
+     "module.deployed.project-load"
+    ],
+    "entailment": "The parent owns the deploy decision and defaults (#1-#8). The child owns project-load eligibility and markers and does not entail any parent obligation. No composition is credited."
+   }
+  },
+  "build.makedeployed": {
+   "body_sha": "9119a63636d25832",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "build.makedeployed#1",
+     "build.makedeployed#2",
+     "build.makedeployed#3"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "build.makedeployed#1",
+     "units": [
+      "P1"
+     ],
+     "text": "makedeployed <module> turns eligible resources selected by the deployment rules into compiled-only code.",
+     "cases": "selected vs unselected resource",
+     "observation": "source presence and compiled code after makedeployed",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/resources.rs::deploy",
+      ".g5/Verus_verification/consolidated/iter3/resources.rs::selected"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter3/gate/receipt.json",
+      ".g5/Verus_verification/consolidated/iter3/run_models.py",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-68 (project map binds Lifecycle/Base.cls::%MakeDeployed to resources.rs deploy/selected)",
+     "assessed_in": "iteration-68",
+     "gap": "The deploy decision is modeled, but the conversion effect is not (source removed, compiled code kept, Deployed flag set, unselected resources untouched). Contrast: after makedeployed a selected class has no source but runs, while an unselected one keeps its source."
+    },
+    {
+     "id": "build.makedeployed#2",
+     "units": [
+      "P1"
+     ],
+     "alias_of": "module.deployed#1",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "build.makedeployed#3",
+     "units": [
+      "P1"
+     ],
+     "text": "-recurse also considers the module's dependencies.",
+     "cases": "with vs without -recurse",
+     "observation": "dependency resources made deployed",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "No formal rule for phase recursion over dependencies in makedeployed. Contrast: a dependency with Deploy=\"true\" changes only with -recurse."
+    }
+   ]
+  },
+  "module.deployed.project-load": {
+   "body_sha": "24231686a2b3f1d3",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "module.deployed.project-load#1"
+    ],
+    "B1": [
+     "module.deployed.project-load#2",
+     "module.deployed.project-load#3"
+    ],
+    "B2": [
+     "module.deployed.project-load#4",
+     "module.deployed.project-load#5"
+    ],
+    "B3": [
+     "module.deployed.project-load#6"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "module.deployed.project-load#1",
+     "units": [
+      "P1"
+     ],
+     "text": "A deployed resource loads from the module's Studio project only when its type is deployable or its name is a path, the project file exists and the resource is neither generated nor preloaded; otherwise the ordinary source path remains in use.",
+     "cases": "each eligibility condition flipped",
+     "observation": "load from project vs source",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/resources.rs::load_project",
+      ".g5/Verus_verification/consolidated/iter3/resources.rs::load_project_boundaries"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter3/gate/receipt.json",
+      ".g5/Verus_verification/consolidated/iter3/run_models.py",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/packaging-deployed-code.g5.md metadata module.deployed.project-load (iter3 resources.rs) (controls generated-uses-project, preload-uses-project, all-types-use-project, missing-project-still-used rejected)",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.deployed.project-load#2",
+     "units": [
+      "B1"
+     ],
+     "text": "IPM sets the object's Deployed flag before attempting its save; if save fails the database row can remain false while the object says true, and the installer is not called.",
+     "cases": "save fails vs succeeds",
+     "observation": "object flag, stored flag, installer call",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/resources.rs::load_project",
+      ".g5/Verus_verification/consolidated/iter3/resources.rs::project_database",
+      ".g5/Verus_verification/consolidated/iter3/resources.rs::resource_identity_and_database_reader"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter3/gate/receipt.json",
+      ".g5/Verus_verification/consolidated/iter3/run_models.py",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/packaging-deployed-code.g5.md metadata module.deployed.project-load (iter3 resources.rs) (control failed-save-writes-database-flag rejected)",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.deployed.project-load#3",
+     "units": [
+      "B1"
+     ],
+     "text": "After save succeeds, a corrupt-project install error can leave the stored flag true; neither flag proves installation.",
+     "cases": "install error vs success after a successful save",
+     "observation": "stored flag, status, marker",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/resources.rs::load_project_boundaries",
+      ".g5/Verus_verification/consolidated/iter3/resources.rs::project_database"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter3/gate/receipt.json",
+      ".g5/Verus_verification/consolidated/iter3/run_models.py",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/packaging-deployed-code.g5.md metadata module.deployed.project-load (iter3 resources.rs) (control deployed-flag-proves-installation rejected)",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.deployed.project-load#4",
+     "units": [
+      "B2"
+     ],
+     "text": "A process-local marker is set only after successful project installation; other resources using that path then skip the installer; failure leaves no marker, so a later attempt may retry.",
+     "cases": "install success vs failure; second resource with marker set",
+     "observation": "marker and installer call",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/resources.rs::load_project",
+      ".g5/Verus_verification/consolidated/iter3/resources.rs::load_project_boundaries"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter3/gate/receipt.json",
+      ".g5/Verus_verification/consolidated/iter3/run_models.py",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/packaging-deployed-code.g5.md metadata module.deployed.project-load (iter3 resources.rs) (control install-error-records-marker rejected)",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.deployed.project-load#5",
+     "units": [
+      "B2"
+     ],
+     "text": "A fresh duplicate resource reference can cause the earlier save to fail, while reusing its stored identity does not. Provider writes before failure are not assumed atomic.",
+     "cases": "new duplicate object vs reused identity",
+     "observation": "save allowed, stored flag, installer call",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/resources.rs::resource_save_allowed",
+      ".g5/Verus_verification/consolidated/iter3/resources.rs::resource_identity_and_database_reader"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter3/gate/receipt.json",
+      ".g5/Verus_verification/consolidated/iter3/run_models.py",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/packaging-deployed-code.g5.md metadata module.deployed.project-load (iter3 resources.rs) (control duplicate-same-owner-resource-is-accepted rejected)",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.deployed.project-load#6",
+     "units": [
+      "B3"
+     ],
+     "text": "Packaging's project check removes missing project items and can return success after doing so; check success alone does not establish that every requested item remains.",
+     "cases": "project with a missing item vs all present",
+     "observation": "project items and check status",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/resources.rs::check_project",
+      ".g5/Verus_verification/consolidated/iter3/resources.rs::project_check_prunes_missing",
+      ".g5/Verus_verification/consolidated/iter3/resources.rs::final_export"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter3/gate/receipt.json",
+      ".g5/Verus_verification/consolidated/iter3/run_models.py",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/packaging-deployed-code.g5.md metadata module.deployed.project-load (iter3 resources.rs) (control project-check-keeps-missing-items rejected)",
+     "assessed_in": "iteration-68"
+    }
+   ]
+  },
+  "build.package.deployed-status": {
+   "body_sha": "84e9bbb9b2fd0dae",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "build.package.deployed-status#1",
+     "build.package.deployed-status#2"
+    ],
+    "B1": "excluded: evidence and scope statement (native exercise with an override; confirms local suppression only)",
+    "B2": [
+     "build.package.deployed-status#3"
+    ],
+    "B3": "excluded: proposed repair not applied (C:S13) and a disclaimer that no compensation is promised"
+   },
+   "obligations": [
+    {
+     "id": "build.package.deployed-status#1",
+     "units": [
+      "P1"
+     ],
+     "text": "As built (C:D19), the document exporter overwrites the deployed-item helper's returned error with success before deciding whether to export source, so a successful source fallback hides the earlier error.",
+     "cases": "helper error with successful source fallback vs helper success",
+     "observation": "export item status",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/resources.rs::export_item",
+      ".g5/Verus_verification/consolidated/iter3/resources.rs::overwritten_error_and_final_reader"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter3/gate/receipt.json",
+      ".g5/Verus_verification/consolidated/iter3/run_models.py",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/packaging-deployed-code.g5.md metadata build.package.deployed-status (iter3 resources.rs) (controls export-propagates-helper-as-built, helper-error-blocks-source-as-built rejected)",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "build.package.deployed-status#2",
+     "units": [
+      "P1"
+     ],
+     "text": "A source-export error still fails the operation.",
+     "cases": "source export fails vs succeeds",
+     "observation": "export item status",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/resources.rs::export_item",
+      ".g5/Verus_verification/consolidated/iter3/resources.rs::overwritten_error_and_final_reader"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter3/gate/receipt.json",
+      ".g5/Verus_verification/consolidated/iter3/run_models.py",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/packaging-deployed-code.g5.md metadata build.package.deployed-status (iter3 resources.rs)",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "build.package.deployed-status#3",
+     "units": [
+      "B2"
+     ],
+     "text": "The later Studio project check is an independent reader that may return success with fewer items, so it does not catch a discarded item or helper error.",
+     "cases": "helper error then successful project check",
+     "observation": "final package status",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/resources.rs::final_export",
+      ".g5/Verus_verification/consolidated/iter3/resources.rs::check_project",
+      ".g5/Verus_verification/consolidated/iter3/resources.rs::overwritten_error_and_final_reader"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter3/gate/receipt.json",
+      ".g5/Verus_verification/consolidated/iter3/run_models.py",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/packaging-deployed-code.g5.md metadata build.package.deployed-status (iter3 resources.rs)",
+     "assessed_in": "iteration-68"
+    }
+   ]
+  }
+ }
+}

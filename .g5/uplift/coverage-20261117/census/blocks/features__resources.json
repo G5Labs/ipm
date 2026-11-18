@@ -1,0 +1,2395 @@
+{
+ "page": ".g5/ontology/features/resources.g5.md",
+ "blocks": {
+  "module.processor": {
+   "body_sha": "d3a61f332ca4a6ae",
+   "status": "structural",
+   "units": {
+    "P1": "excluded: heading introducing the list of processors with special behavior",
+    "B1": "excluded: navigation to module.processor.file-copy (owner)",
+    "B2": "excluded: navigation to module.processor.copy (owner)",
+    "B3": "excluded: navigation to module.processor.deepsee (owner)",
+    "B4": "excluded: navigation to module.processor.interoperability (owner)",
+    "B5": "excluded: navigation to module.webapp (web-applications page owner); CSPApplication deprecation is a naming note owned there",
+    "B6": "excluded: navigation to module.processor.cpf (owner)",
+    "B7": "excluded: navigation to module.system-setting, artifact (artifact-download page), unit-test (testing-policy) and module.processor.localized-messages owners",
+    "P2": "excluded: pointer to module.processor.defaults (owner)"
+   },
+   "obligations": [],
+   "reason": "Index of processor kinds; every bullet links its owner block (file-copy, copy, deepsee, interoperability, module.webapp, cpf, system-setting, artifact, localized-messages) and defaults/order belong to module.processor.defaults. No promise beyond the children. Metadata thin_surfaces.rs::cpf_status is credited at module.processor.cpf#5."
+  },
+  "module.processor.defaults": {
+   "body_sha": "164555bcb0a4e65f",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "module.processor.defaults#1",
+     "module.processor.defaults#2"
+    ],
+    "B1": [
+     "module.processor.defaults#3",
+     "module.processor.defaults#4"
+    ],
+    "B2": [
+     "module.processor.defaults#5"
+    ],
+    "B3": [
+     "module.processor.defaults#6",
+     "module.processor.defaults#7"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "module.processor.defaults#1",
+     "units": [
+      "P1"
+     ],
+     "text": "An explicit attribute, including an empty value, protects that property from every matching default.",
+     "cases": "property in the explicit set vs not; matching default supplying a value",
+     "observation": "processor property value after defaults",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/resources.rs::explicit_default_is_protected",
+      ".g5/Verus_verification/consolidated/iter3/resources.rs::defaults_step",
+      ".g5/Verus_verification/consolidated/iter3/resources.rs::chained_defaults_and_last_writer"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter3/HANDOFF.md",
+      ".g5/uplift/consolidated/iter3/gate"
+     ],
+     "basis": "reused:ontology metadata module.processor.defaults (resources.rs); declaration opened",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.processor.defaults#2",
+     "units": [
+      "P1"
+     ],
+     "text": "Without an explicit attribute, matching defaults apply in declaration order, so a later matching default replaces an earlier one.",
+     "cases": "two matching defaults writing the same property, no explicit attribute",
+     "observation": "final property value equals the later default",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/resources.rs::apply_defaults",
+      ".g5/Verus_verification/consolidated/iter3/resources.rs::chained_defaults_and_last_writer"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter3/HANDOFF.md",
+      ".g5/uplift/consolidated/iter3/gate"
+     ],
+     "basis": "reused:ontology metadata module.processor.defaults (resources.rs); declaration opened",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.processor.defaults#3",
+     "units": [
+      "B1"
+     ],
+     "text": "Each default tests its conditions against current values, including values set by earlier defaults.",
+     "cases": "second default whose condition holds only after the first default applied, vs the same with the first blocked by an explicit attribute",
+     "observation": "whether the second default applies",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/resources.rs::satisfies",
+      ".g5/Verus_verification/consolidated/iter3/resources.rs::chained_defaults_and_last_writer"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter3/HANDOFF.md",
+      ".g5/uplift/consolidated/iter3/gate"
+     ],
+     "basis": "reused:ontology metadata module.processor.defaults; declaration opened",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.processor.defaults#4",
+     "units": [
+      "B1"
+     ],
+     "text": "A default applies only when it names the same processor class by full name or built-in short form; inheritance alone is not a match.",
+     "cases": "full name vs short form vs subclass name",
+     "observation": "whether the default applies",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/resources.rs::processor_class_matches"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter3/HANDOFF.md",
+      ".g5/uplift/consolidated/iter3/gate"
+     ],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "processor_class_matches encodes the full/short-form equality in a spec, but no theorem, neighbor assertion or rejected control exercises a short-form match or a subclass non-match (ResourceProcessor/Abstract.cls::ApplyDefaults class comparison)."
+    },
+    {
+     "id": "module.processor.defaults#5",
+     "units": [
+      "B2"
+     ],
+     "text": "Supplying parameters again reevaluates attributes and defaults and does not turn a previously defaulted value into an explicit attribute.",
+     "cases": "history: SetParams with params1 (default applied) then SetParams with params2 changing a condition or value",
+     "observation": "processor property after the second SetParams",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/resources.rs::apply_defaults"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter3/HANDOFF.md",
+      ".g5/uplift/consolidated/iter3/gate"
+     ],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "apply_defaults models one evaluation with a given explicit set; no two-call history of ResourceProcessor/Abstract.cls::SetParams distinguishes \"defaulted value reevaluated\" from \"defaulted value frozen as explicit\" at the processor property reader."
+    },
+    {
+     "id": "module.processor.defaults#6",
+     "units": [
+      "B3"
+     ],
+     "text": "Named document resources are processed before path-style and other resources, sorted by name without the extension.",
+     "cases": "document vs path-style resource; two documents with different stems",
+     "observation": "position in Storage/Module.cls::GetOrderedResourceList",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/resources.rs::ordered_before",
+      ".g5/Verus_verification/consolidated/iter3/resources.rs::before",
+      ".g5/Verus_verification/consolidated/iter3/resources.rs::resource_order"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter3/HANDOFF.md",
+      ".g5/uplift/consolidated/iter3/gate"
+     ],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "resource_order proves the pairwise relation only; the list returned by GetOrderedResourceList is not shown sorted by it (no sort refinement), and the stem is an input, so stripping the extension is not modeled."
+    },
+    {
+     "id": "module.processor.defaults#7",
+     "units": [
+      "B3"
+     ],
+     "text": "Documents with equal names keep declaration order, and path-style and other resources follow in declaration order.",
+     "cases": "two equal-stem documents; two path-style resources declared in order a,b",
+     "observation": "relative order in GetOrderedResourceList output",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/resources.rs::ordered_before"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter3/HANDOFF.md",
+      ".g5/uplift/consolidated/iter3/gate"
+     ],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "ordered_before returns false both ways for equal stems and for two non-documents, which is consistent with but does not establish stability; no list-level model of declaration-order preservation."
+    }
+   ]
+  },
+  "module.processor.default-sweep": {
+   "body_sha": "7959f9f63dc2591c",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "module.processor.default-sweep#1"
+    ],
+    "P2": "excluded: scope of the helper (EvaluateAttribute, not module-default placeholder resolution) and disclosure of unestablished cases; the raw \"$\" failure is owned by module.parameter.literal-values (manifest page)"
+   },
+   "obligations": [
+    {
+     "id": "module.processor.default-sweep#1",
+     "units": [
+      "P1"
+     ],
+     "text": "Custom-parameter substitution makes one pass in parameter-name order: a replacement that introduces a later parameter is filled in that pass, one that introduces an already-visited parameter stays unfilled.",
+     "cases": "forward introduction (param 1 -> param 2 -> literal) vs backward introduction (param 2 -> param 1)",
+     "observation": "evaluated attribute text",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter7/inputs.rs::sweep",
+      ".g5/Verus_verification/consolidated/iter7/inputs.rs::replace",
+      ".g5/Verus_verification/consolidated/iter7/inputs.rs::parameter_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter7/run.json",
+      ".g5/uplift/consolidated/iter7/INDEX.md"
+     ],
+     "basis": "reused:ontology metadata module.processor.default-sweep (iter7 inputs.rs replace, sweep); declaration opened",
+     "assessed_in": "iteration-68"
+    }
+   ]
+  },
+  "module.placement": {
+   "body_sha": "45b0d5606b8b095b",
+   "status": "enumerated",
+   "units": {
+    "P1": "excluded: heading sentence; outcomes are in the bullets",
+    "B1": [
+     "module.placement#1"
+    ],
+    "B2": [
+     "module.placement#2"
+    ],
+    "B3": [
+     "module.placement#3",
+     "module.placement#4"
+    ],
+    "B4": [
+     "module.placement#5"
+    ],
+    "B5": [
+     "module.placement#6"
+    ],
+    "B6": [
+     "module.placement#7"
+    ],
+    "B7": [
+     "module.placement#8"
+    ],
+    "B8": [
+     "module.placement#9"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "module.placement#1",
+     "units": [
+      "B1"
+     ],
+     "text": "GlobalScope makes the module available in all namespaces without per-namespace mappings.",
+     "cases": "GlobalScope vs ordinary module; reader in a second namespace",
+     "observation": "mapping created; code visible from another namespace",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter59/mappings.rs::needs_map",
+      ".g5/Verus_verification/consolidated/iter59/mappings.rs::load",
+      ".g5/Verus_verification/consolidated/iter59/mappings.rs::global_module_skipped",
+      ".g5/Verus_verification/consolidated/iter59/mappings.rs::schedule"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter59/run.json",
+      ".g5/uplift/consolidated/iter59/HANDOFF.md"
+     ],
+     "basis": "reused:ontology metadata module.placement (iter59 mappings.rs); declaration opened",
+     "assessed_in": "iteration-68",
+     "gap": "Model shows no mapping and code stored where the package resolves; visibility from every namespace exists only as the %Z/IRISSYS premise (visible_sys) for % packages. A GlobalScope module whose package resolves to the namespace database (non-% package) is not distinguished, and no second-namespace reader is modeled."
+    },
+    {
+     "id": "module.placement#2",
+     "units": [
+      "B2"
+     ],
+     "text": "NoMapping turns off the automatic mappings for the module resources.",
+     "cases": "NoMapping vs default for a package that resolves elsewhere",
+     "observation": "mapping created; code location",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter59/mappings.rs::needs_map",
+      ".g5/Verus_verification/consolidated/iter59/mappings.rs::nomapping_code_orphaned",
+      ".g5/Verus_verification/consolidated/iter59/mappings.rs::schedule"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter59/run.json",
+      ".g5/uplift/consolidated/iter59/HANDOFF.md"
+     ],
+     "basis": "reused:ontology metadata module.placement; declaration opened",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.placement#3",
+     "units": [
+      "B3"
+     ],
+     "text": "When a resource would resolve to a database other than the namespace routine database, load maps that package to the namespace routine database; an ordinary package that already resolves there gets no mapping.",
+     "cases": "package resolving elsewhere (%Z, admin-mapped subpackage) vs default destination",
+     "observation": "mapping exists; code in namespace database",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter59/mappings.rs::needs_map",
+      ".g5/Verus_verification/consolidated/iter59/mappings.rs::load",
+      ".g5/Verus_verification/consolidated/iter59/mappings.rs::mapping_outlives_uninstall",
+      ".g5/Verus_verification/consolidated/iter59/mappings.rs::ordinary_package_unmapped",
+      ".g5/Verus_verification/consolidated/iter59/mappings.rs::schedule"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter59/run.json",
+      ".g5/uplift/consolidated/iter59/HANDOFF.md"
+     ],
+     "basis": "reused:ontology metadata module.placement; declaration opened",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.placement#4",
+     "units": [
+      "B3"
+     ],
+     "text": "With NoMapping or GlobalScope the code is stored where the package resolves (for example IRISSYS).",
+     "cases": "NoMapping or GlobalScope with a package resolving elsewhere",
+     "observation": "code location after load",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter59/mappings.rs::load",
+      ".g5/Verus_verification/consolidated/iter59/mappings.rs::nomapping_code_orphaned",
+      ".g5/Verus_verification/consolidated/iter59/mappings.rs::schedule"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter59/run.json",
+      ".g5/uplift/consolidated/iter59/HANDOFF.md"
+     ],
+     "basis": "reused:ontology metadata module.placement; declaration opened",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.placement#5",
+     "units": [
+      "B4"
+     ],
+     "text": "As built, uninstall never removes the automatic mappings, so the package keeps resolving to the namespace database and overrides an administrator mapping (defect C:D65; as-built claim).",
+     "cases": "load that created a mapping, then uninstall",
+     "observation": "mapping present after uninstall",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter59/mappings.rs::mapping_outlives_uninstall",
+      ".g5/Verus_verification/consolidated/iter59/mappings.rs::schedule"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter59/run.json",
+      ".g5/uplift/consolidated/iter59/HANDOFF.md"
+     ],
+     "basis": "reused:ontology metadata module.placement; declaration opened",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.placement#6",
+     "units": [
+      "B5"
+     ],
+     "text": "As built, uninstall skips classes that resolve outside the namespace database unless -global is given, so a NoMapping module leaves its code behind (defect C:D66; as-built claim).",
+     "cases": "NoMapping module uninstalled with vs without -global; GlobalScope module with vs without -global",
+     "observation": "code present after uninstall; module record",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter59/mappings.rs::nomapping_code_orphaned",
+      ".g5/Verus_verification/consolidated/iter59/mappings.rs::global_module_skipped",
+      ".g5/Verus_verification/consolidated/iter59/mappings.rs::schedule"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter59/run.json",
+      ".g5/uplift/consolidated/iter59/HANDOFF.md"
+     ],
+     "basis": "reused:ontology metadata module.placement; declaration opened",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.placement#7",
+     "units": [
+      "B6"
+     ],
+     "text": "<Mappings> adds explicit mappings.",
+     "cases": "module with vs without a declared <Mapping>",
+     "observation": "namespace mapping after load",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter63/cleanup.rs::remains",
+      ".g5/Verus_verification/consolidated/iter63/cleanup.rs::reload_side_effects_outlive_uninstall"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter63/run.json",
+      ".g5/uplift/consolidated/iter63/HANDOFF.md"
+     ],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "iter63 cleanup.rs only states that declared mappings remain after uninstall; that Lifecycle/Base.cls::%Reload creates the declared mapping (and not one absent from the manifest) is a premise, not a modeled distinction."
+    },
+    {
+     "id": "module.placement#8",
+     "units": [
+      "B7"
+     ],
+     "text": "SourcesRoot names the folder that holds the module code.",
+     "cases": "SourcesRoot=\"src\" vs another root for the same resource",
+     "observation": "path from which a resource is loaded/exported",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter6/workflows.rs::global_path",
+      ".g5/Verus_verification/consolidated/iter6/workflows.rs::reload_global"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter6/run.json"
+     ],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "Only the global exporter/importer path is modeled with the SourcesRoot prefix (and the sync folder rule in iter32 sync.rs); class/routine/document resolution under SourcesRoot at load is not modeled."
+    },
+    {
+     "id": "module.placement#9",
+     "units": [
+      "B8"
+     ],
+     "text": "Expressions such as ${ipmDir} stand for system folders.",
+     "cases": "manifest attribute containing ${ipmDir}/${cspdir}-style expressions vs literal text",
+     "observation": "evaluated attribute value",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "No formal rule maps an expression token to its system folder (expression evaluation in ResourceProcessor/Abstract.cls::%Evaluate / module expression helpers); iter7 sweep covers only custom parameters."
+    }
+   ]
+  },
+  "module.global.roundtrip": {
+   "body_sha": "a0699cc7af218924",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "module.global.roundtrip#1",
+     "module.global.roundtrip#2"
+    ],
+    "B1": [
+     "module.global.roundtrip#3"
+    ],
+    "B2": "excluded: scope statement of the round-trip contract; mapping and uninstall preservation are owned by module.placement and the uninstall page, custom filename translation is recorded open at #3"
+   },
+   "obligations": [
+    {
+     "id": "module.global.roundtrip#1",
+     "units": [
+      "P1"
+     ],
+     "text": "A global resource is exported and read back at <SourcesRoot>/<Directory>/<global name>.xml, Directory defaulting to gbl/.",
+     "cases": "Directory absent vs declared; SourcesRoot prefix",
+     "observation": "export/import path",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter6/workflows.rs::global_path",
+      ".g5/Verus_verification/consolidated/iter6/workflows.rs::neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter6/run.json",
+      ".g5/uplift/consolidated/iter6/INDEX.md"
+     ],
+     "basis": "reused:ontology metadata module.global.roundtrip (iter6 workflows.rs); declaration opened",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.global.roundtrip#2",
+     "units": [
+      "P1"
+     ],
+     "text": "Packaging a global with SourcesRoot=\"src\", clearing it and loading that package restores its stored values.",
+     "cases": "package then reload with the same SourcesRoot vs a different root",
+     "observation": "global value after load",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter6/workflows.rs::package_global",
+      ".g5/Verus_verification/consolidated/iter6/workflows.rs::reload_global",
+      ".g5/Verus_verification/consolidated/iter6/workflows.rs::neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter6/run.json",
+      ".g5/uplift/consolidated/iter6/INDEX.md"
+     ],
+     "basis": "reused:ontology metadata module.global.roundtrip; declaration opened",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.global.roundtrip#3",
+     "units": [
+      "B1"
+     ],
+     "text": "The file name drops .GBL, special characters are translated by the processor filename settings, and a preload resource has preload/ before SourcesRoot.",
+     "cases": "name with .GBL suffix and special characters; preload vs ordinary resource",
+     "observation": "relative file path",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "global_path takes the name as an opaque value; ResourceProcessor/Default/Global.cls::OnItemRelativePath suffix removal, filename translation and the preload/ prefix are not modeled."
+    }
+   ]
+  },
+  "module.processor.deepsee": {
+   "body_sha": "3d9a0ad32c1d75c7",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "module.processor.deepsee#1",
+     "module.processor.deepsee#2"
+    ],
+    "B1": [
+     "module.processor.deepsee#3"
+    ],
+    "B2": [
+     "module.processor.deepsee#4",
+     "module.processor.deepsee#5"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "module.processor.deepsee#1",
+     "units": [
+      "P1"
+     ],
+     "text": "A .DFI resource loads its Analytics item from <SourcesRoot>/dfi/, where \"-\" in the item name becomes a folder separator.",
+     "cases": "item name with \"-\" vs without",
+     "observation": "file path loaded",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "dfiitems.rs treats an explicitly named item as loaded; the dfi/ folder and the \"-\" to folder-separator mapping in ResourceProcessor/Default/DeepSeeItem.cls::OnPhase are not modeled."
+    },
+    {
+     "id": "module.processor.deepsee#2",
+     "units": [
+      "P1"
+     ],
+     "text": "A name containing \"*\" loads every matching file in the dfi folder (intended promise).",
+     "cases": "wildcard resource with files ending .xml, .dfi, .XML, .DFI",
+     "observation": "items present after load",
+     "grade": "full",
+     "check": "refuted",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter58/dfiitems.rs::matched_intended",
+      ".g5/Verus_verification/consolidated/iter58/dfiitems.rs::wildcard_extension_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter58/run.json",
+      ".g5/uplift/consolidated/iter58/HANDOFF.md"
+     ],
+     "basis": "reused:ontology metadata module.processor.deepsee (iter58); declaration opened. Refuted on Linux by the as-built model (see #3); other platforms unmodeled",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.processor.deepsee#3",
+     "units": [
+      "B1"
+     ],
+     "text": "As built on Linux a wildcard resource loads only .xml and .DFI files and silently skips .dfi and .XML (defect C:D62; as-built claim).",
+     "cases": "wildcard with each of the four extensions",
+     "observation": "item loaded or not",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter58/dfiitems.rs::matched_unix",
+      ".g5/Verus_verification/consolidated/iter58/dfiitems.rs::wildcard_extension_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter58/run.json",
+      ".g5/uplift/consolidated/iter58/HANDOFF.md"
+     ],
+     "basis": "reused:ontology metadata module.processor.deepsee; declaration opened",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.processor.deepsee#4",
+     "units": [
+      "B2"
+     ],
+     "text": "Uninstall removes explicitly named DFI items.",
+     "cases": "explicit vs wildcard resource",
+     "observation": "item present after uninstall",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter58/dfiitems.rs::removed_by_uninstall",
+      ".g5/Verus_verification/consolidated/iter58/dfiitems.rs::uninstall_neighbors",
+      ".g5/Verus_verification/consolidated/iter58/dfiitems.rs::leftover_after_uninstall"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter58/run.json",
+      ".g5/uplift/consolidated/iter58/HANDOFF.md"
+     ],
+     "basis": "reused:ontology metadata module.processor.deepsee; declaration opened",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.processor.deepsee#5",
+     "units": [
+      "B2"
+     ],
+     "text": "As built, items loaded through a wildcard resource remain after uninstall (defect C:D63; as-built claim).",
+     "cases": "wildcard-loaded item vs explicit item",
+     "observation": "item present after uninstall",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter58/dfiitems.rs::present_after_uninstall",
+      ".g5/Verus_verification/consolidated/iter58/dfiitems.rs::leftover_after_uninstall"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter58/run.json",
+      ".g5/uplift/consolidated/iter58/HANDOFF.md"
+     ],
+     "basis": "reused:ontology metadata module.processor.deepsee; declaration opened",
+     "assessed_in": "iteration-68"
+    }
+   ]
+  },
+  "module.processor.interoperability": {
+   "body_sha": "c2eae85837a26e1a",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "module.processor.interoperability#1"
+    ],
+    "B1": [
+     "module.processor.interoperability#2",
+     "module.processor.interoperability#3"
+    ],
+    "B2": [
+     "module.processor.interoperability#4"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "module.processor.interoperability#1",
+     "units": [
+      "P1"
+     ],
+     "text": "Interoperability documents load from <SourcesRoot>/i14y/<name>.xml, from misc/ when only that folder exists, from a declared Directory, and directly under SourcesRoot when neither folder exists.",
+     "cases": "declared Directory; i14y exists; only misc exists; neither exists; file directly under root while i14y exists",
+     "observation": "whether the file is found",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter62/interopres.rs::candidates_find",
+      ".g5/Verus_verification/consolidated/iter62/interopres.rs::directory_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter62/run.json",
+      ".g5/uplift/consolidated/iter62/HANDOFF.md"
+     ],
+     "basis": "reused:ontology metadata module.processor.interoperability (iter62); declaration opened",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.processor.interoperability#2",
+     "units": [
+      "B1"
+     ],
+     "text": "Loading a changed lookup table replaces the whole table, so a removed key disappears.",
+     "cases": "reload where a key is removed from the file",
+     "observation": "table entries after reload",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter62/interopres.rs::load",
+      ".g5/Verus_verification/consolidated/iter62/interopres.rs::reload_replaces",
+      ".g5/Verus_verification/consolidated/iter62/interopres.rs::schedule"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter62/run.json",
+      ".g5/uplift/consolidated/iter62/HANDOFF.md"
+     ],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "load(old,file)=file encodes the native-qualified provider premise that importing a LUT replaces the table; merge vs replace is not decided by any modeled IPM step (Document.cls::OnPhase Reload calls $system.OBJ.Load), so the model takes the deciding behavior as an input."
+    },
+    {
+     "id": "module.processor.interoperability#3",
+     "units": [
+      "B1"
+     ],
+     "text": "Uninstall removes the lookup table.",
+     "cases": "uninstall of a module with a LUT resource vs a document not resolved as a child",
+     "observation": "table entries after uninstall",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter62/interopres.rs::uninstall",
+      ".g5/Verus_verification/consolidated/iter62/interopres.rs::uninstall_clears"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter62/run.json",
+      ".g5/uplift/consolidated/iter62/HANDOFF.md"
+     ],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "uninstall() clears every key by definition; Lifecycle/Base.cls::%Clean resolving the LUT as a child and the delete removing the entries are premises, with no neighbor where Clean does not resolve it."
+    },
+    {
+     "id": "module.processor.interoperability#4",
+     "units": [
+      "B2"
+     ],
+     "text": "HL7, X12 and ESD documents need the matching document class in the namespace; without it the load fails.",
+     "cases": "HL7 document with vs without a registered document class",
+     "observation": "load status",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "Only a premise comment in interopres.rs; no rule distinguishes the class-present and class-absent load outcome. Only .LUT was exercised natively."
+    }
+   ]
+  },
+  "module.processor.localized-messages": {
+   "body_sha": "38a726700c05c00d",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "module.processor.localized-messages#1"
+    ],
+    "B1": [
+     "module.processor.localized-messages#2",
+     "module.processor.localized-messages#3"
+    ],
+    "B2": [
+     "module.processor.localized-messages#4"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "module.processor.localized-messages#1",
+     "units": [
+      "P1"
+     ],
+     "text": "A .LOC resource is loaded into the message dictionary when the module compiles, and a changed file replaces that domain messages for its language, so a removed message disappears.",
+     "cases": "reload where a message id is removed; two languages or domains",
+     "observation": "message dictionary entries",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter56/locmsgs.rs::load",
+      ".g5/Verus_verification/consolidated/iter56/locmsgs.rs::reload_replaces_domain",
+      ".g5/Verus_verification/consolidated/iter56/locmsgs.rs::schedule"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter56/run.json",
+      ".g5/uplift/consolidated/iter56/HANDOFF.md"
+     ],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "load() sets msgs to the file by premise (compiling a .LOC replaces its domain for the language); a single domain/language is modeled, so another domain or language left intact is not distinguished, and compile-phase timing is not modeled."
+    },
+    {
+     "id": "module.processor.localized-messages#2",
+     "units": [
+      "B1"
+     ],
+     "text": "During Activate IPM writes the file domains to <module root>/localize/<name>.xml.",
+     "cases": "load with a writable module root",
+     "observation": "exported file path and contents",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter56/locmsgs.rs::load",
+      ".g5/Verus_verification/consolidated/iter56/locmsgs.rs::schedule"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter56/run.json",
+      ".g5/uplift/consolidated/iter56/HANDOFF.md"
+     ],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "Only an exported Boolean is modeled; the localize/<name>.xml path, its domain contents and the Activate timing (LocalizationExport.cls::OnBeforePhase) are not distinguished."
+    },
+    {
+     "id": "module.processor.localized-messages#3",
+     "units": [
+      "B1"
+     ],
+     "text": "As built the export write is required, so a module with a .LOC resource cannot be loaded from a read-only folder (defect C:D58; as-built claim).",
+     "cases": "writable vs read-only module root",
+     "observation": "load status and state after failure",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter56/locmsgs.rs::readonly_root_fails",
+      ".g5/Verus_verification/consolidated/iter56/locmsgs.rs::reload_replaces_domain",
+      ".g5/Verus_verification/consolidated/iter56/locmsgs.rs::schedule"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter56/run.json",
+      ".g5/uplift/consolidated/iter56/HANDOFF.md"
+     ],
+     "basis": "reused:ontology metadata module.processor.localized-messages (iter56); declaration opened",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.processor.localized-messages#4",
+     "units": [
+      "B2"
+     ],
+     "text": "As built, uninstall deletes the .LOC document but leaves its messages in the dictionary and the exported file in place (defect C:D59; as-built claim).",
+     "cases": "state after uninstall",
+     "observation": "document present, messages present, export present",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter56/locmsgs.rs::uninstall",
+      ".g5/Verus_verification/consolidated/iter56/locmsgs.rs::uninstall_keeps_messages",
+      ".g5/Verus_verification/consolidated/iter56/locmsgs.rs::schedule"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter56/run.json",
+      ".g5/uplift/consolidated/iter56/HANDOFF.md"
+     ],
+     "basis": "reused:ontology metadata module.processor.localized-messages; declaration opened",
+     "assessed_in": "iteration-68"
+    }
+   ]
+  },
+  "module.processor.localized-messages.legacy": {
+   "body_sha": "5a603b3bdfaba2b7",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "module.processor.localized-messages.legacy#1",
+     "module.processor.localized-messages.legacy#2"
+    ],
+    "B1": [
+     "module.processor.localized-messages.legacy#3"
+    ],
+    "B2": [
+     "module.processor.localized-messages.legacy#4",
+     "module.processor.localized-messages.legacy#5"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "module.processor.localized-messages.legacy#1",
+     "units": [
+      "P1"
+     ],
+     "text": "A LegacyLocalizedMessages resource loads a message XML file from the module root when the module compiles.",
+     "cases": "file at the module root; compile vs other phases",
+     "observation": "messages present after compile",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "legacymsgs.rs models domain replacement and include cleanup, not the module-root file location or the Compile-phase trigger (LegacyLocalizedMessages.cls::OnBeforePhase)."
+    },
+    {
+     "id": "module.processor.localized-messages.legacy#2",
+     "units": [
+      "P1"
+     ],
+     "text": "It generates include files of message-name macros: one for includeFiles=\"<include>\", or one per target for \"<domain>:<include>,...\".",
+     "cases": "single form vs mapped form with two targets",
+     "observation": "generated include documents",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter60/legacymsgs.rs::generated",
+      ".g5/Verus_verification/consolidated/iter60/legacymsgs.rs::fixture"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter60/run.json",
+      ".g5/uplift/consolidated/iter60/HANDOFF.md"
+     ],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "generated() restates the expected includes as a definition (native-qualified generator premise); no rule derives them from the includeFiles attribute parsing in GetDomainMap."
+    },
+    {
+     "id": "module.processor.localized-messages.legacy#3",
+     "units": [
+      "B1"
+     ],
+     "text": "Each domain in the file replaces that domain messages, except that with merge=\"1\" earlier messages of the mapped domains are kept.",
+     "cases": "earlier message absent from the file with merge=0 vs merge=1; mapped vs unmapped domain",
+     "observation": "message present after load",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter60/legacymsgs.rs::after_load",
+      ".g5/Verus_verification/consolidated/iter60/legacymsgs.rs::replace_and_merge"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter60/run.json",
+      ".g5/uplift/consolidated/iter60/HANDOFF.md"
+     ],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "replace_and_merge distinguishes merge=0 from merge=1 for one domain, but the qualifier \"of the mapped domains\" is not modeled: an unmapped domain with merge=1 (MergeMessageDomains restores only mapped domains) is not distinguished."
+    },
+    {
+     "id": "module.processor.localized-messages.legacy#4",
+     "units": [
+      "B2"
+     ],
+     "text": "Uninstall deletes the generated include of the single form.",
+     "cases": "single form vs one mapped entry",
+     "observation": "include present after uninstall",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter60/legacymsgs.rs::single_include_cleaned",
+      ".g5/Verus_verification/consolidated/iter60/legacymsgs.rs::one_mapped_entry_cleaned",
+      ".g5/Verus_verification/consolidated/iter60/legacymsgs.rs::fixture"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter60/run.json",
+      ".g5/uplift/consolidated/iter60/HANDOFF.md"
+     ],
+     "basis": "reused:ontology metadata module.processor.localized-messages.legacy (iter60); declaration opened",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.processor.localized-messages.legacy#5",
+     "units": [
+      "B2"
+     ],
+     "text": "As built, with two or more <domain>:<include> entries no generated include is recognized as the module child, so uninstall leaves them all (defect C:D64; as-built claim).",
+     "cases": "mapped form with two entries vs one",
+     "observation": "includes present after uninstall",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter60/legacymsgs.rs::children",
+      ".g5/Verus_verification/consolidated/iter60/legacymsgs.rs::mapped_includes_leak",
+      ".g5/Verus_verification/consolidated/iter60/legacymsgs.rs::fixture"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter60/run.json",
+      ".g5/uplift/consolidated/iter60/HANDOFF.md"
+     ],
+     "basis": "reused:ontology metadata module.processor.localized-messages.legacy; declaration opened",
+     "assessed_in": "iteration-68"
+    }
+   ]
+  },
+  "module.processor.copy": {
+   "body_sha": "63eadecd80403448",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "module.processor.copy#1",
+     "module.processor.copy#2"
+    ],
+    "B1": [
+     "module.processor.copy#3"
+    ],
+    "B2": [
+     "module.processor.copy#4"
+    ],
+    "B3": [
+     "module.processor.copy#5"
+    ],
+    "B4": [
+     "module.processor.copy#6"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "module.processor.copy#1",
+     "units": [
+      "P1"
+     ],
+     "text": "A Copy resource copies the classes of the named package from its Source namespace into the installing namespace during Reload.",
+     "cases": "classes of the named package vs other packages",
+     "observation": "class body in the installing namespace",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter37/copy.rs::copy_one",
+      ".g5/Verus_verification/consolidated/iter37/copy.rs::load",
+      ".g5/Verus_verification/consolidated/iter37/copy.rs::overwrite_true_replaces",
+      ".g5/Verus_verification/consolidated/iter37/copy.rs::fixture_schedule"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter37/run.json",
+      ".g5/uplift/consolidated/iter37/HANDOFF.md"
+     ],
+     "basis": "reused:ontology metadata module.processor.copy (iter37); declaration opened",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.processor.copy#2",
+     "units": [
+      "P1"
+     ],
+     "text": "Copied classes are then compiled in the installing namespace.",
+     "cases": "copied class compiled vs only loaded",
+     "observation": "compiled class in the target namespace",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "Compilation in the target namespace (Copy.cls::OnPhase Compile, TargetSet) is a premise of copy.rs; no rule distinguishes compiled from loaded-only."
+    },
+    {
+     "id": "module.processor.copy#3",
+     "units": [
+      "B1"
+     ],
+     "text": "With Overwrite true (the default) a class that already exists in the installing namespace is replaced, even when it changed after the source.",
+     "cases": "existing target class with Overwrite true",
+     "observation": "class body after load",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter37/copy.rs::overwrite_true_replaces",
+      ".g5/Verus_verification/consolidated/iter37/copy.rs::fixture_schedule"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter37/run.json",
+      ".g5/uplift/consolidated/iter37/HANDOFF.md"
+     ],
+     "basis": "reused:ontology metadata module.processor.copy; declaration opened",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.processor.copy#4",
+     "units": [
+      "B2"
+     ],
+     "text": "With Overwrite=\"0\" existing classes are kept and only missing ones are copied.",
+     "cases": "existing vs missing target class with Overwrite=0",
+     "observation": "class body after load",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter37/copy.rs::overwrite_false_keeps_existing",
+      ".g5/Verus_verification/consolidated/iter37/copy.rs::fixture_schedule"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter37/run.json",
+      ".g5/uplift/consolidated/iter37/HANDOFF.md"
+     ],
+     "basis": "reused:ontology metadata module.processor.copy; declaration opened",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.processor.copy#5",
+     "units": [
+      "B3"
+     ],
+     "text": "A class that another installed module lists as a resource is never copied.",
+     "cases": "owned vs unowned class of the package, both overwrite values",
+     "observation": "class body after load",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter37/copy.rs::owned_never_copied_or_deleted",
+      ".g5/Verus_verification/consolidated/iter37/copy.rs::fixture_schedule"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter37/run.json",
+      ".g5/uplift/consolidated/iter37/HANDOFF.md"
+     ],
+     "basis": "reused:ontology metadata module.processor.copy; declaration opened",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.processor.copy#6",
+     "units": [
+      "B4"
+     ],
+     "text": "As built, uninstall deletes every class of the package in the installing namespace except classes another module owns, including classes Overwrite=\"0\" kept (defect C:D40; as-built claim).",
+     "cases": "kept pre-existing class vs owned class vs copied class",
+     "observation": "class present after uninstall",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter37/copy.rs::uninstall",
+      ".g5/Verus_verification/consolidated/iter37/copy.rs::uninstall_deletes_kept_item",
+      ".g5/Verus_verification/consolidated/iter37/copy.rs::owned_never_copied_or_deleted",
+      ".g5/Verus_verification/consolidated/iter37/copy.rs::fixture_schedule"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter37/run.json",
+      ".g5/uplift/consolidated/iter37/HANDOFF.md"
+     ],
+     "basis": "reused:ontology metadata module.processor.copy; declaration opened",
+     "assessed_in": "iteration-68"
+    }
+   ]
+  },
+  "module.processor.file-copy": {
+   "body_sha": "f21189edd020a3ad",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "module.processor.file-copy#1"
+    ],
+    "B1": [
+     "module.processor.file-copy#2"
+    ],
+    "B2": "excluded: restates build.copy.overlap (build-and-publish page; owner not yet enumerated); FileCopy.cls:106 and :194 route directory copies through Utils/File.cls::CopyDir, whose DirectoriesOverlap check iter6 workflows.rs copy_ok models",
+    "B3": [
+     "module.processor.file-copy#3"
+    ],
+    "B4": [
+     "module.processor.file-copy#4"
+    ],
+    "B5": [
+     "module.processor.file-copy#5",
+     "module.processor.file-copy#6"
+    ],
+    "B6": [
+     "module.processor.file-copy#7",
+     "module.processor.file-copy#8",
+     "module.processor.file-copy#9"
+    ],
+    "B7": [
+     "module.processor.file-copy#10"
+    ],
+    "B8": [
+     "module.processor.file-copy#11",
+     "module.processor.file-copy#12"
+    ],
+    "B9": [
+     "module.processor.file-copy#13"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "module.processor.file-copy#1",
+     "units": [
+      "P1"
+     ],
+     "text": "FileCopy copies files at install and removes them at uninstall.",
+     "cases": "load then uninstall of an unprotected directory target without KeepOnUninstall",
+     "observation": "target present after load and absent after uninstall",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter14/protection.rs::copy",
+      ".g5/Verus_verification/consolidated/iter14/protection.rs::clean",
+      ".g5/Verus_verification/consolidated/iter14/protection.rs::lifecycle_neighbors",
+      ".g5/Verus_verification/consolidated/iter63/cleanup.rs::filecopy_keep"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter14/run.json",
+      ".g5/uplift/consolidated/iter14/HANDOFF.md",
+      ".g5/uplift/consolidated/iter63/run.json"
+     ],
+     "basis": "reused:ontology metadata module.processor.file-copy.protection (iter14) and iter63 cleanup; declarations opened",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.processor.file-copy#2",
+     "units": [
+      "B1"
+     ],
+     "text": "FileCopy never deletes IRIS or IPM system folders, or any folder that contains one.",
+     "cases": "Clean or Overlay=0 copy targeting a system/IPM/database root, an ancestor of one, or an ordinary child",
+     "observation": "directory present afterwards",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter14/protection.rs::protected",
+      ".g5/Verus_verification/consolidated/iter14/protection.rs::clean",
+      ".g5/Verus_verification/consolidated/iter14/protection.rs::delete_first",
+      ".g5/Verus_verification/consolidated/iter14/protection.rs::whole_segment_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter14/run.json",
+      ".g5/uplift/consolidated/iter14/HANDOFF.md"
+     ],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "Entailed by protection#2 and protection#4 only under the premise that the caller-supplied root list (Utils/File.cls::DatabaseDirectories plus system/IPM directories) is complete and paths are normalized; neither is modeled, so a root missing from the list is not distinguished. Composition therefore not credited."
+    },
+    {
+     "id": "module.processor.file-copy#3",
+     "units": [
+      "B3"
+     ],
+     "text": "KeepOnUninstall leaves the copied files in place on uninstall and clean.",
+     "cases": "KeepOnUninstall true vs false, file and directory targets",
+     "observation": "target present after Clean/uninstall",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter14/protection.rs::keep_and_overlay_are_preserved",
+      ".g5/Verus_verification/consolidated/iter63/cleanup.rs::filecopy_keep",
+      ".g5/Verus_verification/consolidated/verus/thin_surfaces.rs::clean_removes"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter14/run.json",
+      ".g5/uplift/consolidated/iter14/HANDOFF.md",
+      ".g5/uplift/consolidated/iter63/run.json"
+     ],
+     "basis": "reused:ontology metadata module.processor.file-copy (thin_surfaces clean_removes) and iter14/iter63; declarations opened",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.processor.file-copy#4",
+     "units": [
+      "B4"
+     ],
+     "text": "Overlay=0 requests full directory replacement, including removal of unrelated old entries (intended promise).",
+     "cases": "unprotected directory target with an unrelated old entry, Overlay=0",
+     "observation": "unrelated entry present after load",
+     "grade": "full",
+     "check": "refuted",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter14/protection.rs::unix_copy_preserves_unrelated",
+      ".g5/Verus_verification/consolidated/iter14/protection.rs::request_is_distinct_from_clearing",
+      ".g5/Verus_verification/consolidated/iter14/protection.rs::delete_first"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter14/run.json",
+      ".g5/uplift/consolidated/iter14/HANDOFF.md"
+     ],
+     "basis": "reused:ontology metadata module.processor.file-copy.unix-overlay (C:D29); declarations opened. The request flag is proved; the pinned Unix effect refutes full replacement",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.processor.file-copy#5",
+     "units": [
+      "B5"
+     ],
+     "text": "Immediate copies run before Activate; Defer copies run after successful Activate.",
+     "cases": "Defer false vs true",
+     "observation": "copy relative to Activate",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/thin_surfaces.rs::copies_before",
+      ".g5/Verus_verification/consolidated/verus/thin_surfaces.rs::copies_after"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/consolidated/extension/bindings.json"
+     ],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "copies_before/copies_after only select by the Defer flag within the Activate phase; ordering against Activate hooks and the \"successful Activate\" condition (FileCopy.cls::OnBeforePhase/OnAfterPhase called by Lifecycle phase execution) are not modeled."
+    },
+    {
+     "id": "module.processor.file-copy#6",
+     "units": [
+      "B5"
+     ],
+     "text": "A failing hook between the immediate and deferred copies leaves the immediate target but prevents the deferred copy.",
+     "cases": "Activate hook failure after an immediate copy, with a deferred resource",
+     "observation": "immediate target present; deferred target absent",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "No history model of OnBeforePhase copy, a failing Activate hook and the skipped OnAfterPhase; project map shows FileCopy.cls::OnAfterPhase with no formal target."
+    },
+    {
+     "id": "module.processor.file-copy#7",
+     "units": [
+      "B6"
+     ],
+     "text": "Database rollback does not restore either filesystem state (copied target or removed target).",
+     "cases": "copy or Clean inside a transaction that rolls back",
+     "observation": "filesystem state vs journaled database sentinel",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/thin_surfaces.rs::rollback",
+      ".g5/Verus_verification/consolidated/verus/thin_surfaces.rs::rollback_preserves_filesystem",
+      ".g5/Verus_verification/consolidated/verus/thin_surfaces.rs::copied_file_survives_rollback"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/consolidated/extension/bindings.json"
+     ],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "rollback() is defined to replace only the database, so filesystem survival is a premise rather than a derived distinction; the Clean-then-rollback history (removed target stays removed) is not stated."
+    },
+    {
+     "id": "module.processor.file-copy#8",
+     "units": [
+      "B6"
+     ],
+     "text": "With KeepOnUninstall, Clean preserves the target.",
+     "alias_of": "module.processor.file-copy#3",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.processor.file-copy#9",
+     "units": [
+      "B6"
+     ],
+     "text": "Other directory targets are removed subject to the current protection check.",
+     "alias_of": "module.processor.file-copy.protection#4",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.processor.file-copy#10",
+     "units": [
+      "B7"
+     ],
+     "text": "Directory overlay rules protect system directories at copy time.",
+     "cases": "Overlay=0 copy into a protected vs unprotected directory",
+     "observation": "unrelated entries in the target after copy",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter14/protection.rs::delete_first",
+      ".g5/Verus_verification/consolidated/iter14/protection.rs::protected_directory_copy_preserves",
+      ".g5/Verus_verification/consolidated/iter14/protection.rs::request_is_distinct_from_clearing"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter14/run.json",
+      ".g5/uplift/consolidated/iter14/HANDOFF.md"
+     ],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "The requested delete-first flag differs, but on the modeled Unix path the copy never clears either target, so protection makes no observable difference there; the Windows branch that does clear (Utils/File.cls::CopyDir) is not modeled."
+    },
+    {
+     "id": "module.processor.file-copy#11",
+     "units": [
+      "B8"
+     ],
+     "text": "Direct DoCopy with a missing source returns an error and creates no copied target file.",
+     "cases": "source present vs missing",
+     "observation": "status and target existence",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/thin_surfaces.rs::file_copy_observation"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/consolidated/extension/bindings.json"
+     ],
+     "basis": "reused:ontology metadata module.processor.file-copy (thin_surfaces file_copy_observation, F-YES/F-MISSING); declaration opened",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.processor.file-copy#12",
+     "units": [
+      "B8"
+     ],
+     "text": "A successful copy remains after database rollback while a journaled sentinel disappears; rollback does not turn a failed copy into a successful one.",
+     "alias_of": "module.processor.file-copy#7",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.processor.file-copy#13",
+     "units": [
+      "B9"
+     ],
+     "text": "Working assumption: protect configured roots and their ancestors and an exact target containing an IRIS.DAT marker.",
+     "alias_of": "module.processor.file-copy.protection#2",
+     "assessed_in": "iteration-68"
+    }
+   ],
+   "parent": {
+    "children": [
+     "module.processor.file-copy.protection",
+     "module.processor.file-copy.unix-overlay"
+    ],
+    "entailment": "Beyond its children the parent promises copy/remove lifecycle (#1, credited directly), KeepOnUninstall (#3), Defer timing (#5, #6), rollback independence (#7) and never deleting system folders (#2). #2 is not credited by composition: protection#2 and #4 entail it only if the supplied root list is complete. #4 is refuted by unix-overlay#1."
+   }
+  },
+  "module.processor.file-copy.protection": {
+   "body_sha": "94ba86cb91b9dcd8",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "module.processor.file-copy.protection#1",
+     "module.processor.file-copy.protection#2",
+     "module.processor.file-copy.protection#3",
+     "module.processor.file-copy.protection#4"
+    ],
+    "B1": [
+     "module.processor.file-copy.protection#5",
+     "module.processor.file-copy.protection#6"
+    ],
+    "B2": [
+     "module.processor.file-copy.protection#7"
+    ],
+    "B3": [
+     "module.processor.file-copy.protection#8"
+    ],
+    "B4": [
+     "module.processor.file-copy.protection#9"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "module.processor.file-copy.protection#1",
+     "units": [
+      "P1"
+     ],
+     "text": "A marker at target/IRIS.DAT protects that directory even when it is not a configured database.",
+     "cases": "scratch target with vs without an exact marker",
+     "observation": "protected classification; directory after Clean",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter14/protection.rs::protected",
+      ".g5/Verus_verification/consolidated/iter14/protection.rs::whole_segment_neighbors",
+      ".g5/Verus_verification/consolidated/iter14/protection.rs::lifecycle_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter14/run.json",
+      ".g5/uplift/consolidated/iter14/HANDOFF.md"
+     ],
+     "basis": "reused:ontology metadata module.processor.file-copy.protection (iter14); declaration opened",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.processor.file-copy.protection#2",
+     "units": [
+      "P1"
+     ],
+     "text": "Otherwise the target is protected only if it equals or contains a listed system, IPM or configured database directory; an ordinary child of a protected directory is not protected.",
+     "cases": "root itself, ancestor of a root, child of a root, sibling with a shared prefix",
+     "observation": "protected classification",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter14/protection.rs::prefix",
+      ".g5/Verus_verification/consolidated/iter14/protection.rs::ancestor_of_root",
+      ".g5/Verus_verification/consolidated/iter14/protection.rs::whole_segment_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter14/run.json",
+      ".g5/uplift/consolidated/iter14/HANDOFF.md"
+     ],
+     "basis": "reused:ontology metadata module.processor.file-copy.protection; declaration opened",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.processor.file-copy.protection#3",
+     "units": [
+      "P1"
+     ],
+     "text": "The comparison happens after path normalization and case folding.",
+     "cases": "paths differing only in case or separators",
+     "observation": "protected classification",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "protection.rs takes paths as already normalized lowercase segments; Utils/File.cls::NormalizeForComparison is a provider input, so a case- or separator-variant of a root is not distinguished."
+    },
+    {
+     "id": "module.processor.file-copy.protection#4",
+     "units": [
+      "P1"
+     ],
+     "text": "Protection is checked again at copy and Clean time, not fixed at load.",
+     "cases": "marker added or removed between load and Clean",
+     "observation": "directory after Clean",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter14/protection.rs::marker_write",
+      ".g5/Verus_verification/consolidated/iter14/protection.rs::clean",
+      ".g5/Verus_verification/consolidated/iter14/protection.rs::lifecycle_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter14/run.json",
+      ".g5/uplift/consolidated/iter14/HANDOFF.md"
+     ],
+     "basis": "reused:ontology metadata module.processor.file-copy.protection; declaration opened",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.processor.file-copy.protection#5",
+     "units": [
+      "B1"
+     ],
+     "text": "Adding a marker after load makes Clean keep the copied directory; removing it before Clean makes the scratch directory eligible for removal.",
+     "cases": "added-marker vs removed-marker histories",
+     "observation": "directory, payload and sentinel after Clean",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter14/protection.rs::lifecycle_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter14/run.json",
+      ".g5/uplift/consolidated/iter14/HANDOFF.md"
+     ],
+     "basis": "reused:ontology metadata module.processor.file-copy.protection; declaration opened",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.processor.file-copy.protection#6",
+     "units": [
+      "B1"
+     ],
+     "text": "The checked commands succeed and remove the module record in both cases.",
+     "cases": "added-marker vs removed-marker uninstall",
+     "observation": "command status and module record",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "protection.rs models files only; uninstall status and module-record removal in both histories are native observations without a formal rule."
+    },
+    {
+     "id": "module.processor.file-copy.protection#7",
+     "units": [
+      "B2"
+     ],
+     "text": "A single-file resource inside a protected directory is still deleted on Clean when KeepOnUninstall is false; the directory and unrelated files remain.",
+     "cases": "file resource in a marked directory",
+     "observation": "payload, directory, marker and sentinel after Clean",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter14/protection.rs::clean",
+      ".g5/Verus_verification/consolidated/iter14/protection.rs::lifecycle_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter14/run.json",
+      ".g5/uplift/consolidated/iter14/HANDOFF.md"
+     ],
+     "basis": "reused:ontology metadata module.processor.file-copy.protection; declaration opened",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.processor.file-copy.protection#8",
+     "units": [
+      "B3"
+     ],
+     "text": "The marker check examines the target itself, not descendants: a scratch parent containing a child with an IRIS.DAT marker is unprotected and Clean removes the whole parent.",
+     "cases": "nested marker vs exact marker",
+     "observation": "protected classification; directory after Clean",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter14/protection.rs::protected",
+      ".g5/Verus_verification/consolidated/iter14/protection.rs::whole_segment_neighbors",
+      ".g5/Verus_verification/consolidated/iter14/protection.rs::lifecycle_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter14/run.json",
+      ".g5/uplift/consolidated/iter14/HANDOFF.md"
+     ],
+     "basis": "reused:ontology metadata module.processor.file-copy.protection; declaration opened (as-built; intended descendant policy open)",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.processor.file-copy.protection#9",
+     "units": [
+      "B4"
+     ],
+     "text": "Working assumption: protect configured roots and their ancestors and an exact target containing an IRIS.DAT marker.",
+     "alias_of": "module.processor.file-copy.protection#2",
+     "assessed_in": "iteration-68"
+    }
+   ]
+  },
+  "module.processor.file-copy.unix-overlay": {
+   "body_sha": "34107f4d8d143318",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "module.processor.file-copy.unix-overlay#1",
+     "module.processor.file-copy.unix-overlay#2"
+    ],
+    "P2": [
+     "module.processor.file-copy.unix-overlay#3",
+     "module.processor.file-copy.unix-overlay#4"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "module.processor.file-copy.unix-overlay#1",
+     "units": [
+      "P1"
+     ],
+     "text": "On the pinned Unix runtime an ordinary directory load with Overlay=0 copies the new payload but keeps unrelated old entries, contradicting the full-replacement rule (defect C:D29; as-built claim).",
+     "cases": "unprotected target with an unrelated sentinel, Overlay=0, both delete-first values",
+     "observation": "sentinel and payload after copy",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter14/protection.rs::unix_copy",
+      ".g5/Verus_verification/consolidated/iter14/protection.rs::unix_copy_preserves_unrelated",
+      ".g5/Verus_verification/consolidated/iter14/protection.rs::request_is_distinct_from_clearing"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter14/run.json",
+      ".g5/uplift/consolidated/iter14/HANDOFF.md"
+     ],
+     "basis": "reused:ontology metadata module.processor.file-copy.unix-overlay (iter14); declaration opened",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.processor.file-copy.unix-overlay#2",
+     "units": [
+      "P1"
+     ],
+     "text": "The Unix CopyDir wrapper always enables the overlay option; its delete-first argument controls deletion of matching files before replacement, and both flag values replace an old same-name payload.",
+     "cases": "delete-first true vs false with an old same-name payload",
+     "observation": "payload bytes after copy",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter14/protection.rs::unix_args",
+      ".g5/Verus_verification/consolidated/iter14/protection.rs::unix_copy"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter14/run.json",
+      ".g5/uplift/consolidated/iter14/HANDOFF.md"
+     ],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "unix_args proves overlay is always on, but delete_matching has no modeled effect and payload is a Boolean, so replacing old same-name bytes vs keeping them is not distinguished."
+    },
+    {
+     "id": "module.processor.file-copy.unix-overlay#3",
+     "units": [
+      "P2"
+     ],
+     "text": "Protected-directory checks still change the requested delete-first argument and Clean behavior.",
+     "cases": "protected vs unprotected target",
+     "observation": "delete_first flag; directory after Clean",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter14/protection.rs::delete_first",
+      ".g5/Verus_verification/consolidated/iter14/protection.rs::request_is_distinct_from_clearing",
+      ".g5/Verus_verification/consolidated/iter14/protection.rs::lifecycle_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter14/run.json",
+      ".g5/uplift/consolidated/iter14/HANDOFF.md"
+     ],
+     "basis": "reused:ontology metadata module.processor.file-copy.unix-overlay; declaration opened",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.processor.file-copy.unix-overlay#4",
+     "units": [
+      "P2"
+     ],
+     "text": "The Windows wrapper explicitly removes the target first.",
+     "cases": "Windows CopyDir with delete-first",
+     "observation": "unrelated entries after copy on Windows",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "Only the Unix branch is modeled; the Windows branch of Utils/File.cls::CopyDir has no formal rule and no execution."
+    }
+   ]
+  },
+  "module.processor.cpf": {
+   "body_sha": "afff2d42185204c6",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "module.processor.cpf#1",
+     "module.processor.cpf#2",
+     "module.processor.cpf#3"
+    ],
+    "B1": [
+     "module.processor.cpf#4"
+    ],
+    "B2": [
+     "module.processor.cpf#5",
+     "module.processor.cpf#6"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "module.processor.cpf#1",
+     "units": [
+      "P1"
+     ],
+     "text": "By default a CPF file merges before Initialize.",
+     "cases": "CPF resource without Phase/When attributes",
+     "observation": "phase in which the merge runs",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter48/cpfmerge.rs::merges_in",
+      ".g5/Verus_verification/consolidated/iter48/cpfmerge.rs::A",
+      ".g5/Verus_verification/consolidated/iter48/cpfmerge.rs::neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter48/run.json",
+      ".g5/uplift/consolidated/iter48/HANDOFF.md"
+     ],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "Fixture A() is constructed with phase Initialize and When=Before; the attribute defaults of ResourceProcessor/CPF.cls are not derived, so an unattributed resource defaulting elsewhere is not distinguished."
+    },
+    {
+     "id": "module.processor.cpf#2",
+     "units": [
+      "P1"
+     ],
+     "text": "A CPF file can merge before or after another named phase.",
+     "cases": "When=Before vs When=After for the same phase",
+     "observation": "merge before or after the phase work",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter48/cpfmerge.rs::merges_in",
+      ".g5/Verus_verification/consolidated/iter48/cpfmerge.rs::after_is_not_before"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter48/run.json",
+      ".g5/uplift/consolidated/iter48/HANDOFF.md"
+     ],
+     "basis": "reused:ontology metadata module.processor.cpf (iter48); declaration opened",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.processor.cpf#3",
+     "units": [
+      "P1"
+     ],
+     "text": "A CPF with a custom phase merges only when that custom phase is requested.",
+     "cases": "custom-phase CPF under load vs under the custom phase",
+     "observation": "merged or not",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter48/cpfmerge.rs::merged_by",
+      ".g5/Verus_verification/consolidated/iter48/cpfmerge.rs::neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter48/run.json",
+      ".g5/uplift/consolidated/iter48/HANDOFF.md"
+     ],
+     "basis": "reused:ontology metadata module.processor.cpf; declaration opened",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.processor.cpf#4",
+     "units": [
+      "B1"
+     ],
+     "text": "A command whose phases do not include that phase, such as compile -only, does not merge it.",
+     "cases": "Initialize CPF under load vs compile -only",
+     "observation": "merged or not",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter48/cpfmerge.rs::merged_by",
+      ".g5/Verus_verification/consolidated/iter48/cpfmerge.rs::neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter48/run.json",
+      ".g5/uplift/consolidated/iter48/HANDOFF.md"
+     ],
+     "basis": "reused:ontology metadata module.processor.cpf; declaration opened",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.processor.cpf#5",
+     "units": [
+      "B2"
+     ],
+     "text": "A merge the instance rejects fails the phase.",
+     "cases": "invalid CPF under its phase vs not reached",
+     "observation": "phase status",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter48/cpfmerge.rs::ok",
+      ".g5/Verus_verification/consolidated/iter48/cpfmerge.rs::neighbors",
+      ".g5/Verus_verification/consolidated/verus/thin_surfaces.rs::cpf_status"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter48/run.json",
+      ".g5/uplift/consolidated/iter48/HANDOFF.md",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:ontology metadata module.processor.cpf and module.processor (thin_surfaces cpf_status); declarations opened",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.processor.cpf#6",
+     "units": [
+      "B2"
+     ],
+     "text": "The failure carries the merge tool message and a pointer to messages.log.",
+     "cases": "rejected merge",
+     "observation": "error text",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "Error text built in ResourceProcessor/CPF.cls::MergeCPF/DoMerge is not modeled; only the Boolean status is."
+    }
+   ]
+  },
+  "module.processor.cpf-effects": {
+   "body_sha": "2bf87978e59eee18",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "module.processor.cpf-effects#1"
+    ],
+    "B1": [
+     "module.processor.cpf-effects#2"
+    ],
+    "B2": "excluded: scope statement of the observations (one action, one refusal); the exit-zero point restates #1",
+    "B3": [
+     "module.processor.cpf-effects#3"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "module.processor.cpf-effects#1",
+     "units": [
+      "P1"
+     ],
+     "text": "The CPF child exit status and the final instance configuration are read separately from database rollback: success status does not establish the configuration, and rollback does not undo it.",
+     "cases": "same success status with resulting role present vs absent; rollback after the merge",
+     "observation": "configuration reader vs status vs database sentinel",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter2/boundaries/boundaries.rs::cpf_do_merge",
+      ".g5/Verus_verification/consolidated/iter2/boundaries/boundaries.rs::cpf_status_does_not_establish_actual_configuration",
+      ".g5/Verus_verification/consolidated/verus/thin_surfaces.rs::cpf_database_rollback_boundary"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter2/boundaries/SUMMARY.json",
+      ".g5/uplift/consolidated/iter2/boundaries/REPORT.md"
+     ],
+     "basis": "reused:ontology metadata module.processor.cpf-effects (iter2 boundaries); declarations opened",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.processor.cpf-effects#2",
+     "units": [
+      "B1"
+     ],
+     "text": "In the disposable provider a valid role-creation merge returned success and the role survived rollback while a journaled sentinel disappeared; an invalid-section merge returned error with child exit 7 and created no role.",
+     "cases": "valid vs invalid CPF, then rollback",
+     "observation": "role, status, sentinel",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter2/boundaries/boundaries.rs::cpf_native_valid_invalid_witnesses",
+      ".g5/Verus_verification/consolidated/iter2/boundaries/boundaries.rs::rollback_cpf"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter2/boundaries/SUMMARY.json",
+      ".g5/uplift/consolidated/iter2/boundaries/REPORT.md"
+     ],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "The resulting role is a provider input and rollback_cpf only clears the sentinel by definition, so the Verus witnesses restate the native observation rather than derive it."
+    },
+    {
+     "id": "module.processor.cpf-effects#3",
+     "units": [
+      "B3"
+     ],
+     "text": "Working assumption: database rollback alone gives no promise about configuration; compensating or refusing are undecided alternatives.",
+     "alias_of": "module.processor.cpf-effects#1",
+     "assessed_in": "iteration-68"
+    }
+   ]
+  },
+  "module.system-setting": {
+   "body_sha": "b55c34538ed6977d",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "module.system-setting#1",
+     "module.system-setting#2"
+    ],
+    "P2": [
+     "module.system-setting#3",
+     "module.system-setting#4"
+    ],
+    "B1": [
+     "module.system-setting#5"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "module.system-setting#1",
+     "units": [
+      "P1"
+     ],
+     "text": "The SystemSetting processor writes the named CSP setting during Compile, replacing its old value.",
+     "cases": "Compile vs other phase, old value present",
+     "observation": "setting value",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter7/inputs.rs::system_value",
+      ".g5/Verus_verification/consolidated/iter7/inputs.rs::system_target",
+      ".g5/Verus_verification/consolidated/iter7/inputs.rs::system_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter7/run.json",
+      ".g5/uplift/consolidated/iter7/INDEX.md"
+     ],
+     "basis": "reused:ontology metadata module.system-setting (iter7 inputs.rs); declaration opened",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.system-setting#2",
+     "units": [
+      "P1"
+     ],
+     "text": "Other phases, including Clean on uninstall, do not restore or delete the setting.",
+     "cases": "non-Compile phase after the value was written",
+     "observation": "setting value after uninstall",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter7/inputs.rs::system_value",
+      ".g5/Verus_verification/consolidated/iter7/inputs.rs::system_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter7/run.json",
+      ".g5/uplift/consolidated/iter7/INDEX.md"
+     ],
+     "basis": "reused:ontology metadata module.system-setting; declaration opened",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.system-setting#3",
+     "units": [
+      "P2"
+     ],
+     "text": "Only names whose first dot-separated segment is CSP are handled; the second segment is the setting key.",
+     "cases": "CSP.Key vs Other.Key vs CSP. (empty key)",
+     "observation": "whether and which key is written",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter7/inputs.rs::system_target",
+      ".g5/Verus_verification/consolidated/iter7/inputs.rs::system_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter7/run.json",
+      ".g5/uplift/consolidated/iter7/INDEX.md"
+     ],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "system_target encodes the CSP test, but no neighbor or control exercises a non-CSP or empty-key name; only CSP.T is asserted."
+    },
+    {
+     "id": "module.system-setting#4",
+     "units": [
+      "P2"
+     ],
+     "text": "The declared value is written to the current namespace mapped ^%SYS(\"CSP\", key) global.",
+     "cases": "namespace whose ^%SYS mapping differs",
+     "observation": "global written",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "Global mapping is a provider premise; no rule identifies the written global or namespace (SystemSetting.cls::OnPhase)."
+    },
+    {
+     "id": "module.system-setting#5",
+     "units": [
+      "B1"
+     ],
+     "text": "Working assumption: uninstall keeps the installed SystemSetting value.",
+     "alias_of": "module.system-setting#2",
+     "assessed_in": "iteration-68"
+    }
+   ]
+  },
+  "module.python": {
+   "body_sha": "40d11a4871ca4d2f",
+   "status": "enumerated",
+   "units": {
+    "P1": "excluded: heading sentence",
+    "B1": [
+     "module.python#1",
+     "module.python#2"
+    ],
+    "B2": [
+     "module.python#3",
+     "module.python#4"
+    ],
+    "B3": [
+     "module.python#5",
+     "module.python#6"
+    ],
+    "B4": [
+     "module.python#7"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "module.python#1",
+     "units": [
+      "B1"
+     ],
+     "text": "IPM installs requirements.txt with pip in the Reload phase.",
+     "cases": "requirements.txt present vs absent; Reload vs other phases",
+     "observation": "pip called",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter8/python.rs::requirements_called",
+      ".g5/Verus_verification/consolidated/iter8/python.rs::wheel_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter8/run.json",
+      ".g5/uplift/consolidated/iter8/INDEX.md"
+     ],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "requirements_called selects by command code, download, bypass and file existence; the Reload-phase timing in Lifecycle/Base.cls::InstallOrDownloadPythonRequirements is not modeled."
+    },
+    {
+     "id": "module.python#2",
+     "units": [
+      "B1"
+     ],
+     "text": "<PythonWheel> files are installed in Initialize.",
+     "alias_of": "module.python.explicit-wheel#1",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.python#3",
+     "units": [
+      "B2"
+     ],
+     "text": "-bypass-py-deps skips requirements processing (it does not skip explicit wheels; see finding).",
+     "alias_of": "module.python.explicit-wheel#2",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.python#4",
+     "units": [
+      "B2"
+     ],
+     "text": "-extra-pip-flags adds pip flags.",
+     "alias_of": "module.python.explicit-wheel#4",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.python#5",
+     "units": [
+      "B3"
+     ],
+     "text": "Python 3.9 or later is required.",
+     "cases": "Python 3.8 vs 3.9 runtime",
+     "observation": "install status",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "No formal rule or located check for the version gate."
+    },
+    {
+     "id": "module.python#6",
+     "units": [
+      "B3"
+     ],
+     "text": "The PipCaller and UseStandalonePip settings pick which pip runs.",
+     "cases": "settings unset vs PipCaller set vs UseStandalonePip true",
+     "observation": "pip executable invoked by Utils/Module.cls::PipInstall",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "iter41 settings.rs models storage of these settings only; no rule maps them to the pip executable chosen by PipInstall."
+    },
+    {
+     "id": "module.python#7",
+     "units": [
+      "B4"
+     ],
+     "text": "Working assumption: Clean preserves the current shared Python installation.",
+     "alias_of": "module.python.explicit-wheel#6",
+     "assessed_in": "iteration-68"
+    }
+   ],
+   "parent": {
+    "children": [
+     "module.python.explicit-wheel"
+    ],
+    "entailment": "Wheel timing, bypass and Clean behaviour alias explicit-wheel obligations; requirements timing, version gate and pip selection are the parent residue and remain open."
+   }
+  },
+  "module.python.explicit-wheel": {
+   "body_sha": "32b4ec225dc13137",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "module.python.explicit-wheel#1",
+     "module.python.explicit-wheel#2",
+     "module.python.explicit-wheel#3",
+     "module.python.explicit-wheel#4"
+    ],
+    "B1": [
+     "module.python.explicit-wheel#5"
+    ],
+    "B2": [
+     "module.python.explicit-wheel#6"
+    ],
+    "B3": [
+     "module.python.explicit-wheel#7",
+     "module.python.explicit-wheel#8"
+    ],
+    "B4": [
+     "module.python.explicit-wheel#9"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "module.python.explicit-wheel#1",
+     "units": [
+      "P1"
+     ],
+     "text": "An explicit PythonWheel resource installs its wheel during Initialize, even with -bypass-py-deps.",
+     "cases": "Initialize with bypass true vs other phase",
+     "observation": "pip called; installed",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter8/python.rs::wheel",
+      ".g5/Verus_verification/consolidated/iter8/python.rs::wheel_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter8/run.json",
+      ".g5/uplift/consolidated/iter8/INDEX.md"
+     ],
+     "basis": "reused:ontology metadata module.python.explicit-wheel (iter8 python.rs); declaration opened",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.python.explicit-wheel#2",
+     "units": [
+      "P1"
+     ],
+     "text": "-bypass-py-deps skips requirements.txt processing.",
+     "cases": "bypass true vs false with requirements present",
+     "observation": "requirements pip call",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter8/python.rs::requirements_called",
+      ".g5/Verus_verification/consolidated/iter8/python.rs::wheel_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter8/run.json",
+      ".g5/uplift/consolidated/iter8/INDEX.md"
+     ],
+     "basis": "reused:ontology metadata module.python.explicit-wheel; declaration opened",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.python.explicit-wheel#3",
+     "units": [
+      "P1"
+     ],
+     "text": "The wheel path is the module root, its declared Directory and its filename.",
+     "cases": "root, directory, name",
+     "observation": "path passed to pip",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter8/python.rs::wheel_path",
+      ".g5/Verus_verification/consolidated/iter8/python.rs::wheel_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter8/run.json",
+      ".g5/uplift/consolidated/iter8/INDEX.md"
+     ],
+     "basis": "reused:ontology metadata module.python.explicit-wheel; declaration opened",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.python.explicit-wheel#4",
+     "units": [
+      "P1"
+     ],
+     "text": "Extra pip flags are passed through the shared pip runner after empty arguments are removed.",
+     "cases": "flags with empty entries",
+     "observation": "pip argument list",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter8/python.rs::without_empty",
+      ".g5/Verus_verification/consolidated/iter8/python.rs::wheel_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter8/run.json",
+      ".g5/uplift/consolidated/iter8/INDEX.md"
+     ],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "without_empty filters empty arguments, but no rule shows those flags reaching the Utils/Module.cls::PipInstall argument list for the wheel call."
+    },
+    {
+     "id": "module.python.explicit-wheel#5",
+     "units": [
+      "B1"
+     ],
+     "text": "A missing wheel or failed pip call fails an ordinary module; IPM own module instead continues with the resource unhandled.",
+     "cases": "module zpm vs other; wheel missing; pip failure",
+     "observation": "phase status and handled flag",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter8/python.rs::wheel",
+      ".g5/Verus_verification/consolidated/iter8/python.rs::wheel_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter8/run.json",
+      ".g5/uplift/consolidated/iter8/INDEX.md"
+     ],
+     "basis": "reused:ontology metadata module.python.explicit-wheel; declaration opened (warning text is not part of the graded outcome)",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.python.explicit-wheel#6",
+     "units": [
+      "B2"
+     ],
+     "text": "Clean marks the wheel handled and leaves the shared Python installation in place.",
+     "cases": "Clean with the package installed",
+     "observation": "handled flag; package installed after Clean",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter8/python.rs::wheel",
+      ".g5/Verus_verification/consolidated/iter8/python.rs::wheel_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter8/run.json",
+      ".g5/uplift/consolidated/iter8/INDEX.md"
+     ],
+     "basis": "reused:ontology metadata module.python.explicit-wheel; declaration opened",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.python.explicit-wheel#7",
+     "units": [
+      "B3"
+     ],
+     "text": "After a failed pip call package presence is unconfirmed.",
+     "cases": "failed pip with package previously installed vs not",
+     "observation": "installed state",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter8/python.rs::wheel",
+      ".g5/Verus_verification/consolidated/iter8/python.rs::wheel_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter8/run.json",
+      ".g5/uplift/consolidated/iter8/INDEX.md"
+     ],
+     "basis": "reused:ontology metadata module.python.explicit-wheel; declaration opened",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.python.explicit-wheel#8",
+     "units": [
+      "B3"
+     ],
+     "text": "Missing-file refusal never calls pip.",
+     "cases": "wheel file missing",
+     "observation": "pip called",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter8/python.rs::wheel"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter8/run.json",
+      ".g5/uplift/consolidated/iter8/INDEX.md"
+     ],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "wheel() sets pip_called to file existence, but no neighbor assertion or control checks pip_called for a missing file."
+    },
+    {
+     "id": "module.python.explicit-wheel#9",
+     "units": [
+      "B4"
+     ],
+     "text": "Working assumption: Clean preserves the current shared Python installation.",
+     "alias_of": "module.python.explicit-wheel#6",
+     "assessed_in": "iteration-68"
+    }
+   ]
+  }
+ }
+}

@@ -1,0 +1,2305 @@
+{
+ "page": ".g5/ontology/features/developer-tools.g5.md",
+ "blocks": {
+  "devtools": {
+   "body_sha": "1cd8edddcd6d4491",
+   "status": "structural",
+   "units": {
+    "P1": "excluded: summary lead of the page; its commitments are owned by the children devtools.sync, devtools.authoring and devtools.scripting",
+    "B1": "excluded: restates the working assumption owned by devtools.generate.resources (obligation devtools.generate.resources#5)"
+   },
+   "obligations": [],
+   "reason": "Pure heading over devtools.sync, devtools.authoring and devtools.scripting plus a restated working assumption owned by devtools.generate.resources#5. No additional obligation.",
+   "parent": {
+    "children": [
+     "devtools.sync",
+     "devtools.authoring",
+     "devtools.scripting"
+    ],
+    "entailment": "No parent obligation beyond the children; nothing is credited by composition."
+   }
+  },
+  "devtools.sync": {
+   "body_sha": "a76d6b8c0738f553",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "devtools.sync#1",
+     "devtools.sync#2"
+    ],
+    "B1": [
+     "devtools.sync#3",
+     "devtools.sync#4"
+    ],
+    "B2": [
+     "devtools.sync#5",
+     "devtools.sync#6",
+     "devtools.sync#7",
+     "devtools.sync#8"
+    ],
+    "B3": [
+     "devtools.sync#9"
+    ],
+    "B4": [
+     "devtools.sync#10",
+     "devtools.sync#11"
+    ],
+    "B5": [
+     "devtools.sync#12",
+     "devtools.sync#13"
+    ],
+    "B6": [
+     "devtools.sync#14",
+     "devtools.sync#15"
+    ],
+    "B7": [
+     "devtools.sync#16"
+    ],
+    "B8": [
+     "devtools.sync#17"
+    ],
+    "B9": [
+     "devtools.sync#18"
+    ],
+    "B10": [
+     "devtools.sync#19"
+    ],
+    "B11": [
+     "devtools.sync#20"
+    ],
+    "B12": [
+     "devtools.sync#21"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "devtools.sync#1",
+     "units": [
+      "P1"
+     ],
+     "text": "sync loads a developer-mode module's owned files whose disk hash differs from the baseline (or that carry a retry mark) and leaves unchanged files alone; a module not in developer mode is refused.",
+     "cases": "changed vs unchanged vs retry-marked owned file; dev vs non-dev module",
+     "observation": "server copy and baseline after sync; command status",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      "playbook-uplift/models/verus/sync_baseline.rs::detected",
+      "playbook-uplift/models/verus/sync_baseline.rs::sync_state",
+      "playbook-uplift/models/verus/sync_baseline.rs::sync_lemma_success_effects",
+      "playbook-uplift/models/verus/sync_baseline.rs::sync_lemma_sync",
+      ".g5/Verus_verification/consolidated/iter32/sync.rs::modified",
+      ".g5/Verus_verification/consolidated/iter32/sync.rs::nothing"
+     ],
+     "evidence": [
+      "playbook-uplift/models/verus/results/sync_baseline.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter32/run.json"
+     ],
+     "basis": "new:iteration-68 (sync_baseline.rs was not linked from this block)",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "devtools.sync#2",
+     "units": [
+      "P1"
+     ],
+     "text": "sync recompiles only what is out of date.",
+     "cases": "out-of-date compiled item vs up-to-date item in the compile set",
+     "observation": "which items the compiler recompiles",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter4/sync_compile.rs::sync_compile",
+      ".g5/Verus_verification/consolidated/iter4/sync_compile.rs::compile_set_size"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter4/run_all.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "sync_compile models which resources enter the compile set (all eligible resources of the module, not only changed ones). The update-only selection comes from the compiler flag \"u\" passed by Pipeline.cls::SyncCompile to LegacyCompat::UpdateSuperclassAndCompile, a provider no model represents. No rule contrasts an up-to-date item that is skipped with an out-of-date item that is recompiled."
+    },
+    {
+     "id": "devtools.sync#3",
+     "units": [
+      "B1"
+     ],
+     "text": "Intended: sync with no module syncs every developer-mode module in dependency order (transitively).",
+     "cases": "dev module ty reached from tx only through non-dev tz",
+     "observation": "whole-namespace sync order",
+     "grade": "full",
+     "check": "refuted",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter32/sync.rs::order_neighbors",
+      ".g5/Verus_verification/consolidated/iter32/sync.rs::order"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter32/run.json"
+     ],
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "devtools.sync#4",
+     "units": [
+      "B1"
+     ],
+     "text": "As built (C:D37), only dependencies between developer-mode modules count, so a module that depends on another through a non-developer module can be synced first.",
+     "cases": "direct dev-dev edge (oy before ox) vs transitive edge through non-dev module (tx before ty)",
+     "observation": "whole-namespace sync order",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter32/sync.rs::order_neighbors",
+      ".g5/Verus_verification/consolidated/iter32/sync.rs::ready_deps",
+      ".g5/Verus_verification/consolidated/iter32/sync.rs::pass"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter32/run.json"
+     ],
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "devtools.sync#5",
+     "units": [
+      "B2"
+     ],
+     "text": "-delete removes server items whose files were deleted (and their baselines).",
+     "cases": "-delete with a deleted compilable file vs without",
+     "observation": "presence of the server document; baseline row",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter32/sync.rs::delete_flag_removes_compilable",
+      ".g5/Verus_verification/consolidated/iter32/sync.rs::delete_schedule"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter32/run.json"
+     ],
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "devtools.sync#6",
+     "units": [
+      "B2"
+     ],
+     "text": "-test runs the test classes that changed.",
+     "cases": "changed vs unchanged test class with -test",
+     "observation": "which test classes run",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      "playbook-uplift/models/verus/sync_baseline.rs::detected",
+      "playbook-uplift/models/verus/sync_baseline.rs::sync_lemma_test_marks"
+     ],
+     "evidence": [
+      "playbook-uplift/models/verus/results/sync_baseline.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "sync_baseline.rs models test-pending marks and treats the test run outcome as an input (tests_ok); no model selects which changed test classes run (Pipeline.cls::SyncRunTests via the Test processor), so a run of an unchanged class or a missed changed class satisfies every rule."
+    },
+    {
+     "id": "devtools.sync#7",
+     "units": [
+      "B2"
+     ],
+     "text": "Without -delete, sync keeps the items whose files were deleted.",
+     "cases": "deleted file with vs without -delete",
+     "observation": "server document presence",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter32/sync.rs::no_delete_without_flag",
+      ".g5/Verus_verification/consolidated/iter32/sync.rs::delete_schedule"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter32/run.json"
+     ],
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "devtools.sync#8",
+     "units": [
+      "B2"
+     ],
+     "text": "Without -delete, sync reports how many deleted files it did not apply.",
+     "cases": "deletion alone vs deletion together with an edit, without -delete",
+     "observation": "the \"N deleted file(s) detected but not applied\" line/warning",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter32/sync.rs::sync"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter32/run.json"
+     ],
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
+     "assessed_in": "iteration-68",
+     "gap": "sync.rs (like Pipeline.cls:92-97) reports the count only on the nothing-to-sync path. With an edit plus a deletion and no -delete the model's not_applied is 0, but no theorem states that neighbor, and the ontology states the report unconditionally (see finding)."
+    },
+    {
+     "id": "devtools.sync#9",
+     "units": [
+      "B3"
+     ],
+     "text": "A changed module.xml is reloaded first, so files of a newly declared resource are synced as new.",
+     "cases": "manifest adding SyncE.PKG vs unchanged manifest",
+     "observation": "new resource file loaded and counted as updated",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter32/sync.rs::manifest_change",
+      ".g5/Verus_verification/consolidated/iter32/sync.rs::delete_schedule"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter32/run.json"
+     ],
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "devtools.sync#10",
+     "units": [
+      "B4"
+     ],
+     "text": "Within the scanned folders sync finds files at any depth and any extension case, except under .git, __pycache__ and node_modules.",
+     "cases": "depth/extension-case variation vs file under a skipped directory",
+     "observation": "file loaded or untouched",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter45/scan.rs::depth_and_case_do_not_matter",
+      ".g5/Verus_verification/consolidated/iter45/scan.rs::skipped_directory_never_synced"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter45/run.json"
+     ],
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "devtools.sync#11",
+     "units": [
+      "B4"
+     ],
+     "text": "A changed file sync cannot read fails the sync, and the next sync retries it.",
+     "cases": "unreadable changed file then readable",
+     "observation": "sync status; nothing committed; later load",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter45/scan.rs::unreadable_fails_then_retries"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter45/run.json"
+     ],
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "devtools.sync#12",
+     "units": [
+      "B5"
+     ],
+     "text": "Sync applies class, include, routine, .LOC and .DFI files; Global, FileCopy and WebApplication edits are left unapplied.",
+     "cases": "supported kinds vs GBL/FileCopy/WebApplication",
+     "observation": "refreshed server value after sync",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter65/moderefresh.rs::sync_support",
+      ".g5/Verus_verification/consolidated/iter65/moderefresh.rs::sync_skips_unsupported",
+      ".g5/Verus_verification/consolidated/iter65/moderefresh.rs::refreshes"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter65/run.json"
+     ],
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "devtools.sync#13",
+     "units": [
+      "B5"
+     ],
+     "text": "Unsupported resources are named only with -verbose, which suggests reload.",
+     "cases": "-verbose vs default output for an unsupported resource with edits",
+     "observation": "console output",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "No model represents sync output. The -verbose naming and the reload suggestion in Pipeline.cls::Run are unmodeled. The contrast is a verbose vs default run over an edited FileCopy resource."
+    },
+    {
+     "id": "devtools.sync#14",
+     "units": [
+      "B6"
+     ],
+     "text": "Sync looks for a resource's files only in {SourcesRoot}/{Directory}, where Directory defaults to the file type.",
+     "cases": "declared Directory vs defaulted Directory (e.g. cls) vs file elsewhere",
+     "observation": "whether an edit is scanned",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter32/sync.rs::scanned",
+      ".g5/Verus_verification/consolidated/iter32/sync.rs::loads"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter32/run.json"
+     ],
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
+     "assessed_in": "iteration-68",
+     "gap": "Conventional layout is an input Boolean. The Directory default (file type) and a custom Directory are not derived from Document.cls::GetSyncDirectory/OnItemRelativePath."
+    },
+    {
+     "id": "devtools.sync#15",
+     "units": [
+      "B6"
+     ],
+     "text": "As built (C:D36), a module whose class files sit directly under SourcesRoot loads, but sync never sees edits or deletions and reports \"Nothing to sync\".",
+     "cases": "flat layout vs conventional layout; edit and deletion",
+     "observation": "sync nothing flag; server value; later load",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter32/sync.rs::flat_schedule",
+      ".g5/Verus_verification/consolidated/iter32/sync.rs::flat_layout_loads_but_is_not_synced"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter32/run.json"
+     ],
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "devtools.sync#16",
+     "units": [
+      "B7"
+     ],
+     "text": "load -skip-sync leaves recording the hashes to the next sync.",
+     "cases": "load with vs without -skip-sync; next sync with no baseline or an older baseline",
+     "observation": "baseline rows after load and after the next sync",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      "playbook-uplift/models/verus/sync_baseline.rs::sync_lemma_compile_effects",
+      "playbook-uplift/models/verus/sync_baseline.rs::sync_lemma_first_sync",
+      "playbook-uplift/models/verus/sync_baseline.rs::compile_dev"
+     ],
+     "evidence": [
+      "playbook-uplift/models/verus/results/sync_baseline.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "devtools.sync#17",
+     "units": [
+      "B8"
+     ],
+     "text": "A failed sync with an existing baseline keeps its retry mark; the next sync retries even after an exact-byte revert.",
+     "alias_of": "devtools.sync.retry#1",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "devtools.sync#18",
+     "units": [
+      "B9"
+     ],
+     "text": "As built (P:F-SYNC-1), a failed compile, load or reload outside sync, or load -skip-sync, can change server code without a retry mark; reverting to baseline bytes makes sync report nothing while the server keeps the edited code.",
+     "cases": "outside-sync failure then exact revert vs sync failure then revert",
+     "observation": "sync status and server copy",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      "playbook-uplift/models/verus/sync_baseline.rs::sync_witness_failed_compile_then_revert",
+      "playbook-uplift/models/verus/sync_baseline.rs::sync_witness_reload_then_revert",
+      "playbook-uplift/models/verus/sync_baseline.rs::sync_witness_skip_sync_load_then_revert"
+     ],
+     "evidence": [
+      "playbook-uplift/models/verus/results/sync_baseline.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "devtools.sync#19",
+     "units": [
+      "B10"
+     ],
+     "text": "A test failure after successful sync activation happens after the hash commit and does not undo it.",
+     "cases": "tests pass vs fail after a successful load/compile",
+     "observation": "baseline rows and command status",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      "playbook-uplift/models/verus/sync_baseline.rs::sync_state",
+      "playbook-uplift/models/verus/sync_baseline.rs::sync_ok",
+      "playbook-uplift/models/verus/sync_baseline.rs::sync_lemma_sync"
+     ],
+     "evidence": [
+      "playbook-uplift/models/verus/results/sync_baseline.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "devtools.sync#20",
+     "units": [
+      "B11"
+     ],
+     "text": "Working assumption: sync with no module name reports each failure and a summary, then returns OK.",
+     "cases": "one module fails vs all succeed in a whole-namespace sync",
+     "observation": "returned status; summary output",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "No model of Main.cls::Sync's loop status. sync_summary.rs covers only skipped-test rows. The contrast is a whole-namespace sync where one module fails: the status (OK vs error) and the per-module failure lines plus summary. Open question devtools.sync.aggregate-status-policy."
+    },
+    {
+     "id": "devtools.sync#21",
+     "units": [
+      "B12"
+     ],
+     "text": "Working assumption: files that a failed compile, load -dev or reload put on the server are re-detected by the next sync.",
+     "cases": "outside-sync failure with disk still edited vs exact revert to baseline",
+     "observation": "whether the next sync detects and reloads",
+     "grade": "full",
+     "check": "refuted",
+     "models": [
+      "playbook-uplift/models/verus/sync_baseline.rs::sync_witness_failed_compile_then_revert",
+      "playbook-uplift/models/verus/sync_baseline.rs::detected"
+     ],
+     "evidence": [
+      "playbook-uplift/models/verus/results/sync_baseline.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68"
+    }
+   ],
+   "parent": {
+    "children": [
+     "devtools.sync.retry",
+     "devtools.sync.compile-after-resolve",
+     "devtools.sync.test-stop (concepts/testing-policy)",
+     "devtools.sync.skipped-tracking",
+     "devtools.sync.test-paths"
+    ],
+    "entailment": "The parent lead and bullets carry their own obligations and are graded directly. Only B8 restates a child (devtools.sync.retry#1). No parent obligation is credited by composition."
+   }
+  },
+  "devtools.sync.retry": {
+   "body_sha": "956fadbb933a4e5d",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "devtools.sync.retry#1"
+    ],
+    "P2": [
+     "devtools.sync.retry#2"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "devtools.sync.retry#1",
+     "units": [
+      "P1"
+     ],
+     "text": "If a file fails to sync, the next sync tries it again; with an existing baseline SyncFailed keeps it selected even after an exact-byte revert.",
+     "cases": "failed sync then exact revert vs no failure; with vs without baseline",
+     "observation": "detection on the next sync; server copy after it",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      "playbook-uplift/models/verus/sync_baseline.rs::sync_witness_failed_sync_is_retried",
+      "playbook-uplift/models/verus/sync_baseline.rs::sync_lemma_failed_sync_effects",
+      "playbook-uplift/models/verus/sync_baseline.rs::fail_one"
+     ],
+     "evidence": [
+      "playbook-uplift/models/verus/results/sync_baseline.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-68 (block metadata names no model; control sync-ignores-retry-marks killed)",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "devtools.sync.retry#2",
+     "units": [
+      "P2"
+     ],
+     "text": "A compile, load or reload outside sync follows the outside-sync condition and may not set a retry mark.",
+     "alias_of": "devtools.sync#18",
+     "assessed_in": "iteration-68"
+    }
+   ]
+  },
+  "devtools.sync.compile-after-resolve": {
+   "body_sha": "b56194d0bba02e60",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "devtools.sync.compile-after-resolve#1"
+    ],
+    "B1": [
+     "devtools.sync.compile-after-resolve#2"
+    ],
+    "B2": [
+     "devtools.sync.compile-after-resolve#3"
+    ],
+    "B3": [
+     "devtools.sync.compile-after-resolve#4"
+    ],
+    "B4": [
+     "devtools.sync.compile-after-resolve#5"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "devtools.sync.compile-after-resolve#1",
+     "units": [
+      "P1"
+     ],
+     "text": "After loading changed files sync recompiles the module's compilable resources; a resource whose contents cannot be listed is left out with a warning and sync still succeeds.",
+     "cases": "one resource fails ResolveChildren vs all resolve",
+     "observation": "compile set; status; warning",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter4/sync_compile.rs::sync_compile",
+      ".g5/Verus_verification/consolidated/iter4/sync_compile.rs::sync_compile_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter4/run_all.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "devtools.sync.compile-after-resolve#2",
+     "units": [
+      "B1"
+     ],
+     "text": "The other resources are still compiled; if no resource is left to compile, no compile runs.",
+     "cases": "survivor present vs no survivor",
+     "observation": "compile called; status",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter4/sync_compile.rs::sync_compile",
+      ".g5/Verus_verification/consolidated/iter4/sync_compile.rs::sync_compile_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter4/run_all.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "devtools.sync.compile-after-resolve#3",
+     "units": [
+      "B2"
+     ],
+     "text": "Classes in the left-out resource keep their old compiled code; a changed file was already compiled when loaded; its hash is recorded so the next sync does not retry it, and only dependents stay stale.",
+     "cases": "left-out resource with changed file vs survivor",
+     "observation": "compiled code of left-out classes/dependents; baseline; next-sync detection",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter4/sync_compile.rs::sync_compile",
+      "playbook-uplift/models/verus/sync_baseline.rs::commit_one"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter4/run_all.json",
+      "playbook-uplift/models/verus/results/sync_baseline.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
+     "assessed_in": "iteration-68",
+     "gap": "Neither model holds compiled-code state, so the stale dependents and old code of the left-out resource are not represented. The hash commit after a warned but successful compile follows sync_baseline commit_one only if sync_compile.ok maps to its ok input, and no stated composition connects the two models."
+    },
+    {
+     "id": "devtools.sync.compile-after-resolve#4",
+     "units": [
+      "B3"
+     ],
+     "text": "The warning is always printed; a whole-namespace sync keeps it in its final summary and a single-module sync does not.",
+     "cases": "summary active (whole-namespace) vs inactive (named module)",
+     "observation": "printed and retained warnings",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter4/sync_compile.rs::sync_compile",
+      ".g5/Verus_verification/consolidated/iter26/sync_summary.rs::begins",
+      ".g5/Verus_verification/consolidated/iter26/sync_summary.rs::tracking_neighbor"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter4/run_all.json",
+      ".g5/uplift/consolidated/iter26/run.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata plus new:iteration-68 link to sync_summary.rs for which sync activates the summary",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "devtools.sync.compile-after-resolve#5",
+     "units": [
+      "B4"
+     ],
+     "text": "Only already-defined class files and all non-class files are recompiled; resources compiled from a deployed project are skipped without a warning.",
+     "cases": "undefined class vs routine vs CompileFromProject resource",
+     "observation": "compile called; warning count",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter4/sync_compile.rs::sync_compile_neighbors",
+      ".g5/Verus_verification/consolidated/iter4/sync_compile.rs::kept",
+      ".g5/Verus_verification/consolidated/iter4/sync_compile.rs::eligible"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter4/run_all.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
+     "assessed_in": "iteration-68"
+    }
+   ]
+  },
+  "devtools.sync.empty-hash": {
+   "body_sha": "e185a0eead163ce4",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "devtools.sync.empty-hash#1",
+     "devtools.sync.empty-hash#2"
+    ],
+    "P2": [
+     "devtools.sync.empty-hash#3"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "devtools.sync.empty-hash#1",
+     "units": [
+      "P1"
+     ],
+     "text": "Stamping a supplied empty hash fails before looking up or saving a baseline row; an existing row keeps its hash.",
+     "cases": "empty vs nonempty supplied hash",
+     "observation": "status; stored hash",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter7/inputs.rs::stamp",
+      ".g5/Verus_verification/consolidated/iter7/inputs.rs::Stamp"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter7/run.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "devtools.sync.empty-hash#2",
+     "units": [
+      "P1"
+     ],
+     "text": "A nonempty hash is saved only after the row opens successfully, and a save failure is returned.",
+     "cases": "open fails vs open ok/save fails vs both ok",
+     "observation": "status; stored hash",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter7/inputs.rs::stamp"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter7/run.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
+     "assessed_in": "iteration-68",
+     "gap": "The stamp spec encodes open_ok, but no theorem, neighbor assertion or control exercises open_ok=false (OpenByPath failing). The save-failure and success neighbors are asserted."
+    },
+    {
+     "id": "devtools.sync.empty-hash#3",
+     "units": [
+      "P2"
+     ],
+     "text": "StampModule computes hashes first and skips empty computed values, unlike a direct call that returns an error for an empty hash.",
+     "cases": "StampModule with an empty computed hash vs direct helper call with empty hash",
+     "observation": "StampModule status and rows",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "inputs.rs::stamp models only the helper. The project-map link StampModule -> inputs.rs::stamp does not cover the skip, and sync_baseline stamp_all assumes every file gets its disk hash. Contrast: StampModule over a file whose computed hash is empty returns OK and leaves its row untouched."
+    }
+   ]
+  },
+  "devtools.sync.test-paths": {
+   "body_sha": "1ea05f00b8bd02fd",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "devtools.sync.test-paths#1"
+    ],
+    "B1": [
+     "devtools.sync.test-paths#2"
+    ],
+    "B2": [
+     "devtools.sync.test-paths#3"
+    ],
+    "B3": [
+     "devtools.sync.test-paths#4"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "devtools.sync.test-paths#1",
+     "units": [
+      "P1"
+     ],
+     "text": "Sync turns a test file path into a class name by removing the resource folder as plain leading text, without checking the path is inside it.",
+     "cases": "inside vs outside vs sibling-prefix path",
+     "observation": "relative package path",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter4/repairs4.rs::package_rel_path",
+      ".g5/Verus_verification/consolidated/iter4/repairs4.rs::has_prefix",
+      ".g5/Verus_verification/consolidated/iter4/repairs4.rs::rel_path_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter4/run_all.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "devtools.sync.test-paths#2",
+     "units": [
+      "B1"
+     ],
+     "text": "As built, a path outside the folder keeps all its folders in the class name (the method comment promises \"\").",
+     "cases": "outside path",
+     "observation": "class name (rendered from the relative path; slash-to-dot rendering is native-qualified)",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter4/repairs4.rs::rel_path_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter4/run_all.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "devtools.sync.test-paths#3",
+     "units": [
+      "B2"
+     ],
+     "text": "A sibling folder starting with the same text is treated as inside.",
+     "cases": "tests/unit vs tests/unitX",
+     "observation": "class name",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter4/repairs4.rs::rel_path_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter4/run_all.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "devtools.sync.test-paths#4",
+     "units": [
+      "B3"
+     ],
+     "text": "Files that are not .cls give \"\". (Reach of outside paths through sync routing is not traced.)",
+     "cases": ".cls vs non-.cls path",
+     "observation": "returned class name",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "package_rel_path has no extension test. The .cls check in ResourceProcessor/Test.cls::RelPathToClassName is unmodeled. Contrast: a .mac path under the folder returns \"\" and the .cls neighbor returns a name."
+    }
+   ]
+  },
+  "devtools.sync.skipped-tracking": {
+   "body_sha": "6f35162dc17e2719",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "devtools.sync.skipped-tracking#1",
+     "devtools.sync.skipped-tracking#2"
+    ],
+    "B1": [
+     "devtools.sync.skipped-tracking#3"
+    ],
+    "B2": [
+     "devtools.sync.skipped-tracking#4",
+     "devtools.sync.skipped-tracking#5"
+    ],
+    "B3": [
+     "devtools.sync.skipped-tracking#6"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "devtools.sync.skipped-tracking#1",
+     "units": [
+      "P1"
+     ],
+     "text": "Summary recording is enabled around a whole-namespace sync with developer modules to check; a named-module sync skips verify-only tests but does not start the recorder.",
+     "cases": "no module argument with modules vs named module vs no modules",
+     "observation": "recorder active; test callback selected",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter26/sync_summary.rs::begins",
+      ".g5/Verus_verification/consolidated/iter26/sync_summary.rs::start",
+      ".g5/Verus_verification/consolidated/iter26/sync_summary.rs::tracking_neighbor",
+      ".g5/Verus_verification/consolidated/iter26/sync_summary.rs::callback_selected",
+      ".g5/Verus_verification/consolidated/iter26/sync_summary.rs::caller_neighbor"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter26/run.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "devtools.sync.skipped-tracking#2",
+     "units": [
+      "P1"
+     ],
+     "text": "Summary recording is local to the current process.",
+     "cases": "recording process vs another process",
+     "observation": "visibility of records",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "The Store in sync_summary.rs has no process dimension. Contrast: a second job reading General/Sync/Summary storage during an active recording sees nothing."
+    },
+    {
+     "id": "devtools.sync.skipped-tracking#3",
+     "units": [
+      "B1"
+     ],
+     "text": "While inactive AddSkipped writes nothing; while active it increments the module sequence and stores the class; modules keep own counters; repeats stay separate.",
+     "cases": "inactive vs active; two modules; duplicate class",
+     "observation": "stored rows and counts",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter26/sync_summary.rs::add_skipped",
+      ".g5/Verus_verification/consolidated/iter26/sync_summary.rs::inactive_neighbor",
+      ".g5/Verus_verification/consolidated/iter26/sync_summary.rs::append_neighbor",
+      ".g5/Verus_verification/consolidated/iter26/sync_summary.rs::duplicate_neighbor"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter26/run.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "devtools.sync.skipped-tracking#4",
+     "units": [
+      "B2"
+     ],
+     "text": "Reports follow the supplied module order and stored sequence and preserve records; Begin and End clear; the whole-namespace caller ends recording after reporting.",
+     "cases": "forward vs reverse module order; begin/end",
+     "observation": "report rows; store after end",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter26/sync_summary.rs::report",
+      ".g5/Verus_verification/consolidated/iter26/sync_summary.rs::report_neighbor",
+      ".g5/Verus_verification/consolidated/iter26/sync_summary.rs::clear_neighbor",
+      ".g5/Verus_verification/consolidated/iter26/sync_summary.rs::caller_neighbor"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter26/run.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "devtools.sync.skipped-tracking#5",
+     "units": [
+      "B2"
+     ],
+     "text": "The whole-namespace source also clears recording if the loop throws.",
+     "cases": "loop throws vs completes",
+     "observation": "recorder state after Main.Sync",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "The catch branch of Main.cls::Sync is source-inspected only. Contrast: a module sync that throws inside the whole-namespace loop leaves the recorder inactive and empty."
+    },
+    {
+     "id": "devtools.sync.skipped-tracking#6",
+     "units": [
+      "B3"
+     ],
+     "text": "In the checked directory workflow a changed verify-only class is reloaded without its test callback; whole-namespace sync reports it then clears; named sync has no aggregate report.",
+     "cases": "whole-namespace vs named sync over a changed verify-only class",
+     "observation": "reload of the class; callback; report rows; store after",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter26/sync_summary.rs::caller_neighbor",
+      ".g5/Verus_verification/consolidated/iter26/sync_summary.rs::callback_selected",
+      "playbook-uplift/models/verus/sync_baseline.rs::sync_lemma_success_effects"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter26/run.json",
+      "playbook-uplift/models/verus/results/sync_baseline.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata plus new:iteration-68 reload via sync_baseline",
+     "assessed_in": "iteration-68"
+    }
+   ]
+  },
+  "devtools.authoring": {
+   "body_sha": "bc2c6df9f21c442b",
+   "status": "enumerated",
+   "units": {
+    "P1": "excluded: list heading for the authoring commands",
+    "B1": [
+     "devtools.authoring#1"
+    ],
+    "B2": "excluded: navigation link to devtools.authoring.generate",
+    "B3": [
+     "devtools.authoring#2"
+    ],
+    "B4": [
+     "devtools.authoring#3"
+    ],
+    "B5": [
+     "devtools.authoring#4",
+     "devtools.authoring#5"
+    ],
+    "B6": [
+     "devtools.authoring#6"
+    ],
+    "B7": [
+     "devtools.authoring#7"
+    ],
+    "B8": [
+     "devtools.authoring#8"
+    ],
+    "B9": [
+     "devtools.authoring#9"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "devtools.authoring#1",
+     "units": [
+      "B1"
+     ],
+     "text": "generate writes a module.xml, asking for details including a tests folder.",
+     "alias_of": "devtools.authoring.generate#2",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "devtools.authoring#2",
+     "units": [
+      "B3"
+     ],
+     "text": "init sets up a namespace for IPM and its editor extensions.",
+     "alias_of": "devtools.init#2",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "devtools.authoring#3",
+     "units": [
+      "B4",
+      "B5"
+     ],
+     "text": "arrange writes the manifest's resources in name order inside a <Resources> element (standard order).",
+     "cases": "resources stored out of name order",
+     "observation": "resource order in the rewritten document",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "comments.rs::arrange models only ok/rewritten and comment survival. No rule orders resources. Contrast: a manifest with resources B, A rewritten as A, B inside <Resources> (Main.cls::Arrange / StudioDocument export)."
+    },
+    {
+     "id": "devtools.authoring#4",
+     "units": [
+      "B5"
+     ],
+     "text": "arrange rewrites the stored <Name>.ZPM document, not module.xml on disk.",
+     "cases": "stored document vs module.xml file",
+     "observation": "contents of each after arrange",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "No model separates the stored document from the file. Contrast: after arrange the .ZPM document changes and module.xml bytes do not."
+    },
+    {
+     "id": "devtools.authoring#5",
+     "units": [
+      "B5"
+     ],
+     "text": "arrange adds fields such as LastUpdated and dependency DisplayName.",
+     "cases": "manifest without those fields",
+     "observation": "fields present after arrange",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "Unmodeled. Contrast: those fields are absent before and present after a successful arrange."
+    },
+    {
+     "id": "devtools.authoring#6",
+     "units": [
+      "B6"
+     ],
+     "text": "As built (C:D49), arrange works only with a source-control class; otherwise it fails with \"Not logged into source control system\" and changes nothing.",
+     "cases": "source-control class present vs absent",
+     "observation": "status; stored document unchanged",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter44/comments.rs::arrange",
+      ".g5/Verus_verification/consolidated/iter44/comments.rs::without_source_control_nothing_changes"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter44/run.json"
+     ],
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "devtools.authoring#7",
+     "units": [
+      "B7"
+     ],
+     "text": "Comments before Name and inside dependencies are kept; as built (C:D50) comments before each resource and the module's last comment are dropped.",
+     "cases": "comment anchored at Name/dependency vs resource vs trailing",
+     "observation": "comment present after arrange",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter44/comments.rs::leading_and_dependency_comments_kept",
+      ".g5/Verus_verification/consolidated/iter44/comments.rs::resource_comments_dropped",
+      ".g5/Verus_verification/consolidated/iter44/comments.rs::trailing_comment_dropped"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter44/run.json"
+     ],
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "devtools.authoring#8",
+     "units": [
+      "B8"
+     ],
+     "text": "dependency-analyzer finds references to items outside the module and its dependencies.",
+     "cases": "reference inside module/dependency vs outside",
+     "observation": "reported references",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "No model of Main.cls::RunDependencyAnalyzer or the analyzer. Contrast: a class referencing an item in a declared dependency (not reported) vs in an undeclared module (reported)."
+    },
+    {
+     "id": "devtools.authoring#9",
+     "units": [
+      "B9"
+     ],
+     "text": "module-version sets or bumps a version and refuses a downgrade unless -force.",
+     "alias_of": "devtools.authoring.module-version#3",
+     "assessed_in": "iteration-68"
+    }
+   ],
+   "parent": {
+    "children": [
+     "devtools.authoring.generate",
+     "devtools.authoring.import",
+     "devtools.authoring.module-version",
+     "devtools.init",
+     "devtools.generate.resources",
+     "devtools.generate.webapps",
+     "devtools.generate.cors"
+    ],
+    "entailment": "The generate, init and module-version bullets alias child obligations. The arrange and dependency-analyzer bullets have no child owner and are graded here. No composition credit."
+   }
+  },
+  "devtools.authoring.generate": {
+   "body_sha": "55fa7ebb9f77dccd",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "devtools.authoring.generate#1",
+     "devtools.authoring.generate#2",
+     "devtools.authoring.generate#3",
+     "devtools.authoring.generate#4",
+     "devtools.authoring.generate#5"
+    ],
+    "B1": [
+     "devtools.authoring.generate#6"
+    ],
+    "B2": [
+     "devtools.authoring.generate#7",
+     "devtools.authoring.generate#8",
+     "devtools.authoring.generate#9"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "devtools.authoring.generate#1",
+     "units": [
+      "P1"
+     ],
+     "text": "generate -t <dir> writes a fixed example manifest without asking questions.",
+     "cases": "-t vs interactive",
+     "observation": "written manifest fields",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "generator.rs has no template rule. GenerateTemplate/SetTemplateProps (Name template, 1.0.0, License MIT, current-year CopyrightDate, dependency) are seen only natively (iter53 t1)."
+    },
+    {
+     "id": "devtools.authoring.generate#2",
+     "units": [
+      "P1"
+     ],
+     "text": "Interactive generate writes the answers it is given.",
+     "cases": "each answered field (name, version, description, keywords, author fields)",
+     "observation": "manifest field values",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter53/generator.rs::stored_author",
+      ".g5/Verus_verification/consolidated/iter53/generator.rs::set_author_props"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter53/run.json"
+     ],
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
+     "assessed_in": "iteration-68",
+     "gap": "Only the author License/CopyrightDate routing is modeled. Name, version, description, keywords and the other author answers flow through NewTemplate/SetAuthorProps unmodeled."
+    },
+    {
+     "id": "devtools.authoring.generate#3",
+     "units": [
+      "P1"
+     ],
+     "text": "Interactive generate writes source resources grouped by package.",
+     "alias_of": "devtools.generate.resources#7",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "devtools.authoring.generate#4",
+     "units": [
+      "P1"
+     ],
+     "text": "Interactive generate writes test classes as UnitTest entries.",
+     "alias_of": "devtools.generate.resources#2",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "devtools.authoring.generate#5",
+     "units": [
+      "P1"
+     ],
+     "text": "Interactive generate writes the dependencies entered as name:version.",
+     "cases": "dependency answer g53dep:1.x vs none",
+     "observation": "ModuleReference name and version",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "ModuleTemplate.cls::AddDependant is unmodeled (native iter53 t2 only). Contrast: answer name:version yields that ModuleReference, and a malformed answer yields none or an error."
+    },
+    {
+     "id": "devtools.authoring.generate#6",
+     "units": [
+      "B1"
+     ],
+     "text": "As built (C:D54), with -author the License and Copyright Date answers are stored in each other's fields.",
+     "cases": "license != copyright answers",
+     "observation": "stored License and CopyrightDate",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter53/generator.rs::author_swapped",
+      ".g5/Verus_verification/consolidated/iter53/generator.rs::stored_author"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter53/run.json"
+     ],
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "devtools.authoring.generate#7",
+     "units": [
+      "B2"
+     ],
+     "text": "-export exports classes matching the mask prefix, excluding those under the ignore prefix, into the source folder.",
+     "cases": "class under mask vs under ignore vs outside mask",
+     "observation": "exported or not",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter53/generator.rs::exported",
+      ".g5/Verus_verification/consolidated/iter53/generator.rs::export_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter53/run.json"
+     ],
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "devtools.authoring.generate#8",
+     "units": [
+      "B2"
+     ],
+     "text": "As built (C:D55), routines ignore the ignore list and match when the mask appears anywhere in their name.",
+     "cases": "ignored routine; routine with mask as infix",
+     "observation": "exported or not",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter53/generator.rs::exported",
+      ".g5/Verus_verification/consolidated/iter53/generator.rs::export_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter53/run.json"
+     ],
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "devtools.authoring.generate#9",
+     "units": [
+      "B2"
+     ],
+     "text": "Exported items are exported first and then become resources of the generated manifest.",
+     "cases": "exported routine vs not exported",
+     "observation": "resource present in manifest",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "generator.rs stops at the export predicate. The ExportResources -> ReadResources/ReadItems path that turns exported files into resources is not modeled, and the \"become resources\" consequence of C:D55 is native only (t3)."
+    }
+   ]
+  },
+  "devtools.authoring.import": {
+   "body_sha": "d6ae20963c4dde5e",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "devtools.authoring.import#1"
+    ],
+    "B1": [
+     "devtools.authoring.import#2",
+     "devtools.authoring.import#3"
+    ],
+    "B2": [
+     "devtools.authoring.import#4",
+     "devtools.authoring.import#5"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "devtools.authoring.import#1",
+     "units": [
+      "P1"
+     ],
+     "text": "import loads class files and compiles them; a directory is searched recursively unless -norecurse; -nocompile loads without compiling.",
+     "cases": "subdirectory item with/without -norecurse; -nocompile",
+     "observation": "defined / compiled",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter49/importcmd.rs::norecurse_skips_subdirectories",
+      ".g5/Verus_verification/consolidated/iter49/importcmd.rs::nocompile_defines_only",
+      ".g5/Verus_verification/consolidated/iter49/importcmd.rs::selected"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter49/run.json"
+     ],
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "devtools.authoring.import#2",
+     "units": [
+      "B1"
+     ],
+     "text": "A class that fails to compile fails the command with \"Error in import\" while the other classes stay loaded and compiled.",
+     "cases": "one bad and one good class",
+     "observation": "status; defined/compiled per class",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter49/importcmd.rs::one_bad_item_fails_command_but_keeps_good"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter49/run.json"
+     ],
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "devtools.authoring.import#3",
+     "units": [
+      "B1"
+     ],
+     "text": "A missing path fails before anything loads.",
+     "cases": "missing vs existing path",
+     "observation": "status; items defined; source-control actions",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter49/importcmd.rs::missing_path_fails",
+      ".g5/Verus_verification/consolidated/iter49/importcmd.rs::selected"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter49/run.json"
+     ],
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "devtools.authoring.import#4",
+     "units": [
+      "B2"
+     ],
+     "text": "With a source-control class, an item it already tracks is re-exported and a new item is added.",
+     "cases": "tracked vs new item",
+     "observation": "AfterUserAction save vs add",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter49/importcmd.rs::source_control_routing",
+      ".g5/Verus_verification/consolidated/iter49/importcmd.rs::after_save",
+      ".g5/Verus_verification/consolidated/iter49/importcmd.rs::added"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter49/run.json"
+     ],
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "devtools.authoring.import#5",
+     "units": [
+      "B2"
+     ],
+     "text": "IPM first tells source control which items will load, then loads them, then saves each through it.",
+     "cases": "notification before load vs after",
+     "observation": "order of source-control calls",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter49/importcmd.rs::user_actions",
+      ".g5/Verus_verification/consolidated/iter49/importcmd.rs::loaded_line"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter49/run.json"
+     ],
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
+     "assessed_in": "iteration-68",
+     "gap": "The model counts one user action and states save/add outcomes but has no sequence, so any order of notify, load and save satisfies it."
+    }
+   ]
+  },
+  "devtools.authoring.module-version": {
+   "body_sha": "4c97be3263a81477",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "devtools.authoring.module-version#1"
+    ],
+    "B1": [
+     "devtools.authoring.module-version#2"
+    ],
+    "B2": [
+     "devtools.authoring.module-version#3",
+     "devtools.authoring.module-version#4"
+    ],
+    "B3": [
+     "devtools.authoring.module-version#5"
+    ],
+    "B4": [
+     "devtools.authoring.module-version#6"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "devtools.authoring.module-version#1",
+     "units": [
+      "P1"
+     ],
+     "text": "module-version changes the version in the stored manifest and the installed record together, or changes neither.",
+     "cases": "success vs failure of checkout, save or manifest rewrite after the record is set",
+     "observation": "record and stored manifest versions",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/owners.rs::module_version",
+      ".g5/Verus_verification/consolidated/verus/owners.rs::update_version"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/consolidated/verus/owners-results.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
+     "assessed_in": "iteration-68",
+     "gap": "All-or-nothing is assumed by the spec (state s unless ok). No theorem or control exercises a failure after the record save (Main.cls:4011-4099 transaction rollback), and the rollback was not run natively. Contrast: UpdateVersion fails after the record save, and both versions must read the old value."
+    },
+    {
+     "id": "devtools.authoring.module-version#2",
+     "units": [
+      "B1"
+     ],
+     "text": "major, minor and patch bump that part and reset later parts; -prerelease and -build then set those parts.",
+     "cases": "each bump kind; with pre/build",
+     "observation": "resulting version",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/owners.rs::bump",
+      ".g5/Verus_verification/consolidated/verus/owners.rs::with_pre",
+      ".g5/Verus_verification/consolidated/verus/owners.rs::with_build",
+      ".g5/Verus_verification/consolidated/verus/owners.rs::bump_preserves_unselected_core"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/consolidated/verus/owners-results.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "devtools.authoring.module-version#3",
+     "units": [
+      "B2"
+     ],
+     "text": "A version that is not higher than the current one is refused unless -force is given.",
+     "cases": "not-higher with/without -force",
+     "observation": "status; versions",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/owners.rs::module_version",
+      ".g5/Verus_verification/consolidated/verus/owners.rs::no_force_same_version_refused",
+      ".g5/Verus_verification/consolidated/verus/owners.rs::forced_current_is_noop"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/consolidated/verus/owners-results.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "devtools.authoring.module-version#4",
+     "units": [
+      "B2"
+     ],
+     "text": "Intended: a request for the current version reports it unchanged; as built it is refused (C:D13).",
+     "cases": "request for current version without -force",
+     "observation": "status",
+     "grade": "full",
+     "check": "refuted",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/owners.rs::no_force_same_version_refused"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/consolidated/verus/owners-results.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "devtools.authoring.module-version#5",
+     "units": [
+      "B3"
+     ],
+     "text": "The module.xml file the module was loaded from is not changed (whether it should be is open).",
+     "cases": "successful bump",
+     "observation": "disk manifest version",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/owners.rs::stored_version_does_not_write_disk",
+      ".g5/Verus_verification/consolidated/verus/owners.rs::witnessed_owners_distinctions"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/consolidated/verus/owners-results.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "devtools.authoring.module-version#6",
+     "units": [
+      "B4"
+     ],
+     "text": "Working assumption: the command edits the namespace copy and source-control hooks, when present, take it from there.",
+     "cases": "namespace with vs without source-control class",
+     "observation": "source-control receives the edited document",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/owners.rs::update_version"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/consolidated/verus/owners-results.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
+     "assessed_in": "iteration-68",
+     "gap": "The disk-unchanged half is proved (see #5). The source-control handoff (StudioDocument/Module.cls::UpdateVersion through the extension) is only an error input (checkout), so no rule shows the hook receiving the new version."
+    }
+   ]
+  },
+  "devtools.generate.resources": {
+   "body_sha": "8cb8214ef5a8176e",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "devtools.generate.resources#1",
+     "devtools.generate.resources#2"
+    ],
+    "B1": [
+     "devtools.generate.resources#3",
+     "devtools.generate.resources#4"
+    ],
+    "B2": [
+     "devtools.generate.resources#5"
+    ],
+    "B3": [
+     "devtools.generate.resources#7",
+     "devtools.generate.resources#8"
+    ],
+    "B4": [
+     "devtools.generate.resources#6"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "devtools.generate.resources#1",
+     "units": [
+      "P1"
+     ],
+     "text": "generate keeps classes under the chosen tests folder out of application resources, even when that folder is inside the source folder.",
+     "cases": "class under tests folder vs elsewhere",
+     "observation": "membership in application items",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter6/workflows.rs::application_item",
+      ".g5/Verus_verification/consolidated/iter6/workflows.rs::below",
+      ".g5/Verus_verification/consolidated/iter6/workflows.rs::neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter6/run.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "devtools.generate.resources#2",
+     "units": [
+      "P1"
+     ],
+     "text": "Those tests are written as UnitTest entries with Phase=\"test\", their package and test directory.",
+     "cases": "test classes in one vs several directories/packages",
+     "observation": "UnitTest Name, Package, Phase attributes",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter6/workflows.rs::test_item"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter6/run.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
+     "assessed_in": "iteration-68",
+     "gap": "test_item is membership only. AddPackages' emitted Name (\"/\"_tests_dir_\"/\"), ProcessorClass UnitTest, Package (deepest shared package per directory and top-level package) and Phase=\"test\" are not modeled. Leftover test items (non-class files, package-less classes) are silently dropped by ReadResources (see finding)."
+    },
+    {
+     "id": "devtools.generate.resources#3",
+     "units": [
+      "B1"
+     ],
+     "text": "A missing source folder fails before resources are added.",
+     "cases": "source folder exists vs missing",
+     "observation": "status; resources/file written",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter6/workflows.rs::template_status"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter6/run.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
+     "assessed_in": "iteration-68",
+     "gap": "template_status gives only the status. No observation shows that TemplateResources stays empty and no module.xml is saved (ReadFolder error thrown from ReadItems before AddPackages)."
+    },
+    {
+     "id": "devtools.generate.resources#4",
+     "units": [
+      "B1"
+     ],
+     "text": "A missing tests folder adds no tests.",
+     "cases": "tests folder exists vs missing",
+     "observation": "UnitTest membership",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter6/workflows.rs::test_item",
+      ".g5/Verus_verification/consolidated/iter6/workflows.rs::neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter6/run.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "devtools.generate.resources#5",
+     "units": [
+      "B2"
+     ],
+     "text": "Files with unsupported extensions or source that cannot load are skipped (whether invalid source should fail is open).",
+     "cases": "loadable .cls vs unloadable vs .txt",
+     "observation": "membership in resources",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter6/workflows.rs::application_item"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter6/run.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
+     "assessed_in": "iteration-68",
+     "gap": "loaded and supported_ext are provider inputs encoded in application_item, but no theorem, neighbor or control exercises loaded=false or supported_ext=false. Open question devtools.generate.invalid-source."
+    },
+    {
+     "id": "devtools.generate.resources#6",
+     "units": [
+      "B4"
+     ],
+     "text": "Working assumption: generation skips an invalid source file and may produce a manifest without it.",
+     "alias_of": "devtools.generate.resources#5",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "devtools.generate.resources#7",
+     "units": [
+      "B3"
+     ],
+     "text": "Classes are grouped into one resource per (directory, top-level package); classes with different top-level packages or in different directories get separate resources.",
+     "cases": "same dir + same top-level; same dir + different top-level; different dirs + same top-level",
+     "observation": "number and identity of .PKG resources",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter53/generator.rs::shared_resource",
+      ".g5/Verus_verification/consolidated/iter53/generator.rs::grouping_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter53/run.json"
+     ],
+     "basis": "reused:.g5/uplift/consolidated/iter53/HANDOFF.md (claim narrowed)",
+     "assessed_in": "iteration-68",
+     "gap": "grouping_neighbors proves only shared_resource(1,1) and !shared_resource(1,2), a Boolean on top-level identity. The directory key of GroupClasses (\"/\"_Directory) is absent, so the model would merge same-top-level classes from different directories, which the product splits (pkg:<dir>:<pkg>, with a Directory attribute). Contrast: G.A.X under cls/ and G.B.Y under src2/ give two resources."
+    },
+    {
+     "id": "devtools.generate.resources#8",
+     "units": [
+      "B3"
+     ],
+     "text": "The emitted group resource is named by the package the grouped classes share (deepest shared package under the top-level package, e.g. G53.A.X + G53.B.Y -> G53.PKG, but G53.A.X + G53.A.Y -> G53.A.PKG).",
+     "cases": "classes sharing only the top level vs sharing a deeper package vs a single class",
+     "observation": "resource Name <package>.PKG",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-68 (withdraws iteration53 grouping credit for the name)",
+     "assessed_in": "iteration-68",
+     "gap": "No model computes the name. SharedPackage (longest common dotted prefix) and its seeding by the first class's full package are unmodeled. The replay field t2.pkgG53A is just the negation of shared_resource(1,1) and does not distinguish G53.PKG from G53.A.PKG. Contrast: G53.A.X + G53.A.Y must yield G53.A.PKG and not G53.PKG, and a lone class A.B.C yields A.B.PKG. The ontology text \"shared top-level package\" also misstates the deeper case (see finding)."
+    }
+   ]
+  },
+  "devtools.generate.webapps": {
+   "body_sha": "436061778fe4c93f",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "devtools.generate.webapps#1",
+     "devtools.generate.webapps#2",
+     "devtools.generate.webapps#3"
+    ],
+    "B1": [
+     "devtools.generate.webapps#4"
+    ],
+    "B2": [
+     "devtools.generate.webapps#5"
+    ],
+    "B3": [
+     "devtools.generate.webapps#6"
+    ],
+    "B4": "excluded: evidence-scope disclosure (missing-app fallback, wildcard discovery, CORS and nondefault provider properties retain only source evidence); no behavioral promise beyond P1-B3"
+   },
+   "obligations": [
+    {
+     "id": "devtools.generate.webapps#1",
+     "units": [
+      "P1"
+     ],
+     "text": "Generated web-app resources always write their authentication mode.",
+     "cases": "auth in provider props vs default",
+     "observation": "Authentication key present",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter8/webapps.rs::generated_props",
+      ".g5/Verus_verification/consolidated/iter8/webapps.rs::generated_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter8/run.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "devtools.generate.webapps#2",
+     "units": [
+      "P1"
+     ],
+     "text": "Values supplied by the JWT/CORS prompts are kept ahead of provider values.",
+     "cases": "prompt value vs differing provider value, for JWT and for CORS",
+     "observation": "written property value",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter8/webapps.rs::generated_props",
+      ".g5/Verus_verification/consolidated/iter8/webapps.rs::jwt_prompt"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter8/run.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
+     "assessed_in": "iteration-68",
+     "gap": "Precedence is proved for JWT keys only. webapps.rs has no CORS keys, so SetCORSProps precedence over provider CORS values is not distinguished."
+    },
+    {
+     "id": "devtools.generate.webapps#3",
+     "units": [
+      "P1"
+     ],
+     "text": "The installed namespace and app-default marker are left out so installation can choose them.",
+     "cases": "provider namespace / NamespaceDefault present",
+     "observation": "keys absent",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter8/webapps.rs::generated_props",
+      ".g5/Verus_verification/consolidated/iter8/webapps.rs::skipped",
+      ".g5/Verus_verification/consolidated/iter8/webapps.rs::generated_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter8/run.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "devtools.generate.webapps#4",
+     "units": [
+      "B1"
+     ],
+     "text": "A file-serving app with no dispatch class gets a Path; an old path under the CSP root becomes {$cspdir}...; dispatch-only apps get no file path.",
+     "cases": "dispatch vs none; path under root vs not",
+     "observation": "generated Path expression",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter8/webapps.rs::generated_path",
+      ".g5/Verus_verification/consolidated/iter8/webapps.rs::manifest_path",
+      ".g5/Verus_verification/consolidated/iter8/webapps.rs::generated_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter8/run.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "devtools.generate.webapps#5",
+     "units": [
+      "B2"
+     ],
+     "text": "A chosen CSP source folder becomes a FileCopy resource whose target is the app's Path; loading the generated module creates the app and copies files there.",
+     "cases": "folder chosen vs not; load of generated module",
+     "observation": "FileCopy resource presence/target; app and files after load",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter8/webapps.rs::filecopy_target",
+      ".g5/Verus_verification/consolidated/iter8/webapps.rs::copy_one",
+      ".g5/Verus_verification/consolidated/iter8/webapps.rs::reinstall"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter8/run.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
+     "assessed_in": "iteration-68",
+     "gap": "filecopy_target is the identity on the generated path, and copy_one copies a file given a target. Emission of the FileCopy resource conditional on a chosen folder is not modeled, and app creation on load of the generated module is modeled only by the package-roundtrip reinstall, not by the generate-then-load path."
+    },
+    {
+     "id": "devtools.generate.webapps#6",
+     "units": [
+      "B3"
+     ],
+     "text": "JWT prompt fields enableJWT, JWTAccessTokenTO and JWTRefreshTokenTO become JWTAuthEnabled, JWTAccessTokenTimeout and JWTRefreshTokenTimeout, and prompt values win over provider values.",
+     "cases": "prompt vs provider JWT values",
+     "observation": "written JWT properties",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter8/webapps.rs::jwt_prompt",
+      ".g5/Verus_verification/consolidated/iter8/webapps.rs::generated_props",
+      ".g5/Verus_verification/consolidated/iter8/webapps.rs::generated_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter8/run.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
+     "assessed_in": "iteration-68"
+    }
+   ]
+  },
+  "devtools.generate.cors": {
+   "body_sha": "eb9c53645173d286",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "devtools.generate.cors#1"
+    ],
+    "P2": [
+     "devtools.generate.cors#2"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "devtools.generate.cors#1",
+     "units": [
+      "P1"
+     ],
+     "text": "Generation validates comma-separated CORS origins in order, stops at the first provider rejection returning that failure, or succeeds after every origin is accepted.",
+     "cases": "all accepted vs second rejected",
+     "observation": "provider calls made; status",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter7/inputs.rs::split",
+      ".g5/Verus_verification/consolidated/iter7/inputs.rs::cors_calls",
+      ".g5/Verus_verification/consolidated/iter7/inputs.rs::cors_ok",
+      ".g5/Verus_verification/consolidated/iter7/inputs.rs::cors_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter7/run.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "devtools.generate.cors#2",
+     "units": [
+      "P2"
+     ],
+     "text": "The validator runs in %SYS and restores the caller's namespace (accepted syntax belongs to the provider).",
+     "cases": "validation success vs failure",
+     "observation": "$namespace after validation",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "inputs.rs has no namespace state. Contrast: after a rejected origin, $namespace equals the caller namespace (ModuleTemplate.cls::ValidateCorsOrigin)."
+    }
+   ]
+  },
+  "devtools.scripting": {
+   "body_sha": "b0f044b86cdc53b4",
+   "status": "enumerated",
+   "units": {
+    "P1": "excluded: list heading for the scripting commands",
+    "B1": [
+     "devtools.scripting#1",
+     "devtools.scripting#2"
+    ],
+    "B2": [
+     "devtools.scripting#3"
+    ],
+    "B3": [
+     "devtools.scripting#4",
+     "devtools.scripting#5"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "devtools.scripting#1",
+     "units": [
+      "B1"
+     ],
+     "text": "run-from-file runs commands from a .txt file or a JSON object whose commands member is an array; a JSON array root and other extensions are rejected (the single-array help sentence is a documentation defect, P:F-RES-5).",
+     "cases": "txt vs JSON object vs JSON array root vs wrong members vs unsupported extension",
+     "observation": "preparation error",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter28/script.rs::shape_neighbor",
+      ".g5/Verus_verification/consolidated/iter28/script.rs::prepare"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter28/run.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "devtools.scripting#2",
+     "units": [
+      "B1"
+     ],
+     "text": "-dry-run lists prepared commands without running them.",
+     "alias_of": "devtools.scripting.file-sequence#3",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "devtools.scripting#3",
+     "units": [
+      "B2"
+     ],
+     "text": "exec runs ObjectScript.",
+     "alias_of": "devtools.exec#1",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "devtools.scripting#4",
+     "units": [
+      "B3"
+     ],
+     "text": "import loads classes from files.",
+     "alias_of": "devtools.authoring.import#1",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "devtools.scripting#5",
+     "units": [
+      "B3"
+     ],
+     "text": "import re-exports to source control if needed.",
+     "alias_of": "devtools.authoring.import#4",
+     "assessed_in": "iteration-68"
+    }
+   ],
+   "parent": {
+    "children": [
+     "devtools.scripting.file-sequence",
+     "devtools.exec",
+     "devtools.authoring.import"
+    ],
+    "entailment": "Bullets alias the child obligations except the accepted file shape (#1), which no child states and is graded directly. No composition credit."
+   }
+  },
+  "devtools.scripting.file-sequence": {
+   "body_sha": "ec2067f218809114",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "devtools.scripting.file-sequence#1"
+    ],
+    "B1": [
+     "devtools.scripting.file-sequence#2"
+    ],
+    "B2": [
+     "devtools.scripting.file-sequence#3"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "devtools.scripting.file-sequence#1",
+     "units": [
+      "P1"
+     ],
+     "text": "IPM prepares the whole command file before running it: text preparation trims and collects nonempty lines; JSON preparation validates and translates every command, so a later invalid JSON command prevents earlier commands from running.",
+     "cases": "valid vs later-invalid JSON; text with unknown line",
+     "observation": "prepared list; error; setting reader",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter28/script.rs::text_preparation",
+      ".g5/Verus_verification/consolidated/iter28/script.rs::json_preparation",
+      ".g5/Verus_verification/consolidated/iter28/script.rs::translation_neighbor"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter28/run.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "devtools.scripting.file-sequence#2",
+     "units": [
+      "B1"
+     ],
+     "text": "A failing command stops later commands and keeps effects already made; the settings reader sees the first write after a later failure and the second when both succeed.",
+     "cases": "all succeed vs middle unknown/runtime failure",
+     "observation": "status; stored setting value",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter28/script.rs::execution_neighbor",
+      ".g5/Verus_verification/consolidated/iter28/script.rs::runtime_neighbor",
+      ".g5/Verus_verification/consolidated/iter28/script.rs::named_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter28/run.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "devtools.scripting.file-sequence#3",
+     "units": [
+      "B2"
+     ],
+     "text": "Dry-run lists prepared commands without executing them; an invalid JSON command still fails preparation; a text line is not checked until execution.",
+     "cases": "dry vs real; JSON unknown vs text unknown",
+     "observation": "listed commands; world unchanged; error",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter28/script.rs::dry_execution_neighbor",
+      ".g5/Verus_verification/consolidated/iter28/script.rs::dry_json_validation_neighbor",
+      ".g5/Verus_verification/consolidated/iter28/script.rs::named_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter28/run.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
+     "assessed_in": "iteration-68"
+    }
+   ]
+  },
+  "devtools.exec": {
+   "body_sha": "e18a5d8a8c88dabc",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "devtools.exec#1"
+    ],
+    "B1": [
+     "devtools.exec#2"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "devtools.exec#1",
+     "units": [
+      "P1"
+     ],
+     "text": "exec runs ObjectScript in the current namespace; data changes persist; a runtime or syntax error fails the command.",
+     "cases": "global set vs runtime error vs syntax error",
+     "observation": "status; global value",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter55/nsinit.rs::exec",
+      ".g5/Verus_verification/consolidated/iter55/nsinit.rs::exec_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter55/run.json"
+     ],
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "devtools.exec#2",
+     "units": [
+      "B1"
+     ],
+     "text": "As built (C:D56), changing the namespace inside exec has no lasting effect.",
+     "cases": "set $namespace expression",
+     "observation": "$namespace after the command",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter55/nsinit.rs::exec_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter55/run.json"
+     ],
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
+     "assessed_in": "iteration-68"
+    }
+   ]
+  },
+  "devtools.init": {
+   "body_sha": "0e3e098b90b08f0a",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "devtools.init#1",
+     "devtools.init#2"
+    ],
+    "B1": [
+     "devtools.init#3"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "devtools.init#1",
+     "units": [
+      "P1"
+     ],
+     "text": "init -noprompt reindexes the filesystem cache.",
+     "cases": "init run vs not",
+     "observation": "cache index state",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "nsinit.rs::init_quiet has no cache state. Main.cls::Init reindex call unmodeled."
+    },
+    {
+     "id": "devtools.init#2",
+     "units": [
+      "P1"
+     ],
+     "text": "init -noprompt changes source-control setup only as asked: a configured class that no longer exists is disabled, and -extension <class> makes the composite active with that class primary.",
+     "cases": "empty / plain / dangling / -extension",
+     "observation": "active class; stored primary",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter55/nsinit.rs::init_quiet",
+      ".g5/Verus_verification/consolidated/iter55/nsinit.rs::init_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter55/run.json"
+     ],
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "devtools.init#3",
+     "units": [
+      "B1"
+     ],
+     "text": "As built (C:D57), without -extension an existing plain class is only stored as the composite primary and stays active, though the command reports enabling the extension.",
+     "cases": "plain class without -extension",
+     "observation": "active class; stored primary; message",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter55/nsinit.rs::init_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter55/run.json"
+     ],
+     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata",
+     "assessed_in": "iteration-68"
+    }
+   ]
+  }
+ }
+}

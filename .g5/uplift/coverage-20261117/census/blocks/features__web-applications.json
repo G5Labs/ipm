@@ -1,0 +1,830 @@
+{
+ "page": ".g5/ontology/features/web-applications.g5.md",
+ "blocks": {
+  "module.webapp": {
+   "body_sha": "15c78df2fa4f4432",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "module.webapp#1",
+     "module.webapp#2"
+    ],
+    "B1": [
+     "module.webapp#3",
+     "module.webapp#4"
+    ],
+    "B2": [
+     "module.webapp#5"
+    ],
+    "B3": [
+     "module.webapp#6"
+    ],
+    "B4": [
+     "module.webapp#7"
+    ],
+    "B5": [
+     "module.webapp#8",
+     "module.webapp#9",
+     "module.webapp#10",
+     "module.webapp#11"
+    ],
+    "B6": "excluded: working assumption restates the as-built adoption (B1, B2) and lists undecided alternatives (open question module.webapp.ownership)"
+   },
+   "obligations": [
+    {
+     "id": "module.webapp#1",
+     "units": [
+      "P1"
+     ],
+     "text": "A <WebApplication> resource creates the named web application during install.",
+     "cases": "no app of that name",
+     "observation": "app exists with declared properties",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter5/webapp.rs::install_app",
+      ".g5/Verus_verification/consolidated/iter5/webapp.rs::webapp_neighbors",
+      ".g5/Verus_verification/consolidated/iter61/webappphases.rs::load",
+      ".g5/Verus_verification/consolidated/iter61/webappphases.rs::neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter5/proofs/models.json",
+      ".g5/uplift/consolidated/iter5/run_all.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter61/run.json"
+     ],
+     "basis": "reused:.g5/ontology/features/web-applications.g5.md metadata module.webapp (iter5 webapp.rs, iter61 webappphases.rs)",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.webapp#2",
+     "units": [
+      "P1"
+     ],
+     "text": "A <WebApplication> resource deletes the application during uninstall.",
+     "cases": "uninstall by the listing module vs another",
+     "observation": "app presence",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter5/webapp.rs::uninstall",
+      ".g5/Verus_verification/consolidated/iter61/webappphases.rs::uninstall",
+      ".g5/Verus_verification/consolidated/iter61/webappphases.rs::neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter5/proofs/models.json",
+      ".g5/uplift/consolidated/iter5/run_all.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter61/run.json"
+     ],
+     "basis": "reused:.g5/ontology/features/web-applications.g5.md metadata module.webapp (iter5 webapp.rs, iter61 webappphases.rs) (control uninstall-any-owner rejected)",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.webapp#3",
+     "units": [
+      "B1"
+     ],
+     "text": "If an application with that name already exists (e.g. administrator-made), install changes only the declared properties and keeps every other property.",
+     "cases": "existing app with undeclared Timeout",
+     "observation": "app properties after install",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter5/webapp.rs::merged",
+      ".g5/Verus_verification/consolidated/iter5/webapp.rs::lemma_adoption_keeps_undeclared",
+      ".g5/Verus_verification/consolidated/iter5/webapp.rs::webapp_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter5/proofs/models.json",
+      ".g5/uplift/consolidated/iter5/run_all.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/web-applications.g5.md metadata module.webapp (iter5 webapp.rs, iter61 webappphases.rs) (controls adoption-overwrites-undeclared, existing-app-not-adopted rejected)",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.webapp#4",
+     "units": [
+      "B1"
+     ],
+     "text": "Uninstalling the module then deletes the adopted application.",
+     "cases": "adopted administrator app",
+     "observation": "app presence after uninstall",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter5/webapp.rs::uninstall",
+      ".g5/Verus_verification/consolidated/iter5/webapp.rs::webapp_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter5/proofs/models.json",
+      ".g5/uplift/consolidated/iter5/run_all.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/web-applications.g5.md metadata module.webapp (iter5 webapp.rs, iter61 webappphases.rs)",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.webapp#5",
+     "units": [
+      "B2"
+     ],
+     "text": "Reinstalling resets declared properties edited by hand and keeps edits to undeclared properties.",
+     "cases": "manual edit of declared vs undeclared property",
+     "observation": "app properties after reload",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter61/webappphases.rs::load",
+      ".g5/Verus_verification/consolidated/iter61/webappphases.rs::neighbors",
+      ".g5/Verus_verification/consolidated/iter5/webapp.rs::lemma_adoption_keeps_undeclared"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter61/run.json",
+      ".g5/uplift/consolidated/iter5/proofs/models.json",
+      ".g5/uplift/consolidated/iter5/run_all.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/web-applications.g5.md metadata module.webapp (iter5 webapp.rs, iter61 webappphases.rs)",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.webapp#6",
+     "units": [
+      "B3"
+     ],
+     "text": "A second module declaring a web application name another installed module lists is refused when its manifest is read, so two modules cannot share one application.",
+     "cases": "same name owned by another module vs by itself vs unowned",
+     "observation": "refusal and unchanged app",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter61/webappphases.rs::load",
+      ".g5/Verus_verification/consolidated/iter61/webappphases.rs::neighbors",
+      ".g5/Verus_verification/consolidated/iter5/webapp.rs::refused_at_import"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter61/run.json",
+      ".g5/uplift/consolidated/iter5/proofs/models.json",
+      ".g5/uplift/consolidated/iter5/run_all.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/web-applications.g5.md metadata module.webapp (iter5 webapp.rs, iter61 webappphases.rs) (control duplicate-takes-over rejected; case-insensitive name comparison is a native premise)",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.webapp#7",
+     "units": [
+      "B4"
+     ],
+     "text": "NameSpace defaults to the namespace being installed into (whether IPM should take over or delete applications it did not create is open).",
+     "cases": "NameSpace omitted, install into USER vs USER2",
+     "observation": "app NameSpace",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "iteration61 names ResourceProcessor/WebApplication.cls::CopyAttributes as the NameSpace default, but App/Decl carry no namespace. Contrast: install into USER2 without NameSpace gives NameSpace=USER2."
+    },
+    {
+     "id": "module.webapp#8",
+     "units": [
+      "B5"
+     ],
+     "text": "Attribute values are expanded like other resource attributes, so {$mgrdir} becomes the manager directory.",
+     "cases": "attribute with {$mgrdir} vs literal",
+     "observation": "app property value",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::system_expression"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/consolidated/verus/results/env-attr/checks.json",
+      ".g5/uplift/consolidated/extension/bindings.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "attr_evaluator.rs covers the evaluator, but no model connects WebApplication.cls::CopyAttributes evaluating each declared attribute to the app property written. Contrast: Path=\"{$mgrdir}x\" gives the manager directory path in Security.Applications."
+    },
+    {
+     "id": "module.webapp#9",
+     "units": [
+      "B5"
+     ],
+     "text": "Loading again writes only the attributes still declared, so a removed attribute keeps its previous value.",
+     "cases": "attribute removed between loads",
+     "observation": "app property after second load",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter61/webappphases.rs::load",
+      ".g5/Verus_verification/consolidated/iter61/webappphases.rs::apply",
+      ".g5/Verus_verification/consolidated/iter61/webappphases.rs::neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter61/run.json"
+     ],
+     "basis": "reused:.g5/ontology/features/web-applications.g5.md metadata module.webapp (iter5 webapp.rs, iter61 webappphases.rs) (control removed-attribute-cleared rejected)",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.webapp#10",
+     "units": [
+      "B5"
+     ],
+     "text": "compile -only does not touch the application.",
+     "cases": "compile -only after a manual edit",
+     "observation": "app property",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter61/webappphases.rs::compile_only",
+      ".g5/Verus_verification/consolidated/iter61/webappphases.rs::neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter61/run.json"
+     ],
+     "basis": "reused:.g5/ontology/features/web-applications.g5.md metadata module.webapp (iter5 webapp.rs, iter61 webappphases.rs) (control compile-resets rejected)",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.webapp#11",
+     "units": [
+      "B5"
+     ],
+     "text": "Both Activate and Configure update the application.",
+     "cases": "Configure-only vs Activate run",
+     "observation": "app property",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter61/webappphases.rs::load"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter61/run.json"
+     ],
+     "basis": "reused:.g5/ontology/features/web-applications.g5.md metadata module.webapp (iter5 webapp.rs, iter61 webappphases.rs)",
+     "assessed_in": "iteration-68",
+     "gap": "load() models the Activate update only. Configure is not a distinct case, so a processor updating only on Activate satisfies the model. Reader: WebApplication.cls::OnBeforePhase for Configure."
+    }
+   ],
+   "parent": {
+    "children": [
+     "module.webapp.failure",
+     "module.webapp.upgrade",
+     "module.webapp.validation"
+    ],
+    "entailment": "The parent owns create, adopt, delete, reinstall, duplicate refusal, NameSpace and attribute handling (#1-#11). The children add failure, upgrade and validation outcomes and do not entail parent obligations. No composition is credited."
+   }
+  },
+  "module.webapp.upgrade": {
+   "body_sha": "4028ff4dfc299ee7",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "module.webapp.upgrade#1"
+    ],
+    "B1": "excluded: working assumption to disclose the as-built orphan; restates P1 with no further outcome"
+   },
+   "obligations": [
+    {
+     "id": "module.webapp.upgrade#1",
+     "units": [
+      "P1"
+     ],
+     "text": "As built (C:D26), upgrading to a version whose manifest no longer declares a web application leaves it in place, and a later uninstall deletes only applications the installed version declares, so the old application remains.",
+     "cases": "upgrade dropping the declaration then uninstall vs no upgrade",
+     "observation": "app presence after uninstall",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter5/webapp.rs::upgrade_drops_declaration",
+      ".g5/Verus_verification/consolidated/iter5/webapp.rs::uninstall",
+      ".g5/Verus_verification/consolidated/iter5/webapp.rs::webapp_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter5/proofs/models.json",
+      ".g5/uplift/consolidated/iter5/run_all.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/web-applications.g5.md metadata module.webapp.upgrade (control upgrade-removes-app rejected)",
+     "assessed_in": "iteration-68",
+     "note": "Upgrade is modeled as the identity on applications, a transcription of ExecutePhases/%Clean acting only on the installed manifest. The update command from a registry was not run."
+    }
+   ]
+  },
+  "module.webapp.validation": {
+   "body_sha": "feac9617c546c7ab",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "module.webapp.validation#1",
+     "module.webapp.validation#2"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "module.webapp.validation#1",
+     "units": [
+      "P1"
+     ],
+     "text": "As built (C:D23), an attribute that is not a web application property is passed through without an error, because the lifecycle Validate step never calls the processor check.",
+     "cases": "unknown attribute vs none",
+     "observation": "load status",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter5/webapp.rs::validate_dispatches",
+      ".g5/Verus_verification/consolidated/iter5/webapp.rs::refused_at_validate",
+      ".g5/Verus_verification/consolidated/iter5/webapp.rs::webapp_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter5/proofs/models.json",
+      ".g5/uplift/consolidated/iter5/run_all.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/web-applications.g5.md metadata module.webapp.validation (control validate-dispatches rejected)",
+     "assessed_in": "iteration-68",
+     "note": "The dispatch decision is a transcribed constant (Lifecycle/Base.cls::%Validate returns OK without dispatching)."
+    },
+    {
+     "id": "module.webapp.validation#2",
+     "units": [
+      "P1"
+     ],
+     "text": "The unknown attribute has no effect on the application.",
+     "cases": "NoSuchProperty=\"1\" vs absent",
+     "observation": "app properties",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "iteration5 and iteration61 declarations carry only known properties, so an unknown attribute's effect is not represented (native W9 only). Reader: Security.Applications.Get after Activate."
+    }
+   ]
+  },
+  "module.webapp.provider-status": {
+   "body_sha": "6d02adf69b93b109",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "module.webapp.provider-status#1"
+    ],
+    "B1": [
+     "module.webapp.provider-status#2",
+     "module.webapp.provider-status#3"
+    ],
+    "B2": [
+     "module.webapp.provider-status#4"
+    ],
+    "B3": "excluded: history; refines iteration 5's predicate (rationale)"
+   },
+   "obligations": [
+    {
+     "id": "module.webapp.provider-status#1",
+     "units": [
+      "P1"
+     ],
+     "text": "Updating an existing web app calls Modify only when a declared value differs from its old value; an absent old property reads as empty, so a declared empty value for it is not a change.",
+     "cases": "equal, changed, and empty-on-absent declared values",
+     "observation": "whether Modify is called",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter7/inputs.rs::differs",
+      ".g5/Verus_verification/consolidated/iter7/inputs.rs::status_neighbors",
+      ".g5/Verus_verification/consolidated/iter7/inputs.rs::change_witness"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter7/run.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/web-applications.g5.md metadata module.webapp.provider-status (iter7 inputs.rs differs, app_status) (controls missing-empty-is-change, modify-always-call rejected)",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.webapp.provider-status#2",
+     "units": [
+      "B1"
+     ],
+     "text": "With no differing value the phase succeeds without Modify; with a differing value a returned Modify failure becomes a failed phase status.",
+     "cases": "no diff vs diff with Modify failure vs success",
+     "observation": "phase status",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter7/inputs.rs::app_status",
+      ".g5/Verus_verification/consolidated/iter7/inputs.rs::status_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter7/run.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/web-applications.g5.md metadata module.webapp.provider-status (iter7 inputs.rs differs, app_status) (control modify-swallow-failure rejected)",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.webapp.provider-status#3",
+     "units": [
+      "B1"
+     ],
+     "text": "A failed Get or Create also fails the phase.",
+     "cases": "Get failure; Create failure for a new app",
+     "observation": "phase status",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter61/webappphases.rs::load",
+      ".g5/Verus_verification/consolidated/iter7/inputs.rs::app_status"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter61/run.json",
+      ".g5/uplift/consolidated/iter7/run.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/web-applications.g5.md metadata module.webapp.provider-status (iter7 inputs.rs differs, app_status)",
+     "assessed_in": "iteration-68",
+     "gap": "iteration61 load fails on a provider-rejected declaration (control invalid-kept), but Get failure is not a case and app_status has no Get/Create input. Reader: WebApplication.cls::CreateOrUpdateWebApp status into Storage/Module.cls::ExecutePhases."
+    },
+    {
+     "id": "module.webapp.provider-status#4",
+     "units": [
+      "B2"
+     ],
+     "text": "Switching into %SYS for the provider call restores the caller's namespace on return or error (provider failure does not promise no partial changes).",
+     "cases": "provider success vs error",
+     "observation": "$namespace after the call",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "No formal rule represents the namespace switch. Contrast: a Modify error leaves $namespace equal to the caller's."
+    }
+   ]
+  },
+  "module.webapp.failure": {
+   "body_sha": "525ae1f51df7a0aa",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "module.webapp.failure#1",
+     "module.webapp.failure#2"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "module.webapp.failure#1",
+     "units": [
+      "P1"
+     ],
+     "text": "The application is created before the module's later steps; if the install then fails inside its transaction, the rollback also removes the application.",
+     "cases": "failure after Activate with vs without transaction",
+     "observation": "app presence and module record",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter5/webapp.rs::failed_after_activate",
+      ".g5/Verus_verification/consolidated/iter5/webapp.rs::webapp_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter5/proofs/models.json",
+      ".g5/uplift/consolidated/iter5/run_all.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/web-applications.g5.md metadata module.webapp.failure (iter5 webapp.rs failed_after_activate, control transaction-keeps-app rejected)",
+     "assessed_in": "iteration-68",
+     "note": "Rollback of the %SYS write is a native-qualified premise of the model."
+    },
+    {
+     "id": "module.webapp.failure#2",
+     "units": [
+      "P1"
+     ],
+     "text": "With -DNoTransaction=1, the application and the module record both stay after the failure.",
+     "cases": "same failure without transaction",
+     "observation": "app presence and module record",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter5/webapp.rs::failed_after_activate",
+      ".g5/Verus_verification/consolidated/iter5/webapp.rs::webapp_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter5/proofs/models.json",
+      ".g5/uplift/consolidated/iter5/run_all.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/web-applications.g5.md metadata module.webapp.failure (iter5 webapp.rs failed_after_activate, control transaction-keeps-app rejected)",
+     "assessed_in": "iteration-68"
+    }
+   ]
+  },
+  "module.webapp.package": {
+   "body_sha": "186c4a4b3d17a7eb",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "module.webapp.package#1",
+     "module.webapp.package#2"
+    ],
+    "P2": [
+     "module.webapp.package#3"
+    ],
+    "P3": "excluded: premise and scope (successful transport and app creation; no compensation promised)"
+   },
+   "obligations": [
+    {
+     "id": "module.webapp.package#1",
+     "units": [
+      "P1"
+     ],
+     "text": "Web-app resources are configuration and are marked handled during export, so their paths are not exported as database documents.",
+     "cases": "web-app whose Path matches a CSP document vs a document resource",
+     "observation": "documents in the package archive",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter8/webapps.rs::webapp_export_handled",
+      ".g5/Verus_verification/consolidated/iter8/webapps.rs::package_app"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter8/run.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/web-applications.g5.md metadata module.webapp.package (iter8 webapps.rs)",
+     "assessed_in": "iteration-68",
+     "gap": "webapp_export_handled is the constant true and package_app ignores has_source_document, so no model observes which documents the archive contains. Reader: WebApplication.cls::OnExportItem into Lifecycle/Base.cls::ExportSingleModule."
+    },
+    {
+     "id": "module.webapp.package#2",
+     "units": [
+      "P1"
+     ],
+     "text": "Publishing preserves web-app declarations in the package.",
+     "cases": "package and publish with successful provider",
+     "observation": "archived declaration in the registry",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter8/webapps.rs::package_webapp",
+      ".g5/Verus_verification/consolidated/iter8/webapps.rs::publish_archive",
+      ".g5/Verus_verification/consolidated/iter8/webapps.rs::package_protocol"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter8/run.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/web-applications.g5.md metadata module.webapp.package (iter8 webapps.rs) (controls package-drops-declaration, publish-does-not-store rejected)",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.webapp.package#3",
+     "units": [
+      "P2"
+     ],
+     "text": "After uninstall, installing the published package recreates the app from its declarations; a {$cspdir} Path is evaluated against the installation's CSP root, so it survives the round trip and follows a different CSP root.",
+     "cases": "same vs different CSP root at reinstall",
+     "observation": "app Path from Security.Applications.Get",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter8/webapps.rs::package_roundtrip",
+      ".g5/Verus_verification/consolidated/iter8/webapps.rs::evaluate_path",
+      ".g5/Verus_verification/consolidated/iter8/webapps.rs::reinstall",
+      ".g5/Verus_verification/consolidated/iter8/webapps.rs::package_roundtrip_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter8/run.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/web-applications.g5.md metadata module.webapp.package (iter8 webapps.rs) (controls reinstall-loses-suffix, path-stays-literal, uninstall-keeps-app rejected)",
+     "assessed_in": "iteration-68"
+    }
+   ]
+  },
+  "module.csp.directory": {
+   "body_sha": "e5b8b23de3b5c7dc",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "module.csp.directory#1",
+     "module.csp.directory#2"
+    ],
+    "P2": [
+     "module.csp.directory#3",
+     "module.csp.directory#4",
+     "module.csp.directory#2"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "module.csp.directory#1",
+     "units": [
+      "P1"
+     ],
+     "text": "A legacy CSPApplication with no Directory and no DispatchClass uses the normalized module root plus resource name as its file directory.",
+     "cases": "no Directory, no DispatchClass",
+     "observation": "final Directory",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter7/inputs.rs::csp_directory",
+      ".g5/Verus_verification/consolidated/iter7/inputs.rs::csp_path",
+      ".g5/Verus_verification/consolidated/iter7/inputs.rs::directory_and_reader_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter7/run.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/web-applications.g5.md metadata module.csp.directory (iter7 inputs.rs csp_directory, csp_after_before) (control csp-drop-root rejected)",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.csp.directory#2",
+     "units": [
+      "P1",
+      "P2"
+     ],
+     "text": "With a DispatchClass alone, IPM first sets the sentinel <irrelevant>, then clears it during phase processing, so the final Directory is empty; the sentinel is not a directory readers should expect.",
+     "cases": "DispatchClass only vs neither",
+     "observation": "Directory after OnBeforePhase and after phase processing",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter7/inputs.rs::csp_directory",
+      ".g5/Verus_verification/consolidated/iter7/inputs.rs::csp_after_before",
+      ".g5/Verus_verification/consolidated/iter7/inputs.rs::directory_and_reader_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter7/run.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/web-applications.g5.md metadata module.csp.directory (iter7 inputs.rs csp_directory, csp_after_before) (controls csp-sentinel-stays, csp-dispatch-directory rejected)",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.csp.directory#3",
+     "units": [
+      "P2"
+     ],
+     "text": "An explicit Directory takes precedence over dispatch inference.",
+     "cases": "explicit Directory with DispatchClass",
+     "observation": "final Directory",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter7/inputs.rs::csp_directory",
+      ".g5/Verus_verification/consolidated/iter7/inputs.rs::directory_and_reader_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter7/run.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/web-applications.g5.md metadata module.csp.directory (iter7 inputs.rs csp_directory, csp_after_before)",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.csp.directory#4",
+     "units": [
+      "P2"
+     ],
+     "text": "An explicit Directory is normalized.",
+     "cases": "Directory without trailing separator vs normalized",
+     "observation": "final Directory text",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "csp_directory and csp_path pass the explicit value through; normalization is an input. Contrast: Directory=\"/x/web\" becomes \"/x/web/\"."
+    }
+   ]
+  },
+  "module.csp.lifecycle": {
+   "body_sha": "b6b2b96e7e6eb121",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "module.csp.lifecycle#1",
+     "module.csp.lifecycle#2",
+     "module.csp.lifecycle#3"
+    ],
+    "B1": [
+     "module.csp.lifecycle#4"
+    ],
+    "B2": [
+     "module.csp.lifecycle#5"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "module.csp.lifecycle#1",
+     "units": [
+      "P1"
+     ],
+     "text": "A deprecated <CSPApplication> creates or updates its web application during Activate and deletes it during uninstall.",
+     "cases": "load vs uninstall",
+     "observation": "app presence",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter57/cspapp.rs::load",
+      ".g5/Verus_verification/consolidated/iter57/cspapp.rs::uninstall",
+      ".g5/Verus_verification/consolidated/iter57/cspapp.rs::deploy_path_uninstall_purges_deploy"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter57/run.json"
+     ],
+     "basis": "reused:.g5/ontology/features/web-applications.g5.md metadata module.csp.lifecycle (iter57 cspapp.rs)",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.csp.lifecycle#2",
+     "units": [
+      "P1"
+     ],
+     "text": "Each load prints a deprecation warning.",
+     "cases": "first vs repeated load in one command; separate commands",
+     "observation": "console output",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "iteration57 observed the warning but did not model CSPApplication.cls::%OnNew. The guard $$$DeprecationWarned (%IPMModuleDeprecatedResource, newed per shell command in Main.cls) prints once per module per command."
+    },
+    {
+     "id": "module.csp.lifecycle#3",
+     "units": [
+      "P1"
+     ],
+     "text": "Each load copies the source folder into DeployPath when one is given.",
+     "cases": "DeployPath given vs not; source edited between loads",
+     "observation": "files under DeployPath",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter57/cspapp.rs::load",
+      ".g5/Verus_verification/consolidated/iter57/cspapp.rs::reload_recopies"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter57/run.json"
+     ],
+     "basis": "reused:.g5/ontology/features/web-applications.g5.md metadata module.csp.lifecycle (iter57 cspapp.rs) (control no-copy-on-load rejected)",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.csp.lifecycle#4",
+     "units": [
+      "B1"
+     ],
+     "text": "As built (C:D61), updating an existing application writes every property the processor knows, so undeclared properties set by an administrator return to processor defaults (WebApplication keeps them, module.webapp#3).",
+     "cases": "existing admin app with description and timeout",
+     "observation": "properties after load",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter57/cspapp.rs::takeover_resets_undeclared"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter57/run.json"
+     ],
+     "basis": "reused:.g5/ontology/features/web-applications.g5.md metadata module.csp.lifecycle (iter57 cspapp.rs) (control takeover-keeps-undeclared rejected)",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.csp.lifecycle#5",
+     "units": [
+      "B2"
+     ],
+     "text": "Uninstall deletes the files of the application's directory. As built (C:D60), without DeployPath that directory is the module's source folder, so uninstall deletes the module's source files.",
+     "cases": "with vs without DeployPath",
+     "observation": "source and deploy files after uninstall",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter57/cspapp.rs::no_deploy_path_uninstall_deletes_source",
+      ".g5/Verus_verification/consolidated/iter57/cspapp.rs::deploy_path_uninstall_keeps_source",
+      ".g5/Verus_verification/consolidated/iter57/cspapp.rs::deploy_path_uninstall_purges_deploy"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter57/run.json"
+     ],
+     "basis": "reused:.g5/ontology/features/web-applications.g5.md metadata module.csp.lifecycle (iter57 cspapp.rs) (controls purge-skips-source-folder, uninstall-keeps-deploy-files rejected)",
+     "assessed_in": "iteration-68"
+    }
+   ]
+  }
+ }
+}

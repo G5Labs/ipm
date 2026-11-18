@@ -1,0 +1,1433 @@
+{
+ "page": ".g5/ontology/features/manifest.g5.md",
+ "blocks": {
+  "module.identity.document": {
+   "body_sha": "8121a8c27a876b67",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "module.identity.document#1"
+    ],
+    "B1": [
+     "module.identity.document#2",
+     "module.identity.document#3"
+    ],
+    "B2": [
+     "module.identity.document#4"
+    ],
+    "B3": [
+     "module.identity.document#5"
+    ],
+    "B4": [
+     "module.identity.document#6"
+    ],
+    "B5": [
+     "module.identity.document#7"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "module.identity.document#1",
+     "units": [
+      "P1"
+     ],
+     "text": "Saving an installed module's <Name>.ZPM document updates the stored module record at once.",
+     "cases": "existing record; valid save vs refused save",
+     "observation": "stored module record after Save returns",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter39/document.rs::save",
+      ".g5/Verus_verification/consolidated/iter39/document.rs::update",
+      ".g5/Verus_verification/consolidated/iter39/document.rs::valid_edit_updates_record"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter39/run.json"
+     ],
+     "basis": "reused:.g5/ontology/features/manifest.g5.md metadata module.identity.document; .g5/uplift/consolidated/iter39/HANDOFF.md",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.identity.document#2",
+     "units": [
+      "B1"
+     ],
+     "text": "A valid edit replaces the record version, and a lower version is accepted on this path.",
+     "cases": "valid edit with higher vs lower version",
+     "observation": "record version after save; save status",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter39/document.rs::valid_edit_updates_record",
+      ".g5/Verus_verification/consolidated/iter39/document.rs::schedule"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter39/run.json"
+     ],
+     "basis": "reused:.g5/ontology/features/manifest.g5.md metadata module.identity.document; .g5/uplift/consolidated/iter39/HANDOFF.md (control downgrade-refused rejected)",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.identity.document#3",
+     "units": [
+      "B1"
+     ],
+     "text": "A valid edit replaces the other manifest fields of the record.",
+     "cases": "valid edit changing a non-version field (e.g. Description, dependencies) vs unchanged",
+     "observation": "record fields other than version after save",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter39/document.rs::update"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter39/run.json"
+     ],
+     "basis": "reused:.g5/ontology/features/manifest.g5.md metadata module.identity.document; .g5/uplift/consolidated/iter39/HANDOFF.md",
+     "assessed_in": "iteration-68",
+     "gap": "Record models only name, version and resource count, and update() copies every non-version field from the old record (..r). A save that left Description or dependencies at their old values satisfies the model equally. Reader: module record fields after StudioDocument/Module.cls::UpdatePersistentFromStream."
+    },
+    {
+     "id": "module.identity.document#4",
+     "units": [
+      "B2"
+     ],
+     "text": "Saving an empty document keeps the record and its resources and sets the version to 0.0.1+snapshot.",
+     "cases": "empty vs valid document on an existing record",
+     "observation": "record presence, resources and version",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter39/document.rs::empty_resets_version_keeps_resources"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter39/run.json"
+     ],
+     "basis": "reused:.g5/ontology/features/manifest.g5.md metadata module.identity.document; .g5/uplift/consolidated/iter39/HANDOFF.md (control empty-clears-resources rejected)",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.identity.document#5",
+     "units": [
+      "B3"
+     ],
+     "text": "Deleting the document deletes the module record and leaves the module's code in the namespace.",
+     "cases": "delete vs keep",
+     "observation": "record presence and namespace classes after Delete",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter39/document.rs::delete",
+      ".g5/Verus_verification/consolidated/iter39/document.rs::delete_keeps_classes"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter39/run.json"
+     ],
+     "basis": "reused:.g5/ontology/features/manifest.g5.md metadata module.identity.document; .g5/uplift/consolidated/iter39/HANDOFF.md (control delete-removes-classes rejected)",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.identity.document#6",
+     "units": [
+      "B4"
+     ],
+     "text": "As built (C:D44), a refused save such as malformed XML empties the stored document text while the record keeps the earlier manifest. Graded as the as-built claim.",
+     "cases": "malformed vs valid document",
+     "observation": "save status, stored document text, record",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter39/document.rs::refused_save_erases_text"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter39/run.json"
+     ],
+     "basis": "reused:.g5/ontology/features/manifest.g5.md metadata module.identity.document; .g5/uplift/consolidated/iter39/HANDOFF.md (control stream-clear-rolled-back rejected)",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.identity.document#7",
+     "units": [
+      "B5"
+     ],
+     "text": "As built (C:D45), a manifest naming a different module is accepted under the old name: the record takes the other fields and the document keeps the new name. Graded as the as-built claim. The other fields are represented by version only; the general field gap is #3.",
+     "cases": "document naming the same vs a different module",
+     "observation": "save status, record name and version, stored document name",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter39/document.rs::other_name_accepted_under_old_name"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter39/run.json"
+     ],
+     "basis": "reused:.g5/ontology/features/manifest.g5.md metadata module.identity.document; .g5/uplift/consolidated/iter39/HANDOFF.md (control name-guard-effective rejected)",
+     "assessed_in": "iteration-68"
+    }
+   ]
+  },
+  "module.dependency": {
+   "body_sha": "4fafb92ed2e23dbc",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "module.dependency#1"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "module.dependency#1",
+     "units": [
+      "P1"
+     ],
+     "text": "A <ModuleReference> with no version accepts any version. The exact/range semantics are owned by version.range and the selection by deps (not counted here).",
+     "cases": "reference with omitted Version vs an exact version, against offers including a prerelease",
+     "observation": "which offered versions the reference accepts",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter34/versions.rs::satisfies",
+      ".g5/Verus_verification/consolidated/iter34/versions.rs::eligible",
+      ".g5/Verus_verification/consolidated/iter34/versions.rs::fixture_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter34/run.json"
+     ],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "iteration34 versions.rs treats E::Any as satisfied by every version, but the mapping from an omitted <Version> in Storage/ModuleReference to E::Any is not modeled, and eligible() excludes prerelease offers unless the prerelease flag is set, which the block does not qualify. Contrast: dependency without Version against offers {1.0.0, 2.0.0-beta} must show which is accepted at the resolver."
+    }
+   ]
+  },
+  "module.requirement": {
+   "body_sha": "1788fa4af6303e0d",
+   "status": "enumerated",
+   "units": {
+    "P1": "excluded: definition of <SystemRequirements>; the refusal outcome restates load.refusal.requirements (owner not yet enumerated, chunk B)",
+    "B1": [
+     "module.requirement#1"
+    ],
+    "B2": [
+     "module.requirement#3"
+    ],
+    "B3": [
+     "module.requirement#4"
+    ],
+    "B4": [
+     "module.requirement#2"
+    ],
+    "B5": [
+     "module.requirement#5"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "module.requirement#1",
+     "units": [
+      "B1"
+     ],
+     "text": "A Version system requirement refuses an IRIS version the module does not support.",
+     "cases": "current IRIS version inside vs outside the declared Version expression",
+     "observation": "CheckRequirements status",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "No formal rule covers Storage/SystemRequirements.cls::CheckVersion (or VersionStringSet). iteration3 requirement_failures omits Version. Contrast: Version=\">=2099.1\" vs \">=2020.1\" on the same instance must give refusal vs success."
+    },
+    {
+     "id": "module.requirement#2",
+     "units": [
+      "B4"
+     ],
+     "text": "IPMVersion and PythonVersion requirements refuse an IPM or Python version outside the declared expression (mapped-namespace reader gap owned by namespace.version.mapped-reader).",
+     "cases": "installed IPM/Python version inside vs outside the expression",
+     "observation": "CheckRequirements status",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "No formal rule covers CheckIPMVersion or CheckPythonVersion/GetPythonVersion. Contrast: IPMVersion=\">=99.0.0\" vs \">=0.9.0\" must give refusal vs success."
+    },
+    {
+     "id": "module.requirement#3",
+     "units": [
+      "B2"
+     ],
+     "alias_of": "module.requirement.values#5",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.requirement#4",
+     "units": [
+      "B3"
+     ],
+     "alias_of": "module.requirement.values#3",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.requirement#5",
+     "units": [
+      "B5"
+     ],
+     "alias_of": "module.requirement.values#7",
+     "assessed_in": "iteration-68"
+    }
+   ],
+   "parent": {
+    "children": [
+     "module.requirement.values"
+    ],
+    "entailment": "Interoperability, Health and SYSNamespace bullets restate rules owned by module.requirement.values and are aliased there. Version, IPMVersion and PythonVersion are parent-only obligations (#1, #2) with no child that entails them, so they stay open. The refusal outcome belongs to load.refusal.requirements. No obligation is credited by composition."
+   }
+  },
+  "module.requirement.values": {
+   "body_sha": "b25491a7b947801c",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "module.requirement.values#1",
+     "module.requirement.values#2",
+     "module.requirement.values#3",
+     "module.requirement.values#4"
+    ],
+    "B1": [
+     "module.requirement.values#5",
+     "module.requirement.values#6"
+    ],
+    "B2": [
+     "module.requirement.values#7"
+    ],
+    "B3": [
+     "module.requirement.values#8",
+     "module.requirement.values#9"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "module.requirement.values#1",
+     "units": [
+      "P1"
+     ],
+     "text": "An omitted Health requirement accepts either kind of instance.",
+     "cases": "Health unset on a Health instance vs on a non-Health instance",
+     "observation": "health failures from CheckHealth",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/resources.rs::requirement_failures",
+      ".g5/Verus_verification/consolidated/iter3/resources.rs::requirement_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter3/gate/receipt.json",
+      ".g5/Verus_verification/consolidated/iter3/run_models.py",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/manifest.g5.md metadata module.requirement.values (resources.rs requirement_failures, requirement_neighbors; iter3 controls in run_models.py)",
+     "assessed_in": "iteration-68",
+     "gap": "The spec gives no Health failure for Unset, and neighbors plus control unset-health-means-false exercise only the Health instance. No neighbor or control exercises Unset on a non-Health instance (a rule requiring Health when unset would still verify)."
+    },
+    {
+     "id": "module.requirement.values#2",
+     "units": [
+      "P1"
+     ],
+     "text": "Explicit Health false excludes Health products.",
+     "cases": "Health=false on a Health instance vs unset",
+     "observation": "ExcludeHealth failure",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/resources.rs::requirement_failures",
+      ".g5/Verus_verification/consolidated/iter3/resources.rs::requirement_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter3/gate/receipt.json",
+      ".g5/Verus_verification/consolidated/iter3/run_models.py",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/manifest.g5.md metadata module.requirement.values (resources.rs requirement_failures, requirement_neighbors; iter3 controls in run_models.py)",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.requirement.values#3",
+     "units": [
+      "P1"
+     ],
+     "text": "Health true requires a Health instance.",
+     "cases": "Health=true on a non-Health vs Health instance",
+     "observation": "NeedHealth failure",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/resources.rs::requirement_failures",
+      ".g5/Verus_verification/consolidated/iter3/resources.rs::requirement_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter3/gate/receipt.json",
+      ".g5/Verus_verification/consolidated/iter3/run_models.py",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/manifest.g5.md metadata module.requirement.values (resources.rs requirement_failures, requirement_neighbors; iter3 controls in run_models.py)",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.requirement.values#4",
+     "units": [
+      "P1"
+     ],
+     "text": "Health true also requires an interoperability-enabled namespace, even with Interoperability=\"disabled\".",
+     "cases": "Health=true, Interoperability=disabled, namespace interoperability off vs on",
+     "observation": "Interoperability failure",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/resources.rs::requirement_failures",
+      ".g5/Verus_verification/consolidated/iter3/resources.rs::requirement_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter3/gate/receipt.json",
+      ".g5/Verus_verification/consolidated/iter3/run_models.py",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/manifest.g5.md metadata module.requirement.values (resources.rs requirement_failures, requirement_neighbors; iter3 controls in run_models.py) (control health-does-not-imply-interop rejected)",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.requirement.values#5",
+     "units": [
+      "B1"
+     ],
+     "text": "Interoperability=\"enabled\" requires an interoperability-enabled namespace.",
+     "cases": "Interoperability=enabled on an enabled vs disabled namespace",
+     "observation": "Interoperability failure",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/resources.rs::requirement_failures"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter3/gate/receipt.json",
+      ".g5/Verus_verification/consolidated/iter3/run_models.py",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/manifest.g5.md metadata module.requirement.values (resources.rs requirement_failures, requirement_neighbors; iter3 controls in run_models.py)",
+     "assessed_in": "iteration-68",
+     "gap": "The spec encodes interoperability==1 && !e.interoperability, but no neighbor assertion or rejected control uses interoperability=1, so dropping that disjunct still verifies. Contrast: enabled declaration on a disabled vs enabled namespace (Storage/SystemRequirements.cls::CheckInteroperability, IsInteroperabilityEnabled)."
+    },
+    {
+     "id": "module.requirement.values#6",
+     "units": [
+      "B1"
+     ],
+     "text": "As built, Interoperability=\"disabled\" does not require a disabled namespace.",
+     "cases": "disabled declaration on an enabled namespace",
+     "observation": "no failure",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/resources.rs::requirement_failures",
+      ".g5/Verus_verification/consolidated/iter3/resources.rs::requirement_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter3/gate/receipt.json",
+      ".g5/Verus_verification/consolidated/iter3/run_models.py",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/manifest.g5.md metadata module.requirement.values (resources.rs requirement_failures, requirement_neighbors; iter3 controls in run_models.py) (control disabled-means-negative-requirement rejected)",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.requirement.values#7",
+     "units": [
+      "B2"
+     ],
+     "text": "SYSNamespace=\"true\" requires the exact %SYS namespace. False or omission adds no namespace restriction.",
+     "cases": "true in USER vs %SYS; unset in USER",
+     "observation": "SYSNamespace failure",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/resources.rs::requirement_failures",
+      ".g5/Verus_verification/consolidated/iter3/resources.rs::requirement_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter3/gate/receipt.json",
+      ".g5/Verus_verification/consolidated/iter3/run_models.py",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/manifest.g5.md metadata module.requirement.values (resources.rs requirement_failures, requirement_neighbors; iter3 controls in run_models.py)",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.requirement.values#8",
+     "units": [
+      "B3"
+     ],
+     "text": "The aggregate appends returned errors from its checks in order rather than stopping after the first returned error.",
+     "cases": "several failing checks vs one",
+     "observation": "ordered list of failures in the CheckRequirements status",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/resources.rs::requirement_failures",
+      ".g5/Verus_verification/consolidated/iter3/resources.rs::requirement_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter3/gate/receipt.json",
+      ".g5/Verus_verification/consolidated/iter3/run_models.py",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/manifest.g5.md metadata module.requirement.values (resources.rs requirement_failures, requirement_neighbors; iter3 controls in run_models.py)",
+     "assessed_in": "iteration-68",
+     "gap": "The three-failure neighbor proves order among Interoperability, Health and SYSNamespace only. CheckRequirements also appends CheckVersion, CheckIPMVersion and CheckPythonVersion (product order Version, Interoperability, Health, IPMVersion, PythonVersion, SYSNamespace), which the model omits. Contrast: Version and SYSNamespace both failing must report both, Version first."
+    },
+    {
+     "id": "module.requirement.values#9",
+     "units": [
+      "B3"
+     ],
+     "text": "A thrown exception may stop later checks. Version parsing, runtime detection and SemVer exceptions are separate dependencies.",
+     "cases": "a check that throws vs returns an error",
+     "observation": "whether later checks run",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "No model represents a throwing check. Contrast: CheckVersion throwing on an unparsable expression stops CheckSYSNamespace vs a returned error that does not."
+    }
+   ]
+  },
+  "module.parameter": {
+   "body_sha": "e4460bb34f7c78a2",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "module.parameter#1",
+     "module.parameter#2"
+    ],
+    "B1": [
+     "module.parameter#3"
+    ],
+    "B2": [
+     "module.parameter#4"
+    ],
+    "B3": "excluded: restates transaction.flag-sources (concepts/transactions-and-dev-mode, owner not yet enumerated, chunk B)"
+   },
+   "obligations": [
+    {
+     "id": "module.parameter#1",
+     "units": [
+      "P1"
+     ],
+     "text": "<Default> and <Defaults><Parameter> give values the module receives at load and install.",
+     "cases": "<Default> vs <Parameter> value, read by an Invoke argument vs by the installer class",
+     "observation": "value seen by each reader",
+     "grade": "full",
+     "check": "refuted",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter36/installer.rs::default_versus_parameter",
+      ".g5/Verus_verification/consolidated/iter36/installer.rs::configure_call",
+      ".g5/Verus_verification/consolidated/iter36/installer.rs::note_call"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter36/run.json"
+     ],
+     "basis": "new:iteration-68 (iteration36 installer.rs, control default-reaches-installer-vars; finding C:D41)",
+     "assessed_in": "iteration-68",
+     "note": "Refuted for the installer reader: a <Default> reaches Invoke arguments but not the installer variables (C:D41). The block states the promise without the C:D41 qualification."
+    },
+    {
+     "id": "module.parameter#2",
+     "units": [
+      "P1"
+     ],
+     "text": "A -D<name>=<value> on the command line overrides the declared value.",
+     "cases": "declared default/parameter with vs without -D",
+     "observation": "value seen by Invoke and installer readers",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter36/installer.rs::override_reaches_both",
+      ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::parameter_precedence"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter36/run.json",
+      ".g5/Verus_verification/consolidated/verus/results/env-attr/checks.json",
+      ".g5/uplift/consolidated/extension/bindings.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-68; reused:.g5/ontology/features/manifest.g5.md metadata module.parameter",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.parameter#3",
+     "units": [
+      "B1"
+     ],
+     "text": "Dotted parameter names become nested parameters.",
+     "cases": "name a.b vs a",
+     "observation": "subscript structure seen by the reader",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "No formal rule maps a dotted -D or <Default> name to nested parameter subscripts. Contrast: -Da.b=1 read as pParams(\"a\",\"b\") vs a flat \"a.b\" key by a resource attribute or installer."
+    },
+    {
+     "id": "module.parameter#4",
+     "units": [
+      "B2"
+     ],
+     "text": "Placeholders in parameter values are filled in, repeatedly if needed.",
+     "cases": "chain a=${b}, b=${c}, c=v in forward vs backward declaration order",
+     "observation": "final value of a",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::resolve_bounded",
+      ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::resolve_pass",
+      ".g5/Verus_verification/consolidated/iter7/inputs.rs::sweep",
+      ".g5/Verus_verification/consolidated/iter7/inputs.rs::parameter_neighbors"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/consolidated/verus/results/env-attr/checks.json",
+      ".g5/uplift/consolidated/extension/bindings.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter7/run.json"
+     ],
+     "basis": "reused:.g5/ontology/features/manifest.g5.md metadata module.parameter",
+     "assessed_in": "iteration-68",
+     "gap": "resolve_bounded iterates passes to a fixed point and inputs.rs parameter_neighbors shows one sweep resolves a forward chain but not a backward one, but no theorem shows resolve_bounded resolves a multi-level backward chain (native E22, E31, E36 only). Reader: Storage/ModuleSetting/Default.cls::ResolvePlaceholders."
+    }
+   ],
+   "parent": {
+    "children": [
+     "module.parameter.expressions",
+     "module.parameter.literal-values",
+     "module.parameter.cycles"
+    ],
+    "entailment": "The parent owns delivery, -D precedence, dotted names and repeated filling (#1-#4). The children own expression syntax, literal values and cycles. No parent obligation is entailed by the children, so none is credited by composition."
+   }
+  },
+  "module.parameter.expressions": {
+   "body_sha": "b239716ea219486c",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "module.parameter.expressions#1"
+    ],
+    "B1": [
+     "module.parameter.expressions#2",
+     "module.parameter.expressions#3",
+     "module.parameter.expressions#4"
+    ],
+    "B2": [
+     "module.parameter.expressions#5"
+    ],
+    "B3": [
+     "module.parameter.expressions#6"
+    ],
+    "B4": [
+     "module.parameter.expressions#7",
+     "module.parameter.expressions#8"
+    ],
+    "B5": [
+     "module.parameter.expressions#9",
+     "module.parameter.expressions#10"
+    ],
+    "B6": [
+     "module.parameter.expressions#11",
+     "module.parameter.expressions#12",
+     "module.parameter.expressions#13"
+    ],
+    "B7": "excluded: rationale; links the failures to literal intent and points to open question C:Q2",
+    "B8": [
+     "module.parameter.expressions#1"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "module.parameter.expressions#1",
+     "units": [
+      "P1",
+      "B8"
+     ],
+     "text": "An attribute value without { is used as written (working assumption: keep this brace gate).",
+     "cases": "value with vs without {",
+     "observation": "evaluated attribute value",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::evaluate",
+      ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::brace_free_macro_is_unchanged"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/consolidated/verus/results/env-attr/checks.json",
+      ".g5/uplift/consolidated/extension/bindings.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/manifest.g5.md metadata module.parameter.expressions (verus/attr_evaluator.rs)",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.parameter.expressions#2",
+     "units": [
+      "B1"
+     ],
+     "text": "${name} or {$name} takes a parameter's value.",
+     "cases": "${a}, {$a} and {a} with parameter a defined",
+     "observation": "evaluated attribute value",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::regex_replace_match"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/consolidated/verus/results/env-attr/checks.json",
+      ".g5/uplift/consolidated/extension/bindings.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/manifest.g5.md metadata module.parameter.expressions (verus/attr_evaluator.rs)",
+     "assessed_in": "iteration-68",
+     "gap": "regex_replace_match takes matched/start/end as supplied matcher results, so recognizing the two placeholder forms is an input. Contrast: ${a} and {$a} both replaced, {a} untouched (Storage/ModuleSetting/Default.cls::EvaluateAttribute)."
+    },
+    {
+     "id": "module.parameter.expressions#3",
+     "units": [
+      "B1"
+     ],
+     "text": "Parameter names match regardless of case.",
+     "cases": "NS vs ns",
+     "observation": "whether the placeholder matches",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::name_matches",
+      ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::dotted_name_is_not_literal"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/consolidated/verus/results/env-attr/checks.json",
+      ".g5/uplift/consolidated/extension/bindings.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/manifest.g5.md metadata module.parameter.expressions (verus/attr_evaluator.rs)",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.parameter.expressions#4",
+     "units": [
+      "B1"
+     ],
+     "text": "Built-in root, packagename, version, verbose and ipmDir take precedence over module defaults with the same name.",
+     "cases": "default named version vs the built-in",
+     "observation": "evaluated {$version}",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::with_builtins",
+      ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::parameter_precedence"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/consolidated/verus/results/env-attr/checks.json",
+      ".g5/uplift/consolidated/extension/bindings.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/manifest.g5.md metadata module.parameter.expressions (verus/attr_evaluator.rs)",
+     "assessed_in": "iteration-68",
+     "gap": "with_builtins proves a supplied builtin map wins, but which names are built in is an input. Storage/Module.cls::%Evaluate sets the five customParams after GetCustomParameters, and the model does not tie that list. Contrast: a default named version vs one named other (native E20)."
+    },
+    {
+     "id": "module.parameter.expressions#5",
+     "units": [
+      "B2"
+     ],
+     "text": "The same forms give instance values namespace, namespaceLower and mgrDir.",
+     "cases": "namespace vs namespaceLower vs mgrDir; local parameter of the same name",
+     "observation": "evaluated value",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::system_expression",
+      ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::system_namespace_alias_and_lower",
+      ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::nested_lookup_uses_local_before_system"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/consolidated/verus/results/env-attr/checks.json",
+      ".g5/uplift/consolidated/extension/bindings.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/manifest.g5.md metadata module.parameter.expressions (verus/attr_evaluator.rs)",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.parameter.expressions#6",
+     "units": [
+      "B3"
+     ],
+     "text": "$$$name takes an IRIS macro value, or nothing if the macro is undefined.",
+     "cases": "defined vs undefined macro",
+     "observation": "evaluated value",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::macro_value",
+      ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::undefined_macro_is_empty"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/consolidated/verus/results/env-attr/checks.json",
+      ".g5/uplift/consolidated/extension/bindings.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/manifest.g5.md metadata module.parameter.expressions (verus/attr_evaluator.rs)",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.parameter.expressions#7",
+     "units": [
+      "B4"
+     ],
+     "text": "{name} gives the module name.",
+     "cases": "{name} vs {Name} vs other text",
+     "observation": "evaluated value",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "No formal rule covers the (?i)\\{name\\} replacement in Storage/Module.cls::%Evaluate. Contrast: module m with value \"x{name}y\" gives \"xmy\"."
+    },
+    {
+     "id": "module.parameter.expressions#8",
+     "units": [
+      "B4"
+     ],
+     "text": "#{expression} gives the value of an ObjectScript expression, or nothing if it fails.",
+     "cases": "interpreter success vs failure",
+     "observation": "evaluated value",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::evaluate_expression",
+      ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::expression_failure_is_empty",
+      ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::expression_strips_leading_blank"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/consolidated/verus/results/env-attr/checks.json",
+      ".g5/uplift/consolidated/extension/bindings.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/manifest.g5.md metadata module.parameter.expressions (verus/attr_evaluator.rs)",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.parameter.expressions#9",
+     "units": [
+      "B5"
+     ],
+     "text": "As built, a value without { returns unchanged before parameter lookup, macro expansion or expression compilation.",
+     "cases": "brace-free value containing $$$OK",
+     "observation": "value and whether a macro class is generated",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::brace_free_macro_is_unchanged",
+      ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::macro_error_keeps_generated_class"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/consolidated/verus/results/env-attr/checks.json",
+      ".g5/uplift/consolidated/extension/bindings.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/manifest.g5.md metadata module.parameter.expressions (verus/attr_evaluator.rs)",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.parameter.expressions#10",
+     "units": [
+      "B5"
+     ],
+     "text": "With {, lookup and nested placeholders run, followed by macro/expression evaluation.",
+     "cases": "value whose result depends on step order",
+     "observation": "evaluated value",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::evaluate"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/consolidated/verus/results/env-attr/checks.json",
+      ".g5/uplift/consolidated/extension/bindings.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/manifest.g5.md metadata module.parameter.expressions (verus/attr_evaluator.rs)",
+     "assessed_in": "iteration-68",
+     "gap": "evaluate() takes the evaluated pipeline as an input, so step order is not modeled. The stated order also contradicts the source: Storage/Module.cls::%Evaluate runs %EvaluateMacro before ResolvePlaceholders/EvaluateAttribute, then system expressions, {name} and #{}. Contrast: a parameter whose value contains $$$name gives an unexpanded macro if lookup follows macro expansion."
+    },
+    {
+     "id": "module.parameter.expressions#11",
+     "units": [
+      "B6"
+     ],
+     "text": "As built (C:D4), a replacement value containing $ may raise.",
+     "cases": "value $5 vs plain",
+     "observation": "replacement result or error",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::matched_dollar_can_fail"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/consolidated/verus/results/env-attr/checks.json",
+      ".g5/uplift/consolidated/extension/bindings.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/manifest.g5.md metadata module.parameter.expressions (verus/attr_evaluator.rs)",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.parameter.expressions#12",
+     "units": [
+      "B6"
+     ],
+     "text": "As built (C:D5), a dotted parameter name can match another name because it becomes regex syntax.",
+     "cases": "a.b vs axb",
+     "observation": "match",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::dotted_name_is_not_literal"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/consolidated/verus/results/env-attr/checks.json",
+      ".g5/uplift/consolidated/extension/bindings.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/manifest.g5.md metadata module.parameter.expressions (verus/attr_evaluator.rs)",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.parameter.expressions#13",
+     "units": [
+      "B6"
+     ],
+     "text": "As built (C:D3), a cyclic reference exhausts the loop before the declared cycle error can run.",
+     "cases": "cyclic vs acyclic",
+     "observation": "circular error flag",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::declared_cycle_error_is_unreachable",
+      ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::cycle_witness"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/consolidated/verus/results/env-attr/checks.json",
+      ".g5/uplift/consolidated/extension/bindings.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/manifest.g5.md metadata module.parameter.expressions (verus/attr_evaluator.rs)",
+     "assessed_in": "iteration-68"
+    }
+   ]
+  },
+  "module.parameter.literal-values": {
+   "body_sha": "f4f302fb716a3bec",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "module.parameter.literal-values#1",
+     "module.parameter.literal-values#2"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "module.parameter.literal-values#1",
+     "units": [
+      "P1"
+     ],
+     "text": "A parameter value containing \\ is inserted exactly as written.",
+     "cases": "value C:\\dir\\sub vs plain",
+     "observation": "inserted text",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::regex_replace_match",
+      ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::full_match_backslash_literal",
+      ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::attribute_backslash_is_literal",
+      ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::backslash_quote_is_inverse"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/consolidated/verus/results/env-attr/checks.json",
+      ".g5/uplift/consolidated/extension/bindings.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/manifest.g5.md metadata module.parameter.literal-values (attr_evaluator.rs::regex_replace_match)",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.parameter.literal-values#2",
+     "units": [
+      "P1"
+     ],
+     "text": "A parameter value containing $ must not change the result or cause an error. Intended promise; the as-built model refutes it (C:D4).",
+     "cases": "value $5 vs value without $",
+     "observation": "inserted text or error",
+     "grade": "full",
+     "check": "refuted",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::regex_replace_match",
+      ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::matched_dollar_can_fail"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/consolidated/verus/results/env-attr/checks.json",
+      ".g5/uplift/consolidated/extension/bindings.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/manifest.g5.md metadata module.parameter.literal-values (attr_evaluator.rs::regex_replace_match)",
+     "assessed_in": "iteration-68"
+    }
+   ]
+  },
+  "module.parameter.cycles": {
+   "body_sha": "66fabbf5682049cb",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "module.parameter.cycles#1"
+    ],
+    "B1": [
+     "module.parameter.cycles#2"
+    ],
+    "B2": [
+     "module.parameter.cycles#3"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "module.parameter.cycles#1",
+     "units": [
+      "P1"
+     ],
+     "text": "If parameters refer to each other in a loop, IPM should report an error naming the circular reference instead of installing with an unfilled value. Intended promise; the as-built model refutes it (C:D3).",
+     "cases": "a=${b}, b=${a} vs acyclic",
+     "observation": "circular-reference error",
+     "grade": "full",
+     "check": "refuted",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::resolve_bounded",
+      ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::declared_cycle_error_is_unreachable",
+      ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::cycle_witness"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/consolidated/verus/results/env-attr/checks.json",
+      ".g5/uplift/consolidated/extension/bindings.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/manifest.g5.md metadata module.parameter.cycles (attr_evaluator.rs::resolve_bounded)",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.parameter.cycles#2",
+     "units": [
+      "B1"
+     ],
+     "text": "As built, a=${b}, b=${a} returns unresolved ${a} without the error, while a=${b}, b=ok returns ok.",
+     "cases": "cyclic vs resolving neighbor",
+     "observation": "resolved value of a",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::resolve_bounded",
+      ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::cycle_witness"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/consolidated/verus/results/env-attr/checks.json",
+      ".g5/uplift/consolidated/extension/bindings.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/manifest.g5.md metadata module.parameter.cycles (attr_evaluator.rs::resolve_bounded)",
+     "assessed_in": "iteration-68",
+     "gap": "cycle_witness proves only that no circular error is raised. Neither the returned value ${a} for the cycle nor ok for the resolving neighbor is asserted (native E30 only). Reader: Storage/ModuleSetting/Default.cls::ResolvePlaceholders result."
+    },
+    {
+     "id": "module.parameter.cycles#3",
+     "units": [
+      "B2"
+     ],
+     "text": "Using the unresolved value later may raise a regular-expression error, which does not satisfy the circular-reference requirement.",
+     "cases": "later use of ${a} vs resolved value",
+     "observation": "error kind at the later reader",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::regex_replace_match",
+      ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::matched_dollar_can_fail"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/consolidated/verus/results/env-attr/checks.json",
+      ".g5/uplift/consolidated/extension/bindings.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/manifest.g5.md metadata module.parameter.cycles (attr_evaluator.rs::resolve_bounded)",
+     "assessed_in": "iteration-68",
+     "gap": "replacement() fails on $ not followed by 0/1, and matched_dollar_can_fail exercises $5, but no theorem connects a cycle's unresolved ${a} to a later regex failure (native E18, E35 only)."
+    }
+   ]
+  },
+  "module.list.delimiter": {
+   "body_sha": "08693736b06dfff5",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "module.list.delimiter#1",
+     "module.list.delimiter#2"
+    ],
+    "P2": "excluded: scope statement; value/display mappings and allowed-value validation are separate checks with no owner on this block"
+   },
+   "obligations": [
+    {
+     "id": "module.list.delimiter#1",
+     "units": [
+      "P1"
+     ],
+     "text": "An omitted or comma ODBC delimiter splits an XML option-list value at commas.",
+     "cases": "delimiter omitted vs comma vs pipe",
+     "observation": "list items",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter7/inputs.rs::split",
+      ".g5/Verus_verification/consolidated/iter7/inputs.rs::delimiter",
+      ".g5/Verus_verification/consolidated/iter7/inputs.rs::list_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter7/run.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/manifest.g5.md metadata module.list.delimiter (iter7 inputs.rs split, delimiter) (control delimiter-always-comma rejected)",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.list.delimiter#2",
+     "units": [
+      "P1"
+     ],
+     "text": "An explicit pipe delimiter keeps embedded commas inside each list item.",
+     "cases": "a,b|c with pipe vs comma",
+     "observation": "list items",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter7/inputs.rs::split",
+      ".g5/Verus_verification/consolidated/iter7/inputs.rs::list_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter7/run.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/manifest.g5.md metadata module.list.delimiter (iter7 inputs.rs split, delimiter)",
+     "assessed_in": "iteration-68"
+    }
+   ]
+  },
+  "module.env": {
+   "body_sha": "10d4c27808a1b112",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "module.env#1",
+     "module.env#2",
+     "module.env#3",
+     "module.env#4"
+    ],
+    "B1": [
+     "module.env#5"
+    ],
+    "B2": [
+     "module.env#6"
+    ],
+    "B3": [
+     "module.env#7"
+    ],
+    "B4": "excluded: undecided policy (open question module.env.failure)",
+    "B5": [
+     "module.env#8"
+    ],
+    "B6": [
+     "module.env#9"
+    ],
+    "B7": [
+     "module.env#10"
+    ],
+    "B8": [
+     "module.env#11"
+    ],
+    "B9": [
+     "module.env#10",
+     "module.env#9"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "module.env#1",
+     "units": [
+      "P1"
+     ],
+     "text": "-env takes ;-separated JSON files.",
+     "cases": "-env a.json;b.json vs one file",
+     "observation": "sequence of files loaded",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-68",
+     "assessed_in": "iteration-68",
+     "gap": "command() takes a Seq<FileInput>; splitting the -env argument at ; (Lifecycle/Base.cls LoadEnvironmentConfig callers) is not modeled. Contrast: \"a.json;b.json\" loads two files in order."
+    },
+    {
+     "id": "module.env#2",
+     "units": [
+      "P1"
+     ],
+     "text": "${VAR} in the files is replaced with environment values (an unset variable gives empty).",
+     "cases": "VAR set vs unset",
+     "observation": "configuration value",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/env_config.rs::evaluate_json",
+      ".g5/Verus_verification/consolidated/verus/env_config.rs::evaluate_keeps_container_shape"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/consolidated/verus/results/env-attr/checks.json",
+      ".g5/uplift/consolidated/extension/bindings.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/manifest.g5.md metadata module.env (verus/env_config.rs)",
+     "assessed_in": "iteration-68",
+     "gap": "evaluate_json takes the substitution as a primitive callback, so environment lookup and unset-to-empty are inputs (native U7 only)."
+    },
+    {
+     "id": "module.env#3",
+     "units": [
+      "P1"
+     ],
+     "text": "The module reads the configuration with %IPM.General.EnvironmentConfig:GetArg.",
+     "cases": "nested path present vs absent vs through a scalar",
+     "observation": "GetArg result",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/env_config.rs::lookup",
+      ".g5/Verus_verification/consolidated/verus/env_config.rs::scalar_on_lookup_path_is_empty"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/consolidated/verus/results/env-attr/checks.json",
+      ".g5/uplift/consolidated/extension/bindings.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/manifest.g5.md metadata module.env (verus/env_config.rs)",
+     "assessed_in": "iteration-68",
+     "gap": "lookup is specified, but only the scalar-on-path absence is proved. No theorem shows a loaded nested value returned by GetArg, and no binding ties lookup to GetArg's body."
+    },
+    {
+     "id": "module.env#4",
+     "units": [
+      "P1"
+     ],
+     "text": "A missing -env file is an error.",
+     "cases": "missing vs readable file",
+     "observation": "command status",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/env_config.rs::load_file",
+      ".g5/Verus_verification/consolidated/verus/env_config.rs::any_file_error_clears",
+      ".g5/Verus_verification/consolidated/verus/env_config.rs::later_failure_erases_earlier"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/consolidated/verus/results/env-attr/checks.json",
+      ".g5/uplift/consolidated/extension/bindings.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/manifest.g5.md metadata module.env (verus/env_config.rs)",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.env#5",
+     "units": [
+      "B1"
+     ],
+     "text": "Files merge in order; a later value replaces an earlier one and nested objects merge key by key.",
+     "cases": "overlapping vs disjoint keys across two files",
+     "observation": "merged configuration",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/env_config.rs::merge_value",
+      ".g5/Verus_verification/consolidated/verus/env_config.rs::scalar_overwrites",
+      ".g5/Verus_verification/consolidated/verus/env_config.rs::recursive_frame",
+      ".g5/Verus_verification/consolidated/verus/env_config.rs::load_files"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/consolidated/verus/results/env-attr/checks.json",
+      ".g5/uplift/consolidated/extension/bindings.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/manifest.g5.md metadata module.env (verus/env_config.rs)",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.env#6",
+     "units": [
+      "B2"
+     ],
+     "text": "Every command that runs module phases starts from an empty configuration and loads only its own -env files; a later command in the same session does not see an earlier command's files.",
+     "cases": "load -env f then test without -env in one shell session",
+     "observation": "configuration read by the second command",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/env_config.rs::command",
+      ".g5/Verus_verification/consolidated/verus/env_config.rs::command_without_files_resets",
+      ".g5/Verus_verification/consolidated/verus/env_config.rs::clear"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/consolidated/verus/results/env-attr/checks.json",
+      ".g5/uplift/consolidated/extension/bindings.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/manifest.g5.md metadata module.env (verus/env_config.rs)",
+     "assessed_in": "iteration-68",
+     "gap": "command() is defined to start empty, but which commands clear and load (Lifecycle/Base.cls Reload phase, Main.cls phase commands) is not modeled. A phase-running path that skips LoadEnvironmentConfig satisfies the model. Contrast: native S1 (second command reads empty)."
+    },
+    {
+     "id": "module.env#7",
+     "units": [
+      "B3"
+     ],
+     "text": "While a configuration is loaded, IPM compiles in one process so code generated at compile time can read it.",
+     "cases": "configuration loaded vs empty",
+     "observation": "generator-visible value",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/env_config.rs::compile_single",
+      ".g5/Verus_verification/consolidated/verus/env_config.rs::generator_visible",
+      ".g5/Verus_verification/consolidated/verus/env_config.rs::loaded_configuration_is_visible"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/consolidated/verus/results/env-attr/checks.json",
+      ".g5/uplift/consolidated/extension/bindings.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/manifest.g5.md metadata module.env (verus/env_config.rs)",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.env#8",
+     "units": [
+      "B5"
+     ],
+     "text": "An environment value is inserted literally. As built, a $ or \\ in the value changes or breaks the result (C:D14).",
+     "cases": "value a$1b, a\\b, a$9b vs plain",
+     "observation": "configuration value or error",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/env_config.rs::replacement",
+      ".g5/Verus_verification/consolidated/verus/env_config.rs::dollar_is_not_literal"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/consolidated/verus/results/env-attr/checks.json",
+      ".g5/uplift/consolidated/extension/bindings.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/manifest.g5.md metadata module.env (verus/env_config.rs)",
+     "assessed_in": "iteration-68",
+     "gap": "dollar_is_not_literal proves the ICU replacement semantics, but evaluate_json takes the substitution as an input, so no rule connects an environment value to that replacement text. Contrast: ${CONS_VAR}=a$9b makes the load fail while =ab succeeds (native U7, U8)."
+    },
+    {
+     "id": "module.env#9",
+     "units": [
+      "B6",
+      "B9"
+     ],
+     "text": "Object elements in arrays merge recursively at the same index; primitive arrays merge by position, so a later array cannot remove items.",
+     "cases": "[{\"x\":1}] then [{\"y\":2}]; [1,2] then [3]",
+     "observation": "merged array",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/env_config.rs::object_in_array_keeps_both_keys",
+      ".g5/Verus_verification/consolidated/verus/env_config.rs::primitive_array_keeps_tail"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/consolidated/verus/results/env-attr/checks.json",
+      ".g5/uplift/consolidated/extension/bindings.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/manifest.g5.md metadata module.env (verus/env_config.rs)",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.env#10",
+     "units": [
+      "B7",
+      "B9"
+     ],
+     "text": "A missing or malformed later file clears earlier values and raises; each LoadEnvironmentConfig call clears first, so the failed command keeps nothing from any file.",
+     "cases": "good file then bad file vs two good files; array root",
+     "observation": "configuration and status",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/env_config.rs::later_failure_erases_earlier",
+      ".g5/Verus_verification/consolidated/verus/env_config.rs::every_failed_file_sequence_is_empty",
+      ".g5/Verus_verification/consolidated/verus/env_config.rs::any_file_error_clears",
+      ".g5/Verus_verification/consolidated/verus/env_config.rs::command_without_files_resets"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/consolidated/verus/results/env-attr/checks.json",
+      ".g5/uplift/consolidated/extension/bindings.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/manifest.g5.md metadata module.env (verus/env_config.rs)",
+     "assessed_in": "iteration-68"
+    },
+    {
+     "id": "module.env#11",
+     "units": [
+      "B8"
+     ],
+     "text": "Process-local configuration reaches a same-process compile, while a fresh worker process starts empty.",
+     "cases": "same process vs fresh worker",
+     "observation": "value visible to the generator",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/env_config.rs::generator_visible",
+      ".g5/Verus_verification/consolidated/verus/env_config.rs::singleton_get",
+      ".g5/Verus_verification/consolidated/verus/env_config.rs::singleton_same_while_referenced"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/consolidated/verus/results/env-attr/checks.json",
+      ".g5/uplift/consolidated/extension/bindings.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/manifest.g5.md metadata module.env (verus/env_config.rs)",
+     "assessed_in": "iteration-68"
+    }
+   ]
+  }
+ }
+}
