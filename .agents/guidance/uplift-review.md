@@ -27,6 +27,10 @@ The [ontology, model and implementation review brief](ontology-model-review.md) 
 - **Evidence:** apply the [TLC](TLC/setup_foundation.md#execution-evidence-and-reuse) or [Verus](Verus/setup_foundation.md#execution-evidence-and-reuse) evidence and reuse rules to raw results, fingerprints and current applicability, including the runner's rejection cases.
 - **Findings and simplifications:** account for every material bug and opportunity, including rejected or partial proposals. Check the repair-proposal requirements in stage B of the [TLC](TLC/uplift.md#b-model-behavior-and-connect-it-to-implementation) or [Verus](Verus/uplift.md#b-model-behavior-and-connect-it-to-implementation) uplift and the model guide's behavioral and unmodeled design comparisons.
 
+### Coverage through child blocks
+
+When a parent relies on its children for coverage, ask whether every cited child property could hold while a condition or outcome promised by the parent fails. If so, record the case and keep the affected obligation open. To credit it, identify the child guarantees and explain why, under compatible assumptions, they jointly establish that obligation. If the parent only restates child commitments, identify their owners and record zero additional obligations. Use the existing [obligation census](uplift-scoring.md#census-of-ontology-obligations).
+
 ## Finish the contract people will read
 
 Read the actual ontology bodies as a person rebuilding the major functionality. Check correctness, qualification scope, cohesion, understandable language, one owner per commitment and useful links. Keep evidence detail outside the governing prose unless it changes the contract. Do this semantic pass before format, metadata and link validation; a structural checker cannot establish intent completeness.

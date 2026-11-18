@@ -30,6 +30,10 @@ For each consequential capability, record its source, governing owner, relevant 
 
 Derive relevant cases from those contracts: for example absent versus empty inputs, zero or several participants, mixed batches, duplicate delivery, repeated actions, terminal state, interruption and recovery. Cover distinctions that can change a required outcome; do not invent business restrictions to fill a matrix. Keep detailed case tables and model mechanics in evidence. Only concise, useful governing statements and consequential choices belong in the human-facing ontology; a property does not require a new block.
 
+### Recover obligations from existing tests
+
+Use consequential acceptance, regression and property tests in the investigated subsystem to recover obligations, including skipped or expected-failure cases whose intent remains relevant. Read assertions with their setup, action sequences and relevant history: identify the promised outcome, essential conditions and what fixtures or mocks supply. Reconcile supported obligations with canonical ontology and formal claims, grouping examples that express one rule. Record material omissions or conflicts in the existing coverage map, keeping detailed test associations in evidence. A passing test does not establish formal coverage; an existing assertion does not automatically establish accepted intent, and an unexecuted test supplies no passing runtime evidence. Continue discovering important behavior absent from tests.
+
 Before investing in the full model campaign, have a fresh reader attempt to reconstruct the major functionality from the ontology alone, then compare with independently recovered expectations and operations. Could an implementation obey everything written yet omit important required behavior? Repair supported omissions in the owning statements. This early check does not replace C's independent review of the completed models, bindings and evidence.
 
 ## Reconcile an older foundation when present
