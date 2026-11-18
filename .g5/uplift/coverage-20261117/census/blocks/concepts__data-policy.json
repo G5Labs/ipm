@@ -1,0 +1,921 @@
+{
+ "page": ".g5/ontology/concepts/data-policy.g5.md",
+ "blocks": {
+  "module": {
+   "body_sha": "9ef0a0ebc6403ca1",
+   "status": "structural",
+   "units": {
+    "P1": "excluded: definition of a module and its manifest; the commitments are owned by the children (module.identity, module.resource, manifest, resources, lifecycle and packaging pages)"
+   },
+   "reason": "Definition only. Children listed in metadata (identity, resources, dependencies, parameters, requirements, invokes, processors, placement, deployed code, Python, environment files) own every commitment; the parent adds none."
+  },
+  "module.identity": {
+   "body_sha": "0cb004e3f1884f4b",
+   "status": "enumerated",
+   "units": {
+    "P1": "excluded: definition (Name, semantic version and descriptive fields); version rules are owned by concepts/versions.g5.md",
+    "B1": "excluded: definition of the manifest document name <Name>.ZPM; document behaviour is owned by module.identity.document (manifest page)",
+    "B2": [
+     "module.identity#1",
+     "module.identity#2"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "module.identity#1",
+     "units": [
+      "B2"
+     ],
+     "text": "An ExternalName can be used in commands in place of the module name (lookup by stored Name first, then ExternalName).",
+     "cases": "command naming a module by its ExternalName vs by Name vs neither",
+     "observation": "selected module record / command status",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/thin_surfaces.rs::inspection_choice",
+      "playbook-uplift/models/verus/uninstall.rs::lookup_m"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      "playbook-uplift/models/verus/results/uninstall.json"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "Name-then-ExternalName precedence is modeled only for show (thin_surfaces inspection_choice) and uninstall (uninstall.rs lookup_m); other commands that accept a module name (load/update/install, module-action, list-dependents) have no model of alias resolution, so \"commands\" in general is not distinguished."
+    },
+    {
+     "id": "module.identity#2",
+     "units": [
+      "B2"
+     ],
+     "text": "An ExternalName must be unique and must not match another module's name; saving a manifest that violates this is refused.",
+     "cases": "new module with ExternalName equal to another module's Name or ExternalName vs a unique ExternalName",
+     "observation": "module save status (Storage/Module.cls %OnValidateObject)",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "No model of the ExternalName validation in Storage/Module.cls %OnValidateObject. Contrast: loading module B with ExternalName \"a\" while module a is installed is refused with the stored record unchanged, vs a unique ExternalName that saves."
+    }
+   ]
+  },
+  "module.resource": {
+   "body_sha": "dbc8f6a9f77c4d2f",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "module.resource#1"
+    ],
+    "B1": "excluded: definition listing resource attributes; each attribute rule is owned elsewhere (Scope: module.resource.scope; Deploy: module.deployed; Directory: module.placement)",
+    "B2": [
+     "module.resource#2"
+    ],
+    "B3": "excluded: navigation to module.processor (resources page)"
+   },
+   "parent": {
+    "children": [
+     "module.resource.scope",
+     "module.resource.identity"
+    ],
+    "entailment": "The parent owns processor selection and the dropped-resource rule, graded directly. Children add separate outcomes; nothing is composed."
+   },
+   "obligations": [
+    {
+     "id": "module.resource#1",
+     "units": [
+      "P1"
+     ],
+     "text": "IPM picks a resource processor for each listed resource from its type (extension) or element.",
+     "cases": ".cls/.inc/.mac/path resource vs element-declared (e.g. <WebApplication>, <FileCopy>) resource",
+     "observation": "processor class attached to the resource",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "No model selects the processor class (ResourceReference processor resolution / Module default processor per extension). Chunk-A models take the processor as given (defaults#4 compares a named class). Contrast: a .cls resource gets the Document default processor while <FileCopy> gets FileCopy."
+    },
+    {
+     "id": "module.resource#2",
+     "units": [
+      "B2"
+     ],
+     "text": "Loading a manifest that no longer lists a resource or dependency updates the stored record but leaves the dropped resource's code and the dropped dependency module installed (C:D26).",
+     "cases": "reload with a resource and a dependency removed",
+     "observation": "stored record lists vs class presence and dependency module presence",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter52/record.rs::load_changed",
+      ".g5/Verus_verification/consolidated/iter52/record.rs::changed_manifest_keeps_old_code"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter52/run.json"
+     ],
+     "basis": "reused:.g5/ontology/concepts/data-policy.g5.md metadata (iteration52; as-built frame of the load writer)",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "module.resource.identity": {
+   "body_sha": "d2b09365b8727e14",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "module.resource.identity#1",
+     "module.resource.identity#4"
+    ],
+    "B1": [
+     "module.resource.identity#1",
+     "module.resource.identity#2"
+    ],
+    "B2": [
+     "module.resource.identity#3"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "module.resource.identity#1",
+     "units": [
+      "P1",
+      "B1"
+     ],
+     "text": "When saving a module, IPM refuses a new resource reference whose nonempty unique name is already stored (even for the same module); reusing the stored reference passes this check. The check uses the stored identity and unique name.",
+     "cases": "new reference with stored name (refused) vs reused stored reference (allowed) vs empty unique name (allowed)",
+     "observation": "save admission",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/resources.rs::resource_save_allowed",
+      ".g5/Verus_verification/consolidated/iter3/resources.rs::resource_identity_and_database_reader"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter3/INDEX.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/concepts/data-policy.g5.md metadata",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "module.resource.identity#2",
+     "units": [
+      "B1"
+     ],
+     "text": "The duplicate check runs before a deployed-project installer can be called.",
+     "cases": "duplicate (refused save) vs reused reference on the deployed-project path",
+     "observation": "provider_called",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/resources.rs::load_project",
+      ".g5/Verus_verification/consolidated/iter3/resources.rs::resource_identity_and_database_reader"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter3/INDEX.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/concepts/data-policy.g5.md metadata",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "module.resource.identity#3",
+     "units": [
+      "B2"
+     ],
+     "text": "A refused save can leave changed object fields that were not written to the row; the database must be read separately.",
+     "cases": "refused duplicate save: object marked_deployed true vs database flag false; reused: database true",
+     "observation": "object field vs database row",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/resources.rs::project_database",
+      ".g5/Verus_verification/consolidated/iter3/resources.rs::load_project",
+      ".g5/Verus_verification/consolidated/iter3/resources.rs::resource_identity_and_database_reader"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter3/INDEX.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/concepts/data-policy.g5.md metadata",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "module.resource.identity#4",
+     "units": [
+      "P1"
+     ],
+     "text": "Reusing the stored reference still runs the other module save checks.",
+     "cases": "reused reference with another failing save guard vs all guards pass",
+     "observation": "save status",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "resource_save_allowed is the only save guard modeled; no model combines it with the other %OnValidateObject checks (ExternalName clash, other-module ownership), so a reused reference that fails another guard is not distinguished from one that saves."
+    }
+   ]
+  },
+  "namespace": {
+   "body_sha": "621baf0bd0b5ce23",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "namespace#1"
+    ]
+   },
+   "parent": {
+    "children": [
+     "namespace.enable",
+     "namespace.unmap",
+     "namespace.mapped-refusal",
+     "namespace.legacy"
+    ],
+    "entailment": "Children (operations/namespaces page) own mapping commands; the per-namespace separation is the parent's own claim, graded directly and not composed."
+   },
+   "obligations": [
+    {
+     "id": "namespace#1",
+     "units": [
+      "P1"
+     ],
+     "text": "IPM 0.9+ is installed per namespace: each namespace can have its own IPM version, repositories, installed modules and history.",
+     "cases": "two namespaces with different local installs / registries / module records",
+     "observation": "per-namespace IPM code, registry data, module records and history",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      "playbook-uplift/models/verus/ns_mapping.rs::nsp_lemma_installer",
+      "playbook-uplift/models/verus/ns_mapping.rs::nsp_lemma_version_read",
+      "playbook-uplift/models/verus/ns_mapping.rs::nsp_lemma_enable"
+     ],
+     "evidence": [
+      "playbook-uplift/models/verus/results/ns_mapping.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "ns_mapping.rs separates IPM code, registry data and the zpm record per namespace (L1), but installed (non-IPM) module records and history rows are not represented per namespace. Contrast: installing module m in NS1 leaves NS2's module list and history unchanged. Note: config settings are instance-wide (metadata), which the \"own repositories\" wording does not qualify."
+    }
+   ]
+  },
+  "history.namespace": {
+   "body_sha": "ac3bfea935be8063",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "history.namespace#1",
+     "history.namespace#2"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "history.namespace#1",
+     "units": [
+      "P1"
+     ],
+     "text": "Each namespace has its own log and IPM writes a record in the namespace where the action runs.",
+     "cases": "action run in NS1 vs NS2",
+     "observation": "which namespace's history table gets the row",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "No writer model has a namespace dimension (the load/history crate is single-namespace; history.rs only reads (ns,id) keys). Contrast: install in NS1 adds a row to NS1 only. Coverage map lists history.namespace as not modeled."
+    },
+    {
+     "id": "history.namespace#2",
+     "units": [
+      "P1"
+     ],
+     "text": "Record IDs are unique only within a namespace: a detail lookup is scoped to the namespace.",
+     "cases": "same ID present in NS a, absent in NS b",
+     "observation": "history details result per namespace",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/history.rs::details",
+      ".g5/Verus_verification/consolidated/verus/history.rs::local_id_collision_is_scoped"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70 (extension history.rs, not linked from this block)",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "repo.origin.installed": {
+   "body_sha": "95872159ca728b90",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "repo.origin.installed#1"
+    ],
+    "B1": [
+     "repo.origin.installed#2",
+     "repo.origin.installed#3"
+    ],
+    "B2": [
+     "repo.origin.installed#4",
+     "repo.origin.installed#5"
+    ],
+    "B3": "excluded: scope statement (stable repository settings per command; same-version changes owned by repo.origin.same-version; concurrent reconfiguration and cache lifetimes unassessed)",
+    "B4": [
+     "repo.origin.installed#6"
+    ]
+   },
+   "parent": {
+    "children": [
+     "repo.origin.same-version"
+    ],
+    "entailment": "The child adds the equal-version reload; the parent's fresh-install rules are graded directly. Nothing composed."
+   },
+   "obligations": [
+    {
+     "id": "repo.origin.installed#1",
+     "units": [
+      "P1"
+     ],
+     "text": "A repository install writes its configured repository name into the module record; show and list -repository read that saved name even after the repository definition is deleted or reused for another location.",
+     "cases": "after install from alpha; after deleting alpha; after recreating alpha at root C",
+     "observation": "show Repository; repository-filtered list membership",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter16/provenance.rs::install",
+      ".g5/Verus_verification/consolidated/iter16/provenance.rs::show_repository",
+      ".g5/Verus_verification/consolidated/iter16/provenance.rs::listed_for_repository",
+      ".g5/Verus_verification/consolidated/iter16/provenance.rs::ordinary_neighbors",
+      ".g5/Verus_verification/consolidated/iter16/provenance.rs::config_changes_preserve_receipts"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter16/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/concepts/data-policy.g5.md metadata",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.origin.installed#2",
+     "units": [
+      "B1"
+     ],
+     "text": "Qualified alpha and beta requests select their respective payloads despite identical module names and versions.",
+     "cases": "alpha vs beta request, same name/version",
+     "observation": "installed payload, supplier, root",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter16/provenance.rs::select",
+      ".g5/Verus_verification/consolidated/iter16/provenance.rs::selection_binds_supplier",
+      ".g5/Verus_verification/consolidated/iter16/provenance.rs::successful_install_binds_receipt",
+      ".g5/Verus_verification/consolidated/iter16/provenance.rs::ordinary_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter16/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/concepts/data-policy.g5.md metadata",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.origin.installed#3",
+     "units": [
+      "B1"
+     ],
+     "text": "Recreating alpha at a new folder changes the next fresh install, while earlier history source snapshots keep their old values.",
+     "cases": "install from alpha at A, recreate at C, reinstall",
+     "observation": "payload/root of the new install; history row 0 supplier",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter16/provenance.rs::ordinary_neighbors",
+      ".g5/Verus_verification/consolidated/iter16/provenance.rs::uninstall_projection_neighbors",
+      ".g5/Verus_verification/consolidated/iter16/provenance.rs::history_has_supplier"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter16/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/concepts/data-policy.g5.md metadata",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.origin.installed#4",
+     "units": [
+      "B2"
+     ],
+     "text": "A later local load clears the module's repository name: show omits Repository and neither repository-filtered list includes it.",
+     "cases": "local load after beta install",
+     "observation": "show Repository; alpha/beta filtered lists",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter16/provenance.rs::local_load",
+      ".g5/Verus_verification/consolidated/iter16/provenance.rs::local_and_refusal_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter16/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/concepts/data-policy.g5.md metadata",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.origin.installed#5",
+     "units": [
+      "B2"
+     ],
+     "text": "After the local load, earlier installation history still describes the past installs, not the current payload.",
+     "cases": "history rows 1,2 after local load",
+     "observation": "history supplier/root per row",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter16/provenance.rs::local_and_refusal_neighbors",
+      ".g5/Verus_verification/consolidated/iter16/provenance.rs::history_has_supplier"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter16/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/concepts/data-policy.g5.md metadata",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.origin.installed#6",
+     "units": [
+      "B4"
+     ],
+     "text": "Installed supplier names differ from project-repository metadata in available-module searches (search reads repository catalog metadata, not the saved installed supplier).",
+     "cases": "search after a local load or repository rename vs show",
+     "observation": "search output repository column vs saved supplier",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "Source-inspected only (stated in the block). No model of the search catalog reader (Repo/Manager search, Main.cls::Search) against the installed record; contrast: module installed from alpha then alpha renamed shows the new catalog repository in search while show keeps alpha."
+    }
+   ]
+  },
+  "repo.origin.same-version": {
+   "body_sha": "6f276448fd940941",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "repo.origin.same-version#1"
+    ],
+    "B1": [
+     "repo.origin.same-version#2"
+    ],
+    "B2": [
+     "repo.origin.same-version#3"
+    ],
+    "B3": "excluded: pointer to load.same-version (features/load.g5.md, owner) plus domain/scope statement (one package per root, successful providers; other versions and refused-attempt history unassessed; logical labels vs database IDs)"
+   },
+   "obligations": [
+    {
+     "id": "repo.origin.same-version#1",
+     "units": [
+      "P1"
+     ],
+     "text": "Reinstalling the same plain 1.0.0 from a different qualified filesystem repository loads that supplier's files again: saved supplier, root and callable payload change though the version string is unchanged.",
+     "cases": "install alpha then beta at equal version (existing_equal admitted, no skip)",
+     "observation": "payload, supplier, root, version",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter18/reloading.rs::reload",
+      ".g5/Verus_verification/consolidated/iter18/reloading.rs::existing_equal",
+      ".g5/Verus_verification/consolidated/iter18/reloading.rs::selected_source_controls_effect",
+      ".g5/Verus_verification/consolidated/iter18/reloading.rs::admission_neighbor",
+      ".g5/Verus_verification/consolidated/iter18/reloading.rs::module_neighbor"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter18/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/concepts/data-policy.g5.md metadata (as-built; controls equal-version-is-skipped and keep-old-code-payload rejected)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.origin.same-version#2",
+     "units": [
+      "B1"
+     ],
+     "text": "In the alpha, beta, alpha sequence each successful action gets a new source snapshot and earlier alpha and beta history still describe their past suppliers.",
+     "cases": "three successive equal-version installs",
+     "observation": "history rows 0..2 supplier/root and receipt status",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter18/reloading.rs::receipt_neighbor",
+      ".g5/Verus_verification/consolidated/iter18/reloading.rs::old_receipts_survive"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter18/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/concepts/data-policy.g5.md metadata",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.origin.same-version#3",
+     "units": [
+      "B2"
+     ],
+     "text": "A request for that version from a missing repository fails before loading; the installed beta payload and supplier stay beta, earlier snapshots remain, and the installed copy does not satisfy the missing qualifier.",
+     "cases": "missing qualifier after beta vs successful qualified reload",
+     "observation": "status; payload; supplier; history",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter18/reloading.rs::missing_qualifier_preserves_selected_projection",
+      ".g5/Verus_verification/consolidated/iter18/reloading.rs::refusal_neighbor"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter18/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/concepts/data-policy.g5.md metadata (controls missing-qualifier-success and missing-qualifier-falls-back rejected)",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "history.fields.source-snapshot": {
+   "body_sha": "ed963452290903b1",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "history.fields.source-snapshot#1"
+    ],
+    "B1": [
+     "history.fields.source-snapshot#2"
+    ],
+    "B2": [
+     "history.fields.source-snapshot#3",
+     "history.fields.source-snapshot#4"
+    ],
+    "B3": "excluded: model-scope disclosure (logical labels vs permanent IDs; history deletion, caller rollback, concurrency and refused-attempt sources not covered)"
+   },
+   "obligations": [
+    {
+     "id": "history.fields.source-snapshot#1",
+     "units": [
+      "P1"
+     ],
+     "text": "For a retained finalized install record, history details reads the saved repository name, type and details; deleting or reconfiguring that repository later does not replace them.",
+     "cases": "record 0 after alpha delete and recreate at C",
+     "observation": "history detail source view",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter16/provenance.rs::history_detail",
+      ".g5/Verus_verification/consolidated/iter16/provenance.rs::source_view",
+      ".g5/Verus_verification/consolidated/iter16/provenance.rs::persist",
+      ".g5/Verus_verification/consolidated/iter16/provenance.rs::config_changes_preserve_receipts",
+      ".g5/Verus_verification/consolidated/iter16/provenance.rs::ordinary_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter16/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/concepts/data-policy.g5.md metadata",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "history.fields.source-snapshot#2",
+     "units": [
+      "B1"
+     ],
+     "text": "In the alpha / alpha-reused / beta sequence each permanent record retains the supplier and scan-location details captured for that action.",
+     "cases": "records 0,1,2",
+     "observation": "source, moniker, details per record",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter16/provenance.rs::reader_neighbors",
+      ".g5/Verus_verification/consolidated/iter16/provenance.rs::details_literal_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter16/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/concepts/data-policy.g5.md metadata",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "history.fields.source-snapshot#3",
+     "units": [
+      "B2"
+     ],
+     "text": "A subsequent local load has an empty source triple and its details show n/a because its action is load; older install history stays historical.",
+     "cases": "local-load record 3 vs install records",
+     "observation": "source triple; history detail view",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter16/provenance.rs::reader_neighbors",
+      ".g5/Verus_verification/consolidated/iter16/provenance.rs::local_and_refusal_neighbors",
+      ".g5/Verus_verification/consolidated/iter16/provenance.rs::source_view"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter16/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/concepts/data-policy.g5.md metadata",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "history.fields.source-snapshot#4",
+     "units": [
+      "B2"
+     ],
+     "text": "The local-load record's command string identifies the local path.",
+     "cases": "local load record vs install record",
+     "observation": "command text in history details",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [
+      ".g5/uplift/consolidated/iter16/run.json"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "The command text field is not in provenance.rs Row; native-only. Contrast: load /path record shows the path in its command string while its source triple is empty."
+    }
+   ]
+  },
+  "history.locked": {
+   "body_sha": "18593a2bcdc1e5a3",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "history.locked#1",
+     "history.locked#2"
+    ],
+    "B1": [
+     "history.locked#3"
+    ]
+   },
+   "parent": {
+    "children": [
+     "history.locked.unfinished (open question)"
+    ],
+    "entailment": "Only an open-question child; graded directly."
+   },
+   "obligations": [
+    {
+     "id": "history.locked#1",
+     "units": [
+      "P1"
+     ],
+     "text": "Once a record is finalized it cannot be edited through SQL UPDATE or by saving the object (the trigger refuses it).",
+     "cases": "foreign edit of a finalized vs unfinalized durable row; control 10 removes the trigger",
+     "observation": "durable History row after the edit",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/crates/ipm-load-history/src/model.rs::user_edit",
+      ".g5/Verus_verification/crates/ipm-load-history/src/model.rs::persist_row",
+      ".g5/Verus_verification/crates/ipm-load-history/src/proofs.rs::theorem_r2",
+      ".g5/Verus_verification/crates/ipm-load-history/src/proofs.rs::fin_stable"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+      ".g5/Verus_verification/results/verus/20261113T224057Z-final-r3-control-10-verus/receipt.json",
+      ".g5/Verus_verification/coverage-map.md"
+     ],
+     "basis": "reused:.g5/Verus_verification/coverage-map.md (theorem_r2, control 10 detected)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "history.locked#2",
+     "units": [
+      "P1"
+     ],
+     "text": "Records can only be added or deleted; deleting a finalized record is allowed.",
+     "cases": "DELETE of a finalized row vs UPDATE of it",
+     "observation": "row presence after delete",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/history.rs::delete",
+      ".g5/Verus_verification/consolidated/verus/history.rs::persist_after_delete",
+      ".g5/Verus_verification/consolidated/verus/history.rs::delete_wins_depends_on_save_semantics"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "history.rs delete removes selected IDs with no finalized dimension, and the crate has no user-delete transition; no rule contrasts \"DELETE of a finalized row succeeds\" with \"UPDATE of the same row is refused\"."
+    },
+    {
+     "id": "history.locked#3",
+     "units": [
+      "B1"
+     ],
+     "text": "Working assumption: a record without an end time stays unfinalized.",
+     "cases": "process terminated during a load (%OnClose persists) vs normal end",
+     "observation": "Finalized and TimeEnd of the durable row",
+     "grade": "full",
+     "check": "refuted",
+     "models": [
+      ".g5/Verus_verification/crates/ipm-load-history/src/model.rs::persist_row",
+      ".g5/Verus_verification/crates/ipm-load-history/src/explore.rs::q_alternatives",
+      ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::kill_rec"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/results/verus/20261113T223456Z-asbuilt-l1-end/receipt.json",
+      ".g5/Verus_verification/results/verus/20261113T223456Z-asbuilt-l1-end/raw.log",
+      ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+      ".g5/Verus_verification/coverage-map.md"
+     ],
+     "basis": "reused:.g5/Verus_verification/coverage-map.md (history.locked.unfinished, Q-FIN, V10); explorer asbuilt-l1-end violation: terminated process leaves finalized=true, time_end_set=false (2925 configs, not truncated)",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "history.retention": {
+   "body_sha": "81b0e551fbf5ba85",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "history.retention#1"
+    ],
+    "B1": [
+     "history.retention#2"
+    ],
+    "B2": [
+     "history.retention#3"
+    ],
+    "B3": [
+     "history.retention#4",
+     "history.retention#5"
+    ],
+    "B4": "excluded: verification guidance for checkers (preserve record identities), not product behaviour",
+    "B5": "excluded: working assumption \"the command should still run\" is a proposed change (open question history.retention.effect), not as-built behaviour",
+    "B6": "excluded: working assumption restating the P1 age rule and declaring races and repair outcome unclaimed"
+   },
+   "obligations": [
+    {
+     "id": "history.retention#1",
+     "units": [
+      "P1"
+     ],
+     "text": "config set HistoryRetain <days> makes IPM delete records that started more than that many days ago; 0 (default) turns purging off.",
+     "cases": "retain>0 with old and new rows vs retain 0",
+     "observation": "rows deleted; marker",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/history.rs::purge"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "purge takes the set of matching rows as an input (quoted_date_matches) instead of deriving it from the start time and the cutoff, and the retain=0 branch is defined but never exercised. Contrast: retain=7 deletes a 10-day-old row and keeps a 1-day-old row; retain=0 deletes neither and leaves the marker (General/History.cls purge, Main.cls:840-842)."
+    },
+    {
+     "id": "history.retention#2",
+     "units": [
+      "B1"
+     ],
+     "text": "The purge runs on any IPM command, at most once per calendar day.",
+     "cases": "first vs second command on the same day; non-Shell entry",
+     "observation": "purge executed; marker",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/history.rs::purge"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "The ran_today input is defined but only ran_today=false is exercised; no model of the daily marker comparison or of the Shell-only trigger (purge runs only through %IPM.Main:Shell). Contrast: second command same day deletes nothing even with an expired row."
+    },
+    {
+     "id": "history.retention#3",
+     "units": [
+      "B2"
+     ],
+     "text": "The purge applies to every namespace, not just the current one.",
+     "cases": "expired rows in NS1 and NS2, command run in NS1",
+     "observation": "rows remaining in NS2",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "purge is single-namespace. Contrast: an expired row in another IPM namespace is deleted by a command in the current namespace."
+    },
+    {
+     "id": "history.retention#4",
+     "units": [
+      "B3"
+     ],
+     "text": "As built, the daily marker advances whether or not anything was deleted, so it proves an attempt, not a deletion.",
+     "cases": "first purge of the day with no matching rows",
+     "observation": "marker vs rows",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/history.rs::purge",
+      ".g5/Verus_verification/consolidated/verus/history.rs::purge_can_advance_marker_without_removal"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/concepts/data-policy.g5.md metadata (extension history.rs::purge)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "history.retention#5",
+     "units": [
+      "B3"
+     ],
+     "text": "As built (P:F-HIST-6, G:D3), the quoted cutoff matches no row, so an expired row is kept.",
+     "cases": "expired 2000-01-01 row with quoted vs unquoted cutoff",
+     "observation": "rows deleted",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/history.rs::purge"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "The empty match set is an input to purge; no model derives it from the quoted SQL cutoff. The native control (unquoted cutoff deletes both old rows) is not represented as a neighbour."
+    }
+   ]
+  },
+  "history.keep-on-ipm-uninstall": {
+   "body_sha": "080e48047eace20a",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "history.keep-on-ipm-uninstall#1"
+    ],
+    "B1": [
+     "history.keep-on-ipm-uninstall#2"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "history.keep-on-ipm-uninstall#1",
+     "units": [
+      "P1"
+     ],
+     "text": "The log survives uninstalling IPM itself: full cleanup removes all modules and IPM's metadata except the history log.",
+     "cases": "uninstall of IPM with -all: module records/metadata globals vs ^IPM.General.HistoryD",
+     "observation": "presence of history rows and of IPM metadata after cleanup",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      "playbook-uplift/models/verus/uninstall.rs::clean_code",
+      "playbook-uplift/models/verus/uninstall.rs::main_uninstall"
+     ],
+     "evidence": [
+      "playbook-uplift/models/verus/results/uninstall.json"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "uninstall.rs keeps hist only as a frame of clean_code and appends the IPM success row before Clean (OBS-H15); it has no IPM metadata globals, so \"metadata removed, HistoryD kept\" (Lifecycle/Module.cls Clean, :54) is not contrasted. Coverage map: not modeled."
+    },
+    {
+     "id": "history.keep-on-ipm-uninstall#2",
+     "units": [
+      "B1"
+     ],
+     "text": "Working assumption: uninstalling IPM in one namespace does not delete the history records (including in-progress ones) of other namespaces.",
+     "cases": "IPM uninstall in NS1 with in-progress rows in NS2",
+     "observation": "NS2 history rows",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "No multi-namespace model of IPM self-uninstall. Open question history.keep-on-ipm-uninstall.other-namespaces."
+    }
+   ]
+  }
+ }
+}

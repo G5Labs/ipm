@@ -1,0 +1,116 @@
+{
+ "page": ".g5/ontology/features/package-commands.g5.md",
+ "blocks": {
+  "ipm": {
+   "body_sha": "f4338a50b81dd6a6",
+   "status": "structural",
+   "units": {
+    "P1": "excluded: product summary; installing, updating and removing modules and their sources are owned by the load, install, update, uninstall and package-sources pages"
+   },
+   "obligations": [],
+   "reason": "Root summary of IPM. Its child ipm.shell and the feature pages (load, install, update, uninstall, architecture/package-sources) own every behavior it names. No additional obligation."
+  },
+  "ipm.shell": {
+   "body_sha": "eb670ad771ee2fa2",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "ipm.shell#1"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "ipm.shell#1",
+     "units": [
+      "P1"
+     ],
+     "text": "Users run commands in the zpm shell or as zpm \"<command>\"; programs call %IPM.Main:Shell(), which returns a status showing whether the command succeeded.",
+     "alias_of": "ipm.shell.forms#1",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "ipm.shell.forms": {
+   "body_sha": "f84407eca83ffd86",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "ipm.shell.forms#1"
+    ],
+    "B1": [
+     "ipm.shell.forms#2"
+    ],
+    "B2": [
+     "ipm.shell.forms#3"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "ipm.shell.forms#1",
+     "units": [
+      "P1"
+     ],
+     "text": "Only %IPM.Main:Shell() lets a script see that a command failed: Shell(command) returns the status, and Shell(command, 1) also ends the process with exit code 1 on failure.",
+     "cases": "Shell vs Shell(,1) vs command/function forms; failing vs passing command",
+     "observation": "returned status, process exit code, continuation",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter5/entry_forms.rs::outcome",
+      ".g5/Verus_verification/consolidated/iter5/entry_forms.rs::entry_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter5/run_all.json"
+     ],
+     "basis": "reused:.g5/ontology/features/package-commands.g5.md metadata (iter5 entry_forms.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "ipm.shell.forms#2",
+     "units": [
+      "B1"
+     ],
+     "text": "The zpm \"<command>\" command form discards the status; adding ,1 does not pass a flag, so the process keeps running and exits 0.",
+     "cases": "zpm \"cmd\" vs zpm \"cmd\",1 on a failing command",
+     "observation": "exit code and continuation",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter5/entry_forms.rs::outcome",
+      ".g5/Verus_verification/consolidated/iter5/entry_forms.rs::entry_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter5/run_all.json"
+     ],
+     "basis": "reused:.g5/ontology/features/package-commands.g5.md metadata (iter5 entry_forms.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "ipm.shell.forms#3",
+     "units": [
+      "B2"
+     ],
+     "text": "As built (C:D24), the $zpm(\"<command>\") function form runs the command, then fails with <COMMAND> Function must return a value whether the command passed or failed.",
+     "cases": "pinned lowercase body vs capitalized body; passing vs failing command",
+     "observation": "command error; status visibility",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter5/entry_forms.rs::function_returns_value",
+      ".g5/Verus_verification/consolidated/iter5/entry_forms.rs::pinned_body",
+      ".g5/Verus_verification/consolidated/iter5/entry_forms.rs::outcome",
+      ".g5/Verus_verification/consolidated/iter5/entry_forms.rs::entry_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter5/run_all.json"
+     ],
+     "basis": "reused:.g5/ontology/features/package-commands.g5.md metadata (iter5 entry_forms.rs, C:D24)",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  }
+ }
+}

@@ -1,0 +1,245 @@
+{
+ "page": ".g5/ontology/operations/ipm-setup.g5.md",
+ "blocks": {
+  "setup": {
+   "body_sha": "4d8dc622d0dd4305",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "setup#1"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "setup#1",
+     "units": [
+      "P1"
+     ],
+     "text": "IPM is installed by a %ALL user with a one-line installer downloaded from the registry, or offline from a zpm.xml file.",
+     "cases": "registry one-liner vs offline zpm.xml",
+     "observation": "IPM installed in the namespace",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "No model of the installer channels (README one-liner, offline zpm.xml through preload/cls/IPM/Installer.cls::setup). ns_mapping.rs::installer models only the mapping/record effect of setup, not how it is obtained. Contrast: the offline zpm.xml and registry one-liner yield the same installed IPM version and record."
+    }
+   ],
+   "parent": {
+    "children": [
+     "setup.installer",
+     "setup.language-extension"
+    ],
+    "entailment": "The lead adds the install channels and the %ALL premise; graded directly (absent). No composition credited."
+   }
+  },
+  "setup.installer": {
+   "body_sha": "76f49c9deb9676a4",
+   "status": "enumerated",
+   "units": {
+    "P1": "excluded: list heading for the installer steps",
+    "B1": [
+     "setup.installer#1"
+    ],
+    "B2": [
+     "setup.installer#2"
+    ],
+    "B3": [
+     "setup.installer#3"
+    ],
+    "B4": [
+     "setup.installer#4"
+    ],
+    "B5": [
+     "setup.installer#5",
+     "setup.installer#6"
+    ],
+    "B6": [
+     "setup.installer#7"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "setup.installer#1",
+     "units": [
+      "B1"
+     ],
+     "text": "The installer installs only when its version is newer than the IPM already present.",
+     "cases": "installer version newer vs equal/older than the installed IPM",
+     "observation": "whether IPM is (re)loaded",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "No model of the version gate in preload/cls/IPM/Installer.cls (setup/ZPMLoad). Contrast: running the 0.10.x installer over the same installed version leaves the zpm record and code untouched, vs a newer installer replacing them."
+    },
+    {
+     "id": "setup.installer#2",
+     "units": [
+      "B2"
+     ],
+     "text": "The installer maps the %IPM package into the current namespace.",
+     "cases": "namespace with no %IPM mapping vs one with an existing mapping",
+     "observation": "package and routine mappings after setup",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      "playbook-uplift/models/verus/ns_mapping.rs::installer",
+      "playbook-uplift/models/verus/ns_mapping.rs::nsp_lemma_installer",
+      "playbook-uplift/models/verus/ns_mapping.rs::nsp_witness_fresh_install",
+      "playbook-uplift/models/verus/ns_mapping.rs::nsp_witness_installer_in_mapped"
+     ],
+     "evidence": [
+      "playbook-uplift/models/verus/results/ns_mapping.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "ns_mapping.rs::installer transcribes the ClassMapping/RoutineMapping only-when-absent rule and proves l1_install under premise INST; the existing-mapping case is the F-NSP-5 witness (mapping left pointing at the source). The rule is proved, but the premise INST excludes exactly the mapped case, so the intended \"maps %IPM into the current namespace\" for a previously mapped namespace is not established. Contrast: setup in a namespace mapped from USER leaves %IPM pointing at USER (witness) vs a fresh namespace getting its own mapping."
+    },
+    {
+     "id": "setup.installer#3",
+     "units": [
+      "B3"
+     ],
+     "text": "The installer sets default settings without overwriting existing ones (so upgrading IPM keeps existing values).",
+     "cases": "setting already set vs unset at install time",
+     "observation": "setting value after (re)install",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::set_value",
+      ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::setting_neighbors",
+      "playbook-uplift/models/verus/settings.rs::repo_ps_kept"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter3/validation.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      "playbook-uplift/models/verus/results/settings.json"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "The writer rule (overwrite disabled keeps a nonempty value) is proved in public_repairs.rs, but the installer call (preload/cls/IPM/Installer.cls::ZPMInit, L110-124, seeding each key with overwrite off) is not modeled; playbook settings.rs takes the seed map as static input. Contrast: config set analytics 0, then re-run the installer: analytics stays 0, vs a fresh namespace getting 1."
+    },
+    {
+     "id": "setup.installer#4",
+     "units": [
+      "B4"
+     ],
+     "text": "The installer loads IPM in normal mode without automatic mappings.",
+     "cases": "installer load vs default load arguments",
+     "observation": "IPM module developer mode and automatic mappings after setup",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "The installer's `load <dir> -DDeveloperMode=0 -DNoMapping=1` call (Installer.cls ZPMLoad) is not modeled; NoMapping itself is modeled for load in iter59 mappings.rs (module.placement#2) but nothing ties the installer to it. Contrast: after setup, zpm's record has DeveloperMode=0 and no %IPM package mapping was added by its resources."
+    },
+    {
+     "id": "setup.installer#5",
+     "units": [
+      "B5"
+     ],
+     "text": "Upgrading from legacy IPM 0.7 moves its data into the new storage.",
+     "cases": "upgrade from 0.7 storage vs fresh install",
+     "observation": "module/settings storage after upgrade",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "No model of the 0.7 migration (Installer.cls MapIfLegacy and data moves; tests/migration/v0.7-to-v0.9 ModuleStorage is a test). Contrast: a namespace with 0.7 ^ZPM data ends with the same modules listed by `list` after upgrade."
+    },
+    {
+     "id": "setup.installer#6",
+     "units": [
+      "B5"
+     ],
+     "text": "Upgrading from IPM 0.7 maps IPM to all namespaces.",
+     "alias_of": "namespace.legacy#1",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "setup.installer#7",
+     "units": [
+      "B6"
+     ],
+     "text": "The installer installs the Python packages ORAS needs and the ipm and iriscli helper scripts.",
+     "cases": "default vs custom ModuleRoot; Python available vs not",
+     "observation": "pip packages and helper scripts present",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "No model of the wheel and helper-script install (root module.xml L23-59, Installer.cls:564). Contrast: a custom ModuleRoot breaks the helper-script install (metadata observation) vs the default root succeeding."
+    }
+   ]
+  },
+  "setup.language-extension": {
+   "body_sha": "a5ab8f23920b3d2d",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "setup.language-extension#1",
+     "setup.language-extension#2"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "setup.language-extension#1",
+     "units": [
+      "P1"
+     ],
+     "text": "IPM adds the zpm command to the instance's language-extension routines (%ZLANGC00 and %ZLANGF00).",
+     "cases": "routine without the generated block vs with it; both routines",
+     "observation": "routine lines after setup",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/owners.rs::zlang_one",
+      ".g5/Verus_verification/consolidated/verus/owners.rs::rewrite_from",
+      ".g5/Verus_verification/consolidated/verus/owners.rs::witnessed_owners_distinctions"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/consolidated/verus/owners-results.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "rewrite_from appends the generated block when no Start tag is found, but no assertion exercises that branch (the witness already has a block) and the two-routine transaction (Main.cls:3464-3502) is not modeled. Contrast: a routine with only user lines gains exactly one generated block after them."
+    },
+    {
+     "id": "setup.language-extension#2",
+     "units": [
+      "P1"
+     ],
+     "text": "It rewrites only the block it generated and keeps every other line, so a user's own extensions survive repeated installs.",
+     "cases": "user lines before/after the block vs generated lines; first vs second run",
+     "observation": "lines outside the generated tags; number of blocks",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/owners.rs::zlang_one",
+      ".g5/Verus_verification/consolidated/verus/owners.rs::outside_users",
+      ".g5/Verus_verification/consolidated/verus/owners.rs::witnessed_owners_distinctions"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/consolidated/verus/owners-results.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/operations/ipm-setup.g5.md metadata (extension owners.rs::zlang_one); single computed witness (user lines kept, block replaced, idempotent)",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  }
+ }
+}

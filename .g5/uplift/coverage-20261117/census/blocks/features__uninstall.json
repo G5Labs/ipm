@@ -1,0 +1,1157 @@
+{
+ "page": ".g5/ontology/features/uninstall.g5.md",
+ "blocks": {
+  "uninstall": {
+   "body_sha": "02d4b490adb499b3",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "uninstall#1",
+     "uninstall#2"
+    ],
+    "B1": [
+     "uninstall#3"
+    ],
+    "B2": "excluded: restates history.committed.uninstall (features/history.g5.md), the owner of the uninstall Committed rule"
+   },
+   "obligations": [
+    {
+     "id": "uninstall#1",
+     "units": [
+      "P1"
+     ],
+     "text": "Intended: uninstall <module> removes the installed module's resources and its record from the current namespace.",
+     "cases": "successful vs failing resource providers: resolve-children error (C:D27) and editing-locked class delete (C:D28) vs successful providers",
+     "observation": "module record and stored manifest; whether the module code remains callable; command status",
+     "grade": "full",
+     "check": "refuted",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter10/errors.rs::uninstall",
+      ".g5/Verus_verification/consolidated/iter10/errors.rs::failed_hook_leaves_code",
+      ".g5/Verus_verification/consolidated/iter10/errors.rs::returned_error_neighbors",
+      ".g5/Verus_verification/consolidated/iter11/deletion.rs::uninstall",
+      ".g5/Verus_verification/consolidated/iter11/deletion.rs::locked_retains_class",
+      ".g5/Verus_verification/consolidated/iter11/deletion.rs::deletion_neighbors",
+      "playbook-uplift/models/verus/uninstall.rs::unin_refines_complete",
+      "playbook-uplift/models/verus/uninstall.rs::l1_complete"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter10/run.json",
+      ".g5/uplift/consolidated/iter11/run.json",
+      "playbook-uplift/models/verus/results/uninstall.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70 (intended promise; iter10/iter11 as-built models contradict it; playbook unin_refines_complete proves it only under successful providers and PGA)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "uninstall#2",
+     "units": [
+      "P1"
+     ],
+     "text": "A module name is required unless -all is given.",
+     "cases": "uninstall with no name and no -all vs with -all vs with a name",
+     "observation": "command refusal before any change",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "No model of the Main.cls::Uninstall argument check (Unit/CLI.cls TestUninstallWithoutModuleName is a test only). Contrast: `uninstall` with neither a name nor -all is refused with nothing changed, while `uninstall -all` proceeds."
+    },
+    {
+     "id": "uninstall#3",
+     "units": [
+      "B1"
+     ],
+     "text": "Uninstall runs without a transaction, so a failure can leave some resources removed.",
+     "cases": "uninstall that fails after an earlier deletion (uninstall <m> -r where <m> needs zpm) vs a successful uninstall",
+     "observation": "resources present after the failed command; command status",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      "playbook-uplift/models/verus/uninstall.rs::unin_witness_recurse_removes_ipm",
+      "playbook-uplift/models/verus/uninstall.rs::exec_clean",
+      "playbook-uplift/models/verus/uninstall.rs::dep_step"
+     ],
+     "evidence": [
+      "playbook-uplift/models/verus/results/uninstall.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70 (playbook witness: the target's code and IPM's classes are deleted, then the command fails with both records kept)",
+     "assessed_in": "iteration-70"
+    }
+   ],
+   "parent": {
+    "children": [
+     "uninstall.cleanup",
+     "uninstall.dependents",
+     "uninstall.recurse",
+     "uninstall.all",
+     "uninstall.global",
+     "uninstall.purge",
+     "uninstall.ipm"
+    ],
+    "entailment": "The parent promises removal of resources and record (P1), the name/-all argument rule and non-transactional failure (B1) beyond its children; these are graded directly. No parent obligation is credited by composition: cleanup#1 holds only under successful providers, and child-error/class-delete-error refute the removal promise."
+   }
+  },
+  "uninstall.cleanup": {
+   "body_sha": "6b43fb13db9f3d30",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "uninstall.cleanup#1",
+     "uninstall.cleanup#2",
+     "uninstall.cleanup#3",
+     "uninstall.cleanup#4"
+    ],
+    "B1": [
+     "uninstall.cleanup#5"
+    ],
+    "B2": [
+     "uninstall.cleanup#6"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "uninstall.cleanup#1",
+     "units": [
+      "P1"
+     ],
+     "text": "Uninstall deletes the module's classes, packages, includes and routines with their compiled forms, its record, its stored manifest and its sync baseline.",
+     "cases": "code kinds, record, stream and baseline vs kinds that remain (name-only global, declared mapping, ^Sources entry)",
+     "observation": "presence of each artifact after uninstall",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter63/cleanup.rs::remains",
+      ".g5/Verus_verification/consolidated/iter63/cleanup.rs::code_removed",
+      "playbook-uplift/models/verus/uninstall.rs::clean_code",
+      "playbook-uplift/models/verus/uninstall.rs::record_delete",
+      "playbook-uplift/models/verus/uninstall.rs::unin_refines_manifest_with_record"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter63/run.json",
+      "playbook-uplift/models/verus/results/uninstall.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/uninstall.g5.md metadata (iter63 cleanup.rs); playbook clean_code/record_delete added in iteration-70",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "uninstall.cleanup#2",
+     "units": [
+      "P1"
+     ],
+     "text": "A global resource's data is deleted only when the resource names it with the Global attribute.",
+     "cases": "global resource with Global attribute vs name-only global resource",
+     "observation": "global data after uninstall",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter63/cleanup.rs::globals_by_declaration",
+      "playbook-uplift/models/verus/uninstall.rs::clean_step",
+      "playbook-uplift/models/verus/uninstall.rs::unin_witness_global_kept"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter63/run.json",
+      "playbook-uplift/models/verus/results/uninstall.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/uninstall.g5.md metadata (iter63 cleanup.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "uninstall.cleanup#3",
+     "units": [
+      "P1"
+     ],
+     "text": "FileCopy targets are deleted on uninstall.",
+     "alias_of": "module.processor.file-copy#1",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "uninstall.cleanup#4",
+     "units": [
+      "P1"
+     ],
+     "text": "FileCopy targets with KeepOnUninstall are kept.",
+     "alias_of": "module.processor.file-copy#3",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "uninstall.cleanup#5",
+     "units": [
+      "B1"
+     ],
+     "text": "As built (C:D67), declared <Mapping> entries stay in the namespace after uninstall, also with -purge.",
+     "cases": "declared mapping vs removed code kinds; purge vs no purge",
+     "observation": "namespace mapping configuration after uninstall",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter63/cleanup.rs::reload_side_effects_outlive_uninstall",
+      ".g5/Verus_verification/consolidated/iter63/cleanup.rs::purge_changes_nothing",
+      ".g5/Verus_verification/consolidated/iter63/cleanup.rs::remains"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter63/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/uninstall.g5.md metadata (iter63 cleanup.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "uninstall.cleanup#6",
+     "units": [
+      "B2"
+     ],
+     "text": "As built (C:D68), a developer-mode module's ^Sources entries stay after uninstall and keep pointing at its old folder.",
+     "cases": "^Sources entry vs removed code kinds; purge vs no purge",
+     "observation": "^Sources entries after uninstall",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter63/cleanup.rs::reload_side_effects_outlive_uninstall",
+      ".g5/Verus_verification/consolidated/iter63/cleanup.rs::remains"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter63/run.json"
+     ],
+     "basis": "reused:.g5/ontology/features/uninstall.g5.md metadata (iter63 cleanup.rs)",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "uninstall.package-ownership": {
+   "body_sha": "847c7078b604ca12",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "uninstall.package-ownership#1",
+     "uninstall.package-ownership#2"
+    ],
+    "B1": [
+     "uninstall.package-ownership#3"
+    ],
+    "B2": [
+     "uninstall.package-ownership#4"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "uninstall.package-ownership#1",
+     "units": [
+      "P1"
+     ],
+     "text": "Uninstall expands a package without selecting resources separately claimed by another stored reference, including a nested package.",
+     "cases": "own class vs class claimed by another module vs class inside a nested package another module claims",
+     "observation": "which files the clean removes",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter9/ownership.rs::protects",
+      ".g5/Verus_verification/consolidated/iter9/ownership.rs::claimed",
+      ".g5/Verus_verification/consolidated/iter9/ownership.rs::children",
+      ".g5/Verus_verification/consolidated/iter9/ownership.rs::clean",
+      ".g5/Verus_verification/consolidated/iter9/ownership.rs::package_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter9/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/uninstall.g5.md metadata (iter9 ownership.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "uninstall.package-ownership#2",
+     "units": [
+      "P1"
+     ],
+     "text": "The checked ASCII names match without regard to case.",
+     "cases": "claimed reference spelled with different case vs same case",
+     "observation": "whether the differently cased claim protects the class",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter9/ownership.rs::Name",
+      ".g5/Verus_verification/consolidated/iter9/ownership.rs::prefix"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter9/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "Name segments are ints that stand for case-folded provider output, so case-insensitive matching is a premise, not a modeled decision. Contrast: a claim on \"a.b\" vs files under \"A.B\" (ResourceReference.GetChildren/IRIS collation) must protect the class; no rule distinguishes case variants."
+    },
+    {
+     "id": "uninstall.package-ownership#3",
+     "units": [
+      "B1"
+     ],
+     "text": "A separately declared child of the same module is left out of its parent package's expansion, but its own declaration selects it, so uninstall removes it.",
+     "cases": "same-module child declared separately vs not",
+     "observation": "package children set; files after clean",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter9/ownership.rs::package_neighbors",
+      ".g5/Verus_verification/consolidated/iter9/ownership.rs::module_children"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter9/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/uninstall.g5.md metadata (iter9 ownership.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "uninstall.package-ownership#4",
+     "units": [
+      "B2"
+     ],
+     "text": "The checked uninstall removes the selected classes and module record while leaving another module's nested class callable.",
+     "cases": "own selected class vs other module's nested class",
+     "observation": "files present and module records after clean",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter9/ownership.rs::package_neighbors",
+      ".g5/Verus_verification/consolidated/iter9/ownership.rs::selected_child_removed",
+      ".g5/Verus_verification/consolidated/iter9/ownership.rs::unselected_child_survives"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter9/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/uninstall.g5.md metadata (iter9 ownership.rs)",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "uninstall.class-delete-error": {
+   "body_sha": "0073dea5062962b6",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "uninstall.class-delete-error#1",
+     "uninstall.class-delete-error#2"
+    ],
+    "B1": "excluded: calibration and scope of the evidence (actual class-deletion API, separate observations, other deletion errors not inferred)",
+    "B2": "excluded: classification as C:D28 against uninstall#1 and pointer to the open policy question uninstall.class-delete-error.policy",
+    "B3": "excluded: working assumption restates the as-built outcome of uninstall.class-delete-error#1 pending an owner decision; the remainder is rationale for undecided alternatives"
+   },
+   "obligations": [
+    {
+     "id": "uninstall.class-delete-error#1",
+     "units": [
+      "P1"
+     ],
+     "text": "When an editing lock prevents a class from being deleted, uninstall prints a warning, reports success and removes the module and manifest records while the class remains callable.",
+     "cases": "editing lock held vs not held",
+     "observation": "command status and warning; module and manifest records; class presence",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter11/deletion.rs::delete_class",
+      ".g5/Verus_verification/consolidated/iter11/deletion.rs::uninstall",
+      ".g5/Verus_verification/consolidated/iter11/deletion.rs::deletion_neighbors",
+      ".g5/Verus_verification/consolidated/iter11/deletion.rs::locked_retains_class"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter11/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/uninstall.g5.md metadata (iter11 deletion.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "uninstall.class-delete-error#2",
+     "units": [
+      "P1"
+     ],
+     "text": "Without the lock, the checked uninstall removes the class.",
+     "cases": "no editing lock vs lock",
+     "observation": "class presence and warning",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter11/deletion.rs::deletion_neighbors",
+      ".g5/Verus_verification/consolidated/iter11/deletion.rs::uninstall"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter11/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/uninstall.g5.md metadata (iter11 deletion.rs)",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "uninstall.dependents": {
+   "body_sha": "834b4a2c154ed8d4",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "uninstall.dependents#1",
+     "uninstall.dependents#2",
+     "uninstall.dependents#3"
+    ],
+    "B1": [
+     "uninstall.dependents#4",
+     "uninstall.dependents#5",
+     "uninstall.dependents#6"
+    ],
+    "B2": [
+     "uninstall.dependents#7"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "uninstall.dependents#1",
+     "units": [
+      "P1"
+     ],
+     "text": "Intended: without -force, IPM does not uninstall a module that other installed modules depend on.",
+     "cases": "dependent whose dependency graph builds vs dependent whose graph fails to build (F-UNIN-4); force vs no force",
+     "observation": "target module record after the command",
+     "grade": "full",
+     "check": "refuted",
+     "models": [
+      "playbook-uplift/models/verus/uninstall.rs::unin_refines_dependents_protect",
+      "playbook-uplift/models/verus/uninstall.rs::l1_dependents_protect",
+      "playbook-uplift/models/verus/uninstall.rs::unin_witness_unresolvable_dependent",
+      "playbook-uplift/models/verus/uninstall.rs::check_skip"
+     ],
+     "evidence": [
+      "playbook-uplift/models/verus/results/uninstall.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70 (proved under premise PG; refuted by the playbook F-UNIN-4 witness, where an unresolvable dependent graph lets the target be removed)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "uninstall.dependents#2",
+     "units": [
+      "P1"
+     ],
+     "text": "With -force the module is uninstalled despite its dependents.",
+     "alias_of": "uninstall.dependents.as-built#4",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "uninstall.dependents#3",
+     "units": [
+      "P1"
+     ],
+     "text": "Intended: the refusal is an error that names the dependents.",
+     "cases": "blocked uninstall (dependent present, no force) vs unblocked",
+     "observation": "returned status and message",
+     "grade": "full",
+     "check": "refuted",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter5/webapp.rs::uninstall",
+      ".g5/Verus_verification/consolidated/iter5/webapp.rs::repaired_uninstall",
+      ".g5/Verus_verification/consolidated/iter5/webapp.rs::lemma_blocked_uninstall_deletes",
+      "playbook-uplift/models/verus/uninstall.rs::unin_witness_blocked_deletes_webapp"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter5/run_all.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      "playbook-uplift/models/verus/results/uninstall.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70 (as-built models return success for the blocked case; the repaired neighbour returns an error). The message naming the dependents is not modeled.",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "uninstall.dependents#4",
+     "units": [
+      "B1"
+     ],
+     "text": "As built, a blocked uninstall deletes the module's web applications first.",
+     "alias_of": "uninstall.dependents.as-built#1",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "uninstall.dependents#5",
+     "units": [
+      "B1"
+     ],
+     "text": "As built, the module's before-Clean hooks (author Invoke hooks and processor OnBeforePhase(\"Clean\") effects other than web-app deletion) run before the dependency check.",
+     "cases": "blocked uninstall with a Clean-Before Invoke hook vs no hook",
+     "observation": "hook side effects of a blocked uninstall",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [
+      "playbook-uplift/models/verus/results/uninstall.json"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "playbook before_clean models only WebApplication.cls deletion in Storage/Module.cls::ExecutePhases; author <Invoke Phase=\"Clean\" When=\"Before\"> hooks and CSP purge are excluded (uninstall.TRUST.md U10). Contrast: a blocked uninstall of a module with a Clean-Before Invoke whose effect is observable (e.g. a global set) vs the repaired order where the check runs first."
+    },
+    {
+     "id": "uninstall.dependents#6",
+     "units": [
+      "B1"
+     ],
+     "text": "As built, the command prints \"Clean SKIPPED - required by ...\", keeps the module and returns success.",
+     "alias_of": "uninstall.dependents.as-built#2",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "uninstall.dependents#7",
+     "units": [
+      "B2"
+     ],
+     "text": "Working assumption: a need declared only for a phase (test, verify) does not block uninstall.",
+     "cases": "dependent whose need is Scope=\"test\" vs an unscoped need",
+     "observation": "whether the target is skipped",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "No model of phase-scoped dependencies in Utils/Module.cls::GetDependentsList / BuildAllDependencyGraphs as read by Lifecycle/Base.cls::CheckBeforeClean (playbook graph is data; iter33 dependents.rs has no scope). Contrast: uninstall of A where B declares A only with Scope=\"test\" removes A, while an unscoped need skips it. Open question uninstall.dependents.scoped-policy."
+    }
+   ],
+   "parent": {
+    "children": [
+     "uninstall.dependents.as-built"
+    ],
+    "entailment": "P1 states the intended rule (graded directly, refuted); B1 restates the as-built child except the before-Clean hooks clause, graded here as absent. No composition credited."
+   }
+  },
+  "uninstall.dependents.as-built": {
+   "body_sha": "2ed6bbb158c9af90",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "uninstall.dependents.as-built#1",
+     "uninstall.dependents.as-built#2",
+     "uninstall.dependents.as-built#3"
+    ],
+    "B1": [
+     "uninstall.dependents.as-built#4",
+     "uninstall.dependents.as-built#5"
+    ],
+    "B2": "excluded: provenance (P:F-UNIN-1, P:F-UNIN-6, C:D25) and the proposed repair C:S17, which is not applied"
+   },
+   "obligations": [
+    {
+     "id": "uninstall.dependents.as-built#1",
+     "units": [
+      "P1"
+     ],
+     "text": "A blocked uninstall deletes the module's web applications.",
+     "cases": "blocked (dependent, no force) vs repaired check-first order",
+     "observation": "web applications after the command",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter5/webapp.rs::lemma_blocked_uninstall_deletes",
+      ".g5/Verus_verification/consolidated/iter5/webapp.rs::uninstall",
+      "playbook-uplift/models/verus/uninstall.rs::unin_witness_blocked_deletes_webapp",
+      "playbook-uplift/models/verus/uninstall.rs::before_clean"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter5/run_all.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      "playbook-uplift/models/verus/results/uninstall.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/uninstall.g5.md metadata (iter5 webapp.rs, P witness)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "uninstall.dependents.as-built#2",
+     "units": [
+      "P1"
+     ],
+     "text": "A blocked uninstall keeps the module installed and reports success.",
+     "cases": "blocked vs forced; as-built vs repaired",
+     "observation": "module record and returned status (and its history row)",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter5/webapp.rs::lemma_blocked_uninstall_deletes",
+      "playbook-uplift/models/verus/uninstall.rs::unin_witness_blocked_deletes_webapp",
+      "playbook-uplift/models/verus/uninstall.rs::check_skip"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter5/run_all.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      "playbook-uplift/models/verus/results/uninstall.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/uninstall.g5.md metadata (iter5 webapp.rs, P witness)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "uninstall.dependents.as-built#3",
+     "units": [
+      "P1"
+     ],
+     "text": "The dependent module's own applications are untouched.",
+     "cases": "resources owned by the target vs by another module",
+     "observation": "presence of the dependent's resources",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      "playbook-uplift/models/verus/uninstall.rs::unin_refines_only_own",
+      "playbook-uplift/models/verus/uninstall.rs::l1_only_own"
+     ],
+     "evidence": [
+      "playbook-uplift/models/verus/results/uninstall.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70 (playbook l1_only_own: only resources owned by modules in scope are deleted; premise PF concerns shared FileCopy folders only)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "uninstall.dependents.as-built#4",
+     "units": [
+      "B1"
+     ],
+     "text": "-force removes the module despite its dependents.",
+     "cases": "force vs no force with one dependent",
+     "observation": "module kept or removed",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter5/webapp.rs::webapp_neighbors",
+      ".g5/Verus_verification/consolidated/iter5/webapp.rs::blocked",
+      ".g5/Verus_verification/consolidated/iter5/webapp.rs::uninstall"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter5/run_all.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/uninstall.g5.md metadata (iter5 webapp.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "uninstall.dependents.as-built#5",
+     "units": [
+      "B1"
+     ],
+     "text": "After a forced uninstall the dependent stays installed with its dependency gone.",
+     "cases": "dependent record vs target record under -force",
+     "observation": "module records after the command",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      "playbook-uplift/models/verus/uninstall.rs::unin_refines_only_own",
+      "playbook-uplift/models/verus/uninstall.rs::l1_only_own",
+      ".g5/Verus_verification/consolidated/iter5/webapp.rs::webapp_neighbors"
+     ],
+     "evidence": [
+      "playbook-uplift/models/verus/results/uninstall.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70 (l1_only_own: records removed only within scope(t), which excludes dependents)",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "uninstall.recurse": {
+   "body_sha": "759ba34580163cbf",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "uninstall.recurse#1",
+     "uninstall.recurse#2",
+     "uninstall.recurse#3"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "uninstall.recurse#1",
+     "units": [
+      "P1"
+     ],
+     "text": "Intended: -recurse also uninstalls the module's dependencies that no other installed module needs.",
+     "cases": "dependency needed only by the target vs needed by another module",
+     "observation": "dependency record, stored manifest and code after the command",
+     "grade": "full",
+     "check": "refuted",
+     "models": [
+      "playbook-uplift/models/verus/uninstall.rs::unin_witness_recurse_leaves_manifest",
+      "playbook-uplift/models/verus/uninstall.rs::l1_manifest_with_record",
+      "playbook-uplift/models/verus/uninstall.rs::dep_step"
+     ],
+     "evidence": [
+      "playbook-uplift/models/verus/results/uninstall.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70 (F-UNIN-9 witness: the dependency's code and record go but its stored manifest stays, so the dependency is not fully uninstalled)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "uninstall.recurse#2",
+     "units": [
+      "P1"
+     ],
+     "text": "With -recurse, a dependency that another installed module still needs is kept installed.",
+     "cases": "dependency also needed by another module vs needed only by the target",
+     "observation": "dependency record and code after the command",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      "playbook-uplift/models/verus/uninstall.rs::unin_witness_recurse_skipped_dep",
+      "playbook-uplift/models/verus/uninstall.rs::unin_witness_recurse_leaves_manifest",
+      "playbook-uplift/models/verus/uninstall.rs::check_skip"
+     ],
+     "evidence": [
+      "playbook-uplift/models/verus/results/uninstall.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70 (its web app is still deleted and its row logged as success: owned by uninstall.dependents.as-built)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "uninstall.recurse#3",
+     "units": [
+      "P1"
+     ],
+     "text": "-recurse with -force also removes dependencies that other installed modules still need.",
+     "cases": "force vs no force for a shared dependency under -recurse",
+     "observation": "shared dependency record after the command",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      "playbook-uplift/models/verus/uninstall.rs::check_skip",
+      "playbook-uplift/models/verus/uninstall.rs::dep_step"
+     ],
+     "evidence": [
+      "playbook-uplift/models/verus/results/uninstall.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "check_skip drops the dependents test under force, but no lemma or witness exercises -recurse with -force (l1_dependents_protect is stated only for !force). Contrast: `uninstall top -r -force` where dep is also needed by other removes dep's record, vs the same without -force keeping it (Lifecycle/Base.cls::%Clean dependency loop, CheckBeforeClean)."
+    }
+   ]
+  },
+  "uninstall.child-error": {
+   "body_sha": "be9dad26b48d872e",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "uninstall.child-error#1",
+     "uninstall.child-error#2"
+    ],
+    "B1": [
+     "uninstall.child-error#1"
+    ],
+    "B2": [
+     "uninstall.child-error#3"
+    ],
+    "B3": "excluded: classification as C:D27 against the removal promise of uninstall#1 (refutation recorded there)"
+   },
+   "obligations": [
+    {
+     "id": "uninstall.child-error#1",
+     "units": [
+      "P1",
+      "B1"
+     ],
+     "text": "If a resource processor returns an error while resolving its children, uninstall still reports success and deletes the module and manifest records while leaving that resource's code installed (the failed hook returns before copying its child list and Clean ignores the status).",
+     "cases": "hook error vs hook success",
+     "observation": "command status; module and manifest records; code presence",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter10/errors.rs::resolve",
+      ".g5/Verus_verification/consolidated/iter10/errors.rs::uninstall",
+      ".g5/Verus_verification/consolidated/iter10/errors.rs::returned_error_neighbors",
+      ".g5/Verus_verification/consolidated/iter10/errors.rs::failed_hook_leaves_code"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter10/run.json",
+      ".g5/Verus_verification/consolidated/iter10/error-cases.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/uninstall.g5.md metadata (iter10 errors.rs, controls clean-propagates-status, hook-error-leaks-children)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "uninstall.child-error#2",
+     "units": [
+      "P1"
+     ],
+     "text": "Packaging propagates the same resolution error.",
+     "cases": "hook error vs hook success",
+     "observation": "package status",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter10/errors.rs::package",
+      ".g5/Verus_verification/consolidated/iter10/errors.rs::returned_error_neighbors",
+      ".g5/Verus_verification/consolidated/iter10/errors.rs::failed_hook_leaves_code"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter10/run.json",
+      ".g5/Verus_verification/consolidated/iter10/error-cases.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/uninstall.g5.md metadata (iter10 errors.rs, control package-swallows-error)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "uninstall.child-error#3",
+     "units": [
+      "B2"
+     ],
+     "text": "A successful hook selects the class and the checked uninstall removes it.",
+     "cases": "hook success vs error",
+     "observation": "code presence after uninstall",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter10/errors.rs::returned_error_neighbors",
+      ".g5/Verus_verification/consolidated/iter10/errors.rs::resolve"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter10/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/uninstall.g5.md metadata (iter10 errors.rs)",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "uninstall.all": {
+   "body_sha": "9e489e7b7052c426",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "uninstall.all#1"
+    ],
+    "B1": [
+     "uninstall.all#2",
+     "uninstall.all#3"
+    ],
+    "B2": [
+     "uninstall.all#4"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "uninstall.all#1",
+     "units": [
+      "P1"
+     ],
+     "text": "-all uninstalls every module in the namespace except IPM itself.",
+     "cases": "IPM vs other modules; all modules visited",
+     "observation": "installed-module store after the command",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter2/readers.rs::uninstall_all_step",
+      ".g5/Verus_verification/consolidated/iter2/readers.rs::force_does_not_turn_failure_into_removal"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter2/validation.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "uninstall_all_step is a per-module boolean table; store retention is an input (provider_retained) and IPM's retention is never asserted. No model of Utils/Module.cls::UninstallAll traversal over all installed modules (playbook uninstall.rs excludes it, U9). Contrast: a namespace with zpm, A and B (A needs B) ends with only zpm's record, vs a missed module."
+    },
+    {
+     "id": "uninstall.all#2",
+     "units": [
+      "B1"
+     ],
+     "text": "As built, without force, a failed module blocks later attempts on dependencies that still need it.",
+     "cases": "provider failure without force vs success",
+     "observation": "traversal graph membership; later attempts on the failed module's dependencies",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter2/readers.rs::uninstall_all_step",
+      ".g5/Verus_verification/consolidated/iter2/readers.rs::force_does_not_turn_failure_into_removal"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter2/validation.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "The failed module staying in the work graph is asserted, but the consequence (its dependencies are not attempted) needs the traversal loop, which is not modeled. Contrast: A fails, B (needed by A) is never attempted and stays; vs A succeeds and B is removed."
+    },
+    {
+     "id": "uninstall.all#3",
+     "units": [
+      "B1"
+     ],
+     "text": "As built, with force, IPM removes a failed module from its traversal graph and continues, retaining the error in its final status.",
+     "cases": "provider failure with force vs without force",
+     "observation": "traversal graph membership; final command status",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter2/readers.rs::uninstall_all_step",
+      ".g5/Verus_verification/consolidated/iter2/readers.rs::force_does_not_turn_failure_into_removal"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter2/validation.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "The step removes the failed module from the work graph and its step status is not OK, but continuation to later modules and aggregation into the final status of UninstallAll are not modeled. Contrast: with force, A fails, B is still removed and the command returns A's error."
+    },
+    {
+     "id": "uninstall.all#4",
+     "units": [
+      "B2"
+     ],
+     "text": "Traversal progress is not proof of removal from the installed-module store: a failed provider can leave resources or its row behind.",
+     "cases": "forced failed provider vs successful provider",
+     "observation": "work-graph removal vs stored module row",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter2/readers.rs::force_does_not_turn_failure_into_removal",
+      ".g5/Verus_verification/consolidated/iter2/readers.rs::uninstall_all_step"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter2/validation.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/uninstall.g5.md body link (iter2 readers.rs)",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "uninstall.global": {
+   "body_sha": "516f1a4b1dd9e127",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "uninstall.global#1"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "uninstall.global#1",
+     "units": [
+      "P1"
+     ],
+     "text": "Uninstall skips modules with global scope unless -global is given.",
+     "cases": "GlobalScope module with vs without -global",
+     "observation": "module record and code after the command",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      "playbook-uplift/models/verus/uninstall.rs::check_skip",
+      "playbook-uplift/models/verus/uninstall.rs::unin_refines_blocked_unchanged",
+      "playbook-uplift/models/verus/uninstall.rs::unin_refines_honest",
+      ".g5/Verus_verification/consolidated/iter59/mappings.rs::global_module_skipped"
+     ],
+     "evidence": [
+      "playbook-uplift/models/verus/results/uninstall.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter59/run.json"
+     ],
+     "basis": "new:iteration-70 (playbook: intent_blocked includes global scope; blocked_unchanged under PW and honest under PB; iter59 global_module_skipped shows -global removes the code). The skip leaves web apps deleted when the module owns one (premise PW); see handoff.",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "uninstall.purge": {
+   "body_sha": "cca1e37a44d3f52c",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "uninstall.purge#1"
+    ],
+    "B1": [
+     "uninstall.purge#2"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "uninstall.purge#1",
+     "units": [
+      "P1"
+     ],
+     "text": "Intended: -purge deletes the data in the module's tables during uninstall.",
+     "cases": "uninstall with vs without -purge for a persistent-class module",
+     "observation": "rows readable after reloading the schema",
+     "grade": "full",
+     "check": "refuted",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter27/purge.rs::lifecycle_neighbors",
+      ".g5/Verus_verification/consolidated/iter27/purge.rs::uninstall",
+      ".g5/Verus_verification/consolidated/iter27/purge.rs::command_neighbor",
+      ".g5/Verus_verification/consolidated/iter63/cleanup.rs::purge_changes_nothing"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter27/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter63/run.json"
+     ],
+     "basis": "reused:.g5/ontology/features/uninstall.g5.md metadata (iter27 purge.rs, P:F-UNIN-2)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "uninstall.purge#2",
+     "units": [
+      "B1"
+     ],
+     "text": "The pinned implementation leaves table data after uninstall, including with -purge.",
+     "alias_of": "uninstall.purge.as-built#1",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "uninstall.purge.as-built": {
+   "body_sha": "bde977882ffe7a26",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "uninstall.purge.as-built#1",
+     "uninstall.purge.as-built#2"
+    ],
+    "B1": [
+     "uninstall.purge.as-built#3"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "uninstall.purge.as-built#1",
+     "units": [
+      "P1"
+     ],
+     "text": "An ordinary persistent-class module retains its rows after uninstall with or without -purge, and loading the same schema makes those rows readable again.",
+     "cases": "purge vs default flag; before vs after reload; SDK %DeleteExtent neighbour",
+     "observation": "SQL row count and value after reload",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter27/purge.rs::lifecycle_neighbors",
+      ".g5/Verus_verification/consolidated/iter27/purge.rs::reload_neighbor",
+      ".g5/Verus_verification/consolidated/iter27/purge.rs::delete_neighbor",
+      ".g5/Verus_verification/consolidated/iter27/purge.rs::reader_neighbor",
+      ".g5/Verus_verification/consolidated/iter27/purge.rs::sdk_neighbor"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter27/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/uninstall.g5.md metadata (iter27 purge.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "uninstall.purge.as-built#2",
+     "units": [
+      "P1"
+     ],
+     "text": "The command sets Purge while the installer callback receives only Configure.Purge, and ordinary class deletion does not purge its extent.",
+     "cases": "-purge vs -DConfigure.Purge=1 vs default; class delete vs extent delete",
+     "observation": "callback argument; rows after class deletion",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter27/purge.rs::command_neighbor",
+      ".g5/Verus_verification/consolidated/iter27/purge.rs::path_neighbor",
+      ".g5/Verus_verification/consolidated/iter27/purge.rs::hook_neighbor",
+      ".g5/Verus_verification/consolidated/iter27/purge.rs::delete_neighbor"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter27/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/uninstall.g5.md metadata (iter27 purge.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "uninstall.purge.as-built#3",
+     "units": [
+      "B1"
+     ],
+     "text": "A supported installer can delete its own data: -DConfigure.Purge=1 reaches its callback and deletes its rows, while the same setting without an installer leaves them intact.",
+     "cases": "installer callback with Configure.Purge=1 vs Purge=1; no installer",
+     "observation": "rows after uninstall; callback argument",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter27/purge.rs::hook_neighbor",
+      ".g5/Verus_verification/consolidated/iter27/purge.rs::plain_neighbor",
+      ".g5/Verus_verification/consolidated/iter27/purge.rs::unconfigure"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter27/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/uninstall.g5.md metadata (iter27 purge.rs)",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "uninstall.ipm": {
+   "body_sha": "afc38bab4a3ebf08",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "uninstall.ipm#1",
+     "uninstall.ipm#2"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "uninstall.ipm#1",
+     "units": [
+      "P1"
+     ],
+     "text": "`uninstall zpm` removes IPM from the namespace.",
+     "cases": "uninstall zpm (with/without force, with/without the full-cleanup answer) vs other modules",
+     "observation": "IPM classes and record after the command",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      "playbook-uplift/models/verus/uninstall.rs::main_uninstall",
+      "playbook-uplift/models/verus/uninstall.rs::unin_refines_honest",
+      "playbook-uplift/models/verus/uninstall.rs::ipm_block"
+     ],
+     "evidence": [
+      "playbook-uplift/models/verus/results/uninstall.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "unin_refines_honest gives success iff removed only under PNF (no full cleanup) and PB; no lemma or witness shows `uninstall zpm` actually deleting IPM's classes and record, and the full-cleanup path (Utils/Module.cls::UninstallAll, Lifecycle/Module.cls IPM block) is unmodeled (TRUST U9). The success row is written before Clean (U11). Contrast: `uninstall zpm -force` leaves no %IPM classes, vs a skipped Clean that still reports IPM uninstalled (OBS-H15)."
+    },
+    {
+     "id": "uninstall.ipm#2",
+     "units": [
+      "P1"
+     ],
+     "text": "`uninstall zpm` first asks whether to also remove all other modules and IPM's metadata, and then the shell exits. (That the metadata never includes the history log is owned by history.keep-on-ipm-uninstall in concepts/data-policy.)",
+     "cases": "exact name zpm with vs without -force; any other name",
+     "observation": "prompt shown; self-uninstall exit flag",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      "playbook-uplift/models/verus/uninstall.rs::unin_refines_self_guard",
+      "playbook-uplift/models/verus/uninstall.rs::l1_self_guard",
+      "playbook-uplift/models/verus/uninstall.rs::main_uninstall"
+     ],
+     "evidence": [
+      "playbook-uplift/models/verus/results/uninstall.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70 (premise PN; F-UNIN-3 witness shows `uninstall IPM` by external name bypasses the guard)",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  }
+ }
+}

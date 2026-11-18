@@ -1,0 +1,2301 @@
+{
+  "page": ".g5/ontology/features/load.g5.md",
+  "blocks": {
+    "load": {
+      "body_sha": "b275d0b19a407179",
+      "status": "enumerated",
+      "units": {
+        "P1": [
+          "load#1",
+          "load#2"
+        ]
+      },
+      "parent": {
+        "children": [
+          "load.path",
+          "load.core",
+          "load.options",
+          "load.refusal",
+          "load.same-version",
+          "load.outcome",
+          "load.dependencies",
+          "load.write-check"
+        ],
+        "entailment": "The lead promises a successful load of the module and its findable dependencies; it is graded directly against the L1 contract and the as-built survey. No child obligation is composed."
+      },
+      "obligations": [
+        {
+          "units": [
+            "P1"
+          ],
+          "text": "load <path> loads the module into the current namespace: on success the module is present at the manifest version with its resources loaded and the command returns OK.",
+          "cases": "clean load vs refused or failed load of the same path",
+          "observation": "command status; module record version and resources",
+          "grade": "full",
+          "check": "bounded",
+          "models": [
+            ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::l1_verdict",
+            ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::success_alt",
+            ".g5/Verus_verification/crates/ipm-load-history/src/cases.rs::case_c01_conforms",
+            "playbook-uplift/models/verus/load_general.rs::honest",
+            "playbook-uplift/models/verus/load_general.rs::g_refines"
+          ],
+          "evidence": [
+            ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/survey.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/receipt.json",
+            ".g5/Verus_verification/coverage-map.md",
+            "playbook-uplift/models/verus/results/load_general.json",
+            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+          ],
+          "basis": "reused:.g5/Verus_verification/coverage-map.md (load row); new:iteration-70 (load_general honest clause)",
+          "id": "load#1",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "P1"
+          ],
+          "text": "IPM also loads the module's dependencies when it can find them in the configured repositories; a dependency it cannot find fails the load.",
+          "cases": "all dependencies found vs one not found (found=false)",
+          "observation": "command status; dependency module states",
+          "grade": "full",
+          "check": "bounded",
+          "models": [
+            ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::l1_verdict",
+            ".g5/Verus_verification/crates/ipm-load-history/src/model.rs::all_found",
+            ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::dep_installed",
+            ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::l1_alts"
+          ],
+          "evidence": [
+            ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/survey.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/receipt.json",
+            ".g5/Verus_verification/coverage-map.md"
+          ],
+          "basis": "reused:.g5/Verus_verification/coverage-map.md (load row, at most two leaf dependencies)",
+          "id": "load#2",
+          "assessed_in": "iteration-70"
+        }
+      ]
+    },
+    "load.path": {
+      "body_sha": "399883a0c56834d4",
+      "status": "enumerated",
+      "units": {
+        "P1": "excluded: list heading for the accepted path kinds",
+        "B1": [
+          "load.path#1"
+        ],
+        "B2": [
+          "load.path#2",
+          "load.path#3"
+        ],
+        "B3": [
+          "load.path#4"
+        ]
+      },
+      "obligations": [
+        {
+          "units": [
+            "B1"
+          ],
+          "text": "A folder that contains module.xml is accepted and loaded.",
+          "cases": "folder with module.xml vs folder without one",
+          "observation": "command status; module installed",
+          "grade": "partial",
+          "check": "unchecked",
+          "models": [
+            ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::l1_verdict"
+          ],
+          "evidence": [
+            ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/survey.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/receipt.json",
+            ".g5/Verus_verification/coverage-map.md"
+          ],
+          "basis": "new:iteration-70",
+          "gap": "Path validity is one input bit (path_ok) and manifest presence another (mf) in the G model. The classifier in Main.cls::LoadInternal (2447-2467: folder vs archive vs URL) is not modeled, so no rule decides from a concrete path that a folder with module.xml loads and one without fails at GetModuleObjectFromPath.",
+          "id": "load.path#1",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "B2"
+          ],
+          "text": "A .tgz archive that contains module.xml is accepted and loaded.",
+          "cases": ".tgz archive vs plain folder",
+          "observation": "module installed from the unpacked archive",
+          "grade": "absent",
+          "check": "none",
+          "models": [],
+          "evidence": [],
+          "basis": "new:iteration-70",
+          "gap": "No formal model of archive recognition or unpacking (coverage map: not modeled). Contrast: load of x.tgz containing module.xml succeeds (native S1N, FileBinaryTar suite) against a .tgz without module.xml; reader Main.cls::LoadInternal 2466-2467 extension test.",
+          "id": "load.path#2",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "B2"
+          ],
+          "text": "Intended: a .tar.gz archive that contains module.xml is accepted and loaded (as built it is refused, defect D15).",
+          "cases": ".tar.gz vs .tgz with the same content",
+          "observation": "command status (\"File not found to obtain module object\") and module installed",
+          "grade": "absent",
+          "check": "none",
+          "models": [],
+          "evidence": [],
+          "basis": "new:iteration-70",
+          "gap": "No model of the last-extension test at Main.cls:2466-2467. Contrast: x.tar.gz (refused, stage C S1) vs x.tgz (loads, S1N); a model of the extension classifier would refute the intended promise.",
+          "id": "load.path#3",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "B3"
+          ],
+          "text": "A git repository URL is cloned and loaded; -branch picks the branch.",
+          "cases": "git URL with and without -branch; failing clone",
+          "observation": "module installed from the named branch; command status on clone failure",
+          "grade": "absent",
+          "check": "none",
+          "models": [],
+          "evidence": [],
+          "basis": "new:iteration-70",
+          "gap": "No formal or native evidence (coverage map: git URL loads unestablished). Contrast: URL with -branch b loads b's module.xml vs default branch; a failed clone (exit code unchecked, OBS-L13) must not load or report success. Reader Main.cls::LoadInternal clone step.",
+          "id": "load.path#4",
+          "assessed_in": "iteration-70"
+        }
+      ]
+    },
+    "load.path.archive": {
+      "body_sha": "cd6c40793121f3eb",
+      "status": "enumerated",
+      "units": {
+        "P1": [
+          "load.path.archive#1",
+          "load.path.archive#2",
+          "load.path.archive#3"
+        ]
+      },
+      "obligations": [
+        {
+          "units": [
+            "P1"
+          ],
+          "text": "IPM unpacks an archive into <ModuleRoot>/<name>/<version>/ (as install does) and loads the module from there.",
+          "cases": "archive load vs folder load; different name/version",
+          "observation": "module root recorded for the module; unpacked folder location",
+          "grade": "absent",
+          "check": "none",
+          "models": [],
+          "evidence": [],
+          "basis": "new:iteration-70",
+          "gap": "No model of the unpack destination. Contrast: load of a .tgz for m@1.2.0 unpacks to <ModuleRoot>/m/1.2.0/ and the stored module root points there (FileBinaryTar TestLoadDestinationDirectory is native only). Writer Main.cls:2498-2510; reader Storage/Module.cls Root.",
+          "id": "load.path.archive#1",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "P1"
+          ],
+          "text": "A folder load stays where it is: the module root is the given folder.",
+          "cases": "folder load vs archive load",
+          "observation": "stored module root",
+          "grade": "absent",
+          "check": "none",
+          "models": [],
+          "evidence": [],
+          "basis": "new:iteration-70",
+          "gap": "No model contrasts the stored root after a folder load (the folder itself) with an archive load (the unpack folder).",
+          "id": "load.path.archive#2",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "P1"
+          ],
+          "text": "IPM removes its temporary unpacking folder whether the load succeeds or fails.",
+          "cases": "successful vs failed archive load",
+          "observation": "temporary unpack folder exists afterwards",
+          "grade": "absent",
+          "check": "none",
+          "models": [],
+          "evidence": [],
+          "basis": "new:iteration-70",
+          "gap": "No model of the temporary unpack folder or its cleanup. Contrast: archive load that fails in Activate vs one that succeeds, both leave no temporary folder; OBS-L7 says the <ModuleRoot>/<name>/<version>/ copy stays after failure (that copy is not the temporary folder).",
+          "id": "load.path.archive#3",
+          "assessed_in": "iteration-70"
+        }
+      ]
+    },
+    "load.write-check": {
+      "body_sha": "02118b0d3131cbb1",
+      "status": "enumerated",
+      "units": {
+        "P1": [
+          "load.write-check#1"
+        ]
+      },
+      "obligations": [
+        {
+          "units": [
+            "P1"
+          ],
+          "text": "Before installing files, install and load check that IPM can write to the target folder.",
+          "cases": "writable vs read-only target folder",
+          "observation": "refusal before any file is installed",
+          "grade": "absent",
+          "check": "none",
+          "models": [],
+          "evidence": [],
+          "basis": "new:iteration-70",
+          "gap": "Not modeled (coverage map: unestablished). As observed, an explicit check exists only for repository archives (Utils/Module.cls:228-233); an archive load relies on folder-creation errors (Main.cls:2510). Contrast: read-only <ModuleRoot> on load of a .tgz vs install from a repository; observation: refusal message and no files written.",
+          "id": "load.write-check#1",
+          "assessed_in": "iteration-70"
+        }
+      ]
+    },
+    "load.core": {
+      "body_sha": "1dc32a0100035b90",
+      "status": "enumerated",
+      "units": {
+        "P1": [
+          "load.core#1"
+        ],
+        "B1": [
+          "load.core#2"
+        ],
+        "B2": [
+          "load.core#3"
+        ],
+        "B3": [
+          "load.core#4"
+        ],
+        "B4": "excluded: pointer to the install page and dev-mode.overwrite-guard (concepts/transactions-and-dev-mode.g5.md), the owners of install-only rules"
+      },
+      "parent": {
+        "children": [
+          "load.reload.root"
+        ],
+        "entailment": "load.core carries its own obligations; its child load.reload.root adds the reload root rule and composes nothing here."
+      },
+      "obligations": [
+        {
+          "units": [
+            "P1"
+          ],
+          "text": "load, install, update and dependency loads share one loading path, so the load rules govern all four.",
+          "cases": "load vs install vs update vs dependency load of the same manifest",
+          "observation": "refusal and outcome rules applied",
+          "grade": "partial",
+          "check": "unchecked",
+          "models": [
+            "playbook-uplift/models/verus/update_steps.rs::refuses",
+            "playbook-uplift/models/verus/update_steps.rs::step_guard",
+            "playbook-uplift/models/verus/update_steps.rs::step_phases",
+            ".g5/Verus_verification/crates/ipm-load-history/src/model.rs::lmr_step",
+            ".g5/Verus_verification/crates/ipm-load-history/src/model.rs::lnm_step"
+          ],
+          "evidence": [
+            "playbook-uplift/models/verus/results/update_steps.json",
+            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+            ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/survey.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/receipt.json",
+            ".g5/Verus_verification/coverage-map.md"
+          ],
+          "basis": "new:iteration-70",
+          "gap": "update_steps.rs runs install, load and update through one guard/manifest/phases step function keyed by op.kind, and the G model runs the dependency through the same LoadNewModule steps (lnm1). No model connects install's repository resolution (Main.cls Install -> LoadModuleReference) or update to the G outcome rules; coverage map says only load is modeled.",
+          "id": "load.core#1",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "B1"
+          ],
+          "text": "load takes a local path; install finds the module in a repository and records where it came from.",
+          "cases": "load from a path vs install from a qualified repository",
+          "observation": "history row source / supplier",
+          "grade": "partial",
+          "check": "unchecked",
+          "models": [
+            ".g5/Verus_verification/consolidated/iter18/reloading.rs::receipt_neighbor",
+            ".g5/Verus_verification/consolidated/iter18/reloading.rs::selected_source_controls_effect"
+          ],
+          "evidence": [
+            ".g5/uplift/consolidated/iter18/HANDOFF.md",
+            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+          ],
+          "basis": "new:iteration-70",
+          "gap": "iter18 proves an install records its supplier and root (receipt_neighbor). No model contrasts a load's record (local path, no repository) with an install's; the G model has no source field.",
+          "id": "load.core#2",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "B2"
+          ],
+          "text": "IPM checks the request, saves the manifest, loads dependencies, then runs Initialize, Reload, Validate, Compile and Activate, in that order.",
+          "cases": "refusal (nothing saved) vs dependency failure (manifest saved, no resources) vs Activate failure (resources loaded)",
+          "observation": "module record, document and resources by failure point",
+          "grade": "full",
+          "check": "bounded",
+          "models": [
+            ".g5/Verus_verification/crates/ipm-load-history/src/model.rs::lnm_step",
+            ".g5/Verus_verification/crates/ipm-load-history/src/model.rs::guard_refuses",
+            ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::l1_alts",
+            ".g5/Verus_verification/crates/ipm-load-history/src/cases.rs::case_c33_dev_dep_record_lost",
+            ".g5/Verus_verification/crates/ipm-load-history/src/cases.rs::case_c26_dev_failure_keeps_phase_work"
+          ],
+          "evidence": [
+            ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/survey.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/receipt.json",
+            ".g5/Verus_verification/coverage-map.md",
+            ".g5/Verus_verification/crates/ipm-load-history/BINDINGS.md"
+          ],
+          "basis": "reused:.g5/Verus_verification/coverage-map.md; new:iteration-70 (order read from developer-mode end states)",
+          "id": "load.core#3",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "B3"
+          ],
+          "text": "update also runs ApplyUpdateSteps; install and load run no update step.",
+          "cases": "op kind Update vs Install/Load after phases succeed",
+          "observation": "update-step log",
+          "grade": "full",
+          "check": "proved",
+          "models": [
+            "playbook-uplift/models/verus/update_steps.rs::step_phases",
+            "playbook-uplift/models/verus/update_steps.rs::run_ok",
+            "playbook-uplift/models/verus/update_steps.rs::inst_ok_update_runs_iff_scheduled",
+            "playbook-uplift/models/verus/update_steps.rs::inst_refines"
+          ],
+          "evidence": [
+            "playbook-uplift/models/verus/results/update_steps.json",
+            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+          ],
+          "basis": "new:iteration-70",
+          "id": "load.core#4",
+          "assessed_in": "iteration-70"
+        }
+      ]
+    },
+    "load.options": {
+      "body_sha": "b310ca55878a3278",
+      "status": "enumerated",
+      "units": {
+        "P1": "excluded: list heading for the options",
+        "B1": [
+          "load.options#1"
+        ],
+        "B2": [
+          "load.options#3"
+        ],
+        "B3": [
+          "load.options#4"
+        ],
+        "B4": [
+          "load.options#5"
+        ],
+        "B5": [
+          "load.options#6",
+          "load.options#7"
+        ],
+        "B6": "excluded: restates deps.lockfile (features/dependencies.g5.md, owner on another page)",
+        "B7": [
+          "load.options#8"
+        ],
+        "B8": [
+          "load.options#9"
+        ],
+        "B9": [
+          "load.options#10"
+        ],
+        "B10": [
+          "load.options#2"
+        ]
+      },
+      "obligations": [
+        {
+          "units": [
+            "B1"
+          ],
+          "text": "-dev turns developer mode on and -nodev turns it off.",
+          "cases": "-dev vs -nodev on a module stored in the other mode",
+          "observation": "DeveloperMode of the installed module",
+          "grade": "full",
+          "check": "proved",
+          "models": [
+            "playbook-uplift/models/verus/update_steps.rs::want_dev",
+            "playbook-uplift/models/verus/update_steps.rs::end_ok",
+            "playbook-uplift/models/verus/update_steps.rs::inst_refines",
+            ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::dev_mode",
+            ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::final_dev"
+          ],
+          "evidence": [
+            "playbook-uplift/models/verus/results/update_steps.json",
+            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+            ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/survey.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/receipt.json",
+            ".g5/Verus_verification/coverage-map.md"
+          ],
+          "basis": "reused:.g5/Verus_verification/coverage-map.md (load.options row); new:iteration-70 (update_steps end_ok)",
+          "id": "load.options#1",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "B1",
+            "B10"
+          ],
+          "text": "Working assumption: a plain load with neither -dev nor -nodev keeps the stored developer mode.",
+          "cases": "plain load of a module stored in developer mode vs stored normal",
+          "observation": "DeveloperMode after the load",
+          "grade": "full",
+          "check": "proved",
+          "models": [
+            "playbook-uplift/models/verus/update_steps.rs::want_dev",
+            "playbook-uplift/models/verus/update_steps.rs::stored_dev",
+            "playbook-uplift/models/verus/update_steps.rs::end_ok",
+            ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::dev_mode",
+            "playbook-uplift/models/verus/update_steps.rs::inst_refines"
+          ],
+          "evidence": [
+            "playbook-uplift/models/verus/results/update_steps.json",
+            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+            ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/survey.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/receipt.json",
+            ".g5/Verus_verification/coverage-map.md"
+          ],
+          "basis": "new:iteration-70 ; iteration-70 review: exercising theorem/neighbour locator added",
+          "id": "load.options#2",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "B2"
+          ],
+          "text": "-force allows a newer version without running its update steps.",
+          "alias_of": "load.refusal.update-required#3",
+          "id": "load.options#3",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "B3"
+          ],
+          "text": "-env names ;-separated JSON files of settings the module can read.",
+          "alias_of": "module.env#1",
+          "id": "load.options#4",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "B4"
+          ],
+          "text": "-quiet and -verbose set how much output appears.",
+          "cases": "-quiet vs default vs -verbose",
+          "observation": "console output",
+          "grade": "absent",
+          "check": "none",
+          "models": [],
+          "evidence": [],
+          "basis": "new:iteration-70",
+          "gap": "No model of output level. Contrast: the same load with -quiet vs -verbose and the lines printed (e.g. per-resource lines only with -verbose).",
+          "id": "load.options#5",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "B5"
+          ],
+          "text": "-bypass-py-deps skips Python dependencies.",
+          "alias_of": "module.python.explicit-wheel#2",
+          "id": "load.options#6",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "B5"
+          ],
+          "text": "-extra-pip-flags passes flags to pip.",
+          "alias_of": "module.python.explicit-wheel#4",
+          "id": "load.options#7",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "B7"
+          ],
+          "text": "-skip-sync leaves recording file hashes for sync to the next sync, in developer mode.",
+          "alias_of": "devtools.sync#16",
+          "id": "load.options#8",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "B8"
+          ],
+          "text": "-D<name>=<value> passes a parameter to the module and its phases.",
+          "alias_of": "module.parameter#2",
+          "id": "load.options#9",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "B9"
+          ],
+          "text": "-synchronous is deprecated and ignored.",
+          "cases": "load with vs without -synchronous",
+          "observation": "command behaviour and status",
+          "grade": "absent",
+          "check": "none",
+          "models": [],
+          "evidence": [],
+          "basis": "new:iteration-70",
+          "gap": "No model. Contrast: identical end state and status for load with and without -synchronous (wiki/02 still describes it as active).",
+          "id": "load.options#10",
+          "assessed_in": "iteration-70"
+        }
+      ]
+    },
+    "load.dependencies": {
+      "body_sha": "41496182eef73aca",
+      "status": "enumerated",
+      "units": {
+        "P1": [
+          "load.dependencies#1"
+        ],
+        "B1": [
+          "load.dependencies#2"
+        ],
+        "B2": [
+          "load.dependencies#3"
+        ],
+        "B3": "excluded: restates history.dependencies (features/history.g5.md, owner on another page)",
+        "B4": "excluded: pointer to deps (features/dependencies.g5.md) and dev-mode.not-propagated (concepts/transactions-and-dev-mode.g5.md), the owners"
+      },
+      "parent": {
+        "children": [
+          "load.dependencies.local-repo"
+        ],
+        "entailment": "The parent states ordering and failure propagation graded directly; the child adds the temporary repository and is not composed."
+      },
+      "obligations": [
+        {
+          "units": [
+            "P1"
+          ],
+          "text": "IPM loads a module's dependencies before running the module's own phases.",
+          "cases": "dependency failure (module phases never run) vs success",
+          "observation": "module resources after a dependency failure in developer mode (manifest only)",
+          "grade": "full",
+          "check": "bounded",
+          "models": [
+            ".g5/Verus_verification/crates/ipm-load-history/src/model.rs::lnm_step",
+            ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::l1_alts",
+            ".g5/Verus_verification/crates/ipm-load-history/src/cases.rs::case_c33_dev_dep_record_lost",
+            "playbook-uplift/models/verus/load_general.rs::step_dep",
+            "playbook-uplift/models/verus/load_general.rs::step_activate"
+          ],
+          "evidence": [
+            ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/survey.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/receipt.json",
+            ".g5/Verus_verification/coverage-map.md",
+            "playbook-uplift/models/verus/results/load_general.json",
+            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+          ],
+          "basis": "new:iteration-70",
+          "id": "load.dependencies#1",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "B1"
+          ],
+          "text": "Dependencies load one at a time, in dependency order.",
+          "cases": "two dependencies in resolver order; nested dependencies",
+          "observation": "order of dependency installs",
+          "grade": "partial",
+          "check": "unchecked",
+          "models": [
+            "playbook-uplift/models/verus/load_general.rs::step_dep",
+            ".g5/Verus_verification/crates/ipm-load-history/src/model.rs::lmr_step"
+          ],
+          "evidence": [
+            "playbook-uplift/models/verus/results/load_general.json",
+            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+            ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/survey.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/receipt.json",
+            ".g5/Verus_verification/coverage-map.md"
+          ],
+          "basis": "new:iteration-70",
+          "gap": "load_general loads any number of dependencies sequentially but in the resolver's flat order taken as input (cfg.vers); G has at most two leaf dependencies. Neither derives dependency order from the graph (Utils/Module.cls::LoadDependencies BuildDependencyGraph 1380-1381); a nested dependency case (c -> b -> a must load a before b) is not distinguished.",
+          "id": "load.dependencies#2",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "B2"
+          ],
+          "text": "A failed dependency load fails the whole load.",
+          "cases": "every dependency OK vs one fails",
+          "observation": "command status and top history Success",
+          "grade": "full",
+          "check": "proved",
+          "models": [
+            "playbook-uplift/models/verus/load_general.rs::honest",
+            "playbook-uplift/models/verus/load_general.rs::worked",
+            "playbook-uplift/models/verus/load_general.rs::g_refines",
+            ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::l1_verdict",
+            ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::first_dep_fail"
+          ],
+          "evidence": [
+            "playbook-uplift/models/verus/results/load_general.json",
+            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+            ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/survey.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/receipt.json",
+            ".g5/Verus_verification/coverage-map.md"
+          ],
+          "basis": "reused:.g5/Verus_verification/coverage-map.md (load.dependencies row); new:iteration-70 (load_general any n)",
+          "id": "load.dependencies#3",
+          "assessed_in": "iteration-70"
+        }
+      ]
+    },
+    "load.dependencies.local-repo": {
+      "body_sha": "703dcdd10cacf92c",
+      "status": "enumerated",
+      "units": {
+        "P1": [
+          "load.dependencies.local-repo#1",
+          "load.dependencies.local-repo#2"
+        ],
+        "B1": [
+          "load.dependencies.local-repo#3"
+        ],
+        "B2": [
+          "load.dependencies.local-repo#4"
+        ],
+        "B3": [
+          "load.dependencies.local-repo#5"
+        ],
+        "B4": "excluded: pointer to repo.search-order (concepts/repositories.g5.md) and the open precedence question",
+        "B5": [
+          "load.dependencies.local-repo#6",
+          "load.dependencies.local-repo#7",
+          "load.dependencies.local-repo#8"
+        ],
+        "B6": [
+          "load.dependencies.local-repo#9"
+        ],
+        "B7": [
+          "load.dependencies.local-repo#10"
+        ]
+      },
+      "obligations": [
+        {
+          "units": [
+            "P1"
+          ],
+          "text": "A .modules folder in the module root serves as a temporary repository for that load's dependencies.",
+          "cases": ".modules present vs absent; dependency only in .modules",
+          "observation": "dependency resolved from the temporary repository",
+          "grade": "partial",
+          "check": "unchecked",
+          "models": [
+            ".g5/Verus_verification/consolidated/verus/temp_repo.rs::on_new",
+            ".g5/Verus_verification/consolidated/verus/temp_repo.rs::skip_create"
+          ],
+          "evidence": [
+            ".g5/uplift/consolidated/extension/bindings.json",
+            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+          ],
+          "basis": "new:iteration-70",
+          "gap": "on_new creates the repository row, but no model resolves a dependency through it (search is outside temp_repo.rs). Contrast: a dependency offered only by .modules installs vs fails when the folder is missing.",
+          "id": "load.dependencies.local-repo#1",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "P1"
+          ],
+          "text": "IPM removes the temporary repository when loading finishes, even after an error.",
+          "cases": "successful vs failed load with a created temporary repository",
+          "observation": "repository rows after the load",
+          "grade": "partial",
+          "check": "unchecked",
+          "models": [
+            ".g5/Verus_verification/consolidated/verus/temp_repo.rs::cleanup",
+            ".g5/Verus_verification/consolidated/verus/temp_repo.rs::foreign_repository_preserved"
+          ],
+          "evidence": [
+            ".g5/uplift/consolidated/extension/bindings.json",
+            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+          ],
+          "basis": "new:iteration-70",
+          "gap": "cleanup is defined as removing the manager's row, but no theorem asserts that the owned row is gone, and the success vs error paths (Main.cls:2523-2531 cleanup after LoadNewModule throws) are not modeled. Contrast: a load that fails in Activate leaves no ipm-temp-modules-N row, like a successful one.",
+          "id": "load.dependencies.local-repo#2",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "B1"
+          ],
+          "text": "IPM creates no temporary repository when the folder is missing or another repository already uses that folder, and that other repository stays.",
+          "cases": "folder missing vs registered root vs fresh folder",
+          "observation": "repository rows before and after",
+          "grade": "partial",
+          "check": "unchecked",
+          "models": [
+            ".g5/Verus_verification/consolidated/verus/temp_repo.rs::skip_create",
+            ".g5/Verus_verification/consolidated/verus/temp_repo.rs::reused_root_is_not_owned",
+            ".g5/Verus_verification/consolidated/verus/temp_repo.rs::foreign_repository_preserved"
+          ],
+          "evidence": [
+            ".g5/uplift/consolidated/extension/bindings.json",
+            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+          ],
+          "basis": "new:iteration-70",
+          "gap": "reused_root_is_not_owned and foreign_repository_preserved prove that a skipped creation owns nothing and the other row stays, but they take skip as an input: skip_create (directory missing or root registered) is never exercised by a theorem or neighbour.",
+          "id": "load.dependencies.local-repo#3",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "B2"
+          ],
+          "text": "The temporary repository takes the first unused name ipm-temp-modules-N.",
+          "cases": "no leftover vs leftover ipm-temp-modules-1",
+          "observation": "name of the created repository",
+          "grade": "absent",
+          "check": "none",
+          "models": [],
+          "evidence": [],
+          "basis": "new:iteration-70",
+          "gap": "No formal model (Python twin consolidated/models/temp_repo.py TR3 only). Contrast: leftover ipm-temp-modules-1 makes the new one -2 and the leftover stays; reader TempLocalRepoManager naming loop.",
+          "id": "load.dependencies.local-repo#4",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "B3"
+          ],
+          "text": "A dependency's own .modules folder gets the same treatment while that dependency loads.",
+          "cases": "dependency with vs without its own .modules",
+          "observation": "temporary repository created and removed during the dependency load",
+          "grade": "absent",
+          "check": "none",
+          "models": [],
+          "evidence": [],
+          "basis": "new:iteration-70",
+          "gap": "No model of per-dependency temporary repositories (LoadModuleReference creating its own TempLocalRepoManager). Contrast: dependency b with b/.modules containing a; a resolves from it and the -N row is removed after b loads.",
+          "id": "load.dependencies.local-repo#5",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "B5"
+          ],
+          "text": "As built (C:D2), a failed cache creation leaves no repository row but the manager keeps its allocated id, and cleanup warns about the missing row.",
+          "cases": "cache creation fails vs succeeds",
+          "observation": "repository rows; manager id/object; cleanup warning",
+          "grade": "full",
+          "check": "proved",
+          "models": [
+            ".g5/Verus_verification/consolidated/verus/temp_repo.rs::on_new",
+            ".g5/Verus_verification/consolidated/verus/temp_repo.rs::failed_creation_can_warn_without_row",
+            ".g5/Verus_verification/consolidated/verus/temp_repo.rs::cleanup"
+          ],
+          "evidence": [
+            ".g5/uplift/consolidated/extension/bindings.json",
+            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+          ],
+          "basis": "reused:.g5/ontology/features/load.g5.md metadata (temp_repo.rs on_new); project map TempLocalRepoManager.cls::%OnNew",
+          "id": "load.dependencies.local-repo#6",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "B5"
+          ],
+          "text": "At the top-level cleanup call the module can already be committed when cleanup fails.",
+          "cases": "cleanup fails after the final commit",
+          "observation": "module kept, Committed=1, status error",
+          "grade": "full",
+          "check": "proved",
+          "models": [
+            ".g5/Verus_verification/consolidated/verus/temp_repo.rs::postcommit_cleanup",
+            ".g5/Verus_verification/consolidated/verus/temp_repo.rs::cleanup_error_does_not_undo_commit",
+            ".g5/Verus_verification/crates/ipm-load-history/src/cases.rs::case_c29_error_after_commit"
+          ],
+          "evidence": [
+            ".g5/uplift/consolidated/extension/bindings.json",
+            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+            ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json"
+          ],
+          "basis": "reused:.g5/ontology/features/load.g5.md metadata (temp_repo.rs postcommit_cleanup)",
+          "id": "load.dependencies.local-repo#7",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "B5"
+          ],
+          "text": "At a dependency call the parent rolls back, retaining its first manifest commit only in developer mode.",
+          "alias_of": "load.status.after-commit#4",
+          "id": "load.dependencies.local-repo#8",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "B6"
+          ],
+          "text": "As built, a higher candidate version wins before repository order; equal versions choose the older repository id, and temporary sort position does not force local priority (C:Q1).",
+          "cases": "newer version in a later repository vs equal versions in two repositories",
+          "observation": "selected candidate",
+          "grade": "full",
+          "check": "proved",
+          "models": [
+            ".g5/Verus_verification/consolidated/verus/temp_repo.rs::better",
+            ".g5/Verus_verification/consolidated/verus/temp_repo.rs::select",
+            ".g5/Verus_verification/consolidated/verus/temp_repo.rs::equal_version_older_repository_wins",
+            ".g5/Verus_verification/consolidated/verus/temp_repo.rs::newer_version_beats_repository_priority"
+          ],
+          "evidence": [
+            ".g5/uplift/consolidated/extension/bindings.json",
+            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+          ],
+          "basis": "new:iteration-70 (temp_repo.rs selection lemmas)",
+          "id": "load.dependencies.local-repo#9",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "B7"
+          ],
+          "text": "Working assumption: the copy in the older repository wins, as built.",
+          "alias_of": "load.dependencies.local-repo#9",
+          "id": "load.dependencies.local-repo#10",
+          "assessed_in": "iteration-70"
+        }
+      ]
+    },
+    "load.refusal": {
+      "body_sha": "2c5baf25dd988c75",
+      "status": "enumerated",
+      "units": {
+        "P1": [
+          "load.refusal#1",
+          "load.refusal#2",
+          "load.refusal#3",
+          "load.refusal#4"
+        ],
+        "B1": "excluded: extends the rule to the developer-mode overwrite guard, owned by dev-mode.overwrite-guard (concepts/transactions-and-dev-mode.g5.md)",
+        "B2": [
+          "load.refusal#5"
+        ],
+        "B3": "excluded: pointer to transaction.rollback-scope (concepts/transactions-and-dev-mode.g5.md) for files written before the checks",
+        "B4": [
+          "load.refusal#6"
+        ],
+        "B5": "excluded: restates history.actions (features/history.g5.md, owner on another page)",
+        "B6": [
+          "load.refusal#7"
+        ]
+      },
+      "parent": {
+        "children": [
+          "load.refusal.path",
+          "load.refusal.manifest",
+          "load.refusal.downgrade",
+          "load.refusal.update-required",
+          "load.refusal.requirements"
+        ],
+        "entailment": "The no-module-data and uncommitted-record rules are stated for all refusals here and graded directly per refusal kind; the children own their triggers. Composition is not credited: each child's trigger obligation can hold while the no-write rule fails (manifest refusals under NoTransaction)."
+      },
+      "obligations": [
+        {
+          "units": [
+            "P1"
+          ],
+          "text": "Path, downgrade and update-required refusals return an error and write no module data in any mode (default, -dev, NoTransaction, NoJournal, caller transaction).",
+          "cases": "refused vs accepted request across every transaction mode",
+          "observation": "command status; module states unchanged",
+          "grade": "full",
+          "check": "bounded",
+          "models": [
+            ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::l1_alts",
+            ".g5/Verus_verification/crates/ipm-load-history/src/model.rs::guard_refuses",
+            ".g5/Verus_verification/crates/ipm-load-history/src/cases.rs::case_c11_downgrade_refused",
+            ".g5/Verus_verification/crates/ipm-load-history/src/cases.rs::case_c15_update_refused",
+            "playbook-uplift/models/verus/update_steps.rs::end_refused"
+          ],
+          "evidence": [
+            ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/survey.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/receipt.json",
+            ".g5/Verus_verification/coverage-map.md",
+            "playbook-uplift/models/verus/results/update_steps.json",
+            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+          ],
+          "basis": "reused:.g5/Verus_verification/coverage-map.md (load.refusal row; controls 08 and 09 detected)",
+          "id": "load.refusal#1",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "P1"
+          ],
+          "text": "Intended: a manifest refusal writes no module data in any mode.",
+          "cases": "manifest with two documents or no module definition under NoTransaction/NoJournal vs default",
+          "observation": "module record and .ZPM document after the refusal",
+          "grade": "full",
+          "check": "refuted",
+          "models": [
+            ".g5/Verus_verification/crates/ipm-load-history/src/cases.rs::case_c52_multiple_documents_kept",
+            ".g5/Verus_verification/crates/ipm-load-history/src/cases.rs::case_c08_committed_without_change",
+            ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::l1_alts"
+          ],
+          "evidence": [
+            ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/survey.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/receipt.json",
+            ".g5/Verus_verification/coverage-map.md"
+          ],
+          "basis": "reused:.g5/Verus_verification/coverage-map.md (D11)",
+          "id": "load.refusal#2",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "P1"
+          ],
+          "text": "A refused attempt's record reads uncommitted after a version refusal.",
+          "cases": "downgrade or update-required refusal vs success",
+          "observation": "history Committed",
+          "grade": "full",
+          "check": "proved",
+          "models": [
+            ".g5/Verus_verification/crates/ipm-load-history/src/cases.rs::case_c11_downgrade_refused",
+            ".g5/Verus_verification/crates/ipm-load-history/src/cases.rs::case_c15_update_refused",
+            ".g5/Verus_verification/crates/ipm-load-history/src/proofs.rs::theorem_commit_sound"
+          ],
+          "evidence": [
+            ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+            ".g5/Verus_verification/coverage-map.md"
+          ],
+          "basis": "reused:.g5/Verus_verification/coverage-map.md",
+          "id": "load.refusal#3",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "P1"
+          ],
+          "text": "Intended: every refused attempt's record reads uncommitted in every mode.",
+          "cases": "NoTransaction manifest refusal (nothing kept) vs default-mode refusal",
+          "observation": "history Committed",
+          "grade": "full",
+          "check": "refuted",
+          "models": [
+            ".g5/Verus_verification/crates/ipm-load-history/src/cases.rs::case_c08_committed_without_change",
+            ".g5/Verus_verification/crates/ipm-load-history/src/cases.rs::case_c09_committed_without_change"
+          ],
+          "evidence": [
+            ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+            ".g5/Verus_verification/coverage-map.md"
+          ],
+          "basis": "reused:.g5/Verus_verification/coverage-map.md (D12)",
+          "id": "load.refusal#4",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "B2"
+          ],
+          "text": "When the requirements check runs is open (timing).",
+          "alias_of": "load.refusal.requirements#3",
+          "id": "load.refusal#5",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "B4"
+          ],
+          "text": "A dependency conflict is found while dependencies load, so it is a failed load (what a failed load keeps applies), not a refusal.",
+          "cases": "dependency conflict in developer mode (manifest kept at first commit) vs a refusal (nothing kept)",
+          "observation": "module states after the conflict",
+          "grade": "partial",
+          "check": "unchecked",
+          "models": [
+            ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::l1_verdict",
+            ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::l1_alts"
+          ],
+          "evidence": [
+            ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/survey.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/receipt.json",
+            ".g5/Verus_verification/coverage-map.md"
+          ],
+          "basis": "new:iteration-70",
+          "gap": "G models a dependency failure (not found, or the dependency load fails) after the manifest is saved, but no model represents a version conflict detected during LoadDependencies/BuildDependencyGraph. Contrast: -dev load whose dependencies conflict keeps the first-commit manifest, while a downgrade refusal keeps nothing.",
+          "id": "load.refusal#6",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "B6"
+          ],
+          "text": "Working assumption: requirements are checked before module installation.",
+          "alias_of": "load.refusal.requirements#3",
+          "id": "load.refusal#7",
+          "assessed_in": "iteration-70"
+        }
+      ]
+    },
+    "load.refusal.path": {
+      "body_sha": "d66c2a763d0106fe",
+      "status": "enumerated",
+      "units": {
+        "P1": [
+          "load.refusal.path#1",
+          "load.refusal.path#2",
+          "load.refusal.path#3"
+        ]
+      },
+      "obligations": [
+        {
+          "units": [
+            "P1"
+          ],
+          "text": "load accepts only absolute paths and git URLs; a relative path is refused (as built an existing relative path is accepted, D17).",
+          "cases": "existing relative path vs absolute path vs missing relative path",
+          "observation": "command status and module installed",
+          "grade": "partial",
+          "check": "unchecked",
+          "models": [
+            ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::l1_verdict"
+          ],
+          "evidence": [
+            ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/survey.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/receipt.json",
+            ".g5/Verus_verification/coverage-map.md"
+          ],
+          "basis": "new:iteration-70",
+          "gap": "The G model refuses on path_ok=false, an input bit. The check at Main.cls:2447-2452 (refuse only when not absolute, not a URL and not existing) is not modeled; contrast S4R (existing relative path loads, Committed=1) vs S4N1 (missing relative refused) would refute the intended rule.",
+          "id": "load.refusal.path#1",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "P1"
+          ],
+          "text": "An empty path is refused.",
+          "cases": "empty vs non-empty path",
+          "observation": "command status; nothing loaded",
+          "grade": "partial",
+          "check": "unchecked",
+          "models": [
+            ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::l1_verdict"
+          ],
+          "evidence": [
+            ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/survey.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/receipt.json",
+            ".g5/Verus_verification/coverage-map.md"
+          ],
+          "basis": "new:iteration-70",
+          "gap": "path_ok is an input bit; no model of the empty-path check at Main.cls:2447-2452.",
+          "id": "load.refusal.path#2",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "P1"
+          ],
+          "text": "A path that does not exist fails with an error instead of reporting success.",
+          "cases": "nonexistent absolute path vs existing path",
+          "observation": "command status",
+          "grade": "partial",
+          "check": "unchecked",
+          "models": [
+            ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::l1_verdict",
+            ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::l1_alts"
+          ],
+          "evidence": [
+            ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/survey.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/receipt.json",
+            ".g5/Verus_verification/coverage-map.md"
+          ],
+          "basis": "new:iteration-70",
+          "gap": "The refusal consequence (status error, nothing kept) is modeled for path_ok=false, but which paths are invalid is an input. As observed a nonexistent absolute path fails later at GetModuleObjectFromPath; no model distinguishes that route.",
+          "id": "load.refusal.path#3",
+          "assessed_in": "iteration-70"
+        }
+      ]
+    },
+    "load.refusal.manifest": {
+      "body_sha": "0dd030db3d117081",
+      "status": "enumerated",
+      "units": {
+        "P1": [
+          "load.refusal.manifest#1",
+          "load.refusal.manifest#2"
+        ]
+      },
+      "obligations": [
+        {
+          "units": [
+            "P1"
+          ],
+          "text": "IPM refuses a module whose manifest is missing or invalid (malformed XML, no <Module> element, more than one document).",
+          "cases": "each invalid kind vs a valid manifest",
+          "observation": "command status error",
+          "grade": "partial",
+          "check": "unchecked",
+          "models": [
+            ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::l1_verdict",
+            ".g5/Verus_verification/crates/ipm-load-history/src/model.rs::lnm_enter",
+            ".g5/Verus_verification/crates/ipm-load-history/src/model.rs::lnm_load"
+          ],
+          "evidence": [
+            ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/survey.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/receipt.json",
+            ".g5/Verus_verification/coverage-map.md",
+            ".g5/Verus_verification/crates/ipm-load-history/BINDINGS.md"
+          ],
+          "basis": "new:iteration-70",
+          "gap": "The G model distinguishes parse failure, no module definition, validation refusal and multiple documents as an input code mf (1-4) and gives each a refusal; the XML checks themselves (GetModuleObjectFromPath 341-347, Utils/Module.cls:1255-1260) are not modeled, so which manifest text maps to which code is not established.",
+          "id": "load.refusal.manifest#1",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "P1"
+          ],
+          "text": "Intended: IPM rejects an invalid manifest before it touches any resource.",
+          "cases": "two-document manifest under NoTransaction (record, .ZPM document and extra class stay) vs default mode",
+          "observation": "module record, document and classes after the refusal",
+          "grade": "full",
+          "check": "refuted",
+          "models": [
+            ".g5/Verus_verification/crates/ipm-load-history/src/cases.rs::case_c52_multiple_documents_kept",
+            ".g5/Verus_verification/crates/ipm-load-history/src/model.rs::lnm_load"
+          ],
+          "evidence": [
+            ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/survey.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/receipt.json",
+            ".g5/Verus_verification/coverage-map.md"
+          ],
+          "basis": "reused:.g5/Verus_verification/coverage-map.md (D11)",
+          "id": "load.refusal.manifest#2",
+          "assessed_in": "iteration-70"
+        }
+      ]
+    },
+    "load.refusal.downgrade": {
+      "body_sha": "5dd54f554218d47c",
+      "status": "enumerated",
+      "units": {
+        "P1": [
+          "load.refusal.downgrade#1",
+          "load.refusal.downgrade#2",
+          "load.refusal.downgrade#3"
+        ],
+        "B1": [
+          "load.refusal.downgrade#4"
+        ]
+      },
+      "obligations": [
+        {
+          "units": [
+            "P1"
+          ],
+          "text": "Intended: IPM never replaces an installed module with an older version.",
+          "cases": "installed 2.0.0-beta, load 1.0.0-rc",
+          "observation": "installed version afterwards",
+          "grade": "full",
+          "check": "refuted",
+          "models": [
+            ".g5/Verus_verification/consolidated/verus/semver.rs::load_refused",
+            ".g5/Verus_verification/consolidated/verus/semver.rs::witnessed_product_distinctions"
+          ],
+          "evidence": [
+            ".g5/uplift/consolidated/extension/bindings.json",
+            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+          ],
+          "basis": "reused:.g5/ontology/features/load.g5.md metadata (semver.rs load_refused)",
+          "id": "load.refusal.downgrade#1",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "P1"
+          ],
+          "text": "A load or install of a version lower in version order is refused in every flag combination (neither -force nor -dev lifts it) and the installed module stays.",
+          "cases": "strictly older vs equal/newer; with -force, -dev, both, neither",
+          "observation": "command status; installed version",
+          "grade": "full",
+          "check": "proved",
+          "models": [
+            "playbook-uplift/models/verus/update_steps.rs::blocked",
+            "playbook-uplift/models/verus/update_steps.rs::refuses",
+            "playbook-uplift/models/verus/update_steps.rs::end_refused",
+            "playbook-uplift/models/verus/update_steps.rs::inst_refines",
+            ".g5/Verus_verification/crates/ipm-load-history/src/model.rs::guard_refuses",
+            ".g5/Verus_verification/crates/ipm-load-history/src/cases.rs::case_c11_downgrade_refused",
+            ".g5/Verus_verification/consolidated/verus/semver.rs::release_downgrade_refused"
+          ],
+          "evidence": [
+            "playbook-uplift/models/verus/results/update_steps.json",
+            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+            ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/survey.json"
+          ],
+          "basis": "reused:.g5/Verus_verification/coverage-map.md (case_c11, control 08); new:iteration-70 (update_steps blocked for every flag)",
+          "id": "load.refusal.downgrade#2",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "P1"
+          ],
+          "text": "The refusal says \"Cannot downgrade\" and tells the user to uninstall first, then install or load the older version.",
+          "cases": "downgrade refusal",
+          "observation": "error message text",
+          "grade": "absent",
+          "check": "none",
+          "models": [],
+          "evidence": [],
+          "basis": "new:iteration-70",
+          "gap": "No model of the message (Utils/Module.cls:1214-1217). Contrast: message of a downgrade refusal vs an update-required refusal.",
+          "id": "load.refusal.downgrade#3",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "B1"
+          ],
+          "text": "As built, version order does not order prereleases of two different versions, so 1.0.0-rc replaces an installed 2.0.0-beta without a refusal (C:D15), while 2.0.0 then 1.0.0 is refused.",
+          "cases": "2.0.0-beta then 1.0.0-rc vs 2.0.0 then 1.0.0",
+          "observation": "refusal decision",
+          "grade": "full",
+          "check": "proved",
+          "models": [
+            ".g5/Verus_verification/consolidated/verus/semver.rs::load_refused",
+            ".g5/Verus_verification/consolidated/verus/semver.rs::witnessed_product_distinctions"
+          ],
+          "evidence": [
+            ".g5/uplift/consolidated/extension/bindings.json",
+            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+          ],
+          "basis": "reused:.g5/ontology/features/load.g5.md metadata (semver.rs load_refused)",
+          "id": "load.refusal.downgrade#4",
+          "assessed_in": "iteration-70"
+        }
+      ]
+    },
+    "load.refusal.update-required": {
+      "body_sha": "9e5afbcd647d5f3d",
+      "status": "enumerated",
+      "units": {
+        "P1": [
+          "load.refusal.update-required#1",
+          "load.refusal.update-required#2",
+          "load.refusal.update-required#3"
+        ],
+        "B1": [
+          "load.refusal.update-required#4"
+        ]
+      },
+      "obligations": [
+        {
+          "units": [
+            "P1"
+          ],
+          "text": "IPM refuses to load or install a newer version of an installed module whose new manifest declares <UpdatePackage>, keeping the installed version.",
+          "cases": "newer with UpdatePackage vs newer without vs equal",
+          "observation": "command status; installed version",
+          "grade": "full",
+          "check": "proved",
+          "models": [
+            "playbook-uplift/models/verus/update_steps.rs::blocked",
+            "playbook-uplift/models/verus/update_steps.rs::refuses",
+            "playbook-uplift/models/verus/update_steps.rs::end_refused",
+            "playbook-uplift/models/verus/update_steps.rs::inst_refines",
+            ".g5/Verus_verification/crates/ipm-load-history/src/model.rs::guard_refuses",
+            ".g5/Verus_verification/crates/ipm-load-history/src/cases.rs::case_c15_update_refused"
+          ],
+          "evidence": [
+            "playbook-uplift/models/verus/results/update_steps.json",
+            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+            ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json"
+          ],
+          "basis": "reused:.g5/Verus_verification/coverage-map.md (case_c15, control 09)",
+          "id": "load.refusal.update-required#1",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "P1"
+          ],
+          "text": "The refusal points the user to update.",
+          "cases": "update-required refusal",
+          "observation": "error message text",
+          "grade": "absent",
+          "check": "none",
+          "models": [],
+          "evidence": [],
+          "basis": "new:iteration-70",
+          "gap": "No model of the message (Utils/Module.cls:1218-1222).",
+          "id": "load.refusal.update-required#2",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "P1"
+          ],
+          "text": "-force allows the newer version, and the new version's update steps are then not run (they are seeded as done in normal mode).",
+          "cases": "forced install/load vs update of the same version",
+          "observation": "update-step log and step records",
+          "grade": "full",
+          "check": "proved",
+          "models": [
+            "playbook-uplift/models/verus/update_steps.rs::blocked",
+            "playbook-uplift/models/verus/update_steps.rs::end_ok",
+            "playbook-uplift/models/verus/update_steps.rs::step_phases",
+            "playbook-uplift/models/verus/update_steps.rs::inst_refines"
+          ],
+          "evidence": [
+            "playbook-uplift/models/verus/results/update_steps.json",
+            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+          ],
+          "basis": "new:iteration-70",
+          "id": "load.refusal.update-required#3",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "B1"
+          ],
+          "text": "Working assumption: -dev also lifts the update-required refusal.",
+          "cases": "typed -dev vs plain load of a newer UpdatePackage version",
+          "observation": "command status; installed version",
+          "grade": "full",
+          "check": "proved",
+          "models": [
+            "playbook-uplift/models/verus/update_steps.rs::blocked",
+            "playbook-uplift/models/verus/update_steps.rs::typed_dev",
+            "playbook-uplift/models/verus/update_steps.rs::inst_refines",
+            ".g5/Verus_verification/crates/ipm-load-history/src/model.rs::guard_refuses"
+          ],
+          "evidence": [
+            "playbook-uplift/models/verus/results/update_steps.json",
+            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+            ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json"
+          ],
+          "basis": "reused:.g5/Verus_verification/coverage-map.md (Q-02 provisional matches the product)",
+          "id": "load.refusal.update-required#4",
+          "assessed_in": "iteration-70"
+        }
+      ]
+    },
+    "load.refusal.requirements": {
+      "body_sha": "95378d31204c3cf8",
+      "status": "enumerated",
+      "units": {
+        "P1": [
+          "load.refusal.requirements#1",
+          "load.refusal.requirements#2"
+        ],
+        "B1": [
+          "load.refusal.requirements#3"
+        ]
+      },
+      "obligations": [
+        {
+          "units": [
+            "P1"
+          ],
+          "text": "IPM refuses a module whose system requirements are not met.",
+          "cases": "each requirement kind unmet vs met",
+          "observation": "command status",
+          "grade": "partial",
+          "check": "unchecked",
+          "models": [
+            ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::l1_verdict",
+            ".g5/Verus_verification/consolidated/iter3/resources.rs::requirement_failures"
+          ],
+          "evidence": [
+            ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/survey.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/receipt.json",
+            ".g5/Verus_verification/coverage-map.md",
+            ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+          ],
+          "basis": "new:iteration-70",
+          "gap": "G takes sysreq as an input bit; iter3 requirement_failures decides Namespace/Health/Interoperability only. Version, IPMVersion and PythonVersion (Storage/SystemRequirements.cls CheckVersion/CheckIPMVersion/CheckPythonVersion) are unmodeled (module.requirement#1/#2 absent), so e.g. Version=\">=2099.1\" refused vs \">=2020.1\" loaded is not distinguished.",
+          "id": "load.refusal.requirements#1",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "P1"
+          ],
+          "text": "A module that must be installed in %SYS fails to load in any other namespace and loads in %SYS.",
+          "cases": "SYSNamespace=true in USER vs %SYS",
+          "observation": "command status; module installed",
+          "grade": "full",
+          "check": "bounded",
+          "models": [
+            ".g5/Verus_verification/consolidated/iter3/resources.rs::requirement_failures",
+            ".g5/Verus_verification/consolidated/iter3/resources.rs::requirement_neighbors",
+            ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::l1_verdict",
+            ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::l1_alts"
+          ],
+          "evidence": [
+            ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/survey.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/receipt.json",
+            ".g5/Verus_verification/coverage-map.md",
+            ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+            ".g5/uplift/consolidated/iter3/gate/receipt.json"
+          ],
+          "basis": "composed:module.requirement.values#7 (decision) with the G refusal consequence",
+          "composed": [
+            "module.requirement.values#7"
+          ],
+          "entailment": "requirement_failures yields a SYSNamespace failure exactly in a non-%SYS namespace; CheckRequirements returning that failure is G's sysreq=false, whose verdict 5 returns an error while sysreq=true reaches success.",
+          "id": "load.refusal.requirements#2",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "B1"
+          ],
+          "text": "Working assumption: system requirements are checked before anything is written, in every mode.",
+          "cases": "-dev load refused by requirements vs default mode",
+          "observation": "module manifest/record after the refusal; Committed",
+          "grade": "full",
+          "check": "refuted",
+          "models": [
+            ".g5/Verus_verification/crates/ipm-load-history/src/cases.rs::case_c23_sysreq_dev_keeps_manifest",
+            ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::l1_alts"
+          ],
+          "evidence": [
+            ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/survey.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/receipt.json",
+            ".g5/Verus_verification/coverage-map.md"
+          ],
+          "basis": "reused:.g5/Verus_verification/coverage-map.md (D4 under Q-17 provisional)",
+          "id": "load.refusal.requirements#3",
+          "assessed_in": "iteration-70"
+        }
+      ]
+    },
+    "load.same-version": {
+      "body_sha": "da092af4299d1683",
+      "status": "enumerated",
+      "units": {
+        "P1": [
+          "load.same-version#1"
+        ],
+        "B1": "excluded: restates repo.origin.same-version (concepts/data-policy.g5.md, owner on another page)"
+      },
+      "obligations": [
+        {
+          "units": [
+            "P1"
+          ],
+          "text": "Loading or installing the installed version succeeds without -force or -dev and loads that version again.",
+          "cases": "equal version reinstall from another supplier vs first install; strict downgrade",
+          "observation": "command status; payload and supplier after the second install",
+          "grade": "full",
+          "check": "proved",
+          "models": [
+            ".g5/Verus_verification/consolidated/iter18/reloading.rs::admission_neighbor",
+            ".g5/Verus_verification/consolidated/iter18/reloading.rs::module_neighbor",
+            ".g5/Verus_verification/consolidated/iter18/reloading.rs::selected_source_controls_effect",
+            ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::l1_verdict"
+          ],
+          "evidence": [
+            ".g5/uplift/consolidated/iter18/HANDOFF.md",
+            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/survey.json"
+          ],
+          "basis": "reused:.g5/ontology/features/load.g5.md metadata (iter18 reloading.rs)",
+          "id": "load.same-version#1",
+          "assessed_in": "iteration-70"
+        }
+      ]
+    },
+    "load.reload.root": {
+      "body_sha": "78757c52d9c6b404",
+      "status": "enumerated",
+      "units": {
+        "P1": [
+          "load.reload.root#1"
+        ],
+        "P2": [
+          "load.reload.root#2",
+          "load.reload.root#3",
+          "load.reload.root#4"
+        ]
+      },
+      "obligations": [
+        {
+          "units": [
+            "P1"
+          ],
+          "text": "Reload uses an explicit root when present; without one it falls back to the stored root only in developer mode.",
+          "cases": "explicit root; no root in dev vs normal mode",
+          "observation": "root used and whether module.xml is read",
+          "grade": "full",
+          "check": "proved",
+          "models": [
+            ".g5/Verus_verification/consolidated/iter7/inputs.rs::reload",
+            ".g5/Verus_verification/consolidated/iter7/inputs.rs::hash_reload_config_neighbors"
+          ],
+          "evidence": [
+            ".g5/uplift/consolidated/iter7/INDEX.md",
+            ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+          ],
+          "basis": "reused:.g5/ontology/features/load.g5.md metadata (iter7 inputs.rs reload)",
+          "id": "load.reload.root#1",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "P2"
+          ],
+          "text": "Reload loads environment configuration before checking whether a root remains; a configuration error fails it first.",
+          "cases": "env error vs env ok with no root",
+          "observation": "status; whether the manifest is read",
+          "grade": "full",
+          "check": "proved",
+          "models": [
+            ".g5/Verus_verification/consolidated/iter7/inputs.rs::reload",
+            ".g5/Verus_verification/consolidated/iter7/inputs.rs::reload_status",
+            ".g5/Verus_verification/consolidated/iter7/inputs.rs::hash_reload_config_neighbors"
+          ],
+          "evidence": [
+            ".g5/uplift/consolidated/iter7/INDEX.md",
+            ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+          ],
+          "basis": "reused:.g5/ontology/features/load.g5.md metadata",
+          "id": "load.reload.root#2",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "P2"
+          ],
+          "text": "With no root, reload succeeds without reading module.xml.",
+          "cases": "no root (normal mode, no explicit) vs a root",
+          "observation": "status; manifest read",
+          "grade": "full",
+          "check": "proved",
+          "models": [
+            ".g5/Verus_verification/consolidated/iter7/inputs.rs::reload_status",
+            ".g5/Verus_verification/consolidated/iter7/inputs.rs::hash_reload_config_neighbors"
+          ],
+          "evidence": [
+            ".g5/uplift/consolidated/iter7/INDEX.md",
+            ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+          ],
+          "basis": "reused:.g5/ontology/features/load.g5.md metadata",
+          "id": "load.reload.root#3",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "P2"
+          ],
+          "text": "With a root it reads that manifest and reports a read error if it is missing.",
+          "cases": "root with missing vs present manifest",
+          "observation": "status",
+          "grade": "full",
+          "check": "proved",
+          "models": [
+            ".g5/Verus_verification/consolidated/iter7/inputs.rs::reload_status",
+            ".g5/Verus_verification/consolidated/iter7/inputs.rs::hash_reload_config_neighbors"
+          ],
+          "evidence": [
+            ".g5/uplift/consolidated/iter7/INDEX.md",
+            ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+          ],
+          "basis": "reused:.g5/ontology/features/load.g5.md metadata",
+          "id": "load.reload.root#4",
+          "assessed_in": "iteration-70"
+        }
+      ]
+    },
+    "load.outcome": {
+      "body_sha": "31e13ccddcf25923",
+      "status": "enumerated",
+      "units": {
+        "P1": "excluded: lead of the table; outcomes are in the rows",
+        "T1": [
+          "load.outcome#1"
+        ],
+        "T2": "excluded: pointer to load.outcome.dev (owner)",
+        "T3": [
+          "load.outcome#2"
+        ],
+        "B1": [
+          "load.outcome#3"
+        ],
+        "B2": [
+          "load.outcome#4",
+          "load.outcome#5"
+        ],
+        "B3": "excluded: open questions on dependency <Defaults> NoJournal and NoTransaction (undecided)",
+        "B4": "excluded: pointer to transaction.rollback-scope (concepts/transactions-and-dev-mode.g5.md)",
+        "B5": "excluded: pointer to history.committed and history.record (features/history.g5.md)",
+        "B6": [
+          "load.outcome#6"
+        ],
+        "B7": "excluded: restates transaction.flag-sources (concepts/transactions-and-dev-mode.g5.md, owner on another page)",
+        "B8": "excluded: restates transaction.flag-sources (concepts/transactions-and-dev-mode.g5.md, owner on another page)",
+        "B9": [
+          "load.outcome#7"
+        ],
+        "B10": [
+          "load.outcome#8"
+        ],
+        "B11": "excluded: restates the working assumption owned by transaction.flag-sources (concepts/transactions-and-dev-mode.g5.md)",
+        "B12": "excluded: restates the working assumption owned by transaction.flag-sources (concepts/transactions-and-dev-mode.g5.md)"
+      },
+      "parent": {
+        "children": [
+          "load.outcome.dev"
+        ],
+        "entailment": "Row T2 points to the child; the parent's other rows and bullets are graded directly. Nothing is composed."
+      },
+      "obligations": [
+        {
+          "units": [
+            "T1"
+          ],
+          "text": "A normal-mode load in a transaction that fails before the final commit keeps no module data: the whole load, including dependencies loaded for it, is rolled back.",
+          "cases": "Activate or dependency failure vs success, any number of dependencies",
+          "observation": "module and dependency states",
+          "grade": "full",
+          "check": "proved",
+          "models": [
+            "playbook-uplift/models/verus/load_general.rs::honest",
+            "playbook-uplift/models/verus/load_general.rs::g_refines",
+            ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::l1_alts",
+            ".g5/Verus_verification/consolidated/iter64/failkeep.rs::normal_compile_failure_keeps_only_cpf"
+          ],
+          "evidence": [
+            "playbook-uplift/models/verus/results/load_general.json",
+            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+            ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/survey.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/receipt.json",
+            ".g5/Verus_verification/coverage-map.md",
+            ".g5/uplift/consolidated/iter64/run.json"
+          ],
+          "basis": "reused:.g5/Verus_verification/coverage-map.md (load.outcome row); new:iteration-70 (load_general any n under premises P1c-PI)",
+          "id": "load.outcome#1",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "T3"
+          ],
+          "text": "With -DNoTransaction=1 or -DNoJournal=1 a failure keeps everything written before it.",
+          "cases": "NoTransaction/NoJournal Activate failure vs default",
+          "observation": "module installed with resources; Committed",
+          "grade": "full",
+          "check": "proved",
+          "models": [
+            ".g5/Verus_verification/crates/ipm-load-history/src/cases.rs::case_c27_notx_failure_keeps_partial",
+            ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::l1_alts"
+          ],
+          "evidence": [
+            ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/survey.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/receipt.json",
+            ".g5/Verus_verification/coverage-map.md"
+          ],
+          "basis": "reused:.g5/Verus_verification/coverage-map.md (case_c27, control 13)",
+          "id": "load.outcome#2",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "B1"
+          ],
+          "text": "A refusal keeps no module data in any mode; the requirements check is the open exception.",
+          "alias_of": "load.refusal#1",
+          "id": "load.outcome#3",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "B2"
+          ],
+          "text": "A process that dies mid-load ends like a failure at that point: the open transaction is rolled back, so the table applies.",
+          "cases": "kill-like and terminate-like end in each phase, transactional modes",
+          "observation": "durable module states after the process end",
+          "grade": "full",
+          "check": "bounded",
+          "models": [
+            ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::l1_alts_kill",
+            ".g5/Verus_verification/crates/ipm-load-history/src/model.rs::kill",
+            ".g5/Verus_verification/crates/ipm-load-history/src/model.rs::terminate"
+          ],
+          "evidence": [
+            ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/survey.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/receipt.json",
+            ".g5/Verus_verification/coverage-map.md"
+          ],
+          "basis": "reused:.g5/Verus_verification/coverage-map.md (process ends; premise P-6 native)",
+          "id": "load.outcome#4",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "B2"
+          ],
+          "text": "With -DNoTransaction=1 or -DNoJournal=1 a dying process rolls nothing back and the namespace may be left inconsistent.",
+          "cases": "process end with NoTransaction vs default",
+          "observation": "durable module states",
+          "grade": "full",
+          "check": "bounded",
+          "models": [
+            ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::l1_alts_kill",
+            ".g5/Verus_verification/crates/ipm-load-history/src/model.rs::kill"
+          ],
+          "evidence": [
+            ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/survey.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/receipt.json",
+            ".g5/Verus_verification/coverage-map.md"
+          ],
+          "basis": "reused:.g5/Verus_verification/coverage-map.md",
+          "id": "load.outcome#5",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "B6"
+          ],
+          "text": "The rollback rule applies to database writes before the final commit with journaling on; a failed after-install message or cleanup after that commit returns an error with the module kept.",
+          "alias_of": "load.status.after-commit#3",
+          "id": "load.outcome#6",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "B9"
+          ],
+          "text": "Class descriptors and usable code are separate outcomes; after a two-resource compile failure, ordinary rollback removes both classes.",
+          "cases": "transactional compile failure vs success",
+          "observation": "class definition, descriptor and callability per resource",
+          "grade": "full",
+          "check": "proved",
+          "models": [
+            ".g5/Verus_verification/consolidated/verus/partial_compile.rs::compile",
+            ".g5/Verus_verification/consolidated/verus/partial_compile.rs::rollback_removes_every_resource",
+            ".g5/Verus_verification/consolidated/verus/partial_compile.rs::successful_neighbor"
+          ],
+          "evidence": [
+            ".g5/uplift/consolidated/extension/bindings.json",
+            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+          ],
+          "basis": "reused:.g5/ontology/features/load.g5.md metadata (partial_compile.rs compile)",
+          "id": "load.outcome#7",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "B10"
+          ],
+          "text": "Without transactions, or after the developer commit, both descriptors may remain while only the first class runs (premise: observed IRIS compiler behaviour).",
+          "cases": "NoTransaction/developer compile failure of two classes",
+          "observation": "descriptor and callability per class",
+          "grade": "full",
+          "check": "proved",
+          "models": [
+            ".g5/Verus_verification/consolidated/verus/partial_compile.rs::compile",
+            ".g5/Verus_verification/consolidated/verus/partial_compile.rs::compiler_distinction_is_preserved",
+            ".g5/Verus_verification/consolidated/verus/partial_compile.rs::two_resource_witness"
+          ],
+          "evidence": [
+            ".g5/uplift/consolidated/extension/bindings.json",
+            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+          ],
+          "basis": "reused:.g5/ontology/features/load.g5.md metadata (partial_compile.rs compile)",
+          "id": "load.outcome#8",
+          "assessed_in": "iteration-70"
+        }
+      ]
+    },
+    "load.outcome.dev": {
+      "body_sha": "046e185e1eb35f33",
+      "status": "enumerated",
+      "units": {
+        "P1": "excluded: lead (developer-mode stepwise commits, rationale \"so the developer can debug\"); outcomes are in the bullets",
+        "B1": [
+          "load.outcome.dev#1"
+        ],
+        "B2": [
+          "load.outcome.dev#2"
+        ],
+        "B3": [
+          "load.outcome.dev#3"
+        ],
+        "B4": [
+          "load.outcome.dev#4"
+        ]
+      },
+      "parent": {
+        "children": [
+          "load.outcome.dev.early-failure"
+        ],
+        "entailment": "The child adds the before-first-commit case; the parent bullets are graded directly. Nothing composed."
+      },
+      "obligations": [
+        {
+          "units": [
+            "B1"
+          ],
+          "text": "First commit: in developer mode IPM commits the saved manifest before it loads dependencies and resources, so it stays after a later failure.",
+          "cases": "-dev dependency or requirements failure vs normal mode",
+          "observation": "module record/document (manifest only) after the failure",
+          "grade": "full",
+          "check": "bounded",
+          "models": [
+            ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::l1_alts",
+            ".g5/Verus_verification/crates/ipm-load-history/src/model.rs::lnm_devsave",
+            ".g5/Verus_verification/crates/ipm-load-history/src/cases.rs::case_c33_dev_dep_record_lost",
+            "playbook-uplift/models/verus/update_steps.rs::step_manifest"
+          ],
+          "evidence": [
+            ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/survey.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/receipt.json",
+            ".g5/Verus_verification/coverage-map.md",
+            "playbook-uplift/models/verus/results/update_steps.json",
+            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+          ],
+          "basis": "reused:.g5/Verus_verification/coverage-map.md (load.outcome.dev row)",
+          "id": "load.outcome.dev#1",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "B2"
+          ],
+          "text": "Dependencies then load in a second transaction that commits only if every dependency load succeeds; otherwise all of them are rolled back and the manifest stays.",
+          "cases": "second of two dependencies fails vs both succeed in -dev",
+          "observation": "dependency states and top manifest",
+          "grade": "full",
+          "check": "bounded",
+          "models": [
+            ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::l1_alts",
+            ".g5/Verus_verification/crates/ipm-load-history/src/model.rs::lnm_deps",
+            ".g5/Verus_verification/crates/ipm-load-history/src/cases.rs::case_c33_dev_dep_record_lost"
+          ],
+          "evidence": [
+            ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/survey.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/receipt.json",
+            ".g5/Verus_verification/coverage-map.md"
+          ],
+          "basis": "reused:.g5/Verus_verification/coverage-map.md",
+          "id": "load.outcome.dev#2",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "B3"
+          ],
+          "text": "The module's own phases run outside a transaction; whatever they did before a failure stays.",
+          "cases": "-dev Activate failure vs normal-mode Activate failure",
+          "observation": "module resources kept",
+          "grade": "full",
+          "check": "proved",
+          "models": [
+            ".g5/Verus_verification/crates/ipm-load-history/src/cases.rs::case_c26_dev_failure_keeps_phase_work",
+            ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::l1_alts",
+            ".g5/Verus_verification/consolidated/iter64/failkeep.rs::developer_failure_keeps_database_effects"
+          ],
+          "evidence": [
+            ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/survey.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/receipt.json",
+            ".g5/Verus_verification/coverage-map.md",
+            ".g5/uplift/consolidated/iter64/run.json"
+          ],
+          "basis": "reused:.g5/Verus_verification/coverage-map.md (case_c26, control 12)",
+          "id": "load.outcome.dev#3",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "B4"
+          ],
+          "text": "These commits happen only when transactions are on.",
+          "cases": "-dev with transactions vs -dev with NoTransaction",
+          "observation": "what a failure keeps (manifest only vs everything written)",
+          "grade": "full",
+          "check": "bounded",
+          "models": [
+            ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::l1_alts",
+            ".g5/Verus_verification/crates/ipm-load-history/src/model.rs::lnm_devsave",
+            ".g5/Verus_verification/crates/ipm-load-history/src/model.rs::etx"
+          ],
+          "evidence": [
+            ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/survey.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/receipt.json",
+            ".g5/Verus_verification/coverage-map.md",
+            ".g5/Verus_verification/crates/ipm-load-history/BINDINGS.md"
+          ],
+          "basis": "new:iteration-70",
+          "id": "load.outcome.dev#4",
+          "assessed_in": "iteration-70"
+        }
+      ]
+    },
+    "load.outcome.dev.early-failure": {
+      "body_sha": "b93e8814ecf10a34",
+      "status": "enumerated",
+      "units": {
+        "P1": [
+          "load.outcome.dev.early-failure#1",
+          "load.outcome.dev.early-failure#2"
+        ]
+      },
+      "obligations": [
+        {
+          "units": [
+            "P1"
+          ],
+          "text": "A developer-mode load refused before its first commit is rolled back in full: loading an older version with -dev is refused and leaves the installed version.",
+          "cases": "load -dev of an older version vs newer",
+          "observation": "installed version; Committed",
+          "grade": "full",
+          "check": "proved",
+          "models": [
+            "playbook-uplift/models/verus/update_steps.rs::blocked",
+            "playbook-uplift/models/verus/update_steps.rs::end_refused",
+            ".g5/Verus_verification/crates/ipm-load-history/src/model.rs::guard_refuses",
+            ".g5/Verus_verification/crates/ipm-load-history/src/cases.rs::case_c11_downgrade_refused"
+          ],
+          "evidence": [
+            "playbook-uplift/models/verus/results/update_steps.json",
+            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+            ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/survey.json"
+          ],
+          "basis": "reused:.g5/Verus_verification/coverage-map.md",
+          "id": "load.outcome.dev.early-failure#1",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "P1"
+          ],
+          "text": "A developer-mode load that fails before its first commit (manifest refused in a transaction) is rolled back in full, like a normal-mode load.",
+          "cases": "-dev manifest refusal with transactions vs a -dev failure after the first commit",
+          "observation": "module record and document",
+          "grade": "full",
+          "check": "bounded",
+          "models": [
+            ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::l1_alts",
+            ".g5/Verus_verification/crates/ipm-load-history/src/model.rs::lnm_load"
+          ],
+          "evidence": [
+            ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/survey.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/receipt.json",
+            ".g5/Verus_verification/coverage-map.md"
+          ],
+          "basis": "reused:.g5/Verus_verification/coverage-map.md (load.refusal.manifest: default and -dev supported)",
+          "id": "load.outcome.dev.early-failure#2",
+          "assessed_in": "iteration-70"
+        }
+      ]
+    },
+    "load.status": {
+      "body_sha": "67b508b551d5e87f",
+      "status": "enumerated",
+      "units": {
+        "P1": [
+          "load.status#1"
+        ],
+        "B1": [
+          "load.status#2"
+        ],
+        "B2": [
+          "load.status#3"
+        ]
+      },
+      "parent": {
+        "children": [
+          "load.status.after-commit"
+        ],
+        "entailment": "B2 restates the child's as-built claim; P1 and B1 are graded directly. Nothing composed."
+      },
+      "obligations": [
+        {
+          "units": [
+            "P1"
+          ],
+          "text": "Success means the module and its dependencies are installed and every phase finished.",
+          "cases": "command OK vs failure",
+          "observation": "module and dependency states; top record Success",
+          "grade": "full",
+          "check": "proved",
+          "models": [
+            "playbook-uplift/models/verus/load_general.rs::honest",
+            "playbook-uplift/models/verus/load_general.rs::g_refines",
+            ".g5/Verus_verification/crates/ipm-load-history/src/proofs.rs::theorem_top_record_complete",
+            ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::success_alt"
+          ],
+          "evidence": [
+            "playbook-uplift/models/verus/results/load_general.json",
+            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+            ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/survey.json"
+          ],
+          "basis": "new:iteration-70",
+          "id": "load.status#1",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "B1"
+          ],
+          "text": "Intended: an error means the module data was not kept (per what a failed load keeps).",
+          "cases": "error after the final commit vs error before it",
+          "observation": "module kept after an error status",
+          "grade": "full",
+          "check": "refuted",
+          "models": [
+            ".g5/Verus_verification/crates/ipm-load-history/src/cases.rs::case_c29_error_after_commit",
+            ".g5/Verus_verification/consolidated/verus/temp_repo.rs::cleanup_error_does_not_undo_commit",
+            ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::failed_message_is_not_rollback"
+          ],
+          "evidence": [
+            ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+            ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+            ".g5/uplift/consolidated/extension/bindings.json"
+          ],
+          "basis": "reused:.g5/Verus_verification/coverage-map.md (D13)",
+          "id": "load.status#2",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "B2"
+          ],
+          "text": "As built, an error can follow the final commit; the caller must read the stored module and committed history separately; a successful message and a brace-free macro are valid neighbours.",
+          "alias_of": "load.status.after-commit#3",
+          "id": "load.status#3",
+          "assessed_in": "iteration-70"
+        }
+      ]
+    },
+    "load.status.after-commit": {
+      "body_sha": "94b522fa9ebfbc7f",
+      "status": "enumerated",
+      "units": {
+        "P1": [
+          "load.status.after-commit#1"
+        ],
+        "B1": [
+          "load.status.after-commit#2"
+        ],
+        "B2": [
+          "load.status.after-commit#3"
+        ],
+        "B3": [
+          "load.status.after-commit#4"
+        ]
+      },
+      "obligations": [
+        {
+          "units": [
+            "P1"
+          ],
+          "text": "Intended: a failure in work after the final commit must not report the kept load as failed.",
+          "cases": "after-install message throws or temporary-repository cleanup fails after the commit",
+          "observation": "command status vs stored module",
+          "grade": "full",
+          "check": "refuted",
+          "models": [
+            ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::late_error_witness",
+            ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::after_message",
+            ".g5/Verus_verification/consolidated/verus/temp_repo.rs::cleanup_error_does_not_undo_commit",
+            ".g5/Verus_verification/crates/ipm-load-history/src/cases.rs::case_c29_error_after_commit"
+          ],
+          "evidence": [
+            ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+            ".g5/uplift/consolidated/extension/bindings.json",
+            ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json"
+          ],
+          "basis": "reused:.g5/ontology/features/load.g5.md metadata (attr_evaluator.rs after_message)",
+          "id": "load.status.after-commit#1",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "B1"
+          ],
+          "text": "The after-commit work is removing the temporary repository, printing the after-install message and finishing the history record.",
+          "cases": "each of the three steps vs work before the final commit",
+          "observation": "whether a failure there can be rolled back",
+          "grade": "partial",
+          "check": "unchecked",
+          "models": [
+            ".g5/Verus_verification/crates/ipm-load-history/src/model.rs::top_step",
+            ".g5/Verus_verification/consolidated/verus/temp_repo.rs::postcommit_cleanup",
+            ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::after_message"
+          ],
+          "evidence": [
+            ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+            ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+          ],
+          "basis": "new:iteration-70",
+          "gap": "G places CleanUp and Finalize after LoadNewModule's final commit (top_step pc 3-5). The after-install message's position after the commit is a boundary premise of attr_evaluator.after_message (\"all load phases and final commit succeeded\"), not derived; G does not model the message (Utils/Module.cls:1348-1354).",
+          "id": "load.status.after-commit#2",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "B2"
+          ],
+          "text": "As built, a failure in this work returns an error although the module stays installed and its history record reads committed (known defect).",
+          "cases": "failing vs successful after-install message; failing cleanup",
+          "observation": "status, module, Committed, history Success",
+          "grade": "full",
+          "check": "proved",
+          "models": [
+            ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::failed_message_is_not_rollback",
+            ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::successful_neighbor",
+            ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::late_error_witness",
+            ".g5/Verus_verification/consolidated/verus/temp_repo.rs::cleanup_error_does_not_undo_commit",
+            ".g5/Verus_verification/crates/ipm-load-history/src/cases.rs::case_c29_error_after_commit"
+          ],
+          "evidence": [
+            ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+            ".g5/uplift/consolidated/extension/bindings.json",
+            ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json"
+          ],
+          "basis": "reused:.g5/ontology/features/load.g5.md metadata",
+          "id": "load.status.after-commit#3",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "B3"
+          ],
+          "text": "Inside a parent's load, the same failure in a dependency fails the dependency; the parent rolls back fully in normal mode and back to its first commit in developer mode.",
+          "cases": "dependency cleanup failure with parent in normal vs developer mode; no failure",
+          "observation": "parent and dependency states; status",
+          "grade": "full",
+          "check": "proved",
+          "models": [
+            ".g5/Verus_verification/consolidated/verus/temp_repo.rs::dependency_result",
+            ".g5/Verus_verification/consolidated/verus/temp_repo.rs::dependency_failure_distinguishes_first_commit",
+            ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::l1_alts"
+          ],
+          "evidence": [
+            ".g5/uplift/consolidated/extension/bindings.json",
+            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+            ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/survey.json",
+            ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/receipt.json",
+            ".g5/Verus_verification/coverage-map.md"
+          ],
+          "basis": "reused:.g5/ontology/features/load.g5.md metadata (temp_repo.rs dependency_result)",
+          "id": "load.status.after-commit#4",
+          "assessed_in": "iteration-70"
+        }
+      ]
+    },
+    "load.after-install-message": {
+      "body_sha": "004f805959d110a9",
+      "status": "enumerated",
+      "units": {
+        "P1": [
+          "load.after-install-message#1",
+          "load.after-install-message#2"
+        ]
+      },
+      "obligations": [
+        {
+          "units": [
+            "P1"
+          ],
+          "text": "After a module loads, IPM prints the module's after-install message with its expressions filled in.",
+          "cases": "message with {$namespace} {name} after a successful load",
+          "observation": "printed text",
+          "grade": "partial",
+          "check": "unchecked",
+          "models": [
+            ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::evaluate",
+            ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::after_message"
+          ],
+          "evidence": [
+            ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+            ".g5/uplift/consolidated/extension/bindings.json"
+          ],
+          "basis": "new:iteration-70",
+          "gap": "evaluate takes the evaluated pipeline result as an input for messages containing \"{\"; the filling is owned by module.parameter.expressions and the printing point (Storage/Module.cls:356-361 via Utils/Module.cls:1354) is a premise. Contrast: \"Done {$namespace} {name}\" prints \"Done USER pc-ok\" after the load, and nothing is printed for a failed load.",
+          "id": "load.after-install-message#1",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "units": [
+            "P1"
+          ],
+          "text": "A message without a { is printed as written.",
+          "cases": "brace-free \"$$$OK\" vs \"{x}\"",
+          "observation": "printed value and status",
+          "grade": "full",
+          "check": "proved",
+          "models": [
+            ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::evaluate",
+            ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::brace_free_macro_is_unchanged",
+            ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::late_error_witness"
+          ],
+          "evidence": [
+            ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+            ".g5/uplift/consolidated/extension/bindings.json"
+          ],
+          "basis": "reused:.g5/ontology/features/load.g5.md metadata (attr_evaluator.rs)",
+          "id": "load.after-install-message#2",
+          "assessed_in": "iteration-70"
+        }
+      ]
+    }
+  }
+}

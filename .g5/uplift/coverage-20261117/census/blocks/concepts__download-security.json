@@ -1,0 +1,385 @@
+{
+ "page": ".g5/ontology/concepts/download-security.g5.md",
+ "blocks": {
+  "repo.remote.download": {
+   "body_sha": "57a7afbfa25fdec1",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "repo.remote.download#1",
+     "repo.remote.download#2"
+    ],
+    "B1": [
+     "repo.remote.download#1"
+    ],
+    "B2": [
+     "repo.remote.download#3"
+    ],
+    "B3": "excluded: working assumption restating #1/#2 (keep following the returned URL, record C:D20) and listing undecided alternatives (same-origin credentials, refusal); open question repo.remote.download.credentials"
+   },
+   "obligations": [
+    {
+     "id": "repo.remote.download#1",
+     "units": [
+      "P1",
+      "B1"
+     ],
+     "text": "To install from a remote registry IPM asks for the package URL and hash, then downloads that URL exactly as returned (not a path relative to the repository).",
+     "cases": "returned URL on the configured origin vs another origin",
+     "observation": "byte request target",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter4/registry.rs::metadata_request",
+      ".g5/Verus_verification/consolidated/iter4/registry.rs::bytes_request",
+      ".g5/Verus_verification/consolidated/iter4/registry.rs::lemma_cross_origin_carries_credentials",
+      ".g5/Verus_verification/consolidated/iter4/registry.rs::registry_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter4/proofs/models.json"
+     ],
+     "basis": "reused:download-security metadata (iter4 registry.rs; control bytes-sent-to-configured-origin rejected)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.remote.download#2",
+     "units": [
+      "P1"
+     ],
+     "text": "IPM sends the repository credentials on both the metadata and the byte request, even when the URL names a different server.",
+     "cases": "cross-origin vs same-origin URL with Basic and token configured",
+     "observation": "Basic/apikey on the byte request",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter4/registry.rs::bytes_request",
+      ".g5/Verus_verification/consolidated/iter4/registry.rs::lemma_cross_origin_carries_credentials"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter4/proofs/models.json"
+     ],
+     "basis": "reused:download-security metadata (iter4 registry.rs; control bytes-drop-credentials-as-built rejected)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.remote.download#3",
+     "units": [
+      "B2"
+     ],
+     "text": "Artifactory byte downloads send no credentials.",
+     "alias_of": "artifact.authentication#2",
+     "assessed_in": "iteration-70"
+    }
+   ],
+   "parent": {
+    "children": [
+     "repo.remote.download.redirect",
+     "repo.remote.download.integrity",
+     "repo.remote.download.token"
+    ],
+    "entailment": "The parent owns the URL-following and credential-forwarding rules (graded directly). Redirect, integrity and token behaviour are owned by the children; no composition credited."
+   }
+  },
+  "repo.remote.download.redirect": {
+   "body_sha": "172b62f9e42e474a",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "repo.remote.download.redirect#1"
+    ],
+    "B1": [
+     "repo.remote.download.redirect#2"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "repo.remote.download.redirect#1",
+     "units": [
+      "P1"
+     ],
+     "text": "Registry requests follow HTTP redirects automatically and send the same credentials on each hop, so a same-server URL redirecting elsewhere still delivers Basic credentials and the API key there.",
+     "cases": "hop chain [local, other] vs [local]",
+     "observation": "credentials sent per hop",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter5/redirect.rs::as_built_sends",
+      ".g5/Verus_verification/consolidated/iter5/redirect.rs::redirect_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter5/proofs/models.json"
+     ],
+     "basis": "reused:download-security metadata (iter5 redirect.rs; control redirect-drops-credentials-as-built rejected). Scope: download hops; metadata/listing redirects share the builder but were not exercised",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.remote.download.redirect#2",
+     "units": [
+      "B1"
+     ],
+     "text": "Checking only the URL the registry returns would not stop the redirect leak; a fix must decide credentials per hop or stop following redirects itself.",
+     "cases": "s14 (first-hop check) vs s14b (per-hop) on [local, other]",
+     "observation": "leak exists",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter5/redirect.rs::s14_sends",
+      ".g5/Verus_verification/consolidated/iter5/redirect.rs::s14b_sends",
+      ".g5/Verus_verification/consolidated/iter5/redirect.rs::lemma_s14_insufficient",
+      ".g5/Verus_verification/consolidated/iter5/redirect.rs::lemma_s14b_never_leaks"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter5/proofs/models.json"
+     ],
+     "basis": "reused:download-security metadata (iter5 redirect.rs; controls s14-checks-every-hop, s14b-checks-first-hop rejected)",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "repo.remote.download.integrity": {
+   "body_sha": "9e70dc2343cd10ff",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "repo.remote.download.integrity#1"
+    ],
+    "B1": [
+     "repo.remote.download.integrity#2"
+    ],
+    "B2": [
+     "repo.remote.download.integrity#3"
+    ],
+    "B3": [
+     "repo.remote.download.integrity#4"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "repo.remote.download.integrity#1",
+     "units": [
+      "P1"
+     ],
+     "text": "When the registry gives a hash, the downloaded file's lowercase SHA-1 must equal it exactly, so an uppercase hash of the same digest is refused.",
+     "cases": "matching vs zero vs uppercase hash",
+     "observation": "get_module result",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter4/registry.rs::integrity_ok",
+      ".g5/Verus_verification/consolidated/iter4/registry.rs::get_module",
+      ".g5/Verus_verification/consolidated/iter4/registry.rs::registry_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter4/proofs/models.json"
+     ],
+     "basis": "reused:download-security metadata (iter4 registry.rs; control hash-compared-case-insensitively rejected)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.remote.download.integrity#2",
+     "units": [
+      "B1"
+     ],
+     "text": "A mismatch fails the install; no install token is kept and no install report is sent.",
+     "cases": "mismatch vs accepted",
+     "observation": "install status; token stored; analytics sent",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter4/registry.rs::install",
+      ".g5/Verus_verification/consolidated/iter4/registry.rs::token_stored",
+      ".g5/Verus_verification/consolidated/iter4/registry.rs::registry_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter4/proofs/models.json"
+     ],
+     "basis": "reused:download-security metadata (iter4 registry.rs; control mismatch-sends-analytics rejected)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.remote.download.integrity#3",
+     "units": [
+      "B2"
+     ],
+     "text": "An empty hash skips the check; non-archive bytes then pass the download, extract to nothing and fail later with a missing-manifest error after the install report was sent.",
+     "cases": "empty hash with junk bytes vs valid archive",
+     "observation": "download result; install error; analytics sent",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter4/registry.rs::lemma_unchecked_when_empty",
+      ".g5/Verus_verification/consolidated/iter4/registry.rs::install",
+      ".g5/Verus_verification/consolidated/iter4/registry.rs::registry_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter4/proofs/models.json"
+     ],
+     "basis": "reused:download-security metadata (iter4 registry.rs; controls empty-hash-rejected, junk-refused-at-download rejected)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.remote.download.integrity#4",
+     "units": [
+      "B3"
+     ],
+     "text": "A failed metadata request reports its HTTP status; a failed download reports only that the status was not 200.",
+     "cases": "metadata 404 vs bytes 404",
+     "observation": "message carries status",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter4/registry.rs::message_has_status",
+      ".g5/Verus_verification/consolidated/iter4/registry.rs::registry_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter4/proofs/models.json"
+     ],
+     "basis": "reused:download-security metadata (iter4 registry.rs; control bytes-failure-reports-status rejected)",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "repo.remote.download.token": {
+   "body_sha": "25715a7431709a6c",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "repo.remote.download.token#1",
+     "repo.remote.download.token#2"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "repo.remote.download.token#1",
+     "units": [
+      "P1"
+     ],
+     "text": "The registry may return an install token; IPM keeps it only after the hash check passes.",
+     "cases": "accepted vs mismatch download with a token",
+     "observation": "^IRIS.TempZPMRInst entry",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter4/registry.rs::token_stored",
+      ".g5/Verus_verification/consolidated/iter4/registry.rs::registry_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter4/proofs/models.json"
+     ],
+     "basis": "reused:download-security metadata (iter4 registry.rs; control token-stored-before-integrity rejected)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.remote.download.token#2",
+     "units": [
+      "P1"
+     ],
+     "text": "IPM sends the kept token once with the install report and then deletes it.",
+     "cases": "report sent with stored token vs a second report",
+     "observation": "token in the report; temp entry after the report",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [
+      ".g5/uplift/consolidated/iter4/native"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "No model of Repo/Remote/PackageService.cls::SendAnalyticsToRegistry reading and killing ^IRIS.TempZPMRInst; native R-analytics only. Missing contrast: first report carries tok-same and the entry is gone; a second report for the same module carries no token."
+    }
+   ]
+  },
+  "artifact.authentication": {
+   "body_sha": "a003fcf2ba9bbcd8",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "artifact.authentication#1"
+    ],
+    "B1": [
+     "artifact.authentication#2"
+    ],
+    "B2": [
+     "artifact.authentication#3"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "artifact.authentication#1",
+     "units": [
+      "P1"
+     ],
+     "text": "A token takes precedence over a complete username and password; incomplete Basic credentials use anonymous search.",
+     "cases": "token+basic vs basic only vs user without password",
+     "observation": "metadata request authorization",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::auth",
+      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::credentials_cross_endpoint"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter3/proofs/models.json"
+     ],
+     "basis": "reused:download-security metadata (iter3 artifacts.rs; controls token-loses-precedence, incomplete-basic-is-credential rejected)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "artifact.authentication#2",
+     "units": [
+      "B1"
+     ],
+     "text": "As built (C:D17), credentials are attached to the metadata request but the byte download is a new anonymous request, so a server requiring the token for bytes fails the download while a public byte endpoint succeeds.",
+     "cases": "server requiring Bearer vs anonymous at the byte endpoint",
+     "observation": "byte request status",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::metadata_request",
+      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::bytes_request",
+      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::provider_status",
+      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::credentials_cross_endpoint"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter3/proofs/models.json"
+     ],
+     "basis": "reused:download-security metadata (iter3 artifacts.rs; control bytes-request-reuses-token-as-built rejected)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "artifact.authentication#3",
+     "units": [
+      "B2"
+     ],
+     "text": "The byte download must return HTTP 200; success in search does not establish permission to fetch the artifact.",
+     "cases": "search 200 with byte 401 vs byte 200",
+     "observation": "saved file / download result",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::save_download",
+      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::credentials_cross_endpoint",
+      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::cache_and_failure_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter3/proofs/models.json"
+     ],
+     "basis": "new:iteration-70 (save_download refuses status!=200; credentials_cross_endpoint gives metadata 200 with bytes 401)",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  }
+ }
+}

@@ -1,0 +1,703 @@
+{
+ "page": ".g5/ontology/features/artifact-download.g5.md",
+ "blocks": {
+  "artifact": {
+   "body_sha": "0122a676347db903",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "artifact#1",
+     "artifact#2"
+    ],
+    "B1": [
+     "artifact#3"
+    ],
+    "B2": "excluded: working assumption to disclose the target-protection warning boundary without promising protection; alternatives undecided (open question artifact.target-policy)"
+   },
+   "obligations": [
+    {
+     "id": "artifact#1",
+     "units": [
+      "P1"
+     ],
+     "text": "An ArtifactoryTarball resource downloads an archive and copies its contents to InstallDirectory during Activate.",
+     "cases": "Activate with a fresh download vs no Activate phase",
+     "observation": "InstallDirectory contents after Activate",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::activate",
+      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::cache_and_failure_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter3/proofs/models.json"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "activate() records only copy_called and status; the copy target (the expanded InstallDirectory) and the copied contents are not modeled. Missing contrast at ResourceProcessor/ArtifactoryTarball.cls::OnAfterPhase: Activate copies the extracted folder into the InstallDirectory path, observed as the target files, vs a phase other than Activate leaving it unchanged."
+    },
+    {
+     "id": "artifact#2",
+     "units": [
+      "P1"
+     ],
+     "text": "During package export the resource copies its contents to the destination supplied for that resource.",
+     "alias_of": "artifact.local-content#4",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "artifact#3",
+     "units": [
+      "B1"
+     ],
+     "text": "Working assumption: preserve observed reuse of existing local content with no freshness guarantee.",
+     "alias_of": "artifact.local-content#1",
+     "assessed_in": "iteration-70"
+    }
+   ],
+   "parent": {
+    "children": [
+     "artifact.filter",
+     "artifact.selection",
+     "artifact.authentication",
+     "artifact.local-content",
+     "artifact.failure",
+     "artifact.archive-admission"
+    ],
+    "entailment": "Beyond the children the parent states only the Activate copy into InstallDirectory (#1, graded directly, partial). The export copy and reuse assumption alias local-content. No composition credited."
+   }
+  },
+  "artifact.filter": {
+   "body_sha": "ea042d4c6455749a",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "artifact.filter#1",
+     "artifact.filter#2"
+    ],
+    "B1": [
+     "artifact.filter#3"
+    ],
+    "B2": [
+     "artifact.filter#4"
+    ],
+    "B3": [
+     "artifact.filter#5"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "artifact.filter#1",
+     "units": [
+      "P1"
+     ],
+     "text": "Without credentials the filter must give a name or at least one @property.",
+     "cases": "repo-only filter vs name filter",
+     "observation": "parse_fields result",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::parse_fields",
+      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::filter_boundaries"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter3/proofs/models.json"
+     ],
+     "basis": "reused:artifact-download metadata (iter3 artifacts.rs; control repo-only-filter-admitted rejected)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "artifact.filter#2",
+     "units": [
+      "P1"
+     ],
+     "text": "Unsupported keys or operators fail instead of silently broadening the search.",
+     "cases": "unknown key; array condition vs supported key",
+     "observation": "parse result",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::parse_field",
+      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::condition",
+      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::filter_boundaries"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter3/proofs/models.json"
+     ],
+     "basis": "reused:artifact-download metadata (iter3 artifacts.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "artifact.filter#3",
+     "units": [
+      "B1"
+     ],
+     "text": "Allowed keys are repo, name, path, type and @property; type, when supplied, must be file.",
+     "cases": "type=file vs other type value",
+     "observation": "parse result",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::parse_field",
+      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::filter_boundaries"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter3/proofs/models.json"
+     ],
+     "basis": "reused:artifact-download metadata (iter3 artifacts.rs; control nonfile-type-admitted rejected)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "artifact.filter#4",
+     "units": [
+      "B2"
+     ],
+     "text": "A condition is a plain value or an object with exactly one $eq; only name and path allow $match; arrays, nested operator values and multiple operators are refused.",
+     "cases": "$match on repo vs name; two operators; non-text operand; array",
+     "observation": "condition result",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::condition",
+      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::filter_boundaries"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter3/proofs/models.json"
+     ],
+     "basis": "reused:artifact-download metadata (iter3 artifacts.rs; controls multi-operator-object-admitted, match-allowed-on-repository rejected)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "artifact.filter#5",
+     "units": [
+      "B3"
+     ],
+     "text": "* matches any run and ? one character; other punctuation is literal (ASCII without newlines).",
+     "cases": "a* vs a.b; a?b; a.b vs axb",
+     "observation": "wildcard match",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::wildcard",
+      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::wildcard_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter3/proofs/models.json"
+     ],
+     "basis": "reused:artifact-download metadata (iter3 artifacts.rs; controls dot-treated-as-wildcard, star-cannot-be-empty rejected)",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "artifact.selection": {
+   "body_sha": "abad449ab37db13c",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "artifact.selection#1",
+     "artifact.selection#2",
+     "artifact.selection#3"
+    ],
+    "B1": [
+     "artifact.selection#4",
+     "artifact.selection#5"
+    ],
+    "B2": [
+     "artifact.selection#6",
+     "artifact.selection#7"
+    ],
+    "B3": [
+     "artifact.selection#8"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "artifact.selection#1",
+     "units": [
+      "P1"
+     ],
+     "text": "Anonymous search keeps only results matching repository, name, path and every required property.",
+     "cases": "wrong repo, wrong name, wrong path, missing property vs matching",
+     "observation": "accepted",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::accepted",
+      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::selection_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter3/proofs/models.json"
+     ],
+     "basis": "reused:artifact-download metadata (iter3 artifacts.rs; guard-lost controls rejected)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "artifact.selection#2",
+     "units": [
+      "P1"
+     ],
+     "text": "It takes the first result with the greatest lastUpdated text; an equal timestamp keeps the earlier result.",
+     "cases": "older then newer; equal timestamps",
+     "observation": "selected artifact",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::newest",
+      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::choose_candidate",
+      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::selection_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter3/proofs/models.json"
+     ],
+     "basis": "reused:artifact-download metadata (iter3 artifacts.rs; controls selects-first-not-newest, tie-selects-last rejected)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "artifact.selection#3",
+     "units": [
+      "P1"
+     ],
+     "text": "No matching result is an error.",
+     "cases": "no accepted row vs one accepted row",
+     "observation": "download status",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::newest",
+      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::download"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter3/proofs/models.json"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "newest returns None for no match, but download() takes SearchOrFetchError as an input event; no rule maps an empty selection to the error (and in developer mode to a warning). Missing contrast at ArtifactoryTarball.cls::GetArtifactPathAnonymous -> DownloadArtifact: zero matches yields an error status vs one match proceeding to fetch."
+    },
+    {
+     "id": "artifact.selection#4",
+     "units": [
+      "B1"
+     ],
+     "text": "Each required property must occur among that result's property values; missing property data does not satisfy it.",
+     "cases": "property missing vs present among several values",
+     "observation": "properties()",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::properties",
+      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::selection_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter3/proofs/models.json"
+     ],
+     "basis": "reused:artifact-download metadata (iter3 artifacts.rs; control properties-guard-lost rejected)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "artifact.selection#5",
+     "units": [
+      "B1"
+     ],
+     "text": "Scalar (non-array) property data does not satisfy a required property.",
+     "cases": "property given as scalar vs array containing the value",
+     "observation": "accepted",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::properties"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter3/proofs/models.json"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "Artifact.props is Map<Text,Seq<Text>>, so a scalar property value is not representable; the JSON decoding in ArtifactoryTarball.cls::HasProperties is outside the model. Missing contrast: the same value supplied as a scalar vs a one-element array, rejected vs accepted."
+    },
+    {
+     "id": "artifact.selection#6",
+     "units": [
+      "B2"
+     ],
+     "text": "A root-level artifact uses . for path matching.",
+     "cases": "root artifact with path filter \".\" vs nested folder",
+     "observation": "accepted",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::accepted",
+      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::selection_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter3/proofs/models.json"
+     ],
+     "basis": "reused:artifact-download metadata (iter3 artifacts.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "artifact.selection#7",
+     "units": [
+      "B2"
+     ],
+     "text": "The returned download path of a root-level artifact omits the dot folder.",
+     "cases": "root vs nested artifact",
+     "observation": "download path",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "GetArtifactPath path construction is not modeled. Missing contrast: root artifact a.tgz yields repo/a.tgz (no \"./\") vs nested folder yields repo/f/a.tgz."
+    },
+    {
+     "id": "artifact.selection#8",
+     "units": [
+      "B3"
+     ],
+     "text": "With credentials IPM asks AQL to sort by decreasing update time and takes result zero without sorting or rechecking locally, so reversing the server response reverses the choice.",
+     "cases": "response [old,new] vs [new,old]",
+     "observation": "selected artifact",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::authenticated_first",
+      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::authenticated_order_is_a_provider_premise"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter3/proofs/models.json"
+     ],
+     "basis": "reused:artifact-download metadata (iter3 artifacts.rs; control authenticated-response-is-sorted-locally rejected)",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "artifact.failure": {
+   "body_sha": "b913f58c814871fd",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "artifact.failure#1",
+     "artifact.failure#2"
+    ],
+    "B1": [
+     "artifact.failure#3",
+     "artifact.failure#4"
+    ],
+    "B2": [
+     "artifact.failure#5"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "artifact.failure#1",
+     "units": [
+      "P1"
+     ],
+     "text": "A missing ARTI_SERVER is an error outside developer mode and a warning with no download in developer mode.",
+     "cases": "missing server, dev vs non-dev",
+     "observation": "download status; skipped",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::download",
+      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::cache_and_failure_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter3/proofs/models.json"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "download(MissingServer) encodes ok:dev, but only the developer-mode skip is asserted (download(true,Bearer,MissingServer).skipped); the non-dev error is never exercised by a theorem, neighbour or control. Missing contrast: download(false,_,MissingServer).ok == false beside the dev skip."
+    },
+    {
+     "id": "artifact.failure#2",
+     "units": [
+      "P1"
+     ],
+     "text": "Developer mode also warns and skips anonymous search or fetch failures, but does not suppress authenticated failures or an extraction exception.",
+     "cases": "dev anonymous vs dev authenticated vs non-dev anonymous fetch failure; dev extraction error",
+     "observation": "download status",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::download",
+      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::cache_and_failure_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter3/proofs/models.json"
+     ],
+     "basis": "reused:artifact-download metadata (iter3 artifacts.rs; controls developer-suppresses-auth-error, developer-suppresses-extraction rejected)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "artifact.failure#3",
+     "units": [
+      "B1"
+     ],
+     "text": "Skipping creates no artifact folder, and Activate then returns success without copying.",
+     "cases": "skipped download vs failed download vs existing folder",
+     "observation": "Activate status; copy called",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::activate",
+      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::cache_and_failure_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter3/proofs/models.json"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "activate() with d.skipped gives status ok and no copy, but no assertion exercises the skipped case (only the error case and the existing-folder case), and folder creation is not modeled. Missing contrast: dev missing-server skip followed by Activate: status ok, copy not called, no local folder."
+    },
+    {
+     "id": "artifact.failure#4",
+     "units": [
+      "B1"
+     ],
+     "text": "Export still tries its copy after a skip, so the skip alone does not establish export success.",
+     "cases": "export after a skipped download vs after a complete download",
+     "observation": "export copy attempt and status",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "copy_export models the overlay only; ArtifactoryTarball.cls::OnExportItem after a skipped download (missing local folder) is unmodeled. Missing contrast: export after a dev skip attempts CopyDir from a missing folder and its status vs export after a complete download."
+    },
+    {
+     "id": "artifact.failure#5",
+     "units": [
+      "B2"
+     ],
+     "text": "Extraction and copies may leave files when a later step fails, and a database rollback does not compensate them.",
+     "cases": "failure after extraction/copy with transaction rollback vs success",
+     "observation": "files on disk after rollback",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "No model of artifact filesystem effects under a failing later step. Missing contrast: extraction completes, a later Activate step fails and the load rolls back; the local artifact folder and copied InstallDirectory files remain."
+    }
+   ]
+  },
+  "artifact.archive-admission": {
+   "body_sha": "ac494bc4c9075f38",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "artifact.archive-admission#1"
+    ],
+    "B1": [
+     "artifact.archive-admission#2"
+    ],
+    "B2": [
+     "artifact.archive-admission#3"
+    ],
+    "B3": "excluded: scope of the formal contract (first-header decision under the observed provider; no gzip, checksum, PAX or traversal claim)"
+   },
+   "obligations": [
+    {
+     "id": "artifact.archive-admission#1",
+     "units": [
+      "P1"
+     ],
+     "text": "Intended: an archive read error should fail extraction and the consuming download; success must not hide a reported stream error.",
+     "cases": "first header read with error status vs successful empty read",
+     "observation": "extraction/download status",
+     "grade": "full",
+     "check": "refuted",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::header_action",
+      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::artifact_first_header",
+      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::failed_read_is_not_rejected"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter3/proofs/models.json"
+     ],
+     "basis": "reused:artifact-download metadata (iter3 artifacts.rs; C:D18: failed read returns ok in dev and non-dev; control as-built-checks-read-status rejected)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "artifact.archive-admission#2",
+     "units": [
+      "B1"
+     ],
+     "text": "As built (C:D18), a non-gzip byte sequence produces an empty read with an error status that the tar reader ignores, treating the empty header as completion, so ordinary and developer-mode anonymous downloads succeed with an empty artifact folder.",
+     "cases": "failed read, dev vs non-dev",
+     "observation": "download status",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::header_action",
+      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::artifact_first_header",
+      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::failed_read_is_not_rejected"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter3/proofs/models.json"
+     ],
+     "basis": "reused:artifact-download metadata (iter3 artifacts.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "artifact.archive-admission#3",
+     "units": [
+      "B2"
+     ],
+     "text": "A gzip stream with a nonempty header and bad checksum is refused, and a valid archive extracts its file.",
+     "cases": "bad checksum vs matching checksum",
+     "observation": "header action; download status",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::header_action",
+      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::failed_read_is_not_rejected"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter3/proofs/models.json"
+     ],
+     "basis": "reused:artifact-download metadata (iter3 artifacts.rs)",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "artifact.local-content": {
+   "body_sha": "05cea9bcd829cf22",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "artifact.local-content#1",
+     "artifact.local-content#2"
+    ],
+    "B1": [
+     "artifact.local-content#3"
+    ],
+    "B2": [
+     "artifact.local-content#4"
+    ],
+    "B3": [
+     "artifact.local-content#5"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "artifact.local-content#1",
+     "units": [
+      "P1"
+     ],
+     "text": "Activate reuses an existing local artifact folder without checking its contents or contacting the server.",
+     "cases": "local folder present vs absent",
+     "observation": "download requested; copy called",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::activate",
+      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::cache_and_failure_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter3/proofs/models.json"
+     ],
+     "basis": "reused:artifact-download metadata (iter3 artifacts.rs; control existing-directory-is-refetched rejected)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "artifact.local-content#2",
+     "units": [
+      "P1"
+     ],
+     "text": "Export calls the download helper even when the local folder exists.",
+     "cases": "export with existing local folder vs Activate with existing folder",
+     "observation": "download helper called",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "Only Activate's request_download is modeled. ArtifactoryTarball.cls::OnExportItem calling RetrieveArtifact regardless of the folder is unmodeled. Missing contrast: with the folder present, export fetches while Activate does not."
+    },
+    {
+     "id": "artifact.local-content#3",
+     "units": [
+      "B1"
+     ],
+     "text": "The byte helper does not overwrite a temporary file with the same returned filename, so previous bytes can be reused after a newer response.",
+     "cases": "existing temp file vs none; status 200 vs 401",
+     "observation": "saved bytes",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::save_download",
+      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::cache_and_failure_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter3/proofs/models.json"
+     ],
+     "basis": "reused:artifact-download metadata (iter3 artifacts.rs; control cached-file-overwritten rejected)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "artifact.local-content#4",
+     "units": [
+      "B2"
+     ],
+     "text": "Successful copies overlay the destination: equal names are overwritten, unrelated target files remain, and other exported resources are untouched.",
+     "cases": "equal name vs unrelated name; sibling resource",
+     "observation": "destination and sibling maps",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::copy_export",
+      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::cache_and_failure_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter3/proofs/models.json"
+     ],
+     "basis": "reused:artifact-download metadata (iter3 artifacts.rs; control overlay-deletes-unrelated-files rejected)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "artifact.local-content#5",
+     "units": [
+      "B3"
+     ],
+     "text": "The caller builds the export destination from the module or dependency location and the resource's relative path; the processor does not choose the package root.",
+     "cases": "module vs dependency export; relative path variants",
+     "observation": "destination path",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "Lifecycle/Base.cls::ExportSingleModule destination construction is unmodeled. Missing contrast: exporting the parent and a dependency places each artifact under its own module location plus the resource's relative path."
+    }
+   ]
+  }
+ }
+}

@@ -1,0 +1,638 @@
+{
+ "page": ".g5/ontology/features/dependencies.g5.md",
+ "blocks": {
+  "deps": {
+   "body_sha": "e0b73d0995e06749",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "deps#1",
+     "deps#2"
+    ],
+    "B1": [
+     "deps#3"
+    ],
+    "B2": [
+     "deps#4"
+    ],
+    "B3": "excluded: restates repo.oras.selection-modes (architecture/package-sources.g5.md), the owner of ORAS platform filtering across versions",
+    "B4": "excluded: pointer to repo.oras.archive-boundary (architecture/package-sources.g5.md)"
+   },
+   "obligations": [
+    {
+     "id": "deps#1",
+     "units": [
+      "P1"
+     ],
+     "text": "IPM resolves the whole dependency tree before it loads any dependency.",
+     "cases": "resolution fails (dependency not found / conflict) vs succeeds",
+     "observation": "which dependencies were loaded when resolution fails",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/crates/ipm-load-history/src/model.rs::lnm_deps",
+      ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::dep_upto",
+      "playbook-uplift/models/verus/dep_resolve.rs::dep_refines"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/results/index.jsonl",
+      "playbook-uplift/models/verus/results/dep_resolve.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "The crate fails at lnm_deps before any LoadModuleReference when !all_found, and contract dep_upto requires no dependency touched; but resolution is reduced to a per-dependency found flag (no conflict case), and the only passing explorer runs over L1 use the conforming domain (filtered by the check itself). dep_resolve proves resolution soundness but has no load step. Contrast: a two-dependency module whose second dependency conflicts leaves the first not installed."
+    },
+    {
+     "id": "deps#2",
+     "units": [
+      "P1"
+     ],
+     "text": "Resolution runs across the enabled repositories, one level of the tree at a time.",
+     "cases": "breadth-first vs depth-first visiting; enabled vs disabled repository offers",
+     "observation": "chosen versions",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      "playbook-uplift/models/verus/dep_resolve.rs::step_dequeue",
+      "playbook-uplift/models/verus/dep_resolve.rs::is_min",
+      "playbook-uplift/models/verus/dep_resolve.rs::versions",
+      "playbook-uplift/models/verus/dep_resolve.rs::dep_refines"
+     ],
+     "evidence": [
+      "playbook-uplift/models/verus/results/dep_resolve.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "dep_resolve dequeues by (depth, name) and proves soundness, but no theorem contrasts level order with another order, and the registry search (Repo/Manager.cls SearchRepositoriesForModule over enabled repositories) is a trusted input. Contrast: a disabled repository's offer is never chosen."
+    },
+    {
+     "id": "deps#3",
+     "units": [
+      "B1"
+     ],
+     "text": "Every load parameter other than DeveloperMode is passed on to dependency loads (DeveloperMode exception owned by dev-mode.not-propagated).",
+     "cases": "a -D parameter on the parent; its value seen by the dependency's load",
+     "observation": "dependency load parameters",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [
+      "playbook-uplift/models/verus/update_steps.rs"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "No model of parameter propagation in Utils/Module.cls LoadDependencies/LoadModuleReference. update_steps.rs param_dev models only the DeveloperMode parameter (and passes it to a snapshot registry dependency under -dev). Contrast: load -DFoo=1 of a parent makes ${Foo} expand to 1 in the dependency's manifest."
+    },
+    {
+     "id": "deps#4",
+     "units": [
+      "B2"
+     ],
+     "text": "A dependency limited to the test or verify phase is resolved and loaded only for that phase.",
+     "cases": "scoped requirement with its phase in vs not in the command's phase set",
+     "observation": "requirement classified for resolution",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      "playbook-uplift/models/verus/dep_resolve.rs::active",
+      "playbook-uplift/models/verus/dep_resolve.rs::classify",
+      "playbook-uplift/models/verus/dep_resolve.rs::dep_lemma_classify",
+      "playbook-uplift/models/verus/dep_resolve.rs::dep_refines"
+     ],
+     "evidence": [
+      "playbook-uplift/models/verus/results/dep_resolve.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70"
+    }
+   ],
+   "parent": {
+    "children": [
+     "deps.conflict",
+     "deps.installed",
+     "deps.lockfile"
+    ],
+    "entailment": "The parent lead and bullets carry their own obligations, graded directly. No parent obligation is credited by composition."
+   }
+  },
+  "deps.conflict": {
+   "body_sha": "62c7ab5f0fdd3e2f",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "deps.conflict#1",
+     "deps.conflict#2"
+    ],
+    "B1": "excluded: restates load.outcome (features/load.g5.md), the owner of what a failed load keeps",
+    "B2": [
+     "deps.conflict#3"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "deps.conflict#1",
+     "units": [
+      "P1"
+     ],
+     "text": "When no version can satisfy every requirement, IPM stops the load with an error.",
+     "cases": "unsatisfiable vs satisfiable requirements",
+     "observation": "resolution outcome and load status",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      "playbook-uplift/models/verus/dep_resolve.rs::dep_refines",
+      "playbook-uplift/models/verus/dep_resolve.rs::sound",
+      "playbook-uplift/models/verus/dep_resolve.rs::dep_witness_greedy_rejects_solvable"
+     ],
+     "evidence": [
+      "playbook-uplift/models/verus/results/dep_resolve.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "dep_refines shows a resolution that ends Done is sound, so an unsatisfiable instance never ends Done, and Failed carries a reason; termination is not claimed, so \"stops with an error\" is not proved, and the load-level failure appears only in the crate as a found flag. The greedy witness shows failure also on some solvable instances."
+    },
+    {
+     "id": "deps.conflict#2",
+     "units": [
+      "P1"
+     ],
+     "text": "The conflict error names the modules whose requirements conflict.",
+     "cases": "conflict between parents A and B on dependency C",
+     "observation": "error message text",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "No model of the message built in Storage/Module.cls (around :954-959). Contrast: A requires C =1.0.0 and B requires C =2.0.0 gives an error naming A and B (and C)."
+    },
+    {
+     "id": "deps.conflict#3",
+     "units": [
+      "B2"
+     ],
+     "text": "In developer mode, resolution happens after the first commit, so the saved manifest stays when resolution fails.",
+     "cases": "-dev load whose dependency resolution fails vs non-dev",
+     "observation": "module record present and in developer mode after the failure",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/crates/ipm-load-history/src/model.rs::lnm_deps",
+      ".g5/Verus_verification/crates/ipm-load-history/src/model.rs::lnm_devsave",
+      ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::l1_alts",
+      ".g5/Verus_verification/crates/ipm-load-history/src/cases.rs::case_c33_dev_dep_record_lost"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/results/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "The crate orders the dev commit C1 before lnm_deps and l1_alts expects the manifest kept for verdict 6 under -dev. But case_c33 exercises a dependency Activate failure, not a resolution failure; no theorem or non-conforming passing explorer run exercises Pkg.found=false or a version conflict under -dev."
+    }
+   ]
+  },
+  "deps.installed": {
+   "body_sha": "ff46f519e4886612",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "deps.installed#1"
+    ],
+    "B1": [
+     "deps.installed#2"
+    ],
+    "B2": [
+     "deps.installed#3"
+    ],
+    "B3": [
+     "deps.installed#4"
+    ],
+    "B4": [
+     "deps.installed#5"
+    ],
+    "B5": [
+     "deps.installed#6"
+    ],
+    "B6": [
+     "deps.installed#7"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "deps.installed#1",
+     "units": [
+      "P1"
+     ],
+     "text": "A dependency version must satisfy the requirements of installed modules; otherwise the load fails with \"Requested version ... does not satisfy the requirements of other modules installed in the current namespace\".",
+     "cases": "requested B version satisfying vs breaking installed A's range",
+     "observation": "status, message flag, installed B",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter31/installed.rs::reference_ok",
+      ".g5/Verus_verification/consolidated/iter31/installed.rs::install_b",
+      ".g5/Verus_verification/consolidated/iter31/installed.rs::reference_neighbor"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter31/run.json"
+     ],
+     "basis": "reused:.g5/ontology/features/dependencies.g5.md metadata (iter31)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "deps.installed#2",
+     "units": [
+      "B1"
+     ],
+     "text": "Resolution picks the highest offered version meeting the parent's range, every installed module's range and the no-downgrade floor, so an installed requirement can select an older version than the newest offer.",
+     "cases": "P request without vs with installed A (<2.0.0)",
+     "observation": "chosen B version",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter31/installed.rs::resolve_b",
+      ".g5/Verus_verification/consolidated/iter31/installed.rs::resolution_neighbor",
+      "playbook-uplift/models/verus/dep_resolve.rs::floor_ok",
+      "playbook-uplift/models/verus/dep_resolve.rs::dep_refines"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter31/run.json",
+      "playbook-uplift/models/verus/results/dep_resolve.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/dependencies.g5.md metadata (iter31); dep_resolve for the floor",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "deps.installed#3",
+     "units": [
+      "B2"
+     ],
+     "text": "An explicit install <module> <version> that breaks an installed requirement is refused with that message and the installed version stays.",
+     "cases": "install B 2.0.0 with A installed vs B 1.7.0",
+     "observation": "status, message, installed B",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter31/installed.rs::install_b",
+      ".g5/Verus_verification/consolidated/iter31/installed.rs::reference_neighbor"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter31/run.json"
+     ],
+     "basis": "reused:.g5/ontology/features/dependencies.g5.md metadata (iter31)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "deps.installed#4",
+     "units": [
+      "B3"
+     ],
+     "text": "As built, install <module> without a version takes the newest offer and is refused if it breaks an installed requirement, even when an older offer satisfies all of them.",
+     "cases": "unversioned install of B with A installed",
+     "observation": "status; existence of a satisfying offer",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter31/installed.rs::top_choice",
+      ".g5/Verus_verification/consolidated/iter31/installed.rs::install_b",
+      ".g5/Verus_verification/consolidated/iter31/installed.rs::reference_neighbor",
+      ".g5/Verus_verification/consolidated/iter31/installed.rs::unversioned_has_satisfying_offer"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter31/run.json"
+     ],
+     "basis": "reused:.g5/ontology/features/dependencies.g5.md metadata (iter31)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "deps.installed#5",
+     "units": [
+      "B4"
+     ],
+     "text": "As built, load <directory> does not apply the installed-requirement check to the module it loads.",
+     "cases": "directory load of B 2.0.0 with A requiring <2.0.0 vs repository install",
+     "observation": "status and installed B",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter31/installed.rs::load_b_directory",
+      ".g5/Verus_verification/consolidated/iter31/installed.rs::directory_neighbor"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter31/run.json"
+     ],
+     "basis": "reused:.g5/ontology/features/dependencies.g5.md metadata (iter31)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "deps.installed#6",
+     "units": [
+      "B5"
+     ],
+     "text": "Working assumption: keep the as-built refusal of an unversioned install.",
+     "alias_of": "deps.installed#4",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "deps.installed#7",
+     "units": [
+      "B6"
+     ],
+     "text": "Working assumption (as built): the directory load succeeds without a warning, and installed modules keep requirements the namespace no longer satisfies.",
+     "cases": "directory load breaking A's range",
+     "observation": "status, message flag, A still installed with unsatisfied range",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter31/installed.rs::load_b_directory",
+      ".g5/Verus_verification/consolidated/iter31/installed.rs::directory_neighbor"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter31/run.json"
+     ],
+     "basis": "reused:.g5/ontology/features/dependencies.g5.md metadata (iter31)",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "deps.lockfile": {
+   "body_sha": "327a1455defe4da2",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "deps.lockfile#1",
+     "deps.lockfile#2"
+    ],
+    "B1": [
+     "deps.lockfile#3"
+    ],
+    "B2": "excluded: pointer to deps.lockfile.content (owner of stored identities and ordering)",
+    "B3": "excluded: roadmap note (installing from a lock file is planned, issue #962); no current behavior",
+    "B4": [
+     "deps.lockfile#4"
+    ],
+    "B5": [
+     "deps.lockfile#5",
+     "deps.lockfile#6"
+    ],
+    "B6": "excluded: observation caveat qualifying deps.lockfile#6 (a nonempty Root at return does not show where the earlier writer wrote)",
+    "B7": "excluded: classifies deps.lockfile#6 as a defect against the root rule of deps.lockfile#1; the populated-Root helper neighbor adds no outcome",
+    "B8": [
+     "deps.lockfile#7"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "deps.lockfile#1",
+     "units": [
+      "P1"
+     ],
+     "text": "-create-lockfile on install, load or update writes module-lock.json in the module root.",
+     "cases": "flag given vs not; install vs load vs update",
+     "observation": "file at <Root>/module-lock.json",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/thin_surfaces.rs::lock_written",
+      ".g5/Verus_verification/consolidated/verus/thin_surfaces.rs::lock_in_module_root"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/consolidated/verus/results/thin_surfaces.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/dependencies.g5.md metadata (thin_surfaces)",
+     "assessed_in": "iteration-70",
+     "gap": "lock_written and lock_in_module_root are identity functions of their inputs (requested, top_level, root_nonempty). Which commands pass the flag (Main.cls install/load/update to LoadDependencies) and the root path are not modeled."
+    },
+    {
+     "id": "deps.lockfile#2",
+     "units": [
+      "P1"
+     ],
+     "text": "The lock file lists the resolved dependency versions and the repositories they came from, without credentials.",
+     "cases": "dependency installed from a credentialed remote repository",
+     "observation": "lock file entries and repository fields",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter12/lockfile.rs::installed_identity_drives_entry",
+      ".g5/Verus_verification/consolidated/iter12/lockfile.rs::projection_drops_credentials",
+      ".g5/Verus_verification/consolidated/iter12/lockfile.rs::writer_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "composed:deps.lockfile.content#1,deps.lockfile.content#3",
+     "assessed_in": "iteration-70",
+     "composed": [
+      "deps.lockfile.content#1",
+      "deps.lockfile.content#3"
+     ]
+    },
+    {
+     "id": "deps.lockfile#3",
+     "units": [
+      "B1"
+     ],
+     "text": "Only the top-level module gets a lock file.",
+     "cases": "top-level vs dependency load with the flag",
+     "observation": "lock file written",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/thin_surfaces.rs::lock_written"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/consolidated/verus/results/thin_surfaces.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "top_level is an input to lock_written and no neighbour exercises top_level=false; the LoadDependencies decision that a dependency load does not write a lock file is not modeled."
+    },
+    {
+     "id": "deps.lockfile#4",
+     "units": [
+      "B4"
+     ],
+     "text": "As built, the lock file is written before later lifecycle phases, so a later failed load can roll back its module record while the lock file remains.",
+     "cases": "load -create-lockfile with Activate failure vs success",
+     "observation": "module record and module-lock.json after the command",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/thin_surfaces.rs::write_file",
+      ".g5/Verus_verification/consolidated/verus/thin_surfaces.rs::copied_file_survives_rollback",
+      ".g5/Verus_verification/consolidated/verus/thin_surfaces.rs::rollback_preserves_filesystem"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/consolidated/verus/results/thin_surfaces.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "thin_surfaces shows any file write survives a database rollback, but no model places the lock write (LoadDependencies, Utils/Module.cls:1323-1328) before the phases; the crate has no lock file. Contrast: failed Activate leaves no module record and module-lock.json present."
+    },
+    {
+     "id": "deps.lockfile#5",
+     "units": [
+      "B5"
+     ],
+     "text": "A lock-file write error is logged and swallowed rather than failing the load.",
+     "cases": "lock write fails vs succeeds after successful dependencies",
+     "observation": "load status and file written",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/thin_surfaces.rs::dependency_status",
+      ".g5/Verus_verification/consolidated/verus/thin_surfaces.rs::lock_written"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/consolidated/verus/results/thin_surfaces.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/dependencies.g5.md metadata (thin_surfaces)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "deps.lockfile#6",
+     "units": [
+      "B5"
+     ],
+     "text": "As built (C:D16), when the new stored module still has an empty Root, load -lock writes a relative module-lock.json in the process working directory instead of the module root.",
+     "cases": "first load (Root \"\") vs reload (Root set)",
+     "observation": "location of module-lock.json",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/thin_surfaces.rs::lock_in_module_root"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/consolidated/verus/results/thin_surfaces.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "Root emptiness is an input and the relative-path resolution against the process cwd is explicitly not reconstructed. Contrast: first load -lock from /src writes ./module-lock.json in the cwd; a reload writes /src/module-lock.json."
+    },
+    {
+     "id": "deps.lockfile#7",
+     "units": [
+      "B8"
+     ],
+     "text": "Working assumption: a needed module loaded from a folder is written to the lock file with an empty registry.",
+     "cases": "dependency loaded from a directory vs from a repository",
+     "observation": "lock entry repository field",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [
+      ".g5/Verus_verification/consolidated/iter12/lockfile.rs"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "lockfile.rs add_repo marks the document not ok for an unknown repository and has no empty-registry case, so the directory-supplied dependency entry is not represented. Contrast: the lock file entry of a folder-loaded dependency has registry \"\"."
+    }
+   ],
+   "parent": {
+    "children": [
+     "deps.lockfile.content"
+    ],
+    "entailment": "deps.lockfile#2 (versions and repositories without credentials) is credited by composition: deps.lockfile.content#1 shows each entry carries the installed module's stored version and repository, and deps.lockfile.content#3 shows the repository projection drops username, password and token. Root location, timing and error handling stay open here."
+   }
+  },
+  "deps.lockfile.content": {
+   "body_sha": "e1a19740d5422952",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "deps.lockfile.content#1"
+    ],
+    "B1": [
+     "deps.lockfile.content#2"
+    ],
+    "B2": [
+     "deps.lockfile.content#3"
+    ],
+    "B3": "excluded: evidence-scope statement (fixtures checked; earlier qualifications retained)"
+   },
+   "obligations": [
+    {
+     "id": "deps.lockfile.content#1",
+     "units": [
+      "P1"
+     ],
+     "text": "The lock-file writer opens installed modules by name, so stored versions, repositories and requirements supply the entries; repeated references keep one keyed entry and reference metadata does not replace stored values.",
+     "cases": "references with forged version 999; duplicate reference",
+     "observation": "entry fields and key set",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter12/lockfile.rs::add_dependency",
+      ".g5/Verus_verification/consolidated/iter12/lockfile.rs::installed_identity_drives_entry",
+      ".g5/Verus_verification/consolidated/iter12/lockfile.rs::writer_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter12/INDEX.md"
+     ],
+     "basis": "reused:.g5/ontology/features/dependencies.g5.md metadata (iter12 lockfile.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "deps.lockfile.content#2",
+     "units": [
+      "B1"
+     ],
+     "text": "The graph helper emits dependencies before dependents, keeping its scan position; the JSON keys are serialized in name order, so a parent can appear before its leaf (P:F-DEP-2).",
+     "cases": "reverse-name graph; cursor fixture",
+     "observation": "flattened order and JSON key order",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter12/lockfile.rs::flatten",
+      ".g5/Verus_verification/consolidated/iter12/lockfile.rs::walk",
+      ".g5/Verus_verification/consolidated/iter12/lockfile.rs::json_keys",
+      ".g5/Verus_verification/consolidated/iter12/lockfile.rs::graph_neighbors",
+      ".g5/Verus_verification/consolidated/iter12/lockfile.rs::writer_neighbors",
+      "playbook-uplift/models/verus/dep_resolve.rs::dep_witness_lockfile_name_order"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      "playbook-uplift/models/verus/results/dep_resolve.json"
+     ],
+     "basis": "reused:.g5/ontology/features/dependencies.g5.md metadata (iter12, playbook dep_resolve)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "deps.lockfile.content#3",
+     "units": [
+      "B2"
+     ],
+     "text": "Each repository is included once, including the base module's; export uses the kind's field mapping and omits username, password and token, retaining allowed text fields such as URL.",
+     "cases": "two modules from one repository plus base repository; remote repository with credentials",
+     "observation": "repositories object",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter12/lockfile.rs::add_repo",
+      ".g5/Verus_verification/consolidated/iter12/lockfile.rs::public_repo",
+      ".g5/Verus_verification/consolidated/iter12/lockfile.rs::projection_drops_credentials",
+      ".g5/Verus_verification/consolidated/iter12/lockfile.rs::writer_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/dependencies.g5.md metadata (iter12 lockfile.rs)",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  }
+ }
+}

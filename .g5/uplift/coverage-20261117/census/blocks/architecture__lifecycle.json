@@ -1,0 +1,1708 @@
+{
+ "page": ".g5/ontology/architecture/lifecycle.g5.md",
+ "blocks": {
+  "lifecycle": {
+   "body_sha": "a5ac67094050c706",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "lifecycle#1"
+    ],
+    "B1": [
+     "lifecycle#2",
+     "lifecycle#3"
+    ],
+    "B2": [
+     "lifecycle#4"
+    ],
+    "B3": "excluded: restates the Clean removal owned by uninstall (features/uninstall.g5.md)",
+    "B4": [
+     "lifecycle#5",
+     "lifecycle#6"
+    ],
+    "B5": [
+     "lifecycle#7"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "lifecycle#1",
+     "units": [
+      "P1"
+     ],
+     "text": "IPM runs a module phases in the fixed order Clean, Initialize, Reload, Validate, ExportData, Compile, Activate, Document, MakeDeployed, Test, Package, Verify, Publish, Configure, Unconfigure, ApplyUpdateSteps.",
+     "cases": "phases requested out of order (activate initialize) vs in order",
+     "observation": "START order",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter30/phases.rs::fixed_order",
+      ".g5/Verus_verification/consolidated/iter30/phases.rs::ordered_from",
+      ".g5/Verus_verification/consolidated/iter30/phases.rs::complete_plan"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter30/run.json"
+     ],
+     "basis": "reused:lifecycle.chain metadata (iter30)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "lifecycle#2",
+     "units": [
+      "B1"
+     ],
+     "text": "Initialize brings in preload code.",
+     "alias_of": "lifecycle.initialize#1",
+     "assessed_in": "iteration-70",
+     "basis": "alias"
+    },
+    {
+     "id": "lifecycle#3",
+     "units": [
+      "B1"
+     ],
+     "text": "Reload brings source into the namespace without compiling it.",
+     "cases": "reload vs compile after a disk edit, by resource kind",
+     "observation": "source vs compiled value per kind",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter30/phases.rs::step",
+      ".g5/Verus_verification/consolidated/iter65/moderefresh.rs::refreshes",
+      ".g5/Verus_verification/consolidated/iter65/moderefresh.rs::schedule"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter30/run.json",
+      ".g5/uplift/consolidated/iter65/run.json"
+     ],
+     "basis": "reused:lifecycle.chain metadata (iter30, iter65)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "lifecycle#4",
+     "units": [
+      "B2"
+     ],
+     "text": "Compile compiles the module, and Activate runs post-compile setup, including a nested Configure phase.",
+     "cases": "Activate alone vs compile chain",
+     "observation": "START lines, compiled value and hook counts",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter30/phases.rs::activate_nests_configure",
+      ".g5/Verus_verification/consolidated/iter30/phases.rs::only_versus_chain"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter30/run.json"
+     ],
+     "basis": "reused:lifecycle.chain metadata (iter30)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "lifecycle#5",
+     "units": [
+      "B4"
+     ],
+     "text": "Working assumption: run the standard chain, then each custom phase in the order named.",
+     "alias_of": "lifecycle.custom#7",
+     "assessed_in": "iteration-70",
+     "basis": "alias"
+    },
+    {
+     "id": "lifecycle#6",
+     "units": [
+      "B4"
+     ],
+     "text": "Working assumption: refuse the whole command before any phase runs when a name is neither standard nor declared custom.",
+     "alias_of": "lifecycle.custom#8",
+     "assessed_in": "iteration-70",
+     "basis": "alias"
+    },
+    {
+     "id": "lifecycle#7",
+     "units": [
+      "B5"
+     ],
+     "text": "Working assumption: a standalone reload of a module with no root says nothing was loaded; inside other phase lists the phase stays silent.",
+     "cases": "standalone reload vs reload inside a phase list, module without root",
+     "observation": "message output and status",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "No model of %Reload with an empty root or of its message. Missing: <m> reload on a rootless module prints \"nothing loaded\" while <m> compile prints nothing for Reload; open question lifecycle.empty-reload-policy."
+    }
+   ],
+   "parent": {
+    "children": [
+     "lifecycle.chain",
+     "lifecycle.only",
+     "lifecycle.module-action",
+     "lifecycle.custom",
+     "lifecycle.hooks"
+    ],
+    "entailment": "The parent states the phase order and what Initialize/Reload/Compile/Activate do, graded directly. B4 restates the lifecycle.custom working assumption (aliased). No parent obligation is credited by composition."
+   }
+  },
+  "lifecycle.chain": {
+   "body_sha": "11d454aa57062ba7",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "lifecycle.chain#1",
+     "lifecycle.chain#2",
+     "lifecycle.chain#3"
+    ],
+    "B1": [
+     "lifecycle.chain#4",
+     "lifecycle.chain#5"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "lifecycle.chain#1",
+     "units": [
+      "P1"
+     ],
+     "text": "A command runs its phase together with all the phases it needs first.",
+     "cases": "compile with and without -only",
+     "observation": "phase plan and compiled value",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter30/phases.rs::only_versus_chain",
+      ".g5/Verus_verification/consolidated/iter30/phases.rs::in_chain",
+      ".g5/Verus_verification/consolidated/iter30/phases.rs::complete_plan"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter30/run.json"
+     ],
+     "basis": "reused:lifecycle.chain metadata (iter30)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "lifecycle.chain#2",
+     "units": [
+      "P1"
+     ],
+     "text": "load, install and the Activate phase run Initialize, Reload, Validate, Compile and Activate.",
+     "cases": "Activate request vs load",
+     "observation": "phase plan / phases started",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter30/phases.rs::fixed_order",
+      ".g5/Verus_verification/consolidated/iter30/phases.rs::native_sequence",
+      ".g5/Verus_verification/crates/ipm-load-history/src/proofs.rs::theorem_reachable_inv"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter30/run.json",
+      ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json"
+     ],
+     "basis": "reused:lifecycle.chain metadata (iter30; G crate load runs the five phases)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "lifecycle.chain#3",
+     "units": [
+      "P1"
+     ],
+     "text": "test adds Test to that chain.",
+     "cases": "test vs activate request",
+     "observation": "phase plan",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter30/phases.rs::in_chain"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter30/run.json"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "in_chain(10, r) encodes the Test chain but no theorem or native case of iter30 requests test. Missing: plan(seq![10], false) == Activate chain + Test, against plan(seq![7])."
+    },
+    {
+     "id": "lifecycle.chain#4",
+     "units": [
+      "B1"
+     ],
+     "text": "Each resource kind becomes visible at its own phase: include, global and DFI at Reload; classes, routines and LOC at Compile; FileCopy and WebApplication at Activate.",
+     "cases": "reload vs compile vs load per kind (developer mode)",
+     "observation": "value observed per kind after each command",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter65/moderefresh.rs::on_reload",
+      ".g5/Verus_verification/consolidated/iter65/moderefresh.rs::on_compile",
+      ".g5/Verus_verification/consolidated/iter65/moderefresh.rs::on_activate",
+      ".g5/Verus_verification/consolidated/iter65/moderefresh.rs::schedule"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter65/run.json"
+     ],
+     "basis": "reused:lifecycle.chain metadata (iter65)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "lifecycle.chain#5",
+     "units": [
+      "B1"
+     ],
+     "text": "A compile module action therefore leaves FileCopy targets and web applications stale.",
+     "cases": "compile vs load for an Activate-time kind",
+     "observation": "FileCopy/WebApplication refresh",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter65/moderefresh.rs::compile_chain_skips_activate",
+      ".g5/Verus_verification/consolidated/iter65/moderefresh.rs::schedule"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter65/run.json"
+     ],
+     "basis": "reused:lifecycle.chain metadata (iter65)",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "lifecycle.initialize": {
+   "body_sha": "a1392c647f128815",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "lifecycle.initialize#1"
+    ],
+    "B1": [
+     "lifecycle.initialize#2"
+    ],
+    "B2": [
+     "lifecycle.initialize#3"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "lifecycle.initialize#1",
+     "units": [
+      "P1"
+     ],
+     "text": "Initialize imports and compiles everything in the module preload folder before Reload.",
+     "cases": "directory load with preload vs without root",
+     "observation": "boot (preload) value after Initialize",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter42/initialize.rs::initialize",
+      ".g5/Verus_verification/consolidated/iter42/initialize.rs::directory_load_refreshes",
+      ".g5/Verus_verification/consolidated/iter30/phases.rs::fixed_order"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter42/run.json",
+      ".g5/uplift/consolidated/iter30/run.json"
+     ],
+     "basis": "reused:lifecycle.initialize metadata (iter42)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "lifecycle.initialize#2",
+     "units": [
+      "B1"
+     ],
+     "text": "Initialize finds preload only through the root a directory load supplies; a module action on an installed developer-mode module skips preload (\"Skipping preload\"), so edited preload code is not refreshed (C:D47).",
+     "cases": "module action vs directory load after a preload edit",
+     "observation": "preload code version; skipped flag",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter42/initialize.rs::module_action_skips_preload",
+      ".g5/Verus_verification/consolidated/iter42/initialize.rs::schedule"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter42/run.json"
+     ],
+     "basis": "reused:lifecycle.initialize metadata (iter42)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "lifecycle.initialize#3",
+     "units": [
+      "B2"
+     ],
+     "text": "As built, a preload class that fails to compile does not fail Initialize; the load succeeds with the class uncompiled, while the same error in an ordinary resource fails the load (C:D46).",
+     "cases": "broken preload class vs broken ordinary class",
+     "observation": "load status and compiled state",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter42/initialize.rs::preload_error_swallowed",
+      ".g5/Verus_verification/consolidated/iter42/initialize.rs::ordinary_compile_ok"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter42/run.json"
+     ],
+     "basis": "reused:lifecycle.initialize metadata (iter42)",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "lifecycle.document": {
+   "body_sha": "41a29551a5a57367",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "lifecycle.document#1",
+     "lifecycle.document#2",
+     "lifecycle.document#3"
+    ],
+    "B1": [
+     "lifecycle.document#4"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "lifecycle.document#1",
+     "units": [
+      "P1"
+     ],
+     "text": "The Document phase runs Document hooks first for each installed dependency and then for the module, unless -DDocument.Recurse=0.",
+     "cases": "Recurse default vs 0",
+     "observation": "hook marks and their order",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter66/docphase.rs::document",
+      ".g5/Verus_verification/consolidated/iter66/docphase.rs::neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter66/run.json"
+     ],
+     "basis": "reused:lifecycle.document metadata (iter66)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "lifecycle.document#2",
+     "units": [
+      "P1"
+     ],
+     "text": "A failing hook fails the command and rolls back what the hooks wrote, all in one transaction.",
+     "cases": "dependency hook fails vs all succeed",
+     "observation": "command status and kept marks",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter66/docphase.rs::document",
+      ".g5/Verus_verification/consolidated/iter66/docphase.rs::neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter66/run.json"
+     ],
+     "basis": "reused:lifecycle.document metadata (iter66)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "lifecycle.document#3",
+     "units": [
+      "P1"
+     ],
+     "text": "A dependency that is not installed stops the command before any hook runs.",
+     "cases": "dependency installed vs not installed (offered or not)",
+     "observation": "status, marks, not-installed message",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter66/docphase.rs::neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter66/run.json"
+     ],
+     "basis": "reused:lifecycle.document metadata (iter66)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "lifecycle.document#4",
+     "units": [
+      "B1"
+     ],
+     "text": "As built, IPM itself generates no documentation in the Document phase (C:D69).",
+     "cases": "module without hooks",
+     "observation": "marks written",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter66/docphase.rs::phase_generates_nothing"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter66/run.json"
+     ],
+     "basis": "reused:lifecycle.document metadata (iter66)",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "lifecycle.module-action": {
+   "body_sha": "026590a6060f3c3e",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "lifecycle.module-action#1",
+     "lifecycle.module-action#2"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "lifecycle.module-action#1",
+     "units": [
+      "P1"
+     ],
+     "text": "module-action <module> <phases>, or <module> <phases>, runs the named phases on a module.",
+     "cases": "phase words on an installed module",
+     "observation": "phases run",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter30/phases.rs::execute",
+      ".g5/Verus_verification/consolidated/iter30/phases.rs::native_sequence",
+      ".g5/Verus_verification/consolidated/iter6/workflows.rs::selected_module"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter30/run.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "lifecycle.module-action#2",
+     "units": [
+      "P1"
+     ],
+     "text": "compile, reload, test, package, verify, publish, makedeployed and update are shortcuts for it.",
+     "cases": "shortcut command vs module-action with the same phase",
+     "observation": "phases run",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter30/phases.rs::native_sequence"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter30/run.json"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "Only the compile shortcut (RunOnePhase, native case c9) is exercised; the reload/test/package/verify/publish/makedeployed/update shortcuts and update -> ApplyUpdateSteps mapping are not modeled."
+    }
+   ],
+   "parent": {
+    "children": [
+     "lifecycle.alias"
+    ],
+    "entailment": "The child owns name lookup; the parent states the command form and shortcuts, graded directly."
+   }
+  },
+  "lifecycle.alias": {
+   "body_sha": "ec9d088921f170f2",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "lifecycle.alias#1"
+    ],
+    "P2": [
+     "lifecycle.alias#2",
+     "lifecycle.alias#3"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "lifecycle.alias#1",
+     "units": [
+      "P1"
+     ],
+     "text": "Module actions look up the installed internal name, then the external name; either selects the same module; an unknown name fails.",
+     "cases": "internal vs external vs unknown name",
+     "observation": "selected module",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter6/workflows.rs::selected_module",
+      ".g5/Verus_verification/consolidated/iter6/workflows.rs::neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter6/INDEX.md"
+     ],
+     "basis": "reused:lifecycle.alias metadata (iter6)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "lifecycle.alias#2",
+     "units": [
+      "P2"
+     ],
+     "text": "A declared custom hook runs when its phase is selected, not on an ordinary load or uninstall.",
+     "cases": "custom phase selected vs ordinary phase list",
+     "observation": "hook run",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter6/workflows.rs::custom_hook",
+      ".g5/Verus_verification/consolidated/iter6/workflows.rs::neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:lifecycle.alias metadata (iter6)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "lifecycle.alias#3",
+     "units": [
+      "P2"
+     ],
+     "text": "Custom phase names are matched without regard to case.",
+     "alias_of": "lifecycle.custom#3",
+     "assessed_in": "iteration-70",
+     "basis": "alias"
+    }
+   ]
+  },
+  "lifecycle.only": {
+   "body_sha": "c02bca071ab4ced4",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "lifecycle.only#1",
+     "lifecycle.only#2"
+    ],
+    "B1": [
+     "lifecycle.only#3"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "lifecycle.only#1",
+     "units": [
+      "P1"
+     ],
+     "text": "-only with one named phase runs just that phase, without the phases before it.",
+     "cases": "compile -only vs compile",
+     "observation": "plan and compiled value",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter30/phases.rs::only_versus_chain",
+      ".g5/Verus_verification/consolidated/iter30/phases.rs::only_plan"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter30/run.json"
+     ],
+     "basis": "reused:lifecycle.only metadata (iter30)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "lifecycle.only#2",
+     "units": [
+      "P1"
+     ],
+     "text": "Intended: -only runs just the named phases (several).",
+     "cases": "-only with two standard names",
+     "observation": "phases run",
+     "grade": "full",
+     "check": "refuted",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter30/phases.rs::only_multiple_names_fail"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter30/run.json"
+     ],
+     "basis": "reused:lifecycle.only metadata (iter30; C:D34 contradicts the plural promise)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "lifecycle.only#3",
+     "units": [
+      "B1"
+     ],
+     "text": "As built, two or more names with -only become one name matching no phase, so the command fails before any of them runs (C:D34).",
+     "cases": "-only with one vs two names",
+     "observation": "status and world",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter30/phases.rs::only_multiple_names_fail",
+      ".g5/Verus_verification/consolidated/iter30/phases.rs::only_plan"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter30/run.json"
+     ],
+     "basis": "reused:lifecycle.only metadata (iter30)",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "lifecycle.custom": {
+   "body_sha": "8c94762c081ee1da",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "lifecycle.custom#1",
+     "lifecycle.custom#2",
+     "lifecycle.custom#3"
+    ],
+    "B1": [
+     "lifecycle.custom#4"
+    ],
+    "B2": [
+     "lifecycle.custom#5"
+    ],
+    "B3": [
+     "lifecycle.custom#6"
+    ],
+    "B4": [
+     "lifecycle.custom#7",
+     "lifecycle.custom#8"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "lifecycle.custom#1",
+     "units": [
+      "P1"
+     ],
+     "text": "A module can define a custom phase with <Invoke>; it runs only when requested by name.",
+     "cases": "custom phase named vs ordinary phases",
+     "observation": "custom hook count",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter6/workflows.rs::custom_hook",
+      ".g5/Verus_verification/consolidated/iter30/phases.rs::custom_and_unknown_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter30/run.json"
+     ],
+     "basis": "reused:lifecycle.custom metadata (iter30) and lifecycle.alias (iter6)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "lifecycle.custom#2",
+     "units": [
+      "P1"
+     ],
+     "text": "A module can define a custom phase with <CPF>.",
+     "cases": "CPF with a custom phase name requested vs not",
+     "observation": "CPF merge performed",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "No model selects a <CPF> resource by a custom phase (phases.rs CUSTOM covers Invoke hooks only). Missing: <m> mycustom merges the CPF, a normal load does not."
+    },
+    {
+     "id": "lifecycle.custom#3",
+     "units": [
+      "P1"
+     ],
+     "text": "Custom phase names are not case-sensitive.",
+     "cases": "MYCUSTOM vs mycustom",
+     "observation": "custom hook run",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "Case folding is a native-qualified premise of phases.rs (tokens abstract case-insensitive words); no rule folds names. Missing: GetCustomPhases lookup with differing case selects the hook."
+    },
+    {
+     "id": "lifecycle.custom#4",
+     "units": [
+      "B1"
+     ],
+     "text": "As built, a custom phase runs only when it is the only name in the command, with or without -only.",
+     "cases": "custom alone vs custom with a standard phase, with and without -only",
+     "observation": "custom hook count, status",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter30/phases.rs::custom_and_unknown_neighbors",
+      ".g5/Verus_verification/consolidated/iter30/phases.rs::only_plan",
+      ".g5/Verus_verification/consolidated/iter30/phases.rs::native_sequence"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter30/run.json"
+     ],
+     "basis": "reused:lifecycle.custom metadata (iter30)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "lifecycle.custom#5",
+     "units": [
+      "B2"
+     ],
+     "text": "Named beside a standard phase without -only, a custom phase is silently left out and the command succeeds (C:D35).",
+     "cases": "reload mycustom vs mycustom",
+     "observation": "custom hook count and status",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter30/phases.rs::custom_and_unknown_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter30/run.json"
+     ],
+     "basis": "reused:lifecycle.custom metadata (iter30)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "lifecycle.custom#6",
+     "units": [
+      "B3"
+     ],
+     "text": "An unknown name beside a standard phase is left out the same way, while an unknown name alone fails.",
+     "cases": "compile bogus vs bogus",
+     "observation": "plan and status",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter30/phases.rs::custom_and_unknown_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter30/run.json"
+     ],
+     "basis": "reused:lifecycle.custom metadata (iter30)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "lifecycle.custom#7",
+     "units": [
+      "B4"
+     ],
+     "text": "Working assumption (intended): run the standard chain, then each custom phase in the order named.",
+     "cases": "reload mycustom",
+     "observation": "custom hook count after the chain",
+     "grade": "full",
+     "check": "refuted",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter30/phases.rs::custom_and_unknown_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter30/run.json"
+     ],
+     "basis": "new:iteration-70 (as built the custom phase is dropped)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "lifecycle.custom#8",
+     "units": [
+      "B4"
+     ],
+     "text": "Working assumption (intended): refuse the whole command before any phase runs when a name is neither standard nor declared custom.",
+     "cases": "compile bogus",
+     "observation": "status and phases run",
+     "grade": "full",
+     "check": "refuted",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter30/phases.rs::custom_and_unknown_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter30/run.json"
+     ],
+     "basis": "new:iteration-70 (as built the unknown name is dropped and the chain runs)",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "module.lifecycle-class": {
+   "body_sha": "b532f4222783e565",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "module.lifecycle-class#1",
+     "module.lifecycle-class#2",
+     "module.lifecycle-class#3"
+    ],
+    "B1": [
+     "module.lifecycle-class#4",
+     "module.lifecycle-class#5"
+    ],
+    "B2": [
+     "module.lifecycle-class#6"
+    ],
+    "B3": [
+     "module.lifecycle-class#7"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "module.lifecycle-class#1",
+     "units": [
+      "P1"
+     ],
+     "text": "A manifest LifecycleClass picks the lifecycle IPM runs.",
+     "cases": "named class compiled vs absent name",
+     "observation": "lifecycle used",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter52/record.rs::resolve",
+      ".g5/Verus_verification/consolidated/iter52/record.rs::lifecycle_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter52/run.json"
+     ],
+     "basis": "reused:module.lifecycle-class metadata (iter52)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "module.lifecycle-class#2",
+     "units": [
+      "P1"
+     ],
+     "text": "Short lifecycle names resolve under %IPM.Lifecycle.",
+     "cases": "short name vs full class name",
+     "observation": "resolved class",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "resolve takes the name as an int; the %IPM.Lifecycle prefixing in LifecycleGet is not modeled. Missing: LifecycleClass=\"Module\" vs a full user class name."
+    },
+    {
+     "id": "module.lifecycle-class#3",
+     "units": [
+      "P1"
+     ],
+     "text": "IPM resolves the lifecycle when a command starts and again after Reload.",
+     "cases": "class available only after the post-Reload refresh",
+     "observation": "lifecycle used per phase",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter52/record.rs::compiled_at_refresh",
+      ".g5/Verus_verification/consolidated/iter52/record.rs::resolve"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter52/run.json"
+     ],
+     "basis": "reused:module.lifecycle-class metadata (iter52)",
+     "assessed_in": "iteration-70",
+     "gap": "The two resolution points are a native-qualified premise; compiled_at_refresh folds them into one boolean. No rule shows the lifecycle switching between Initialize and Compile within one command."
+    },
+    {
+     "id": "module.lifecycle-class#4",
+     "units": [
+      "B1"
+     ],
+     "text": "A lifecycle class shipped in preload is used on the first install; one shipped as an ordinary resource gives the default Module lifecycle on the first install and the named class on a later load.",
+     "cases": "preload vs ordinary resource; first install vs reinstall",
+     "observation": "lifecycle used",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter52/record.rs::lifecycle_neighbors",
+      ".g5/Verus_verification/consolidated/iter52/record.rs::first_install",
+      ".g5/Verus_verification/consolidated/iter52/record.rs::reinstall"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter52/run.json"
+     ],
+     "basis": "reused:module.lifecycle-class metadata (iter52)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "module.lifecycle-class#5",
+     "units": [
+      "B1"
+     ],
+     "text": "The first install with an ordinary-resource lifecycle class stores Module.",
+     "cases": "first install vs reinstall",
+     "observation": "stored LifecycleClass",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter52/record.rs::resolve"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter52/run.json"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "record.rs returns only the Life used; the LifecycleGet overwrite of LifecycleClass with \"Module\" is in a comment, not in the record state. Missing: stored LifecycleClass after the first install vs after the reinstall."
+    },
+    {
+     "id": "module.lifecycle-class#6",
+     "units": [
+      "B2"
+     ],
+     "text": "As built, a LifecycleClass naming a class that does not exist is replaced by Module without a warning.",
+     "cases": "unknown class vs existing class",
+     "observation": "lifecycle used",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter52/record.rs::lifecycle_neighbors",
+      ".g5/Verus_verification/consolidated/iter52/record.rs::unknown"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter52/run.json"
+     ],
+     "basis": "reused:module.lifecycle-class metadata (iter52)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "module.lifecycle-class#7",
+     "units": [
+      "B3"
+     ],
+     "text": "Working assumption: as built, fall back to Module silently.",
+     "alias_of": "module.lifecycle-class#6",
+     "assessed_in": "iteration-70",
+     "basis": "alias"
+    }
+   ]
+  },
+  "lifecycle.hooks": {
+   "body_sha": "93bb3625981f76e2",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "lifecycle.hooks#1"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "lifecycle.hooks#1",
+     "units": [
+      "P1"
+     ],
+     "text": "Resource processors can act before, during and after each phase, so the same phases behave differently depending on a module resources.",
+     "cases": "module with a processor hook vs without, per phase",
+     "observation": "processor effects per phase",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter30/phases.rs::step",
+      ".g5/Verus_verification/consolidated/iter65/moderefresh.rs::refreshes"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter30/run.json",
+      ".g5/uplift/consolidated/iter65/run.json"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "phases.rs counts Compile/Activate hooks and moderefresh tabulates kinds per phase, but no rule orders a processor OnBeforePhase/OnPhase/OnAfterPhase around the phase body (ResourceProcessor/Abstract.cls:168-209, Storage/Module.cls:575-691)."
+    }
+   ],
+   "parent": {
+    "children": [
+     "lifecycle.source-control"
+    ],
+    "entailment": "The child covers source-control hooks; the resource-processor promise is graded here."
+   }
+  },
+  "module.invoke": {
+   "body_sha": "464695c3e8b62b94",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "module.invoke#1",
+     "module.invoke#2"
+    ],
+    "B1": [
+     "module.invoke#3",
+     "module.invoke#4",
+     "module.invoke#5"
+    ],
+    "B2": [
+     "module.invoke#6",
+     "module.invoke#7"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "module.invoke#1",
+     "units": [
+      "P1"
+     ],
+     "text": "<Invoke> runs a class method during a lifecycle phase, by default after Configure.",
+     "cases": "Invoke without Phase/When vs explicit phase",
+     "observation": "phase in which the method runs",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::invoke_selected"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "invoke_selected takes the declared phase and side as inputs; the default (After Configure) is not modeled. Missing: an Invoke without Phase runs after Configure, not after Activate."
+    },
+    {
+     "id": "module.invoke#2",
+     "units": [
+      "P1"
+     ],
+     "text": "By default IPM checks a declared %Status return; a returned error fails the phase.",
+     "cases": "status method returning error vs non-status method",
+     "observation": "phase status",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::invoke_ok",
+      ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::invoke_checked",
+      ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::invoke_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter3/INDEX.json"
+     ],
+     "basis": "reused:module.invoke metadata (iter3)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "module.invoke#3",
+     "units": [
+      "B1"
+     ],
+     "text": "Explicit CheckStatus=\"0\" discards the return, even for a status method.",
+     "cases": "CheckStatus 0 with an error status",
+     "observation": "phase status",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::invoke_neighbors",
+      ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::invoke_ok"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:module.invoke metadata (iter3)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "module.invoke#4",
+     "units": [
+      "B1"
+     ],
+     "text": "CheckStatus=\"1\" checks the return regardless of its declared type.",
+     "cases": "CheckStatus 1 on a non-status method returning error",
+     "observation": "phase status",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::invoke_neighbors",
+      ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::invoke_ok"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:module.invoke metadata (iter3)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "module.invoke#5",
+     "units": [
+      "B1"
+     ],
+     "text": "A thrown exception still fails the invocation.",
+     "cases": "CheckStatus 0 with a throw",
+     "observation": "phase status",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::invoke_neighbors",
+      ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::invoke_ok"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:module.invoke metadata (iter3)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "module.invoke#6",
+     "units": [
+      "B2"
+     ],
+     "text": "A nonempty CustomPhase replaces Phase and adds no second call in the ordinary phase.",
+     "cases": "CustomPhase set: custom vs ordinary phase",
+     "observation": "invocation selected",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::invoke_selected",
+      ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::invoke_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:module.invoke metadata (iter3)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "module.invoke#7",
+     "units": [
+      "B2"
+     ],
+     "text": "The phase and the Before/After side must both match.",
+     "cases": "matching phase, wrong side",
+     "observation": "invocation selected",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::invoke_selected"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "invoke_selected has before==declared_before but invoke_neighbors never exercises a side mismatch. Missing: Before-declared Invoke not run in the After slot of its phase."
+    }
+   ]
+  },
+  "lifecycle.installer": {
+   "body_sha": "864778940c27d74c",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "lifecycle.installer#1",
+     "lifecycle.installer#2"
+    ],
+    "B1": [
+     "lifecycle.installer#3"
+    ],
+    "B2": [
+     "lifecycle.installer#4",
+     "lifecycle.installer#5"
+    ],
+    "B3": [
+     "lifecycle.installer#6"
+    ],
+    "B4": [
+     "lifecycle.installer#7",
+     "lifecycle.installer#8"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "lifecycle.installer#1",
+     "units": [
+      "P1"
+     ],
+     "text": "During Activate, Configure calls OnInstallComponent and then OnConfigureComponent.",
+     "cases": "installer module load",
+     "observation": "callback sequence",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter36/installer.rs::load",
+      ".g5/Verus_verification/consolidated/iter36/installer.rs::schedule"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter36/run.json"
+     ],
+     "basis": "reused:lifecycle.installer metadata (iter36)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "lifecycle.installer#2",
+     "units": [
+      "P1"
+     ],
+     "text": "At uninstall, Clean calls OnUnconfigureComponent and then OnUnInstallComponent.",
+     "cases": "uninstall of an installer module",
+     "observation": "callback sequence",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter36/installer.rs::uninstall",
+      ".g5/Verus_verification/consolidated/iter36/installer.rs::schedule"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter36/run.json"
+     ],
+     "basis": "reused:lifecycle.installer metadata (iter36)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "lifecycle.installer#3",
+     "units": [
+      "B1"
+     ],
+     "text": "OnInstallComponent receives database name, verbose, developer-mode and upgrade flags; OnConfigureComponent receives namespace, verbose and the phase parameters plus InstallDir.",
+     "cases": "-dev vs normal, -D values",
+     "observation": "callback arguments",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter36/installer.rs::install_call",
+      ".g5/Verus_verification/consolidated/iter36/installer.rs::configure_call"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter36/run.json"
+     ],
+     "basis": "reused:lifecycle.installer metadata (iter36)",
+     "assessed_in": "iteration-70",
+     "gap": "The verbose flag is not modeled and the database name is the constant db_empty=1; dev, upgrade, namespace, InstallDir and parameter mode are. Missing: -verbose vs quiet load observed in both callbacks."
+    },
+    {
+     "id": "lifecycle.installer#4",
+     "units": [
+      "B2"
+     ],
+     "text": "If OnInstallComponent returns an error, OnConfigureComponent is not called and the load fails.",
+     "cases": "failing vs succeeding OnInstallComponent",
+     "observation": "calls and status",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter36/installer.rs::refusal_stops",
+      ".g5/Verus_verification/consolidated/iter36/installer.rs::load"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter36/run.json"
+     ],
+     "basis": "reused:lifecycle.installer metadata (iter36)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "lifecycle.installer#5",
+     "units": [
+      "B2"
+     ],
+     "text": "An ordinary load then rolls back, including data the installer wrote.",
+     "cases": "normal vs developer-mode load with a failing installer",
+     "observation": "installer global and module record afterwards",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter36/installer.rs::refusal_stops"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter36/run.json"
+     ],
+     "basis": "reused:lifecycle.installer metadata (iter36)",
+     "assessed_in": "iteration-70",
+     "gap": "load() hard-codes the rolled-back outcome (premise: a failing Activate rolls back the normal-mode load); there is no developer-mode neighbour where the installer write is kept."
+    },
+    {
+     "id": "lifecycle.installer#6",
+     "units": [
+      "B3"
+     ],
+     "text": "A module without an installer class gets no callbacks.",
+     "cases": "no installer vs installer",
+     "observation": "calls",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter36/installer.rs::no_installer_no_calls"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter36/run.json"
+     ],
+     "basis": "reused:lifecycle.installer metadata (iter36)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "lifecycle.installer#7",
+     "units": [
+      "B4"
+     ],
+     "text": "Working assumption (as built): the upgrade flag is 0 unless -DConfigure.IsUpgrade supplies it, even when a newer version replaces an installed one.",
+     "cases": "installed before vs fresh; -D given vs not",
+     "observation": "IsUpgrade argument",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter36/installer.rs::upgrade_ignores_installed_state",
+      ".g5/Verus_verification/consolidated/iter36/installer.rs::schedule"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter36/run.json"
+     ],
+     "basis": "reused:lifecycle.installer metadata (iter36)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "lifecycle.installer#8",
+     "units": [
+      "B4"
+     ],
+     "text": "Working assumption (as built): the database name is empty unless -DConfigure.DatabaseName supplies it.",
+     "cases": "-DConfigure.DatabaseName given vs not",
+     "observation": "DatabaseName argument",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter36/installer.rs::install_call"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter36/run.json"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "install_call sets db_empty=1 unconditionally; the -D neighbour that supplies a name is not modeled."
+    }
+   ],
+   "parent": {
+    "children": [
+     "lifecycle.installer.parameters"
+    ],
+    "entailment": "The child owns which parameters reach the installer; the callback order and failure rules are graded here."
+   }
+  },
+  "lifecycle.installer.parameters": {
+   "body_sha": "5866550f38a1bbdb",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "lifecycle.installer.parameters#1"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "lifecycle.installer.parameters#1",
+     "units": [
+      "P1"
+     ],
+     "text": "Installer parameters include <Defaults><Parameter> values and -D values, with -D winning; as built <Default Name Value> values are not included, although Invoke arguments can use them (C:D41).",
+     "cases": "<Parameter> vs <Default> vs -D",
+     "observation": "OnConfigureComponent variables vs Invoke argument",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter36/installer.rs::default_versus_parameter",
+      ".g5/Verus_verification/consolidated/iter36/installer.rs::override_reaches_both"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter36/run.json"
+     ],
+     "basis": "reused:lifecycle.installer.parameters metadata (iter36)",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "lifecycle.source-control": {
+   "body_sha": "b890c2190dbfebfb",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "lifecycle.source-control#1",
+     "lifecycle.source-control#2",
+     "lifecycle.source-control#3"
+    ],
+    "B1": [
+     "lifecycle.source-control#4"
+    ],
+    "B2": [
+     "lifecycle.source-control#5"
+    ],
+    "B3": [
+     "lifecycle.source-control#6"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "lifecycle.source-control#1",
+     "units": [
+      "P1"
+     ],
+     "text": "The extension is called before and after every phase IPM runs, including nested phases such as Configure inside Activate.",
+     "cases": "load vs uninstall (nested Unconfigure)",
+     "observation": "hook event sequence",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter43/schooks.rs::run_phases",
+      ".g5/Verus_verification/consolidated/iter43/schooks.rs::nested_hooks_inside_parent",
+      ".g5/Verus_verification/consolidated/iter43/schooks.rs::load_schedule"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter43/run.json"
+     ],
+     "basis": "reused:lifecycle.source-control metadata (iter43)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "lifecycle.source-control#2",
+     "units": [
+      "P1"
+     ],
+     "text": "It is also called when a module resources or manifest change.",
+     "cases": "load vs document save vs reload",
+     "observation": "OnModifyResources calls",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter43/schooks.rs::modify_calls",
+      ".g5/Verus_verification/consolidated/iter43/schooks.rs::observe"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter43/run.json"
+     ],
+     "basis": "reused:lifecycle.source-control metadata (iter43)",
+     "assessed_in": "iteration-70",
+     "gap": "modify_calls is a per-operation constant taken from native counts (premise); no rule derives a call from a resource or manifest save. Missing: a load that saves no resource makes no call."
+    },
+    {
+     "id": "lifecycle.source-control#3",
+     "units": [
+      "P1"
+     ],
+     "text": "It is called when a module root changes.",
+     "cases": "root changed vs unchanged",
+     "observation": "OnChangeModuleRoot calls",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter43/schooks.rs::observe",
+      ".g5/Verus_verification/consolidated/iter43/schooks.rs::root_hook_not_reached"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter43/run.json"
+     ],
+     "basis": "reused:lifecycle.source-control metadata (iter43)",
+     "assessed_in": "iteration-70",
+     "gap": "observe fixes root: 0 for every operation, so no case where the root hook fires exists in the model; the product condition (%Reload comparing an already-updated root) is in a comment. Missing: a path where the stored root differs at comparison time and the hook is called."
+    },
+    {
+     "id": "lifecycle.source-control#4",
+     "units": [
+      "B1"
+     ],
+     "text": "Only the primary extension of IPM composite source-control class receives these calls; an extension set directly or only as secondary receives none.",
+     "cases": "composite with IPM primary vs direct vs secondary",
+     "observation": "calls received",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter43/schooks.rs::active",
+      ".g5/Verus_verification/consolidated/iter43/schooks.rs::direct_or_secondary_inactive",
+      ".g5/Verus_verification/consolidated/iter43/schooks.rs::inactive_no_calls"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter43/run.json"
+     ],
+     "basis": "reused:lifecycle.source-control metadata (iter43)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "lifecycle.source-control#5",
+     "units": [
+      "B2"
+     ],
+     "text": "If the before-phase call returns an error, that phase and the command fail and the after-phase call is not made.",
+     "cases": "before hook error vs none",
+     "observation": "status and events",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter43/schooks.rs::before_error_stops_phase"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter43/run.json"
+     ],
+     "basis": "reused:lifecycle.source-control metadata (iter43)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "lifecycle.source-control#6",
+     "units": [
+      "B3"
+     ],
+     "text": "As built, the root-change call is not made when a module is loaded from another directory or reloaded with an explicit root, although the stored root changes (C:D51).",
+     "cases": "load from another directory; reload with explicit root",
+     "observation": "root-change calls",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter43/schooks.rs::root_hook_not_reached"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter43/run.json"
+     ],
+     "basis": "reused:lifecycle.source-control metadata (iter43; as-built claim, constant in the model)",
+     "assessed_in": "iteration-70"
+    }
+   ],
+   "parent": {
+    "children": [
+     "lifecycle.source-control.editor"
+    ],
+    "entailment": "The child covers editor callbacks; lifecycle callbacks are graded here."
+   }
+  },
+  "lifecycle.source-control.editor": {
+   "body_sha": "0c38a4a81f5c9838",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "lifecycle.source-control.editor#1",
+     "lifecycle.source-control.editor#2",
+     "lifecycle.source-control.editor#3"
+    ],
+    "B1": [
+     "lifecycle.source-control.editor#4",
+     "lifecycle.source-control.editor#5"
+    ],
+    "B2": [
+     "lifecycle.source-control.editor#6",
+     "lifecycle.source-control.editor#7"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "lifecycle.source-control.editor#1",
+     "units": [
+      "P1"
+     ],
+     "text": "Editor callbacks (save, load, compile, delete, icon state) on the composite go only to the primary extension.",
+     "cases": "primary vs other extension",
+     "observation": "callback recipients",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter67/composite.rs::per_item",
+      ".g5/Verus_verification/consolidated/iter67/composite.rs::neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter67/run.json"
+     ],
+     "basis": "reused:lifecycle.source-control.editor metadata (iter67)",
+     "assessed_in": "iteration-70",
+     "gap": "per_item is the constant (1, 0); no rule over the composite dispatch distinguishes a callback the other extension would receive. Missing: OnAfterSave with two extensions, observed call counts per extension."
+    },
+    {
+     "id": "lifecycle.source-control.editor#2",
+     "units": [
+      "P1"
+     ],
+     "text": "Item names are normalized (/A/B.cls becomes A.B.CLS).",
+     "cases": "path form vs internal name",
+     "observation": "name passed to the extension",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "CorrectInternalNames is named in composite.rs comments only. Missing: /A/B.cls and A.B.cls both delivered as A.B.CLS."
+    },
+    {
+     "id": "lifecycle.source-control.editor#3",
+     "units": [
+      "P1"
+     ],
+     "text": "A menu action goes to the extension that defines the menu; other actions go to the primary.",
+     "cases": "menu of other extension vs unknown menu vs type 1 action",
+     "observation": "action recipient",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter67/composite.rs::user_action",
+      ".g5/Verus_verification/consolidated/iter67/composite.rs::neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter67/run.json"
+     ],
+     "basis": "reused:lifecycle.source-control.editor metadata (iter67)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "lifecycle.source-control.editor#4",
+     "units": [
+      "B1"
+     ],
+     "text": "An item is editable only if every configured extension allows editing.",
+     "cases": "both editable vs other not editable",
+     "observation": "GetStatus Editable",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter67/composite.rs::editable",
+      ".g5/Verus_verification/consolidated/iter67/composite.rs::neighbors",
+      ".g5/Verus_verification/consolidated/iter67/composite.rs::other_extension_inconsistency"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter67/run.json"
+     ],
+     "basis": "reused:lifecycle.source-control.editor metadata (iter67)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "lifecycle.source-control.editor#5",
+     "units": [
+      "B1"
+     ],
+     "text": "As built, the read-only check asks only the primary, so another extension marking an item read-only is ignored (C:D70).",
+     "cases": "other read-only, primary not vs primary read-only",
+     "observation": "IsReadOnly",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter67/composite.rs::read_only",
+      ".g5/Verus_verification/consolidated/iter67/composite.rs::other_extension_inconsistency",
+      ".g5/Verus_verification/consolidated/iter67/composite.rs::neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter67/run.json"
+     ],
+     "basis": "reused:lifecycle.source-control.editor metadata (iter67)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "lifecycle.source-control.editor#6",
+     "units": [
+      "B2"
+     ],
+     "text": "As built, configuring a nonexistent extension class returns success and every later creation of the composite fails (C:D71).",
+     "cases": "nonexistent vs existing other extension",
+     "observation": "configure status; creation status",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter67/composite.rs::configure_ok",
+      ".g5/Verus_verification/consolidated/iter67/composite.rs::create_ok",
+      ".g5/Verus_verification/consolidated/iter67/composite.rs::misconfigured_other_breaks_creation"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter67/run.json"
+     ],
+     "basis": "reused:lifecycle.source-control.editor metadata (iter67)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "lifecycle.source-control.editor#7",
+     "units": [
+      "B2"
+     ],
+     "text": "An empty primary name leaves the previous primary in place.",
+     "cases": "empty vs class name",
+     "observation": "primary after set",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter67/composite.rs::primary_after_set",
+      ".g5/Verus_verification/consolidated/iter67/composite.rs::empty_primary_ignored"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter67/run.json"
+     ],
+     "basis": "reused:lifecycle.source-control.editor metadata (iter67)",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  }
+ }
+}

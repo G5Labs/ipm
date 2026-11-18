@@ -1,0 +1,1247 @@
+{
+ "page": ".g5/ontology/features/build-and-publish.g5.md",
+ "blocks": {
+  "build": {
+   "body_sha": "d4a0f7e60f53b1d3",
+   "status": "structural",
+   "units": {
+    "P1": "excluded: summary lead of the release commands; its commitments are owned by the children build.test, build.test-output, build.package, build.verify, build.publish and build.makedeployed (packaging-deployed-code page)"
+   },
+   "obligations": [],
+   "reason": "Pure heading for the release commands. Every command it names is owned by a child block (build.test, build.test-output, build.package, build.verify, build.publish here; build.makedeployed on the packaging-deployed-code page). No additional obligation."
+  },
+  "build.test": {
+   "body_sha": "0a6487699e744870",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "build.test#1",
+     "build.test#2",
+     "build.test#3"
+    ],
+    "B1": [
+     "build.test#4",
+     "build.test#5"
+    ],
+    "B2": [
+     "build.test#6"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "build.test#1",
+     "units": [
+      "P1"
+     ],
+     "text": "`test <module>` runs the module's Phase=\"test\" unit-test resource in the current namespace; a Phase=\"verify\" resource is not run.",
+     "cases": "test command with a test-phase and a verify-phase UnitTest resource sharing one directory",
+     "observation": "run counters of each resource",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter40/unittests.rs::test",
+      ".g5/Verus_verification/consolidated/iter40/unittests.rs::test_leaves_test_code",
+      ".g5/Verus_verification/consolidated/iter40/unittests.rs::schedule"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter40/run.json"
+     ],
+     "basis": "reused:.g5/ontology/features/build-and-publish.g5.md metadata (iter40)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "build.test#2",
+     "units": [
+      "P1"
+     ],
+     "text": "Test-scoped resources are loaded and compiled only by a command whose phase list contains their scope phase (test for Scope=test); other commands leave them out.",
+     "cases": "scoped vs unscoped resource; command phase list with vs without the scope phase (test vs verify vs load)",
+     "observation": "resource loaded/compiled after the phase walk",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      "playbook-uplift/models/verus/scopes.rs::in_scope",
+      "playbook-uplift/models/verus/scopes.rs::run",
+      "playbook-uplift/models/verus/scopes.rs::res_present",
+      "playbook-uplift/models/verus/scopes.rs::res_witness_verify_skips_test_scoped"
+     ],
+     "evidence": [
+      "playbook-uplift/models/verus/results/scopes.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "build.test#3",
+     "units": [
+      "P1"
+     ],
+     "text": "Test-scoped dependencies load for the test phase only.",
+     "alias_of": "deps#4",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "build.test#4",
+     "units": [
+      "B1"
+     ],
+     "text": "A module's test classes are loaded at load time only in developer mode.",
+     "cases": "load with dev vs without dev",
+     "observation": "test classes defined after load",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter40/unittests.rs::load",
+      ".g5/Verus_verification/consolidated/iter40/unittests.rs::non_dev_load_has_no_tests"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter40/run.json"
+     ],
+     "basis": "reused:.g5/ontology/features/build-and-publish.g5.md metadata (iter40)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "build.test#5",
+     "units": [
+      "B1"
+     ],
+     "text": "The test phase loads every class under the test resource's directory (including other resources' packages), then compiles and runs the resource's own package.",
+     "cases": "test phase on a directory holding the test and verify packages",
+     "observation": "both packages defined; only the test package compiled and run",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter40/unittests.rs::load_dir",
+      ".g5/Verus_verification/consolidated/iter40/unittests.rs::test",
+      ".g5/Verus_verification/consolidated/iter40/unittests.rs::schedule"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter40/run.json"
+     ],
+     "basis": "reused:.g5/ontology/features/build-and-publish.g5.md metadata (iter40)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "build.test#6",
+     "units": [
+      "B2"
+     ],
+     "text": "As built (C:D48), the test phase never deletes the test classes it loaded, even for a non-developer module; they stay (including verify-only packages that did not run) until uninstall.",
+     "cases": "non-dev load then test then uninstall; dev load then test then uninstall",
+     "observation": "test/verify classes defined after test and after uninstall",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter40/unittests.rs::do_delete",
+      ".g5/Verus_verification/consolidated/iter40/unittests.rs::test_leaves_test_code",
+      ".g5/Verus_verification/consolidated/iter40/unittests.rs::uninstall_clears",
+      ".g5/Verus_verification/consolidated/iter40/unittests.rs::schedule"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter40/run.json"
+     ],
+     "basis": "reused:.g5/ontology/features/build-and-publish.g5.md metadata (iter40, C:D48)",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "build.test-output": {
+   "body_sha": "91e2144a03d5b47d",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "build.test-output#1"
+    ],
+    "B1": [
+     "build.test-output#2"
+    ],
+    "B2": [
+     "build.test-output#3"
+    ],
+    "B3": [
+     "build.test-output#4"
+    ],
+    "B4": [
+     "build.test-output#5"
+    ],
+    "B5": "excluded: observation-scope statement (status and report-file existence are separate observations; a reporting check does not prove verify cleanup)",
+    "B6": [
+     "build.test-output#6",
+     "build.test-output#7"
+    ],
+    "B7": [
+     "build.test-output#8"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "build.test-output#1",
+     "units": [
+      "P1"
+     ],
+     "text": "`test` and `verify` print a summary of results.",
+     "cases": "test vs verify; any outcome",
+     "observation": "terminal summary",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter2/readers.rs::json_device",
+      ".g5/Verus_verification/consolidated/iter2/readers.rs::file_and_device_have_different_contracts"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter2/proofs/models.json"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "readers.rs json_device sets summary=true only for the JSON device output of the test phase. The plain-text default summary (Test/Abstract GetSummary through OutputToDevice without -format) and the verify command's summary in the VERIFY namespace are not modeled, so no rule contrasts a run that prints a summary with one that does not."
+    },
+    {
+     "id": "build.test-output#2",
+     "units": [
+      "B1"
+     ],
+     "text": "-quiet shows only the summary and failures; -verbose adds per-method results when used with -format.",
+     "cases": "default vs -quiet vs -verbose (with -format)",
+     "observation": "which sections the device output contains",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter2/readers.rs::json_device",
+      ".g5/Verus_verification/consolidated/iter2/readers.rs::file_and_device_have_different_contracts"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter2/proofs/models.json"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "json_device(show_detail, verbose) distinguishes summary-only, failures and all-methods sections (control quiet-device-includes-all rejected), but show_detail/verbose are inputs: the mapping from the -quiet, -verbose and -format flags (Lifecycle/Base.cls %Test into Test/JsonOutput OutputToDevice) is not modeled, and only the JSON device is covered (YAML, TOON and plain-text device output are not)."
+    },
+    {
+     "id": "build.test-output#3",
+     "units": [
+      "B2"
+     ],
+     "text": "-format json|yaml|toon, or the TestReportFormat setting, selects the summary format.",
+     "cases": "-format given vs only TestReportFormat set vs neither; each format value",
+     "observation": "format of the printed summary",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [
+      ".g5/Verus_verification/consolidated/iter41/settings.rs"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "No model selects the summary renderer. iter41 settings.rs and playbook settings.rs only validate and store TestReportFormat. Contrast to close: TestReportFormat=yaml with no -format prints YAML; -format json with TestReportFormat=yaml prints JSON (precedence); neither prints the default text summary."
+    },
+    {
+     "id": "build.test-output#4",
+     "units": [
+      "B3"
+     ],
+     "text": "-output-file writes the full results; the file extension picks the format (.json, .yaml, .toon, or .xml for JUnit).",
+     "cases": "extension .json vs .yaml vs .toon vs .xml vs unsupported",
+     "observation": "file existence and its format",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/thin_surfaces.rs::report_result",
+      ".g5/Verus_verification/consolidated/verus/thin_surfaces.rs::report_file_written",
+      ".g5/Verus_verification/consolidated/iter2/readers.rs::json_file"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/consolidated/verus/results/thin_surfaces.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/build-and-publish.g5.md metadata (thin_surfaces report_result)",
+     "assessed_in": "iteration-70",
+     "gap": "report_result takes extension_supported as an input Boolean and json_file fixes the JSON file contract to the full tree. The extension-to-format dispatch (.yaml -> YamlOutput, .xml -> JUnit) is not modeled, so no rule contrasts .yaml producing YAML with .xml producing JUnit, or an unsupported extension (.csv) refusing."
+    },
+    {
+     "id": "build.test-output#5",
+     "units": [
+      "B4"
+     ],
+     "text": "The output-file export happens before summary rendering: an unsupported summary format returns an error after valid results were written; the same passing tests with a supported summary format return success.",
+     "cases": "unsupported vs supported summary format with a requested, supported output file",
+     "observation": "command status and output-file existence",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/thin_surfaces.rs::report_result",
+      ".g5/Verus_verification/consolidated/verus/thin_surfaces.rs::report_status",
+      ".g5/Verus_verification/consolidated/verus/thin_surfaces.rs::report_error_can_keep_output"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/consolidated/verus/results/thin_surfaces.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/build-and-publish.g5.md metadata (thin_surfaces report_result)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "build.test-output#6",
+     "units": [
+      "B6"
+     ],
+     "text": "All formats print the same method and assertion counts.",
+     "cases": "JSON vs YAML vs TOON summaries for one result tree",
+     "observation": "printed method/assertion counts",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter47/formats.rs::summaries_agree",
+      ".g5/Verus_verification/consolidated/iter47/formats.rs::summary_json",
+      ".g5/Verus_verification/consolidated/iter2/readers.rs::count_methods"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter47/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/build-and-publish.g5.md metadata (iter47)",
+     "assessed_in": "iteration-70",
+     "gap": "summary_json/summary_yaml/summary_toon are each the identity on one shared Summary, so summaries_agree holds by definition. No model renders each format's counts from the tree (Test/JsonOutput, YamlOutput, ToonOutput summary paths), so a renderer that miscounts could not be distinguished."
+    },
+    {
+     "id": "build.test-output#7",
+     "units": [
+      "B6"
+     ],
+     "text": "JSON keeps assertion and error text exactly; as built (C:D53) YAML and TOON drop carriage returns, and YAML reads back with a trailing newline and without the first line's leading spaces.",
+     "cases": "messages with punctuation, LF, CRLF and leading spaces in each format",
+     "observation": "text read back from the report file",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter47/formats.rs::json_exact",
+      ".g5/Verus_verification/consolidated/iter47/formats.rs::toon_text",
+      ".g5/Verus_verification/consolidated/iter47/formats.rs::yaml_text",
+      ".g5/Verus_verification/consolidated/iter47/formats.rs::fixture_rendering"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter47/run.json"
+     ],
+     "basis": "reused:.g5/ontology/features/build-and-publish.g5.md metadata (iter47, C:D53)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "build.test-output#8",
+     "units": [
+      "B7"
+     ],
+     "text": "TOON writes one row per assertion; a method with an error and no assertions gets an error row and a status row.",
+     "cases": "method with 2 assertions vs method with an error and 0 assertions",
+     "observation": "TOON row count",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter47/formats.rs::toon_rows",
+      ".g5/Verus_verification/consolidated/iter47/formats.rs::error_method_two_toon_rows"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter47/run.json"
+     ],
+     "basis": "reused:.g5/ontology/features/build-and-publish.g5.md metadata (iter47)",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "build.package": {
+   "body_sha": "0855ab7c23552981",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "build.package#1",
+     "build.package#2"
+    ],
+    "B1": [
+     "build.package#3"
+    ],
+    "B2": [
+     "build.package#4"
+    ],
+    "B3": [
+     "build.package#5"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "build.package#1",
+     "units": [
+      "P1"
+     ],
+     "text": "`package <module>` exports the module and bundles it into a .tgz archive.",
+     "cases": "successful vs failing export",
+     "observation": "archive existence and contents",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter10/scope.rs::package",
+      ".g5/Verus_verification/consolidated/iter10/scope.rs::archive"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter10/INDEX.md"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "scope.rs archive() adds the manifest to the copied UnitTest path map; ordinary resource export, the tar/gzip bundling and export failure are premises. No rule contrasts a successful export that yields the archive with a failing export (Lifecycle/Base.cls %Export error) that leaves none."
+    },
+    {
+     "id": "build.package#2",
+     "units": [
+      "P1"
+     ],
+     "text": "A deployed-item helper has a known error-propagation gap during package export.",
+     "alias_of": "build.package.deployed-status#1",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "build.package#3",
+     "units": [
+      "B1"
+     ],
+     "text": "-path sets where the archive goes, and only the archive is left there.",
+     "cases": "package with -path vs default",
+     "observation": "files left in the target directory",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "No model of Lifecycle/Base.cls %Package output-directory handling. Contrast: package -path /tmp/x leaves exactly <module>-<version>.tgz in /tmp/x with the staging export removed, versus the default location."
+    },
+    {
+     "id": "build.package#4",
+     "units": [
+      "B2"
+     ],
+     "text": "-export-deps controls whether dependencies are included, and -export-python-deps adds Python dependencies.",
+     "cases": "-export-deps 1 vs 0; -export-python-deps on vs off",
+     "observation": "dependency modules and wheels inside the archive",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "No model of the dependency/Python export branches of %Package/%Export. Contrast: a module with one dependency packaged with -export-deps 1 contains the dependency's archive, with 0 it does not; -export-python-deps adds the requirements' wheels."
+    },
+    {
+     "id": "build.package#5",
+     "units": [
+      "B3"
+     ],
+     "text": "Test-scoped resources are left out of the package unless their phase is requested or test inclusion adds it; -include-tests enables inclusion; an explicit -DIncludeTests=0 overrides a true <IncludeTests>.",
+     "cases": "flag vs manifest vs explicit zero vs none; test-scoped vs unscoped resource",
+     "observation": "resource present in the archive",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      "playbook-uplift/models/verus/scopes.rs::export_phases",
+      "playbook-uplift/models/verus/scopes.rs::exported",
+      "playbook-uplift/models/verus/scopes.rs::res_export",
+      "playbook-uplift/models/verus/scopes.rs::res_witness_explicit_zero_overrides_manifest",
+      ".g5/Verus_verification/consolidated/iter10/scope.rs::export_phases",
+      ".g5/Verus_verification/consolidated/iter10/scope.rs::packaging_neighbors"
+     ],
+     "evidence": [
+      "playbook-uplift/models/verus/results/scopes.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:scopes.rs (project map %Export) and iter10 scope.rs (build.package.test-path metadata)",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "build.package.test-path": {
+   "body_sha": "9e1405e784dd622b",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "build.package.test-path#1"
+    ],
+    "B1": [
+     "build.package.test-path#2",
+     "build.package.test-path#3"
+    ],
+    "B2": [
+     "build.package.test-path#4"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "build.package.test-path#1",
+     "units": [
+      "P1"
+     ],
+     "text": "A UnitTest resource's Phase sets its returned child scope; export requires both the declared Scope and that returned scope to match the requested phases, and a matching test directory is copied with its file contents.",
+     "cases": "declared Scope verify with Phase test under phases [test], [verify], [test,verify]; file under the directory vs sibling prefix",
+     "observation": "archive membership and bytes",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter10/scope.rs::unit_children",
+      ".g5/Verus_verification/consolidated/iter10/scope.rs::references",
+      ".g5/Verus_verification/consolidated/iter10/scope.rs::copied",
+      ".g5/Verus_verification/consolidated/iter10/scope.rs::selected_file_keeps_payload",
+      ".g5/Verus_verification/consolidated/iter10/scope.rs::packaging_neighbors",
+      ".g5/Verus_verification/consolidated/iter10/scope.rs::directory_boundary"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter10/INDEX.md"
+     ],
+     "basis": "reused:.g5/ontology/features/build-and-publish.g5.md metadata (iter10 scope.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "build.package.test-path#2",
+     "units": [
+      "B1"
+     ],
+     "text": "Test inclusion adds Test and Verify to the export phases; an explicit IncludeTests, including zero, overrides the manifest for that addition.",
+     "alias_of": "build.package#5",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "build.package.test-path#3",
+     "units": [
+      "B1"
+     ],
+     "text": "An explicit IncludeTests=0 does not remove a phase already requested.",
+     "cases": "export phases already containing Test with IncludeTests=0 vs without",
+     "observation": "Phase=test directory in the archive",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter10/scope.rs::export_phases"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "export_phases returns the base list unchanged when inclusion is off, but every theorem and neighbour uses base [Package]. No rule exercises a base list already containing Test with param Some(false), so a variant that strips Test on zero would still verify."
+    },
+    {
+     "id": "build.package.test-path#4",
+     "units": [
+      "B2"
+     ],
+     "text": "Direct child enumeration does not return the test directory; export adds it after the scope checks. Archives omit it by default, include it by flag or manifest, and omit it again under the explicit zero override.",
+     "cases": "none vs -include-tests vs manifest true vs explicit zero",
+     "observation": "test file present in the archive",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter10/scope.rs::unit_children",
+      ".g5/Verus_verification/consolidated/iter10/scope.rs::references",
+      ".g5/Verus_verification/consolidated/iter10/scope.rs::archive_has",
+      ".g5/Verus_verification/consolidated/iter10/scope.rs::packaging_neighbors",
+      ".g5/Verus_verification/consolidated/iter10/scope.rs::matrix_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/build-and-publish.g5.md metadata (iter10 scope.rs)",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "build.package.include-refresh": {
+   "body_sha": "70c5fa6d2fd5fcc4",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "build.package.include-refresh#1"
+    ],
+    "B1": [
+     "build.package.include-refresh#2",
+     "build.package.include-refresh#3"
+    ],
+    "B2": "excluded: pointer to the open policy question build.package.include-refresh.policy (undecided alternative)",
+    "B3": [
+     "build.package.include-refresh#4"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "build.package.include-refresh#1",
+     "units": [
+      "P1"
+     ],
+     "text": "Reloading an existing module with IncludeTests omitted keeps the stored value; an explicit false clears it; a command-only zero disables inclusion for that command and leaves the stored value unchanged.",
+     "cases": "stored true + omitted vs explicit false; command override 0 vs none",
+     "observation": "stored IncludeTests and archive contents",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter10/scope.rs::refresh_include",
+      ".g5/Verus_verification/consolidated/iter10/scope.rs::refresh_and_package",
+      ".g5/Verus_verification/consolidated/iter10/scope.rs::refresh_neighbors",
+      ".g5/Verus_verification/consolidated/iter10/scope.rs::matrix_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/build-and-publish.g5.md metadata (iter10 scope.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "build.package.include-refresh#2",
+     "units": [
+      "B1"
+     ],
+     "text": "A later package command with no override includes tests again when the stored value is still true.",
+     "cases": "after a command-only zero, package with no override",
+     "observation": "archive contains the test file",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter10/scope.rs::refresh_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/build-and-publish.g5.md metadata (iter10 scope.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "build.package.include-refresh#3",
+     "units": [
+      "B1"
+     ],
+     "text": "A fresh module with IncludeTests omitted starts false.",
+     "cases": "first load with the element omitted vs explicit true",
+     "observation": "stored IncludeTests",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter10/scope.rs::matrix_prior",
+      ".g5/Verus_verification/consolidated/iter10/scope.rs::refresh_include"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "The initial stored value is an input (old=false, matrix_prior(0)=false). The fresh-module default from XML import of %IPM.Storage.Module (no prior record) is not modeled, so a default of true would still verify."
+    },
+    {
+     "id": "build.package.include-refresh#4",
+     "units": [
+      "B3"
+     ],
+     "text": "Working assumption: preserve the checked behavior (omission keeps, explicit false clears).",
+     "alias_of": "build.package.include-refresh#1",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "build.archive.empty-file": {
+   "body_sha": "c5aa484c9c9c6467",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "build.archive.empty-file#1",
+     "build.archive.empty-file#2"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "build.archive.empty-file#1",
+     "units": [
+      "P1"
+     ],
+     "text": "Extracting a named regular archive entry creates a file even when its size is zero.",
+     "cases": "size 0 vs nonzero regular named entry",
+     "observation": "file created",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter6/workflows.rs::creates_file",
+      ".g5/Verus_verification/consolidated/iter6/workflows.rs::neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter6/INDEX.md"
+     ],
+     "basis": "reused:.g5/ontology/features/build-and-publish.g5.md metadata (iter6 workflows.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "build.archive.empty-file#2",
+     "units": [
+      "P1"
+     ],
+     "text": "After a zero-size entry the next header is still read; an empty filename in the header, not a zero payload size, ends the archive.",
+     "cases": "zero-size named entry vs empty-name header",
+     "observation": "next header offset; end of archive",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter6/workflows.rs::next_header",
+      ".g5/Verus_verification/consolidated/iter6/workflows.rs::end_header",
+      ".g5/Verus_verification/consolidated/iter6/workflows.rs::neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/build-and-publish.g5.md metadata (iter6 workflows.rs)",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "build.copy.overlap": {
+   "body_sha": "8333e4313061e06b",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "build.copy.overlap#1",
+     "build.copy.overlap#2",
+     "build.copy.overlap#3"
+    ],
+    "P2": [
+     "build.copy.overlap#4",
+     "build.copy.overlap#5"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "build.copy.overlap#1",
+     "units": [
+      "P1"
+     ],
+     "text": "Directory copying refuses a target that is the source, contains it or lies inside it; a separate sibling directory is allowed.",
+     "cases": "target == source, child, parent vs sibling",
+     "observation": "copy allowed or refused",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter6/workflows.rs::below",
+      ".g5/Verus_verification/consolidated/iter6/workflows.rs::overlap",
+      ".g5/Verus_verification/consolidated/iter6/workflows.rs::copy_ok",
+      ".g5/Verus_verification/consolidated/iter6/workflows.rs::neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter6/INDEX.md"
+     ],
+     "basis": "reused:.g5/ontology/features/build-and-publish.g5.md metadata (iter6 workflows.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "build.copy.overlap#2",
+     "units": [
+      "P1"
+     ],
+     "text": "The overlap refusal happens before anything is deleted or copied.",
+     "cases": "overlapping target with delete-first requested vs sibling",
+     "observation": "source and target files after the refused call",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter6/workflows.rs::copy_ok"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "copy_ok is a Boolean with no filesystem state, so it cannot distinguish refusal-before-delete from delete-then-refuse. Contrast: Utils/File.cls::CopyDir(src, src/child, pDeleteFirst=1) leaves every nested source file intact (native S6-03 only)."
+    },
+    {
+     "id": "build.copy.overlap#3",
+     "units": [
+      "P1"
+     ],
+     "text": "A sibling target receives the nested files when the filesystem copy succeeds.",
+     "cases": "sibling target, provider success vs failure",
+     "observation": "nested files present in the target",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter6/workflows.rs::copy_ok"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "copy_ok(provider_ok) returns a Boolean; nested file contents are not represented, so no rule shows src/a/b.txt arriving at sibling/a/b.txt."
+    },
+    {
+     "id": "build.copy.overlap#4",
+     "units": [
+      "P2"
+     ],
+     "text": "The Python check detects aliases (for example symlinks) through device and inode ancestry.",
+     "cases": "aliased target whose real path is inside the source vs unaliased sibling",
+     "observation": "copy refused",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter6/workflows.rs::overlap",
+      ".g5/Verus_verification/consolidated/iter6/workflows.rs::neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/build-and-publish.g5.md metadata (iter6, inode ancestry as premise)",
+     "assessed_in": "iteration-70",
+     "gap": "same_inode_ancestor is an input; Utils/File.cls::DirectoriesOverlapPython's ancestry walk is not modeled, so the alias detection itself is a premise."
+    },
+    {
+     "id": "build.copy.overlap#5",
+     "units": [
+      "P2"
+     ],
+     "text": "Without Python or file IDs, the fallback compares normalized directory paths, so an alias is not detected there.",
+     "cases": "Python available vs unavailable on the same aliased target",
+     "observation": "copy refused vs allowed",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter6/workflows.rs::below",
+      ".g5/Verus_verification/consolidated/iter6/workflows.rs::overlap"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "No model of the branch selection between DirectoriesOverlapPython and the path fallback; the alias flag is supplied by the caller. Contrast: the same symlinked target is refused with Python and allowed by the fallback."
+    }
+   ]
+  },
+  "build.verify": {
+   "body_sha": "b0941419e0f68aa2",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "build.verify#1",
+     "build.verify#2"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "build.verify#1",
+     "units": [
+      "P1"
+     ],
+     "text": "`verify <module>` packages the module, installs the package into the VERIFY namespace with journaling off and runs its integration tests there.",
+     "cases": "fresh VERIFY setup vs reuse/skip-load; passing vs failing integration test",
+     "observation": "namespace created, NoJournal parameter, package installed, tests run",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter2/readers.rs::verify_plan",
+      ".g5/Verus_verification/consolidated/iter2/readers.rs::verify_reuse_is_not_fresh_setup"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter2/proofs/models.json"
+     ],
+     "basis": "reused:project map Lifecycle/Base.cls::%Verify",
+     "assessed_in": "iteration-70",
+     "gap": "verify_plan gives only the setup plan (create, load, NoJournal on a fresh create). Packaging, installing the package (not the source) into <ns>-VERIFY, running the Verify-phase tests there and the command outcome are not modeled; no contrast between a failing and a passing integration test."
+    },
+    {
+     "id": "build.verify#2",
+     "units": [
+      "P1"
+     ],
+     "text": "With -only, the VERIFY namespace loads the module from its folder on disk instead of the package.",
+     "cases": "verify vs verify -only",
+     "observation": "source of the module loaded into VERIFY",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "No model of the -only branch of Lifecycle/Base.cls %Verify. Contrast: with -only the VERIFY module root is the source folder; without, it is the extracted package."
+    }
+   ]
+  },
+  "build.publish": {
+   "body_sha": "e16af42e417b9e81",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "build.publish#1"
+    ],
+    "B1": [
+     "build.publish#2",
+     "build.publish#3"
+    ],
+    "B2": [
+     "build.publish#4"
+    ],
+    "B3": [
+     "build.publish#5"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "build.publish#1",
+     "units": [
+      "P1"
+     ],
+     "text": "`publish <module>` packages the module and sends it to a repository that allows publishing.",
+     "cases": "publish-enabled vs non-publishing repository; package success vs failure",
+     "observation": "remote write and status",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter2/registry.rs::publish_lifecycle",
+      ".g5/Verus_verification/consolidated/iter2/registry.rs::capability"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "publish_lifecycle takes package_ok and server_found as inputs, and capability() is not connected to repository choice. Selection of a publish-enabled repository (Repo/Manager over configured servers) is not modeled; contrast: two repositories, only one with publishing enabled, publish writes only there."
+    },
+    {
+     "id": "build.publish#2",
+     "units": [
+      "B1"
+     ],
+     "text": "-repo picks the repository to publish to.",
+     "cases": "-repo r1 vs -repo r2 vs default",
+     "observation": "repository receiving the package",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "No model of Main.cls publish argument handling for -repo. Contrast: same module published with -repo a and -repo b lands in a and b respectively."
+    },
+    {
+     "id": "build.publish#3",
+     "units": [
+      "B1"
+     ],
+     "text": "-use-external-name publishes under the external name.",
+     "alias_of": "build.publish.external-identity#1",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "build.publish#4",
+     "units": [
+      "B2"
+     ],
+     "text": "`unpublish [<repo>/]<module> <version|all>` deletes a published package, asks first unless -force, and requires the registry to still allow deletion.",
+     "cases": "confirm yes/no vs -force; registry allows vs refuses; version vs all",
+     "observation": "remote package present after the command",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter2/registry.rs::remote_delete_enabled",
+      ".g5/Verus_verification/consolidated/iter2/registry.rs::remote_delete",
+      ".g5/Verus_verification/consolidated/iter2/registry.rs::oras_delete_enabled",
+      ".g5/Verus_verification/consolidated/iter2/registry.rs::delete_all"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "The registry permission and the all/version choice are modeled as Booleans, but the confirmation prompt and -force (Main.cls::Unpublish) are not. Contrast: without -force and answer no the package remains; with -force it is deleted."
+    },
+    {
+     "id": "build.publish#5",
+     "units": [
+      "B3"
+     ],
+     "text": "`unpublish` fails when the module or version does not exist or the registry refuses.",
+     "cases": "missing module/version vs registry refusal vs success",
+     "observation": "command status",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter2/registry.rs::remote_delete",
+      ".g5/Verus_verification/consolidated/iter2/registry.rs::remote_exact_status_contract"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "Only the HTTP status contract (exactly 200) is modeled. The existence check for the module/version before deletion is not, so a nonexistent version reporting success could not be distinguished."
+    }
+   ]
+  },
+  "build.publish.external-identity": {
+   "body_sha": "cb20a345250e66fc",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "build.publish.external-identity#1",
+     "build.publish.external-identity#2"
+    ],
+    "P2": [
+     "build.publish.external-identity#3",
+     "build.publish.external-identity#4",
+     "build.publish.external-identity#5"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "build.publish.external-identity#1",
+     "units": [
+      "P1"
+     ],
+     "text": "Publishing with -use-external-name makes the registry key the module's external name.",
+     "cases": "use_external true vs false",
+     "observation": "registry key",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter8/webapps.rs::published_key",
+      ".g5/Verus_verification/consolidated/iter8/webapps.rs::package_roundtrip_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter8/INDEX.md"
+     ],
+     "basis": "reused:.g5/ontology/features/build-and-publish.g5.md metadata (iter8 webapps.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "build.publish.external-identity#2",
+     "units": [
+      "P1"
+     ],
+     "text": "It does not rename the module inside the archived manifest.",
+     "cases": "use_external true",
+     "observation": "module name in the archived manifest",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter8/webapps.rs::archive_manifest_name",
+      ".g5/Verus_verification/consolidated/iter8/webapps.rs::package_roundtrip_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/build-and-publish.g5.md metadata (iter8 webapps.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "build.publish.external-identity#3",
+     "units": [
+      "P2"
+     ],
+     "text": "Installing by the external registry key installs the original internal module name.",
+     "cases": "install <external key>",
+     "observation": "NameExists(internal) vs NameExists(external) after install",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter8/webapps.rs::archive_manifest_name"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "Only the archived name is modeled; the install reader (Utils/Module.cls::LoadModuleReference then Storage/Module.cls::NameExists) is not. Contrast: after install <external>, NameExists(internal) is true and NameExists(external) false."
+    },
+    {
+     "id": "build.publish.external-identity#4",
+     "units": [
+      "P2"
+     ],
+     "text": "The default publish mode uses the internal name for the key.",
+     "cases": "use_external false",
+     "observation": "registry key",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter8/webapps.rs::published_key",
+      ".g5/Verus_verification/consolidated/iter8/webapps.rs::package_roundtrip_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/build-and-publish.g5.md metadata (iter8 webapps.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "build.publish.external-identity#5",
+     "units": [
+      "P2"
+     ],
+     "text": "Empty or invalid chosen publish names are refused before publication.",
+     "cases": "empty/invalid external name vs valid",
+     "observation": "remote write and status",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter2/registry.rs::publish_lifecycle"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "publish_lifecycle has a name_valid input, but the validation decision in Lifecycle/Base.cls %Publish is not modeled and no theorem exercises name_valid=false. Contrast: external name \"\" is refused with no remote write."
+    }
+   ]
+  },
+  "build.publish.partial-effects": {
+   "body_sha": "8567e7a092c32cf5",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "build.publish.partial-effects#1"
+    ],
+    "B1": [
+     "build.publish.partial-effects#2",
+     "build.publish.partial-effects#3"
+    ],
+    "B2": [
+     "build.publish.partial-effects#4",
+     "build.publish.partial-effects#5",
+     "build.publish.partial-effects#6"
+    ],
+    "B3": "excluded: evidence-scope statement (provider results are explicit inputs; multi-tag failure, cleanup errors and post-publication export were not exercised end to end)"
+   },
+   "obligations": [
+    {
+     "id": "build.publish.partial-effects#1",
+     "units": [
+      "P1"
+     ],
+     "text": "A failed publish or unpublish does not establish that the registry is unchanged: as built, ORAS writes or deletes tags one at a time, so a later failure can follow completed earlier calls.",
+     "cases": "first tag call succeeds, second fails, for push and delete",
+     "observation": "registry tag map after the failure",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter2/registry.rs::write_prefix",
+      ".g5/Verus_verification/consolidated/iter2/registry.rs::delete_prefix",
+      ".g5/Verus_verification/consolidated/iter2/registry.rs::partial_remote_effects",
+      ".g5/Verus_verification/consolidated/iter2/registry.rs::failed_provider_may_have_written"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/build-and-publish.g5.md metadata (iter2 registry.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "build.publish.partial-effects#2",
+     "units": [
+      "B1"
+     ],
+     "text": "ORAS cleanup can fail after the push succeeded, so the command fails with the package published.",
+     "cases": "cleanup ok vs fails after a written push",
+     "observation": "remote written; status",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter2/registry.rs::oras_publish",
+      ".g5/Verus_verification/consolidated/iter2/registry.rs::post_publish_failure_is_not_compensation"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/build-and-publish.g5.md metadata (iter2 registry.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "build.publish.partial-effects#3",
+     "units": [
+      "B1"
+     ],
+     "text": "The lifecycle can publish before its optional local version export fails; the in-memory version assignment does not show the stored row or manifest was updated.",
+     "cases": "local export ok vs fails after a new version was published",
+     "observation": "remote written; in-memory version; status",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter2/registry.rs::publish_lifecycle",
+      ".g5/Verus_verification/consolidated/iter2/registry.rs::post_publish_failure_is_not_compensation"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/build-and-publish.g5.md metadata (iter2 registry.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "build.publish.partial-effects#4",
+     "units": [
+      "B2"
+     ],
+     "text": "Remote publishing and deletion require credentials and exactly HTTP 200 for success.",
+     "cases": "status 200 vs 201/204; with vs without password",
+     "observation": "success",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter2/registry.rs::remote_publish",
+      ".g5/Verus_verification/consolidated/iter2/registry.rs::remote_delete",
+      ".g5/Verus_verification/consolidated/iter2/registry.rs::remote_delete_enabled",
+      ".g5/Verus_verification/consolidated/iter2/registry.rs::remote_exact_status_contract"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/build-and-publish.g5.md metadata (iter2 registry.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "build.publish.partial-effects#5",
+     "units": [
+      "B2"
+     ],
+     "text": "As built, ORAS permission probing reports deletion enabled before attempting the operation.",
+     "cases": "any ORAS repository",
+     "observation": "reported delete capability",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter2/registry.rs::oras_delete_enabled",
+      ".g5/Verus_verification/consolidated/iter2/registry.rs::remote_exact_status_contract"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/build-and-publish.g5.md metadata (iter2 registry.rs; as-built constant)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "build.publish.partial-effects#6",
+     "units": [
+      "B2"
+     ],
+     "text": "An HTTP error or other returned error may follow external effects.",
+     "cases": "provider wrote then returned an error",
+     "observation": "remote written; status",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter2/registry.rs::failed_provider_may_have_written"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/build-and-publish.g5.md metadata (iter2 registry.rs)",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  }
+ }
+}

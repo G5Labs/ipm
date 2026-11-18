@@ -1,0 +1,153 @@
+{
+ "page": ".g5/ontology/operations/repositories.g5.md",
+ "blocks": {
+  "repo.manage": {
+   "body_sha": "f5c713e23cff7a23",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "repo.manage#1"
+    ],
+    "B1": [
+     "repo.manage#2"
+    ],
+    "B2": [
+     "repo.manage#3"
+    ],
+    "B3": [
+     "repo.manage#4"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "repo.manage#1",
+     "units": [
+      "P1"
+     ],
+     "text": "`repo` lists, adds, changes, enables, disables and deletes repositories, and lists the modules they hold.",
+     "cases": "each subcommand vs the repository definitions before",
+     "observation": "repository definitions; which repositories later commands use",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      "playbook-uplift/models/verus/settings.rs::repo_install_enabled_only",
+      "playbook-uplift/models/verus/settings.rs::install_pick"
+     ],
+     "evidence": [
+      "playbook-uplift/models/verus/results/settings.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "Only the effect of the Enabled flag on install selection is proved (repo_install_enabled_only); Main.cls::Repository add/modify/delete/list/-list-modules have no model (iter22 reinstall.rs uses delete/disable only as fixture steps). Contrast: `repo -n r -delete` then `repo -list` no longer shows r and install no longer resolves from it; `repo -n r -disable` keeps the definition listed."
+    },
+    {
+     "id": "repo.manage#2",
+     "units": [
+      "B1"
+     ],
+     "text": "Credentials can come from -password-stdin, -password-env or -token-env.",
+     "cases": "each credential source vs inline password",
+     "observation": "stored credentials of the repository",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "No model of credential sourcing (Repo/*/Definition.cls command handling); iter2 registry.rs treats credentials as booleans. Contrast: `-token-env T` stores the value of $T, and an unset variable is refused."
+    },
+    {
+     "id": "repo.manage#3",
+     "units": [
+      "B2"
+     ],
+     "text": "Intended: -publish 1 marks the repository that publishing goes to (only flagged repositories receive publishes without -repo).",
+     "cases": "flag holder vs no holder vs older unflagged remote",
+     "observation": "registry publish uses without -repo",
+     "grade": "full",
+     "check": "refuted",
+     "models": [
+      "playbook-uplift/models/verus/settings.rs::repo_refines_publish_default",
+      "playbook-uplift/models/verus/settings.rs::repo_witness_publish_fallback",
+      "playbook-uplift/models/verus/settings.rs::repo_witness_publish_flag_ignored",
+      "playbook-uplift/models/verus/settings.rs::publish_target"
+     ],
+     "evidence": [
+      "playbook-uplift/models/verus/results/settings.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70 (proved under PH, PU, PK; F-REPO-3 witness: with no flag holder a token-only remote is used; row-order witness: an older unflagged remote wins over the holder)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.manage#4",
+     "units": [
+      "B3"
+     ],
+     "text": "-copy-from copies repository settings from another namespace.",
+     "cases": "copy from a namespace with definitions vs none",
+     "observation": "repository definitions in the current namespace",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "No model of -copy-from in Main.cls::Repository. Contrast: `repo -copy-from USER` in NS2 yields NS2 definitions equal to USER's, and later edits in USER do not change NS2 (copy, not mapping)."
+    }
+   ]
+  },
+  "repo.default-registry": {
+   "body_sha": "fe7a8df94d8c0003",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "repo.default-registry#1",
+     "repo.default-registry#2"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "repo.default-registry#1",
+     "units": [
+      "P1"
+     ],
+     "text": "IPM 0.9 and later does not enable the community registry by default on a new installation.",
+     "cases": "fresh install vs after enable -community",
+     "observation": "repository definitions after install",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "Installer repository seeding (preload/cls/IPM/Installer.cls:114) is not modeled; ns_mapping.rs::installer sets no rows. Contrast: `repo -list` after a fresh install shows no pm.community.intersystems.com entry."
+    },
+    {
+     "id": "repo.default-registry#2",
+     "units": [
+      "P1"
+     ],
+     "text": "`repo -r -n registry -url https://pm.community.intersystems.com/` or `enable -community` adds the community registry.",
+     "cases": "each command vs none",
+     "observation": "repository definitions",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      "playbook-uplift/models/verus/ns_mapping.rs::reset_repos",
+      "playbook-uplift/models/verus/ns_mapping.rs::nsp_lemma_community",
+      "playbook-uplift/models/verus/ns_mapping.rs::l1_reset"
+     ],
+     "evidence": [
+      "playbook-uplift/models/verus/results/ns_mapping.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "Only enable -community is modeled, and only as \"the source database has registry rows\" (reset_repos), not the community URL. `repo -r -n registry -url ...` is not modeled. Contrast: after either command `repo -list` shows a remote named registry with that URL."
+    }
+   ]
+  }
+ }
+}

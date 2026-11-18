@@ -1,0 +1,675 @@
+{
+ "page": ".g5/ontology/features/install.g5.md",
+ "blocks": {
+  "install": {
+   "body_sha": "8105b8cdd9583563",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "install#1"
+    ],
+    "B1": [
+     "install#2"
+    ],
+    "B2": [
+     "install#3",
+     "install#4"
+    ],
+    "B3": [
+     "install#5"
+    ],
+    "B4": "excluded: restates load.options (features/load.g5.md), the owner of -dev, -force and the other load options"
+   },
+   "obligations": [
+    {
+     "id": "install#1",
+     "units": [
+      "P1"
+     ],
+     "text": "`install <module> [<version>]` finds the module in the enabled repositories and installs it, with its dependencies, into the current namespace.",
+     "cases": "module offered by an enabled vs a disabled repository; module with a dependency",
+     "observation": "installed module and dependency",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter22/reinstall.rs::search",
+      ".g5/Verus_verification/consolidated/iter22/reinstall.rs::catalog_neighbor",
+      ".g5/Verus_verification/consolidated/iter31/installed.rs::install_parent",
+      ".g5/Verus_verification/consolidated/iter31/installed.rs::resolution_neighbor"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter31/run.json"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "Enabled-repository search is modeled only for the reinstall caller (iter22 catalog_neighbor) and dependency-then-parent loading only for the iter31 fixture; no model of Main.cls::Install composes search across enabled repositories, resolution and installation of both. Contrast: install P where only a disabled repository offers B fails."
+    },
+    {
+     "id": "install#2",
+     "units": [
+      "B1"
+     ],
+     "text": "`<repo>/<module>` picks one repository.",
+     "cases": "qualified request alpha vs beta for the same version; missing qualifier repository",
+     "observation": "installed supplier, root and payload",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter18/reloading.rs::reload",
+      ".g5/Verus_verification/consolidated/iter18/reloading.rs::selected_source_controls_effect",
+      ".g5/Verus_verification/consolidated/iter18/reloading.rs::module_neighbor",
+      ".g5/Verus_verification/consolidated/iter18/reloading.rs::missing_qualifier_preserves_selected_projection"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:project map Main.cls::Install (iter18 reloading.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "install#3",
+     "units": [
+      "B2"
+     ],
+     "text": "The version can be exact or a range.",
+     "cases": "Exact 2.0.0 vs 1.x range vs any",
+     "observation": "installed version",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter34/versions.rs::installed",
+      ".g5/Verus_verification/consolidated/iter34/versions.rs::fixture_neighbors",
+      ".g5/Verus_verification/consolidated/iter15/oras.rs::selected_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter34/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:project map Main.cls::Install (iter34 versions.rs, iter15 oras.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "install#4",
+     "units": [
+      "B2"
+     ],
+     "text": "Intended: without a version, IPM installs the latest available version.",
+     "cases": "filesystem repository offering 2.0.0 and 2.0.0-beta1; 1.0.0-rc2 and 1.0.0-rc10",
+     "observation": "installed version vs semantic maximum",
+     "grade": "full",
+     "check": "refuted",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter34/versions.rs::installed",
+      ".g5/Verus_verification/consolidated/iter34/versions.rs::semver_max",
+      ".g5/Verus_verification/consolidated/iter34/versions.rs::fixture_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter34/run.json"
+     ],
+     "basis": "new:iteration-70 (iter34 C:D39)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "install#5",
+     "units": [
+      "B3"
+     ],
+     "text": "-latest installs the latest without asking; -prompt asks which version when several are found; -keywords searches by keywords.",
+     "cases": "-prompt with several matches and an empty answer vs -latest; keyword search",
+     "observation": "version installed; prompt shown",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "No model of Main.cls::Install prompt/latest/keyword branches. Contrast: -prompt with two matches and an empty answer installs nothing (and reports success, per metadata), -latest installs the newest without prompting."
+    }
+   ],
+   "parent": {
+    "children": [
+     "install.refusal",
+     "install.package"
+    ],
+    "entailment": "The parent lead and bullets are graded directly; no parent obligation is credited by composition."
+   }
+  },
+  "install.refusal": {
+   "body_sha": "c6666b275b962e99",
+   "status": "enumerated",
+   "units": {
+    "P1": "excluded: list heading for the refusal bullets",
+    "B1": [
+     "install.refusal#1"
+    ],
+    "B2": [
+     "install.refusal#2"
+    ],
+    "B3": "excluded: restates namespace.mapped-refusal (operations/namespaces.g5.md)",
+    "B4": "excluded: restates load.refusal (features/load.g5.md) and dev-mode.overwrite-guard (concepts/transactions-and-dev-mode.g5.md)"
+   },
+   "obligations": [
+    {
+     "id": "install.refusal#1",
+     "units": [
+      "B1"
+     ],
+     "text": "IPM refuses an install when no repository is enabled in the namespace.",
+     "cases": "no enabled repository vs one enabled",
+     "observation": "status and unchanged module",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter22/reinstall.rs::search",
+      ".g5/Verus_verification/consolidated/iter22/reinstall.rs::deletion_neighbor",
+      ".g5/Verus_verification/consolidated/iter22/reinstall.rs::failed_default"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "iter22 shows a reinstall failing with the module unchanged once every repository definition is deleted, but that is the search returning nothing; the explicit no-enabled-repository refusal in Main.cls::Install (:2573-2575, message) and a disabled-but-defined repository are not modeled."
+    },
+    {
+     "id": "install.refusal#2",
+     "units": [
+      "B2"
+     ],
+     "text": "IPM refuses an install when the module or the requested version is not found in any repository.",
+     "cases": "missing module; offered module but missing version; missing qualifier repository",
+     "observation": "status and unchanged namespace",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter18/reloading.rs::missing_qualifier_preserves_selected_projection",
+      ".g5/Verus_verification/consolidated/iter22/reinstall.rs::search",
+      ".g5/Verus_verification/consolidated/iter31/installed.rs::top_choice"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter31/run.json"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "Only a missing qualifier repository (iter18) and an empty search after deletion (iter22) are modeled; iter31 Outcome.msg_none is never exercised. Contrast: install B 9.9.9 with B offered only at 1.0.0 refuses with the not-found message and leaves the namespace unchanged."
+    }
+   ]
+  },
+  "install.package": {
+   "body_sha": "a5045b2b62aa6dbd",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "install.package#1",
+     "install.package#2"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "install.package#1",
+     "units": [
+      "P1"
+     ],
+     "text": "IPM downloads the package, unpacks it into <ModuleRoot>/<name>/<version>/ and loads the module from there.",
+     "cases": "registry install vs filesystem repository install",
+     "observation": "module root of the installed module",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "No model of Utils/Module.cls::LoadModuleFromArchive extraction path or of the ModuleRoot layout (iter19 duplicates.rs and iter22 cover filesystem repositories, which install from the repository folder). Contrast: a remote/ORAS install has Root <ModuleRoot>/<name>/<version>/ with the extracted manifest; the existing folder replaced before any version check."
+    },
+    {
+     "id": "install.package#2",
+     "units": [
+      "P1"
+     ],
+     "text": "For modules with deployed code, IPM picks the package built for this IRIS version and platform.",
+     "cases": "deployed tags for current vs other platform; range admitting only an incompatible version",
+     "observation": "selected tag and payload",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter15/oras.rs::compatible",
+      ".g5/Verus_verification/consolidated/iter15/oras.rs::manager",
+      ".g5/Verus_verification/consolidated/iter15/oras.rs::ranged",
+      ".g5/Verus_verification/consolidated/iter15/oras.rs::pinned",
+      ".g5/Verus_verification/consolidated/iter15/oras.rs::selected_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter15/HANDOFF.md"
+     ],
+     "basis": "reused:project map Main.cls::Install (iter15 oras.rs; ORAS repositories only)",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "reinstall": {
+   "body_sha": "b3f1f830e9331691",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "reinstall#1",
+     "reinstall#2",
+     "reinstall#3"
+    ],
+    "B1": [
+     "reinstall#4"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "reinstall#1",
+     "units": [
+      "P1"
+     ],
+     "text": "`reinstall <module>` installs an installed module again from a repository.",
+     "alias_of": "reinstall.selection#1",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "reinstall#2",
+     "units": [
+      "P1"
+     ],
+     "text": "Intended: by default reinstall also refreshes dependencies with +snapshot versions.",
+     "cases": "snapshot dependency payload changed 1 -> 2; default reinstall",
+     "observation": "installed dependency payload and status",
+     "grade": "full",
+     "check": "refuted",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter24/snapshot_dependencies.rs::decision_neighbor",
+      ".g5/Verus_verification/consolidated/iter24/snapshot_dependencies.rs::load_neighbor",
+      ".g5/Verus_verification/consolidated/iter24/snapshot_dependencies.rs::intersection_neighbor",
+      ".g5/Verus_verification/consolidated/iter22/reinstall.rs::flags_neighbor"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/install.g5.md metadata (iter24 refutation of the refresh prediction)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "reinstall#3",
+     "units": [
+      "P1"
+     ],
+     "text": "-shallow turns the snapshot refresh off.",
+     "cases": "reinstall with vs without -shallow",
+     "observation": "refresh flag; dependency payload",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter22/reinstall.rs::update_snapshots",
+      ".g5/Verus_verification/consolidated/iter22/reinstall.rs::flags_neighbor",
+      ".g5/Verus_verification/consolidated/iter24/snapshot_dependencies.rs::request_neighbor",
+      ".g5/Verus_verification/consolidated/iter24/snapshot_dependencies.rs::decision_neighbor"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/install.g5.md metadata (iter22/iter24)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "reinstall#4",
+     "units": [
+      "B1"
+     ],
+     "text": "Working assumption: reinstall uses the version already installed.",
+     "alias_of": "reinstall.selection#5",
+     "assessed_in": "iteration-70"
+    }
+   ],
+   "parent": {
+    "children": [
+     "reinstall.selection",
+     "reinstall.history",
+     "reinstall.snapshot-dependencies"
+    ],
+    "entailment": "P1's first clause and B1 restate reinstall.selection and are counted there; the snapshot refresh promise (#2) is graded here and refuted by the child reinstall.snapshot-dependencies model. No composition credit."
+   }
+  },
+  "reinstall.selection": {
+   "body_sha": "1f0b713240976a12",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "reinstall.selection#1"
+    ],
+    "B1": [
+     "reinstall.selection#2"
+    ],
+    "B2": [
+     "reinstall.selection#3"
+    ],
+    "B3": [
+     "reinstall.selection#4"
+    ],
+    "B4": "excluded: scope of the qualification (stable filesystem sources, no dependencies, successful ordinary loads; open question reinstall.version)",
+    "B5": [
+     "reinstall.selection#5"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "reinstall.selection#1",
+     "units": [
+      "P1"
+     ],
+     "text": "reinstall reads the installed version and searches the enabled repositories again for that version; it does not preserve the stored supplier or fall back to the stored module root.",
+     "cases": "installed from beta; alpha older eligible; repositories deleted; stored root present",
+     "observation": "selected supplier and failure",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter22/reinstall.rs::installed_request",
+      ".g5/Verus_verification/consolidated/iter22/reinstall.rs::search",
+      ".g5/Verus_verification/consolidated/iter22/reinstall.rs::caller_neighbor",
+      ".g5/Verus_verification/consolidated/iter22/reinstall.rs::catalog_neighbor",
+      ".g5/Verus_verification/consolidated/iter22/reinstall.rs::deletion_neighbor",
+      ".g5/Verus_verification/consolidated/iter22/reinstall.rs::stored_root_neighbor"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter22/HANDOFF.md"
+     ],
+     "basis": "reused:.g5/ontology/features/install.g5.md metadata (iter22 reinstall.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "reinstall.selection#2",
+     "units": [
+      "B1"
+     ],
+     "text": "A module installed from beta at 1.0.0 reloads alpha's files when alpha is the older eligible repository, still requesting 1.0.0 although alpha offers 2.0.0; disabling alpha reloads beta instead.",
+     "cases": "alpha enabled vs disabled",
+     "observation": "payload, supplier, directory, version",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter22/reinstall.rs::reinstall_neighbor",
+      ".g5/Verus_verification/consolidated/iter22/reinstall.rs::catalog_neighbor",
+      ".g5/Verus_verification/consolidated/iter22/reinstall.rs::caller_neighbor"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/install.g5.md metadata (iter22 reinstall.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "reinstall.selection#3",
+     "units": [
+      "B2"
+     ],
+     "text": "With both repository definitions removed, ordinary and -dev reinstalls fail although installed code and its folder remain; supplier, root and payload stay beta's.",
+     "cases": "repositories deleted; default vs -dev",
+     "observation": "status, supplier, payload, directory",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter22/reinstall.rs::deletion_neighbor",
+      ".g5/Verus_verification/consolidated/iter22/reinstall.rs::failed_default",
+      ".g5/Verus_verification/consolidated/iter22/reinstall.rs::failed_dev"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/install.g5.md metadata (iter22 reinstall.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "reinstall.selection#4",
+     "units": [
+      "B3"
+     ],
+     "text": "Current show and repository-filtered lists follow the newly selected supplier; earlier successful history keeps its past supplier even after that definition is deleted.",
+     "cases": "reinstall switching beta -> alpha; then repositories deleted",
+     "observation": "show repository, list filter, history supplier",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter22/reinstall.rs::reinstall_neighbor",
+      ".g5/Verus_verification/consolidated/iter22/reinstall.rs::history_neighbor",
+      ".g5/Verus_verification/consolidated/iter22/reinstall.rs::shown_supplier",
+      ".g5/Verus_verification/consolidated/iter22/reinstall.rs::listed_for"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/install.g5.md metadata (iter22 reinstall.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "reinstall.selection#5",
+     "units": [
+      "B5"
+     ],
+     "text": "Working assumption: reinstall installs the version already installed.",
+     "cases": "installed 1.0.0 with 2.0.0 offered vs installed 2.0.0",
+     "observation": "requested version",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter22/reinstall.rs::installed_request",
+      ".g5/Verus_verification/consolidated/iter22/reinstall.rs::caller_neighbor"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/install.g5.md metadata (iter22 reinstall.rs)",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "reinstall.snapshot-dependencies": {
+   "body_sha": "7f938ea002b16f39",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "reinstall.snapshot-dependencies#1"
+    ],
+    "B1": [
+     "reinstall.snapshot-dependencies#2"
+    ],
+    "B2": [
+     "reinstall.snapshot-dependencies#3"
+    ],
+    "B3": "excluded: scope of the qualification (one exact dependency, successful directory loads; no repair certified)"
+   },
+   "obligations": [
+    {
+     "id": "reinstall.snapshot-dependencies#1",
+     "units": [
+      "P1"
+     ],
+     "text": "As built (C:D33), default reinstall can refuse to refresh an installed snapshot dependency because its exact requirement conflicts with the added installed-version lower bound.",
+     "cases": "exact snapshot requirement AND >=snapshot vs release",
+     "observation": "intersection result and refusal",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter24/snapshot_dependencies.rs::intersection_neighbor",
+      ".g5/Verus_verification/consolidated/iter24/snapshot_dependencies.rs::decision_neighbor",
+      ".g5/Verus_verification/consolidated/iter24/snapshot_dependencies.rs::reuse_neighbor"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter24/HANDOFF.md"
+     ],
+     "basis": "reused:.g5/ontology/features/install.g5.md metadata (iter24)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "reinstall.snapshot-dependencies#2",
+     "units": [
+      "B1"
+     ],
+     "text": "Changing dependency 1.0.0+snapshot from payload 1 to 2 leaves the installed payload at 1: -shallow succeeds and keeps 1; default reinstall reports the range conflict and keeps 1.",
+     "cases": "shallow vs default reinstall",
+     "observation": "status and dependency payload",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter24/snapshot_dependencies.rs::decision_neighbor",
+      ".g5/Verus_verification/consolidated/iter24/snapshot_dependencies.rs::load_neighbor",
+      ".g5/Verus_verification/consolidated/iter24/snapshot_dependencies.rs::reuse_neighbor"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/install.g5.md metadata (iter24)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "reinstall.snapshot-dependencies#3",
+     "units": [
+      "B2"
+     ],
+     "text": "-DPermitDowngrade=1 skips the added lower bound, selects the dependency from alpha and reloads it (direct and parent calls return 2); a release dependency 1.0.0 keeps payload 1 under default reinstall.",
+     "cases": "PermitDowngrade vs default; snapshot vs release",
+     "observation": "selected repository and payloads",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter24/snapshot_dependencies.rs::decision_neighbor",
+      ".g5/Verus_verification/consolidated/iter24/snapshot_dependencies.rs::load_neighbor",
+      ".g5/Verus_verification/consolidated/iter24/snapshot_dependencies.rs::flat_neighbor"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/install.g5.md metadata (iter24)",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "reinstall.history": {
+   "body_sha": "cd8371b7afecc102",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "reinstall.history#1",
+     "reinstall.history#2",
+     "reinstall.history#3"
+    ],
+    "P2": [
+     "reinstall.history#4",
+     "reinstall.history#5"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "reinstall.history#1",
+     "units": [
+      "P1"
+     ],
+     "text": "A reinstall of an existing module delegates to install and creates one install-history record.",
+     "cases": "successful reinstall",
+     "observation": "history row count delta and action",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter22/reinstall.rs::history_neighbor",
+      ".g5/Verus_verification/consolidated/iter22/reinstall.rs::record_delta",
+      ".g5/Verus_verification/consolidated/iter22/reinstall.rs::caller_neighbor"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/install.g5.md metadata (iter22 reinstall.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "reinstall.history#2",
+     "units": [
+      "P1"
+     ],
+     "text": "A no-repository failure still creates a failed record.",
+     "cases": "reinstall after deleting repositories",
+     "observation": "history row count delta",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter22/reinstall.rs::history_neighbor",
+      ".g5/Verus_verification/consolidated/iter22/reinstall.rs::failed_default",
+      ".g5/Verus_verification/consolidated/iter22/reinstall.rs::failed_dev"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/install.g5.md metadata (iter22 reinstall.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "reinstall.history#3",
+     "units": [
+      "P1"
+     ],
+     "text": "A missing installed-module name is rejected before delegation and creates no record.",
+     "cases": "reinstall of a module not installed",
+     "observation": "delegated flag and row count delta",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter22/reinstall.rs::history_neighbor",
+      ".g5/Verus_verification/consolidated/iter22/reinstall.rs::missing"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/install.g5.md metadata (iter22 reinstall.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "reinstall.history#4",
+     "units": [
+      "P2"
+     ],
+     "text": "Successful records keep the original reinstall command and the selected source.",
+     "cases": "install then reinstall from another repository",
+     "observation": "history command and supplier per row",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter22/reinstall.rs::history_neighbor",
+      ".g5/Verus_verification/consolidated/iter22/reinstall.rs::history_command",
+      ".g5/Verus_verification/consolidated/iter22/reinstall.rs::history_supplier"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/install.g5.md metadata (iter22 reinstall.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "reinstall.history#5",
+     "units": [
+      "P2"
+     ],
+     "text": "The checked failed reinstall rows appear with their error in `history find`.",
+     "cases": "failed default and -dev reinstalls",
+     "observation": "history find output",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter22/reinstall.rs::history_neighbor",
+      ".g5/Verus_verification/consolidated/iter22/reinstall.rs::failed_default"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "The model records only HistoryEffect::FailedInstallFieldsUnknown for failed rows; the error text and the history find reader (General/History list) are not modeled. Contrast: history find shows the failed row with its error versus a successful row without one."
+    }
+   ]
+  }
+ }
+}

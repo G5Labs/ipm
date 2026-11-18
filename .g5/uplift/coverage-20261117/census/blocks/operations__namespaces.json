@@ -1,0 +1,877 @@
+{
+ "page": ".g5/ontology/operations/namespaces.g5.md",
+ "blocks": {
+  "namespace.enable": {
+   "body_sha": "582dd99c543fe52a",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "namespace.enable#1"
+    ],
+    "B1": [
+     "namespace.enable#2"
+    ],
+    "B2": [
+     "namespace.enable#3",
+     "namespace.enable#4",
+     "namespace.enable#5"
+    ],
+    "B3": [
+     "namespace.enable#6"
+    ],
+    "B4": [
+     "namespace.enable#7",
+     "namespace.enable#8"
+    ],
+    "B5": "excluded: navigation to namespace.enable.mapping-results (owner of the first-pass and local-repository limits)",
+    "B6": "excluded: navigation to namespace.enable.partial-batch (owner of pending entries after a missing target)",
+    "B7": [
+     "namespace.enable#9"
+    ],
+    "B8": [
+     "namespace.enable#10"
+    ],
+    "B9": [
+     "namespace.enable#11"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "namespace.enable#1",
+     "units": [
+      "P1"
+     ],
+     "text": "`enable` adds IPM to other namespaces.",
+     "cases": "install-a-copy path vs -map path; target with vs without IPM",
+     "observation": "whether each target runs IPM afterwards",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      "playbook-uplift/models/verus/ns_mapping.rs::enable_map",
+      "playbook-uplift/models/verus/ns_mapping.rs::nsp_lemma_enable"
+     ],
+     "evidence": [
+      "playbook-uplift/models/verus/results/ns_mapping.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "Only the -map path is modeled (enable_map, nsp_lemma_enable). The default path that installs a copy in each target (Main.cls::EnableIPM install branch) has no model. Contrast: `enable -ns NS2` (no -map) leaves NS2 with its own zpm record and code."
+    },
+    {
+     "id": "namespace.enable#2",
+     "units": [
+      "B1"
+     ],
+     "text": "-ns names the target namespaces and -globally picks every namespace without IPM.",
+     "cases": "-globally over namespaces with and without IPM vs -ns list",
+     "observation": "target set acted on",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      "playbook-uplift/models/verus/ns_mapping.rs::enable_map",
+      "playbook-uplift/models/verus/ns_mapping.rs::community"
+     ],
+     "evidence": [
+      "playbook-uplift/models/verus/results/ns_mapping.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "enable_map takes the target set ts as an input; the -globally selection (namespaces without IPM) is not modeled. Contrast: `enable -map -globally` with NS2 already a local install and NS3 empty acts on NS3 only."
+    },
+    {
+     "id": "namespace.enable#3",
+     "units": [
+      "B2"
+     ],
+     "text": "-map makes each non-local target run IPM from the current namespace instead of installing a copy; local installs are left as they are.",
+     "cases": "empty target vs local install target",
+     "observation": "which namespace's IPM code each target runs",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      "playbook-uplift/models/verus/ns_mapping.rs::enable_map",
+      "playbook-uplift/models/verus/ns_mapping.rs::map_code_one",
+      "playbook-uplift/models/verus/ns_mapping.rs::nsp_lemma_enable",
+      "playbook-uplift/models/verus/ns_mapping.rs::l1_enable"
+     ],
+     "evidence": [
+      "playbook-uplift/models/verus/results/ns_mapping.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/operations/namespaces.g5.md metadata (inherited ns_mapping.rs); premises SRC, UNIQ, TGT, REPOS",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "namespace.enable#4",
+     "units": [
+      "B2"
+     ],
+     "text": "Intended: -repos also shares the source's repository settings with the targets.",
+     "cases": "first run on an empty target vs second run",
+     "observation": "which repositories the target reads",
+     "grade": "full",
+     "check": "refuted",
+     "models": [
+      "playbook-uplift/models/verus/ns_mapping.rs::nsp_witness_repos_second_run",
+      ".g5/Verus_verification/consolidated/iter12/namespaces.rs::selected_namespace_neighbors",
+      ".g5/Verus_verification/consolidated/iter12/namespaces.rs::repo_visible"
+     ],
+     "evidence": [
+      "playbook-uplift/models/verus/results/ns_mapping.json",
+      ".g5/uplift/consolidated/iter12/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/operations/namespaces.g5.md metadata (P:F-NSP-4 witness)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "namespace.enable#5",
+     "units": [
+      "B2"
+     ],
+     "text": "-repos needs -map.",
+     "alias_of": "namespace.enable.mapping-results#5",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "namespace.enable#6",
+     "units": [
+      "B3"
+     ],
+     "text": "-v, -remote, -local-only and -allow-upgrade choose the IPM version and where it comes from.",
+     "cases": "each flag vs default source/version",
+     "observation": "IPM version installed in the target",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "No model of version/source selection in Main.cls::EnableIPM. Contrast: `enable -ns NS2 -v 0.10.1 -local-only` installs 0.10.1 from the local package, vs -remote fetching the registry version."
+    },
+    {
+     "id": "namespace.enable#7",
+     "units": [
+      "B4"
+     ],
+     "text": "-preview makes no changes.",
+     "alias_of": "namespace.enable.mapping-results#4",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "namespace.enable#8",
+     "units": [
+      "B4"
+     ],
+     "text": "-preview shows the changes it would make.",
+     "cases": "preview vs real run",
+     "observation": "printed plan matches the real run's changes",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "Preview output is not modeled; request(..., preview) only returns the unchanged state. Contrast: the preview listing for NS2 names the same mappings a real run then creates."
+    },
+    {
+     "id": "namespace.enable#9",
+     "units": [
+      "B7"
+     ],
+     "text": "-community sets up the community registry and maps IPM and its repositories to all namespaces, like IPM 0.7.",
+     "cases": "empty targets vs targets already reaching the code; source registry state before",
+     "observation": "registry rows of the source; code and repositories each namespace uses",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      "playbook-uplift/models/verus/ns_mapping.rs::community",
+      "playbook-uplift/models/verus/ns_mapping.rs::nsp_lemma_community",
+      "playbook-uplift/models/verus/ns_mapping.rs::reset_repos",
+      "playbook-uplift/models/verus/ns_mapping.rs::l1_community"
+     ],
+     "evidence": [
+      "playbook-uplift/models/verus/results/ns_mapping.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "nsp_lemma_community proves the L1 effect only under premise REPOS (every non-local target already reaches IPM code). For an empty target the same enable_map first pass leaves repositories local (F-NSP-4 witness for enable_map), and no witness exercises community on such a target. The registry is abstracted to \"rows present\" (reset_repos), not the community URL. Contrast: `enable -community` on an instance with an empty NS2: NS2 runs USER's code but reads its own (empty) repositories after one run."
+    },
+    {
+     "id": "namespace.enable#10",
+     "units": [
+      "B8"
+     ],
+     "text": "Working assumption: the source of a mapped namespace is the namespace whose own code database holds the IPM code.",
+     "cases": "single source vs two zpm records reaching one code database",
+     "observation": "which source GetMapInfo assigns to a target",
+     "grade": "full",
+     "check": "refuted",
+     "models": [
+      "playbook-uplift/models/verus/ns_mapping.rs::mapped_from",
+      "playbook-uplift/models/verus/ns_mapping.rs::nsp_witness_repos_tie_other_source"
+     ],
+     "evidence": [
+      "playbook-uplift/models/verus/results/ns_mapping.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70 (F-NSP-7 witness: a later-named namespace with its own zpm record that maps USER's database wins the tie; open question namespace.enable.source-ambiguity-policy)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "namespace.enable#11",
+     "units": [
+      "B9"
+     ],
+     "text": "Working assumption: if a step of enable -community fails, the command stops and returns that error.",
+     "cases": "repo -delete-all / -reset-defaults / enable step fails vs all succeed",
+     "observation": "returned status; later steps run or not",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "ns_mapping.rs has no success/failure result for any command (header). Contrast: a failing `repo -reset-defaults` step inside `enable -community` returns its error and no namespace is mapped, vs success. Open question namespace.enable.community-failure-policy."
+    }
+   ],
+   "parent": {
+    "children": [
+     "namespace.enable.mapping-results",
+     "namespace.enable.partial-batch"
+    ],
+    "entailment": "B5 and B6 point to the children; the remaining bullets are graded directly. B2 (-repos needs -map) and B4 (preview changes nothing) alias the mapping-results child. No composition credited."
+   }
+  },
+  "namespace.enable.mapping-results": {
+   "body_sha": "41ac80ecf7b97a89",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "namespace.enable.mapping-results#1"
+    ],
+    "B1": [
+     "namespace.enable.mapping-results#2",
+     "namespace.enable.mapping-results#3"
+    ],
+    "B2": [
+     "namespace.enable.mapping-results#4",
+     "namespace.enable.mapping-results#5"
+    ],
+    "B3": "excluded: provenance (inherited P:F-NSP-4) and scope (successful configuration calls, not batch failures)"
+   },
+   "obligations": [
+    {
+     "id": "namespace.enable.mapping-results#1",
+     "units": [
+      "P1"
+     ],
+     "text": "For an empty target, the first enable -map -repos shares IPM's code but leaves repository settings local; running it again shares the repositories, because the repository loop checks active code mappings before the new ones are activated.",
+     "cases": "first vs second run on an empty target",
+     "observation": "code destination; repository name read in the target",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      "playbook-uplift/models/verus/ns_mapping.rs::nsp_witness_repos_second_run",
+      "playbook-uplift/models/verus/ns_mapping.rs::repo_mapped",
+      ".g5/Verus_verification/consolidated/iter12/namespaces.rs::selected_namespace_neighbors",
+      ".g5/Verus_verification/consolidated/iter12/namespaces.rs::repo_visible",
+      ".g5/Verus_verification/consolidated/iter12/namespaces.rs::first",
+      ".g5/Verus_verification/consolidated/iter12/namespaces.rs::second"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter12/run.json",
+      "playbook-uplift/models/verus/results/ns_mapping.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/operations/namespaces.g5.md metadata (iter12 namespaces.rs, ns_mapping.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "namespace.enable.mapping-results#2",
+     "units": [
+      "B1"
+     ],
+     "text": "A target with its own repository data keeps those settings instead of sharing the source's.",
+     "cases": "target with local repository rows vs without",
+     "observation": "repository mapping and names read in the target",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter12/namespaces.rs::own_target",
+      ".g5/Verus_verification/consolidated/iter12/namespaces.rs::own_skip",
+      ".g5/Verus_verification/consolidated/iter12/namespaces.rs::own_visible",
+      ".g5/Verus_verification/consolidated/iter12/namespaces.rs::selected_namespace_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter12/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/operations/namespaces.g5.md metadata (iter12 namespaces.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "namespace.enable.mapping-results#3",
+     "units": [
+      "B1"
+     ],
+     "text": "Clearing that local data allows a later command to share the source's repositories.",
+     "cases": "later enable after clearing local rows vs before clearing",
+     "observation": "repository mapping in the target after the later enable",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter12/namespaces.rs::own_cleared",
+      ".g5/Verus_verification/consolidated/iter12/namespaces.rs::selected_namespace_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter12/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "own_cleared only asserts the local rows are no longer visible; no assertion runs enable_map on own_cleared and checks repo_visible. Contrast: enable -map -repos after clearing NS2's ^IPM.Repo.DefinitionD maps NS2's repositories to USER (Main.cls::EnableIPM repo loop), vs before clearing it does not."
+    },
+    {
+     "id": "namespace.enable.mapping-results#4",
+     "units": [
+      "B2"
+     ],
+     "text": "Preview changes no mappings.",
+     "cases": "preview vs real run",
+     "observation": "mapping state",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter12/namespaces.rs::request",
+      ".g5/Verus_verification/consolidated/iter12/namespaces.rs::preview_and_refusal",
+      ".g5/Verus_verification/consolidated/iter13/batch.rs::preview_bad"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter12/run.json",
+      ".g5/uplift/consolidated/iter13/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/operations/namespaces.g5.md metadata (iter12 namespaces.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "namespace.enable.mapping-results#5",
+     "units": [
+      "B2"
+     ],
+     "text": "Requesting -repos without -map is refused before changes.",
+     "cases": "-repos without -map vs with -map",
+     "observation": "status and mapping state",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter12/namespaces.rs::request",
+      ".g5/Verus_verification/consolidated/iter12/namespaces.rs::preview_and_refusal"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter12/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/operations/namespaces.g5.md metadata (iter12 namespaces.rs)",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "namespace.enable.partial-batch": {
+   "body_sha": "f836eb940e49d37c",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "namespace.enable.partial-batch#1",
+     "namespace.enable.partial-batch#2"
+    ],
+    "B1": [
+     "namespace.enable.partial-batch#3",
+     "namespace.enable.partial-batch#4"
+    ],
+    "B2": [
+     "namespace.enable.partial-batch#5"
+    ],
+    "B3": "excluded: scope (initially empty targets, successful configuration calls; no restart durability or all-or-nothing policy; repository-loop failures separate)"
+   },
+   "obligations": [
+    {
+     "id": "namespace.enable.partial-batch#1",
+     "units": [
+      "P1"
+     ],
+     "text": "enable -map -ns VALID,MISSING returns an error after creating the valid target's package and routine configuration entries, which stay inactive so a fresh process in the valid target cannot run IPM.",
+     "cases": "missing namespace after a valid one vs all valid",
+     "observation": "status; configuration entries; active mappings",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter13/batch.rs::visit",
+      ".g5/Verus_verification/consolidated/iter13/batch.rs::run",
+      ".g5/Verus_verification/consolidated/iter13/batch.rs::late",
+      ".g5/Verus_verification/consolidated/iter13/batch.rs::selected_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter13/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/operations/namespaces.g5.md metadata (iter13 batch.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "namespace.enable.partial-batch#2",
+     "units": [
+      "P1"
+     ],
+     "text": "Retrying that valid target succeeds and activates the pending entries.",
+     "cases": "retry of the pending target vs no retry",
+     "observation": "status and active mappings",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter13/batch.rs::retry",
+      ".g5/Verus_verification/consolidated/iter13/batch.rs::publish",
+      ".g5/Verus_verification/consolidated/iter13/batch.rs::selected_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter13/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/operations/namespaces.g5.md metadata (iter13 batch.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "namespace.enable.partial-batch#3",
+     "units": [
+      "B1"
+     ],
+     "text": "Putting the missing namespace first creates no entries for the valid target.",
+     "cases": "missing first vs missing later",
+     "observation": "configuration entries for the valid target",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter13/batch.rs::first_bad",
+      ".g5/Verus_verification/consolidated/iter13/batch.rs::selected_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter13/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/operations/namespaces.g5.md metadata (iter13 batch.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "namespace.enable.partial-batch#4",
+     "units": [
+      "B1"
+     ],
+     "text": "Preview with a missing later namespace also returns an error and creates no entries.",
+     "cases": "preview vs real run with a missing later namespace",
+     "observation": "status and entries",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter13/batch.rs::preview_bad",
+      ".g5/Verus_verification/consolidated/iter13/batch.rs::selected_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter13/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/operations/namespaces.g5.md metadata (iter13 batch.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "namespace.enable.partial-batch#5",
+     "units": [
+      "B2"
+     ],
+     "text": "Enabling a different valid target leaves the earlier pending target inactive; activation loads only the namespaces marked by the successful command.",
+     "cases": "other target enabled vs retry of the pending one",
+     "observation": "active mappings of both targets",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter13/batch.rs::other",
+      ".g5/Verus_verification/consolidated/iter13/batch.rs::selected_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter13/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/operations/namespaces.g5.md metadata (iter13 batch.rs)",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "namespace.unmap": {
+   "body_sha": "6a9d31d66552af0a",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "namespace.unmap#1",
+     "namespace.unmap#2",
+     "namespace.unmap#3",
+     "namespace.unmap#4"
+    ],
+    "B1": "excluded: navigation to namespace.unmap.routine-result (owner of the routine-mapping gap)"
+   },
+   "obligations": [
+    {
+     "id": "namespace.unmap#1",
+     "units": [
+      "P1"
+     ],
+     "text": "Intended: unmap removes IPM's code mappings from the named namespaces, so they no longer run the source's IPM.",
+     "cases": "full unmap of a mapped target vs a target mapped by package only",
+     "observation": "whether the target still runs IPM from a fresh process",
+     "grade": "full",
+     "check": "refuted",
+     "models": [
+      "playbook-uplift/models/verus/ns_mapping.rs::nsp_witness_unmap_leaves_routines",
+      "playbook-uplift/models/verus/ns_mapping.rs::nsp_witness_unmap_package_only",
+      ".g5/Verus_verification/consolidated/iter12/namespaces.rs::selected_namespace_neighbors"
+     ],
+     "evidence": [
+      "playbook-uplift/models/verus/results/ns_mapping.json",
+      ".g5/uplift/consolidated/iter12/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/operations/namespaces.g5.md metadata (P:F-NSP-6 witness)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "namespace.unmap#2",
+     "units": [
+      "P1"
+     ],
+     "text": "`unmap -globally` acts on every namespace.",
+     "cases": "-globally vs named namespaces",
+     "observation": "target set acted on",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      "playbook-uplift/models/verus/ns_mapping.rs::unmap",
+      "playbook-uplift/models/verus/ns_mapping.rs::nsp_lemma_unmap"
+     ],
+     "evidence": [
+      "playbook-uplift/models/verus/results/ns_mapping.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "unmap takes the target set as input; the -globally selection in Main.cls::UnmapIPM (and its help text, which reads backwards) is not modeled. Contrast: `unmap -globally` with NS2 and NS3 mapped from USER removes both, vs `unmap -ns NS2` leaving NS3."
+    },
+    {
+     "id": "namespace.unmap#3",
+     "units": [
+      "P1"
+     ],
+     "text": "unmap also unmaps shared repository settings.",
+     "cases": "full unmap vs no unmap",
+     "observation": "repository mapping and names read in the target",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter12/namespaces.rs::unmapped",
+      ".g5/Verus_verification/consolidated/iter12/namespaces.rs::selected_namespace_neighbors",
+      "playbook-uplift/models/verus/ns_mapping.rs::unmap_one"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter12/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/operations/namespaces.g5.md metadata (iter12 namespaces.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "namespace.unmap#4",
+     "units": [
+      "P1"
+     ],
+     "text": "-repos-only unmaps only the shared repository settings.",
+     "alias_of": "namespace.unmap.routine-result#3",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "namespace.unmap.routine-result": {
+   "body_sha": "fedd2728bf9c6fb6",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "namespace.unmap.routine-result#1",
+     "namespace.unmap.routine-result#2"
+    ],
+    "B1": [
+     "namespace.unmap.routine-result#3",
+     "namespace.unmap.routine-result#4"
+    ],
+    "B2": [
+     "namespace.unmap.routine-result#1"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "namespace.unmap.routine-result#1",
+     "units": [
+      "P1",
+      "B2"
+     ],
+     "text": "Full unmap removes the package mapping and shared repository mappings but leaves the %IPM.* routine mapping, because the caller passes 1 in the routine-type argument.",
+     "cases": "package vs routine vs repository mapping under full unmap",
+     "observation": "saved and active mappings of the target",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      "playbook-uplift/models/verus/ns_mapping.rs::remove_rtn",
+      "playbook-uplift/models/verus/ns_mapping.rs::unmap_one",
+      "playbook-uplift/models/verus/ns_mapping.rs::nsp_witness_unmap_leaves_routines",
+      ".g5/Verus_verification/consolidated/iter12/namespaces.rs::selected_namespace_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter12/run.json",
+      "playbook-uplift/models/verus/results/ns_mapping.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/operations/namespaces.g5.md metadata (iter12 namespaces.rs, ns_mapping.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "namespace.unmap.routine-result#2",
+     "units": [
+      "P1"
+     ],
+     "text": "After full unmap the target can still run the source's IPM, even from a fresh process.",
+     "cases": "after full unmap vs after package-only unmap",
+     "observation": "has_ipm on the active table",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter12/namespaces.rs::selected_namespace_neighbors",
+      "playbook-uplift/models/verus/ns_mapping.rs::has_ipm",
+      "playbook-uplift/models/verus/ns_mapping.rs::nsp_witness_unmap_leaves_routines"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter12/run.json",
+      "playbook-uplift/models/verus/results/ns_mapping.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/operations/namespaces.g5.md metadata (iter12 namespaces.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "namespace.unmap.routine-result#3",
+     "units": [
+      "B1"
+     ],
+     "text": "-repos-only removes shared repository mappings and keeps both code mappings.",
+     "cases": "-repos-only vs full unmap",
+     "observation": "package, routine and repository mappings",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter12/namespaces.rs::repos_only",
+      ".g5/Verus_verification/consolidated/iter12/namespaces.rs::selected_namespace_neighbors",
+      "playbook-uplift/models/verus/ns_mapping.rs::nsp_lemma_unmap",
+      "playbook-uplift/models/verus/ns_mapping.rs::l1_unmap"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter12/run.json",
+      "playbook-uplift/models/verus/results/ns_mapping.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/operations/namespaces.g5.md metadata (iter12 namespaces.rs); code kept generally via nsp_lemma_unmap",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "namespace.unmap.routine-result#4",
+     "units": [
+      "B1"
+     ],
+     "text": "Actual repository-name reads follow the resulting mappings.",
+     "cases": "after second enable vs after -repos-only vs after full unmap",
+     "observation": "repository names visible in the target",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter12/namespaces.rs::repo_visible",
+      ".g5/Verus_verification/consolidated/iter12/namespaces.rs::selected_namespace_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter12/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/operations/namespaces.g5.md metadata (iter12 namespaces.rs)",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "namespace.mapped-refusal": {
+   "body_sha": "d691f4506dd19461",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "namespace.mapped-refusal#1",
+     "namespace.mapped-refusal#2"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "namespace.mapped-refusal#1",
+     "units": [
+      "P1"
+     ],
+     "text": "Installing IPM (install/load zpm) in a namespace where it is mapped from another namespace is refused and changes nothing.",
+     "cases": "namespace listed as mapped vs local or empty",
+     "observation": "namespace state after install zpm",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      "playbook-uplift/models/verus/ns_mapping.rs::install_zpm",
+      "playbook-uplift/models/verus/ns_mapping.rs::nsp_lemma_install_zpm_refused",
+      "playbook-uplift/models/verus/ns_mapping.rs::listed"
+     ],
+     "evidence": [
+      "playbook-uplift/models/verus/results/ns_mapping.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70 (ns_mapping.rs CheckModuleNamespace transcription; no block metadata link)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "namespace.mapped-refusal#2",
+     "units": [
+      "P1"
+     ],
+     "text": "Intended: the IPM installer also cannot install IPM in a mapped namespace.",
+     "cases": "installer in a namespace mapped from USER vs a fresh namespace",
+     "observation": "mappings, record and code used after setup",
+     "grade": "full",
+     "check": "refuted",
+     "models": [
+      "playbook-uplift/models/verus/ns_mapping.rs::installer",
+      "playbook-uplift/models/verus/ns_mapping.rs::nsp_witness_installer_in_mapped",
+      "playbook-uplift/models/verus/ns_mapping.rs::nsp_witness_fresh_install"
+     ],
+     "evidence": [
+      "playbook-uplift/models/verus/results/ns_mapping.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70 (F-NSP-5 witness: the installer neither refuses nor installs independently; it creates a zpm record while the namespace still runs USER's code)",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "namespace.legacy": {
+   "body_sha": "42144004185ba57f",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "namespace.legacy#1",
+     "namespace.legacy#2"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "namespace.legacy#1",
+     "units": [
+      "P1"
+     ],
+     "text": "Upgrading from IPM 0.7 or earlier maps IPM's code to all namespaces again.",
+     "cases": "upgrade from 0.7 (GloballyEnabled) vs fresh install",
+     "observation": "mappings in every namespace after upgrade",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "No model of preload/cls/IPM/Installer.cls::MapIfLegacy (L133-139); ns_mapping.rs::installer covers only the current namespace. Contrast: after upgrading a 0.7 instance, a namespace without IPM runs the upgraded IPM (tests/migration GloballyEnabled), vs a fresh install where it does not."
+    },
+    {
+     "id": "namespace.legacy#2",
+     "units": [
+      "P1"
+     ],
+     "text": "`unmap -globally` undoes the legacy mapping.",
+     "cases": "unmap -globally after a legacy upgrade vs before",
+     "observation": "whether other namespaces still run IPM",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "No model connects the legacy mapping (which may be %ALL or per-namespace) to UnmapIPM; given F-NSP-6 (routine mapping left), whether the code is really removed is unknown. Contrast: after `unmap -globally`, a fresh process in another namespace cannot run zpm."
+    }
+   ]
+  },
+  "namespace.version.mapped-reader": {
+   "body_sha": "1ebe0bed1cab4f2a",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "namespace.version.mapped-reader#1"
+    ],
+    "B1": [
+     "namespace.version.mapped-reader#2"
+    ],
+    "B2": "excluded: scope disclaimer (no general version parsing or developer-mode rollback claim)"
+   },
+   "obligations": [
+    {
+     "id": "namespace.version.mapped-reader#1",
+     "units": [
+      "P1"
+     ],
+     "text": "An IPMVersion requirement reads the zpm record in the current namespace even when it runs another namespace's IPM code; with no local record the minimum 0.1.0 is refused, while the same requirement passes in the source namespace.",
+     "cases": "mapped target without a record vs source namespace",
+     "observation": "requirement result",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter12/namespaces.rs::requirement",
+      "playbook-uplift/models/verus/ns_mapping.rs::check_ipm_version",
+      "playbook-uplift/models/verus/ns_mapping.rs::nsp_witness_version_empty_when_mapped",
+      ".g5/Verus_verification/consolidated/iter12/namespaces.rs::selected_namespace_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter12/run.json",
+      "playbook-uplift/models/verus/results/ns_mapping.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/operations/namespaces.g5.md metadata (iter12 namespaces.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "namespace.version.mapped-reader#2",
+     "units": [
+      "B1"
+     ],
+     "text": "A normal -nodev load of the fixture succeeds locally but fails in the mapped target and leaves no target module record.",
+     "cases": "load in source vs mapped target",
+     "observation": "load status; target module record",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter12/namespaces.rs::new_normal_load",
+      ".g5/Verus_verification/consolidated/iter12/namespaces.rs::selected_namespace_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter12/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "new_normal_load defines row := ok, so \"no record after a failed requirement\" is encoded, not derived. The rollback comes from Utils/Module.cls::LoadNewModule (system requirements check inside T1 for non-dev) and needs composition with the load-page transaction obligation (features/load.g5.md, load.core), which this block does not cite by obligation. Contrast: the same failing requirement under -dev, where the record is committed at C1 before the check."
+    }
+   ]
+  }
+ }
+}

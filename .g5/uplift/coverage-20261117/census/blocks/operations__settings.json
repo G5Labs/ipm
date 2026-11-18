@@ -1,0 +1,981 @@
+{
+  "page": ".g5/ontology/operations/settings.g5.md",
+  "blocks": {
+    "settings": {
+      "body_sha": "763ba93fd64e80ab",
+      "status": "enumerated",
+      "units": {
+        "P1": [
+          "settings#1",
+          "settings#2",
+          "settings#3"
+        ],
+        "T1": [
+          "settings#4",
+          "settings#5"
+        ],
+        "T2": [
+          "settings#6"
+        ],
+        "T3": [
+          "settings#7"
+        ],
+        "T4": [
+          "settings#8",
+          "settings#9"
+        ],
+        "T5": [
+          "settings#10"
+        ],
+        "T6": [
+          "settings#11"
+        ],
+        "T7": [
+          "settings#12"
+        ],
+        "T8": [
+          "settings#13"
+        ],
+        "T9": [
+          "settings#14"
+        ]
+      },
+      "obligations": [
+        {
+          "id": "settings#1",
+          "units": [
+            "P1"
+          ],
+          "text": "`config list`, `get`, `set` and `delete` manage IPM settings: set changes a configurable setting, get reads it back, list shows them.",
+          "cases": "known vs unknown key; set then get; list after set",
+          "observation": "config get/list output and stored value",
+          "grade": "partial",
+          "check": "unchecked",
+          "models": [
+            "playbook-uplift/models/verus/settings.rs::repo_refines_config_set",
+            "playbook-uplift/models/verus/settings.rs::config_get",
+            ".g5/Verus_verification/consolidated/iter41/settings.rs::set",
+            ".g5/Verus_verification/consolidated/iter41/settings.rs::unknown_key_reports_ok"
+          ],
+          "evidence": [
+            "playbook-uplift/models/verus/results/settings.json",
+            ".g5/uplift/consolidated/iter41/run.json",
+            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+          ],
+          "basis": "new:iteration-70",
+          "assessed_in": "iteration-70",
+          "gap": "set/get are proved (repo_refines_config_set reads the value back); `config list` (Repo/UniversalSettings.cls::GetAll, PrintList) has no model. Contrast: after `config set analytics 0`, `config list` shows analytics 0 among all configurable keys."
+        },
+        {
+          "id": "settings#2",
+          "units": [
+            "P1"
+          ],
+          "text": "Intended: `config delete` restores a setting's default.",
+          "cases": "key with seeded default vs key whose first write became its default",
+          "observation": "value after delete",
+          "grade": "full",
+          "check": "refuted",
+          "models": [
+            "playbook-uplift/models/verus/settings.rs::repo_refines_config_delete",
+            "playbook-uplift/models/verus/settings.rs::repo_witness_delete_restores_first_value",
+            ".g5/Verus_verification/consolidated/iter41/settings.rs::delete_restores_first_write",
+            ".g5/Verus_verification/consolidated/iter41/settings.rs::delete_restores_seed"
+          ],
+          "evidence": [
+            "playbook-uplift/models/verus/results/settings.json",
+            ".g5/uplift/consolidated/iter41/run.json",
+            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+          ],
+          "basis": "reused:.g5/ontology/operations/settings.g5.md metadata (iter41 settings.rs; B2 D5 / P:F-REPO-4)",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "id": "settings#3",
+          "units": [
+            "P1"
+          ],
+          "text": "Upgrading IPM keeps existing setting values.",
+          "alias_of": "setup.installer#3",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "id": "settings#4",
+          "units": [
+            "T1"
+          ],
+          "text": "analytics defaults to 1.",
+          "cases": "fresh install vs after config set/delete",
+          "observation": "config get value on a fresh install",
+          "grade": "absent",
+          "check": "none",
+          "models": [],
+          "evidence": [],
+          "basis": "new:iteration-70",
+          "assessed_in": "iteration-70",
+          "gap": "The default comes from the installer seeding (preload/cls/IPM/Installer.cls::ZPMInit L110-124), which no model represents; iter41 c0() and playbook settings.rs Cfg.seed take the observed seeded values as fixture input. Contrast: `config get analytics` on a fresh install shows 1."
+        },
+        {
+          "id": "settings#5",
+          "units": [
+            "T1"
+          ],
+          "text": "analytics controls whether usage data is sent.",
+          "alias_of": "settings.analytics#1",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "id": "settings#6",
+          "units": [
+            "T2"
+          ],
+          "text": "DefaultLogEntryLimit defaults to 20 (how many records history find shows by default; the reader is owned by the history page).",
+          "cases": "fresh install vs after config set/delete",
+          "observation": "config get value on a fresh install",
+          "grade": "absent",
+          "check": "none",
+          "models": [],
+          "evidence": [],
+          "basis": "new:iteration-70",
+          "assessed_in": "iteration-70",
+          "gap": "The default comes from the installer seeding (preload/cls/IPM/Installer.cls::ZPMInit L110-124), which no model represents; iter41 c0() and playbook settings.rs Cfg.seed take the observed seeded values as fixture input. Contrast: `config get DefaultLogEntryLimit` on a fresh install shows 20."
+        },
+        {
+          "id": "settings#7",
+          "units": [
+            "T3"
+          ],
+          "text": "HistoryRetain defaults to 0, which keeps history forever (retention rule owned by history.retention in concepts/data-policy).",
+          "cases": "fresh install vs after config set/delete",
+          "observation": "config get value on a fresh install",
+          "grade": "absent",
+          "check": "none",
+          "models": [],
+          "evidence": [],
+          "basis": "new:iteration-70",
+          "assessed_in": "iteration-70",
+          "gap": "The default comes from the installer seeding (preload/cls/IPM/Installer.cls::ZPMInit L110-124), which no model represents; iter41 c0() and playbook settings.rs Cfg.seed take the observed seeded values as fixture input. Contrast: `config get HistoryRetain` on a fresh install shows 0."
+        },
+        {
+          "id": "settings#8",
+          "units": [
+            "T4"
+          ],
+          "text": "ModuleRoot defaults to <data directory>/ipm/ and is reset to that computed value.",
+          "cases": "config delete ModuleRoot vs other keys",
+          "observation": "ModuleRoot value after delete",
+          "grade": "partial",
+          "check": "unchecked",
+          "models": [
+            "playbook-uplift/models/verus/settings.rs::reset",
+            "playbook-uplift/models/verus/settings.rs::factory",
+            "playbook-uplift/models/verus/settings.rs::repo_refines_config_delete",
+            "playbook-uplift/models/verus/settings.rs::mroot_default"
+          ],
+          "evidence": [
+            "playbook-uplift/models/verus/results/settings.json",
+            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+          ],
+          "basis": "new:iteration-70 (playbook reset/factory give ModuleRoot its computed default on delete regardless of premise PS)",
+          "assessed_in": "iteration-70",
+          "gap": "The reset branch is proved, but the fresh-install value is not: get_value of an absent node is empty, and the installer/UniversalSettings default computation for ModuleRoot (NormalizeDirectory(DataDirectory()_\"ipm/\")) is an abstract constant mroot_default. Contrast: `config get ModuleRoot` on a fresh install prints <mgr>/ipm/ rather than empty."
+        },
+        {
+          "id": "settings#9",
+          "units": [
+            "T4"
+          ],
+          "text": "ModuleRoot is where archives unpack, and it must be writable.",
+          "cases": "writable vs unwritable or empty ModuleRoot",
+          "observation": "config set result; archive unpack location",
+          "grade": "partial",
+          "check": "unchecked",
+          "models": [
+            "playbook-uplift/models/verus/settings.rs::update_one"
+          ],
+          "evidence": [
+            "playbook-uplift/models/verus/results/settings.json",
+            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+          ],
+          "basis": "new:iteration-70",
+          "assessed_in": "iteration-70",
+          "gap": "update_one refuses only an empty ModuleRoot and takes the value as already normalized and writable (comment); the write-access check and the archive reader are not modeled. Contrast: `config set ModuleRoot /readonly/` is refused and archives still unpack under the old root."
+        },
+        {
+          "id": "settings#10",
+          "units": [
+            "T5"
+          ],
+          "text": "PipCaller and UseStandalonePip pick which pip IPM runs.",
+          "alias_of": "module.python#6",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "id": "settings#11",
+          "units": [
+            "T6"
+          ],
+          "text": "PublishTimeout bounds how long publishing may take.",
+          "cases": "publish exceeding vs within the timeout",
+          "observation": "publish status",
+          "grade": "absent",
+          "check": "none",
+          "models": [],
+          "evidence": [],
+          "basis": "new:iteration-70",
+          "assessed_in": "iteration-70",
+          "gap": "No model reads PublishTimeout (Repo/Remote publish HTTP request timeout). Contrast: a publish slower than the configured timeout fails, the same publish with a larger timeout succeeds."
+        },
+        {
+          "id": "settings#12",
+          "units": [
+            "T7"
+          ],
+          "text": "SemVerPostRelease defaults to 0 (the ordering rule of x.y.z-w is owned by version.post-release in concepts/versions).",
+          "cases": "fresh install vs after config set/delete",
+          "observation": "config get value on a fresh install",
+          "grade": "absent",
+          "check": "none",
+          "models": [],
+          "evidence": [],
+          "basis": "new:iteration-70",
+          "assessed_in": "iteration-70",
+          "gap": "The default comes from the installer seeding (preload/cls/IPM/Installer.cls::ZPMInit L110-124), which no model represents; iter41 c0() and playbook settings.rs Cfg.seed take the observed seeded values as fixture input. Contrast: `config get SemVerPostRelease` on a fresh install shows 0."
+        },
+        {
+          "id": "settings#13",
+          "units": [
+            "T8"
+          ],
+          "text": "TerminalPrompt sets what the shell prompt shows.",
+          "cases": "TerminalPrompt set vs unset",
+          "observation": "shell prompt text",
+          "grade": "absent",
+          "check": "none",
+          "models": [],
+          "evidence": [],
+          "basis": "new:iteration-70",
+          "assessed_in": "iteration-70",
+          "gap": "No model of the shell prompt (Main.cls::Shell prompt construction). Contrast: with TerminalPrompt set to show the namespace, the prompt includes it; unset it does not."
+        },
+        {
+          "id": "settings#14",
+          "units": [
+            "T9"
+          ],
+          "text": "TestReportFormat sets the default format of test summaries.",
+          "alias_of": "build.test-output#3",
+          "basis": "iteration-70 review: restates the format selection owned by build-and-publish build.test-output#3 (counted once there)",
+          "assessed_in": "iteration-70"
+        }
+      ],
+      "parent": {
+        "children": [
+          "settings.print",
+          "settings.writes",
+          "settings.report-format",
+          "settings.analytics",
+          "settings.default-modifiers",
+          "settings.install-flags"
+        ],
+        "entailment": "The parent adds the config command set, the intended delete rule, upgrade preservation and the defaults table; graded directly. T1 meaning aliases settings.analytics#1 and the upgrade rule aliases setup.installer#3. No composition credited."
+      }
+    },
+    "settings.print": {
+      "body_sha": "75546d0c57be6a39",
+      "status": "enumerated",
+      "units": {
+        "P1": [
+          "settings.print#1",
+          "settings.print#2"
+        ],
+        "P2": [
+          "settings.print#3"
+        ]
+      },
+      "obligations": [
+        {
+          "id": "settings.print#1",
+          "units": [
+            "P1"
+          ],
+          "text": "Printing a configurable setting shows its key and current effective value.",
+          "cases": "configurable key vs unknown key",
+          "observation": "printed line",
+          "grade": "full",
+          "check": "proved",
+          "models": [
+            ".g5/Verus_verification/consolidated/iter7/inputs.rs::config_line",
+            ".g5/Verus_verification/consolidated/iter7/inputs.rs::config_output_neighbors",
+            ".g5/Verus_verification/consolidated/iter7/inputs.rs::config_get_called"
+          ],
+          "evidence": [
+            ".g5/uplift/consolidated/iter7/run.json",
+            ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+          ],
+          "basis": "reused:.g5/ontology/operations/settings.g5.md metadata (iter7 inputs.rs)",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "id": "settings.print#2",
+          "units": [
+            "P1"
+          ],
+          "text": "Printing an unknown key shows a not-found diagnostic and returns before requesting any value.",
+          "cases": "unknown vs configurable key",
+          "observation": "printed line; whether GetValue is called",
+          "grade": "full",
+          "check": "proved",
+          "models": [
+            ".g5/Verus_verification/consolidated/iter7/inputs.rs::config_line",
+            ".g5/Verus_verification/consolidated/iter7/inputs.rs::config_output_neighbors",
+            ".g5/Verus_verification/consolidated/iter7/inputs.rs::config_get_called"
+          ],
+          "evidence": [
+            ".g5/uplift/consolidated/iter7/run.json",
+            ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+          ],
+          "basis": "reused:.g5/ontology/operations/settings.g5.md metadata (iter7 inputs.rs)",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "id": "settings.print#3",
+          "units": [
+            "P2"
+          ],
+          "text": "Key membership is exact, as in the configurable list; a diagnostic is not an effective setting value.",
+          "cases": "key differing from a configurable key only by case or prefix vs exact key",
+          "observation": "not-found vs value line",
+          "grade": "partial",
+          "check": "unchecked",
+          "models": [
+            ".g5/Verus_verification/consolidated/iter7/inputs.rs::config_get_called"
+          ],
+          "evidence": [
+            ".g5/uplift/consolidated/iter7/run.json",
+            ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+          ],
+          "basis": "new:iteration-70",
+          "assessed_in": "iteration-70",
+          "gap": "Keys are ints and membership is Set::contains, so exactness is assumed by the abstraction; no case/prefix variant is exercised against UniversalSettings.cls::PrintOne's $LISTFIND on CONFIGURABLE. Contrast: `config get Analytics` prints not found while `config get analytics` prints the value."
+        }
+      ]
+    },
+    "settings.writes": {
+      "body_sha": "24e67b560ec7f2e9",
+      "status": "enumerated",
+      "units": {
+        "P1": [
+          "settings.writes#1",
+          "settings.writes#2",
+          "settings.writes#3"
+        ],
+        "B1": [
+          "settings.writes#4",
+          "settings.writes#5"
+        ]
+      },
+      "obligations": [
+        {
+          "id": "settings.writes#1",
+          "units": [
+            "P1"
+          ],
+          "text": "A setting write with overwrite disabled keeps a nonempty current value.",
+          "cases": "overwrite off vs on with a nonempty current value",
+          "observation": "current value",
+          "grade": "full",
+          "check": "proved",
+          "models": [
+            ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::set_value",
+            ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::setting_neighbors"
+          ],
+          "evidence": [
+            ".g5/uplift/consolidated/iter3/validation.json",
+            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+          ],
+          "basis": "reused:.g5/ontology/operations/settings.g5.md metadata (public_repairs.rs)",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "id": "settings.writes#2",
+          "units": [
+            "P1"
+          ],
+          "text": "An absent or empty current value still accepts a write with overwrite disabled.",
+          "cases": "empty vs nonempty current value under overwrite off",
+          "observation": "current value",
+          "grade": "full",
+          "check": "proved",
+          "models": [
+            ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::set_value",
+            ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::setting_neighbors"
+          ],
+          "evidence": [
+            ".g5/uplift/consolidated/iter3/validation.json",
+            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+          ],
+          "basis": "reused:.g5/ontology/operations/settings.g5.md metadata (public_repairs.rs)",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "id": "settings.writes#3",
+          "units": [
+            "P1"
+          ],
+          "text": "Later writes preserve the first stored default even when the current value is cleared.",
+          "cases": "first write vs later writes; cleared current",
+          "observation": "stored default",
+          "grade": "full",
+          "check": "proved",
+          "models": [
+            ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::set_value",
+            ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::setting_neighbors",
+            "playbook-uplift/models/verus/settings.rs::set_value"
+          ],
+          "evidence": [
+            ".g5/uplift/consolidated/iter3/validation.json",
+            "playbook-uplift/models/verus/results/settings.json",
+            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+          ],
+          "basis": "reused:.g5/ontology/operations/settings.g5.md metadata (public_repairs.rs)",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "id": "settings.writes#4",
+          "units": [
+            "B1"
+          ],
+          "text": "As built, `config delete` restores the first stored value for most keys rather than a factory default.",
+          "cases": "unseeded key set 30 then 1 then delete vs seeded key",
+          "observation": "value after delete",
+          "grade": "full",
+          "check": "proved",
+          "models": [
+            "playbook-uplift/models/verus/settings.rs::repo_witness_delete_restores_first_value",
+            ".g5/Verus_verification/consolidated/iter41/settings.rs::delete_restores_first_write",
+            ".g5/Verus_verification/consolidated/iter41/settings.rs::delete_restores_seed"
+          ],
+          "evidence": [
+            "playbook-uplift/models/verus/results/settings.json",
+            ".g5/uplift/consolidated/iter41/run.json",
+            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+          ],
+          "basis": "new:iteration-70 (iter41 and playbook F-REPO-4 witness)",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "id": "settings.writes#5",
+          "units": [
+            "B1"
+          ],
+          "text": "TestReportFormat and ModuleRoot have explicit reset rules (empty and the computed <data directory>/ipm/).",
+          "cases": "delete of TestReportFormat / ModuleRoot vs other keys",
+          "observation": "value after delete",
+          "grade": "full",
+          "check": "proved",
+          "models": [
+            "playbook-uplift/models/verus/settings.rs::reset",
+            "playbook-uplift/models/verus/settings.rs::factory",
+            "playbook-uplift/models/verus/settings.rs::repo_refines_config_delete",
+            ".g5/Verus_verification/consolidated/iter41/settings.rs::delete",
+            ".g5/Verus_verification/consolidated/iter41/settings.rs::schedule"
+          ],
+          "evidence": [
+            "playbook-uplift/models/verus/results/settings.json",
+            ".g5/uplift/consolidated/iter41/run.json",
+            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+          ],
+          "basis": "new:iteration-70 (playbook reset has both branches; repo_refines_config_delete holds for them without premise PS)",
+          "assessed_in": "iteration-70"
+        }
+      ]
+    },
+    "settings.report-format": {
+      "body_sha": "d3f91af938f3a343",
+      "status": "enumerated",
+      "units": {
+        "P1": [
+          "settings.report-format#1",
+          "settings.report-format#2"
+        ],
+        "B1": [
+          "settings.report-format#3",
+          "settings.report-format#4"
+        ],
+        "B2": "excluded: scope statement (ModuleRoot rules differ; no validation guarantee for other keys follows)"
+      },
+      "obligations": [
+        {
+          "id": "settings.report-format#1",
+          "units": [
+            "P1"
+          ],
+          "text": "The TestReportFormat setter accepts empty, JSON, YAML and TOON without regard to case and stores the supplied spelling.",
+          "cases": "\"JsOn\"/\"JSON\" vs \"json\" vs empty vs YAML/TOON vs other text",
+          "observation": "stored value",
+          "grade": "full",
+          "check": "proved",
+          "models": [
+            ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::format_valid",
+            ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::lower",
+            ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::set_format",
+            ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::setting_neighbors",
+            "playbook-uplift/models/verus/settings.rs::valid_trf",
+            "playbook-uplift/models/verus/settings.rs::repo_refines_config_set"
+          ],
+          "evidence": [
+            ".g5/uplift/consolidated/iter3/validation.json",
+            "playbook-uplift/models/verus/results/settings.json",
+            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+          ],
+          "basis": "reused:.g5/ontology/operations/settings.g5.md metadata (public_repairs.rs); YAML/TOON acceptance from playbook valid_trf over the general set theorem",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "id": "settings.report-format#2",
+          "units": [
+            "P1"
+          ],
+          "text": "An invalid value returns an error before writing, preserving both the current value and its first default.",
+          "cases": "invalid vs valid format",
+          "observation": "setter status; current value and default",
+          "grade": "full",
+          "check": "proved",
+          "models": [
+            ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::set_format",
+            ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::setting_neighbors",
+            "playbook-uplift/models/verus/settings.rs::repo_config_errors_unchanged",
+            ".g5/Verus_verification/consolidated/iter41/settings.rs::invalid_format_refused_with_ok"
+          ],
+          "evidence": [
+            ".g5/uplift/consolidated/iter3/validation.json",
+            "playbook-uplift/models/verus/results/settings.json",
+            ".g5/uplift/consolidated/iter41/run.json",
+            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+          ],
+          "basis": "reused:.g5/ontology/operations/settings.g5.md metadata (public_repairs.rs); the shell still reports OK (F-REPO-8, playbook witness)",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "id": "settings.report-format#3",
+          "units": [
+            "B1"
+          ],
+          "text": "An empty TestReportFormat selects legacy test output.",
+          "cases": "empty vs JSON setting",
+          "observation": "test summary format",
+          "grade": "absent",
+          "check": "none",
+          "models": [],
+          "evidence": [],
+          "basis": "new:iteration-70",
+          "assessed_in": "iteration-70",
+          "gap": "The renderer that reads TestReportFormat is not modeled. Contrast: with an empty setting `test` prints the legacy summary; with JSON it prints JSON."
+        },
+        {
+          "id": "settings.report-format#4",
+          "units": [
+            "B1"
+          ],
+          "text": "The setter validates before applying the overwrite rule, so an invalid value is still an error when overwrite is disabled.",
+          "cases": "invalid value with overwrite off vs on",
+          "observation": "setter status",
+          "grade": "partial",
+          "check": "unchecked",
+          "models": [
+            ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::set_format",
+            ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::setting_neighbors"
+          ],
+          "evidence": [
+            ".g5/uplift/consolidated/iter3/validation.json",
+            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+          ],
+          "basis": "new:iteration-70",
+          "assessed_in": "iteration-70",
+          "gap": "set_format checks format_valid before set_value, but the only invalid-value assertion uses overwrite=true; the overwrite-disabled invalid case (UniversalSettings.cls::SetTestReportFormat called from installer seeding) is never exercised. Contrast: SetTestReportFormat(\"xml\", overwrite 0) over a nonempty value returns an error rather than silently keeping the old value with OK."
+        }
+      ]
+    },
+    "settings.analytics": {
+      "body_sha": "aa11c0e3a5515049",
+      "status": "enumerated",
+      "units": {
+        "P1": [
+          "settings.analytics#1",
+          "settings.analytics#2"
+        ]
+      },
+      "obligations": [
+        {
+          "id": "settings.analytics#1",
+          "units": [
+            "P1"
+          ],
+          "text": "`config set analytics 0` stops IPM from sending usage data.",
+          "cases": "analytics 0 vs 1",
+          "observation": "analytics-available decision",
+          "grade": "full",
+          "check": "proved",
+          "models": [
+            ".g5/Verus_verification/consolidated/iter41/settings.rs::analytics_disabled",
+            ".g5/Verus_verification/consolidated/iter41/settings.rs::text_analytics_counts_as_disabled"
+          ],
+          "evidence": [
+            ".g5/uplift/consolidated/iter41/run.json",
+            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+          ],
+          "basis": "reused:.g5/ontology/operations/settings.g5.md metadata (iter41 settings.rs); the sender (Repo/Remote/PackageService.cls) is read through GetAnalyticsAvailable",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "id": "settings.analytics#2",
+          "units": [
+            "P1"
+          ],
+          "text": "The value is stored as given; any value that is not a positive number, such as yes, also stops usage data.",
+          "cases": "\"yes\" vs 0 vs 1",
+          "observation": "stored value and analytics-available decision",
+          "grade": "full",
+          "check": "proved",
+          "models": [
+            ".g5/Verus_verification/consolidated/iter41/settings.rs::schedule",
+            ".g5/Verus_verification/consolidated/iter41/settings.rs::analytics_disabled",
+            ".g5/Verus_verification/consolidated/iter41/settings.rs::text_analytics_counts_as_disabled"
+          ],
+          "evidence": [
+            ".g5/uplift/consolidated/iter41/run.json",
+            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+          ],
+          "basis": "reused:.g5/ontology/operations/settings.g5.md metadata (iter41 settings.rs)",
+          "assessed_in": "iteration-70"
+        }
+      ]
+    },
+    "settings.default-modifiers": {
+      "body_sha": "3c3dd83af278c3d2",
+      "status": "enumerated",
+      "units": {
+        "P1": [
+          "settings.default-modifiers#1",
+          "settings.default-modifiers#2"
+        ],
+        "B1": [
+          "settings.default-modifiers#3"
+        ],
+        "B2": [
+          "settings.default-modifiers#4",
+          "settings.default-modifiers#5"
+        ],
+        "B3": [
+          "settings.default-modifiers#6"
+        ],
+        "B4": [
+          "settings.default-modifiers#7"
+        ],
+        "B5": [
+          "settings.default-modifiers#8",
+          "settings.default-modifiers#9"
+        ],
+        "B6": [
+          "settings.default-modifiers#10",
+          "settings.default-modifiers#11"
+        ],
+        "B7": [
+          "settings.default-modifiers#4"
+        ]
+      },
+      "obligations": [
+        {
+          "id": "settings.default-modifiers#1",
+          "units": [
+            "P1"
+          ],
+          "text": "`default-modifiers` stores flags that IPM adds to every command.",
+          "cases": "stored value vs none, with no command-line value",
+          "observation": "effective command data",
+          "grade": "full",
+          "check": "proved",
+          "models": [
+            ".g5/Verus_verification/consolidated/iter50/defmods.rs::merged",
+            ".g5/Verus_verification/consolidated/iter50/defmods.rs::effective",
+            ".g5/Verus_verification/consolidated/iter50/defmods.rs::stored_beats_manifest",
+            ".g5/Verus_verification/consolidated/iter50/defmods.rs::schedule"
+          ],
+          "evidence": [
+            ".g5/uplift/consolidated/iter50/run.json",
+            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+          ],
+          "basis": "reused:.g5/ontology/operations/settings.g5.md metadata (iter50 defmods.rs)",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "id": "settings.default-modifiers#2",
+          "units": [
+            "P1"
+          ],
+          "text": "Intended: the stored flags apply to the current namespace only.",
+          "cases": "set in USER, read in another namespace",
+          "observation": "stored list seen by the other namespace",
+          "grade": "full",
+          "check": "refuted",
+          "models": [
+            "playbook-uplift/models/verus/settings.rs::repo_witness_dm_shared",
+            "playbook-uplift/models/verus/settings.rs::pct_db",
+            "playbook-uplift/models/verus/settings.rs::repo_refines_dm_set"
+          ],
+          "evidence": [
+            "playbook-uplift/models/verus/results/settings.json",
+            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+          ],
+          "basis": "new:iteration-70 (F-REPO-5 / D19 witness: ^%IPM.DefaultModifiers lives in one database for every namespace)",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "id": "settings.default-modifiers#3",
+          "units": [
+            "B1"
+          ],
+          "text": "-set adds flags to the stored ones and removes none.",
+          "cases": "new key vs existing other key",
+          "observation": "stored list",
+          "grade": "full",
+          "check": "proved",
+          "models": [
+            ".g5/Verus_verification/consolidated/iter50/defmods.rs::set_appends_and_overwrites",
+            ".g5/Verus_verification/consolidated/iter50/defmods.rs::schedule",
+            "playbook-uplift/models/verus/settings.rs::repo_dm_laws"
+          ],
+          "evidence": [
+            ".g5/uplift/consolidated/iter50/run.json",
+            "playbook-uplift/models/verus/results/settings.json",
+            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+          ],
+          "basis": "reused:.g5/ontology/operations/settings.g5.md metadata (iter50 defmods.rs)",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "id": "settings.default-modifiers#4",
+          "units": [
+            "B2",
+            "B7"
+          ],
+          "text": "-get shows the stored flags, each as -D<name>=<value> with nested names joined by dots.",
+          "cases": "flat vs nested stored name",
+          "observation": "printed -get lines",
+          "grade": "partial",
+          "check": "unchecked",
+          "models": [
+            ".g5/Verus_verification/consolidated/iter50/defmods.rs::listed",
+            ".g5/Verus_verification/consolidated/iter50/defmods.rs::schedule",
+            "playbook-uplift/models/verus/settings.rs::dm_get"
+          ],
+          "evidence": [
+            ".g5/uplift/consolidated/iter50/run.json",
+            "playbook-uplift/models/verus/results/settings.json",
+            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+          ],
+          "basis": "new:iteration-70",
+          "assessed_in": "iteration-70",
+          "gap": "listed/dm_get are store predicates over key ids; Main.cls::AccumulateDefaultModifierList rendering (-D prefix, dotted nested names) is not modeled. Contrast: after `-set -DOther.Sub=x`, -get prints `-DOther.Sub=x`, not `-DOther=` or a subscripted form."
+        },
+        {
+          "id": "settings.default-modifiers#5",
+          "units": [
+            "B2"
+          ],
+          "text": "-delete removes all stored flags.",
+          "cases": "delete vs set",
+          "observation": "stored list; effective value afterwards",
+          "grade": "full",
+          "check": "proved",
+          "models": [
+            ".g5/Verus_verification/consolidated/iter50/defmods.rs::delete_restores_manifest",
+            ".g5/Verus_verification/consolidated/iter50/defmods.rs::default_modifiers",
+            "playbook-uplift/models/verus/settings.rs::repo_dm_laws"
+          ],
+          "evidence": [
+            ".g5/uplift/consolidated/iter50/run.json",
+            "playbook-uplift/models/verus/results/settings.json",
+            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+          ],
+          "basis": "reused:.g5/ontology/operations/settings.g5.md metadata (iter50 defmods.rs)",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "id": "settings.default-modifiers#6",
+          "units": [
+            "B3"
+          ],
+          "text": "Exactly one of -set, -get and -delete is required.",
+          "cases": "two or none vs exactly one",
+          "observation": "status and store",
+          "grade": "full",
+          "check": "proved",
+          "models": [
+            ".g5/Verus_verification/consolidated/iter50/defmods.rs::exactly_one_and_known",
+            ".g5/Verus_verification/consolidated/iter50/defmods.rs::default_modifiers"
+          ],
+          "evidence": [
+            ".g5/uplift/consolidated/iter50/run.json",
+            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+          ],
+          "basis": "reused:.g5/ontology/operations/settings.g5.md metadata (iter50 defmods.rs)",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "id": "settings.default-modifiers#7",
+          "units": [
+            "B4"
+          ],
+          "text": "A flag given on the command line wins over a stored one.",
+          "cases": "command-line value vs stored only",
+          "observation": "effective value",
+          "grade": "full",
+          "check": "proved",
+          "models": [
+            ".g5/Verus_verification/consolidated/iter50/defmods.rs::command_line_wins",
+            ".g5/Verus_verification/consolidated/iter50/defmods.rs::schedule",
+            "playbook-uplift/models/verus/settings.rs::repo_dm_laws"
+          ],
+          "evidence": [
+            ".g5/uplift/consolidated/iter50/run.json",
+            "playbook-uplift/models/verus/results/settings.json",
+            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+          ],
+          "basis": "reused:.g5/ontology/operations/settings.g5.md metadata (iter50 defmods.rs)",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "id": "settings.default-modifiers#8",
+          "units": [
+            "B5"
+          ],
+          "text": "As built, only -D<name>=<value> data values can be stored; a modifier such as -verbose is refused.",
+          "cases": "-set -verbose vs -set -DVerbose=1",
+          "observation": "status and store",
+          "grade": "partial",
+          "check": "unchecked",
+          "models": [
+            ".g5/Verus_verification/consolidated/iter50/defmods.rs::exactly_one_and_known",
+            ".g5/Verus_verification/consolidated/iter50/defmods.rs::default_modifiers"
+          ],
+          "evidence": [
+            ".g5/uplift/consolidated/iter50/run.json",
+            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+          ],
+          "basis": "new:iteration-70",
+          "assessed_in": "iteration-70",
+          "gap": "unknown_modifier is an input to default_modifiers; the refusal itself is the shell parser's (native-qualified premise: the parser refuses modifiers the command does not declare). Contrast: `default-modifiers -set -verbose` is refused by the parser for the default-modifiers command declaration in Main.cls Commands XData."
+        },
+        {
+          "id": "settings.default-modifiers#9",
+          "units": [
+            "B5"
+          ],
+          "text": "A stored -DVerbose=1 acts like -verbose, and -quiet on the command line still overrides it.",
+          "cases": "stored Verbose=1 with vs without a command-line Verbose=0",
+          "observation": "verbose effective in load",
+          "grade": "full",
+          "check": "proved",
+          "models": [
+            ".g5/Verus_verification/consolidated/iter50/defmods.rs::schedule",
+            ".g5/Verus_verification/consolidated/iter50/defmods.rs::verbose_load",
+            ".g5/Verus_verification/consolidated/iter50/defmods.rs::merged"
+          ],
+          "evidence": [
+            ".g5/uplift/consolidated/iter50/run.json",
+            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+          ],
+          "basis": "reused:.g5/ontology/operations/settings.g5.md metadata (iter50 defmods.rs); -quiet modeled as command data Verbose=0",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "id": "settings.default-modifiers#10",
+          "units": [
+            "B6"
+          ],
+          "text": "-set of a name already stored replaces its value, and -set without any -D value stores nothing.",
+          "cases": "existing key vs absent key in the -set data",
+          "observation": "stored list",
+          "grade": "full",
+          "check": "proved",
+          "models": [
+            ".g5/Verus_verification/consolidated/iter50/defmods.rs::set_appends_and_overwrites",
+            ".g5/Verus_verification/consolidated/iter50/defmods.rs::schedule"
+          ],
+          "evidence": [
+            ".g5/uplift/consolidated/iter50/run.json",
+            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+          ],
+          "basis": "reused:.g5/ontology/operations/settings.g5.md metadata (iter50 defmods.rs)",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "id": "settings.default-modifiers#11",
+          "units": [
+            "B6"
+          ],
+          "text": "A stored value overrides a module's own <Default> for that name until -delete removes it.",
+          "cases": "stored vs deleted vs never stored",
+          "observation": "value the module sees",
+          "grade": "full",
+          "check": "proved",
+          "models": [
+            ".g5/Verus_verification/consolidated/iter50/defmods.rs::stored_beats_manifest",
+            ".g5/Verus_verification/consolidated/iter50/defmods.rs::delete_restores_manifest",
+            ".g5/Verus_verification/consolidated/iter50/defmods.rs::schedule"
+          ],
+          "evidence": [
+            ".g5/uplift/consolidated/iter50/run.json",
+            ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+          ],
+          "basis": "reused:.g5/ontology/operations/settings.g5.md metadata (iter50 defmods.rs)",
+          "assessed_in": "iteration-70"
+        }
+      ]
+    },
+    "settings.install-flags": {
+      "body_sha": "8265de008721b974",
+      "status": "enumerated",
+      "units": {
+        "P1": [
+          "settings.install-flags#1",
+          "settings.install-flags#2"
+        ]
+      },
+      "obligations": [
+        {
+          "id": "settings.install-flags#1",
+          "units": [
+            "P1"
+          ],
+          "text": "-DNoMapping=1 turns off the automatic mappings for a module's resources.",
+          "alias_of": "module.placement#2",
+          "assessed_in": "iteration-70"
+        },
+        {
+          "id": "settings.install-flags#2",
+          "units": [
+            "P1"
+          ],
+          "text": "NoMapping (like the transaction flags) applies to install, load, reinstall and update.",
+          "cases": "NoMapping on install / reinstall / update vs load",
+          "observation": "automatic mappings created",
+          "grade": "partial",
+          "check": "unchecked",
+          "models": [
+            ".g5/Verus_verification/consolidated/iter59/mappings.rs::load",
+            ".g5/Verus_verification/consolidated/iter59/mappings.rs::needs_map"
+          ],
+          "evidence": [
+            ".g5/uplift/consolidated/iter59/run.json"
+          ],
+          "basis": "new:iteration-70",
+          "assessed_in": "iteration-70",
+          "gap": "iter59 mappings.rs models only the load path (Document.cls::OnPhase Reload hook); propagation of the -D data through install, reinstall and update (Main.cls command data into Storage/Module.cls::ExecutePhases) is not modeled. Contrast: `install m -DNoMapping=1` from a registry leaves no %Z package mapping, same as load. The transaction-flag part is owned by transaction.opt-out (concepts/transactions-and-dev-mode)."
+        }
+      ]
+    }
+  }
+}

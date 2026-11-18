@@ -1,0 +1,446 @@
+{
+ "page": ".g5/ontology/concepts/repositories.g5.md",
+ "blocks": {
+  "repo": {
+   "body_sha": "fffc8a17d3453a22",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "repo#1"
+    ],
+    "B1": "excluded: definition of the remote registry kind; behaviour owned by repo.remote.download (download-security) and repo.manage (operations/repositories, other page)",
+    "B2": "excluded: definition of the ORAS kind; behaviour owned by repo.oras (architecture/package-sources)",
+    "B3": "excluded: definition of the filesystem kind; behaviour owned by repo.filesystem (architecture/package-sources)"
+   },
+   "obligations": [
+    {
+     "id": "repo#1",
+     "units": [
+      "P1"
+     ],
+     "text": "Each namespace has its own list of repositories: a namespace does not see another namespace's repositories unless its repository storage is mapped there.",
+     "cases": "namespace with repository globals mapped vs unmapped",
+     "observation": "repository visible in the namespace's list",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter12/namespaces.rs::repo_catalog",
+      ".g5/Verus_verification/consolidated/iter12/namespaces.rs::repo_visible",
+      ".g5/Verus_verification/consolidated/iter12/namespaces.rs::selected_namespace_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter12/run.json"
+     ],
+     "basis": "new:iteration-70 (iter12 namespaces.rs; not linked from this block)",
+     "assessed_in": "iteration-70"
+    }
+   ],
+   "parent": {
+    "children": [
+     "repo.manage",
+     "repo.search-order",
+     "repo.read-only",
+     "repo.prereleases",
+     "repo.default-registry",
+     "repo.oras",
+     "repo.filesystem",
+     "repo.remote.download"
+    ],
+    "entailment": "Beyond the children the parent promises only that repository lists are per namespace (#1, graded directly). The kind list is definitional. No composition credited."
+   }
+  },
+  "repo.read-only": {
+   "body_sha": "40ab6353b39dba2d",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "repo.read-only#1"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "repo.read-only#1",
+     "units": [
+      "P1"
+     ],
+     "text": "Modules installed from a read-only repository always install in normal mode, never in developer mode.",
+     "cases": "install -dev from a ReadOnly=1 vs ReadOnly=0 repository",
+     "observation": "stored DeveloperMode of the installed module",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "No model reads Repo/Definition.cls::ReadOnly. Decider Utils/Module.cls:1280 (ReadOnlyGetStored forces DeveloperMode=0 after the update-required check); writer the %IPM.Storage.Module save; reader the module list/DeveloperMode. Missing contrast: the same install -dev from a read-only vs writable repository gives DeveloperMode 0 vs 1."
+    }
+   ]
+  },
+  "repo.prereleases": {
+   "body_sha": "33d5d4d174d802f6",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "repo.prereleases#1",
+     "repo.prereleases#2"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "repo.prereleases#1",
+     "units": [
+      "P1"
+     ],
+     "text": "IPM uses a repository for prerelease versions only when the repository is set up for them.",
+     "cases": "repository Prereleases=0 vs 1 offering a prerelease; command override",
+     "observation": "candidate set / installed version",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter34/versions.rs::eligible",
+      ".g5/Verus_verification/consolidated/iter34/versions.rs::count",
+      ".g5/Verus_verification/consolidated/iter34/versions.rs::fixture_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter34/run.json"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "versions.rs takes the prerelease flag as an input and only for the filesystem index (count(repo_c(),false)==1). The flag resolution in Repo/Manager.cls::SearchRepositoriesForModule:99-108 (criteria IncludePrerelease overrides the server Prereleases) and remote/ORAS listing filters are unmodeled. Missing contrast: remote and ORAS repositories with Prereleases=0 vs 1 offering 2.0.0-beta.1, observing the selected version."
+    },
+    {
+     "id": "repo.prereleases#2",
+     "units": [
+      "P1"
+     ],
+     "text": "IPM uses a repository for +snapshot builds only when the repository is set up for them.",
+     "cases": "repository Snapshots=0 vs 1 offering 1.0.0+snapshot",
+     "observation": "candidate set / installed version",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "No model of the Snapshots repository flag. iter24 snapshot_dependencies.rs models IsSnapshot and the force-snapshot reinstall, not repository eligibility. Members: Repo/Manager.cls:103-108 (IncludeSnapshots from criteria or tServer.Snapshots), Repo/Utils.cls:95. Missing contrast: a repository with Snapshots=0 vs 1 offering only 1.0.0+snapshot: not found vs installed."
+    }
+   ]
+  },
+  "repo.search-order": {
+   "body_sha": "42f2ad1e4d4d8eb4",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "repo.search-order#1",
+     "repo.search-order#2"
+    ],
+    "B1": [
+     "repo.search-order#3"
+    ],
+    "B2": [
+     "repo.search-order#4",
+     "repo.search-order#5"
+    ],
+    "B3": [
+     "repo.search-order#6"
+    ],
+    "B4": [
+     "repo.search-order#7",
+     "repo.search-order#8"
+    ],
+    "B5": [
+     "repo.search-order#9"
+    ],
+    "B6": "excluded: restates repo.origin.installed (concepts/data-policy, owned by another page) for the saved supplier and historical source"
+   },
+   "obligations": [
+    {
+     "id": "repo.search-order#1",
+     "units": [
+      "P1"
+     ],
+     "text": "IPM searches only enabled repositories for a module.",
+     "cases": "enabled vs disabled repository offering the module",
+     "observation": "repositories visited",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::repo_visited",
+      ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::search_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter3/proofs/models.json"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "repo_visited has an enabled parameter but no neighbour assertion or control sets it false. Missing contrast at Repo/Manager.cls::SearchRepositoriesForModule: a disabled repository offering a higher version is not visited and the enabled one supplies the install."
+    },
+    {
+     "id": "repo.search-order#2",
+     "units": [
+      "P1"
+     ],
+     "text": "A <repo>/<module> prefix limits the search to one repository.",
+     "cases": "qualified vs unqualified request with two repositories offering the module",
+     "observation": "repositories visited / supplier",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::repo_visited",
+      ".g5/Verus_verification/consolidated/iter4/repairs4.rs::visits_filesystem"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "registry_match is an input to repo_visited/visits_filesystem and is never exercised false. Missing contrast: install other/M with repositories main (2.0.0) and other (1.0.0) installs 1.0.0 from other; unqualified installs 2.0.0 from main (Main.cls install argument parsing -> SearchCriteria.Registry)."
+    },
+    {
+     "id": "repo.search-order#3",
+     "units": [
+      "B1"
+     ],
+     "text": "A request containing keywords skips filesystem repositories, even when the filesystem repository is explicitly named; ordinary name searches can use them.",
+     "cases": "filesystem vs remote repository; keywords vs none",
+     "observation": "repository visited",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::repo_visited",
+      ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::search_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter3/proofs/models.json"
+     ],
+     "basis": "reused:repositories metadata (iter3 public_repairs.rs; control keyword-search-visits-filesystem rejected)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.search-order#4",
+     "units": [
+      "B2"
+     ],
+     "text": "Keyword text is split on spaces with empty pieces dropped, so a keyword string of only spaces counts as no keywords and filesystem repositories are searched.",
+     "cases": "spaces-only vs padded word; text vs $list vs object input",
+     "observation": "keyword list; filesystem visited",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter4/repairs4.rs::keywords",
+      ".g5/Verus_verification/consolidated/iter4/repairs4.rs::visits_filesystem",
+      ".g5/Verus_verification/consolidated/iter4/repairs4.rs::keyword_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter4/proofs/models.json"
+     ],
+     "basis": "reused:repositories metadata (iter4 repairs4.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.search-order#5",
+     "units": [
+      "B2"
+     ],
+     "text": "The module name is lowercased before any repository is asked.",
+     "cases": "mixed-case vs lowercase name",
+     "observation": "criteria name",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter4/repairs4.rs::criteria_name",
+      ".g5/Verus_verification/consolidated/iter4/repairs4.rs::keyword_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter4/proofs/models.json"
+     ],
+     "basis": "reused:repositories metadata (iter4 repairs4.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.search-order#6",
+     "units": [
+      "B3"
+     ],
+     "text": "IPM takes the highest version that satisfies the request, whichever repository offers it.",
+     "cases": "newer version in a later repository vs older in an earlier one",
+     "observation": "selected candidate",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/temp_repo.rs::better",
+      ".g5/Verus_verification/consolidated/verus/temp_repo.rs::select",
+      ".g5/Verus_verification/consolidated/verus/temp_repo.rs::newer_version_beats_repository_priority"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:repositories metadata (Extension Verus temp_repo.rs::select)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.search-order#7",
+     "units": [
+      "B4"
+     ],
+     "text": "As built (C:D39), a filesystem repository offers one version per module, the first row after re-sorting by version columns with prerelease compared as text and a release after its own prereleases, so an unversioned install picks 2.0.0-beta.1 over 2.0.0 and 1.0.0-rc.2 over 1.0.0-rc.10.",
+     "cases": "repo_d (2.0.0, 2.0.0-beta.1) and repo_c (rc.2, rc.10): installed vs semantic max",
+     "observation": "installed version",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter34/versions.rs::installed",
+      ".g5/Verus_verification/consolidated/iter34/versions.rs::sql_before",
+      ".g5/Verus_verification/consolidated/iter34/versions.rs::release_versus_own_prerelease",
+      ".g5/Verus_verification/consolidated/iter34/versions.rs::fixture_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter34/run.json"
+     ],
+     "basis": "reused:repositories metadata (iter34 versions.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.search-order#8",
+     "units": [
+      "B4"
+     ],
+     "text": "The filesystem version index itself lists versions in version order.",
+     "cases": "rc.10 vs rc.2 index position; prerelease included vs excluded",
+     "observation": "cache query position",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter34/versions.rs::index_first_before",
+      ".g5/Verus_verification/consolidated/iter34/versions.rs::pos",
+      ".g5/Verus_verification/consolidated/iter34/versions.rs::releases_agree",
+      ".g5/Verus_verification/consolidated/iter34/versions.rs::fixture_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter34/run.json"
+     ],
+     "basis": "reused:repositories metadata (iter34 versions.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.search-order#9",
+     "units": [
+      "B5"
+     ],
+     "text": "When several repositories offer the selected version, the one created first wins; a repository's sort position does not change this.",
+     "cases": "equal version in two repositories with any sort values",
+     "observation": "selected candidate",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/temp_repo.rs::better",
+      ".g5/Verus_verification/consolidated/verus/temp_repo.rs::equal_version_older_repository_wins"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:repositories metadata (temp_repo.rs; better ignores the sort field for all inputs)",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "repo.install.version-request": {
+   "body_sha": "afa920d6404da6c9",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "repo.install.version-request#1"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "repo.install.version-request#1",
+     "units": [
+      "P1"
+     ],
+     "text": "An explicit install version constrains the module actually installed: a successful request for 1.0.0 must not silently install 2.0.0.",
+     "cases": "explicit 1.0.0 with stable vs edited filesystem source",
+     "observation": "status and installed version",
+     "grade": "full",
+     "check": "refuted",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter21/temporal.rs::install",
+      ".g5/Verus_verification/consolidated/iter21/temporal.rs::stale_neighbor",
+      ".g5/Verus_verification/consolidated/iter21/temporal.rs::stable_neighbor"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter21/run.json"
+     ],
+     "basis": "reused:repositories metadata (iter21 temporal.rs; C:D32: stale_one succeeds with installed version 2 for a 1.0.0 request)",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "repo.search.version-list": {
+   "body_sha": "dbfcc89cfd12d511",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "repo.search.version-list#1"
+    ],
+    "P2": [
+     "repo.search.version-list#2"
+    ],
+    "P3": "excluded: scope statement (major-only release domain after range parsing; other contracts named)"
+   },
+   "obligations": [
+    {
+     "id": "repo.search.version-list#1",
+     "units": [
+      "P1"
+     ],
+     "text": "An AllVersions search groups matching versions into one result per module, selecting the newest eligible version and listing eligible versions newest to oldest.",
+     "cases": "releases 1,2,3 unrestricted",
+     "observation": "row count, selected version, version list",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter8/catalog.rs::grouped",
+      ".g5/Verus_verification/consolidated/iter8/catalog.rs::ordered",
+      ".g5/Verus_verification/consolidated/iter8/catalog.rs::list_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter8/run.json"
+     ],
+     "basis": "reused:repositories metadata (iter8 catalog.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.search.version-list#2",
+     "units": [
+      "P2"
+     ],
+     "text": "Filtering happens before the grouped result is formed: a <3.0.0 search selects 2 and lists 2,1.",
+     "cases": "unrestricted vs <3.0.0 vs <1.0.0",
+     "observation": "selected version and list",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter8/catalog.rs::eligible",
+      ".g5/Verus_verification/consolidated/iter8/catalog.rs::grouped",
+      ".g5/Verus_verification/consolidated/iter8/catalog.rs::list_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter8/run.json"
+     ],
+     "basis": "reused:repositories metadata (iter8 catalog.rs)",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  }
+ }
+}

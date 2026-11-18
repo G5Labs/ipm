@@ -1,0 +1,637 @@
+{
+ "page": ".g5/ontology/features/update.g5.md",
+ "blocks": {
+  "update": {
+   "body_sha": "b52b9325fa2c6387",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "update#1",
+     "update#2",
+     "update#3"
+    ],
+    "B1": "excluded: restates history.actions (features/history.g5.md), the owner of the recorded action names"
+   },
+   "obligations": [
+    {
+     "id": "update#1",
+     "units": [
+      "P1"
+     ],
+     "text": "`update <module> [<version>]` moves an installed module to a newer version and runs its update steps.",
+     "cases": "update to a newer version with due steps vs all done",
+     "observation": "installed version, step records, steps run",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      "playbook-uplift/models/verus/update_steps.rs::end_ok",
+      "playbook-uplift/models/verus/update_steps.rs::inst_refines",
+      "playbook-uplift/models/verus/update_steps.rs::inst_ok_update_runs_iff_scheduled"
+     ],
+     "evidence": [
+      "playbook-uplift/models/verus/results/update_steps.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "update#2",
+     "units": [
+      "P1"
+     ],
+     "text": "Without a version, update moves to the latest available version.",
+     "cases": "update with vs without a version; offers 1.1.0 and 1.2.0",
+     "observation": "installed version",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "No model of Main.cls::Update version selection; update_steps takes the target version op.to as an input. Contrast: with 1.1.0 and 1.2.0 offered, update m installs 1.2.0."
+    },
+    {
+     "id": "update#3",
+     "units": [
+      "P1"
+     ],
+     "text": "-path <archive> updates from a local archive instead of a repository.",
+     "cases": "update -path archive vs repository",
+     "observation": "source of the installed payload",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [
+      "playbook-uplift/models/verus/update_steps.rs"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "update_steps.rs Source::Path only affects the DeveloperMode parameter; archive extraction and loading are not modeled. Contrast: update m -path m-1.2.0.tgz installs the archive payload without a repository."
+    }
+   ],
+   "parent": {
+    "children": [
+     "update.refusal",
+     "update.dev-mode",
+     "update.requirements",
+     "update.steps"
+    ],
+    "entailment": "Lead obligations are graded directly; no parent obligation is credited by composition."
+   }
+  },
+  "update.refusal": {
+   "body_sha": "7e9f9959a3fa667b",
+   "status": "enumerated",
+   "units": {
+    "P1": "excluded: list heading for the refusal bullets",
+    "B1": [
+     "update.refusal#1",
+     "update.refusal#2"
+    ],
+    "B2": [
+     "update.refusal#3"
+    ],
+    "B3": [
+     "update.refusal#4"
+    ],
+    "B4": "excluded: restates load.refusal.downgrade (features/load.g5.md)",
+    "P2": [
+     "update.refusal#5"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "update.refusal#1",
+     "units": [
+      "B1"
+     ],
+     "text": "IPM refuses an update of a module that is not installed.",
+     "cases": "update of an absent module vs installed module",
+     "observation": "outcome Refused and unchanged namespace",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      "playbook-uplift/models/verus/update_steps.rs::refuses",
+      "playbook-uplift/models/verus/update_steps.rs::end_refused",
+      "playbook-uplift/models/verus/update_steps.rs::inst_refines"
+     ],
+     "evidence": [
+      "playbook-uplift/models/verus/results/update_steps.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "update.refusal#2",
+     "units": [
+      "B1"
+     ],
+     "text": "The not-installed refusal points the user to install or load.",
+     "cases": "update of an absent module",
+     "observation": "error message text",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "No model of the Main.cls:4415-4423 message. Contrast: the refusal text names install and load."
+    },
+    {
+     "id": "update.refusal#3",
+     "units": [
+      "B2"
+     ],
+     "text": "IPM refuses an update when -DPermitDowngrade is given.",
+     "cases": "update with vs without -DPermitDowngrade",
+     "observation": "status and unchanged module",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "No model of the PermitDowngrade guard in Main.cls::Update. Contrast: update m 1.2.0 -DPermitDowngrade=1 is refused before any history row; without the flag it proceeds."
+    },
+    {
+     "id": "update.refusal#4",
+     "units": [
+      "B3"
+     ],
+     "text": "IPM refuses an update when the -path archive holds a different module from the one named.",
+     "cases": "update A -path <B archive> vs <A archive>",
+     "observation": "status, error, namespace and ModuleRoot after the command",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "No model. Per metadata (D16) the as-built path crashes with <INVALID OREF> in LoadNewModule before the mismatch check, and B's archive stays unpacked under ModuleRoot; neither the intended refusal nor the crash is modeled."
+    },
+    {
+     "id": "update.refusal#5",
+     "units": [
+      "P2"
+     ],
+     "text": "Like a refused load, a refused update keeps no module data.",
+     "cases": "each refusal reason vs a successful update",
+     "observation": "module records, documents and step records after the command",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      "playbook-uplift/models/verus/update_steps.rs::end_refused",
+      "playbook-uplift/models/verus/update_steps.rs::inst_refines"
+     ],
+     "evidence": [
+      "playbook-uplift/models/verus/results/update_steps.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "end_refused (database equal to the starting state) covers the not-installed and downgrade refusals only. The PermitDowngrade and -path mismatch refusals are not modeled, and for the mismatch the archive left under ModuleRoot (D16) is outside the database model."
+    }
+   ]
+  },
+  "update.dev-mode": {
+   "body_sha": "1ca8618bc27d90db",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "update.dev-mode#1"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "update.dev-mode#1",
+     "units": [
+      "P1"
+     ],
+     "text": "`update` does not pass developer mode on to dependencies.",
+     "cases": "update -dev of a parent with a registry dependency (release vs snapshot) and a directory dependency",
+     "observation": "dependency DeveloperMode after update",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      "playbook-uplift/models/verus/update_steps.rs::param_dev",
+      "playbook-uplift/models/verus/update_steps.rs::dev_run"
+     ],
+     "evidence": [
+      "playbook-uplift/models/verus/results/update_steps.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "param_dev models the DeveloperMode parameter of one LoadNewModule run by source and kind, but update_steps has no dependency loads under an update, so no rule contrasts the parent's -dev with its dependencies' mode. param_dev gives a snapshot registry dependency developer mode under -dev, which would contradict the block if update passes -dev down; the update caller's removal of the parameter (CHANGELOG #1036) is not modeled."
+    }
+   ]
+  },
+  "update.requirements": {
+   "body_sha": "ad84297ea387e91d",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "update.requirements#1",
+     "update.requirements#2"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "update.requirements#1",
+     "units": [
+      "P1"
+     ],
+     "text": "`update` checks version requirements against the versions modules will have after the update, not the ones installed now.",
+     "cases": "installed module requiring the old version of a co-updated module",
+     "observation": "resolution outcome",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      "playbook-uplift/models/verus/dep_resolve.rs::excluded",
+      "playbook-uplift/models/verus/dep_resolve.rs::inst_ok",
+      "playbook-uplift/models/verus/dep_resolve.rs::dep_refines"
+     ],
+     "evidence": [
+      "playbook-uplift/models/verus/results/dep_resolve.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "dep_resolve excludes known/co-updating modules from the installed-requirement check (g.known is an input) and proves soundness, but no witness contrasts update with install on the same namespace; how Main.cls::Update populates the co-updating set is not modeled (iter31 states co-updating exclusion is not represented)."
+    },
+    {
+     "id": "update.requirements#2",
+     "units": [
+      "P1"
+     ],
+     "text": "Shared dependencies that must move in lock-step update together instead of failing.",
+     "cases": "two modules sharing a dependency that both require at new versions",
+     "observation": "update succeeds with both moved",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      "playbook-uplift/models/verus/dep_resolve.rs::excluded",
+      "playbook-uplift/models/verus/dep_resolve.rs::dep_refines"
+     ],
+     "evidence": [
+      "playbook-uplift/models/verus/results/dep_resolve.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "No model of the lock-step co-update (BuildDependencyGraph with co-updating modules, Update.cls TestSharedTransitiveDependencyUpdate). Contrast: updating A where shared dependency S must move from 1.x to 2.x together with B succeeds rather than failing the installed-requirement check."
+    }
+   ]
+  },
+  "update.steps": {
+   "body_sha": "ef5c16be30de4256",
+   "status": "enumerated",
+   "units": {
+    "P1": "excluded: definition (a module declaring <UpdatePackage> provides update steps)",
+    "B1": [
+     "update.steps#1"
+    ],
+    "B2": [
+     "update.steps#2",
+     "update.steps#3"
+    ],
+    "B3": [
+     "update.steps#4"
+    ],
+    "B4": "excluded: author-side premise with undecided alternatives (open question update.steps.shared-ownership); no product outcome",
+    "B5": [
+     "update.steps#5"
+    ],
+    "B6": [
+     "update.steps#6"
+    ],
+    "B7": [
+     "update.steps#7"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "update.steps#1",
+     "units": [
+      "B1"
+     ],
+     "text": "Each V<major> class in the update package lists its step methods in order; update walks classes ascending, the all-member list before the primary-only list, each in author order.",
+     "cases": "steps across two classes and both lists",
+     "observation": "order of steps run",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      "playbook-uplift/models/verus/update_steps.rs::wf",
+      "playbook-uplift/models/verus/update_steps.rs::inst_ok_update_runs_in_walk_order"
+     ],
+     "evidence": [
+      "playbook-uplift/models/verus/results/update_steps.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "update.steps#2",
+     "units": [
+      "B2"
+     ],
+     "text": "Steps report errors by throwing; a throwing step fails the update and no later step runs.",
+     "cases": "step throws vs succeeds",
+     "observation": "outcome and steps run",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      "playbook-uplift/models/verus/update_steps.rs::end_failed",
+      "playbook-uplift/models/verus/update_steps.rs::log_is",
+      "playbook-uplift/models/verus/update_steps.rs::honest_end",
+      "playbook-uplift/models/verus/update_steps.rs::inst_refines"
+     ],
+     "evidence": [
+      "playbook-uplift/models/verus/results/update_steps.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "update.steps#3",
+     "units": [
+      "B2"
+     ],
+     "text": "Steps must be safe to run again: a rolled-back update reruns steps that had worked.",
+     "cases": "second step fails in a transactional update, then retry",
+     "observation": "steps scheduled on retry; external effects",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      "playbook-uplift/models/verus/update_steps.rs::inst_witness_failed_update_repeats_effects"
+     ],
+     "evidence": [
+      "playbook-uplift/models/verus/results/update_steps.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "update.steps#4",
+     "units": [
+      "B3"
+     ],
+     "text": "`update` runs the steps needed from the current to the new version (as built: every due step by the record of completed steps).",
+     "cases": "records done vs missing vs failed",
+     "observation": "steps run",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      "playbook-uplift/models/verus/update_steps.rs::due",
+      "playbook-uplift/models/verus/update_steps.rs::inst_ok_update_runs_iff_scheduled",
+      "playbook-uplift/models/verus/update_steps.rs::inst_all_done_runs_nothing",
+      "playbook-uplift/models/verus/update_steps.rs::inst_fresh_update_runs_all"
+     ],
+     "evidence": [
+      "playbook-uplift/models/verus/results/update_steps.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "update.steps#5",
+     "units": [
+      "B5"
+     ],
+     "text": "Working assumption: a developer-mode install or load seeds update steps like any install, so a later update runs only newer steps.",
+     "cases": "dev install then update vs non-dev install then update",
+     "observation": "steps of older classes run by the update",
+     "grade": "full",
+     "check": "refuted",
+     "models": [
+      "playbook-uplift/models/verus/update_steps.rs::inst_witness_dev_install_leaves_steps_due",
+      "playbook-uplift/models/verus/update_steps.rs::end_ok"
+     ],
+     "evidence": [
+      "playbook-uplift/models/verus/results/update_steps.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "update.steps#6",
+     "units": [
+      "B6"
+     ],
+     "text": "Working assumption: a module that update installs for the first time has its steps seeded, as on a fresh install.",
+     "cases": "dependency first installed during update vs fresh install",
+     "observation": "steps run vs seeded",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      "playbook-uplift/models/verus/update_steps.rs::inst_fresh_update_runs_all"
+     ],
+     "evidence": [
+      "playbook-uplift/models/verus/results/update_steps.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "inst_fresh_update_runs_all shows an Update-kind run with no records runs every step (which would refute the assumption), but whether a dependency newly installed by update runs as kind Update (Utils/Module.cls:316, Lifecycle/Module.cls:122) is an input. Contrast: update P that first installs dependency D runs D's steps vs install D seeding them."
+    },
+    {
+     "id": "update.steps#7",
+     "units": [
+      "B7"
+     ],
+     "text": "Working assumption: if the update lock is busy, update fails with an error saying so and never reports success.",
+     "cases": "lock granted vs busy",
+     "observation": "outcome and steps run",
+     "grade": "full",
+     "check": "refuted",
+     "models": [
+      "playbook-uplift/models/verus/update_steps.rs::inst_witness_busy_lock_reports_success"
+     ],
+     "evidence": [
+      "playbook-uplift/models/verus/results/update_steps.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "update.steps.shared-execution": {
+   "body_sha": "a23a404ce58d3ff9",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "update.steps.shared-execution#1"
+    ],
+    "B1": [
+     "update.steps.shared-execution#2"
+    ],
+    "B2": [
+     "update.steps.shared-execution#3"
+    ],
+    "B3": "excluded: rationale and scope (entry counter vs idempotent payload; no at-most-once policy promised)",
+    "B4": "excluded: pointer to the open shared-ownership question and listed boundaries",
+    "B5": "excluded: restates the author-side working assumption of update.steps B4 (excluded there: undecided alternatives)"
+   },
+   "obligations": [
+    {
+     "id": "update.steps.shared-execution#1",
+     "units": [
+      "P1"
+     ],
+     "text": "The step lock belongs to the module and the record to class and method, so two modules sharing a due step can both enter it and both report success; serial calls enter once and then reuse its completion.",
+     "cases": "concurrent A and B vs serial A then B",
+     "observation": "entry count, results",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter11/shared_steps.rs::lock_key",
+      ".g5/Verus_verification/consolidated/iter11/shared_steps.rs::begin",
+      ".g5/Verus_verification/consolidated/iter11/shared_steps.rs::enter",
+      ".g5/Verus_verification/consolidated/iter11/shared_steps.rs::finish",
+      ".g5/Verus_verification/consolidated/iter11/shared_steps.rs::serial",
+      ".g5/Verus_verification/consolidated/iter11/shared_steps.rs::shared_key_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter11/run.json"
+     ],
+     "basis": "reused:.g5/ontology/features/update.g5.md metadata (iter11 shared_steps.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "update.steps.shared-execution#2",
+     "units": [
+      "B1"
+     ],
+     "text": "In the checked two-process schedule, B saves its completion and home first and A's later save restores A as the home (snapshot save).",
+     "cases": "finish B then A, snapshot vs delta save",
+     "observation": "row home",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter11/shared_steps.rs::finish",
+      ".g5/Verus_verification/consolidated/iter11/shared_steps.rs::shared_key_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter11/run.json"
+     ],
+     "basis": "reused:.g5/ontology/features/update.g5.md metadata (iter11 shared_steps.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "update.steps.shared-execution#3",
+     "units": [
+      "B2"
+     ],
+     "text": "Two calls for the same module share a lock; the second can wait out its timeout and return success without entering the step.",
+     "cases": "same module second attempt while the first holds the lock",
+     "observation": "started flag, result, entry count",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter11/shared_steps.rs::same_attempt",
+      ".g5/Verus_verification/consolidated/iter11/shared_steps.rs::busy_preserves_state",
+      ".g5/Verus_verification/consolidated/iter11/shared_steps.rs::shared_key_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter11/run.json"
+     ],
+     "basis": "reused:.g5/ontology/features/update.g5.md metadata (iter11 shared_steps.rs)",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "update.steps.records": {
+   "body_sha": "f3043f9c0398b3da",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "update.steps.records#1",
+     "update.steps.records#2"
+    ],
+    "B1": [
+     "update.steps.records#3"
+    ],
+    "B2": "excluded: scope statement (successful registration, seeding and deletion in one namespace; concurrency owned by update.steps.shared-execution)"
+   },
+   "obligations": [
+    {
+     "id": "update.steps.records#1",
+     "units": [
+      "P1"
+     ],
+     "text": "A saved update-step record is unique by class and method within its kind, not by module; registering the key for another module moves its home and keeps completion and status.",
+     "cases": "module 1 seeds, module 2 registers the same key",
+     "observation": "row home, completed, ok",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter9/ownership.rs::get_add",
+      ".g5/Verus_verification/consolidated/iter9/ownership.rs::seed",
+      ".g5/Verus_verification/consolidated/iter9/ownership.rs::cascade_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter9/INDEX.md"
+     ],
+     "basis": "reused:.g5/ontology/features/update.g5.md metadata (iter9 ownership.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "update.steps.records#2",
+     "units": [
+      "P1"
+     ],
+     "text": "Seeding a successful completed record does not run it again.",
+     "cases": "completed-ok record vs failed record at the next update",
+     "observation": "step due / entered",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter9/ownership.rs::seed",
+      ".g5/Verus_verification/consolidated/iter11/shared_steps.rs::completed_success_is_not_due",
+      ".g5/Verus_verification/consolidated/iter11/shared_steps.rs::shared_key_neighbors",
+      "playbook-uplift/models/verus/update_steps.rs::inst_all_done_runs_nothing"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      "playbook-uplift/models/verus/results/update_steps.json"
+     ],
+     "basis": "reused:.g5/ontology/features/update.g5.md metadata (iter9) plus iter11/update_steps for the run",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "update.steps.records#3",
+     "units": [
+      "B1"
+     ],
+     "text": "Any-member and primary-only steps use separate stores; deleting a module removes the records whose current home is that module, and records moved to another module survive until that home is deleted.",
+     "cases": "delete module 1 before and after moving one kind to module 2",
+     "observation": "records present per kind",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter9/ownership.rs::delete_module",
+      ".g5/Verus_verification/consolidated/iter9/ownership.rs::cascade_preserves_other_home",
+      ".g5/Verus_verification/consolidated/iter9/ownership.rs::cascade_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/update.g5.md metadata (iter9 ownership.rs)",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  }
+ }
+}

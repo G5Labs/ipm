@@ -1,0 +1,1182 @@
+{
+ "page": ".g5/ontology/concepts/testing-policy.g5.md",
+ "blocks": {
+  "module.resource.scope": {
+   "body_sha": "f8ff11c94a0511c2",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "module.resource.scope#1",
+     "module.resource.scope#2"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "module.resource.scope#1",
+     "units": [
+      "P1"
+     ],
+     "text": "A Scope=\"test\" resource stays out of ordinary installs (load), and is loaded and compiled in the Test phase of a command whose phase list includes Test.",
+     "cases": "test-scoped vs unscoped resource under load/install vs test (and verify, whose list has no Test)",
+     "observation": "whether the resource is loaded and compiled after the command",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      "playbook-uplift/models/verus/scopes.rs::res_present_one",
+      "playbook-uplift/models/verus/scopes.rs::res_present",
+      "playbook-uplift/models/verus/scopes.rs::l1_present",
+      "playbook-uplift/models/verus/scopes.rs::res_witness_verify_skips_test_scoped"
+     ],
+     "evidence": [
+      "playbook-uplift/models/verus/results/scopes.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70 (playbook scopes.rs is not linked from this block)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "module.resource.scope#2",
+     "units": [
+      "P1"
+     ],
+     "text": "Packaging leaves a Scope=\"test\" resource out unless tests are included (-include-tests or manifest IncludeTests); an explicit -DIncludeTests=0 overrides the manifest.",
+     "cases": "package/publish with include flag or manifest IncludeTests vs neither vs explicit 0",
+     "observation": "membership of the resource in the exported package",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      "playbook-uplift/models/verus/scopes.rs::res_export",
+      "playbook-uplift/models/verus/scopes.rs::l1_exported",
+      "playbook-uplift/models/verus/scopes.rs::res_witness_explicit_zero_overrides_manifest"
+     ],
+     "evidence": [
+      "playbook-uplift/models/verus/results/scopes.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70 (playbook scopes.rs is not linked from this block)",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "build.test.selection": {
+   "body_sha": "5fd07fce7018ca1c",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "build.test.selection#1",
+     "build.test.selection#2",
+     "build.test.selection#3"
+    ],
+    "B1": [
+     "build.test.selection#2"
+    ],
+    "B2": [
+     "build.test.selection#4",
+     "build.test.selection#5"
+    ],
+    "B3": [
+     "build.test.selection#6",
+     "build.test.selection#7"
+    ],
+    "B4": "excluded: scope statement separating the two readers already graded in B3 (#6 vs #7) and pointing to the path conversion owned by devtools.sync.test-paths (developer-tools page); no additional outcome"
+   },
+   "obligations": [
+    {
+     "id": "build.test.selection#1",
+     "units": [
+      "P1"
+     ],
+     "text": "A test resource must declare exactly one of Class and Package.",
+     "cases": "Class only vs Package only vs both vs neither",
+     "observation": "validation admission",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::valid_test_target",
+      ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::test_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter3/INDEX.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/concepts/testing-policy.g5.md metadata",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "build.test.selection#2",
+     "units": [
+      "P1",
+      "B1"
+     ],
+     "text": "The requested phase is lowercased and matched exactly against the declared phase list, which validation admits only as lowercase test/verify; a stored TEST would never match.",
+     "cases": "uppercase request with admitted lowercase declaration (selected) vs unadmitted stored TEST (not selected)",
+     "observation": "test resource selection for the phase",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter4/repairs4.rs::phase_enabled",
+      ".g5/Verus_verification/consolidated/iter4/repairs4.rs::admitted",
+      ".g5/Verus_verification/consolidated/iter4/repairs4.rs::lemma_admitted_agree",
+      ".g5/Verus_verification/consolidated/iter4/repairs4.rs::phase_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter4/run_all.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/concepts/testing-policy.g5.md metadata (iteration 4 phase-domain repair; controls stored-phase-folded and request-not-lowercased rejected)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "build.test.selection#3",
+     "units": [
+      "P1"
+     ],
+     "text": "A Class resource ignores Suite and Case path selectors.",
+     "cases": "Class resource (empty package) with an unrelated Suite/Case vs Package resource with an unrelated Case",
+     "observation": "selection",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::test_selected",
+      ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::test_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter3/INDEX.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/concepts/testing-policy.g5.md metadata",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "build.test.selection#4",
+     "units": [
+      "B2"
+     ],
+     "text": "A Package resource uses Suite when that key is defined, otherwise Case; a defined empty Suite takes precedence over Case and turns path filtering off.",
+     "cases": "defined empty Suite with a non-matching Case (selected) vs undefined Suite with the same Case (not selected)",
+     "observation": "selection",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::test_selected",
+      ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::test_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter3/INDEX.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/concepts/testing-policy.g5.md metadata",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "build.test.selection#5",
+     "units": [
+      "B2"
+     ],
+     "text": "Suite slashes (and backslashes) become dots before prefix comparison.",
+     "cases": "Suite \"A/B\" against package A.B vs a dotted Suite",
+     "observation": "selection of the Package resource",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::suite_path",
+      ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::test_selected"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter3/INDEX.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "suite_path is defined but no theorem or neighbour applies it to a Suite containing a slash; every exercised Suite is slash-free (seq![9] or empty). The contrast Suite \"A/B\" selecting package A.B (and a mutated suite_path that keeps the slash being rejected) is missing."
+    },
+    {
+     "id": "build.test.selection#6",
+     "units": [
+      "B3"
+     ],
+     "text": "Package selection compares raw prefixes in either direction, so package A is selected by request AB.",
+     "cases": "request AB vs request Z against package A",
+     "observation": "selection",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::test_selected",
+      ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::prefix",
+      ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::test_neighbors",
+      ".g5/Verus_verification/consolidated/iter2/readers.rs::raw_prefix_admits_sibling_name"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter3/INDEX.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/concepts/testing-policy.g5.md metadata",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "build.test.selection#7",
+     "units": [
+      "B3"
+     ],
+     "text": "Changed-class ownership is stricter: a Package resource owns A or A.<class>, and rejects AB.",
+     "cases": "class A.C vs class AB for package A",
+     "observation": "owns_class result (sync assignment)",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::owns_class",
+      ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::test_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter3/INDEX.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/concepts/testing-policy.g5.md metadata",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "build.test.outcome": {
+   "body_sha": "ff2b210611af71e4",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "build.test.outcome#1"
+    ],
+    "B1": [
+     "build.test.outcome#2"
+    ],
+    "B2": [
+     "build.test.outcome#3"
+    ],
+    "B3": [
+     "build.test.outcome#4",
+     "build.test.outcome#5"
+    ],
+    "B4": [
+     "build.test.outcome#6"
+    ]
+   },
+   "parent": {
+    "children": [
+     "build.test.outcome.not-fatal",
+     "build.test.outcome.empty",
+     "build.test.outcome.nested",
+     "build.test.outcome.exit"
+    ],
+    "entailment": "The parent states its own counting, run-all, report-before-count and FAILED-line rules, graded directly from test_outcome.rs. B4 restates the exit child (alias). No parent obligation is credited by composition."
+   },
+   "obligations": [
+    {
+     "id": "build.test.outcome#1",
+     "units": [
+      "P1"
+     ],
+     "text": "A test command fails when any test it ran failed; each case error, method error and failed assertion counts as one failure (the error reads \"N failure(s)\").",
+     "cases": "fixture log with a case error, a method error and two failed assertions (4) vs passing log (0)",
+     "observation": "failure count and command status",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter4/test_outcome.rs::failures",
+      ".g5/Verus_verification/consolidated/iter4/test_outcome.rs::fixture_counts",
+      ".g5/Verus_verification/consolidated/iter4/test_outcome.rs::resource_ok",
+      ".g5/Verus_verification/consolidated/iter4/test_outcome.rs::outcome_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter4/run_all.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/concepts/testing-policy.g5.md metadata",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "build.test.outcome#2",
+     "units": [
+      "B1"
+     ],
+     "text": "Every in-scope test resource runs even after an earlier one fails and the command reports one combined failure; sync -test stops at the first failing resource instead.",
+     "cases": "failing first resource followed by passing and empty resources, lifecycle vs sync",
+     "observation": "which resources are invoked; aggregate status",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter4/test_outcome.rs::lifecycle_invoked",
+      ".g5/Verus_verification/consolidated/iter4/test_outcome.rs::sync_invoked",
+      ".g5/Verus_verification/consolidated/iter4/test_outcome.rs::all_ok",
+      ".g5/Verus_verification/consolidated/iter4/test_outcome.rs::outcome_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter4/run_all.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/concepts/testing-policy.g5.md metadata",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "build.test.outcome#3",
+     "units": [
+      "B2"
+     ],
+     "text": "Failures are counted after the report file is written, so a .json/.xml file exists for a failing run; an unsupported extension such as .csv fails the command after passing tests and writes no file.",
+     "cases": "failing run with .json vs passing run with .csv",
+     "observation": "report file written; command status",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter4/test_outcome.rs::report_written",
+      ".g5/Verus_verification/consolidated/iter4/test_outcome.rs::resource_ok",
+      ".g5/Verus_verification/consolidated/iter4/test_outcome.rs::outcome_neighbors",
+      ".g5/Verus_verification/consolidated/verus/thin_surfaces.rs::report_result"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter4/run_all.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/concepts/testing-policy.g5.md metadata",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "build.test.outcome#4",
+     "units": [
+      "B3"
+     ],
+     "text": "The red FAILED lines list the same rows that are counted.",
+     "cases": "failing slots after the start, with and without an empty slot",
+     "observation": "number of printed FAILED lines vs counted failures",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter4/test_outcome.rs::displayed_lines",
+      ".g5/Verus_verification/consolidated/iter4/test_outcome.rs::suffix_failures",
+      ".g5/Verus_verification/consolidated/iter4/test_outcome.rs::accumulator_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter4/run_all.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/concepts/testing-policy.g5.md metadata",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "build.test.outcome#5",
+     "units": [
+      "B3"
+     ],
+     "text": "The red FAILED lines appear only when no summary format is active.",
+     "cases": "failing run with a summary format (-DUnitTest.Format / device JSON) vs without",
+     "observation": "presence of FAILED lines on the device",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter4/test_outcome.rs::displayed_lines",
+      ".g5/Verus_verification/consolidated/iter2/readers.rs::json_device"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter4/run_all.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "displayed_lines has no summary-format input, and readers.rs json_device selects summary content but not whether OutputFailures prints. The pair \"failing run with JSON summary format active prints no FAILED lines\" vs \"same run without a format prints them\" is unmodeled (Test.cls::ReportTestResults / Test/Manager.cls::OutputFailures)."
+    },
+    {
+     "id": "build.test.outcome#6",
+     "units": [
+      "B4"
+     ],
+     "text": "A CI job learns the result only from the command status and exit code.",
+     "alias_of": "build.test.outcome.exit#1",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "build.test.outcome.not-fatal": {
+   "body_sha": "bc7c23c62fd9fa37",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "build.test.outcome.not-fatal#1",
+     "build.test.outcome.not-fatal#2"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "build.test.outcome.not-fatal#1",
+     "units": [
+      "P1"
+     ],
+     "text": "-DUnitTest.FailuresAreFatal=0 makes a run with failing tests succeed, and the process exit code stays 0 even with the terminate flag.",
+     "cases": "same failing resources with fatal=true (fails) vs fatal=false (succeeds); exit_code for a succeeded command",
+     "observation": "command status; process exit code",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter4/test_outcome.rs::resource_ok",
+      ".g5/Verus_verification/consolidated/iter4/test_outcome.rs::all_ok",
+      ".g5/Verus_verification/consolidated/iter4/test_outcome.rs::exit_code",
+      ".g5/Verus_verification/consolidated/iter4/test_outcome.rs::outcome_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter4/run_all.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/concepts/testing-policy.g5.md metadata (control not-fatal-still-fails rejected)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "build.test.outcome.not-fatal#2",
+     "units": [
+      "P1"
+     ],
+     "text": "With FailuresAreFatal=0 the summary still says \"Some tests FAILED\", no failure is counted and no FAILED lines are printed.",
+     "cases": "non-fatal failing run vs fatal failing run",
+     "observation": "summary text; FAILED lines; failure count",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [
+      ".g5/uplift/consolidated/iter4/run_all.json"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "No model connects the fatal flag to the reader: get_all_status/displayed_lines are never conditioned on fatal, and no summary text is modeled. Contrast: non-fatal failing run (ReportTestResults skips GetAllTestsStatus/OutputFailures: 0 counted, 0 FAILED lines, summary \"Some tests FAILED\") vs fatal run (N counted and printed). Native T2/E4 only."
+    }
+   ]
+  },
+  "build.test.outcome.empty": {
+   "body_sha": "a8a88d6cc6bb8755",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "build.test.outcome.empty#1",
+     "build.test.outcome.empty#2"
+    ],
+    "B1": [
+     "build.test.outcome.empty#3"
+    ],
+    "B2": "excluded: pointer to the open question build.test.outcome.empty.policy (undecided policy)",
+    "B3": "excluded: working assumption restating the as-built warning and pass of P1 (#1, #2) and listing undecided alternatives"
+   },
+   "obligations": [
+    {
+     "id": "build.test.outcome.empty#1",
+     "units": [
+      "P1"
+     ],
+     "text": "A Package test resource whose package has no test classes is skipped and the command can still succeed.",
+     "cases": "empty package resource vs named Suite with a missing directory",
+     "observation": "resource run; command status",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter4/test_outcome.rs::ran",
+      ".g5/Verus_verification/consolidated/iter4/test_outcome.rs::resource_ok",
+      ".g5/Verus_verification/consolidated/iter4/test_outcome.rs::outcome_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter4/run_all.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/concepts/testing-policy.g5.md metadata (control empty-package-fails rejected)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "build.test.outcome.empty#2",
+     "units": [
+      "P1"
+     ],
+     "text": "The skipped empty package prints a warning.",
+     "cases": "empty package vs package with classes",
+     "observation": "warning line on the device",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [
+      ".g5/uplift/consolidated/iter4/run_all.json"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "The warning is native-only (T1). test_outcome.rs has no output for a skipped resource; the pair \"empty package prints the no-class warning\" vs \"non-empty package prints none\" (Test.cls::OnPhase) is unmodeled."
+    },
+    {
+     "id": "build.test.outcome.empty#3",
+     "units": [
+      "B1"
+     ],
+     "text": "A Suite selector naming a folder that does not exist fails the command (\"Directory name ... is invalid\") before any test runs.",
+     "cases": "named Suite with missing directory vs empty unnamed package",
+     "observation": "command status; tests run",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter4/test_outcome.rs::load_fails",
+      ".g5/Verus_verification/consolidated/iter4/test_outcome.rs::resource_ok",
+      ".g5/Verus_verification/consolidated/iter4/test_outcome.rs::outcome_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter4/run_all.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/concepts/testing-policy.g5.md metadata (control missing-suite-dir-skipped rejected)",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "build.test.outcome.nested": {
+   "body_sha": "be04cd3c4b456d8d",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "build.test.outcome.nested#1"
+    ],
+    "B1": [
+     "build.test.outcome.nested#2"
+    ],
+    "B2": [
+     "build.test.outcome.nested#3",
+     "build.test.outcome.nested#4"
+    ],
+    "B3": [
+     "build.test.outcome.nested#5"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "build.test.outcome.nested#1",
+     "units": [
+      "P1"
+     ],
+     "text": "Test results gather in a per-process list; each test resource counts only the results added after it started, then removes them.",
+     "cases": "reader start 1 over [passing parent, failing child] vs start 0",
+     "observation": "count, status and remaining list",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter4/test_outcome.rs::get_all_status",
+      ".g5/Verus_verification/consolidated/iter4/test_outcome.rs::suffix_failures",
+      ".g5/Verus_verification/consolidated/iter4/test_outcome.rs::lemma_suffix_ignores_prefix",
+      ".g5/Verus_verification/consolidated/iter4/test_outcome.rs::accumulator_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter4/run_all.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/concepts/testing-policy.g5.md metadata (controls nested-clears-parent and nested-counts-parent-slots rejected)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "build.test.outcome.nested#2",
+     "units": [
+      "B1"
+     ],
+     "text": "A nested test command counts and removes only its own results; the outer run's earlier results stay, and the outer reader then sees only its own slot (it learns of the inner failure only through the inner command status).",
+     "cases": "nested reader after a passing parent slot, then the parent reader from 0",
+     "observation": "nested status/count, list after nested read, parent status",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter4/test_outcome.rs::get_all_status",
+      ".g5/Verus_verification/consolidated/iter4/test_outcome.rs::lemma_nested_keeps_parent",
+      ".g5/Verus_verification/consolidated/iter4/test_outcome.rs::accumulator_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter4/run_all.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/concepts/testing-policy.g5.md metadata",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "build.test.outcome.nested#3",
+     "units": [
+      "B2"
+     ],
+     "text": "A reader that started from an empty list removes the whole list; a later test command starts after leftover entries and ignores them.",
+     "cases": "start 0 vs start>0; later reader after a failing leftover slot",
+     "observation": "list after read; later status",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter4/test_outcome.rs::get_all_status",
+      ".g5/Verus_verification/consolidated/iter4/test_outcome.rs::lemma_suffix_ignores_prefix",
+      ".g5/Verus_verification/consolidated/iter4/test_outcome.rs::accumulator_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter4/run_all.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/concepts/testing-policy.g5.md metadata",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "build.test.outcome.nested#4",
+     "units": [
+      "B2"
+     ],
+     "text": "When failures are not fatal, or when the report step fails first, nothing is removed from the list.",
+     "cases": "non-fatal or report-failure resource vs fatal successful report",
+     "observation": "list contents after the resource",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [
+      ".g5/uplift/consolidated/iter4/run_all.json"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "get_all_status always consumes; no model represents ReportTestResults returning before GetAllTestsStatus. Contrast: FailuresAreFatal=0 (or .csv report failure) leaves the run's entries in the list vs the fatal path truncating them; then a later reader started after them ignores them."
+    },
+    {
+     "id": "build.test.outcome.nested#5",
+     "units": [
+      "B3"
+     ],
+     "text": "FAILED lines are printed only for results after the start, and empty entries are skipped.",
+     "cases": "display from slot 1 vs 2; empty middle slot",
+     "observation": "number of printed lines",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter4/test_outcome.rs::displayed_lines",
+      ".g5/Verus_verification/consolidated/iter4/test_outcome.rs::accumulator_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter4/run_all.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/concepts/testing-policy.g5.md metadata (control display-includes-start-slot rejected)",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "devtools.sync.test-stop": {
+   "body_sha": "5209236476cf2d46",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "devtools.sync.test-stop#1",
+     "devtools.sync.test-stop#2"
+    ],
+    "B1": [
+     "devtools.sync.test-stop#3"
+    ],
+    "B2": [
+     "devtools.sync.test-stop#4"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "devtools.sync.test-stop#1",
+     "units": [
+      "P1"
+     ],
+     "text": "sync -test runs test resources one at a time and stops at the first resource whose tests fail, so later resources do not run in that sync; test runs every resource.",
+     "cases": "failing first resource: sync invokes no later resource vs lifecycle invokes all",
+     "observation": "which resources are invoked",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter4/test_outcome.rs::sync_invoked",
+      ".g5/Verus_verification/consolidated/iter4/test_outcome.rs::lifecycle_invoked",
+      ".g5/Verus_verification/consolidated/iter4/test_outcome.rs::outcome_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter4/run_all.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/concepts/testing-policy.g5.md metadata (controls sync-runs-all-resources and lifecycle-stops-at-first-failure rejected)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "devtools.sync.test-stop#2",
+     "units": [
+      "P1"
+     ],
+     "text": "sync -test runs the changed test classes.",
+     "alias_of": "devtools.sync#6",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "devtools.sync.test-stop#3",
+     "units": [
+      "B1"
+     ],
+     "text": "File changes are recorded before tests run, so a test failure does not undo the sync.",
+     "alias_of": "devtools.sync#19",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "devtools.sync.test-stop#4",
+     "units": [
+      "B2"
+     ],
+     "text": "A test resource whose phase list lacks test is skipped and reported as verify-only.",
+     "alias_of": "devtools.sync.skipped-tracking#6",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "build.test.outcome.exit": {
+   "body_sha": "c3424ad5d0bf5c3f",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "build.test.outcome.exit#1",
+     "build.test.outcome.exit#2"
+    ],
+    "B1": "excluded: restates the zpm \",1\" and $zpm() behaviour owned by ipm.shell.forms (features/package-commands.g5.md)"
+   },
+   "obligations": [
+    {
+     "id": "build.test.outcome.exit#1",
+     "units": [
+      "P1"
+     ],
+     "text": "Shell(command, 1) ends the process with exit code 1 when the command fails; without the terminate flag a failed command exits 0.",
+     "cases": "failed vs passing command, with vs without the terminate flag",
+     "observation": "process exit code",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter4/test_outcome.rs::exit_code",
+      ".g5/Verus_verification/consolidated/iter4/test_outcome.rs::outcome_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter4/run_all.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/concepts/testing-policy.g5.md metadata (control exit-ignores-terminate-flag rejected)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "build.test.outcome.exit#2",
+     "units": [
+      "P1"
+     ],
+     "text": "zpm \"<command>\" and Shell(command) without the second argument exit 0 even when tests fail.",
+     "cases": "zpm form with failing tests vs Shell(command,1)",
+     "observation": "process exit code",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter4/test_outcome.rs::exit_code"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter4/run_all.json",
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "exit_code takes the terminate flag as an input. That Main.cls::LanguageExtensions (ZPM) calls Shell without the flag and discards its status is source/native-only (E3); no model of the zpm entry form distinguishes it from Shell(command,1)."
+    }
+   ]
+  },
+  "build.test-output.run-identity": {
+   "body_sha": "25779b09a8b87318",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "build.test-output.run-identity#1"
+    ],
+    "B1": [
+     "build.test-output.run-identity#2",
+     "build.test-output.run-identity#3",
+     "build.test-output.run-identity#4"
+    ],
+    "B2": [
+     "build.test-output.run-identity#5",
+     "build.test-output.run-identity#6"
+    ],
+    "B3": [
+     "build.test-output.run-identity#7"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "build.test-output.run-identity#1",
+     "units": [
+      "P1"
+     ],
+     "text": "Intended: the device summary and the exported report describe the same selected test run.",
+     "cases": "nested run (outer allocated before passing child) vs a run alone",
+     "observation": "run ID and case of device summary vs report file",
+     "grade": "full",
+     "check": "refuted",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter17/report_identity.rs::nested_identity_neighbors",
+      ".g5/Verus_verification/consolidated/iter17/report_identity.rs::report"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter17/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/concepts/testing-policy.g5.md metadata (C:D31; file ID 4 child vs device ID 3 outer)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "build.test-output.run-identity#2",
+     "units": [
+      "B1"
+     ],
+     "text": "The device summary uses the last tracked completed run.",
+     "cases": "tracked IDs [a,b] \u2192 b; nested state \u2192 outer a",
+     "observation": "device run ID",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter17/report_identity.rs::device_index",
+      ".g5/Verus_verification/consolidated/iter17/report_identity.rs::tracked_last_neighbor",
+      ".g5/Verus_verification/consolidated/iter17/report_identity.rs::symbolic_order_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter17/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/concepts/testing-policy.g5.md metadata",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "build.test-output.run-identity#3",
+     "units": [
+      "B1"
+     ],
+     "text": "The device summary falls back to the latest stored run only when tracking has no ID.",
+     "cases": "tracked list empty vs non-empty",
+     "observation": "device run ID",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter17/report_identity.rs::device_index",
+      ".g5/Verus_verification/consolidated/iter17/report_identity.rs::latest"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter17/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "The fallback branch of device_index (tracked_ids empty \u2192 latest(db)) is defined but every named state and neighbour has a tracked ID. The pair \"empty tracking with stored runs 1,2 \u2192 device reads 2\" vs \"tracking [1] \u2192 device reads 1\" is not exercised."
+    },
+    {
+     "id": "build.test-output.run-identity#4",
+     "units": [
+      "B1"
+     ],
+     "text": "File export omits the tracked ID and uses the numerically latest stored run.",
+     "cases": "nested state with ids a,b in either order",
+     "observation": "file run ID",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter17/report_identity.rs::file_index",
+      ".g5/Verus_verification/consolidated/iter17/report_identity.rs::symbolic_order_neighbors",
+      ".g5/Verus_verification/consolidated/iter17/report_identity.rs::latest_older_frame"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter17/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/concepts/testing-policy.g5.md metadata",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "build.test-output.run-identity#5",
+     "units": [
+      "B2"
+     ],
+     "text": "A passing or failing run alone has the same ID in both readers.",
+     "cases": "pass alone, fail alone",
+     "observation": "file and device run ID",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter17/report_identity.rs::single_report_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter17/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/concepts/testing-policy.g5.md metadata",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "build.test-output.run-identity#6",
+     "units": [
+      "B2"
+     ],
+     "text": "As built, in the checked nested sequence (failing outer allocated before a passing child that completes first), the device reports the outer failures and the command fails while the outer report file contains the passing child's class and results.",
+     "cases": "nested state outer3/child4 vs single runs",
+     "observation": "device case/failures, command status, file case/results",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter17/report_identity.rs::nested_identity_neighbors",
+      ".g5/Verus_verification/consolidated/iter17/report_identity.rs::nested_count_neighbors",
+      ".g5/Verus_verification/consolidated/iter17/report_identity.rs::control_status_uses_tracked"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter17/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/concepts/testing-policy.g5.md metadata (as-built claim; allocation order is the native-qualified fixture)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "build.test-output.run-identity#7",
+     "units": [
+      "B3"
+     ],
+     "text": "Supplying the outer ID explicitly to the export API writes the outer results.",
+     "cases": "export with explicit outer ID vs default export",
+     "observation": "file run ID and counts",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter17/report_identity.rs::forwarded",
+      ".g5/Verus_verification/consolidated/iter17/report_identity.rs::explicit_forwarding_preserves_reader",
+      ".g5/Verus_verification/consolidated/iter17/report_identity.rs::nested_count_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter17/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/concepts/testing-policy.g5.md metadata (C:S21 comparison)",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "build.test-output.counted-rows": {
+   "body_sha": "355e7ed8802530f9",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "build.test-output.counted-rows#1",
+     "build.test-output.counted-rows#2",
+     "build.test-output.counted-rows#3"
+    ],
+    "B1": [
+     "build.test-output.counted-rows#4"
+    ],
+    "B2": "excluded: scope disclosure (entries are stored rows, not assertion-call provenance; assertion execution, ID allocation and duration logging are provider boundaries)"
+   },
+   "obligations": [
+    {
+     "id": "build.test-output.counted-rows#1",
+     "units": [
+      "P1"
+     ],
+     "text": "The summary's assertion count includes every numeric result entry under a method, regardless of action name (including LogMessage).",
+     "cases": "runs with a LogMessage duration entry",
+     "observation": "assertion count",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter17/report_identity.rs::decode_entries",
+      ".g5/Verus_verification/consolidated/iter17/report_identity.rs::summary",
+      ".g5/Verus_verification/consolidated/iter17/report_identity.rs::raw_neighbors",
+      ".g5/Verus_verification/consolidated/iter17/report_identity.rs::fixture_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter17/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/concepts/testing-policy.g5.md metadata",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "build.test-output.counted-rows#2",
+     "units": [
+      "P1"
+     ],
+     "text": "An entry passes when its stored status is nonzero.",
+     "cases": "status 2, -1 vs 0",
+     "observation": "entry passed",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter17/report_identity.rs::passed",
+      ".g5/Verus_verification/consolidated/iter17/report_identity.rs::raw_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter17/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/concepts/testing-policy.g5.md metadata",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "build.test-output.counted-rows#3",
+     "units": [
+      "P1"
+     ],
+     "text": "A method's own status is read separately, and an aggregate failure message without an error category adds no separate error row.",
+     "cases": "failed header with empty category vs with category; passing header with category",
+     "observation": "error text; classified rows",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter17/report_identity.rs::error",
+      ".g5/Verus_verification/consolidated/iter17/report_identity.rs::classified",
+      ".g5/Verus_verification/consolidated/iter17/report_identity.rs::raw_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter17/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/concepts/testing-policy.g5.md metadata",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "build.test-output.counted-rows#4",
+     "units": [
+      "B1"
+     ],
+     "text": "On the checked build a passing LogMessage duration entry is appended: two passing assertion calls report three passing assertions; one passing and two failing report four entries, two failed.",
+     "cases": "pass_run vs fail_run fixtures",
+     "observation": "assertions and failed assertions in device and file summaries",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter17/report_identity.rs::single_report_neighbors",
+      ".g5/Verus_verification/consolidated/iter17/report_identity.rs::duration_rows",
+      ".g5/Verus_verification/consolidated/iter17/report_identity.rs::fixture_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter17/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/concepts/testing-policy.g5.md metadata",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "build.test-output.counts": {
+   "body_sha": "a93ee80e594536b0",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "build.test-output.counts#1",
+     "build.test-output.counts#2"
+    ],
+    "B1": [
+     "build.test-output.counts#3",
+     "build.test-output.counts#4"
+    ],
+    "B2": [
+     "build.test-output.counts#5"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "build.test-output.counts#1",
+     "units": [
+      "P1"
+     ],
+     "text": "As built, a failed test method counts as failed even if every assertion passed.",
+     "cases": "failed method with only passing assertions vs passing method",
+     "observation": "failed_methods",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter2/readers.rs::count_methods",
+      ".g5/Verus_verification/consolidated/iter2/readers.rs::nonassert_failure_remains_a_failure"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter2/native/receipt.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/concepts/testing-policy.g5.md metadata",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "build.test-output.counts#2",
+     "units": [
+      "P1"
+     ],
+     "text": "A case's nonempty hook error adds one failed method to the summary.",
+     "cases": "case error with one passing method vs none",
+     "observation": "methods and failed_methods",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter2/readers.rs::count_methods",
+      ".g5/Verus_verification/consolidated/iter2/readers.rs::nonassert_failure_remains_a_failure"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter2/native/receipt.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/concepts/testing-policy.g5.md metadata",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "build.test-output.counts#3",
+     "units": [
+      "B1"
+     ],
+     "text": "A blank error category hides the aggregate error message but does not turn a failed status into passed.",
+     "cases": "failed status with blank vs nonblank category; passed status",
+     "observation": "error presence; failed count",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter2/readers.rs::error_present",
+      ".g5/Verus_verification/consolidated/iter2/readers.rs::nonassert_failure_remains_a_failure",
+      ".g5/Verus_verification/consolidated/iter17/report_identity.rs::raw_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter2/native/receipt.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/concepts/testing-policy.g5.md metadata",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "build.test-output.counts#4",
+     "units": [
+      "B1"
+     ],
+     "text": "JSON files contain the full result tree; device JSON always has a summary and selects method details or failures from its detail and verbose settings.",
+     "cases": "file vs device; detail/verbose combinations",
+     "observation": "output sections",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter2/readers.rs::json_file",
+      ".g5/Verus_verification/consolidated/iter2/readers.rs::json_device",
+      ".g5/Verus_verification/consolidated/iter2/readers.rs::file_and_device_have_different_contracts"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter2/native/receipt.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/concepts/testing-policy.g5.md metadata",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "build.test-output.counts#5",
+     "units": [
+      "B2"
+     ],
+     "text": "verify creates its NoJournal load parameter when it creates a fresh VERIFY namespace; reuse and SkipLoad take other setup paths.",
+     "cases": "fresh vs reuse-existing vs skip-load-existing vs current namespace",
+     "observation": "create/load/NoJournal parameter",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter2/readers.rs::verify_plan",
+      ".g5/Verus_verification/consolidated/iter2/readers.rs::verify_reuse_is_not_fresh_setup"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter2/native/receipt.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/concepts/testing-policy.g5.md metadata (namespace cleanup after errors and other formats remain out of scope as stated)",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  }
+ }
+}

@@ -1,0 +1,1107 @@
+{
+ "page": ".g5/ontology/concepts/transactions-and-dev-mode.g5.md",
+ "blocks": {
+  "transaction": {
+   "body_sha": "975b62cd208f5eba",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "transaction#1"
+    ],
+    "B1": [
+     "transaction#2"
+    ],
+    "B2": "excluded: navigation to dev-mode and transaction.opt-out (owners of the exceptions)",
+    "B3": "excluded: navigation to transaction.rollback-scope (owner)"
+   },
+   "obligations": [
+    {
+     "id": "transaction#1",
+     "units": [
+      "P1"
+     ],
+     "text": "By default a package change (load, install, reinstall, update) runs as one IRIS transaction, so a failure rolls back its database writes.",
+     "cases": "normal-mode failure (Activate or update step) vs success; transaction on by default",
+     "observation": "installed module record/version and journaled step records after the command; $TLEVEL on return",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      "playbook-uplift/models/verus/load_general.rs::g_refines",
+      "playbook-uplift/models/verus/load_general.rs::witness_two_deps_txn_parent_fails",
+      "playbook-uplift/models/verus/update_steps.rs::inst_refines",
+      "playbook-uplift/models/verus/update_steps.rs::inst_witness_failed_update_repeats_effects",
+      ".g5/Verus_verification/crates/ipm-load-history/src/proofs.rs::theorem_tlevel"
+     ],
+     "evidence": [
+      "playbook-uplift/models/verus/results/load_general.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      "playbook-uplift/models/verus/results/update_steps.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json"
+     ],
+     "basis": "new:iteration-70 (P load_general/update_steps were not linked from this block; G crate is the coverage-map link)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "transaction#2",
+     "units": [
+      "B1"
+     ],
+     "text": "The rollback includes the dependencies the change loaded for the module.",
+     "cases": "parent Activate fails after one or two dependencies loaded (normal mode) vs success",
+     "observation": "dependency module records after the command",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      "playbook-uplift/models/verus/load_general.rs::witness_two_deps_txn_parent_fails",
+      "playbook-uplift/models/verus/load_general.rs::g_refines"
+     ],
+     "evidence": [
+      "playbook-uplift/models/verus/results/load_general.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+      ".g5/Verus_verification/cases/cases.json",
+      ".g5/Verus_verification/results/verus/20261113T223110Z-cases-asbuilt-r3/receipt.json"
+     ],
+     "basis": "new:iteration-70 (G cases B1-C31/C36 agree: dependencies absent after the parent failure)",
+     "assessed_in": "iteration-70"
+    }
+   ],
+   "parent": {
+    "children": [
+     "transaction.rollback-scope",
+     "transaction.opt-out",
+     "transaction.flag-sources"
+    ],
+    "entailment": "The parent states the default rollback itself (graded directly). The children add the scope of a rollback and the two ways to turn it off; no parent obligation is credited by composition."
+   }
+  },
+  "transaction.rollback-scope": {
+   "body_sha": "895abacad5e4f27c",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "transaction.rollback-scope#1"
+    ],
+    "B1": [
+     "transaction.rollback-scope#2"
+    ],
+    "B2": [
+     "transaction.rollback-scope#3",
+     "transaction.rollback-scope#4"
+    ],
+    "B3": [
+     "transaction.rollback-scope#5",
+     "transaction.rollback-scope#6"
+    ],
+    "B4": [
+     "transaction.rollback-scope#7"
+    ],
+    "B5": "excluded: undecided policy (open question transaction.rollback-scope.policy); the observations do not ratify compensation",
+    "B6": "excluded: working assumption restating P1 as the evaluation boundary plus an evidence requirement on this ontology (separate receipts), not a product outcome"
+   },
+   "obligations": [
+    {
+     "id": "transaction.rollback-scope#1",
+     "units": [
+      "P1"
+     ],
+     "text": "A database rollback undoes journaled writes in its transaction and does not undo filesystem copies, lock files, CPF effects, pip installs or remote calls.",
+     "cases": "failed normal load: journaled record/mapping vs file copy, CPF merge, lock file, pip install, remote call",
+     "observation": "which effects remain after the rollback",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter64/failkeep.rs::kept",
+      ".g5/Verus_verification/consolidated/iter64/failkeep.rs::external",
+      ".g5/Verus_verification/consolidated/iter64/failkeep.rs::late_failure_keeps_external_effects"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter64/run.json"
+     ],
+     "basis": "reused:transaction.rollback-scope metadata (iter64)",
+     "assessed_in": "iteration-70",
+     "gap": "failkeep classifies only File, CPF and LocExport as external (an input table). Lock files (OBS-L11), pip installs, remote calls, the archive ModuleRoot replacement (OBS-L7) and the git clone folder have no model: no rule contrasts a lock file or pip install made before an Activate failure with the rolled-back module record."
+    },
+    {
+     "id": "transaction.rollback-scope#2",
+     "units": [
+      "B1"
+     ],
+     "text": "A failing load that rolled its module record back keeps a FileCopy target copied before the failure, while a deferred copy not yet reached leaves no file; the history Committed bit reflects only the database.",
+     "cases": "failure after Activate copy (fail point 3) vs failure at Compile before the deferred copy (fail point 2); history bit",
+     "observation": "copied file, module record, history Committed",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter64/failkeep.rs::late_failure_keeps_external_effects",
+      ".g5/Verus_verification/consolidated/iter64/failkeep.rs::normal_compile_failure_keeps_only_cpf",
+      ".g5/Verus_verification/consolidated/iter64/failkeep.rs::hist_committed"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter64/run.json"
+     ],
+     "basis": "reused:transaction.rollback-scope metadata (iter64)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "transaction.rollback-scope#3",
+     "units": [
+      "B2"
+     ],
+     "text": "A direct missing-source copy fails without a copied target file.",
+     "alias_of": "module.processor.file-copy#11",
+     "assessed_in": "iteration-70",
+     "basis": "alias: resources page owner"
+    },
+    {
+     "id": "transaction.rollback-scope#4",
+     "units": [
+      "B2"
+     ],
+     "text": "A successful copy leaves its file after database rollback.",
+     "alias_of": "module.processor.file-copy#7",
+     "assessed_in": "iteration-70",
+     "basis": "alias: resources page owner (#12 there aliases it too)"
+    },
+    {
+     "id": "transaction.rollback-scope#5",
+     "units": [
+      "B3"
+     ],
+     "text": "CPF child exit and applied configuration are separate outputs, read separately from rollback.",
+     "alias_of": "module.processor.cpf-effects#1",
+     "assessed_in": "iteration-70",
+     "basis": "alias: resources page owner"
+    },
+    {
+     "id": "transaction.rollback-scope#6",
+     "units": [
+      "B3"
+     ],
+     "text": "A valid role-creation merge survives rollback; an invalid-section merge fails on a disposable provider.",
+     "alias_of": "module.processor.cpf-effects#2",
+     "assessed_in": "iteration-70",
+     "basis": "alias: resources page owner"
+    },
+    {
+     "id": "transaction.rollback-scope#7",
+     "units": [
+      "B4"
+     ],
+     "text": "A normal-mode rollback also undoes declared <Mapping> entries and a web application created during the load, while a CPF merge, FileCopy targets and the localization export file written in Activate remain.",
+     "cases": "normal load failing after Activate: Mapping, WebApp vs CPF, File, LocExport; success neighbour keeps all",
+     "observation": "mapping, web application, CPF configuration, copied file and export file after the command",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter64/failkeep.rs::late_failure_keeps_external_effects",
+      ".g5/Verus_verification/consolidated/iter64/failkeep.rs::success_keeps_all_but_nondev_sources"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter64/run.json"
+     ],
+     "basis": "reused:transaction.rollback-scope metadata (iter64)",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "transaction.opt-out": {
+   "body_sha": "1eaa0b962630c4cb",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "transaction.opt-out#1",
+     "transaction.opt-out#2"
+    ],
+    "B1": [
+     "transaction.opt-out#1"
+    ],
+    "B2": [
+     "transaction.opt-out#2"
+    ],
+    "B3": [
+     "transaction.opt-out#3"
+    ],
+    "B4": [
+     "transaction.opt-out#4"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "transaction.opt-out#1",
+     "units": [
+      "P1",
+      "B1"
+     ],
+     "text": "-DNoTransaction=1 runs the package change without a transaction, so a failure leaves a partial install.",
+     "cases": "NoTransaction Activate failure vs default Activate failure (rolled back)",
+     "observation": "installed module and resources after the failed command",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/crates/ipm-load-history/src/cases.rs::case_c27_notx_failure_keeps_partial",
+      ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::l1_alts",
+      ".g5/Verus_verification/crates/ipm-load-history/src/model.rs::etx"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+      ".g5/Verus_verification/cases/cases.json",
+      ".g5/Verus_verification/results/verus/20261113T223110Z-cases-asbuilt-r3/receipt.json",
+      ".g5/Verus_verification/results/verus/20261113T223500Z-control-13-notransaction-ignored/receipt.json"
+     ],
+     "basis": "reused:coverage-map transaction.opt-out (G crate; control 13 detected)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "transaction.opt-out#2",
+     "units": [
+      "P1",
+      "B2"
+     ],
+     "text": "-DNoJournal=1 turns off process journaling during the change (restored afterwards) and also turns off the transaction.",
+     "cases": "NoJournal vs default load: journaling flag during and after the activation; no TSTART",
+     "observation": "process journaling flag; $TLEVEL; writes kept after a failure",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/crates/ipm-load-history/src/model.rs::lnm_begin",
+      ".g5/Verus_verification/crates/ipm-load-history/src/proofs.rs::theorem_reachable_inv",
+      ".g5/Verus_verification/crates/ipm-load-history/src/proofs.rs::theorem_tlevel"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+      ".g5/Verus_verification/cases/cases.json",
+      ".g5/Verus_verification/results/verus/20261113T223110Z-cases-asbuilt-r3/receipt.json",
+      ".g5/Verus_verification/results/verus/20261113T223452Z-asbuilt-invariants-nojournal/receipt.json"
+     ],
+     "basis": "reused:coverage-map transaction.opt-out (G crate invariant: journaling off exactly while a NoJournal LoadNewModule holds its JournalManager)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "transaction.opt-out#3",
+     "units": [
+      "B3"
+     ],
+     "text": "With either flag, a process crash during the change rolls nothing back and may leave the namespace inconsistent.",
+     "cases": "kill inside Activate under NoTransaction and under NoJournal vs default (rolled back)",
+     "observation": "module state after a process end",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::l1_alts_kill",
+      "playbook-uplift/models/verus/load_general.rs::crash_k"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+      ".g5/Verus_verification/cases/cases.json",
+      ".g5/Verus_verification/results/verus/20261113T223110Z-cases-asbuilt-r3/receipt.json",
+      "playbook-uplift/models/verus/results/load_general.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "Only NoTransaction kill cases B1-C48T/K are computed (partial kept); l1_alts_kill leaves non-transactional process ends unconstrained (disclosed gap) and no NoJournal crash case is computed. Missing: kill inside Activate under NoJournal showing journaled-off writes kept, against the default kill neighbour."
+    },
+    {
+     "id": "transaction.opt-out#4",
+     "units": [
+      "B4"
+     ],
+     "text": "Both flags apply to install, load, reinstall and update.",
+     "cases": "flag given to install/reinstall/update vs load",
+     "observation": "transaction use of each command",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      "playbook-uplift/models/verus/update_steps.rs::inst_refines",
+      ".g5/Verus_verification/crates/ipm-load-history/src/model.rs::etx"
+     ],
+     "evidence": [
+      "playbook-uplift/models/verus/results/update_steps.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+      ".g5/Verus_verification/cases/cases.json",
+      ".g5/Verus_verification/results/verus/20261113T223110Z-cases-asbuilt-r3/receipt.json"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "update_steps takes `txn` (neither flag) as one input for install/update and never distinguishes NoJournal journaling; reinstall is not modeled. Missing: install and update under each flag with a failing step showing partial writes kept, and the NoJournal journaling-off effect on those paths."
+    }
+   ]
+  },
+  "transaction.flag-sources": {
+   "body_sha": "a1806b350d76ed3d",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "transaction.flag-sources#1"
+    ],
+    "B1": "excluded: undecided alternatives (open questions dependency-defaults and dependency-no-transaction)",
+    "B2": [
+     "transaction.flag-sources#2"
+    ],
+    "B3": [
+     "transaction.flag-sources#3",
+     "transaction.flag-sources#4",
+     "transaction.flag-sources#5"
+    ],
+    "B4": "excluded: status statement (settled source/native facts; the open questions concern policy)",
+    "B5": [
+     "transaction.flag-sources#6",
+     "transaction.flag-sources#7"
+    ],
+    "B6": [
+     "transaction.flag-sources#8"
+    ],
+    "B7": [
+     "transaction.flag-sources#9"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "transaction.flag-sources#1",
+     "units": [
+      "P1"
+     ],
+     "text": "NoTransaction/NoJournal can come from the command line, the namespace default modifiers or the module <Defaults>; a command-line value wins over the other two.",
+     "cases": "same key given on the command line vs stored default modifier vs module <Defaults>",
+     "observation": "effective flag value at LoadNewModule",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter50/defmods.rs::merged",
+      ".g5/Verus_verification/consolidated/iter50/defmods.rs::command_line_wins",
+      ".g5/Verus_verification/consolidated/verus/loadtx.rs::merge_key",
+      ".g5/Verus_verification/consolidated/verus/loadtx.rs::explicit_false_parent_overrides_child"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter50/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70 (composition: defmods.merged puts the command line over stored defaults in the shell; loadtx.merge_key puts the command data over the module own <Defaults> at LoadNewModule)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "transaction.flag-sources#2",
+     "units": [
+      "B2"
+     ],
+     "text": "Effective values are merged by key at each LoadNewModule activation; a parent parameter that exists, even zero, overrides the child default.",
+     "cases": "parent Some(false) vs child Some(true); parent absent",
+     "observation": "effective flag of the child activation",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/loadtx.rs::effective",
+      ".g5/Verus_verification/consolidated/verus/loadtx.rs::merge_key",
+      ".g5/Verus_verification/consolidated/verus/loadtx.rs::explicit_false_parent_overrides_child"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:transaction.flag-sources metadata (extension loadtx)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "transaction.flag-sources#3",
+     "units": [
+      "B3"
+     ],
+     "text": "If the parent value is absent, the child own value applies.",
+     "cases": "parent None, child Some(true)",
+     "observation": "effective flag",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/loadtx.rs::merge_key",
+      ".g5/Verus_verification/consolidated/verus/loadtx.rs::explicit_false_parent_overrides_child"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:transaction.flag-sources metadata (extension loadtx)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "transaction.flag-sources#4",
+     "units": [
+      "B3"
+     ],
+     "text": "A child NoTransaction does not cancel an already-open parent transaction.",
+     "cases": "child NoTransaction with parent depth > 0 vs no parent",
+     "observation": "transaction depth of the child activation",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/loadtx.rs::no_transaction_child_does_not_cancel_parent",
+      ".g5/Verus_verification/consolidated/verus/loadtx.rs::entry_depth"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:extension loadtx",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "transaction.flag-sources#5",
+     "units": [
+      "B3"
+     ],
+     "text": "A child NoJournal disables process journaling during that activation, so its writes can escape the parent rollback.",
+     "cases": "child NoJournal write vs journaled child write, parent rolled back",
+     "observation": "child writes after the parent rollback",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/loadtx.rs::nojournal_survives_parent_rollback",
+      ".g5/Verus_verification/consolidated/verus/loadtx.rs::journaled_child_cannot_survive_uncommitted_parent"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:extension loadtx",
+     "assessed_in": "iteration-70",
+     "gap": "loadtx takes Write.journal as an input: no rule derives journal=false from the child own <Defaults> NoJournal through effective(). The G crate cannot represent per-module <Defaults> flags (coverage map). Missing: dependency with <Defaults> NoJournal under a failing normal-mode parent, showing its module record kept and the parent rolled back."
+    },
+    {
+     "id": "transaction.flag-sources#6",
+     "units": [
+      "B5"
+     ],
+     "text": "Working assumption: a NoJournal dependency keeps its changes when the parent rolls back.",
+     "alias_of": "transaction.flag-sources#5",
+     "assessed_in": "iteration-70",
+     "basis": "alias"
+    },
+    {
+     "id": "transaction.flag-sources#7",
+     "units": [
+      "B5"
+     ],
+     "text": "Working assumption: the history record of such a NoJournal dependency must survive the parent rollback and say its changes were kept.",
+     "cases": "NoJournal dependency under a failing parent: its History row present with Committed=1 vs absent/0",
+     "observation": "dependency History row after the parent rollback",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "No model joins dependency <Defaults> NoJournal with History rows. The G crate shows dependency rows lost under the parent rollback (D1) only for journaled dependencies. Missing: the dependency row under journaling off at LoadModuleReference insert time, read by history list/details."
+    },
+    {
+     "id": "transaction.flag-sources#8",
+     "units": [
+      "B6"
+     ],
+     "text": "Working assumption (intended): a module that declares NoTransaction must not run inside a transaction opened for its parent, so the change runs without one.",
+     "cases": "child NoTransaction inside an open parent transaction",
+     "observation": "transaction depth of the child activation",
+     "grade": "full",
+     "check": "refuted",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/loadtx.rs::no_transaction_child_does_not_cancel_parent"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70 (as built the child stays at the parent depth > 0; the intended promise is contradicted)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "transaction.flag-sources#9",
+     "units": [
+      "B7"
+     ],
+     "text": "Working assumption: require closure consistency (an escaped NoJournal dependency must not remain without its own dependencies); record the observed violating state.",
+     "cases": "NoJournal dependency kept after a parent rollback that removed its own dependencies vs consistent closure",
+     "observation": "installed modules and their dependency closure",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "No model of a NoJournal dependency with its own dependencies (G crate: leaf dependencies only; loadtx: disjoint writes). Missing: dep D (NoJournal) requiring E, parent fails: E rolled back while D stays."
+    }
+   ]
+  },
+  "dev-mode": {
+   "body_sha": "fff45290821b72e2",
+   "status": "enumerated",
+   "units": {
+    "P1": "excluded: definition of developer mode (restated under Definitions); the stored-mode outcomes are graded at B4 and B6",
+    "B1": [
+     "dev-mode#1"
+    ],
+    "B2": [
+     "dev-mode#2"
+    ],
+    "B3": [
+     "dev-mode#3"
+    ],
+    "B4": [
+     "dev-mode#4",
+     "dev-mode#5",
+     "dev-mode#6",
+     "dev-mode#7"
+    ],
+    "B5": [
+     "dev-mode#8"
+    ],
+    "B6": [
+     "dev-mode#9"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "dev-mode#1",
+     "units": [
+      "B1"
+     ],
+     "text": "IPM sets up ^Sources so each resource maps back to its file on disk.",
+     "alias_of": "dev-mode.source-files#1",
+     "assessed_in": "iteration-70",
+     "basis": "alias"
+    },
+    {
+     "id": "dev-mode#2",
+     "units": [
+      "B2"
+     ],
+     "text": "Installer methods and <Invoke> code receive the developer mode flag.",
+     "cases": "-dev vs normal load: flag seen by OnInstallComponent and by an Invoke",
+     "observation": "callback arguments",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter36/installer.rs::install_call",
+      ".g5/Verus_verification/consolidated/iter36/installer.rs::upgrade_ignores_installed_state"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter36/run.json"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "installer.rs passes b(c.dev) to OnInstallComponent (schedule l2 dev=1) but no model gives an <Invoke> the developer-mode value (${DeveloperMode} or params). Missing: Invoke argument under -dev vs normal."
+    },
+    {
+     "id": "dev-mode#3",
+     "units": [
+      "B3"
+     ],
+     "text": "A developer-mode module is marked as not deployed, so its source stays editable.",
+     "cases": "-dev load of a module that declares Deploy items vs normal load",
+     "observation": "deployed flag / source availability",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "No model connects DeveloperMode to the deployed marking (%MakeDeployed / Deploy attribute). Missing: -dev load keeps source of a Deploy=\"true\" class while a normal install with MakeDeployed removes it."
+    },
+    {
+     "id": "dev-mode#4",
+     "units": [
+      "B4"
+     ],
+     "text": "-dev applies to load, and -nodev turns developer mode off.",
+     "cases": "load -dev vs plain vs -nodev on a stored developer-mode module",
+     "observation": "stored DeveloperMode after load",
+     "grade": "full",
+     "check": "bounded",
+     "models": [
+      ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::dev_mode",
+      ".g5/Verus_verification/crates/ipm-load-history/src/model.rs::etx"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+      ".g5/Verus_verification/cases/cases.json",
+      ".g5/Verus_verification/results/verus/20261113T223110Z-cases-asbuilt-r3/receipt.json"
+     ],
+     "basis": "reused:coverage-map dev-mode (G cases B1-C02, B1-C20, B1-C21 computed by the L2 transcription)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "dev-mode#5",
+     "units": [
+      "B4"
+     ],
+     "text": "-dev applies to install and reinstall.",
+     "cases": "install -dev vs plain install; developer reinstall",
+     "observation": "stored DeveloperMode",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      "playbook-uplift/models/verus/update_steps.rs::inst_witness_dev_install_leaves_steps_due",
+      ".g5/Verus_verification/consolidated/iter25/developer_sources.rs::writer_neighbor"
+     ],
+     "evidence": [
+      "playbook-uplift/models/verus/results/update_steps.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "dev-mode#6",
+     "units": [
+      "B4"
+     ],
+     "text": "-dev applies to update.",
+     "cases": "update -dev of a non-snapshot version from a registry vs from a path",
+     "observation": "developer mode and version after the update",
+     "grade": "full",
+     "check": "refuted",
+     "models": [
+      "playbook-uplift/models/verus/update_steps.rs::inst_witness_dev_update_from_registry_rolls_back"
+     ],
+     "evidence": [
+      "playbook-uplift/models/verus/results/update_steps.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70 (F-INST-5: update -dev from a registry runs without developer mode; a failing step rolls back to the old version, not in developer mode)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "dev-mode#7",
+     "units": [
+      "B4"
+     ],
+     "text": "-dev applies to lifecycle phase commands.",
+     "cases": "<module> compile -dev vs without",
+     "observation": "developer mode seen by the phases",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "phases.rs and moderefresh.rs take the stored mode as an input; no model of -dev/-nodev on a module action. Missing: <m> activate -dev on a normal-mode module, observed DeveloperMode and installer flag."
+    },
+    {
+     "id": "dev-mode#8",
+     "units": [
+      "B5"
+     ],
+     "text": "Modules from a read-only repository always install in normal mode.",
+     "cases": "install -dev from a read-only vs writable repository",
+     "observation": "stored DeveloperMode",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "No model of the read-only repository override (Main.cls:262; it runs after the update-required check, Q-02). Missing: install -dev from a ReadOnly repository leaves DeveloperMode 0 vs 1 from a writable one."
+    },
+    {
+     "id": "dev-mode#9",
+     "units": [
+      "B6"
+     ],
+     "text": "Working assumption: a plain load of a module stored in developer mode keeps developer mode (dev-mode.sticky).",
+     "cases": "plain load vs -nodev on a stored dev module",
+     "observation": "stored DeveloperMode",
+     "grade": "full",
+     "check": "bounded",
+     "models": [
+      ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::dev_mode",
+      ".g5/Verus_verification/crates/ipm-load-history/src/model.rs::etx",
+      "playbook-uplift/models/verus/update_steps.rs::inst_refines"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+      ".g5/Verus_verification/cases/cases.json",
+      ".g5/Verus_verification/results/verus/20261113T223110Z-cases-asbuilt-r3/receipt.json",
+      "playbook-uplift/models/verus/results/update_steps.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:coverage-map dev-mode.sticky (G case B1-C20 computed by L2: lnm_devsave keeps the stored mode when DeveloperMode is undefined)",
+     "assessed_in": "iteration-70"
+    }
+   ],
+   "parent": {
+    "children": [
+     "dev-mode.source-files",
+     "dev-mode.keep-on-failure",
+     "dev-mode.not-propagated",
+     "dev-mode.overwrite-guard"
+    ],
+    "entailment": "B1 restates dev-mode.source-files#1. The other bullets (flags reaching code, not deployed, command scope, read-only repositories, sticky mode) are the parent own promises, graded directly; none is credited by composition."
+   }
+  },
+  "dev-mode.source-files": {
+   "body_sha": "8f40261867619447",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "dev-mode.source-files#1",
+     "dev-mode.source-files#2"
+    ],
+    "B1": [
+     "dev-mode.source-files#3"
+    ],
+    "B2": [
+     "dev-mode.source-files#4",
+     "dev-mode.source-files#5"
+    ],
+    "B3": "excluded: scope statement of the qualification (two nondeployed filesystem modules; plug-ins, IDE interpretation, flags, triggers and failures outside)"
+   },
+   "obligations": [
+    {
+     "id": "dev-mode.source-files#1",
+     "units": [
+      "P1"
+     ],
+     "text": "A successful developer-mode reinstall records the module root and maps its loaded class to the selected source directory.",
+     "cases": "developer vs normal reinstall",
+     "observation": "stored mode, root, MODULE and class ^Sources entries",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter25/developer_sources.rs::writer_neighbor",
+      ".g5/Verus_verification/consolidated/iter25/developer_sources.rs::lifecycle_staged",
+      ".g5/Verus_verification/consolidated/iter25/developer_sources.rs::resource_guard_neighbor"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter25/HANDOFF.md"
+     ],
+     "basis": "reused:dev-mode.source-files metadata (iter25)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "dev-mode.source-files#2",
+     "units": [
+      "P1"
+     ],
+     "text": "A following normal reinstall is refused and preserves developer mode, root, source mappings and code.",
+     "cases": "normal reinstall over a developer-mode install vs over a normal install",
+     "observation": "result kind and world after the command",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter25/developer_sources.rs::refusal_neighbor",
+      ".g5/Verus_verification/consolidated/iter25/developer_sources.rs::guard_neighbor",
+      ".g5/Verus_verification/consolidated/iter25/developer_sources.rs::lifecycle_staged"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:dev-mode.source-files metadata (iter25)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "dev-mode.source-files#3",
+     "units": [
+      "B1"
+     ],
+     "text": "Source mappings follow the directory actually selected for loading; resource path readers describe the configured layout without fallback, so a class loaded from src can declare a nonexistent src/cls path.",
+     "cases": "implicit (src fallback) vs explicit code layout",
+     "observation": "mapping value vs declared relative path and its existence",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter25/developer_sources.rs::layout_neighbor",
+      ".g5/Verus_verification/consolidated/iter25/developer_sources.rs::reader_neighbor"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:dev-mode.source-files metadata (iter25)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "dev-mode.source-files#4",
+     "units": [
+      "B2"
+     ],
+     "text": "With an explicit code directory the mapping and the resource path readers agree on the file under src/code.",
+     "cases": "explicit vs implicit layout",
+     "observation": "declared path existence and mapping",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter25/developer_sources.rs::reader_neighbor",
+      ".g5/Verus_verification/consolidated/iter25/developer_sources.rs::layout_neighbor"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:dev-mode.source-files metadata (iter25)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "dev-mode.source-files#5",
+     "units": [
+      "B2"
+     ],
+     "text": "The checked reader opens that file and reads its class and method source.",
+     "cases": "explicit-layout file read vs missing file",
+     "observation": "file contents returned by the reader",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter25/developer_sources.rs::reader_neighbor"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:dev-mode.source-files metadata (iter25)",
+     "assessed_in": "iteration-70",
+     "gap": "reader_neighbor proves only the path and its existence; the file contents read back are native-qualified (iter25 HANDOFF). No rule distinguishes the class/method text returned for the explicit file."
+    }
+   ]
+  },
+  "dev-mode.overwrite-guard": {
+   "body_sha": "9456433a9bde93d1",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "dev-mode.overwrite-guard#1"
+    ],
+    "B1": "excluded: undecided alternative (open question dev-mode.overwrite-guard.force)",
+    "B2": [
+     "dev-mode.overwrite-guard#2"
+    ],
+    "B3": [
+     "dev-mode.overwrite-guard#3"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "dev-mode.overwrite-guard#1",
+     "units": [
+      "P1"
+     ],
+     "text": "A module installed in developer mode cannot be overwritten by a normal-mode install; IPM refuses (\"Cannot install X over previously installed in developer mode\").",
+     "cases": "normal install over dev install vs -dev install, over normal install, fresh install, PermitDowngrade",
+     "observation": "refusal and unchanged world",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter25/developer_sources.rs::overwrite_guard",
+      ".g5/Verus_verification/consolidated/iter25/developer_sources.rs::guard_neighbor",
+      ".g5/Verus_verification/consolidated/iter25/developer_sources.rs::refusal_neighbor"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70 (coverage map says \"not modeled\"; iteration25 models the guard)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "dev-mode.overwrite-guard#2",
+     "units": [
+      "B2"
+     ],
+     "text": "Working assumption: the guard covers install only, and -force does not lift it.",
+     "cases": "top-level install vs load/dependency; -force vs not",
+     "observation": "refusal",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter25/developer_sources.rs::overwrite_guard",
+      ".g5/Verus_verification/consolidated/iter25/developer_sources.rs::guard_neighbor"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "overwrite_guard has no -force input, so \"-force does not lift it\" is unmodeled; top_install=false lumps load with dependency activations. Missing: install -force over a dev module (refused) vs load over it (accepted)."
+    },
+    {
+     "id": "dev-mode.overwrite-guard#3",
+     "units": [
+      "B3"
+     ],
+     "text": "Working assumption: preserve the install overwrite guard for dependencies.",
+     "cases": "dependency already in developer mode reached by a normal-mode parent install at another version",
+     "observation": "dependency DeveloperMode and version",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter25/developer_sources.rs::overwrite_guard"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "The model has no dependency path: overwrite_guard is false whenever top_install is false, and LoadModuleReference with a dev-mode dependency is not modeled. Missing: parent install requiring dep 2.0 while dep 1.0 is in developer mode, showing whether the dependency is replaced or refused."
+    }
+   ]
+  },
+  "dev-mode.keep-on-failure": {
+   "body_sha": "cce6ee3450a24515",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "dev-mode.keep-on-failure#1",
+     "dev-mode.keep-on-failure#2"
+    ],
+    "B1": "excluded: restates load.outcome.dev.early-failure (features/load.g5.md, owner)",
+    "B2": [
+     "dev-mode.keep-on-failure#3"
+    ],
+    "B3": "excluded: navigation to load.outcome.dev (owner of the per-point detail)"
+   },
+   "obligations": [
+    {
+     "id": "dev-mode.keep-on-failure#1",
+     "units": [
+      "P1"
+     ],
+     "text": "A failed developer-mode change keeps what it already did.",
+     "cases": "-dev Activate failure vs default Activate failure",
+     "observation": "module record, resources and DeveloperMode after the failed command",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/crates/ipm-load-history/src/cases.rs::case_c26_dev_failure_keeps_phase_work",
+      ".g5/Verus_verification/consolidated/iter64/failkeep.rs::developer_failure_keeps_database_effects"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+      ".g5/Verus_verification/cases/cases.json",
+      ".g5/Verus_verification/results/verus/20261113T223110Z-cases-asbuilt-r3/receipt.json",
+      ".g5/uplift/consolidated/iter64/run.json",
+      ".g5/Verus_verification/results/verus/20261113T223459Z-control-12-dev-phases-in-transaction/receipt.json"
+     ],
+     "basis": "reused:coverage-map dev-mode.keep-on-failure (G crate; control 12 detected)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "dev-mode.keep-on-failure#2",
+     "units": [
+      "P1"
+     ],
+     "text": "In normal mode a failed change inside a transaction is rolled back.",
+     "alias_of": "transaction#1",
+     "assessed_in": "iteration-70",
+     "basis": "alias"
+    },
+    {
+     "id": "dev-mode.keep-on-failure#3",
+     "units": [
+      "B2"
+     ],
+     "text": "Exception: the dependency loads of a developer-mode change commit together, so one failed dependency rolls back all of them.",
+     "cases": "-dev parent: second dependency fails vs parent Activate fails after dependencies",
+     "observation": "dependency module records",
+     "grade": "full",
+     "check": "bounded",
+     "models": [
+      ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::l1_alts",
+      ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::dep_installed"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+      ".g5/Verus_verification/cases/cases.json",
+      ".g5/Verus_verification/results/verus/20261113T223110Z-cases-asbuilt-r3/receipt.json"
+     ],
+     "basis": "reused:coverage-map dev-mode.keep-on-failure (G cases B1-C37: dep1 rolled back with dep2; B1-C38: dependencies kept after their commit)",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "dev-mode.not-propagated": {
+   "body_sha": "0912bcdca8c60969",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "dev-mode.not-propagated#1",
+     "dev-mode.not-propagated#2"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "dev-mode.not-propagated#1",
+     "units": [
+      "P1"
+     ],
+     "text": "Developer mode is not passed on to dependencies (they stay in normal mode).",
+     "cases": "-dev parent with a non-snapshot dependency vs the dependency own state",
+     "observation": "dependency DeveloperMode after the load",
+     "grade": "full",
+     "check": "bounded",
+     "models": [
+      ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::dep_installed",
+      ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::l1_alts"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+      ".g5/Verus_verification/cases/cases.json",
+      ".g5/Verus_verification/results/verus/20261113T223110Z-cases-asbuilt-r3/receipt.json"
+     ],
+     "basis": "reused:coverage-map dev-mode.not-propagated (G cases B1-C38 dependency normal, B1-C39 snapshot neighbour)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "dev-mode.not-propagated#2",
+     "units": [
+      "P1"
+     ],
+     "text": "Every other load, install and update parameter is passed on to dependencies.",
+     "cases": "parent -D parameter vs dependency activation, for load/install/update",
+     "observation": "parameter value seen by the dependency",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/loadtx.rs::effective"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "loadtx.effective merges only NoJournal/NoTransaction and takes the parent params as given; no model of LoadModuleReference copying the other parameters, and none for install/update. Missing: load/update with -DFoo=1 whose dependency Invoke reads Foo."
+    }
+   ],
+   "parent": {
+    "children": [
+     "dev-mode.not-propagated.local-snapshot"
+    ],
+    "entailment": "The child is an exception to the parent rule; the parent rule is graded directly, no composition."
+   }
+  },
+  "dev-mode.not-propagated.local-snapshot": {
+   "body_sha": "c38a592581c304b0",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "dev-mode.not-propagated.local-snapshot#1"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "dev-mode.not-propagated.local-snapshot#1",
+     "units": [
+      "P1"
+     ],
+     "text": "When a developer-mode load pulls a +snapshot dependency from a filesystem repository, that dependency also loads in developer mode.",
+     "cases": "-dev parent: snapshot vs non-snapshot dependency; filesystem vs remote repository",
+     "observation": "dependency DeveloperMode",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::dep_installed"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+      ".g5/Verus_verification/cases/cases.json",
+      ".g5/Verus_verification/results/verus/20261113T223110Z-cases-asbuilt-r3/receipt.json"
+     ],
+     "basis": "reused:coverage-map dev-mode.not-propagated (G case B1-C39)",
+     "assessed_in": "iteration-70",
+     "gap": "dep_installed sets dev = snapshot && -dev with no repository-kind input; the filesystem-vs-remote condition (Utils/Module.cls:131-135) is not modeled. Missing: the same +snapshot dependency from a remote registry stays in normal mode."
+    }
+   ]
+  }
+ }
+}

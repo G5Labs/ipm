@@ -1,0 +1,1590 @@
+{
+ "page": ".g5/ontology/architecture/package-sources.g5.md",
+ "blocks": {
+  "repo.filesystem": {
+   "body_sha": "df17623f8083244b",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "repo.filesystem#1"
+    ],
+    "B1": [
+     "repo.filesystem#2"
+    ],
+    "B2": [
+     "repo.filesystem#3",
+     "repo.filesystem#4"
+    ],
+    "B3": [
+     "repo.filesystem#5"
+    ],
+    "B4": [
+     "repo.filesystem#6"
+    ],
+    "B5": [
+     "repo.filesystem#7"
+    ],
+    "B6": "excluded: navigation to the children repo.filesystem.duplicates and repo.filesystem.mutable-source (owners on this page)",
+    "B7": [
+     "repo.filesystem#8"
+    ],
+    "B8": "excluded: working assumption that only plans investigation and lists undecided alternatives (deferred release, refusing an outer transaction, existing database locks); open question repo.filesystem.concurrent-refresh; the consistency requirement itself is #7"
+   },
+   "obligations": [
+    {
+     "id": "repo.filesystem#1",
+     "units": [
+      "P1"
+     ],
+     "text": "A filesystem repository offers every module whose module.xml is found under its folder down to the configured depth.",
+     "cases": "entry within depth vs deeper than depth; Depth=0 (unlimited) vs Depth=1 over a hidden .modules folder",
+     "observation": "cache rows / refresh status",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/owners.rs::scan",
+      ".g5/Verus_verification/consolidated/verus/owners.rs::scanned_keys",
+      ".g5/Verus_verification/consolidated/verus/owners.rs::cache_item_kinds_and_scan_limit",
+      ".g5/Verus_verification/consolidated/verus/owners.rs::witnessed_owners_distinctions"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/Verus_verification/consolidated/verus/owners-results.json"
+     ],
+     "basis": "reused:package-sources metadata (Extension Verus owners.rs::scan)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.filesystem#2",
+     "units": [
+      "B1"
+     ],
+     "text": "IPM reads the folder into the cache on creation and on refresh; a refresh replaces the whole cache, so a module whose folder is gone stops being offered.",
+     "cases": "new repository vs refresh of existing; module still present vs removed before refresh",
+     "observation": "cache rows after build_cache",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/owners.rs::build_cache",
+      ".g5/Verus_verification/consolidated/verus/owners_native.rs::native_110",
+      ".g5/Verus_verification/consolidated/verus/owners_native.rs::native_114",
+      ".g5/Verus_verification/consolidated/verus/owners_native.rs::native_115"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/Verus_verification/consolidated/verus/owners-results.json"
+     ],
+     "basis": "new:iteration-70 (owners_native.rs neighbour assertions native_109-115 exercise creation and the removed key 2)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.filesystem#3",
+     "units": [
+      "B2"
+     ],
+     "text": "A module.xml that is not a readable manifest is skipped and the rest are cached.",
+     "cases": "unreadable vs valid manifest in one scan",
+     "observation": "cache rows; refresh status",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/owners.rs::add_cache",
+      ".g5/Verus_verification/consolidated/verus/owners.rs::cache_item_kinds_and_scan_limit",
+      ".g5/Verus_verification/consolidated/verus/owners_native.rs::native_109"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:package-sources metadata (LK1, owners.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.filesystem#4",
+     "units": [
+      "B2"
+     ],
+     "text": "A readable manifest whose module name is invalid fails the whole refresh, which then changes nothing.",
+     "cases": "invalid name within scan depth vs beyond scan depth; failed vs successful build",
+     "observation": "refresh status; cache rows unchanged",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/owners.rs::scanned_error",
+      ".g5/Verus_verification/consolidated/verus/owners.rs::failed_cache_preserves_rows",
+      ".g5/Verus_verification/consolidated/verus/owners.rs::witnessed_owners_distinctions"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "reused:package-sources metadata (TR7, owners.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.filesystem#5",
+     "units": [
+      "B3"
+     ],
+     "text": "A refresh of an existing repository locks it; while another process holds the lock the refresh fails (after a timeout) and changes nothing.",
+     "cases": "foreign lock held vs free on an existing repository",
+     "observation": "refresh status; cache rows",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/owners.rs::lock_class_id",
+      ".g5/Verus_verification/consolidated/verus/owners.rs::foreign_lock_refuses_refresh",
+      ".g5/Verus_verification/consolidated/verus/owners_native.rs::native_112"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:package-sources metadata (LK2)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.filesystem#6",
+     "units": [
+      "B4"
+     ],
+     "text": "The default refresh lock manager releases the explicit lock when the refresh method returns, even inside an outer transaction; explicit %New(0) keeps it through close until commit, default %New(1) releases at close.",
+     "cases": "immediate (default) vs deferred lock manager; outer transaction depth 0 vs >0; before vs after commit",
+     "observation": "lock held after return / after commit",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter2/boundaries/boundaries.rs::cache_return",
+      ".g5/Verus_verification/consolidated/iter2/boundaries/boundaries.rs::constructor_at_actual_transaction_boundary",
+      ".g5/Verus_verification/consolidated/iter2/boundaries/boundaries.rs::default_cache_return_does_not_hold_outer_lock",
+      ".g5/Verus_verification/consolidated/iter2/boundaries/boundaries.rs::reachable_old_outer_lock_counterexample"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter2/boundaries/withdrawals.json"
+     ],
+     "basis": "reused:package-sources metadata (corrected binding, iter2 boundaries withdrawal OW-CONSTRUCTOR)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.filesystem#7",
+     "units": [
+      "B5"
+     ],
+     "text": "The cache still needs consistent replacement: a competing refresh or writer must not observe or produce a mixed cache while a refresh is uncommitted.",
+     "cases": "two concurrent refreshes / refresh plus writer under IRIS isolation vs a single refresh",
+     "observation": "cache rows seen by each process",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [
+      ".g5/Verus_verification/open_questions.md"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "No model of concurrent refreshes. owners.rs/boundaries.rs model one refresh with a foreign-lock Boolean. Missing contrast: process A purges and rebuilds Repo/Filesystem/Definition.cls::BuildCache rows inside an open transaction after the default lock is released at return, while process B refreshes or reads ^IPM.Repo.Filesystem.CacheD; the reader (SearchRepositoriesForModule) must see either old or new cache, never a mix. Open question repo.filesystem.concurrent-refresh."
+    },
+    {
+     "id": "repo.filesystem#8",
+     "units": [
+      "B7"
+     ],
+     "text": "Working assumption (intended): a module with an invalid name should be skipped with a warning, like an unreadable manifest, so the other modules stay available.",
+     "cases": "invalid-name manifest alongside a valid one",
+     "observation": "refresh status and the valid module's cache row",
+     "grade": "full",
+     "check": "refuted",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/owners.rs::build_cache",
+      ".g5/Verus_verification/consolidated/verus/owners.rs::scanned_error",
+      ".g5/Verus_verification/consolidated/verus/owners.rs::failed_cache_preserves_rows",
+      ".g5/Verus_verification/consolidated/verus/owners.rs::witnessed_owners_distinctions"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70 (as-built model: an InvalidName entry fails the whole build and preserves the old rows, contradicting the intended skip)",
+     "assessed_in": "iteration-70"
+    }
+   ],
+   "parent": {
+    "children": [
+     "repo.filesystem.duplicates",
+     "repo.filesystem.mutable-source"
+    ],
+    "entailment": "The parent owns the scan, refresh, lock and invalid-manifest rules and is graded directly; B6 only points to the children. No obligation is credited by composition."
+   }
+  },
+  "repo.filesystem.duplicates": {
+   "body_sha": "3652713ac8a12032",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "repo.filesystem.duplicates#1",
+     "repo.filesystem.duplicates#2",
+     "repo.filesystem.duplicates#3",
+     "repo.filesystem.duplicates#4"
+    ],
+    "B1": "excluded: scope of \"first\" (scan order of the cache build, not a portable lexical order) and evidence statement about checked traces",
+    "B2": [
+     "repo.filesystem.duplicates#5",
+     "repo.filesystem.duplicates#6"
+    ],
+    "B3": [
+     "repo.filesystem.duplicates#7"
+    ],
+    "B4": "excluded: scope statement of the contract (valid parsed manifests, fresh successful builds); excluded branches are named"
+   },
+   "obligations": [
+    {
+     "id": "repo.filesystem.duplicates#1",
+     "units": [
+      "P1"
+     ],
+     "text": "Within one filesystem root the cache identifies a module by name and full version string.",
+     "cases": "same root/name/version vs different root, name or version",
+     "observation": "cache key",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter19/duplicates.rs::key",
+      ".g5/Verus_verification/consolidated/iter19/duplicates.rs::logical_key_neighbor"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter19/run.json"
+     ],
+     "basis": "reused:package-sources metadata (iter19 duplicates.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.filesystem.duplicates#2",
+     "units": [
+      "P1"
+     ],
+     "text": "When two valid directories offer the same identity, the first successfully admitted entry stays in the cache.",
+     "cases": "duplicate admitted first vs second in scan order",
+     "observation": "retained cache row (subdir, manifest)",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter19/duplicates.rs::add_valid",
+      ".g5/Verus_verification/consolidated/iter19/duplicates.rs::first_row_survives",
+      ".g5/Verus_verification/consolidated/iter19/duplicates.rs::admission_neighbor"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter19/run.json"
+     ],
+     "basis": "reused:package-sources metadata (iter19 duplicates.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.filesystem.duplicates#3",
+     "units": [
+      "P1"
+     ],
+     "text": "A later duplicate prints a warning naming both directories and the retained one.",
+     "cases": "duplicate vs distinct key",
+     "observation": "warning record (key, retained, duplicate)",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter19/duplicates.rs::add_valid",
+      ".g5/Verus_verification/consolidated/iter19/duplicates.rs::warning_neighbor"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter19/run.json"
+     ],
+     "basis": "reused:package-sources metadata (iter19 duplicates.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.filesystem.duplicates#4",
+     "units": [
+      "P1"
+     ],
+     "text": "A duplicate does not fail the cache build.",
+     "cases": "build with a duplicate vs a single entry",
+     "observation": "build status",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter19/duplicates.rs::same_key_preserves_pair",
+      ".g5/Verus_verification/consolidated/iter19/duplicates.rs::admission_neighbor"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter19/run.json"
+     ],
+     "basis": "reused:package-sources metadata (iter19 duplicates.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.filesystem.duplicates#5",
+     "units": [
+      "B2"
+     ],
+     "text": "The retained manifest and directory belong to the same cache row: the manifest API returns its saved manifest and the directory API its physical folder.",
+     "cases": "retained A vs retained B",
+     "observation": "service manifest and service directory",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter19/duplicates.rs::two_readers_open_same_row",
+      ".g5/Verus_verification/consolidated/iter19/duplicates.rs::service_neighbor"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter19/run.json"
+     ],
+     "basis": "reused:package-sources metadata (iter19 duplicates.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.filesystem.duplicates#6",
+     "units": [
+      "B2"
+     ],
+     "text": "With stable files and successful directory loading, installed description, root and callable payload follow the retained folder.",
+     "cases": "retained A vs retained B under the stable-source premise",
+     "observation": "installed description, root, payload, supplier",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter19/duplicates.rs::install_directory",
+      ".g5/Verus_verification/consolidated/iter19/duplicates.rs::installation_neighbor"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter19/run.json"
+     ],
+     "basis": "reused:package-sources metadata (iter19 duplicates.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.filesystem.duplicates#7",
+     "units": [
+      "B3"
+     ],
+     "text": "Swapping the directory-to-payload assignment changes which duplicate is retained; a single valid entry has no duplicate warning.",
+     "cases": "ab vs ba fixtures; single vs duplicated entry",
+     "observation": "retained directory/marker; warning count",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter19/duplicates.rs::admission_neighbor",
+      ".g5/Verus_verification/consolidated/iter19/duplicates.rs::warning_neighbor"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter19/run.json"
+     ],
+     "basis": "reused:package-sources metadata (iter19 duplicates.rs)",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "repo.filesystem.mutable-source": {
+   "body_sha": "41720afc15c7d989",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "repo.filesystem.mutable-source#1"
+    ],
+    "B1": [
+     "repo.filesystem.mutable-source#2"
+    ],
+    "B2": [
+     "repo.filesystem.mutable-source#3"
+    ],
+    "B3": "excluded: scope statement (one directory, plain releases, successful providers); concurrent edits, removal and failures stay outside"
+   },
+   "obligations": [
+    {
+     "id": "repo.filesystem.mutable-source#1",
+     "units": [
+      "P1"
+     ],
+     "text": "A filesystem cache saves a manifest but keeps a pointer to the physical directory; ordinary directory installation reads the current module.xml and sources from that directory.",
+     "cases": "install before vs after the directory is replaced",
+     "observation": "cached manifest vs installed version/payload",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter21/temporal.rs::install",
+      ".g5/Verus_verification/consolidated/iter21/temporal.rs::snapshot_neighbor",
+      ".g5/Verus_verification/consolidated/iter21/temporal.rs::stale_neighbor",
+      ".g5/Verus_verification/consolidated/iter21/temporal.rs::physical_writer_frames_cache_and_runtime"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter21/run.json"
+     ],
+     "basis": "reused:package-sources metadata (iter21 temporal.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.filesystem.mutable-source#2",
+     "units": [
+      "B1"
+     ],
+     "text": "As built (C:D32): after replacing the directory with a 2.0.0 manifest and code, cache, manifest API and search still offer 1.0.0, and an explicit 1.0.0 install succeeds, saving 2.0.0, its new description and running the new payload.",
+     "cases": "stable vs edited source for an explicit 1.0.0 request",
+     "observation": "cache/service version; installed version, marker, payload; status",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter21/temporal.rs::snapshot_neighbor",
+      ".g5/Verus_verification/consolidated/iter21/temporal.rs::stale_neighbor",
+      ".g5/Verus_verification/consolidated/iter21/temporal.rs::readers_neighbor"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter21/run.json"
+     ],
+     "basis": "reused:package-sources metadata (iter21 temporal.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.filesystem.mutable-source#3",
+     "units": [
+      "B2"
+     ],
+     "text": "Reconfiguring the same repository with repo -fs rebuilds its cache: search offers 2.0.0, an explicit 1.0.0 request fails not found and keeps the installed 2.0.0, and an explicit 2.0.0 request succeeds.",
+     "cases": "after refresh: request 1.0.0 vs 2.0.0",
+     "observation": "search version; status; installed version and payload",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter21/temporal.rs::refresh_neighbor",
+      ".g5/Verus_verification/consolidated/iter21/temporal.rs::refusal_frames_selected_state"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter21/run.json"
+     ],
+     "basis": "reused:package-sources metadata (iter21 temporal.rs)",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "repo.oras": {
+   "body_sha": "495c21d24bb38a4c",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "repo.oras#1"
+    ],
+    "B1": [
+     "repo.oras#2"
+    ],
+    "B2": [
+     "repo.oras#3"
+    ],
+    "B3": [
+     "repo.oras#4"
+    ],
+    "B4": [
+     "repo.oras#5"
+    ],
+    "B5": "excluded: scope of the availability probe (not proof that authentication, pull or publish work) and evidence statement (native loopback cases)",
+    "B6": [
+     "repo.oras#6"
+    ],
+    "B7": [
+     "repo.oras#7"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "repo.oras#1",
+     "units": [
+      "P1"
+     ],
+     "text": "An ORAS registry can use a registry namespace, a path inside the registry, when addressing packages.",
+     "cases": "registry with vs without a namespace path",
+     "observation": "request URL / tag reference used for pull and publish",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "No model of ORAS reference construction (Repo/Oras/PackageService.cls and Definition namespace property). admission.rs folds the namespace into an abstract repository_path integer for the proposed contract only. Missing contrast: same module pulled from a definition with Namespace=\"ns\" vs empty, observing the reference passed to the ORAS client."
+    },
+    {
+     "id": "repo.oras#2",
+     "units": [
+      "B1"
+     ],
+     "text": "ORAS repositories support Basic and token authentication.",
+     "cases": "username/password vs token vs none",
+     "observation": "credentials attached to the ORAS client request",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "No model of ORAS credential attachment. iter2 registry.rs auth_status/token_probe classify probe replies, not which credential the ORAS client sends. Missing contrast: a registry requiring a token accepts the pull when a token is configured and refuses it with only Basic, observed at the registry request log."
+    },
+    {
+     "id": "repo.oras#3",
+     "units": [
+      "B2"
+     ],
+     "text": "IPM finds a module in an ORAS registry by its name or its external name.",
+     "cases": "lookup by Name vs ExternalName vs neither",
+     "observation": "module found / not found",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "No model of ORAS name resolution. thin_surfaces.rs::inspection_choice covers ModuleSummary.Show name/external-name selection, not the ORAS package lookup. Missing contrast: package published under the external name, install by Name vs by ExternalName at Repo/Oras/PackageService lookup."
+    },
+    {
+     "id": "repo.oras#4",
+     "units": [
+      "B3"
+     ],
+     "text": "ORAS errors name the repository and show the registry status and message.",
+     "cases": "registry error vs success",
+     "observation": "error text (repository name, status, message)",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "No model of ORAS error rendering; only native observation. Missing contrast: a failing ORAS call produces an error whose text contains the repository name and the registry HTTP status and message."
+    },
+    {
+     "id": "repo.oras#5",
+     "units": [
+      "B4"
+     ],
+     "text": "The ORAS availability adapter accepts a 2xx reply or a 401 carrying WWW-Authenticate; a headerless 401 and a 403 are unavailable.",
+     "cases": "200 vs 401+header vs 401 without header vs 403; transport failure",
+     "observation": "IsAvailable result",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/thin_surfaces.rs::oras_available"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
+      ".g5/Verus_verification/consolidated/verus/results/thin_surfaces.json"
+     ],
+     "basis": "reused:package-sources metadata (Extension Verus thin_surfaces.rs::oras_available)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.oras#6",
+     "units": [
+      "B6"
+     ],
+     "text": "Working assumption: ORAS unpublish R/M V deletes the plain tag and every V__<platform> tag of that version.",
+     "cases": "version with plain and platform tags",
+     "observation": "tags remaining after unpublish",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "No model of ORAS unpublish tag enumeration. iter2 registry.rs delete_prefix/delete_all only show sequential delete prefixes and the all-versions flag. Missing contrast: version 1.0.0 with tags 1.0.0 and 1.0.0__2026.1; after unpublish R/M 1.0.0 neither tag remains (open question repo.oras.unpublish-platform-policy)."
+    },
+    {
+     "id": "repo.oras#7",
+     "units": [
+      "B7"
+     ],
+     "text": "Working assumption: changing an ORAS registry address clears its stored credentials, as for a remote registry.",
+     "cases": "address changed vs unchanged on repo -modify",
+     "observation": "stored Username/Password/Token",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "No model of the ORAS definition update clearing credentials. Missing contrast: repo -oras -n R -url <new> keeps vs clears stored credentials compared with the same command with an unchanged URL (open question repo.oras.credentials-change-policy)."
+    }
+   ]
+  },
+  "repo.oras.integrity": {
+   "body_sha": "6baefeaa98fdc36b",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "repo.oras.integrity#1"
+    ],
+    "B1": [
+     "repo.oras.integrity#1",
+     "repo.oras.integrity#2"
+    ],
+    "B2": [
+     "repo.oras.integrity#3",
+     "repo.oras.integrity#4"
+    ],
+    "B3": [
+     "repo.oras.integrity#5",
+     "repo.oras.integrity#6"
+    ],
+    "B4": "excluded: working assumption listing undecided alternatives (sorting before selection, registry ordering contract, rejecting ambiguous archives, selecting by digest); open question repo.oras.integrity.policy"
+   },
+   "obligations": [
+    {
+     "id": "repo.oras.integrity#1",
+     "units": [
+      "P1",
+      "B1"
+     ],
+     "text": "As built, an ORAS pull without a tag selects the last tag supplied by the registry, unsorted: [2.0.0,1.0.0] selects 1.0.0 and the reverse selects 2.0.0.",
+     "cases": "provider order [2,1] vs [1,2]; empty tag list",
+     "observation": "selected tag",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter2/registry.rs::last_tag",
+      ".g5/Verus_verification/consolidated/iter2/registry.rs::tag_order_is_a_real_input"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter2/proofs/models.json"
+     ],
+     "basis": "reused:package-sources metadata (iter2 registry.rs; control provider-order-erased rejected)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.oras.integrity#2",
+     "units": [
+      "B1"
+     ],
+     "text": "The separate all-tags listing sorts versions (so it cannot justify the pull helper ordering).",
+     "cases": "raw tag order t1,t2 vs listing order",
+     "observation": "GetAllTags result order",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter15/oras.rs::get_all",
+      ".g5/Verus_verification/consolidated/iter15/oras.rs::raw_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter15/run.json"
+     ],
+     "basis": "new:iteration-70 (iter15 oras.rs get_all sorts the raw list; not linked from this block)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.oras.integrity#3",
+     "units": [
+      "B2"
+     ],
+     "text": "Archive validation skips non-tar layers and compares size and digest with the first tar layer; a later matching tar layer does not rescue an earlier mismatch.",
+     "cases": "first tar mismatching then matching; non-tar before matching tar; first tar matching",
+     "observation": "validation result",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter2/registry.rs::verify_layers",
+      ".g5/Verus_verification/consolidated/iter2/registry.rs::first_tar_controls_integrity"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter2/proofs/models.json"
+     ],
+     "basis": "reused:package-sources metadata (iter2 registry.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.oras.integrity#4",
+     "units": [
+      "B2"
+     ],
+     "text": "The pull path chooses the first downloaded *.tgz, which need not name the same artifact as the validated first tar layer.",
+     "cases": "two .tgz files whose first differs from the first tar layer",
+     "observation": "archive file handed to the loader vs layer validated",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter2/registry.rs::pull"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter2/proofs/models.json"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "registry.rs::pull takes archive_found as one Boolean and verify_layers checks layer metadata separately; no rule links the selected file (first *.tgz in PackageService.cls::Pull) with the validated layer. Missing contrast: layers [tar A, tar B] with files B.tgz listed first; validation passes on A while the loader receives B."
+    },
+    {
+     "id": "repo.oras.integrity#5",
+     "units": [
+      "B3"
+     ],
+     "text": "Failed validation returns an error even if the raw helper assigned a stream.",
+     "cases": "hash ok vs hash failed with stream linked",
+     "observation": "Pull status and stream_set",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter2/registry.rs::pull",
+      ".g5/Verus_verification/consolidated/iter2/registry.rs::failed_hash_keeps_downloaded_stream"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter2/proofs/models.json"
+     ],
+     "basis": "reused:package-sources metadata (iter2 registry.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.oras.integrity#6",
+     "units": [
+      "B3"
+     ],
+     "text": "The final GetModule reader throws the failed status instead of returning the stream to the loader.",
+     "cases": "failed vs passed validation",
+     "observation": "archive released to loader; loader entered",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter68/as_built.rs::observe",
+      ".g5/Verus_verification/consolidated/iter68/as_built.rs::rejection_stops_loader_after_provider_effect"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter68/proofs/models.json"
+     ],
+     "basis": "new:iteration-70 (iter68 as_built.rs; control failed-validation-releases-linked-stream rejected)",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "repo.oras.archive-boundary": {
+   "body_sha": "a4608f4070c8d5cd",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "repo.oras.archive-boundary#1",
+     "repo.oras.archive-boundary#2"
+    ],
+    "B1": [
+     "repo.oras.archive-boundary#3"
+    ],
+    "B2": [
+     "repo.oras.archive-boundary#4"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "repo.oras.archive-boundary#1",
+     "units": [
+      "P1"
+     ],
+     "text": "As built, the ORAS client can unpack a directory layer in its staging area before IPM checks the package archive.",
+     "cases": "size mismatch with a provider that extracts before IPM validation",
+     "observation": "staging directory contents",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter68/as_built.rs::observe",
+      ".g5/Verus_verification/consolidated/iter68/as_built.rs::rejection_stops_loader_after_provider_effect"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter68/proofs/models.json"
+     ],
+     "basis": "reused:package-sources metadata (iter68 as_built.rs)",
+     "assessed_in": "iteration-70",
+     "gap": "Trace.provider_extracts is a provider input, so the model shows only that IPM does not gate it (control provider-unpacks-only-after-validation rejected). That the bundled oras-py client extracts before PackageService.cls::VerifyModuleHashAndSize runs is native evidence only. Missing: a model of the client pull step ordering (download, extract directory layer, return) relative to the IPM hash/size check."
+    },
+    {
+     "id": "repo.oras.archive-boundary#2",
+     "units": [
+      "P1"
+     ],
+     "text": "A failed archive size or digest check stops IPM from replacing the installed module's directory.",
+     "cases": "size/digest mismatch vs match on a writable installed root",
+     "observation": "installed root replaced; loader entered",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter68/as_built.rs::observe",
+      ".g5/Verus_verification/consolidated/iter68/as_built.rs::rejection_stops_loader_after_provider_effect"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter68/proofs/models.json"
+     ],
+     "basis": "reused:package-sources metadata (iter68 as_built.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.oras.archive-boundary#3",
+     "units": [
+      "B1"
+     ],
+     "text": "In a same-version reinstall with a size mismatch, the installed files, callable code and module row stay at the original revision and IPM records a failed, uncommitted install.",
+     "cases": "size mismatch reinstall vs successful reinstall",
+     "observation": "module record, callable code, history row Success/Committed",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter68/as_built.rs::observe"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter68/proofs/models.json"
+     ],
+     "basis": "reused:package-sources metadata (iter68 as_built.rs)",
+     "assessed_in": "iteration-70",
+     "gap": "as_built.rs observes only archive_released/loader_entered/installed_root_replaced. The module record (%IPM.Storage.Module), callable code and the history row written by HistoryTemp/AbstractHistory Finalize (Success=0, Committed=0) are native observations. Missing contrast: the same reinstall with matching vs mismatching size, observing ModuleD version and the history row's Success/Committed fields."
+    },
+    {
+     "id": "repo.oras.archive-boundary#4",
+     "units": [
+      "B2"
+     ],
+     "text": "ORAS dependency resolution reads the manifest annotation by tag and retrieves the archive by tag again, so a tag moved between the two reads installs revision 2 after resolving with revision 1, and the archive passes the later size/digest check against revision 2.",
+     "cases": "metadata manifest == pull manifest vs moved tag",
+     "observation": "archive released / loader entered",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter68/as_built.rs::changed_tag",
+      ".g5/Verus_verification/consolidated/iter68/as_built.rs::hash_acceptance_does_not_require_metadata_identity"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter68/proofs/models.json"
+     ],
+     "basis": "reused:package-sources metadata (iter68 as_built.rs; control hash-check-binds-earlier-metadata rejected)",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "repo.oras.signed-admission": {
+   "body_sha": "a204af95893643fa",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "repo.oras.signed-admission#1"
+    ],
+    "B1": [
+     "repo.oras.signed-admission#2",
+     "repo.oras.signed-admission#3"
+    ],
+    "B2": [
+     "repo.oras.signed-admission#4"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "repo.oras.signed-admission#1",
+     "units": [
+      "P1"
+     ],
+     "text": "Proposed (issue #281): when verification is configured for an ORAS repository, IPM must verify the publisher's authorization for the selected artifact (target, policy, signer, manifest digest) before unpacking it.",
+     "cases": "authorized evidence for this target/policy/manifest vs missing, rejected, unavailable or mismatched evidence",
+     "observation": "may_extract / may_replace_root",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter68/admission.rs::authorized",
+      ".g5/Verus_verification/consolidated/iter68/admission.rs::protected_admission",
+      ".g5/Verus_verification/consolidated/iter68/admission.rs::extraction_binds_scope_and_bytes",
+      ".g5/Verus_verification/consolidated/iter68/admission.rs::authorized_artifact_can_continue"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter68/proofs/models.json"
+     ],
+     "basis": "reused:package-sources metadata (iter68 admission.rs, 8 verified, 11 controls rejected). Design contract only: the pinned product has no verifier or configuration, so this grades the proposed rule, not product behaviour",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.oras.signed-admission#2",
+     "units": [
+      "B1"
+     ],
+     "text": "Proposed: dependencies resolved from protected repositories use metadata and bytes from the same authorized manifest.",
+     "cases": "resolution and admission with same vs different target/policy/manifest digest",
+     "observation": "continue_from_metadata",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter68/admission.rs::resolve",
+      ".g5/Verus_verification/consolidated/iter68/admission.rs::continue_from_metadata",
+      ".g5/Verus_verification/consolidated/iter68/admission.rs::resolution_preserves_metadata_identity",
+      ".g5/Verus_verification/consolidated/iter68/admission.rs::authorized_resolution_has_a_success_path"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter68/proofs/models.json"
+     ],
+     "basis": "reused:package-sources metadata (iter68 admission.rs; design contract)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.oras.signed-admission#3",
+     "units": [
+      "B1"
+     ],
+     "text": "Proposed: failed verification stops before unpacking or replacing the installed directory; verified metadata with bad bytes allows only metadata use.",
+     "cases": "unauthorized vs authorized with bad bytes vs authorized with verified bytes",
+     "observation": "use_manifest, may_extract, may_replace_root",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter68/admission.rs::trust_failure_has_no_consumer_effect",
+      ".g5/Verus_verification/consolidated/iter68/admission.rs::verified_manifest_with_bad_bytes_only_allows_metadata"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter68/proofs/models.json"
+     ],
+     "basis": "reused:package-sources metadata (iter68 admission.rs; controls extraction-before-admission, root-replacement-before-admission, trust-outage-allows-metadata rejected)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.oras.signed-admission#4",
+     "units": [
+      "B2"
+     ],
+     "text": "Proposed: each admission decision is scoped to the selected repository and policy revision; cached evidence for another target, policy revision or manifest digest is not reused.",
+     "cases": "old vs new target/policy/manifest digest",
+     "observation": "use_manifest",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter68/admission.rs::cached_evidence_cannot_cross_identity"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter68/proofs/models.json"
+     ],
+     "basis": "reused:package-sources metadata (iter68 admission.rs; control reuse-old-policy-revision rejected). Open decisions in B2 (trust format, signer policy, unprotected fallback) are not graded",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "repo.oras.tag-decode": {
+   "body_sha": "6b75b81ef3b13c88",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "repo.oras.tag-decode#1",
+     "repo.oras.tag-decode#2",
+     "repo.oras.tag-decode#3"
+    ],
+    "P2": "excluded: scope statement of the codec model (roundtrip domain without underscores; no sorting or transport claim)"
+   },
+   "obligations": [
+    {
+     "id": "repo.oras.tag-decode#1",
+     "units": [
+      "P1"
+     ],
+     "text": "ORAS tags encode a version's + as _ and append __PLATFORM for a deployed artifact.",
+     "cases": "source vs deployed artifact; version with build metadata",
+     "observation": "tag text",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter15/oras.rs::encode",
+      ".g5/Verus_verification/consolidated/iter15/oras.rs::joined",
+      ".g5/Verus_verification/consolidated/iter15/oras.rs::tag_for",
+      ".g5/Verus_verification/consolidated/iter15/oras.rs::raw_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter15/run.json"
+     ],
+     "basis": "reused:package-sources metadata (iter15 oras.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.oras.tag-decode#2",
+     "units": [
+      "P1"
+     ],
+     "text": "Splitting the platform suffix and decoding the version restores the prerelease/build string.",
+     "cases": "deployed tag with prerelease+build; versions without underscores",
+     "observation": "decoded version and platform",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter15/oras.rs::parse",
+      ".g5/Verus_verification/consolidated/iter15/oras.rs::decode",
+      ".g5/Verus_verification/consolidated/iter15/oras.rs::codec_roundtrip",
+      ".g5/Verus_verification/consolidated/iter15/oras.rs::raw_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter15/run.json"
+     ],
+     "basis": "reused:package-sources metadata (iter15 oras.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.oras.tag-decode#3",
+     "units": [
+      "P1"
+     ],
+     "text": "A deployed reference with no selected platform is refused before download.",
+     "cases": "deployed with vs without selected platform; source package",
+     "observation": "tag_for result (None = refused)",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter15/oras.rs::tag_for",
+      ".g5/Verus_verification/consolidated/iter15/oras.rs::raw_neighbors",
+      ".g5/Verus_verification/consolidated/iter8/catalog.rs::platform_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter15/run.json",
+      ".g5/uplift/consolidated/iter8/run.json"
+     ],
+     "basis": "reused:package-sources metadata (iter15 oras.rs, iter8 catalog.rs)",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "repo.oras.platform-selection": {
+   "body_sha": "a1ff0e850c33a2a5",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "repo.oras.platform-selection#1",
+     "repo.oras.platform-selection#2",
+     "repo.oras.platform-selection#3"
+    ],
+    "B1": [
+     "repo.oras.platform-selection#4"
+    ],
+    "B2": [
+     "repo.oras.platform-selection#5",
+     "repo.oras.platform-selection#6"
+    ],
+    "B3": "excluded: pointer to repo.oras.selection-modes (owner) and scope statement (metadata transport and SemVer parsing remain provider boundaries)"
+   },
+   "obligations": [
+    {
+     "id": "repo.oras.platform-selection#1",
+     "units": [
+      "P1"
+     ],
+     "text": "A deployed module can be selected for installation only when its reported platforms include the current IRIS platform.",
+     "cases": "deployed with current platform vs only another platform",
+     "observation": "install candidate",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter8/catalog.rs::compatible",
+      ".g5/Verus_verification/consolidated/iter8/catalog.rs::install_candidate",
+      ".g5/Verus_verification/consolidated/iter8/catalog.rs::platform_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter8/run.json"
+     ],
+     "basis": "reused:package-sources metadata (iter8 catalog.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.oras.platform-selection#2",
+     "units": [
+      "P1"
+     ],
+     "text": "Normal repository listings apply the same test and show the current platform for a compatible artifact.",
+     "cases": "compatible vs incompatible deployed artifact in a normal listing",
+     "observation": "listing visibility; reported platform",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter8/catalog.rs::catalog_visible",
+      ".g5/Verus_verification/consolidated/iter8/catalog.rs::reported_platform",
+      ".g5/Verus_verification/consolidated/iter8/catalog.rs::platform_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter8/run.json"
+     ],
+     "basis": "reused:package-sources metadata (iter8 catalog.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.oras.platform-selection#3",
+     "units": [
+      "P1"
+     ],
+     "text": "A nondeployed source package is not platform-specific.",
+     "cases": "nondeployed with empty platform set vs deployed",
+     "observation": "compatibility",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter8/catalog.rs::compatible",
+      ".g5/Verus_verification/consolidated/iter8/catalog.rs::platform_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter8/run.json"
+     ],
+     "basis": "reused:package-sources metadata (iter8 catalog.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.oras.platform-selection#4",
+     "units": [
+      "B1"
+     ],
+     "text": "A module available only for another platform is hidden in the normal listing and refused at install, while the all-versions listing may still show it.",
+     "cases": "show_all false vs true for an incompatible artifact",
+     "observation": "listing visibility; install candidate",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter8/catalog.rs::catalog_visible",
+      ".g5/Verus_verification/consolidated/iter8/catalog.rs::platform_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter8/run.json"
+     ],
+     "basis": "reused:package-sources metadata (iter8 catalog.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.oras.platform-selection#5",
+     "units": [
+      "B2"
+     ],
+     "text": "The selected current platform is carried into the deployed artifact tag.",
+     "cases": "deployed artifact with selected platform",
+     "observation": "pull tag",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter8/catalog.rs::tag_for",
+      ".g5/Verus_verification/consolidated/iter8/catalog.rs::platform_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter8/run.json"
+     ],
+     "basis": "reused:package-sources metadata (iter8 catalog.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.oras.platform-selection#6",
+     "units": [
+      "B2"
+     ],
+     "text": "A deployed reference with no selected platform is refused before download.",
+     "alias_of": "repo.oras.tag-decode#3",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "repo.oras.selection-modes": {
+   "body_sha": "1533dca69ed73633",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "repo.oras.selection-modes#1",
+     "repo.oras.selection-modes#2",
+     "repo.oras.selection-modes#3"
+    ],
+    "B1": [
+     "repo.oras.selection-modes#4"
+    ],
+    "B2": [
+     "repo.oras.selection-modes#5",
+     "repo.oras.selection-modes#6"
+    ],
+    "B3": [
+     "repo.oras.selection-modes#7",
+     "repo.oras.selection-modes#8"
+    ],
+    "B4": "excluded: scope statement (literal release versions, pinned platform pair, successful providers, fresh consumer)"
+   },
+   "obligations": [
+    {
+     "id": "repo.oras.selection-modes#1",
+     "units": [
+      "P1"
+     ],
+     "text": "Raw tags are grouped by encoded package version, keeping platform strings in input order.",
+     "cases": "same version with bad-first vs current-first tags",
+     "observation": "group platform list",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter15/oras.rs::gather",
+      ".g5/Verus_verification/consolidated/iter15/oras.rs::aggregate",
+      ".g5/Verus_verification/consolidated/iter15/oras.rs::raw_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter15/run.json"
+     ],
+     "basis": "reused:package-sources metadata (iter15 oras.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.oras.selection-modes#2",
+     "units": [
+      "P1"
+     ],
+     "text": "Normal listing prefers a compatible version.",
+     "cases": "current-platform 1.0.0 and incompatible 2.0.0",
+     "observation": "normal service row",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter15/oras.rs::prefer",
+      ".g5/Verus_verification/consolidated/iter15/oras.rs::service",
+      ".g5/Verus_verification/consolidated/iter15/oras.rs::selected_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter15/run.json"
+     ],
+     "basis": "reused:package-sources metadata (iter15 oras.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.oras.selection-modes#3",
+     "units": [
+      "P1"
+     ],
+     "text": "Dependency lookup enumerates candidate versions before the manager filters them, and records the current platform for the pull tag.",
+     "cases": "Dependencies mode rows vs manager-filtered rows",
+     "observation": "rows; manager selected platform",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter15/oras.rs::produce",
+      ".g5/Verus_verification/consolidated/iter15/oras.rs::manager",
+      ".g5/Verus_verification/consolidated/iter15/oras.rs::selected_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter15/run.json"
+     ],
+     "basis": "reused:package-sources metadata (iter15 oras.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.oras.selection-modes#4",
+     "units": [
+      "B1"
+     ],
+     "text": "With current 1.0.0 and only-incompatible 2.0.0, a consumer requiring >=1.0.0 loads 1.0.0 and its payload; a new consumer requiring ^2.0.0 fails and leaves neither consumer nor dependency record.",
+     "cases": "range >=1.0.0 vs ^2.0.0",
+     "observation": "status, dependency/consumer records, payload, tag",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter15/oras.rs::normal_consumer",
+      ".g5/Verus_verification/consolidated/iter15/oras.rs::selected_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter15/run.json"
+     ],
+     "basis": "reused:package-sources metadata (iter15 oras.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.oras.selection-modes#5",
+     "units": [
+      "B2"
+     ],
+     "text": "AllVersions is tri-state: 0 returns one preferred row with platforms; 1 returns one preferred row with raw all-tag text and no platform list; empty enumerates candidate rows for dependencies.",
+     "cases": "Mode Normal vs AllTags vs Dependencies",
+     "observation": "row count, platforms, all_tags",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter15/oras.rs::service",
+      ".g5/Verus_verification/consolidated/iter15/oras.rs::produce",
+      ".g5/Verus_verification/consolidated/iter15/oras.rs::selected_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter15/run.json"
+     ],
+     "basis": "reused:package-sources metadata (iter15 oras.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.oras.selection-modes#6",
+     "units": [
+      "B2"
+     ],
+     "text": "The SQL show-all reader displays the grouped row, while the manager filters that same platform-empty deployed row out.",
+     "cases": "display(show_all) vs manager on the AllTags row",
+     "observation": "displayed vs installable rows",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter15/oras.rs::display",
+      ".g5/Verus_verification/consolidated/iter15/oras.rs::manager",
+      ".g5/Verus_verification/consolidated/iter15/oras.rs::selected_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter15/run.json"
+     ],
+     "basis": "reused:package-sources metadata (iter15 oras.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.oras.selection-modes#7",
+     "units": [
+      "B3"
+     ],
+     "text": "If 1.0.0 has both current and incompatible tags, its selected current tag supplies the installed payload.",
+     "cases": "group with platforms [current, bad]",
+     "observation": "manager selected platform / pull tag",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter15/oras.rs::manager",
+      ".g5/Verus_verification/consolidated/iter15/oras.rs::selected_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter15/run.json"
+     ],
+     "basis": "reused:package-sources metadata (iter15 oras.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.oras.selection-modes#8",
+     "units": [
+      "B3"
+     ],
+     "text": "Metadata is fetched from the group's first platform tag; arbitrary input-order independence is not promised.",
+     "cases": "same version, bad-first vs current-first input order",
+     "observation": "metadata tag",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter15/oras.rs::metadata_tag",
+      ".g5/Verus_verification/consolidated/iter15/oras.rs::raw_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter15/run.json"
+     ],
+     "basis": "reused:package-sources metadata (iter15 oras.rs)",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "repo.oras.build-readers": {
+   "body_sha": "34c10d89c67e336f",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "repo.oras.build-readers#1"
+    ],
+    "B1": [
+     "repo.oras.build-readers#2"
+    ],
+    "B2": "excluded: evidence statement (manifests, records and tags checked; the broader prediction was refuted)",
+    "B3": [
+     "repo.oras.build-readers#3"
+    ],
+    "B4": "excluded: scope disclaimer (no general SemVer build-precedence, OCI order or corruption claim)",
+    "B5": "excluded: working assumption restating repo.oras.integrity B4 (undecided alternatives; open question repo.oras.integrity.policy)"
+   },
+   "obligations": [
+    {
+     "id": "repo.oras.build-readers#1",
+     "units": [
+      "P1"
+     ],
+     "text": "For current-platform builds 1.0.0+a.1.a and 1.0.0+a.1.z, raw tag sorting places +a.1.z first, while aggregation parses encoded keys without decoding _ to +, reducing both to equal fields so its stable sort keeps natural key order.",
+     "cases": "decoded vs encoded comparison of the two literals",
+     "observation": "raw tag order; aggregate key order",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter15/oras.rs::deep_fields",
+      ".g5/Verus_verification/consolidated/iter15/oras.rs::pair_order",
+      ".g5/Verus_verification/consolidated/iter15/oras.rs::deep_aggregate",
+      ".g5/Verus_verification/consolidated/iter15/oras.rs::deep_oci",
+      ".g5/Verus_verification/consolidated/iter15/oras.rs::deep_build_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter15/run.json"
+     ],
+     "basis": "reused:package-sources metadata (iter15 oras.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.oras.build-readers#2",
+     "units": [
+      "B1"
+     ],
+     "text": "The service's first normal row and the SQL listing report +a.1.a; dependency lookup emits both; the manager key omits Build so the later row wins and installation selects +a.1.z.",
+     "cases": "service first row vs dependency rows vs manager last-writer",
+     "observation": "reported version; installed pull tag",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter15/oras.rs::deep_service_first_version",
+      ".g5/Verus_verification/consolidated/iter15/oras.rs::same_base_insert",
+      ".g5/Verus_verification/consolidated/iter15/oras.rs::deep_manager_version",
+      ".g5/Verus_verification/consolidated/iter15/oras.rs::deep_pull_tag",
+      ".g5/Verus_verification/consolidated/iter15/oras.rs::deep_build_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter15/run.json"
+     ],
+     "basis": "reused:package-sources metadata (iter15 oras.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.oras.build-readers#3",
+     "units": [
+      "B3"
+     ],
+     "text": "Decoding in aggregation alone is not a complete repair, because the manager has a separate last-writer rule.",
+     "cases": "aggregation with decode_first vs as built, each fed to the Build-omitting manager",
+     "observation": "service first row vs installed version",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter15/oras.rs::pair_order",
+      ".g5/Verus_verification/consolidated/iter15/oras.rs::deep_oci",
+      ".g5/Verus_verification/consolidated/iter15/oras.rs::same_base_insert"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter15/run.json"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "deep_oci shows decoded ordering (z before a) and same_base_insert the last-writer rule, but no theorem composes a decoding aggregation with the manager to show the service first row (+a.1.z) and the installed version (+a.1.a, the later row) then disagree. Missing contrast: repaired aggregation order [z,a] through Repo/Manager.cls::SearchRepositoriesForModule keyed without Build, observing the listed vs installed build."
+    }
+   ]
+  },
+  "repo.publish-cache": {
+   "body_sha": "25f7adaa96d59f68",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "repo.publish-cache#1",
+     "repo.publish-cache#2",
+     "repo.publish-cache#3"
+    ],
+    "B1": "excluded: evidence (paired native calls) and scope (no lifetime across shell commands)",
+    "B2": [
+     "repo.publish-cache#4"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "repo.publish-cache#1",
+     "units": [
+      "P1"
+     ],
+     "text": "As built, a retained Remote publishing manager reuses an available client without rechecking Enabled or availability.",
+     "cases": "retained available client, repository then disabled",
+     "observation": "manager availability; provider called",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter2/registry.rs::remote_cache",
+      ".g5/Verus_verification/consolidated/iter2/registry.rs::cache_changes_operator_observation"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter2/proofs/models.json"
+     ],
+     "basis": "reused:package-sources metadata (iter2 registry.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.publish-cache#2",
+     "units": [
+      "P1"
+     ],
+     "text": "The Remote manager keeps unavailable names suppressed for the object's lifetime.",
+     "cases": "cached unavailable, provider now available",
+     "observation": "manager availability",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter2/registry.rs::remote_cache",
+      ".g5/Verus_verification/consolidated/iter2/registry.rs::cache_changes_operator_observation"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter2/proofs/models.json"
+     ],
+     "basis": "reused:package-sources metadata (iter2 registry.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.publish-cache#3",
+     "units": [
+      "P1"
+     ],
+     "text": "The ORAS publishing manager rereads Enabled and probes on each call.",
+     "cases": "enabled false vs true with an available provider",
+     "observation": "manager availability",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter2/registry.rs::oras_cache",
+      ".g5/Verus_verification/consolidated/iter2/registry.rs::cache_changes_operator_observation"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter2/proofs/models.json"
+     ],
+     "basis": "reused:package-sources metadata (iter2 registry.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "repo.publish-cache#4",
+     "units": [
+      "B2"
+     ],
+     "text": "An available service may report deletion disabled while the manager returns success; capability, availability and operation status are different results.",
+     "cases": "available with provider enabled false vs true; unavailable",
+     "observation": "capability status_ok vs enabled",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter2/registry.rs::capability",
+      ".g5/Verus_verification/consolidated/iter2/registry.rs::manager_status",
+      ".g5/Verus_verification/consolidated/iter2/registry.rs::manifest_and_platform_guards"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/consolidated/iter2/proofs/models.json"
+     ],
+     "basis": "reused:package-sources metadata (iter2 registry.rs)",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  }
+ }
+}

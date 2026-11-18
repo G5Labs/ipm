@@ -1,0 +1,2749 @@
+{
+ "page": ".g5/ontology/features/history.g5.md",
+ "blocks": {
+  "history": {
+   "body_sha": "e9885f420f9bff2c",
+   "status": "structural",
+   "units": {
+    "P1": "excluded: summary lead of the page; \"whether or not they succeed\" restates history.actions#1-#3 (failed and refused attempts) and \"per namespace\" restates history.namespace (concepts/data-policy page, another chunk owner)"
+   },
+   "obligations": [],
+   "reason": "Lead of the history page. Its only content (a per-namespace log of attempted package changes, successful or not) is owned by history.actions (attempts, including failures) and history.namespace (data-policy page). Children: actions, record, fields, phases, survives-rollback, committed, dependencies, read, delete, plus data-policy namespace/locked/retention/keep-on-ipm-uninstall.",
+   "parent": {
+    "children": [
+     "history.actions",
+     "history.record",
+     "history.fields",
+     "history.phases",
+     "history.survives-rollback",
+     "history.committed",
+     "history.dependencies",
+     "history.read",
+     "history.delete",
+     "history.namespace (concepts/data-policy)",
+     "history.locked (concepts/data-policy)",
+     "history.retention (concepts/data-policy)",
+     "history.keep-on-ipm-uninstall (concepts/data-policy)"
+    ],
+    "entailment": "Pure lead: no obligation beyond its children, so nothing is composed."
+   }
+  },
+  "history.actions": {
+   "body_sha": "ac2cd9df02b0a844",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "history.actions#1",
+     "history.actions#2",
+     "history.actions#3"
+    ],
+    "B1": [
+     "history.actions#1",
+     "history.actions#2",
+     "history.actions#3"
+    ],
+    "B2": [
+     "history.actions#4"
+    ],
+    "B3": [
+     "history.actions#5"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "history.actions#1",
+     "units": [
+      "P1",
+      "B1"
+     ],
+     "text": "Every top-level load attempt is recorded, including loads that fail or are refused (bad path, broken manifest, downgrade, update-required, requirements, dependency or phase failure).",
+     "cases": "load verdicts success / path refused / manifest refused / downgrade / update-required / requirements / dependency failure / Activate failure / post-commit failure; normal return and process death",
+     "observation": "durable %IPM.General.History row for the top action",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/crates/ipm-load-history/src/proofs.rs::theorem_top_record_complete",
+      ".g5/Verus_verification/crates/ipm-load-history/src/proofs.rs::theorem_top_record_durable",
+      ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::top_rec",
+      ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::l1_verdict"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+      ".g5/Verus_verification/results/verus/20261113T223451Z-asbuilt-invariants-default/receipt.json",
+      ".g5/Verus_verification/coverage-map.md"
+     ],
+     "basis": "reused:.g5/Verus_verification/coverage-map.md (history.actions: load supported)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "history.actions#2",
+     "units": [
+      "P1",
+      "B1"
+     ],
+     "text": "Every install and update attempt, including failed and refused ones, is recorded.",
+     "cases": "install / update attempt that succeeds, fails or is refused (no module name, not found)",
+     "observation": "History row with Action install or update",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [
+      ".g5/Verus_verification/coverage-map.md"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "No formal model of Main.cls::Install (HistoryTemp.InstallInit before the name check, Main.cls:2565-2566) or of the update path record creation. The crate binds only Main:Load. Contrast: install of an unknown name and an update refused by the version check must each leave one error row, against a successful install row."
+    },
+    {
+     "id": "history.actions#3",
+     "units": [
+      "P1",
+      "B1"
+     ],
+     "text": "Every uninstall attempt, including a failed one or one naming a module that is not installed, is recorded.",
+     "cases": "uninstall of an installed module (success or failure) vs uninstall of a name that is not installed",
+     "observation": "uninstall History rows",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      "playbook-uplift/models/verus/uninstall.rs::storage_uninstall",
+      "playbook-uplift/models/verus/uninstall.rs::unin_refines_rows_honest",
+      "playbook-uplift/models/verus/uninstall.rs::l1_rows_honest"
+     ],
+     "evidence": [
+      "playbook-uplift/models/verus/results/uninstall.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "unin_refines_rows_honest ensures only that rows written are honest (vacuous if none); the one-row-per-uninstall fact appears as an internal assertion under premises PR (no -r), PB, PG and PNF. The not-installed branch (storage_uninstall pushes HRow{m: None, ok: false}) is never exercised by a theorem, and uninstall with no name / refusals before Storage.Module:Uninstall are not modeled. Contrast: uninstall of a missing name leaves exactly one failed row, against an installed module's success row."
+    },
+    {
+     "id": "history.actions#4",
+     "units": [
+      "B2"
+     ],
+     "text": "Installs started for dependencies get their own records.",
+     "alias_of": "history.dependencies#1",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "history.actions#5",
+     "units": [
+      "B3"
+     ],
+     "text": "Other commands (list, sync, reload, lifecycle phase commands) write no History record.",
+     "cases": "list / sync / reload / <module> <phase> vs load",
+     "observation": "History row count before and after the command",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [
+      ".g5/Verus_verification/coverage-map.md"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "No model of the Main.cls command dispatch to HistoryTemp. The playbook uninstall.rs clean_cmd (`<module> clean`, Clean.Level 0, Recurse 1) reuses exec_clean, whose dep_step pushes History rows for cleaned dependencies, and no theorem examines clean's history effect. Contrast: `<module> clean` on a module with a dependency, and `sync`, must leave the History row count unchanged."
+    }
+   ]
+  },
+  "history.record": {
+   "body_sha": "15c00c9d7d066b89",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "history.record#1",
+     "history.record#2",
+     "history.record#3",
+     "history.record#4"
+    ],
+    "B1": [
+     "history.record#5",
+     "history.record#6"
+    ],
+    "B2": [
+     "history.record#7"
+    ],
+    "B3": [
+     "history.record#8"
+    ],
+    "B4": [
+     "history.record#9"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "history.record#1",
+     "units": [
+      "P1"
+     ],
+     "text": "For load, IPM creates the durable record when the action starts (before any check) and fills it in (status, end time, finalized) when the action ends normally.",
+     "cases": "path refused at the first check vs completed load; row inserted (att>=1) vs returned",
+     "observation": "durable History row existence and fields at return",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/crates/ipm-load-history/src/proofs.rs::theorem_top_record_durable",
+      ".g5/Verus_verification/crates/ipm-load-history/src/proofs.rs::theorem_top_record_complete",
+      ".g5/Verus_verification/crates/ipm-load-history/src/proofs.rs::theorem_persist_target"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+      ".g5/Verus_verification/results/verus/20261113T223451Z-asbuilt-invariants-default/receipt.json"
+     ],
+     "basis": "reused:.g5/Verus_verification/coverage-map.md (history.record: theorem_top_record_durable, theorem_top_record_complete)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "history.record#2",
+     "units": [
+      "P1"
+     ],
+     "text": "For install, update and uninstall, the record is created at start and filled in at the end.",
+     "cases": "install/update/uninstall start vs end",
+     "observation": "History row at start and at end",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [
+      ".g5/Verus_verification/coverage-map.md"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "Only Main:Load is bound in the crate; playbook uninstall.rs appends rows only at the end of Clean (no start row). Contrast: an install refused for a missing name, and an uninstall killed inside Clean, must each leave a row created at start."
+    },
+    {
+     "id": "history.record#3",
+     "units": [
+      "P1"
+     ],
+     "text": "A process that dies mid-load still leaves a durable record with an empty end time.",
+     "cases": "SIGKILL-like and terminate-like process end at every running point vs normal return",
+     "observation": "durable row exists, TimeEnd empty",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/crates/ipm-load-history/src/proofs.rs::theorem_top_record_durable",
+      "playbook-uplift/models/verus/load_general.rs::g_rollback_crash_honest",
+      "playbook-uplift/models/verus/load_general.rs::honest",
+      ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::kill_rec"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+      ".g5/Verus_verification/results/verus/20261113T223451Z-asbuilt-invariants-default/receipt.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      "playbook-uplift/models/verus/results/load_general.json"
+     ],
+     "basis": "new:iteration-70 (playbook load_general.rs honest(): Ended <=> top_row.ended; rerun with --rlimit 30)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "history.record#4",
+     "units": [
+      "P1"
+     ],
+     "text": "Fields not yet known, such as the version, may hold a placeholder.",
+     "alias_of": "history.fields#3",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "history.record#5",
+     "units": [
+      "B1"
+     ],
+     "text": "While a load runs and after it stops without ending, its record reads Success 0 and has no end time.",
+     "cases": "running state / crashed with rollback vs ended",
+     "observation": "Success and TimeEnd of the durable row",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      "playbook-uplift/models/verus/load_general.rs::progress_row",
+      "playbook-uplift/models/verus/load_general.rs::g_step_refines",
+      "playbook-uplift/models/verus/load_general.rs::g_rollback_crash_honest",
+      ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::kill_rec"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      "playbook-uplift/models/verus/results/load_general.json",
+      ".g5/Verus_verification/results/verus/20261113T223456Z-asbuilt-l1-end/receipt.json"
+     ],
+     "basis": "new:iteration-70 (scope: top-level load, no caller transaction; the load_general premises exclude only crashes in the commit window and the developer-mode dependency phase, where the Committed clause fails)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "history.record#6",
+     "units": [
+      "B1"
+     ],
+     "text": "Intended: a record whose action stopped without ending lists the phases it started (and names the package once known).",
+     "cases": "normal-mode load terminated or killed in Activate (five phases started) vs normal end",
+     "observation": "phases and Package on the unfinished row",
+     "grade": "full",
+     "check": "refuted",
+     "models": [
+      ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::kill_rec",
+      ".g5/Verus_verification/crates/ipm-load-history/src/cases.rs::case_c46_dev_end_inside_activate",
+      ".g5/Verus_verification/crates/ipm-load-history/src/cases.rs::case_c45_kill_dep_record_lost"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/results/verus/20261113T223456Z-asbuilt-l1-end/receipt.json",
+      ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+      ".g5/Verus_verification/coverage-map.md"
+     ],
+     "basis": "reused:.g5/Verus_verification/coverage-map.md (history.record: confirmed violation D10); asbuilt-l1-end violates H-RECORD-FIELDS",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "history.record#7",
+     "units": [
+      "B2"
+     ],
+     "text": "`history find -DSuccess=0` finds exactly the actions that are running or never finished.",
+     "cases": "unfinished row (Success stored 0) vs finished failure (stored error status) vs success",
+     "observation": "rows selected by the Success=0 filter",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/history.rs::where_prefix",
+      ".g5/Verus_verification/consolidated/verus/history.rs::selection",
+      ".g5/Verus_verification/consolidated/verus/history.rs::valid_single_key_deletes_only_matches"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "where_prefix keeps the valid Success key, but Filter.matches (the SQL equality on the stored %Status) is an input, so nothing ties \"matches 0\" to unfinished rows. Contrast: a finished failure whose stored status is \"0 <encoded error>\" is not selected by Success=0, while an unfinished row (status 0) is."
+    },
+    {
+     "id": "history.record#8",
+     "units": [
+      "B3"
+     ],
+     "text": "Working assumption: IPM records refused update and reinstall of a module that is not installed and uninstall with no name.",
+     "cases": "update/reinstall of a non-installed module, uninstall with no name vs a refused load",
+     "observation": "History row count",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [
+      ".g5/Verus_verification/coverage-map.md"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "Open question history.record.unlogged-refusals is \"not modeled\" in the coverage map. Main.cls argument checks before HistoryTemp init are not represented. Contrast: `update nosuchmod` and `uninstall` with no name each add one error row, against a refused load that does."
+    },
+    {
+     "id": "history.record#9",
+     "units": [
+      "B4"
+     ],
+     "text": "Working assumption: Committed reflects the changes kept even on an unfinished record, because IPM writes it to the permanent record at each commit.",
+     "cases": "developer-mode or NoTransaction load that kept its manifest, then killed / instance crash vs rolled-back crash",
+     "observation": "Committed on the unfinished durable row vs module store",
+     "grade": "full",
+     "check": "refuted",
+     "models": [
+      ".g5/Verus_verification/crates/ipm-load-history/src/cases.rs::case_c46_dev_end_inside_activate",
+      "playbook-uplift/models/verus/load_general.rs::g_dev_crash_dishonest_unless_fixed",
+      "playbook-uplift/models/verus/load_general.rs::g_instance_crash_dishonest_unless_fixed"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      "playbook-uplift/models/verus/results/load_general.json"
+     ],
+     "basis": "reused:.g5/Verus_verification/coverage-map.md (history.record.abnormal-end, Q-08: confirmed violation C4R); load_general new:iteration-70",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "history.fields": {
+   "body_sha": "4f86631fef07fc66",
+   "status": "enumerated",
+   "units": {
+    "P1": "excluded: list heading (\"Each record holds:\")",
+    "B1": [
+     "history.fields#1"
+    ],
+    "B2": [
+     "history.fields#2"
+    ],
+    "B3": [
+     "history.fields#3",
+     "history.fields#4"
+    ],
+    "B4": [
+     "history.fields#5",
+     "history.fields#6"
+    ],
+    "B5": [
+     "history.fields#7"
+    ],
+    "B6": [
+     "history.fields#8"
+    ],
+    "B7": [
+     "history.fields#9"
+    ],
+    "B8": [
+     "history.fields#10"
+    ],
+    "B9": [
+     "history.fields#11"
+    ],
+    "B10": [
+     "history.fields#12"
+    ],
+    "B11": [
+     "history.fields#13"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "history.fields#1",
+     "units": [
+      "B1"
+     ],
+     "text": "Action records which of load, install, uninstall or update ran.",
+     "cases": "load vs install vs uninstall vs update (reinstall recorded as install)",
+     "observation": "Action column",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter16/provenance.rs::local_and_refusal_neighbors",
+      ".g5/Verus_verification/consolidated/iter16/provenance.rs::ordinary_neighbors"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/Verus_verification/consolidated/iter16/model-lane/controls/receipt.json"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "iteration16 provenance proves install rows carry Action=Install and a local load row Action=Load (control local-action-treated-as-install). Uninstall and update labels and reinstall-as-install are not modeled. Contrast: an update row reads update, an uninstall row uninstall, `reinstall` reads install."
+    },
+    {
+     "id": "history.fields#2",
+     "units": [
+      "B2"
+     ],
+     "text": "Package is empty only if the action failed before any name was known; a refusal after IPM read the manifest records the name.",
+     "cases": "refused with unparseable manifest vs downgrade / update-required / validation refusal after the manifest was read vs success",
+     "observation": "Package column",
+     "grade": "full",
+     "check": "refuted",
+     "models": [
+      ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::top_rec",
+      ".g5/Verus_verification/crates/ipm-load-history/src/cases.rs::case_c11_downgrade_refused",
+      ".g5/Verus_verification/crates/ipm-load-history/src/cases.rs::case_c15_update_refused",
+      ".g5/Verus_verification/crates/ipm-load-history/src/cases.rs::case_c52_multiple_documents_kept"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+      ".g5/Verus_verification/coverage-map.md"
+     ],
+     "basis": "reused:.g5/Verus_verification/coverage-map.md (history.fields Package rule V7, confirmed violation D9)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "history.fields#3",
+     "units": [
+      "B3"
+     ],
+     "text": "Until the version is known it is stored as 0.0.0-0, and listings show a stored 0.0.0-0 as <unset> and any other version as v<version>.",
+     "cases": "stored placeholder vs stored real version; writer before vs after the version is known",
+     "observation": "Version column in find/details",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter38/render.rs::placeholder_hides_version",
+      ".g5/Verus_verification/consolidated/iter38/render.rs::summary",
+      ".g5/Verus_verification/crates/ipm-load-history/src/model.rs::Twin"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter38/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "The reader half is proved in render.rs (control placeholder-only-when-unknown rejected). The writer half is not: the crate Twin carries a version slot (0 = placeholder) but no theorem or clause says when it leaves the placeholder, and iter38 takes vunset as the stored input. Contrast: a refused load before the version is read stores 0.0.0-0, while a load refused after SetVersion stores the declared version."
+    },
+    {
+     "id": "history.fields#4",
+     "units": [
+      "B3"
+     ],
+     "text": "As built (C:D43), a module whose declared version is 0.0.0-0 is also shown as <unset>, because listings compare the stored text only.",
+     "cases": "real 0.0.0-0 module (package known) vs placeholder row (package unknown)",
+     "observation": "Version column rendering",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter38/render.rs::known_placeholder_indistinguishable",
+      ".g5/Verus_verification/consolidated/iter38/render.rs::fixture_rendering"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter38/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/history.g5.md metadata (iteration38 render.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "history.fields#5",
+     "units": [
+      "B4"
+     ],
+     "text": "Source name, type and details hold the repository an install came from and are empty for load and uninstall.",
+     "cases": "install from a filesystem repository vs local load vs uninstall",
+     "observation": "stored source fields",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter16/provenance.rs::successful_install_binds_receipt",
+      ".g5/Verus_verification/consolidated/iter16/provenance.rs::local_and_refusal_neighbors",
+      ".g5/Verus_verification/consolidated/verus/history.rs::source_and_identity_are_preserved"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/Verus_verification/consolidated/iter16/model-lane/controls/receipt.json"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "Install (filesystem supplier) and local load (empty source) are proved; uninstall rows and remote/ORAS suppliers are not modeled, and refused-attempt rows are unassessed. Contrast: an uninstall row and an ORAS install row read empty source and the ORAS supplier respectively."
+    },
+    {
+     "id": "history.fields#6",
+     "units": [
+      "B4"
+     ],
+     "text": "Listings show the source as n/a for any action other than install.",
+     "cases": "install vs load vs uninstall row",
+     "observation": "source column in find and details",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter38/render.rs::source_only_for_install",
+      ".g5/Verus_verification/consolidated/iter38/render.rs::fixture_rendering",
+      ".g5/Verus_verification/consolidated/verus/history.rs::source_shown"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter38/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/history.g5.md metadata (iteration38 render.rs; controls source-shown-for-all, uninstall-shows-source rejected)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "history.fields#7",
+     "units": [
+      "B5"
+     ],
+     "text": "TimeEnd is empty while the action runs or after it ended abnormally, and set when it ended.",
+     "cases": "running / crashed vs returned",
+     "observation": "TimeEnd of the durable row",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/crates/ipm-load-history/src/proofs.rs::theorem_top_record_complete",
+      "playbook-uplift/models/verus/load_general.rs::honest",
+      "playbook-uplift/models/verus/load_general.rs::g_rollback_crash_honest"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      "playbook-uplift/models/verus/results/load_general.json"
+     ],
+     "basis": "new:iteration-70 (load only)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "history.fields#8",
+     "units": [
+      "B6"
+     ],
+     "text": "UserName is the user who started the action.",
+     "cases": "actions started by different users",
+     "observation": "UserName column",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [
+      ".g5/Verus_verification/coverage-map.md"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "No model carries the user. Contrast: two loads by different users record their own names."
+    },
+    {
+     "id": "history.fields#9",
+     "units": [
+      "B7"
+     ],
+     "text": "Success is the action's returned status and 0 while the action is in progress.",
+     "cases": "returned OK vs error vs still running / crashed",
+     "observation": "Success column",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/crates/ipm-load-history/src/proofs.rs::theorem_top_record_complete",
+      ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::kill_rec",
+      "playbook-uplift/models/verus/load_general.rs::honest"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      "playbook-uplift/models/verus/results/load_general.json"
+     ],
+     "basis": "reused:.g5/Verus_verification/coverage-map.md (history.fields: Success supported)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "history.fields#10",
+     "units": [
+      "B8"
+     ],
+     "text": "Committed: whether the action kept changes.",
+     "alias_of": "history.committed#1",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "history.fields#11",
+     "units": [
+      "B9"
+     ],
+     "text": "CommandString is the command as typed.",
+     "cases": "shell command vs API call vs dependency row",
+     "observation": "CommandString column",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [
+      ".g5/Verus_verification/coverage-map.md"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "Not modeled. Observed: dependency rows carry the parent's command and API calls record <unset>. Contrast: shell `load /p -dev` stores that text, a dependency row stores the parent command."
+    },
+    {
+     "id": "history.fields#12",
+     "units": [
+      "B10"
+     ],
+     "text": "Phases: the phase entries.",
+     "alias_of": "history.phases#1",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "history.fields#13",
+     "units": [
+      "B11"
+     ],
+     "text": "Working assumption: dependencies of load and update keep the load label and their stored source, and listings show a source only for installs.",
+     "cases": "dependency of a load or update pulled from a repository vs top-level install",
+     "observation": "Action label, stored source, listed source",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter38/render.rs::source_only_for_install"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter38/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "Only the listing rule (n/a unless install) is proved. Which Action label and source a dependency row stores (LoadModuleReference -> LoadInit(pModuleName), Main.cls:2631) is not modeled. Contrast: a dependency of `load` fetched from a registry stores Action=load and its repository source, and the listing shows n/a."
+    }
+   ]
+  },
+  "history.phases": {
+   "body_sha": "25a8f8e8ed81d576",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "history.phases#1",
+     "history.phases#5"
+    ],
+    "B1": [
+     "history.phases#2",
+     "history.phases#3"
+    ],
+    "B2": [
+     "history.phases#4"
+    ],
+    "B3": [
+     "history.phases#5"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "history.phases#1",
+     "units": [
+      "P1"
+     ],
+     "text": "Each record lists the lifecycle phases its action ran, each with start time, end time and status.",
+     "cases": "phases run vs not run; each phase ended OK / ended with error / open",
+     "observation": "Phases of the stored row",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::top_rec",
+      ".g5/Verus_verification/crates/ipm-load-history/src/model.rs::Twin",
+      ".g5/Verus_verification/consolidated/iter38/render.rs::phase_rendering_keeps_order_and_status"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/results/verus/20261113T223453Z-asbuilt-l1-normal-conforming-domain/receipt.json",
+      ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+      ".g5/uplift/consolidated/iter38/run.json"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "The crate summarises Phases as a count and the last phase's status (ph, phst); per-phase start/end times and the status of earlier phases are not represented, and render.rs takes the stored phases as input. Contrast: a load whose Compile phase logs an error recovered by a later phase must show Compile with its error and Activate OK."
+    },
+    {
+     "id": "history.phases#2",
+     "units": [
+      "B1"
+     ],
+     "text": "Load records Initialize, Reload, Validate, Compile and Activate.",
+     "cases": "successful load vs refusal before phases",
+     "observation": "phase count and last status",
+     "grade": "full",
+     "check": "bounded",
+     "models": [
+      ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::top_rec",
+      ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::dep_rec"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/results/verus/20261113T223453Z-asbuilt-l1-normal-conforming-domain/receipt.json",
+      ".g5/Verus_verification/coverage-map.md"
+     ],
+     "basis": "new:iteration-70 (explorer L1-END-NORMAL, exhaustive within <=2 leaf dependencies, conforming domain; phases 14-28 bound to the five names in BINDINGS.md)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "history.phases#3",
+     "units": [
+      "B1"
+     ],
+     "text": "Install records the same five phases, update also records ApplyUpdateSteps, and uninstall records Clean.",
+     "cases": "install vs update vs uninstall",
+     "observation": "phase names on the row",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [
+      ".g5/Verus_verification/coverage-map.md"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "No model of the phase lists for install, update (ApplyUpdateSteps) or uninstall (Clean). Contrast: an update row lists ApplyUpdateSteps after Activate; an uninstall row lists only Clean."
+    },
+    {
+     "id": "history.phases#4",
+     "units": [
+      "B2"
+     ],
+     "text": "A failed action lists the phases up to and including the one that failed.",
+     "cases": "failure in Initialize / Reload / Validate / Compile / Activate",
+     "observation": "listed phases and last status",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::top_rec",
+      ".g5/Verus_verification/crates/ipm-load-history/src/cases.rs::case_c28_phase_left_open"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/results/verus/20261113T223453Z-asbuilt-l1-normal-conforming-domain/receipt.json",
+      ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "Only an Activate failure is modeled (Pkg.act); a failure in Initialize, Reload, Validate or Compile is not an input. Contrast: a Compile error lists Initialize..Compile with Compile in error and no Activate entry."
+    },
+    {
+     "id": "history.phases#5",
+     "units": [
+      "P1",
+      "B3"
+     ],
+     "text": "Working assumption: every started phase ends with its status, so an ordinary error (including an <Invoke> returning an error status) never looks like a hang or crash.",
+     "cases": "Invoke throws vs Invoke returns an error status in Activate",
+     "observation": "end time and status of the Activate phase",
+     "grade": "full",
+     "check": "refuted",
+     "models": [
+      ".g5/Verus_verification/crates/ipm-load-history/src/cases.rs::case_c28_phase_left_open",
+      ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::top_rec"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+      ".g5/Verus_verification/coverage-map.md"
+     ],
+     "basis": "reused:.g5/Verus_verification/coverage-map.md (history.phases: case_c28_phase_left_open, confirmed violation D6 under Q-14)",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "history.survives-rollback": {
+   "body_sha": "72a7935c2d0aa0a6",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "history.survives-rollback#1",
+     "history.survives-rollback#2"
+    ],
+    "B1": "excluded: open question history.committed.nested (survival under the caller's own transaction is undecided); its working assumption is graded at #4",
+    "B2": [
+     "history.survives-rollback#3"
+    ],
+    "B3": "excluded: commentary relating the as-built defect (B2) to the requirement (P1); no further outcome",
+    "B4": [
+     "history.survives-rollback#4"
+    ],
+    "B5": "excluded: process statement (repair undecided, no product repair applied)"
+   },
+   "obligations": [
+    {
+     "id": "history.survives-rollback#1",
+     "units": [
+      "P1"
+     ],
+     "text": "A top-level action's record survives the rollback that undoes the action (own rollback, kill-like or terminate-like end).",
+     "cases": "normal-mode failure rolled back vs success; process death",
+     "observation": "durable History row after the rollback",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/crates/ipm-load-history/src/proofs.rs::theorem_top_record_durable",
+      ".g5/Verus_verification/crates/ipm-load-history/src/proofs.rs::theorem_r1"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+      ".g5/Verus_verification/results/verus/20261113T223451Z-asbuilt-invariants-default/receipt.json"
+     ],
+     "basis": "reused:.g5/Verus_verification/coverage-map.md (history.survives-rollback: top-level supported)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "history.survives-rollback#2",
+     "units": [
+      "P1"
+     ],
+     "text": "Intended: a dependency's record survives the parent load's rollback of that dependency.",
+     "cases": "parent Activate fails after the dependency loaded (normal and -dev), process end in parent Activate",
+     "observation": "dependency History row after the parent rollback",
+     "grade": "full",
+     "check": "refuted",
+     "models": [
+      ".g5/Verus_verification/crates/ipm-load-history/src/cases.rs::case_c31_dep_record_lost",
+      ".g5/Verus_verification/crates/ipm-load-history/src/cases.rs::case_c33_dev_dep_record_lost",
+      "playbook-uplift/models/verus/load_general.rs::g_dependency_records_lost_unless_fixed"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+      ".g5/Verus_verification/results/verus/20261113T223456Z-asbuilt-r3-dep/receipt.json",
+      ".g5/Verus_verification/results/verus/20261113T223457Z-asbuilt-dep-clauses/receipt.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/Verus_verification/coverage-map.md (confirmed violation D1); load_general new:iteration-70",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "history.survives-rollback#3",
+     "units": [
+      "B2"
+     ],
+     "text": "As built (G:D1), a dependency's permanent record inserted inside its parent's transaction can disappear with the parent's rollback, separately from its IRISTEMP result and the installed data.",
+     "cases": "dependency completed then parent fails vs parent succeeds",
+     "observation": "dependency durable row, IRISTEMP row, module store",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/crates/ipm-load-history/src/cases.rs::case_c31_dep_record_lost",
+      ".g5/Verus_verification/crates/ipm-load-history/src/cases.rs::case_c45_kill_dep_record_lost",
+      "playbook-uplift/models/verus/load_general.rs::g_dependency_records_lost_unless_fixed"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/Verus_verification/coverage-map.md",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "history.survives-rollback#4",
+     "units": [
+      "B4"
+     ],
+     "text": "Working assumption: the record survives a rollback of the caller's own transaction (Committed is exact only for actions started outside any caller transaction).",
+     "cases": "caller-held transaction then caller rollback vs caller commit",
+     "observation": "durable History row after the caller ends",
+     "grade": "full",
+     "check": "refuted",
+     "models": [
+      ".g5/Verus_verification/crates/ipm-load-history/src/cases.rs::case_c42_caller_rollback_record_lost",
+      "playbook-uplift/models/verus/load_general.rs::g_caller_rollback_leaves_no_trace",
+      "playbook-uplift/models/verus/load_general.rs::g_caller_commit_is_honest"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      "playbook-uplift/models/verus/results/load_general.json"
+     ],
+     "basis": "reused:.g5/Verus_verification/coverage-map.md (history.committed.nested, Q-06b: confirmed deviation)",
+     "assessed_in": "iteration-70"
+    }
+   ],
+   "parent": {
+    "children": [
+     "history.survives-rollback.temp-copy"
+    ],
+    "entailment": "The parent adds the dependency and caller cases beyond the temp-copy decision (top-level only). #1 is proved directly by the crate theorems rather than composed; #2 and #4 are refuted; nothing is credited by composition."
+   }
+  },
+  "history.survives-rollback.temp-copy": {
+   "body_sha": "b3ae5339d98daae8",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "history.survives-rollback.temp-copy#1"
+    ],
+    "B1": [
+     "history.survives-rollback.temp-copy#2",
+     "history.survives-rollback.temp-copy#3"
+    ],
+    "B2": "excluded: evidence scope (checked IRISTEMP mapping and durable database; no power-loss, replication or caller-transaction claim)"
+   },
+   "obligations": [
+    {
+     "id": "history.survives-rollback.temp-copy#1",
+     "units": [
+      "P1"
+     ],
+     "text": "IPM writes the permanent record at start, keeps the in-progress copy in IRISTEMP (not undone by rollback) and copies the result at the end; for a top-level action outside any transaction both durable writes happen outside the action's transaction.",
+     "cases": "IRISTEMP survives rollback vs is rolled back (control 06); persist at entry $TLEVEL",
+     "observation": "durable row content after the action's own rollback",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/crates/ipm-load-history/src/proofs.rs::theorem_top_record_durable",
+      ".g5/Verus_verification/crates/ipm-load-history/src/proofs.rs::theorem_tlevel",
+      ".g5/Verus_verification/crates/ipm-load-history/src/proofs.rs::theorem_persist_target"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+      ".g5/Verus_verification/results/verus/20261113T223458Z-control-06-iristemp-rolled-back/receipt.json",
+      ".g5/Verus_verification/results/verus/20261113T223800Z-final-r3-control-06-verus/receipt.json"
+     ],
+     "basis": "reused:.g5/Verus_verification/coverage-map.md (P-02, P-06a, P-07; control 06 detected)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "history.survives-rollback.temp-copy#2",
+     "units": [
+      "B1"
+     ],
+     "text": "After a SIGKILL-like end the IRISTEMP progress and the initial permanent row remain (the end copy never ran).",
+     "cases": "kill-like vs terminate-like end inside Activate",
+     "observation": "durable row fields and IRISTEMP row",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/crates/ipm-load-history/src/cases.rs::case_c45_kill_dep_record_lost",
+      ".g5/Verus_verification/crates/ipm-load-history/src/cases.rs::case_c45_terminate_dep_record_lost"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json"
+     ],
+     "basis": "reused:.g5/ontology/features/history.g5.md metadata (B1 cases C44-C48 T and K variants)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "history.survives-rollback.temp-copy#3",
+     "units": [
+      "B1"
+     ],
+     "text": "After a whole-instance restart the IRISTEMP row is gone and the durable initial row remains unfinished.",
+     "cases": "instance restart vs process kill",
+     "observation": "IRISTEMP row and durable row",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      "playbook-uplift/models/verus/load_general.rs::g_instance_crash_dishonest_unless_fixed",
+      "playbook-uplift/models/verus/load_general.rs::g_instance_crash_loses_pending"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      "playbook-uplift/models/verus/results/load_general.json"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "load_general models an instance crash (lost_temp) but its theorems concern Committed honesty and the fixed variant's pending dependency rows; no as-built theorem states that the temp row is lost while the initial durable row stays unended. The crate has no instance-restart step. Contrast: an as-built top-level load hit by an instance restart in Activate leaves the durable row with TimeEnd empty and no IRISTEMP row, against a SIGKILL that keeps the IRISTEMP row."
+    }
+   ]
+  },
+  "history.dependencies": {
+   "body_sha": "140e56b02d73272e",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "history.dependencies#1"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "history.dependencies#1",
+     "units": [
+      "P1"
+     ],
+     "text": "Installs that IPM starts for dependencies are recorded as their own records, with their own phases.",
+     "cases": "needed dependency loaded (OK or failing) vs not needed (already installed at the version)",
+     "observation": "dependency History row and its phases",
+     "grade": "full",
+     "check": "bounded",
+     "models": [
+      ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::dep_rec",
+      ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::attempted"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/results/verus/20261113T223453Z-asbuilt-l1-normal-conforming-domain/receipt.json",
+      ".g5/Verus_verification/coverage-map.md"
+     ],
+     "basis": "new:iteration-70 (explorer L1-END-NORMAL exhaustive within <=2 leaf dependencies, conforming domain; loss under parent rollback is history.survives-rollback#2)",
+     "assessed_in": "iteration-70"
+    }
+   ],
+   "parent": {
+    "children": [
+     "history.dependencies.parent-rollback"
+    ],
+    "entailment": "The parent promises the dependency record itself; the child adds the meaning of Success and Committed under a parent rollback. Graded directly; nothing composed."
+   }
+  },
+  "history.dependencies.parent-rollback": {
+   "body_sha": "38dfd51e49eca18f",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "history.dependencies.parent-rollback#1",
+     "history.dependencies.parent-rollback#2"
+    ],
+    "B1": "excluded: pointer to the survival requirement owned by history.survives-rollback",
+    "B2": [
+     "history.dependencies.parent-rollback#3"
+    ],
+    "B3": "excluded: alias note for Q-06 and open question history.committed.nested",
+    "B4": [
+     "history.dependencies.parent-rollback#4"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "history.dependencies.parent-rollback#1",
+     "units": [
+      "P1"
+     ],
+     "text": "A dependency's Success records its own returned status, even if its parent's later rollback undoes its data.",
+     "cases": "dependency OK vs failing; parent succeeds vs parent rolls back",
+     "observation": "dependency row Success",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      "playbook-uplift/models/verus/load_general.rs::honest",
+      "playbook-uplift/models/verus/load_general.rs::g_refines",
+      ".g5/Verus_verification/crates/ipm-load-history/src/cases.rs::repair103_c31",
+      ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::dep_rec"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      "playbook-uplift/models/verus/results/load_general.json",
+      ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json"
+     ],
+     "basis": "new:iteration-70 (as built every existing dependency row has Success = own outcome; under a parent rollback the as-built row is lost (history.survives-rollback#2) and the value is shown only for the repair variant repair103_c31)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "history.dependencies.parent-rollback#2",
+     "units": [
+      "P1"
+     ],
+     "text": "A dependency's Committed describes its kept database writes.",
+     "cases": "dependency installed and kept vs rolled back with the parent",
+     "observation": "dependency row Committed vs module store",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      "playbook-uplift/models/verus/load_general.rs::honest",
+      "playbook-uplift/models/verus/load_general.rs::g_refines",
+      ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::dep_rec"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      "playbook-uplift/models/verus/results/load_general.json",
+      ".g5/Verus_verification/results/verus/20261113T223457Z-asbuilt-dep-clauses/receipt.json"
+     ],
+     "basis": "new:iteration-70 (honest(): dep row committed => installed, uncommitted => unchanged, under premises P1c, P2, P3, PC)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "history.dependencies.parent-rollback#3",
+     "units": [
+      "B2"
+     ],
+     "text": "As built, the child can finish successfully and then lose its permanent row with the parent's rollback (G:D1).",
+     "alias_of": "history.survives-rollback#3",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "history.dependencies.parent-rollback#4",
+     "units": [
+      "B4"
+     ],
+     "text": "Working assumption: the record survives; Committed is exact only outside a caller transaction.",
+     "alias_of": "history.survives-rollback#4",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "history.committed": {
+   "body_sha": "2a9625d947e8d901",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "history.committed#1",
+     "history.committed#2",
+     "history.committed#3"
+    ],
+    "B1": [
+     "history.committed#4",
+     "history.committed#5"
+    ],
+    "B2": [
+     "history.committed#6"
+    ],
+    "B3": [
+     "history.committed#7"
+    ],
+    "B4": [
+     "history.committed#8"
+    ],
+    "B5": [
+     "history.committed#9"
+    ],
+    "B6": [
+     "history.committed#10"
+    ],
+    "B7": [
+     "history.committed#11"
+    ],
+    "B8": [
+     "history.committed#12"
+    ],
+    "B9": [
+     "history.committed#13"
+    ],
+    "B10": [
+     "history.committed#14"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "history.committed#1",
+     "units": [
+      "P1"
+     ],
+     "text": "For a top-level load with no caller transaction, Committed=0 means the action kept no changes.",
+     "cases": "every mode and failure point: Committed 0 vs module store changed",
+     "observation": "Committed vs namespace modules",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/crates/ipm-load-history/src/proofs.rs::theorem_commit_sound",
+      "playbook-uplift/models/verus/load_general.rs::honest"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+      ".g5/Verus_verification/results/verus/20261113T223451Z-asbuilt-invariants-default/receipt.json",
+      ".g5/Verus_verification/results/verus/20261113T223451Z-asbuilt-invariants-notx/receipt.json",
+      ".g5/Verus_verification/results/verus/20261113T223452Z-asbuilt-invariants-nojournal/receipt.json",
+      ".g5/Verus_verification/results/verus/20261113T223632Z-final-r3-control-03-verus/receipt.json"
+     ],
+     "basis": "reused:.g5/Verus_verification/coverage-map.md (theorem_commit_sound, controls 01-03 detected)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "history.committed#2",
+     "units": [
+      "P1"
+     ],
+     "text": "Intended: Committed=1 means the action kept changes (by a commit or a write outside a transaction).",
+     "cases": "NoTransaction / NoJournal manifest refusal after the no-transaction marker vs a kept write",
+     "observation": "Committed vs namespace modules",
+     "grade": "full",
+     "check": "refuted",
+     "models": [
+      ".g5/Verus_verification/crates/ipm-load-history/src/cases.rs::case_c08_committed_without_change",
+      ".g5/Verus_verification/crates/ipm-load-history/src/cases.rs::case_c09_committed_without_change"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/results/verus/20261113T223456Z-asbuilt-commit-exact/receipt.json",
+      ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json"
+     ],
+     "basis": "reused:.g5/Verus_verification/coverage-map.md (\"Committed implies changed\": confirmed violation D12)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "history.committed#3",
+     "units": [
+      "P1"
+     ],
+     "text": "For install and update, Committed shows whether the action kept changes.",
+     "cases": "install / update success, failure, refusal",
+     "observation": "Committed vs namespace",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/crates/ipm-load-history/src/proofs.rs::theorem_commit_sound"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "The SetCommitted sites are inside the shared Utils/Module.cls::LoadNewModule, which the crate models, but only from the Main:Load caller; Main:Install and the update path (ApplyUpdateSteps, its own transaction handling) are not modeled. Contrast: an update whose ApplyUpdateSteps fails after its commit reads Committed=1 with the steps kept, against a refused install that reads 0."
+    },
+    {
+     "id": "history.committed#4",
+     "units": [
+      "B1"
+     ],
+     "text": "A successful top-level action is committed.",
+     "cases": "returned OK vs error",
+     "observation": "Committed on the row",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      "playbook-uplift/models/verus/load_general.rs::honest",
+      "playbook-uplift/models/verus/load_general.rs::g_refines",
+      ".g5/Verus_verification/crates/ipm-load-history/src/proofs.rs::theorem_top_record_complete"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      "playbook-uplift/models/verus/results/load_general.json",
+      ".g5/Verus_verification/results/verus/20261113T223451Z-asbuilt-invariants-default/receipt.json"
+     ],
+     "basis": "new:iteration-70 (honest(): top_row.ok => committed; explorer ISOK-REDUNDANT)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "history.committed#5",
+     "units": [
+      "B1"
+     ],
+     "text": "Intended: a dependency undone by its parent load's rollback reads uncommitted.",
+     "cases": "dependency completed, parent Activate fails (rolled back) vs parent succeeds",
+     "observation": "dependency row Committed",
+     "grade": "full",
+     "check": "refuted",
+     "models": [
+      ".g5/Verus_verification/crates/ipm-load-history/src/cases.rs::case_c31_dep_record_lost",
+      ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::dep_rec"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+      ".g5/Verus_verification/results/verus/20261113T223457Z-asbuilt-dep-clauses/receipt.json"
+     ],
+     "basis": "reused:.g5/Verus_verification/coverage-map.md (undone dependency records are lost rather than uncommitted, B2 D1)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "history.committed#6",
+     "units": [
+      "B2"
+     ],
+     "text": "A failure rolled back in full is not committed, including a developer-mode failure before its first commit.",
+     "cases": "transactional failure (default, -dev before C1) vs kept writes",
+     "observation": "Committed",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      "playbook-uplift/models/verus/load_general.rs::honest",
+      "playbook-uplift/models/verus/load_general.rs::g_refines",
+      ".g5/Verus_verification/crates/ipm-load-history/src/proofs.rs::theorem_commit_sound"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      "playbook-uplift/models/verus/results/load_general.json",
+      ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+      ".g5/Verus_verification/results/verus/20261113T223453Z-asbuilt-l1-normal-conforming-domain/receipt.json"
+     ],
+     "basis": "new:iteration-70 (honest(): committed and mode != NoTxn => manifest kept; transactional failure => unchanged)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "history.committed#7",
+     "units": [
+      "B3"
+     ],
+     "text": "A developer-mode failure after its first commit is committed.",
+     "cases": "-dev Activate failure after C1/C2 vs before",
+     "observation": "Committed and kept module",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/crates/ipm-load-history/src/cases.rs::case_c26_dev_failure_keeps_phase_work",
+      ".g5/Verus_verification/crates/ipm-load-history/src/cases.rs::case_c29_error_after_commit"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+      ".g5/Verus_verification/results/verus/20261113T223505Z-final-r3-control-01-verus/receipt.json"
+     ],
+     "basis": "reused:.g5/Verus_verification/coverage-map.md (load.outcome.dev: case_c26)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "history.committed#8",
+     "units": [
+      "B4"
+     ],
+     "text": "A failure with -DNoTransaction=1 or -DNoJournal=1 is committed once the action has started writing.",
+     "cases": "NoTransaction / NoJournal Activate failure after writes vs refusal before writes",
+     "observation": "Committed",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/crates/ipm-load-history/src/cases.rs::case_c27_notx_failure_keeps_partial",
+      ".g5/Verus_verification/crates/ipm-load-history/src/proofs.rs::theorem_commit_sound"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+      ".g5/Verus_verification/results/verus/20261113T223451Z-asbuilt-invariants-notx/receipt.json",
+      ".g5/Verus_verification/results/verus/20261113T223452Z-asbuilt-invariants-nojournal/receipt.json",
+      ".g5/Verus_verification/results/verus/20261113T223454Z-asbuilt-l1-ns-all-conforming-domain/receipt.json"
+     ],
+     "basis": "reused:.g5/Verus_verification/coverage-map.md (load.outcome: case_c27)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "history.committed#9",
+     "units": [
+      "B5"
+     ],
+     "text": "A refusal before anything is written is not committed, in any mode.",
+     "cases": "manifest refusal with -DNoTransaction=1 vs default mode",
+     "observation": "Committed with nothing kept",
+     "grade": "full",
+     "check": "refuted",
+     "models": [
+      ".g5/Verus_verification/crates/ipm-load-history/src/cases.rs::case_c08_committed_without_change",
+      ".g5/Verus_verification/crates/ipm-load-history/src/cases.rs::case_c09_committed_without_change"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/results/verus/20261113T223456Z-asbuilt-commit-exact/receipt.json",
+      ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json"
+     ],
+     "basis": "reused:.g5/ontology/features/history.g5.md metadata (D12 contradicts the last bullet)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "history.committed#10",
+     "units": [
+      "B6"
+     ],
+     "text": "Committed describes database writes, with no promise to undo files, locks, pip effects or CPF changes.",
+     "alias_of": "history.committed.side-effects#1",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "history.committed#11",
+     "units": [
+      "B7"
+     ],
+     "text": "After a post-commit error the record can be committed and unsuccessful.",
+     "cases": "error after the final commit (CleanUp) vs before any commit",
+     "observation": "Success and Committed together",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/history.rs::finalize_preserves_committed_on_late_error",
+      ".g5/Verus_verification/crates/ipm-load-history/src/cases.rs::case_c29_error_after_commit",
+      ".g5/Verus_verification/consolidated/iter23/status_reader.rs::producer_copies_status"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+      ".g5/Verus_verification/consolidated/iter23/model-lane/controls/receipt.json"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "history.committed#12",
+     "units": [
+      "B8"
+     ],
+     "text": "Working assumption: the record survives; Committed is exact only outside a caller transaction.",
+     "alias_of": "history.survives-rollback#4",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "history.committed#13",
+     "units": [
+      "B9"
+     ],
+     "text": "Working assumption: answering \"Commit\" at a crash prompt is an operator error (it leaves a dishonest record).",
+     "cases": "operator commit vs rollback at the crash prompt of a transactional load after the manifest write",
+     "observation": "Committed/Success vs kept modules",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      "playbook-uplift/models/verus/load_general.rs::g_operator_commit_dishonest",
+      "playbook-uplift/models/verus/load_general.rs::g_rollback_crash_honest"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      "playbook-uplift/models/verus/results/load_general.json"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "history.committed#14",
+     "units": [
+      "B10"
+     ],
+     "text": "Working assumption: a parent's outcome counts the writes its dependencies kept (e.g. a NoJournal dependency), while parent and child records stay distinct.",
+     "cases": "parent fails and rolls back while a dependency with <Defaults> NoJournal keeps writes vs all transactional",
+     "observation": "parent row Committed",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [
+      ".g5/Verus_verification/coverage-map.md"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "Per-module <Defaults> flags are not representable in the crate (D14, Q-22) and load_general has one mode per command. Contrast: parent default mode fails after a NoJournal dependency wrote; parent row Committed=1 because the dependency's writes survived."
+    }
+   ],
+   "parent": {
+    "children": [
+     "history.committed.marking",
+     "history.committed.uninstall",
+     "history.committed.vs-success",
+     "history.committed.side-effects"
+    ],
+    "entailment": "The parent owns the per-outcome meaning of Committed for load/install/update and is graded directly; the children add the marking mechanism, uninstall, the Success contrast and the scope. No obligation is credited by composition: marking#1 (per-commit marking) plus theorem_commit_sound do not entail #2 (the early no-transaction marker makes it false)."
+   }
+  },
+  "history.committed.marking": {
+   "body_sha": "a3ca45304bcf0c92",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "history.committed.marking#1"
+    ],
+    "B1": [
+     "history.committed.marking#2"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "history.committed.marking#1",
+     "units": [
+      "P1"
+     ],
+     "text": "IPM sets Committed at each commit, or just before the first write when there is no transaction, and does not derive it afterwards from developer mode and the final status.",
+     "cases": "each SetCommitted site removed (controls 01 C1, 02 C3, 03 no-transaction) vs as built; Finalize ISOK term removed (control 05 survives)",
+     "observation": "Committed vs kept writes",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/crates/ipm-load-history/src/proofs.rs::theorem_commit_sound",
+      ".g5/Verus_verification/crates/ipm-load-history/src/model.rs::set_com"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json",
+      ".g5/Verus_verification/results/verus/20261113T223505Z-final-r3-control-01-verus/receipt.json",
+      ".g5/Verus_verification/results/verus/20261113T223548Z-final-r3-control-02-verus/receipt.json",
+      ".g5/Verus_verification/results/verus/20261113T223632Z-final-r3-control-03-verus/receipt.json",
+      ".g5/Verus_verification/results/verus/20261113T223451Z-asbuilt-invariants-default/receipt.json"
+     ],
+     "basis": "reused:.g5/Verus_verification/coverage-map.md (marking: SetCommitted sites bound) and models/commit-soundness/manifest.json",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "history.committed.marking#2",
+     "units": [
+      "B1"
+     ],
+     "text": "Working assumption: a no-write refusal is uncommitted; the early marker is a defect.",
+     "alias_of": "history.committed#9",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "history.committed.uninstall": {
+   "body_sha": "716da2e56118fd06",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "history.committed.uninstall#1"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "history.committed.uninstall#1",
+     "units": [
+      "P1"
+     ],
+     "text": "Uninstall runs without a transaction, so its Committed equals its success: a failed uninstall that removed some resources reads uncommitted.",
+     "cases": "uninstall success vs failure after removing some resources",
+     "observation": "Committed on the uninstall row",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/history.rs::finalize",
+      "playbook-uplift/models/verus/uninstall.rs::l1_rows_honest"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      "playbook-uplift/models/verus/results/uninstall.json"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "history.rs finalize sets committed = committed || status OK, and playbook uninstall rows carry only ok; no model states that uninstall never calls SetCommitted, and no theorem exercises an uninstall row's Committed. Contrast: an uninstall whose Clean fails after deleting a resource reads Committed=0 and Success error."
+    }
+   ]
+  },
+  "history.committed.vs-success": {
+   "body_sha": "79f53f04df4f5cad",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "history.committed.vs-success#1"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "history.committed.vs-success#1",
+     "units": [
+      "P1"
+     ],
+     "text": "Success and Committed are independent: a failed action can be recorded committed (kept changes), which marks the namespace as changed by a failure.",
+     "cases": "failure with kept changes (-dev after C1, NoTransaction, post-commit error) vs fully rolled-back failure",
+     "observation": "Success and Committed pair",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/crates/ipm-load-history/src/cases.rs::case_c26_dev_failure_keeps_phase_work",
+      ".g5/Verus_verification/crates/ipm-load-history/src/cases.rs::case_c27_notx_failure_keeps_partial",
+      ".g5/Verus_verification/crates/ipm-load-history/src/cases.rs::case_c11_downgrade_refused"
+     ],
+     "evidence": [
+      ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json"
+     ],
+     "basis": "reused:.g5/Verus_verification/coverage-map.md (vs-success: covered by the cases with failure plus commit)",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "history.committed.side-effects": {
+   "body_sha": "9a9ca3980e050cf7",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "history.committed.side-effects#1"
+    ],
+    "B1": "excluded: rationale (P DEC-HIST-5 support, wiki wording to correct); its last sentence restates P1"
+   },
+   "obligations": [
+    {
+     "id": "history.committed.side-effects#1",
+     "units": [
+      "P1"
+     ],
+     "text": "Committed covers database changes only; filesystem effects can remain while Committed is 0.",
+     "cases": "transactional failure after FileCopy/pip/CPF effects vs no effects",
+     "observation": "Committed vs filesystem state",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [
+      ".g5/Verus_verification/coverage-map.md"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "Coverage map: not modeled. The crate and load_general define Committed only against the module store; no model carries a filesystem or CPF effect beside the row. Contrast: a default-mode load whose FileCopy ran in Activate and then failed reads Committed=0 while the copied files remain."
+    }
+   ]
+  },
+  "history.read": {
+   "body_sha": "5c40374dfaefdf1f",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "history.read#1"
+    ],
+    "B1": [
+     "history.read#2"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "history.read#1",
+     "units": [
+      "P1"
+     ],
+     "text": "The history command (alias log) dispatches find (default), details <id>, delete and schema; any other action is an error.",
+     "cases": "each action word vs unknown word vs none",
+     "observation": "command result",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [
+      ".g5/Verus_verification/coverage-map.md"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "No model of Main.cls history dispatch. Contrast: `history foo` fails, `history` lists like `history find`."
+    },
+    {
+     "id": "history.read#2",
+     "units": [
+      "B1"
+     ],
+     "text": "Working assumption: readers return identities (namespace and ID) sufficient for a caller to distinguish colliding namespace-local IDs.",
+     "cases": "two namespaces each with local ID 1, read via find -globally, GlobalRecords, details",
+     "observation": "identity columns of returned rows",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/history.rs::local_id_collision_is_scoped",
+      ".g5/Verus_verification/consolidated/verus/history.rs::cli_global",
+      ".g5/Verus_verification/consolidated/verus/history.rs::programmatic_global"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "cli_global returns (namespace, id) keys but is never exercised; programmatic_global returns whole Row values that include id and namespace, so the as-built GlobalRecords row schema without those columns is not represented. Contrast: GlobalRecords rows for USER ID 1 and USER-VERIFY ID 1 are indistinguishable while CLI -globally labels them by namespace."
+    }
+   ],
+   "parent": {
+    "children": [
+     "history.read.find",
+     "history.read.filter",
+     "history.read.details",
+     "history.read.unfinished",
+     "history.read.global",
+     "history.read.api"
+    ],
+    "entailment": "The parent adds the command dispatch and the identity working assumption; each is graded here. Nothing composed."
+   }
+  },
+  "history.read.find": {
+   "body_sha": "1b68c050390f9b80",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "history.read.find#1"
+    ],
+    "B1": [
+     "history.read.find#2"
+    ],
+    "B2": [
+     "history.read.find#3"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "history.read.find#1",
+     "units": [
+      "P1"
+     ],
+     "text": "history find lists the records of the current namespace, newest first.",
+     "cases": "rows of current vs other namespace; ordering by ID",
+     "observation": "listed rows and order",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/history.rs::selection",
+      ".g5/Verus_verification/consolidated/verus/history.rs::details"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "selection is a set over IDs with no namespace or order; namespace scoping is shown only for details. Contrast: with IDs 1..3 in USER and 1 in another namespace, find in USER prints 3,2,1."
+    },
+    {
+     "id": "history.read.find#2",
+     "units": [
+      "B1"
+     ],
+     "text": "-sort asc or -sort desc sets the order by record ID.",
+     "cases": "asc vs desc vs other value",
+     "observation": "listing order",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [
+      ".g5/Verus_verification/coverage-map.md"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "No order model. Observed: any other value sorts newest first. Contrast: -sort asc prints 1,2,3; -sort desc 3,2,1."
+    },
+    {
+     "id": "history.read.find#3",
+     "units": [
+      "B2"
+     ],
+     "text": "-limit <n> shows at most n records, 0 shows all, and the default is the DefaultLogEntryLimit setting (20).",
+     "cases": "limit n vs 0 vs unset with 25 rows",
+     "observation": "row count",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [
+      ".g5/Verus_verification/coverage-map.md"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "No limit model. Contrast: 25 rows, unset limit shows 20, -limit 0 shows 25."
+    }
+   ]
+  },
+  "history.read.filter": {
+   "body_sha": "218fe9a1fcbedf34",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "history.read.filter#1"
+    ],
+    "B1": [
+     "history.read.filter#2"
+    ],
+    "B2": [
+     "history.read.filter#3"
+    ],
+    "B3": [
+     "history.read.filter#4"
+    ],
+    "B4": [
+     "history.read.filter#5"
+    ],
+    "B5": [
+     "history.read.filter#6"
+    ],
+    "B6": [
+     "history.read.filter#7"
+    ],
+    "B7": [
+     "history.read.filter#8"
+    ],
+    "B8": [
+     "history.read.filter#9",
+     "history.read.filter#10"
+    ],
+    "B9": [
+     "history.read.filter#11"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "history.read.filter#1",
+     "units": [
+      "P1"
+     ],
+     "text": "-D<column>=<value> filters records, and several filters must all match.",
+     "cases": "two valid filters vs one",
+     "observation": "selected rows",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/history.rs::selection",
+      ".g5/Verus_verification/consolidated/verus/history.rs::where_prefix"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "selection intersects every filter, but no theorem exercises two valid filters (only one valid, or valid followed by invalid). Contrast: -DAction=load -DPackage=a selects only rows matching both."
+    },
+    {
+     "id": "history.read.filter#2",
+     "units": [
+      "B1"
+     ],
+     "text": "A value can use * as a wildcard or start with >, >=, <, <= or <>.",
+     "cases": "each operator form",
+     "observation": "selected rows",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [
+      ".g5/Verus_verification/coverage-map.md"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "Filter.matches is an input; the operator parsing in ConstructSQLWhere is a boundary premise. Contrast: -DPackage=a* selects a1 and a2 but not b."
+    },
+    {
+     "id": "history.read.filter#3",
+     "units": [
+      "B2"
+     ],
+     "text": "history schema lists the columns that can be filtered.",
+     "cases": "schema output vs filterable columns",
+     "observation": "schema listing",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [
+      ".g5/Verus_verification/coverage-map.md"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "Not modeled. Contrast: every column listed by schema is accepted by find -D."
+    },
+    {
+     "id": "history.read.filter#4",
+     "units": [
+      "B3"
+     ],
+     "text": "Intended: versions are filtered by part, such as Version_Major.",
+     "cases": "Version_Major=99 vs Package=x",
+     "observation": "selected / deleted rows",
+     "grade": "full",
+     "check": "refuted",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/history.rs::underscore_column_is_invalid",
+      ".g5/Verus_verification/consolidated/verus/history.rs::invalid_first_key_widens_delete"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/history.g5.md metadata (extension history.rs::where_prefix; G:D2)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "history.read.filter#5",
+     "units": [
+      "B4"
+     ],
+     "text": "Filters work the same way for find and delete.",
+     "cases": "unknown column on find vs delete; same valid filter",
+     "observation": "selected vs deleted sets, error status",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/history.rs::delete",
+      ".g5/Verus_verification/consolidated/verus/history.rs::where_prefix"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "Only delete is defined through where_prefix; find's use of ConstructSQLWhere and its error path are not modeled. Contrast (G:D2): -DNoSuchCol=1 makes delete throw while find shows an empty successful listing."
+    },
+    {
+     "id": "history.read.filter#6",
+     "units": [
+      "B5"
+     ],
+     "text": "As built, ConstructSQLWhere walks the keys (in IRIS collation order) and stops at the first absent value or name outside [A-Za-z][A-Za-z0-9]*, keeping earlier predicates and ignoring that key and every later one.",
+     "cases": "valid then invalid key; invalid first key; absent value",
+     "observation": "effective predicate list",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/history.rs::where_prefix",
+      ".g5/Verus_verification/consolidated/verus/history.rs::earlier_filter_remains_effective",
+      ".g5/Verus_verification/consolidated/verus/history.rs::invalid_first_key_widens_delete",
+      ".g5/Verus_verification/consolidated/verus/history.rs::valid_column"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/history.g5.md metadata (history.rs::where_prefix); key order is the collation-ordered input sequence (premise)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "history.read.filter#7",
+     "units": [
+      "B6"
+     ],
+     "text": "As built, an underscore column such as Version_Major leaves no predicate (an unmatched Version_Major=99 deletes everything), while a valid Package or Success filter deletes only its matches.",
+     "cases": "Version_Major=99 vs Package=del-b",
+     "observation": "deleted identities",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/history.rs::underscore_column_is_invalid",
+      ".g5/Verus_verification/consolidated/verus/history.rs::invalid_first_key_widens_delete",
+      ".g5/Verus_verification/consolidated/verus/history.rs::valid_single_key_deletes_only_matches"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/history.g5.md metadata (history.rs)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "history.read.filter#8",
+     "units": [
+      "B7"
+     ],
+     "text": "As built, an unknown alphanumeric column raises an SQL error; find can hide it behind an empty successful listing while delete throws.",
+     "cases": "unknown alphanumeric column on find vs delete",
+     "observation": "status and output",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "Filter.column_known exists in history.rs but no definition or theorem uses it. Contrast: -DNoSuchCol=1 on find returns OK with no rows; on delete returns the SQL error."
+    },
+    {
+     "id": "history.read.filter#9",
+     "units": [
+      "B8"
+     ],
+     "text": "Working assumption: filters on listed columns, including version parts, must work and IPM never silently drops a filter.",
+     "cases": "valid key followed by an invalid or underscore key",
+     "observation": "effective predicate",
+     "grade": "full",
+     "check": "refuted",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/history.rs::earlier_filter_remains_effective",
+      ".g5/Verus_verification/consolidated/verus/history.rs::invalid_first_key_widens_delete",
+      ".g5/Verus_verification/consolidated/verus/history.rs::underscore_column_is_invalid"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "history.read.filter#10",
+     "units": [
+      "B8"
+     ],
+     "text": "Working assumption: when find cannot run its query, it reports the error instead of showing an empty log.",
+     "cases": "query error vs successful empty result",
+     "observation": "find status and output",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [
+      ".g5/Verus_verification/coverage-map.md"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "No model of find's query error path. Contrast: an SQL error in find must return an error status, unlike an empty match."
+    },
+    {
+     "id": "history.read.filter#11",
+     "units": [
+      "B9"
+     ],
+     "text": "Working assumption: the namespace default modifiers do not act as history filters.",
+     "cases": "default modifier -DNoTransaction=1 set vs unset",
+     "observation": "history find rows",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [
+      ".g5/Verus_verification/coverage-map.md"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "Coverage map records D18 (default modifiers as filters) as decision Q-18; nothing models it. Contrast: with a default modifier set, history find lists the same rows as without."
+    }
+   ]
+  },
+  "history.read.details": {
+   "body_sha": "903d25daae97b16e",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "history.read.details#1",
+     "history.read.details#2",
+     "history.read.details#3",
+     "history.read.details#4"
+    ],
+    "B1": [
+     "history.read.details#4"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "history.read.details#1",
+     "units": [
+      "P1"
+     ],
+     "text": "history details <id> shows the record with that ID in the current namespace; an unknown ID is an error.",
+     "cases": "ID present in current namespace vs only in another namespace vs absent",
+     "observation": "record returned vs not found",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/history.rs::details",
+      ".g5/Verus_verification/consolidated/verus/history.rs::local_id_collision_is_scoped"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "history.read.details#2",
+     "units": [
+      "P1"
+     ],
+     "text": "details shows the raw stored status (not decoded).",
+     "cases": "detail vs summary rendering of a failed status",
+     "observation": "status field bytes",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter23/status_reader.rs::reader_refines_inherited",
+      ".g5/Verus_verification/consolidated/iter23/status_reader.rs::branch_neighbor",
+      ".g5/Verus_verification/consolidated/verus/history.rs::success_to_string"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/Verus_verification/consolidated/iter23/model-lane/controls/receipt.json"
+     ],
+     "basis": "reused:.g5/ontology/features/history.g5.md metadata (iteration23; control details-decodes rejected)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "history.read.details#3",
+     "units": [
+      "P1"
+     ],
+     "text": "details shows every field, including the full repository details.",
+     "cases": "install row with filesystem supplier vs load row",
+     "observation": "source/details fields",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter16/provenance.rs::history_detail",
+      ".g5/Verus_verification/consolidated/iter16/provenance.rs::details_literal_neighbors",
+      ".g5/Verus_verification/consolidated/iter38/render.rs::detail_source_na"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/Verus_verification/consolidated/iter16/model-lane/controls/receipt.json",
+      ".g5/uplift/consolidated/iter38/run.json"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "Supplier name, moniker and root details are proved for filesystem installs; every-field completeness (UserName, CommandString, TimeStart) and remote/ORAS details are not modeled. Contrast: details of an ORAS install shows its registry URL; details of any row shows CommandString and UserName."
+    },
+    {
+     "id": "history.read.details#4",
+     "units": [
+      "P1",
+      "B1"
+     ],
+     "text": "details -phases lists each phase in stored order with its start time, a duration only when it has an end time, and Success or error text; a phase left open after a returned error shows its start and error text.",
+     "cases": "ended OK phase vs ended error vs open phase",
+     "observation": "phase lines",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter38/render.rs::phase_rendering_keeps_order_and_status",
+      ".g5/Verus_verification/consolidated/iter38/render.rs::detail_phases",
+      ".g5/Verus_verification/consolidated/iter38/render.rs::fixture_rendering"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter38/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/history.g5.md metadata (iteration38; controls phase-success-from-record, phase-duration-always rejected); error-text decoding is a provider premise",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "history.read.status-bytes": {
+   "body_sha": "8bfe2504d41a20b6",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "history.read.status-bytes#1",
+     "history.read.status-bytes#2"
+    ],
+    "B1": [
+     "history.read.status-bytes#3"
+    ],
+    "B2": [
+     "history.read.status-bytes#4"
+    ],
+    "B3": "excluded: evidence scope (finalized ordinary installs; providers and other encodings out of scope)"
+   },
+   "obligations": [
+    {
+     "id": "history.read.status-bytes#1",
+     "units": [
+      "P1"
+     ],
+     "text": "A history summary writes Success for a successful status and decoded error text for a failed one.",
+     "cases": "OK vs error status",
+     "observation": "summary Success column bytes",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter23/status_reader.rs::reader_refines_inherited",
+      ".g5/Verus_verification/consolidated/iter23/status_reader.rs::branch_neighbor"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/Verus_verification/consolidated/iter23/model-lane/controls/receipt.json"
+     ],
+     "basis": "reused:.g5/ontology/features/history.g5.md metadata (iteration23; controls success-summary-uses-raw, error-summary-uses-raw rejected)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "history.read.status-bytes#2",
+     "units": [
+      "P1"
+     ],
+     "text": "details selects the stored raw status and makes CR, LF and TAB visible as <CR>, <LF> and <TAB>.",
+     "cases": "status with CR/LF/TAB vs without; detail vs summary",
+     "observation": "detail field bytes",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter23/status_reader.rs::cleanup_neighbor",
+      ".g5/Verus_verification/consolidated/iter23/status_reader.rs::reader_refines_inherited",
+      ".g5/Verus_verification/consolidated/iter23/status_reader.rs::native_controls_bytes"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/Verus_verification/consolidated/iter23/model-lane/controls/receipt.json"
+     ],
+     "basis": "reused:.g5/ontology/features/history.g5.md metadata (iteration23; cleanup-* controls rejected)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "history.read.status-bytes#3",
+     "units": [
+      "B1"
+     ],
+     "text": "The checked no-repository failure (311-byte status): its summary is valid UTF-8 error text, its detailed status preserves the stored bytes and is not valid UTF-8.",
+     "cases": "summary vs detail of the stored no-repository status",
+     "observation": "UTF-8 validity of the bytes",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter23/status_reader.rs::native_bad_bytes",
+      ".g5/Verus_verification/consolidated/iter23/status_reader.rs::utf8_neighbor"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/Verus_verification/consolidated/iter23/model-lane/controls/receipt.json"
+     ],
+     "basis": "reused:iteration23 HANDOFF",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "history.read.status-bytes#4",
+     "units": [
+      "B2"
+     ],
+     "text": "A failing hook status containing CR, LF and TAB displays with visible labels; color on vs off changes only ANSI formatting.",
+     "cases": "color on vs none; detail vs summary",
+     "observation": "displayed bytes",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter23/status_reader.rs::native_controls_bytes",
+      ".g5/Verus_verification/consolidated/iter23/status_reader.rs::format_neighbor"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/Verus_verification/consolidated/iter23/model-lane/controls/receipt.json"
+     ],
+     "basis": "reused:iteration23 HANDOFF",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "history.read.unfinished": {
+   "body_sha": "ea7075443b04b83b",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "history.read.unfinished#1",
+     "history.read.unfinished#2"
+    ],
+    "B1": [
+     "history.read.unfinished#3"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "history.read.unfinished#1",
+     "units": [
+      "P1"
+     ],
+     "text": "A record of an action that has not ended shows its start time without a duration.",
+     "cases": "TimeEnd empty vs set",
+     "observation": "summary time column",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/iter38/render.rs::summary"
+     ],
+     "evidence": [
+      ".g5/uplift/consolidated/iter38/run.json",
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "summary.duration = r.ended is defined, but every iteration38 fixture row is ended (manifest: unfinished records not exercised). Contrast: a row with TimeEnd empty prints the start time with no \"(N sec)\"."
+    },
+    {
+     "id": "history.read.unfinished#2",
+     "units": [
+      "P1"
+     ],
+     "text": "Intended: an unfinished record's result reads as not finished, not as an error.",
+     "cases": "unfinished row (status 0) vs failed row",
+     "observation": "summary Success column",
+     "grade": "full",
+     "check": "refuted",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/history.rs::unfinished_row_displays_error00",
+      ".g5/Verus_verification/consolidated/verus/history.rs::success_to_string"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/history.g5.md metadata (history.rs::success_to_string; C:D12)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "history.read.unfinished#3",
+     "units": [
+      "B1"
+     ],
+     "text": "As built, history find shows an unfinished record's result as ERROR #00: (no error description).",
+     "cases": "status 0 in summary vs detail",
+     "observation": "summary Success column",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/history.rs::unfinished_row_displays_error00"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/history.g5.md metadata",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "history.read.global": {
+   "body_sha": "aeef286a2e9f05b1",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "history.read.global#1"
+    ],
+    "B1": [
+     "history.read.global#2"
+    ],
+    "B2": [
+     "history.read.global#3"
+    ],
+    "B3": [
+     "history.read.global#4"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "history.read.global#1",
+     "units": [
+      "P1"
+     ],
+     "text": "-globally reads every namespace on the instance and groups the records by namespace.",
+     "cases": "rows in several namespaces",
+     "observation": "listing grouped by namespace",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/history.rs::cli_global"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "cli_global (rows whose namespace is in the scope set) is never exercised by a theorem; grouping and the namespace enumeration are not modeled. Contrast: rows in USER and USER-VERIFY both listed, each under its namespace heading."
+    },
+    {
+     "id": "history.read.global#2",
+     "units": [
+      "B1"
+     ],
+     "text": "Namespaces without IPM add no records.",
+     "cases": "namespace with vs without IPM",
+     "observation": "global listing",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [
+      ".g5/Verus_verification/coverage-map.md"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "The scope set is an input. Contrast: a namespace without IPM contributes no heading or rows and no error."
+    },
+    {
+     "id": "history.read.global#3",
+     "units": [
+      "B2"
+     ],
+     "text": "-limit applies to each namespace, not to the total.",
+     "cases": "limit 1 over two namespaces",
+     "observation": "row count per namespace",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [
+      ".g5/Verus_verification/coverage-map.md"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "No limit model. Contrast: -globally -limit 1 over two namespaces prints two rows."
+    },
+    {
+     "id": "history.read.global#4",
+     "units": [
+      "B3"
+     ],
+     "text": "history details always reads the current namespace (even with -globally).",
+     "cases": "details with vs without -globally; ID present only elsewhere",
+     "observation": "record shown",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/history.rs::details",
+      ".g5/Verus_verification/consolidated/verus/history.rs::local_id_collision_is_scoped"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "details is keyed by the namespace argument, but the -globally flag is not an input, so nothing shows the flag is ignored. Contrast: details 5 -globally in USER fails when ID 5 exists only in USER-VERIFY."
+    }
+   ]
+  },
+  "history.read.api": {
+   "body_sha": "92a69514f27f1ee3",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "history.read.api#1",
+     "history.read.api#2"
+    ],
+    "B1": [
+     "history.read.api#3",
+     "history.read.api#4"
+    ],
+    "B2": [
+     "history.read.api#5",
+     "history.read.api#6"
+    ],
+    "B3": [
+     "history.read.api#7"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "history.read.api#1",
+     "units": [
+      "P1"
+     ],
+     "text": "Programs can read the log through the SQL table %IPM_General.History and the class query Records (current namespace).",
+     "cases": "Records in USER vs another namespace",
+     "observation": "query rows",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [
+      ".g5/Verus_verification/coverage-map.md"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "Not modeled (OBS-H11: Records declares an ID column it does not return first). Contrast: Records returns the same rows as history find in that namespace, with ID first."
+    },
+    {
+     "id": "history.read.api#2",
+     "units": [
+      "P1"
+     ],
+     "text": "Intended: the class query GlobalRecords returns the records of all namespaces.",
+     "cases": "caller namespace vs other namespaces' rows",
+     "observation": "rows returned",
+     "grade": "full",
+     "check": "refuted",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/history.rs::global_programmatic_repeats_caller",
+      ".g5/Verus_verification/consolidated/verus/history.rs::programmatic_global"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/history.g5.md metadata (history.rs::programmatic_global; G:D20)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "history.read.api#3",
+     "units": [
+      "B1"
+     ],
+     "text": "CLI find -globally fetches each namespace's results there and labels the namespace.",
+     "alias_of": "history.read.global#1",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "history.read.api#4",
+     "units": [
+      "B1"
+     ],
+     "text": "CLI find -globally applies the limit per namespace.",
+     "alias_of": "history.read.global#3",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "history.read.api#5",
+     "units": [
+      "B2"
+     ],
+     "text": "As built, GlobalRecordsFetch fetches each handle in the caller's namespace and so repeats the caller's rows.",
+     "cases": "two handles, caller USER",
+     "observation": "returned rows",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/history.rs::global_programmatic_repeats_caller"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/history.g5.md metadata",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "history.read.api#6",
+     "units": [
+      "B2"
+     ],
+     "text": "As built, the GlobalRecords row schema includes neither namespace nor ID.",
+     "cases": "row columns",
+     "observation": "row schema",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/history.rs::programmatic_global"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "programmatic_global returns full Row values carrying id and namespace, so the schema omission (the reason CLI correctness does not establish API correctness) is only a comment. Contrast: a GlobalRecords row has no Namespace or ID column."
+    },
+    {
+     "id": "history.read.api#7",
+     "units": [
+      "B3"
+     ],
+     "text": "Working assumption: return identities sufficient to distinguish colliding IDs.",
+     "alias_of": "history.read#2",
+     "assessed_in": "iteration-70"
+    }
+   ]
+  },
+  "history.delete": {
+   "body_sha": "732517e4e7f1be45",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "history.delete#1"
+    ],
+    "B1": [
+     "history.delete#2"
+    ],
+    "B2": [
+     "history.delete#3"
+    ],
+    "B3": [
+     "history.delete#4"
+    ],
+    "B4": [
+     "history.delete#5"
+    ],
+    "B5": [
+     "history.delete#6",
+     "history.delete#7"
+    ],
+    "B6": [
+     "history.delete#8"
+    ],
+    "B7": [
+     "history.delete#9"
+    ],
+    "B8": [
+     "history.delete#10"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "history.delete#1",
+     "units": [
+      "P1"
+     ],
+     "text": "Intended: history delete deletes exactly the records that match its filters.",
+     "cases": "invalid or underscore key vs valid key",
+     "observation": "deleted identities",
+     "grade": "full",
+     "check": "refuted",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/history.rs::invalid_first_key_widens_delete",
+      ".g5/Verus_verification/consolidated/verus/history.rs::delete"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "reused:.g5/ontology/features/history.g5.md metadata (history.rs::delete; G:D2)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "history.delete#2",
+     "units": [
+      "B1"
+     ],
+     "text": "Deleting every record in the namespace with no filter requires -confirm.",
+     "cases": "no filter with vs without -confirm",
+     "observation": "rows remaining / refusal",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [
+      ".g5/Verus_verification/coverage-map.md"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "No confirm model. Native E5 shows refusal. Contrast: `history delete` alone fails and deletes nothing; with -confirm deletes all."
+    },
+    {
+     "id": "history.delete#3",
+     "units": [
+      "B2"
+     ],
+     "text": "With -globally, delete removes the matching records in every namespace.",
+     "cases": "matching rows in two namespaces",
+     "observation": "rows remaining per namespace",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [
+      ".g5/Verus_verification/coverage-map.md"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "history.rs delete is single-namespace; no namespace loop. Contrast: -globally -DPackage=a removes a's rows in USER and USER-VERIFY and nothing else."
+    },
+    {
+     "id": "history.delete#4",
+     "units": [
+      "B3"
+     ],
+     "text": "-verbose shows how many records each namespace lost and which namespaces were skipped for lack of permission.",
+     "cases": "namespace with vs without permission",
+     "observation": "verbose output",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [
+      ".g5/Verus_verification/coverage-map.md"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "Not modeled. Contrast: a namespace without write permission is reported as skipped."
+    },
+    {
+     "id": "history.delete#5",
+     "units": [
+      "B4"
+     ],
+     "text": "As built, a syntactic filter does not ensure an effective predicate (the parser stop rule can widen delete to every record).",
+     "cases": "underscore or invalid first key",
+     "observation": "deleted identities",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/history.rs::invalid_first_key_widens_delete"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70 (-confirm is not in the model; its part is #8)",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "history.delete#6",
+     "units": [
+      "B5"
+     ],
+     "text": "As built, global delete ignores namespace exceptions in its loop.",
+     "cases": "one namespace throws vs all succeed",
+     "observation": "command status and rows",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [
+      ".g5/Verus_verification/coverage-map.md"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "No global loop model. Contrast: an exception in one namespace still returns OK while the others are deleted."
+    },
+    {
+     "id": "history.delete#7",
+     "units": [
+      "B5"
+     ],
+     "text": "A valid filter deletes exactly its matching identities.",
+     "cases": "valid single key with matches vs rows not matching",
+     "observation": "deleted identities",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/history.rs::valid_single_key_deletes_only_matches",
+      ".g5/Verus_verification/consolidated/verus/history.rs::earlier_filter_remains_effective"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70"
+    },
+    {
+     "id": "history.delete#8",
+     "units": [
+      "B6"
+     ],
+     "text": "Working assumption: with a filter, -confirm deletes only the matching records; -confirm only permits a delete without a filter.",
+     "cases": "-confirm with filter vs without",
+     "observation": "deleted identities",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [
+      ".g5/Verus_verification/coverage-map.md"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "No confirm input. Contrast: -confirm -DPackage=a deletes only a's rows."
+    },
+    {
+     "id": "history.delete#9",
+     "units": [
+      "B7"
+     ],
+     "text": "Working assumption: a delete or purge may remove a running action's record, and the running action still finishes normally whether or not its record comes back.",
+     "cases": "record deleted while the action runs; save recreates vs not",
+     "observation": "action status and final row",
+     "grade": "partial",
+     "check": "unchecked",
+     "models": [
+      ".g5/Verus_verification/consolidated/verus/history.rs::persist_after_delete",
+      ".g5/Verus_verification/consolidated/verus/history.rs::delete_wins_depends_on_save_semantics",
+      ".g5/Verus_verification/crates/ipm-load-history/src/proofs.rs::theorem_persist_target"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "history.rs takes the save-recreates outcome as an input (hypothesis H-DELETE-FINALIZE) and does not model the action's status; the crate proves PersistToTwin finds its row only without foreign deletes. Contrast: delete the running load's row before Finalize; the load returns its own status and either the row reappears finalized or stays deleted, decided by %Save on a deleted ID."
+    },
+    {
+     "id": "history.delete#10",
+     "units": [
+      "B8"
+     ],
+     "text": "Working assumption: errors that mean the requested deletion was not performed are reported.",
+     "cases": "SQL error during delete vs success",
+     "observation": "delete status",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [
+      ".g5/Verus_verification/coverage-map.md"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "Not modeled. Contrast: an SQL failure in a namespace makes delete report an error."
+    }
+   ],
+   "parent": {
+    "children": [
+     "history.delete.global-unfiltered"
+    ],
+    "entailment": "The parent owns filtered/confirm/verbose delete; the child owns the unconfirmed unfiltered global delete. Nothing composed."
+   }
+  },
+  "history.delete.global-unfiltered": {
+   "body_sha": "edbf4fd7ad74a449",
+   "status": "enumerated",
+   "units": {
+    "P1": [
+     "history.delete.global-unfiltered#1"
+    ]
+   },
+   "obligations": [
+    {
+     "id": "history.delete.global-unfiltered#1",
+     "units": [
+      "P1"
+     ],
+     "text": "history delete -globally does not require -confirm, and with no filter deletes every record on the instance without asking.",
+     "cases": "global unfiltered delete with vs without -confirm",
+     "observation": "rows remaining in every namespace",
+     "grade": "absent",
+     "check": "none",
+     "models": [],
+     "evidence": [
+      ".g5/Verus_verification/coverage-map.md"
+     ],
+     "basis": "new:iteration-70",
+     "assessed_in": "iteration-70",
+     "gap": "No confirm or global-loop model. Contrast: `history delete -globally` alone empties the log in every namespace with IPM."
+    }
+   ]
+  }
+ }
+}
