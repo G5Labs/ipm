@@ -514,22 +514,35 @@
      "text": "A global resource is exported and read back at <SourcesRoot>/<Directory>/<global name>.xml, Directory defaulting to gbl/.",
      "cases": "Directory absent vs declared; SourcesRoot prefix",
      "observation": "export/import path",
-     "grade": "partial",
+     "grade": "full",
      "check": "proved",
      "models": [
-      ".g5/Verus_verification/consolidated/iter6/workflows.rs::global_path",
-      ".g5/Verus_verification/consolidated/iter6/workflows.rs::neighbors"
+      ".g5/Verus_verification/coverage-20261117/iter75/global_path.rs::directory_segment",
+      ".g5/Verus_verification/coverage-20261117/iter75/global_path.rs::global_path",
+      ".g5/Verus_verification/coverage-20261117/iter75/global_path.rs::reload_global",
+      ".g5/Verus_verification/coverage-20261117/iter75/global_path.rs::path_neighbours",
+      ".g5/Verus_verification/coverage-20261117/iter75/global_path.rs::round_trip_neighbours",
+      ".g5/Verus_verification/coverage-20261117/iter75/global_path.rs::agrees_with_inherited"
      ],
      "evidence": [
       ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
       ".g5/uplift/consolidated/iter6/run.json",
       ".g5/uplift/consolidated/iter6/INDEX.md",
       ".g5/uplift/coverage-20261117/iter72/audit/features__resources.json",
-      ".g5/uplift/coverage-20261117/iter72/mutations/M.jsonl"
+      ".g5/uplift/coverage-20261117/iter72/mutations/M.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/mutations.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/ledger/R67.json"
      ],
-     "basis": "reused:ontology metadata module.global.roundtrip (iter6 workflows.rs); declaration opened; iteration-72 rule-4a re-audit (G3): partial, support inspection (mutations M-m01)",
-     "assessed_in": "iteration-72",
-     "gap": "Rule 4a (iteration-72): only the no-Directory branch is asserted; a declared Directory is never exercised (mutant M-m01, which ignores a declared Directory, survives) and an explicitly empty Directory gives gbl/ in the product but drops the segment in the model (review-71 A1, settled)"
+     "basis": "new:iteration-75 (Corrected successor of iter6 workflows.rs::global_path, which drops the segment for an explicitly empty Directory (inherited_drops_empty_directory); the two agree otherwise (agrees_with_inherited). M-m01 re-run on the inherited file as R7-m04 and on the successor as R7-m01 are killed; R7-m02 (empty-Directory substitution removed) and R7-m03 (SourcesRoot dropped) are killed. Trailing-slash normalisation and the preload/ prefix are outside the model.) || earlier: reused:ontology metadata module.global.roundtrip (iter6 workflows.rs); declaration opened; iteration-72 rule-4a re-audit (G3): partial, support inspection (mutations M-m01)",
+     "assessed_in": "iteration-75",
+     "support": "mutation-checked",
+     "mutations": [
+      "R7-m01",
+      "R7-m02",
+      "R7-m03",
+      "R7-m04"
+     ]
     },
     {
      "id": "module.global.roundtrip#2",
@@ -1953,21 +1966,28 @@
      "text": "A CPF file can merge before or after another named phase.",
      "cases": "When=Before vs When=After for the same phase",
      "observation": "merge before or after the phase work",
-     "grade": "partial",
+     "grade": "full",
      "check": "proved",
      "models": [
       ".g5/Verus_verification/consolidated/iter48/cpfmerge.rs::merges_in",
-      ".g5/Verus_verification/consolidated/iter48/cpfmerge.rs::after_is_not_before"
+      ".g5/Verus_verification/consolidated/iter48/cpfmerge.rs::after_is_not_before",
+      ".g5/Verus_verification/coverage-20261117/iter75/lifecycle_neighbours.rs::before_and_after"
      ],
      "evidence": [
       ".g5/uplift/consolidated/iter48/run.json",
       ".g5/uplift/consolidated/iter48/HANDOFF.md",
       ".g5/uplift/coverage-20261117/iter72/audit/features__resources.json",
-      ".g5/uplift/coverage-20261117/iter72/mutations/G3.jsonl"
+      ".g5/uplift/coverage-20261117/iter72/mutations/G3.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/mutations.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/ledger/R67.json"
      ],
-     "basis": "reused:ontology metadata module.processor.cpf (iter48); declaration opened; iteration-72 rule-4a re-audit (G3): partial, support inspection (mutations G3-m73)",
-     "assessed_in": "iteration-72",
-     "gap": "Rule 4a (iteration-72): only the When=\"After\" timing is asserted (after_is_not_before); the When=\"Before\" side is never exercised, and mutant G3-m73 (Before merges at both points) survives"
+     "basis": "new:iteration-75 (Neighbours over the inherited cpfmerge.rs merges_in. G3-m73 re-run as R7-m09 (Before merges at both points) is killed.) || earlier: reused:ontology metadata module.processor.cpf (iter48); declaration opened; iteration-72 rule-4a re-audit (G3): partial, support inspection (mutations G3-m73)",
+     "assessed_in": "iteration-75",
+     "support": "mutation-checked",
+     "mutations": [
+      "R7-m09"
+     ]
     },
     {
      "id": "module.processor.cpf#3",

@@ -1,0 +1,604 @@
+{
+ "group": "R8B",
+ "items": "HANDOFF-72 \u00a76 item 8 (second half) and item 9",
+ "entries": [
+  {
+   "id": "module.requirement.values#4",
+   "old_grade": "partial",
+   "new_grade": "full",
+   "check": "proved",
+   "models": [
+    ".g5/Verus_verification/consolidated/iter3/resources.rs::requirement_failures",
+    ".g5/Verus_verification/coverage-20261117/iter75/r8b_manifest.rs::health_interop_neighbors",
+    ".g5/Verus_verification/consolidated/iter3/resources.rs::requirement_neighbors"
+   ],
+   "evidence_add": [
+    ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+    ".g5/uplift/coverage-20261117/iter75/mutations.jsonl"
+   ],
+   "support": "mutation-checked",
+   "mutations": [
+    "R8b-m01"
+   ],
+   "receipts": [
+    "receipts/coverage-20261117__iter75__r8b_manifest.rs.log"
+   ],
+   "product": "src/cls/IPM/Storage/SystemRequirements.cls:61-70 CheckInteroperability: required = (Interoperability=\"enabled\") || Health; fails only when IsInteroperabilityEnabled() is false. Health=true with Interoperability=\"disabled\" passes on an interoperability-enabled namespace.",
+   "neighbour": "health_interop_neighbors: Health=On, Interoperability=disabled gives [Interoperability] on a namespace without interoperability and no failure on an enabled one (Health instance); without Health, disabled never fails",
+   "basis_note": "r8b_manifest.rs::health_interop_neighbors asserts both namespace sides over the inherited requirement_failures; the G6-m73 replay (R8b-m01) is killed at the enabled-namespace assertion.",
+   "instance_scoped": false,
+   "metadata_link": {
+    "page": ".g5/ontology/features/manifest.g5.md",
+    "block": "module.requirement.values",
+    "model": ".g5/Verus_verification/coverage-20261117/iter75/r8b_manifest.rs"
+   }
+  },
+  {
+   "id": "module.parameter.expressions#6",
+   "old_grade": "partial",
+   "new_grade": "full",
+   "check": "proved",
+   "models": [
+    ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::macro_value",
+    ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::undefined_macro_is_empty",
+    ".g5/Verus_verification/coverage-20261117/iter75/r8b_manifest.rs::defined_macro_gives_value",
+    ".g5/Verus_verification/coverage-20261117/iter75/r8b_manifest.rs::macro_neighbors"
+   ],
+   "evidence_add": [
+    ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+    ".g5/uplift/coverage-20261117/iter75/mutations.jsonl",
+    ".g5/Verus_verification/consolidated/native/results/20261114T025636Z-r1-evaluator/receipt.json"
+   ],
+   "support": "mutation-checked",
+   "mutations": [
+    "R8b-m02"
+   ],
+   "receipts": [
+    "receipts/coverage-20261117__iter75__r8b_manifest.rs.log"
+   ],
+   "product": "src/cls/IPM/Utils/Module.cls:2746-2785 %EvaluateMacro/EvaluateMacroHelper: a generated class returns $$$name under #IfDef and \"\" under #Else.",
+   "neighbour": "defined_macro_gives_value (general) and macro_neighbors: a defined macro gives its definition, an undefined one gives \"\"",
+   "basis_note": "Defined and undefined macros are both asserted over the inherited macro_value; G6-m77 replay (R8b-m02) killed. The macro value is the preprocessor's (input); native receipt consolidated/native/results/20261114T025636Z-r1-evaluator E16 ($$$OK gives 1) and E17 (undefined gives \"\") covers both sides.",
+   "instance_scoped": false,
+   "metadata_link": {
+    "page": ".g5/ontology/features/manifest.g5.md",
+    "block": "module.parameter.expressions",
+    "model": ".g5/Verus_verification/coverage-20261117/iter75/r8b_manifest.rs"
+   }
+  },
+  {
+   "id": "module.parameter.expressions#8",
+   "old_grade": "partial",
+   "new_grade": "full",
+   "check": "proved",
+   "models": [
+    ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::evaluate_expression",
+    ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::expression_failure_is_empty",
+    ".g5/Verus_verification/coverage-20261117/iter75/r8b_manifest.rs::expression_success_gives_value",
+    ".g5/Verus_verification/coverage-20261117/iter75/r8b_manifest.rs::expression_neighbors"
+   ],
+   "evidence_add": [
+    ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+    ".g5/uplift/coverage-20261117/iter75/mutations.jsonl",
+    ".g5/Verus_verification/consolidated/native/results/20261114T025636Z-r1-evaluator/receipt.json"
+   ],
+   "support": "mutation-checked",
+   "mutations": [
+    "R8b-m03"
+   ],
+   "receipts": [
+    "receipts/coverage-20261117__iter75__r8b_manifest.rs.log"
+   ],
+   "product": "src/cls/IPM/Storage/Module.cls:1885-1894 %EvaluateExpression: $zstrip leading whitespace, return @expr, \"\" when it throws.",
+   "neighbour": "expression_success_gives_value (general) and expression_neighbors: \" 1+2\" with an interpreter giving 3 evaluates to 3; a failing expression gives \"\"",
+   "basis_note": "The success side is now asserted (the interpreter result is an input); G6-m78 replay (R8b-m03) killed. Native receipt 20261114T025636Z-r1-evaluator E10/E11 (#{1+2} and #{ 1+2} give 3) and E13/E14 (failures give \"\").",
+   "instance_scoped": false,
+   "metadata_link": {
+    "page": ".g5/ontology/features/manifest.g5.md",
+    "block": "module.parameter.expressions",
+    "model": ".g5/Verus_verification/coverage-20261117/iter75/r8b_manifest.rs"
+   }
+  },
+  {
+   "id": "deps#4",
+   "old_grade": "partial",
+   "new_grade": "full",
+   "check": "proved",
+   "models": [
+    "playbook-uplift/models/verus/dep_resolve.rs::active",
+    "playbook-uplift/models/verus/dep_resolve.rs::classify",
+    "playbook-uplift/models/verus/dep_resolve.rs::dep_lemma_classify",
+    ".g5/Verus_verification/coverage-20261117/iter75/r8b_deps.rs::scoped_requirement_neighbors"
+   ],
+   "evidence_add": [
+    ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+    ".g5/uplift/coverage-20261117/iter75/mutations.jsonl"
+   ],
+   "support": "mutation-checked",
+   "mutations": [
+    "R8b-m04"
+   ],
+   "receipts": [
+    "receipts/coverage-20261117__iter75__r8b_deps.rs.log"
+   ],
+   "product": "src/cls/IPM/Storage/Module.cls:834-855 HasScope (empty scope counts; otherwise the scope must be in pPhases, case-insensitive) used at :955 and :1256 to skip a requirement.",
+   "neighbour": "scoped_requirement_neighbors: the same manifest classifies the test-scoped requirement under {..., test} and not under the load phases; the unscoped one in both",
+   "basis_note": "The in/out contrast is asserted through classify (dep_lemma_classify gives the general iff with active); G6-m58 replay (R8b-m04) killed. A scope list (several phases) is represented by one token.",
+   "instance_scoped": false,
+   "metadata_link": {
+    "page": ".g5/ontology/features/dependencies.g5.md",
+    "block": "deps",
+    "model": ".g5/Verus_verification/coverage-20261117/iter75/r8b_deps.rs"
+   }
+  },
+  {
+   "id": "update.steps.records#1",
+   "old_grade": "partial",
+   "new_grade": "full",
+   "check": "proved",
+   "models": [
+    ".g5/Verus_verification/consolidated/iter9/ownership.rs::get_add",
+    ".g5/Verus_verification/consolidated/iter9/ownership.rs::cascade_neighbors",
+    ".g5/Verus_verification/coverage-20261117/iter75/r8b_records.rs::get_add_keeps_completion",
+    ".g5/Verus_verification/coverage-20261117/iter75/r8b_records.rs::registration_neighbors"
+   ],
+   "evidence_add": [
+    ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+    ".g5/uplift/coverage-20261117/iter75/mutations.jsonl"
+   ],
+   "support": "mutation-checked",
+   "mutations": [
+    "R8b-m05",
+    "R8b-m06"
+   ],
+   "receipts": [
+    "receipts/coverage-20261117__iter75__r8b_records.rs.log"
+   ],
+   "product": "src/cls/IPM/Storage/Module.cls:259-272 GetAddUpdateStep opens the row by the unique (ClassName, MethodName) index (UpdateStep/AnyMember.cls:8, 18-30) or creates it, sets HomeModule and saves; TimeStampEnd and Status are untouched.",
+   "neighbour": "get_add_keeps_completion (general): registration moves home and keeps completed and ok; registration_neighbors: done, due and failed rows for module 1 keep their state under module 2",
+   "basis_note": "Completion and status retention is now asserted for get_add itself, not via seed; G2-m38 replay (R8b-m05) and a status-reset mutant (R8b-m06) are killed.",
+   "instance_scoped": false,
+   "metadata_link": {
+    "page": ".g5/ontology/features/update.g5.md",
+    "block": "update.steps.records",
+    "model": ".g5/Verus_verification/coverage-20261117/iter75/r8b_records.rs"
+   }
+  },
+  {
+   "id": "load.dependencies.local-repo#6",
+   "old_grade": "partial",
+   "new_grade": "full",
+   "check": "proved",
+   "models": [
+    ".g5/Verus_verification/coverage-20261117/iter75/r8b_records.rs::build_cache",
+    ".g5/Verus_verification/coverage-20261117/iter75/r8b_records.rs::on_new75",
+    ".g5/Verus_verification/coverage-20261117/iter75/r8b_records.rs::temp_repo_neighbors",
+    ".g5/Verus_verification/consolidated/verus/temp_repo.rs::cleanup"
+   ],
+   "evidence_add": [
+    ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+    ".g5/uplift/coverage-20261117/iter75/mutations.jsonl",
+    ".g5/uplift/consolidated/findings-audit-iter28/runs/20261116T031715006352Z-early/receipt.json"
+   ],
+   "support": "mutation-checked",
+   "mutations": [
+    "R8b-m07",
+    "R8b-m08"
+   ],
+   "receipts": [
+    "receipts/coverage-20261117__iter75__r8b_records.rs.log"
+   ],
+   "product": "src/cls/IPM/General/TempLocalRepoManager.cls:49-86 (%OnNew calls CleanUp on a Create failure; CleanUp warns when %DeleteId fails); Repo/Filesystem/Definition.cls:117-180 BuildCache saves the definition inside its own TSTART and rolls back to the entry level on failure, so the object keeps its id.",
+   "neighbour": "temp_repo_neighbors: failed creation leaves no row, keeps the id and warns; successful creation has the row and its cleanup removes it silently; skipped creation is silent",
+   "basis_note": "Successor on_new75 derives the missing row from the BuildCache TSTART/TROLLBACK position instead of writing it into on_new's failure branch; inherited cleanup is faithful. G2-m07 replay (R8b-m07) and a no-rollback mutant (R8b-m08) are killed. %DeleteId of a missing row returning an error and the in-memory id surviving the rollback are IRIS behaviour, covered by the C:D2 native receipt (TR7 warning and no row; TR2/TR7b success).",
+   "instance_scoped": false,
+   "metadata_link": {
+    "page": ".g5/ontology/features/load.g5.md",
+    "block": "load.dependencies.local-repo",
+    "model": ".g5/Verus_verification/coverage-20261117/iter75/r8b_records.rs"
+   }
+  },
+  {
+   "id": "devtools.sync#5",
+   "old_grade": "partial",
+   "new_grade": "full",
+   "check": "proved",
+   "models": [
+    ".g5/Verus_verification/consolidated/iter32/sync.rs::sync_file",
+    ".g5/Verus_verification/consolidated/iter32/sync.rs::delete_flag_removes_compilable",
+    ".g5/Verus_verification/coverage-20261117/iter75/r8b_sync.rs::delete_flag_removes_baseline",
+    ".g5/Verus_verification/coverage-20261117/iter75/r8b_sync.rs::no_flag_keeps_baseline",
+    ".g5/Verus_verification/coverage-20261117/iter75/r8b_sync.rs::baseline_neighbors"
+   ],
+   "evidence_add": [
+    ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+    ".g5/uplift/coverage-20261117/iter75/mutations.jsonl"
+   ],
+   "support": "mutation-checked",
+   "mutations": [
+    "R8b-m09",
+    "R8b-m10"
+   ],
+   "receipts": [
+    "receipts/coverage-20261117__iter75__r8b_sync.rs.log"
+   ],
+   "product": "src/cls/IPM/General/Sync/Pipeline.cls:140-149 (SyncApplyDeletes then CommitChanges); Storage/FileHash.cls:394-405 CommitChanges deletes the baseline row of every routed deleted path when processDeletes; SyncApplyDeletes (:535-578) deletes the server document only for compilable resources.",
+   "neighbour": "delete_flag_removes_baseline / no_flag_keeps_baseline (general) and baseline_neighbors: with -delete both a compilable and a non-compilable deleted file lose their baseline (only the compilable one loses its document); without -delete both keep it",
+   "basis_note": "Baseline removal is now asserted on both sides; G5-m01 replay (R8b-m09) and a compilable-only baseline removal mutant (R8b-m10) are killed. A SyncCompile failure throws before CommitChanges and is not represented (outside the stated cases).",
+   "instance_scoped": false,
+   "metadata_link": {
+    "page": ".g5/ontology/features/developer-tools.g5.md",
+    "block": "devtools.sync",
+    "model": ".g5/Verus_verification/coverage-20261117/iter75/r8b_sync.rs"
+   },
+   "ontology_repair": "devtools.sync B (the -delete bullet): as built, -delete also drops the baseline row of a deleted file routed to a non-compilable resource, whose server item stays; \"(and their baselines)\" reads as only the removed items' baselines."
+  },
+  {
+   "id": "devtools.sync.compile-after-resolve#5",
+   "old_grade": "partial",
+   "new_grade": "full",
+   "check": "proved",
+   "models": [
+    ".g5/Verus_verification/consolidated/iter4/sync_compile.rs::eligible",
+    ".g5/Verus_verification/consolidated/iter4/sync_compile.rs::kept",
+    ".g5/Verus_verification/consolidated/iter4/sync_compile.rs::sync_compile_neighbors",
+    ".g5/Verus_verification/coverage-20261117/iter75/r8b_sync.rs::project_resource_neighbors"
+   ],
+   "evidence_add": [
+    ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+    ".g5/uplift/coverage-20261117/iter75/mutations.jsonl"
+   ],
+   "support": "mutation-checked",
+   "mutations": [
+    "R8b-m11"
+   ],
+   "receipts": [
+    "receipts/coverage-20261117__iter75__r8b_sync.rs.log"
+   ],
+   "product": "src/cls/IPM/General/Sync/Pipeline.cls:690-749 SyncCompile skips a resource with Processor.CompileFromProject (:710-712) before ResolveChildren, so it neither joins the compile set nor warns; undefined .CLS children are skipped (:731-736).",
+   "neighbour": "project_resource_neighbors: a CompileFromProject resource whose children resolve is not compiled and not warned about; the same resource without CompileFromProject is compiled",
+   "basis_note": "The project skip is now exercised with resolution succeeding; G5-m02 replay (R8b-m11) killed. The warning half (G5-m03) and the undefined-class/routine split (G5-m06) were killed in iteration 72.",
+   "instance_scoped": false,
+   "metadata_link": {
+    "page": ".g5/ontology/features/developer-tools.g5.md",
+    "block": "devtools.sync.compile-after-resolve",
+    "model": ".g5/Verus_verification/coverage-20261117/iter75/r8b_sync.rs"
+   }
+  },
+  {
+   "id": "devtools.authoring.module-version#2",
+   "old_grade": "partial",
+   "new_grade": "full",
+   "check": "proved",
+   "models": [
+    ".g5/Verus_verification/consolidated/verus/owners.rs::module_version",
+    ".g5/Verus_verification/consolidated/verus/owners.rs::bump",
+    ".g5/Verus_verification/consolidated/verus/owners.rs::with_pre",
+    ".g5/Verus_verification/consolidated/verus/owners.rs::with_build",
+    ".g5/Verus_verification/coverage-20261117/iter75/r8b_versioning.rs::pre_and_build_applied"
+   ],
+   "evidence_add": [
+    ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+    ".g5/uplift/coverage-20261117/iter75/mutations.jsonl"
+   ],
+   "support": "mutation-checked",
+   "mutations": [
+    "R8b-m12",
+    "R8b-m13",
+    "R8b-m14"
+   ],
+   "receipts": [
+    "receipts/coverage-20261117__iter75__r8b_versioning.rs.log"
+   ],
+   "product": "src/cls/IPM/Main.cls:4031-4049 bump/parse, then WithPrerelease and WithBuild (General/SemanticVersion.cls:245-265; each keeps the other part; WithBump* clear both, :212-243).",
+   "neighbour": "pre_and_build_applied: patch -prerelease rc gives 1.2.4-rc, patch -build b1 gives 1.2.4+b1, minor with both gives 1.3.0-rc+b1, no flags gives 1.2.4 (with -force, so prerelease order is not involved)",
+   "basis_note": "Applying -prerelease and -build is now asserted through module_version; G5-m14 replay (R8b-m12), a -build-ignored mutant (R8b-m13) and a WithPrerelease-drops-build mutant (R8b-m14) are killed. Bumping was killed in iteration 72 (G5-m13).",
+   "instance_scoped": true,
+   "metadata_link": {
+    "page": ".g5/ontology/features/developer-tools.g5.md",
+    "block": "devtools.authoring.module-version",
+    "model": ".g5/Verus_verification/coverage-20261117/iter75/r8b_versioning.rs"
+   }
+  },
+  {
+   "id": "build.publish.partial-effects#4",
+   "old_grade": "partial",
+   "new_grade": "full",
+   "check": "proved",
+   "models": [
+    ".g5/Verus_verification/consolidated/iter2/registry.rs::remote_publish",
+    ".g5/Verus_verification/consolidated/iter2/registry.rs::remote_authorized",
+    ".g5/Verus_verification/consolidated/iter2/registry.rs::remote_delete",
+    ".g5/Verus_verification/coverage-20261117/iter75/r8b_remote.rs::remote_unpublish",
+    ".g5/Verus_verification/coverage-20261117/iter75/r8b_remote.rs::unpublish_credential_neighbors",
+    ".g5/Verus_verification/consolidated/iter2/registry.rs::remote_exact_status_contract"
+   ],
+   "evidence_add": [
+    ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+    ".g5/uplift/coverage-20261117/iter75/mutations.jsonl"
+   ],
+   "support": "mutation-checked",
+   "mutations": [
+    "R8b-m15",
+    "R8b-m16"
+   ],
+   "receipts": [
+    "receipts/coverage-20261117__iter75__r8b_remote.rs.log"
+   ],
+   "product": "src/cls/IPM/Repo/Remote/PublishService.cls:14-35 Publish and :56-74 Unpublish: ((Username=\"\")||(Password=\"\"))&&(Token=\"\") throws before the request; success only on status 200.",
+   "neighbour": "unpublish_credential_neighbors: delete succeeds with user+password or token at 200; fails with user only, password only, nothing, or status 204; publish uses the same guard",
+   "basis_note": "Successor remote_unpublish computes the authorization that registry.rs::remote_delete took as an input, from the credential fields through the inherited remote_authorized; G5-m43 replay (R8b-m15) and a user-without-password mutant (R8b-m16) are killed. CheckUnpublishEnabled (:38-53) repeats the guard but remote_delete_enabled still takes it as input.",
+   "instance_scoped": true,
+   "metadata_link": {
+    "page": ".g5/ontology/features/build-and-publish.g5.md",
+    "block": "build.publish.partial-effects",
+    "model": ".g5/Verus_verification/coverage-20261117/iter75/r8b_remote.rs"
+   }
+  },
+  {
+   "id": "artifact.local-content#1",
+   "old_grade": "partial",
+   "new_grade": "full",
+   "check": "proved",
+   "models": [
+    ".g5/Verus_verification/consolidated/iter3/artifacts.rs::activate",
+    ".g5/Verus_verification/consolidated/iter3/artifacts.rs::cache_and_failure_neighbors",
+    ".g5/Verus_verification/coverage-20261117/iter75/r8b_remote.rs::local_folder_neighbors"
+   ],
+   "evidence_add": [
+    ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+    ".g5/uplift/coverage-20261117/iter75/mutations.jsonl"
+   ],
+   "support": "mutation-checked",
+   "mutations": [
+    "R8b-m17",
+    "R8b-m18"
+   ],
+   "receipts": [
+    "receipts/coverage-20261117__iter75__r8b_remote.rs.log"
+   ],
+   "product": "src/cls/IPM/ResourceProcessor/ArtifactoryTarball.cls:32-43 OnAfterPhase(Activate): DownloadArtifact only when <Root>/<resource name>/ does not exist; the copy runs when the folder exists afterwards (:47-63).",
+   "neighbour": "local_folder_neighbors: an absent folder requests a download (and copies after a completed one); a present folder requests none and is copied; nothing outside Activate",
+   "basis_note": "The absent-folder request is now asserted; G4-m32 replay (R8b-m17) and a download-always mutant (R8b-m18) are killed. The model takes \"copy after download\" from the download result rather than a second DirectoryExists check.",
+   "instance_scoped": false,
+   "metadata_link": {
+    "page": ".g5/ontology/features/artifact-download.g5.md",
+    "block": "artifact.local-content",
+    "model": ".g5/Verus_verification/coverage-20261117/iter75/r8b_remote.rs"
+   }
+  },
+  {
+   "id": "load.same-version#1",
+   "old_grade": "partial",
+   "new_grade": "full",
+   "check": "proved",
+   "models": [
+    ".g5/Verus_verification/coverage-20261117/iter75/r9_same_version.rs::load_guard",
+    ".g5/Verus_verification/coverage-20261117/iter75/r9_same_version.rs::reload75",
+    ".g5/Verus_verification/coverage-20261117/iter75/r9_same_version.rs::guard_neighbors",
+    ".g5/Verus_verification/coverage-20261117/iter75/r9_same_version.rs::same_version_reload_neighbor",
+    ".g5/Verus_verification/coverage-20261117/iter75/r9_same_version.rs::downgrade_refused",
+    ".g5/Verus_verification/consolidated/verus/semver.rs::follows",
+    ".g5/Verus_verification/consolidated/iter18/reloading.rs::successful_selected_load",
+    "playbook-uplift/models/verus/update_steps.rs::refuses"
+   ],
+   "evidence_add": [
+    ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+    ".g5/uplift/coverage-20261117/iter75/mutations.jsonl",
+    ".g5/uplift/consolidated/iter18/HANDOFF.md"
+   ],
+   "support": "mutation-checked",
+   "mutations": [
+    "R9-m01",
+    "R9-m02",
+    "R9-m03",
+    "R9-m04"
+   ],
+   "receipts": [
+    "receipts/coverage-20261117__iter75__r9_same_version.rs.log"
+   ],
+   "product": "src/cls/IPM/Utils/Module.cls:1211-1222 LoadNewModule: refuse when fromVersion.Follows(toVersion); refuse install/load without -force/-dev when toVersion.Follows(fromVersion) and UpdatePackage is set; no equal-version branch, so the loader proceeds.",
+   "neighbour": "same_version_reload_neighbor: install 1.0.0 from alpha, then 1.0.0 from beta succeeds with payload 2 and supplier beta; guard_neighbors: equal passes under both SemVerPostRelease values with an update package, first install passes, 2.0.0->1.0.0 refused; downgrade_refused: a refused attempt leaves the world unchanged",
+   "basis_note": "Citation check (HANDOFF-72 item 9): update_steps.rs::refuses computes the guard over version ranks (G2-m12 killed) but carries no payload or supplier. Successor r9_same_version.rs::reload75 replaces reloading.rs's constant skip_equal_load with the product guard over semver.rs::follows and reuses reloading.rs's successful writer for payload and supplier. Mutants R9-m01 (equal refused), R9-m02 (no downgrade refusal), R9-m03 (equal-version skip before the loader) and R9-m04 (Follows treats equal as following) are killed. Premise: from/to are the parsed installed and new manifest versions; the successful path keeps reloading.rs's successful-provider premises (iteration-18 native probes).",
+   "instance_scoped": false,
+   "metadata_link": {
+    "page": ".g5/ontology/features/load.g5.md",
+    "block": "load.same-version",
+    "model": ".g5/Verus_verification/coverage-20261117/iter75/r9_same_version.rs"
+   }
+  }
+ ],
+ "bindings": [
+  {
+   "formal": ".g5/Verus_verification/consolidated/iter3/resources.rs::requirement_failures",
+   "file": "src/cls/IPM/Storage/SystemRequirements.cls",
+   "member": "%IPM.Storage.SystemRequirements::CheckInteroperability",
+   "lines": "61-70",
+   "role": "decide",
+   "note": "Health implies Interoperability required"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/r8b_manifest.rs::health_interop_neighbors",
+   "file": "src/cls/IPM/Storage/SystemRequirements.cls",
+   "member": "%IPM.Storage.SystemRequirements::CheckInteroperability",
+   "lines": "63-68",
+   "role": "neighbour",
+   "note": "enabled namespace passes with Health and disabled"
+  },
+  {
+   "formal": ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::macro_value",
+   "file": "src/cls/IPM/Utils/Module.cls",
+   "member": "%IPM.Utils.Module::EvaluateMacroHelper",
+   "lines": "2763-2785",
+   "role": "decide",
+   "note": "#IfDef value else \"\""
+  },
+  {
+   "formal": ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::evaluate_expression",
+   "file": "src/cls/IPM/Storage/Module.cls",
+   "member": "%IPM.Storage.Module::%EvaluateExpression",
+   "lines": "1885-1894",
+   "role": "decide",
+   "note": "strip leading blank, @expr, \"\" on error"
+  },
+  {
+   "formal": "playbook-uplift/models/verus/dep_resolve.rs::active",
+   "file": "src/cls/IPM/Storage/Module.cls",
+   "member": "%IPM.Storage.Module::HasScope",
+   "lines": "834-855",
+   "role": "decide",
+   "note": "scope in phases"
+  },
+  {
+   "formal": "playbook-uplift/models/verus/dep_resolve.rs::classify",
+   "file": "src/cls/IPM/Storage/Module.cls",
+   "member": "%IPM.Storage.Module::BuildDependencyGraph",
+   "lines": "953-956",
+   "role": "guard",
+   "note": "skip requirement when HasScope false"
+  },
+  {
+   "formal": ".g5/Verus_verification/consolidated/iter9/ownership.rs::get_add",
+   "file": "src/cls/IPM/Storage/Module.cls",
+   "member": "%IPM.Storage.Module::GetAddUpdateStep",
+   "lines": "259-272",
+   "role": "write",
+   "note": "home moved, TimeStampEnd/Status kept"
+  },
+  {
+   "formal": ".g5/Verus_verification/consolidated/iter9/ownership.rs::get_add",
+   "file": "src/cls/IPM/Storage/UpdateStep/AnyMember.cls",
+   "member": "%IPM.Storage.UpdateStep.AnyMember::GetUpdateStep",
+   "lines": "18-30",
+   "role": "read",
+   "note": "open by unique (ClassName, MethodName) or new"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/r8b_records.rs::build_cache",
+   "file": "src/cls/IPM/Repo/Filesystem/Definition.cls",
+   "member": "%IPM.Repo.Filesystem.Definition::BuildCache",
+   "lines": "117-180",
+   "role": "write",
+   "note": "TSTART, %Save, scan/AddCacheItem, TCOMMIT or TROLLBACK to entry level"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/r8b_records.rs::on_new75",
+   "file": "src/cls/IPM/General/TempLocalRepoManager.cls",
+   "member": "%IPM.General.TempLocalRepoManager::%OnNew",
+   "lines": "49-71",
+   "role": "decide",
+   "note": "SkipCreate, Create, CleanUp on failure"
+  },
+  {
+   "formal": ".g5/Verus_verification/consolidated/verus/temp_repo.rs::cleanup",
+   "file": "src/cls/IPM/General/TempLocalRepoManager.cls",
+   "member": "%IPM.General.TempLocalRepoManager::CleanUp",
+   "lines": "73-86",
+   "role": "write",
+   "note": "%DeleteId, warn on error"
+  },
+  {
+   "formal": ".g5/Verus_verification/consolidated/iter32/sync.rs::sync_file",
+   "file": "src/cls/IPM/Storage/FileHash.cls",
+   "member": "%IPM.Storage.FileHash::CommitChanges",
+   "lines": "394-405",
+   "role": "write",
+   "note": "baseline rows of deleted paths removed with processDeletes"
+  },
+  {
+   "formal": ".g5/Verus_verification/consolidated/iter32/sync.rs::sync_file",
+   "file": "src/cls/IPM/General/Sync/Pipeline.cls",
+   "member": "%IPM.General.Sync.Pipeline::SyncApplyDeletes",
+   "lines": "535-578",
+   "role": "write",
+   "note": "server document deleted for compilable resources only"
+  },
+  {
+   "formal": ".g5/Verus_verification/consolidated/iter4/sync_compile.rs::eligible",
+   "file": "src/cls/IPM/General/Sync/Pipeline.cls",
+   "member": "%IPM.General.Sync.Pipeline::SyncCompile",
+   "lines": "701-712",
+   "role": "guard",
+   "note": "CompileFromProject skipped before resolution"
+  },
+  {
+   "formal": ".g5/Verus_verification/consolidated/verus/owners.rs::module_version",
+   "file": "src/cls/IPM/Main.cls",
+   "member": "%IPM.Main::ModuleVersion",
+   "lines": "4031-4049",
+   "role": "decide",
+   "note": "bump/parse then WithPrerelease, WithBuild"
+  },
+  {
+   "formal": ".g5/Verus_verification/consolidated/verus/owners.rs::with_pre",
+   "file": "src/cls/IPM/General/SemanticVersion.cls",
+   "member": "%IPM.General.SemanticVersion::WithPrerelease",
+   "lines": "245-254",
+   "role": "write",
+   "note": "keeps Build"
+  },
+  {
+   "formal": ".g5/Verus_verification/consolidated/verus/owners.rs::with_build",
+   "file": "src/cls/IPM/General/SemanticVersion.cls",
+   "member": "%IPM.General.SemanticVersion::WithBuild",
+   "lines": "256-265",
+   "role": "write",
+   "note": "keeps Prerelease"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/r8b_remote.rs::remote_unpublish",
+   "file": "src/cls/IPM/Repo/Remote/PublishService.cls",
+   "member": "%IPM.Repo.Remote.PublishService::Unpublish",
+   "lines": "56-74",
+   "role": "decide",
+   "note": "credential guard then status 200"
+  },
+  {
+   "formal": ".g5/Verus_verification/consolidated/iter2/registry.rs::remote_authorized",
+   "file": "src/cls/IPM/Repo/Remote/PublishService.cls",
+   "member": "%IPM.Repo.Remote.PublishService::Publish",
+   "lines": "16-18",
+   "role": "guard",
+   "note": "same guard at :42 and :60"
+  },
+  {
+   "formal": ".g5/Verus_verification/consolidated/iter3/artifacts.rs::activate",
+   "file": "src/cls/IPM/ResourceProcessor/ArtifactoryTarball.cls",
+   "member": "%IPM.ResourceProcessor.ArtifactoryTarball::OnAfterPhase",
+   "lines": "32-63",
+   "role": "decide",
+   "note": "download only when the folder is absent"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/r9_same_version.rs::load_guard",
+   "file": "src/cls/IPM/Utils/Module.cls",
+   "member": "%IPM.Utils.Module::LoadNewModule",
+   "lines": "1211-1222",
+   "role": "guard",
+   "note": "downgrade and guarded-upgrade refusals; equal passes"
+  },
+  {
+   "formal": ".g5/Verus_verification/consolidated/verus/semver.rs::follows",
+   "file": "src/cls/IPM/General/SemanticVersion.cls",
+   "member": "%IPM.General.SemanticVersion::Follows",
+   "lines": "123-180",
+   "role": "decide",
+   "note": "order used by the guard"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/r9_same_version.rs::reload75",
+   "file": "src/cls/IPM/Utils/Module.cls",
+   "member": "%IPM.Utils.Module::LoadNewModule",
+   "lines": "1196-1251",
+   "role": "decide",
+   "note": "guard then manifest and payload load from the selected supplier"
+  }
+ ],
+ "not_done": [],
+ "notes": [
+  "No refutations and no product findings. All 12 obligations rest on inherited definitions opened and found faithful, except three successors: on_new75/build_cache (rollback derived from the TSTART position), remote_unpublish (authorization computed), reload75/load_guard (equal-version admission computed).",
+  "Native coverage cited: evaluator E10-E17 (expressions#6, #8), C:D2 TR7/TR2 (local-repo#6), iteration-18 probes (same-version successful path). No new native runs.",
+  "r8b_manifest.rs had a comment-only edit (product line citation) after R8b-m01..m03 ran, so those records carry the earlier target_sha256; the last receipts/index.jsonl entry for r8b_manifest.rs is the final file (69 verified, 0 errors)."
+ ],
+ "cost": "fork R8B: about 40 minutes wall time; 25 Verus runs (18 R8b + 4 R9 mutations, 7 receipts); tokens not visible to the fork"
+}

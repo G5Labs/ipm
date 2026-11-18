@@ -332,6 +332,8 @@ Findings: [C:D2 — e2e reproduced](../../Verus_verification/bugs_issues.md#c-d2
 
 Open questions: [When another repository offers the same version of a dependency as the `.modules` folder, which copy should IPM install?](../../Verus_verification/open_questions.md#load.dependencies.local-repo.precedence)
 
+Iteration75 neighbours: [r8b_records.rs](../../Verus_verification/coverage-20261117/iter75/r8b_records.rs) ([handoff](../../uplift/coverage-20261117/iter75/HANDOFF.md)).
+
 ### load.refusal
 
 - uncertain
@@ -412,6 +414,8 @@ Open questions: [Must IPM check system requirements before it writes anything, e
 Sources: PR #887 review r2388507362 by isc-tleavitt, 2025-09-29 ("someone's automation ... does an 'install' of the same version every time and makes sure that it succeeds"); r2392741268 by isc-jili ("removed check for newVer==currVer"). Inventory: INT-LOAD-18; OP-LOAD-06. This supersedes issue #903 and the CHANGELOG 0.10.4 `#903` entry, which said a same-version install should fail. No product-authored test covers a same-version install. Earlier native g2 reloads 1.2.1 successfully (`182832Z-cases-dg`); [iteration18](../../uplift/consolidated/iter18/HANDOFF.md) now checks actual qualified repository installs at1.0.0 across two suppliers without uninstall, plus missing-qualifier refusal. [Verus](../../Verus_verification/consolidated/iter18/reloading.rs) retains the declared successful-provider domain and bounds the new version relation to the checked plain release.
 
 State machines: [reloading · iter18](../../Verus_verification/models/iter18-reloading/manifest.json)
+
+Iteration75 neighbours: [r9_same_version.rs](../../Verus_verification/coverage-20261117/iter75/r9_same_version.rs) ([handoff](../../uplift/coverage-20261117/iter75/HANDOFF.md)).
 
 ### load.reload.root
 

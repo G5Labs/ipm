@@ -241,6 +241,8 @@ Open questions: [Should sync without a module name return an error when a module
 
 State machines: [sync · iter32](../../Verus_verification/models/iter32-sync/manifest.json), [scan · iter45](../../Verus_verification/models/iter45-scan/manifest.json), [moderefresh · iter65](../../Verus_verification/models/iter65-moderefresh/manifest.json)
 
+Iteration75 neighbours: [r8b_sync.rs](../../Verus_verification/coverage-20261117/iter75/r8b_sync.rs) ([handoff](../../uplift/coverage-20261117/iter75/HANDOFF.md)).
+
 ### devtools.sync.retry
 
 - human-provided
@@ -261,6 +263,8 @@ Sources: issue #1224; `General/Sync/Pipeline.cls:146-153`, `:201-222`. Inventory
 Direct decision: `General/Sync/Pipeline.cls::SyncCompile`. Callers and readers: `::Run` steps 7 and 8 (`$$$ThrowOnError` on its status, then hash commit in step 9), `::SyncDispatchProcessors` (loads each changed file with compile), `General/Sync/Summary.cls::AddWarning` (keeps text only while the summary is active). Verus [sync_compile.rs](../../Verus_verification/consolidated/iter4/sync_compile.rs) `{sync_compile,sync_compile_neighbors}`; six controls rejected. Native Y1 (survivor recompiled to the new definition, failed resource stays stale, warning retained with an active summary) and Y2 (no compile, status OK, no retained warning) call the real private step through a subclass, with a fixture processor whose resolution fails on demand. The full `sync` command around this step was not run. Answers public case I3F20.
 
 State machines: [sync compile · iter4](../../Verus_verification/models/iter4-sync-compile/manifest.json)
+
+Iteration75 neighbours: [r8b_sync.rs](../../Verus_verification/coverage-20261117/iter75/r8b_sync.rs) ([handoff](../../uplift/coverage-20261117/iter75/HANDOFF.md)).
 
 ### devtools.sync.empty-hash
 
@@ -348,6 +352,8 @@ Sources: `Main.cls::Import`; command help. Model: [importcmd.rs](../../Verus_ver
 
 State machines: [importcmd · iter49](../../Verus_verification/models/iter49-importcmd/manifest.json)
 
+Iteration75 neighbours: [r8a_import.rs](../../Verus_verification/coverage-20261117/iter75/r8a_import.rs) ([handoff](../../uplift/coverage-20261117/iter75/HANDOFF.md)).
+
 ### devtools.authoring.module-version
 
 - uncertain
@@ -364,6 +370,8 @@ Extension Verus: [owners.rs::bump](../../Verus_verification/consolidated/verus/o
 Findings: [C:D13 — e2e reproduced](../../Verus_verification/bugs_issues.md#c-d13). The linked entry qualifies the caller, reader and providers.
 
 Open questions: [Should `module-version` also update the `module.xml` file a module was loaded from?](../../Verus_verification/open_questions.md#devtools.authoring.module-version.file)
+
+Iteration75 neighbours: [r8b_versioning.rs](../../Verus_verification/coverage-20261117/iter75/r8b_versioning.rs) ([handoff](../../uplift/coverage-20261117/iter75/HANDOFF.md)).
 
 ### devtools.generate.resources
 
@@ -396,6 +404,8 @@ State machines: [grouping · coverage iter73](../../Verus_verification/models/co
 Sources and readers: `Storage/ModuleTemplate.cls::{SetJWTProps,SetCORSProps,AddWebApps,SetSourcePathForCSPApp,ProcessResources,SaveFile}` → `Main.cls::GenerateModuleXML`, WebApplication and FileCopy phase readers. [Iteration 8 index](../../uplift/consolidated/iter8/INDEX.md). [Contract](../../Verus_verification/consolidated/iter8/webapps.rs): `jwt_prompt`, `generated_props`, `generated_path`, `manifest_path`, `filecopy_target`, `copy_one`. The [trust inventory](../../Verus_verification/consolidated/iter8/TRUST.md) names provider and input boundaries; direct ObjectScript implementation proofs: 0.
 
 State machines: [webapps · iter8](../../Verus_verification/models/iter8-webapps/manifest.json)
+
+Iteration75 neighbours: [webapps_neighbours.rs](../../Verus_verification/coverage-20261117/iter75/webapps_neighbours.rs) ([handoff](../../uplift/coverage-20261117/iter75/HANDOFF.md)).
 
 ### devtools.generate.cors
 

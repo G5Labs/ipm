@@ -286,3 +286,5 @@ State machines: [webapps · iter8](../../Verus_verification/models/iter8-webapps
 Sources: `Repo/Oras/PublishService.cls::PushOras`, `::DeleteTags`, `::PublishModule`; `Repo/Remote/PublishService.cls`; `Lifecycle/Base.cls::%Publish`. [Actual state and scoped assertions](../../Verus_verification/consolidated/iter2/registry.rs); [source review and withheld mappings](../../uplift/consolidated/iter2/inventory/new-binding-review.json). Remote effects are provider inputs, not implementation proofs. Simplification proposal: expose which external stages completed; no compensation design has been accepted.
 
 State machines: [registry · iter2](../../Verus_verification/models/iter2-registry/manifest.json)
+
+Iteration75 neighbours: [r8b_remote.rs](../../Verus_verification/coverage-20261117/iter75/r8b_remote.rs) ([handoff](../../uplift/coverage-20261117/iter75/HANDOFF.md)).

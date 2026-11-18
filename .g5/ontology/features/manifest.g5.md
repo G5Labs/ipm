@@ -158,6 +158,8 @@ Sources: `wiki/03` L260-272; CHANGELOG 0.9.0 (`#364`), 0.10.0 (`#469`), 0.10.4 (
 
 Sources: `Storage/SystemRequirements.cls::{CheckRequirements,CheckHealth,CheckInteroperability,CheckSYSNamespace}`; tests `Health.cls`, `Interoperability.cls`, `SystemRequirements.cls`. Verus `resources.rs::{requirement_failures,requirement_neighbors}`. Native environment-subclass probes exercise the unmodified check bodies, not every product variant or version expression.
 
+Iteration75 neighbours: [r8b_manifest.rs](../../Verus_verification/coverage-20261117/iter75/r8b_manifest.rs) ([handoff](../../uplift/coverage-20261117/iter75/HANDOFF.md)).
+
 ### module.parameter
 
 - human-provided
@@ -188,6 +190,8 @@ Sources: doc comment `Utils/Module.cls:2678-2696` (system expressions and `$$$ma
 Extension Verus: [attr_evaluator.rs::evaluate](../../Verus_verification/consolidated/verus/attr_evaluator.rs), [attr_evaluator.rs::evaluate_expression](../../Verus_verification/consolidated/verus/attr_evaluator.rs), [attr_evaluator.rs::macro_helper](../../Verus_verification/consolidated/verus/attr_evaluator.rs), [attr_evaluator.rs::macro_value](../../Verus_verification/consolidated/verus/attr_evaluator.rs), [attr_evaluator.rs::parameters](../../Verus_verification/consolidated/verus/attr_evaluator.rs), [attr_evaluator.rs::regex_replace_match](../../Verus_verification/consolidated/verus/attr_evaluator.rs), [attr_evaluator.rs::system_expression](../../Verus_verification/consolidated/verus/attr_evaluator.rs). These hand translations represent only the manifest-scoped property under its named premises; native receipt links and open inputs are in [the bidirectional index](../../uplift/consolidated/extension/bindings.json). They do not mechanically verify the ObjectScript body.
 
 Open questions: [Should a `$$$macro` expand when the attribute contains no opening brace?](../../Verus_verification/open_questions.md#module.parameter.expressions.brace-policy)
+
+Iteration75 neighbours: [r8b_manifest.rs](../../Verus_verification/coverage-20261117/iter75/r8b_manifest.rs) ([handoff](../../uplift/coverage-20261117/iter75/HANDOFF.md)).
 
 ### module.parameter.literal-values
 
@@ -237,3 +241,5 @@ Extension Verus: [env_config.rs::clear](../../Verus_verification/consolidated/ve
 Findings: [C:D14 — e2e reproduced](../../Verus_verification/bugs_issues.md#c-d14). The linked entry qualifies the caller, reader and providers.
 
 Open questions: [When one of several `-env` files is missing, malformed or an array, what should the command keep, and how should two arrays merge?](../../Verus_verification/open_questions.md#module.env.failure)
+
+Iteration75 neighbours: [env_loader.rs](../../Verus_verification/coverage-20261117/iter75/env_loader.rs) ([handoff](../../uplift/coverage-20261117/iter75/HANDOFF.md)).

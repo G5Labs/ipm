@@ -121,6 +121,8 @@ Sources: `Repo/UniversalSettings.cls::{SetValue,GetValue,GetDefaultValue,ResetTo
 
 Sources: `Repo/UniversalSettings.cls::{SetTestReportFormat,GetTestReportFormat,UpdateOne}`; `%IPM.Test.Abstract.VALIDFORMATS`. Verus `public_repairs.rs::{lower,format_valid,set_format,setting_neighbors}`. Native `JsOn`, invalid refusal and spelling retention are checked. This is the persistent setter, not the later renderer's supported-format contract.
 
+Iteration75 neighbours: [r8a_settings.rs](../../Verus_verification/coverage-20261117/iter75/r8a_settings.rs) ([handoff](../../uplift/coverage-20261117/iter75/HANDOFF.md)).
+
 ### settings.analytics
 
 - design-verified

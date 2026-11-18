@@ -1,0 +1,915 @@
+{
+ "verus_dir": ".g5/Verus_verification/coverage-20261117/iter75",
+ "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+ "rows": [
+  {
+   "formal": ".g5/Verus_verification/consolidated/iter2/registry.rs::verify_layers",
+   "file": "src/cls/IPM/Repo/Oras/PackageService.cls",
+   "member": "%IPM.Repo.Oras.PackageService::VerifyModuleHashAndSize",
+   "lines": "1014-1021",
+   "role": "decide",
+   "note": "first application/vnd.oci.image.layer.v1.tar layer: size and digest both equal",
+   "group": "R12"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/oras_integrity.rs::pull_effects",
+   "file": "src/cls/IPM/Repo/Oras/PackageService.cls",
+   "member": "%IPM.Repo.Oras.PackageService::Pull",
+   "lines": "822-829",
+   "role": "decide",
+   "note": "hash and size of the linked tgz checked; failure throws \"Module size and/or hash failed validation!\"",
+   "group": "R12"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/oras_integrity.rs::pull_effects",
+   "file": "src/cls/IPM/Repo/Oras/PackageService.cls",
+   "member": "%IPM.Repo.Oras.PackageService::GetModule",
+   "lines": "239-246",
+   "role": "guard",
+   "note": "$$$ThrowOnError(status) before returning the stream",
+   "group": "R12"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/oras_integrity.rs::pull_effects",
+   "file": "src/cls/IPM/Utils/Module.cls",
+   "member": "%IPM.Utils.Module::LoadModuleReference",
+   "lines": "142-172",
+   "role": "read",
+   "note": "only a returned payload is copied and passed to LoadModuleFromArchive",
+   "group": "R12"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/oras_integrity.rs::pull_tag",
+   "file": "src/cls/IPM/Repo/Oras/PackageService.cls",
+   "member": "%IPM.Repo.Oras.PackageService::Pull",
+   "lines": "785-787",
+   "role": "decide",
+   "note": "empty tag replaced by GetLatestTag",
+   "group": "R12"
+  },
+  {
+   "formal": ".g5/Verus_verification/consolidated/iter2/registry.rs::last_tag",
+   "file": "src/cls/IPM/Repo/Oras/PackageService.cls",
+   "member": "%IPM.Repo.Oras.PackageService::GetLatestTag",
+   "lines": "920-923",
+   "role": "decide",
+   "note": "tags[-1] if tags else \"\"",
+   "group": "R12"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/oras_integrity.rs::size_and_digest_each_decide",
+   "file": "src/cls/IPM/Repo/Oras/PackageService.cls",
+   "member": "%IPM.Repo.Oras.PackageService::VerifyModuleHashAndSize",
+   "lines": "1014-1021",
+   "role": "neighbour",
+   "note": "size-only and digest-only mismatches",
+   "group": "R12"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/oras_integrity.rs::failed_check_keeps_installed_root",
+   "file": "src/cls/IPM/Repo/Oras/PackageService.cls",
+   "member": "%IPM.Repo.Oras.PackageService::GetModule",
+   "lines": "239-246",
+   "role": "neighbour",
+   "note": "match on a writable root vs single mismatches",
+   "group": "R12"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/oras_integrity.rs::tag_selection_neighbours",
+   "file": "src/cls/IPM/Repo/Oras/PackageService.cls",
+   "member": "%IPM.Repo.Oras.PackageService::Pull",
+   "lines": "785-787",
+   "role": "neighbour",
+   "note": "explicit tag vs no tag",
+   "group": "R12"
+  },
+  {
+   "formal": "playbook-uplift/models/verus/uninstall.rs::code_gone",
+   "file": "src/cls/IPM/Lifecycle/Base.cls",
+   "member": "%IPM.Lifecycle.Base::%Clean",
+   "lines": "314,375-378,414-417",
+   "role": "decide",
+   "note": "IsMapped items skipped unless Clean.GlobalScope",
+   "group": "R12"
+  },
+  {
+   "formal": "playbook-uplift/models/verus/uninstall.rs::storage_uninstall",
+   "file": "src/cls/IPM/Main.cls",
+   "member": "%IPM.Main (Commands XDATA, uninstall)",
+   "lines": "500",
+   "role": "write",
+   "note": "-global sets Clean.GlobalScope=1",
+   "group": "R12"
+  },
+  {
+   "formal": "playbook-uplift/models/verus/uninstall.rs::clean_step",
+   "file": "src/cls/IPM/ResourceProcessor/Default/Global.cls",
+   "member": "%IPM.ResourceProcessor.Default.Global::OnPhase",
+   "lines": "76-80",
+   "role": "decide",
+   "note": "kill @..Global when Global non-empty and not Preserve",
+   "group": "R12"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/uninstall_neighbours.rs::mapped_code_needs_global",
+   "file": "src/cls/IPM/Lifecycle/Base.cls",
+   "member": "%IPM.Lifecycle.Base::%Clean",
+   "lines": "375-378,414-417",
+   "role": "neighbour",
+   "note": "mapped class with and without -global",
+   "group": "R12"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/uninstall_neighbours.rs::preserve_keeps_global_data",
+   "file": "src/cls/IPM/ResourceProcessor/Default/Global.cls",
+   "member": "%IPM.ResourceProcessor.Default.Global::OnPhase",
+   "lines": "76-80",
+   "role": "neighbour",
+   "note": "Global with and without Preserve",
+   "group": "R12"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/artifact_filter.rs::property_alone_is_enough",
+   "file": "src/cls/IPM/ResourceProcessor/ArtifactoryTarball.cls",
+   "member": "ArtifactoryTarball::ParseAnonymousFilter",
+   "lines": "344-346",
+   "role": "neighbour",
+   "note": "name-or-property requirement; property-only accepted, repo-only refused",
+   "group": "R345"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/artifact_filter.rs::property_alone_is_enough",
+   "file": "src/cls/IPM/ResourceProcessor/ArtifactoryTarball.cls",
+   "member": "ArtifactoryTarball::ParseAnonymousFilter",
+   "lines": "338-339",
+   "role": "neighbour",
+   "note": "@key stored as a property",
+   "group": "R345"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/artifact_filter.rs::unsupported_key_or_operator_fails",
+   "file": "src/cls/IPM/ResourceProcessor/ArtifactoryTarball.cls",
+   "member": "ArtifactoryTarball::ParseAnonymousFilter",
+   "lines": "341-342",
+   "role": "neighbour",
+   "note": "unknown key throws while iterating",
+   "group": "R345"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/artifact_filter.rs::unsupported_key_or_operator_fails",
+   "file": "src/cls/IPM/ResourceProcessor/ArtifactoryTarball.cls",
+   "member": "ArtifactoryTarball::ParseCondition",
+   "lines": "362-364",
+   "role": "neighbour",
+   "note": "non-DynamicObject (array) condition throws",
+   "group": "R345"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/artifact_filter.rs::allowed_keys_and_type_file",
+   "file": "src/cls/IPM/ResourceProcessor/ArtifactoryTarball.cls",
+   "member": "ArtifactoryTarball::ParseAnonymousFilter",
+   "lines": "334-337",
+   "role": "neighbour",
+   "note": "type must be file and adds no criterion",
+   "group": "R345"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/artifact_filter.rs::condition_shapes",
+   "file": "src/cls/IPM/ResourceProcessor/ArtifactoryTarball.cls",
+   "member": "ArtifactoryTarball::ParseCondition",
+   "lines": "358-375",
+   "role": "neighbour",
+   "note": "plain value, single $eq, $match only with allowMatch, object operand refused",
+   "group": "R345"
+  },
+  {
+   "formal": ".g5/Verus_verification/consolidated/iter3/artifacts.rs::condition",
+   "file": "src/cls/IPM/ResourceProcessor/ArtifactoryTarball.cls",
+   "member": "ArtifactoryTarball::ParseCondition",
+   "lines": "351-375",
+   "role": "decide",
+   "note": "inherited transcription, reused as faithful",
+   "group": "R345"
+  },
+  {
+   "formal": ".g5/Verus_verification/consolidated/iter3/artifacts.rs::parse_fields",
+   "file": "src/cls/IPM/ResourceProcessor/ArtifactoryTarball.cls",
+   "member": "ArtifactoryTarball::ParseAnonymousFilter",
+   "lines": "323-347",
+   "role": "decide",
+   "note": "inherited transcription, reused as faithful",
+   "group": "R345"
+  },
+  {
+   "formal": ".g5/Verus_verification/consolidated/iter57/cspapp.rs::load",
+   "file": "src/cls/IPM/ResourceProcessor/CSPApplication.cls",
+   "member": "CSPApplication::CreateOrUpdateCSPApp",
+   "lines": "335-373",
+   "role": "decide",
+   "note": "Exists -> Modify, else Create",
+   "group": "R345"
+  },
+  {
+   "formal": ".g5/Verus_verification/consolidated/iter57/cspapp.rs::load",
+   "file": "src/cls/IPM/ResourceProcessor/CSPApplication.cls",
+   "member": "CSPApplication::OnPhaseInternal",
+   "lines": "137-140",
+   "role": "decide",
+   "note": "no copy when Directory is the resource folder",
+   "group": "R345"
+  },
+  {
+   "formal": ".g5/Verus_verification/consolidated/iter57/cspapp.rs::load",
+   "file": "src/cls/IPM/ResourceProcessor/CSPApplication.cls",
+   "member": "CSPApplication::OnBeforePhase",
+   "lines": "106-108",
+   "role": "decide",
+   "note": "empty Directory defaults to the resource folder",
+   "group": "R345"
+  },
+  {
+   "formal": ".g5/Verus_verification/consolidated/iter57/cspapp.rs::load",
+   "file": "src/cls/IPM/ResourceProcessor/CSPApplication.cls",
+   "member": "CSPApplication::OnPhaseInternal",
+   "lines": "159-163",
+   "role": "guard",
+   "note": "After Reload copy requires the directory to exist; not modelled, covered by native iter57 a1",
+   "group": "R345"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/cspapp_neighbours.rs::load_creates_and_uninstall_deletes",
+   "file": "src/cls/IPM/ResourceProcessor/CSPApplication.cls",
+   "member": "CSPApplication::OnPhaseInternal",
+   "lines": "147-156",
+   "role": "neighbour",
+   "note": "create before Activate, delete before Clean",
+   "group": "R345"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/cspapp_neighbours.rs::no_deploy_path_no_copy",
+   "file": "src/cls/IPM/ResourceProcessor/CSPApplication.cls",
+   "member": "CSPApplication::OnPhaseInternal",
+   "lines": "137-140",
+   "role": "neighbour",
+   "note": "no DeployPath -> tCopyFiles=0",
+   "group": "R345"
+  },
+  {
+   "formal": ".g5/Verus_verification/consolidated/iter8/webapps.rs::skipped",
+   "file": "src/cls/IPM/Storage/ModuleTemplate.cls",
+   "member": "ModuleTemplate::AddWebApps",
+   "lines": "203-205",
+   "role": "decide",
+   "note": "skipped list IsNameSpaceDefault, Name, NameSpace, Path",
+   "group": "R345"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/webapps_neighbours.rs::namespace_and_default_marker_left_out",
+   "file": "src/cls/IPM/Storage/ModuleTemplate.cls",
+   "member": "ModuleTemplate::AddWebApps",
+   "lines": "226-233",
+   "role": "neighbour",
+   "note": "loop skips listed keys and writes differing others",
+   "group": "R345"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/webapps_neighbours.rs::generated_path75",
+   "file": "src/cls/IPM/Storage/ModuleTemplate.cls",
+   "member": "ModuleTemplate::AddWebApps",
+   "lines": "220-223",
+   "role": "decide",
+   "note": "Path only without DispatchClass and with a Path",
+   "group": "R345"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/webapps_neighbours.rs::replace_root",
+   "file": "src/cls/IPM/Storage/ModuleTemplate.cls",
+   "member": "ModuleTemplate::AddWebApps",
+   "lines": "222",
+   "role": "decide",
+   "note": "$replace of every occurrence of cspDir; corrected successor of iter8 manifest_path",
+   "group": "R345"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/webapps_neighbours.rs::path_neighbours",
+   "file": "src/cls/IPM/Storage/ModuleTemplate.cls",
+   "member": "ModuleTemplate::AddWebApps",
+   "lines": "195,220-223",
+   "role": "neighbour",
+   "note": "under root, outside root, inner occurrence, dispatch",
+   "group": "R345"
+  },
+  {
+   "formal": ".g5/Verus_verification/consolidated/verus/owners.rs::build_cache",
+   "file": "src/cls/IPM/Repo/Filesystem/Definition.cls",
+   "member": "Filesystem.Definition::BuildCache",
+   "lines": "117-182",
+   "role": "decide",
+   "note": "aggregate item statuses, throw after loop, roll back",
+   "group": "R345"
+  },
+  {
+   "formal": ".g5/Verus_verification/consolidated/verus/owners.rs::add_cache",
+   "file": "src/cls/IPM/Repo/Filesystem/Definition.cls",
+   "member": "Filesystem.Definition::AddCacheItem",
+   "lines": "196-200,225-227",
+   "role": "decide",
+   "note": "unloadable skipped; failed Name save returned",
+   "group": "R345"
+  },
+  {
+   "formal": ".g5/Verus_verification/consolidated/verus/owners.rs::scan",
+   "file": "src/cls/IPM/Repo/Filesystem/Definition.cls",
+   "member": "Filesystem.Definition::ScanDirectory",
+   "lines": "329",
+   "role": "decide",
+   "note": "depth limit",
+   "group": "R345"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/fs_cache.rs::invalid_name_fails_whole_refresh",
+   "file": "src/cls/IPM/Repo/Filesystem/Definition.cls",
+   "member": "Filesystem.Definition::BuildCache",
+   "lines": "170-179",
+   "role": "neighbour",
+   "note": "invalid name within depth fails; beyond depth succeeds",
+   "group": "R345"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/fs_cache.rs::intended_skip_refuted",
+   "file": "src/cls/IPM/Repo/Filesystem/Definition.cls",
+   "member": "Filesystem.Definition::BuildCache",
+   "lines": "170-179",
+   "role": "neighbour",
+   "note": "valid module not offered beside an invalid-name one",
+   "group": "R345"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/env_loader.rs::present",
+   "file": "src/cls/IPM/General/EnvironmentConfig.cls",
+   "member": "%IPM.General.EnvironmentConfig::Load",
+   "lines": "12-14",
+   "role": "guard",
+   "note": "%File.Exists or throw FileDoesNotExist",
+   "group": "R67"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/env_loader.rs::parses",
+   "file": "src/cls/IPM/General/EnvironmentConfig.cls",
+   "member": "%IPM.General.EnvironmentConfig::Load",
+   "lines": "15-22",
+   "role": "guard",
+   "note": "LinkToFile and %FromJSON, throw on failure",
+   "group": "R67"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/env_loader.rs::file_input",
+   "file": "src/cls/IPM/General/EnvironmentConfig.cls",
+   "member": "%IPM.General.EnvironmentConfig::Load",
+   "lines": "12-27",
+   "role": "read",
+   "note": "presence and parse derived from the filesystem map; parsed content passed to the inherited load_file",
+   "group": "R67"
+  },
+  {
+   "formal": ".g5/Verus_verification/consolidated/verus/env_config.rs::load_file",
+   "file": "src/cls/IPM/General/EnvironmentConfig.cls",
+   "member": "%IPM.General.EnvironmentConfig::Load",
+   "lines": "23-31",
+   "role": "decide",
+   "note": "array root throws; merge and evaluate; any throw clears and rethrows",
+   "group": "R67"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/env_loader.rs::env_command",
+   "file": "src/cls/IPM/Lifecycle/Base.cls",
+   "member": "%IPM.Lifecycle.Base::LoadEnvironmentConfig",
+   "lines": "2188-2200",
+   "role": "write",
+   "note": "Clear then Load each ;-separated path",
+   "group": "R67"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/env_loader.rs::missing_versus_readable",
+   "file": "src/cls/IPM/General/EnvironmentConfig.cls",
+   "member": "%IPM.General.EnvironmentConfig::Load",
+   "lines": "12-27",
+   "role": "neighbour",
+   "note": "missing vs readable file",
+   "group": "R67"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/env_loader.rs::later_files",
+   "file": "src/cls/IPM/General/EnvironmentConfig.cls",
+   "member": "%IPM.General.EnvironmentConfig::Load",
+   "lines": "12-31",
+   "role": "neighbour",
+   "note": "two good files vs good then missing, unparsable or array-root file",
+   "group": "R67"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/global_path.rs::directory_segment",
+   "file": "src/cls/IPM/ResourceProcessor/Default/Global.cls",
+   "member": "%IPM.ResourceProcessor.Default.Global::OnItemRelativePath",
+   "lines": "106-111",
+   "role": "decide",
+   "note": "\"\" -> gbl/; InitialExpression gbl/ at line 18 for an absent attribute",
+   "group": "R67"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/global_path.rs::global_path",
+   "file": "src/cls/IPM/ResourceProcessor/Default/Global.cls",
+   "member": "%IPM.ResourceProcessor.Default.Global::OnItemRelativePath",
+   "lines": "98-115",
+   "role": "decide",
+   "note": "SourcesRoot + Directory + translated name + .xml (preload/ prefix outside the model)",
+   "group": "R67"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/global_path.rs::export_global",
+   "file": "src/cls/IPM/ResourceProcessor/Default/Global.cls",
+   "member": "%IPM.ResourceProcessor.Default.Global::OnResolveChildren",
+   "lines": "89-94",
+   "role": "write",
+   "note": "export RelativePath",
+   "group": "R67"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/global_path.rs::reload_global",
+   "file": "src/cls/IPM/ResourceProcessor/Default/Global.cls",
+   "member": "%IPM.ResourceProcessor.Default.Global::OnPhase",
+   "lines": "59-72",
+   "role": "read",
+   "note": "Reload loads Root/OnItemRelativePath",
+   "group": "R67"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/lifecycle_neighbours.rs::custom_alone_or_beside",
+   "file": "src/cls/IPM/Storage/Module.cls",
+   "member": "%IPM.Storage.Module::ExecutePhases",
+   "lines": "521-525",
+   "role": "neighbour",
+   "note": "IsComplete: GetCompletePhases; -only: MatchSinglePhase($listtostring)",
+   "group": "R67"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/lifecycle_neighbours.rs::complete_plan",
+   "file": "src/cls/IPM/Lifecycle/Base.cls",
+   "member": "%IPM.Lifecycle.Base::GetCompletePhases",
+   "lines": "139-162",
+   "role": "decide",
+   "note": "lone non-standard name as-is; otherwise chain union in PHASES order",
+   "group": "R67"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/lifecycle_neighbours.rs::only_plan",
+   "file": "src/cls/IPM/Lifecycle/Base.cls",
+   "member": "%IPM.Lifecycle.Base::MatchSinglePhase",
+   "lines": "192-214",
+   "role": "decide",
+   "note": "the joined list matched as one name",
+   "group": "R67"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/lifecycle_neighbours.rs::single_step",
+   "file": "src/cls/IPM/Storage/Module.cls",
+   "member": "%IPM.Storage.Module::GetCustomPhases",
+   "lines": "413-443",
+   "role": "read",
+   "note": "declared custom phases by lower-cased name",
+   "group": "R67"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/lifecycle_neighbours.rs::execute",
+   "file": "src/cls/IPM/Main.cls",
+   "member": "%IPM.Main::ModuleAction",
+   "lines": "2830-2849",
+   "role": "read",
+   "note": "words -> list; IsComplete = not -only",
+   "group": "R67"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/lifecycle_neighbours.rs::two_custom_names",
+   "file": "src/cls/IPM/Lifecycle/Base.cls",
+   "member": "%IPM.Lifecycle.Base::GetCompletePhasesForOne",
+   "lines": "165-189",
+   "role": "neighbour",
+   "note": "\"\" for a custom name, so two custom names give an empty plan",
+   "group": "R67"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/lifecycle_neighbours.rs::before_and_after",
+   "file": "src/cls/IPM/ResourceProcessor/CPF.cls",
+   "member": "%IPM.ResourceProcessor.CPF::OnBeforePhase",
+   "lines": "24-32",
+   "role": "neighbour",
+   "note": "When=Before merges before the phase",
+   "group": "R67"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/lifecycle_neighbours.rs::before_and_after",
+   "file": "src/cls/IPM/ResourceProcessor/CPF.cls",
+   "member": "%IPM.ResourceProcessor.CPF::OnAfterPhase",
+   "lines": "34-42",
+   "role": "neighbour",
+   "note": "When=After merges after the phase",
+   "group": "R67"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/lifecycle_neighbours.rs::set_primary",
+   "file": "src/cls/IPM/ExtensionBase/CompositeMethodOverrides.cls",
+   "member": "%IPM.ExtensionBase.CompositeMethodOverrides::SetPrimaryExtensionClass",
+   "lines": "81-103",
+   "role": "decide",
+   "note": "no class: quit OK; not an extension: error; else set primary",
+   "group": "R67"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/lifecycle_neighbours.rs::lifecycle_class_neighbours",
+   "file": "src/cls/IPM/Storage/Module.cls",
+   "member": "%IPM.Storage.Module::LifecycleGet",
+   "lines": "1428-1449",
+   "role": "neighbour",
+   "note": "no compiled class -> Module",
+   "group": "R67"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/r8a_import.rs::recursive_import_reaches_subdirectory",
+   "file": "src/cls/IPM/Main.cls",
+   "member": "%IPM.Main::Import",
+   "lines": "3334,3352-3358",
+   "role": "neighbour",
+   "note": "tRecurse from -norecurse passed to ImportDir",
+   "group": "R8A"
+  },
+  {
+   "formal": ".g5/Verus_verification/consolidated/iter49/importcmd.rs::selected",
+   "file": "src/cls/IPM/Main.cls",
+   "member": "%IPM.Main::Import",
+   "lines": "3350-3374",
+   "role": "decide",
+   "note": "directory/file/missing branch; missing path throws before any load",
+   "group": "R8A"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/r8a_import.rs::missing_path_defines_nothing",
+   "file": "src/cls/IPM/Main.cls",
+   "member": "%IPM.Main::Import",
+   "lines": "3371-3374",
+   "role": "neighbour",
+   "note": "FileDoesNotExist thrown before UserAction and load",
+   "group": "R8A"
+  },
+  {
+   "formal": ".g5/Verus_verification/consolidated/iter15/oras.rs::tag_for",
+   "file": "src/cls/IPM/Repo/Oras/PackageService.cls",
+   "member": "%IPM.Repo.Oras.PackageService::TagForReference",
+   "lines": "270-280",
+   "role": "decide",
+   "note": "Semver2Tag (Common.inc:82) and __platform for deployed; deployed without platform throws",
+   "group": "R8A"
+  },
+  {
+   "formal": ".g5/Verus_verification/consolidated/iter8/catalog.rs::tag_for",
+   "file": "src/cls/IPM/Repo/Oras/PackageService.cls",
+   "member": "%IPM.Repo.Oras.PackageService::TagForReference",
+   "lines": "273-279",
+   "role": "decide",
+   "note": "abstract tag kind",
+   "group": "R8A"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/r8a_oras.rs::source_tag_is_encoded_version",
+   "file": "src/inc/IPM/Common.inc",
+   "member": "Semver2Tag",
+   "lines": "82,86",
+   "role": "neighbour",
+   "note": "+ to _, separator __",
+   "group": "R8A"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/r8a_oras.rs::only_deployed_reference_needs_platform",
+   "file": "src/cls/IPM/Repo/Oras/PackageService.cls",
+   "member": "%IPM.Repo.Oras.PackageService::TagForReference",
+   "lines": "273-276",
+   "role": "neighbour",
+   "note": "only Deployed checks PlatformVersion",
+   "group": "R8A"
+  },
+  {
+   "formal": ".g5/Verus_verification/consolidated/iter2/registry.rs::remote_cache",
+   "file": "src/cls/IPM/Repo/Remote/PublishManager.cls",
+   "member": "%IPM.Repo.Remote.PublishManager::CheckServiceCache",
+   "lines": "12-43",
+   "role": "decide",
+   "note": "UnavailableNames, ServiceCache, Enabled read and IsAvailable only when uncached",
+   "group": "R8A"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/r8a_oras.rs::retained_remote_client_is_not_reprobed",
+   "file": "src/cls/IPM/Repo/Remote/PublishManager.cls",
+   "member": "%IPM.Repo.Remote.PublishManager::CheckServiceCache",
+   "lines": "38-41",
+   "role": "neighbour",
+   "note": "cached client: pAvailable = 1, no provider call",
+   "group": "R8A"
+  },
+  {
+   "formal": ".g5/Verus_verification/consolidated/iter2/registry.rs::oras_cache",
+   "file": "src/cls/IPM/Repo/Oras/PublishManager.cls",
+   "member": "%IPM.Repo.Oras.PublishManager::CheckServiceCache",
+   "lines": "4-20",
+   "role": "decide",
+   "note": "no cache; Enabled and IsAvailable every call",
+   "group": "R8A"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/r8a_oras.rs::oras_manager_probes_each_call",
+   "file": "src/cls/IPM/Repo/Oras/PublishManager.cls",
+   "member": "%IPM.Repo.Oras.PublishManager::CheckServiceCache",
+   "lines": "15-18",
+   "role": "neighbour",
+   "note": "probe answer is pAvailable",
+   "group": "R8A"
+  },
+  {
+   "formal": ".g5/Verus_verification/consolidated/verus/thin_surfaces.rs::oras_available",
+   "file": "src/cls/IPM/Repo/Oras/PackageService.cls",
+   "member": "%IPM.Repo.Oras.PackageService::IsAvailable",
+   "lines": "93-109",
+   "role": "decide",
+   "note": "transport, 2xx, 401 + WWW-Authenticate",
+   "group": "R8A"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/r8a_oras.rs::oras_available_neighbors",
+   "file": "src/cls/IPM/Repo/Oras/PackageService.cls",
+   "member": "%IPM.Repo.Oras.PackageService::IsAvailable",
+   "lines": "98-108",
+   "role": "neighbour",
+   "note": "five status cases",
+   "group": "R8A"
+  },
+  {
+   "formal": ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::format_valid",
+   "file": "src/cls/IPM/Repo/UniversalSettings.cls",
+   "member": "%IPM.Repo.UniversalSettings::SetTestReportFormat",
+   "lines": "225-233",
+   "role": "decide",
+   "note": "lowercased value in VALIDFORMATS (Test/Abstract.cls:7) or empty",
+   "group": "R8A"
+  },
+  {
+   "formal": "playbook-uplift/models/verus/settings.rs::valid_trf",
+   "file": "src/cls/IPM/Test/Abstract.cls",
+   "member": "%IPM.Test.Abstract::VALIDFORMATS",
+   "lines": "7",
+   "role": "decide",
+   "note": "json,yaml,toon as codes 10,11,12",
+   "group": "R8A"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/r8a_settings.rs::yaml_and_toon_accepted",
+   "file": "src/cls/IPM/Repo/UniversalSettings.cls",
+   "member": "%IPM.Repo.UniversalSettings::SetTestReportFormat",
+   "lines": "228-232",
+   "role": "neighbour",
+   "note": "stores val as supplied",
+   "group": "R8A"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/r8a_settings.rs::config_set_stores_yaml_and_toon",
+   "file": "src/cls/IPM/Repo/UniversalSettings.cls",
+   "member": "%IPM.Repo.UniversalSettings::UpdateOne",
+   "lines": "123-125",
+   "role": "neighbour",
+   "note": "config set routes TestReportFormat to SetTestReportFormat",
+   "group": "R8A"
+  },
+  {
+   "formal": ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::valid_test_target",
+   "file": "src/cls/IPM/ResourceProcessor/Test.cls",
+   "member": "%IPM.ResourceProcessor.Test::%OnValidateObject",
+   "lines": "615-621",
+   "role": "decide",
+   "note": "exactly one of Package and Class",
+   "group": "R8A"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/r8a_settings.rs::package_only_test_target_valid",
+   "file": "src/cls/IPM/ResourceProcessor/Test.cls",
+   "member": "%IPM.ResourceProcessor.Test::%OnValidateObject",
+   "lines": "617",
+   "role": "neighbour",
+   "note": "Package-only admitted",
+   "group": "R8A"
+  },
+  {
+   "formal": ".g5/Verus_verification/consolidated/iter3/resources.rs::requirement_failures",
+   "file": "src/cls/IPM/Storage/SystemRequirements.cls",
+   "member": "%IPM.Storage.SystemRequirements::CheckInteroperability",
+   "lines": "61-70",
+   "role": "decide",
+   "note": "Health implies Interoperability required",
+   "group": "R8B"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/r8b_manifest.rs::health_interop_neighbors",
+   "file": "src/cls/IPM/Storage/SystemRequirements.cls",
+   "member": "%IPM.Storage.SystemRequirements::CheckInteroperability",
+   "lines": "63-68",
+   "role": "neighbour",
+   "note": "enabled namespace passes with Health and disabled",
+   "group": "R8B"
+  },
+  {
+   "formal": ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::macro_value",
+   "file": "src/cls/IPM/Utils/Module.cls",
+   "member": "%IPM.Utils.Module::EvaluateMacroHelper",
+   "lines": "2763-2785",
+   "role": "decide",
+   "note": "#IfDef value else \"\"",
+   "group": "R8B"
+  },
+  {
+   "formal": ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::evaluate_expression",
+   "file": "src/cls/IPM/Storage/Module.cls",
+   "member": "%IPM.Storage.Module::%EvaluateExpression",
+   "lines": "1885-1894",
+   "role": "decide",
+   "note": "strip leading blank, @expr, \"\" on error",
+   "group": "R8B"
+  },
+  {
+   "formal": "playbook-uplift/models/verus/dep_resolve.rs::active",
+   "file": "src/cls/IPM/Storage/Module.cls",
+   "member": "%IPM.Storage.Module::HasScope",
+   "lines": "834-855",
+   "role": "decide",
+   "note": "scope in phases",
+   "group": "R8B"
+  },
+  {
+   "formal": "playbook-uplift/models/verus/dep_resolve.rs::classify",
+   "file": "src/cls/IPM/Storage/Module.cls",
+   "member": "%IPM.Storage.Module::BuildDependencyGraph",
+   "lines": "953-956",
+   "role": "guard",
+   "note": "skip requirement when HasScope false",
+   "group": "R8B"
+  },
+  {
+   "formal": ".g5/Verus_verification/consolidated/iter9/ownership.rs::get_add",
+   "file": "src/cls/IPM/Storage/Module.cls",
+   "member": "%IPM.Storage.Module::GetAddUpdateStep",
+   "lines": "259-272",
+   "role": "write",
+   "note": "home moved, TimeStampEnd/Status kept",
+   "group": "R8B"
+  },
+  {
+   "formal": ".g5/Verus_verification/consolidated/iter9/ownership.rs::get_add",
+   "file": "src/cls/IPM/Storage/UpdateStep/AnyMember.cls",
+   "member": "%IPM.Storage.UpdateStep.AnyMember::GetUpdateStep",
+   "lines": "18-30",
+   "role": "read",
+   "note": "open by unique (ClassName, MethodName) or new",
+   "group": "R8B"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/r8b_records.rs::build_cache",
+   "file": "src/cls/IPM/Repo/Filesystem/Definition.cls",
+   "member": "%IPM.Repo.Filesystem.Definition::BuildCache",
+   "lines": "117-180",
+   "role": "write",
+   "note": "TSTART, %Save, scan/AddCacheItem, TCOMMIT or TROLLBACK to entry level",
+   "group": "R8B"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/r8b_records.rs::on_new75",
+   "file": "src/cls/IPM/General/TempLocalRepoManager.cls",
+   "member": "%IPM.General.TempLocalRepoManager::%OnNew",
+   "lines": "49-71",
+   "role": "decide",
+   "note": "SkipCreate, Create, CleanUp on failure",
+   "group": "R8B"
+  },
+  {
+   "formal": ".g5/Verus_verification/consolidated/verus/temp_repo.rs::cleanup",
+   "file": "src/cls/IPM/General/TempLocalRepoManager.cls",
+   "member": "%IPM.General.TempLocalRepoManager::CleanUp",
+   "lines": "73-86",
+   "role": "write",
+   "note": "%DeleteId, warn on error",
+   "group": "R8B"
+  },
+  {
+   "formal": ".g5/Verus_verification/consolidated/iter32/sync.rs::sync_file",
+   "file": "src/cls/IPM/Storage/FileHash.cls",
+   "member": "%IPM.Storage.FileHash::CommitChanges",
+   "lines": "394-405",
+   "role": "write",
+   "note": "baseline rows of deleted paths removed with processDeletes",
+   "group": "R8B"
+  },
+  {
+   "formal": ".g5/Verus_verification/consolidated/iter32/sync.rs::sync_file",
+   "file": "src/cls/IPM/General/Sync/Pipeline.cls",
+   "member": "%IPM.General.Sync.Pipeline::SyncApplyDeletes",
+   "lines": "535-578",
+   "role": "write",
+   "note": "server document deleted for compilable resources only",
+   "group": "R8B"
+  },
+  {
+   "formal": ".g5/Verus_verification/consolidated/iter4/sync_compile.rs::eligible",
+   "file": "src/cls/IPM/General/Sync/Pipeline.cls",
+   "member": "%IPM.General.Sync.Pipeline::SyncCompile",
+   "lines": "701-712",
+   "role": "guard",
+   "note": "CompileFromProject skipped before resolution",
+   "group": "R8B"
+  },
+  {
+   "formal": ".g5/Verus_verification/consolidated/verus/owners.rs::module_version",
+   "file": "src/cls/IPM/Main.cls",
+   "member": "%IPM.Main::ModuleVersion",
+   "lines": "4031-4049",
+   "role": "decide",
+   "note": "bump/parse then WithPrerelease, WithBuild",
+   "group": "R8B"
+  },
+  {
+   "formal": ".g5/Verus_verification/consolidated/verus/owners.rs::with_pre",
+   "file": "src/cls/IPM/General/SemanticVersion.cls",
+   "member": "%IPM.General.SemanticVersion::WithPrerelease",
+   "lines": "245-254",
+   "role": "write",
+   "note": "keeps Build",
+   "group": "R8B"
+  },
+  {
+   "formal": ".g5/Verus_verification/consolidated/verus/owners.rs::with_build",
+   "file": "src/cls/IPM/General/SemanticVersion.cls",
+   "member": "%IPM.General.SemanticVersion::WithBuild",
+   "lines": "256-265",
+   "role": "write",
+   "note": "keeps Prerelease",
+   "group": "R8B"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/r8b_remote.rs::remote_unpublish",
+   "file": "src/cls/IPM/Repo/Remote/PublishService.cls",
+   "member": "%IPM.Repo.Remote.PublishService::Unpublish",
+   "lines": "56-74",
+   "role": "decide",
+   "note": "credential guard then status 200",
+   "group": "R8B"
+  },
+  {
+   "formal": ".g5/Verus_verification/consolidated/iter2/registry.rs::remote_authorized",
+   "file": "src/cls/IPM/Repo/Remote/PublishService.cls",
+   "member": "%IPM.Repo.Remote.PublishService::Publish",
+   "lines": "16-18",
+   "role": "guard",
+   "note": "same guard at :42 and :60",
+   "group": "R8B"
+  },
+  {
+   "formal": ".g5/Verus_verification/consolidated/iter3/artifacts.rs::activate",
+   "file": "src/cls/IPM/ResourceProcessor/ArtifactoryTarball.cls",
+   "member": "%IPM.ResourceProcessor.ArtifactoryTarball::OnAfterPhase",
+   "lines": "32-63",
+   "role": "decide",
+   "note": "download only when the folder is absent",
+   "group": "R8B"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/r9_same_version.rs::load_guard",
+   "file": "src/cls/IPM/Utils/Module.cls",
+   "member": "%IPM.Utils.Module::LoadNewModule",
+   "lines": "1211-1222",
+   "role": "guard",
+   "note": "downgrade and guarded-upgrade refusals; equal passes",
+   "group": "R8B"
+  },
+  {
+   "formal": ".g5/Verus_verification/consolidated/verus/semver.rs::follows",
+   "file": "src/cls/IPM/General/SemanticVersion.cls",
+   "member": "%IPM.General.SemanticVersion::Follows",
+   "lines": "123-180",
+   "role": "decide",
+   "note": "order used by the guard",
+   "group": "R8B"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/r9_same_version.rs::reload75",
+   "file": "src/cls/IPM/Utils/Module.cls",
+   "member": "%IPM.Utils.Module::LoadNewModule",
+   "lines": "1196-1251",
+   "role": "decide",
+   "note": "guard then manifest and payload load from the selected supplier",
+   "group": "R8B"
+  }
+ ]
+}

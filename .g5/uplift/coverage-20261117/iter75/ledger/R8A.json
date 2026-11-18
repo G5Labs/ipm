@@ -1,0 +1,474 @@
+{
+ "group": "R8A",
+ "items": "HANDOFF-72 \u00a76 item 8 (first half)",
+ "entries": [
+  {
+   "id": "devtools.authoring.import#1",
+   "old_grade": "partial",
+   "new_grade": "full",
+   "check": "proved",
+   "models": [
+    ".g5/Verus_verification/consolidated/iter49/importcmd.rs::selected",
+    ".g5/Verus_verification/consolidated/iter49/importcmd.rs::norecurse_skips_subdirectories",
+    ".g5/Verus_verification/consolidated/iter49/importcmd.rs::nocompile_defines_only",
+    ".g5/Verus_verification/coverage-20261117/iter75/r8a_import.rs::recursive_import_reaches_subdirectory"
+   ],
+   "evidence_add": [
+    ".g5/uplift/coverage-20261117/iter75/mutations.jsonl",
+    ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+    ".g5/uplift/coverage-20261117/iter75/ledger/R8A.json",
+    ".g5/uplift/coverage-20261117/iter75/receipts/coverage-20261117__iter75__r8a_import.rs.log",
+    ".g5/uplift/consolidated/iter49/native/20261116T180209444815Z/observations.json"
+   ],
+   "support": "mutation-checked",
+   "mutations": [
+    "R8a-m01"
+   ],
+   "receipts": [
+    "receipts/coverage-20261117__iter75__r8a_import.rs.log"
+   ],
+   "product": "src/cls/IPM/Main.cls:3334 (tRecurse = not -norecurse), 3352-3358 (an existing directory goes to $system.OBJ.ImportDir with tRecurse); recursion itself is ImportDir behaviour, observed by iteration-49 native case i2 (sub/ items compiled without -norecurse)",
+   "neighbour": "recursive_import_reaches_subdirectory: a sub/ item is defined and compiled without -norecurse, not defined with it, defined but not compiled with -nocompile",
+   "basis_note": "inherited iter49 selected (faithful) with a recursion neighbour; G5-m10 re-run as R8a-m01 is killed. The ImportDir recursion premise is covered by the iteration-49 native receipt (case i2).",
+   "instance_scoped": true,
+   "metadata_link": {
+    "page": ".g5/ontology/features/developer-tools.g5.md",
+    "block": "devtools.authoring.import",
+    "model": ".g5/Verus_verification/coverage-20261117/iter75/r8a_import.rs"
+   }
+  },
+  {
+   "id": "devtools.authoring.import#3",
+   "old_grade": "partial",
+   "new_grade": "full",
+   "check": "proved",
+   "models": [
+    ".g5/Verus_verification/consolidated/iter49/importcmd.rs::selected",
+    ".g5/Verus_verification/consolidated/iter49/importcmd.rs::missing_path_fails",
+    ".g5/Verus_verification/coverage-20261117/iter75/r8a_import.rs::missing_path_defines_nothing"
+   ],
+   "evidence_add": [
+    ".g5/uplift/coverage-20261117/iter75/mutations.jsonl",
+    ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+    ".g5/uplift/coverage-20261117/iter75/ledger/R8A.json",
+    ".g5/uplift/coverage-20261117/iter75/receipts/coverage-20261117__iter75__r8a_import.rs.log",
+    ".g5/uplift/consolidated/iter49/native/20261116T180209444815Z/observations.json"
+   ],
+   "support": "mutation-checked",
+   "mutations": [
+    "R8a-m02"
+   ],
+   "receipts": [
+    "receipts/coverage-20261117__iter75__r8a_import.rs.log"
+   ],
+   "product": "src/cls/IPM/Main.cls:3350-3374: neither file nor directory exists, so tSC = FileDoesNotExist and $$$ThrowOnError before any ImportDir/Load or UserAction call",
+   "neighbour": "missing_path_defines_nothing: for every item and flag combination a missing path defines and compiles nothing, fails, makes no source-control call; an existing file defines the item",
+   "basis_note": "inherited iter49 selected (faithful) with a general missing-path neighbour; G5-m11 re-run as R8a-m02 is killed. Iteration-49 native case i6 observed the failure.",
+   "instance_scoped": false,
+   "metadata_link": {
+    "page": ".g5/ontology/features/developer-tools.g5.md",
+    "block": "devtools.authoring.import",
+    "model": ".g5/Verus_verification/coverage-20261117/iter75/r8a_import.rs"
+   }
+  },
+  {
+   "id": "repo.oras.tag-decode#1",
+   "old_grade": "partial",
+   "new_grade": "full",
+   "check": "proved",
+   "models": [
+    ".g5/Verus_verification/consolidated/iter15/oras.rs::encode",
+    ".g5/Verus_verification/consolidated/iter15/oras.rs::joined",
+    ".g5/Verus_verification/consolidated/iter15/oras.rs::tag_for",
+    ".g5/Verus_verification/consolidated/iter15/oras.rs::raw_neighbors",
+    ".g5/Verus_verification/coverage-20261117/iter75/r8a_oras.rs::source_tag_is_encoded_version"
+   ],
+   "evidence_add": [
+    ".g5/uplift/coverage-20261117/iter75/mutations.jsonl",
+    ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+    ".g5/uplift/coverage-20261117/iter75/ledger/R8A.json",
+    ".g5/uplift/coverage-20261117/iter75/receipts/coverage-20261117__iter75__r8a_oras.rs.log"
+   ],
+   "support": "mutation-checked",
+   "mutations": [
+    "R8a-m03"
+   ],
+   "receipts": [
+    "receipts/coverage-20261117__iter75__r8a_oras.rs.log"
+   ],
+   "product": "src/cls/IPM/Repo/Oras/PackageService.cls:270-280 TagForReference (tag = $$$Semver2Tag(version), src/inc/IPM/Common.inc:82 replaces + with _; deployed appends \"__\" and the platform; a source reference ignores PlatformVersion)",
+   "neighbour": "source_tag_is_encoded_version: a source tag of 1.2.3-alpha+build.7 is the encoded version (not the raw one), a deployed tag is encoded + __platform, a source reference carrying a platform still gets the bare version",
+   "basis_note": "inherited iter15 tag_for (faithful) with a source-artifact neighbour; G4-m37 re-run as R8a-m03 is killed.",
+   "instance_scoped": true,
+   "metadata_link": {
+    "page": ".g5/ontology/architecture/package-sources.g5.md",
+    "block": "repo.oras.tag-decode",
+    "model": ".g5/Verus_verification/coverage-20261117/iter75/r8a_oras.rs"
+   }
+  },
+  {
+   "id": "repo.oras.tag-decode#3",
+   "old_grade": "partial",
+   "new_grade": "full",
+   "check": "proved",
+   "models": [
+    ".g5/Verus_verification/consolidated/iter15/oras.rs::tag_for",
+    ".g5/Verus_verification/consolidated/iter8/catalog.rs::tag_for",
+    ".g5/Verus_verification/coverage-20261117/iter75/r8a_oras.rs::only_deployed_reference_needs_platform"
+   ],
+   "evidence_add": [
+    ".g5/uplift/coverage-20261117/iter75/mutations.jsonl",
+    ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+    ".g5/uplift/coverage-20261117/iter75/ledger/R8A.json",
+    ".g5/uplift/coverage-20261117/iter75/receipts/coverage-20261117__iter75__r8a_oras.rs.log"
+   ],
+   "support": "mutation-checked",
+   "mutations": [
+    "R8a-m04",
+    "R8a-m05"
+   ],
+   "receipts": [
+    "receipts/coverage-20261117__iter75__r8a_oras.rs.log"
+   ],
+   "product": "src/cls/IPM/Repo/Oras/PackageService.cls:273-276: only a Deployed reference with an empty PlatformVersion throws; a source reference is tagged without a platform",
+   "neighbour": "only_deployed_reference_needs_platform: deployed without platform is refused in both models, deployed with platform and a source package without platform are tagged",
+   "basis_note": "inherited iter15 and iter8 tag_for (faithful) with source-package neighbours; G4-m38 and G4-m39 re-run as R8a-m04 and R8a-m05 are killed.",
+   "instance_scoped": true,
+   "metadata_link": {
+    "page": ".g5/ontology/architecture/package-sources.g5.md",
+    "block": "repo.oras.tag-decode",
+    "model": ".g5/Verus_verification/coverage-20261117/iter75/r8a_oras.rs"
+   }
+  },
+  {
+   "id": "repo.publish-cache#1",
+   "old_grade": "partial",
+   "new_grade": "full",
+   "check": "proved",
+   "models": [
+    ".g5/Verus_verification/consolidated/iter2/registry.rs::remote_cache",
+    ".g5/Verus_verification/consolidated/iter2/registry.rs::cache_changes_operator_observation",
+    ".g5/Verus_verification/coverage-20261117/iter75/r8a_oras.rs::retained_remote_client_is_not_reprobed"
+   ],
+   "evidence_add": [
+    ".g5/uplift/coverage-20261117/iter75/mutations.jsonl",
+    ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+    ".g5/uplift/coverage-20261117/iter75/ledger/R8A.json",
+    ".g5/uplift/coverage-20261117/iter75/receipts/coverage-20261117__iter75__r8a_oras.rs.log"
+   ],
+   "support": "mutation-checked",
+   "mutations": [
+    "R8a-m06",
+    "R8a-m08"
+   ],
+   "receipts": [
+    "receipts/coverage-20261117__iter75__r8a_oras.rs.log"
+   ],
+   "product": "src/cls/IPM/Repo/Remote/PublishManager.cls:12-43 CheckServiceCache: a client in ServiceCache is returned with pAvailable = 1 (lines 38-41) without reading Enabled or calling IsAvailable; only an uncached enabled repository is probed (lines 26-36)",
+   "neighbour": "retained_remote_client_is_not_reprobed: a retained client stays available with the repository disabled and the provider unavailable, and the provider is not called; a fresh enabled manager calls the provider and its answer decides",
+   "basis_note": "inherited iter2 remote_cache (faithful) with provider_called neighbours; G4-m73 re-run as R8a-m06 and a recheck-on-retained mutant R8a-m08 are killed.",
+   "instance_scoped": true,
+   "metadata_link": {
+    "page": ".g5/ontology/architecture/package-sources.g5.md",
+    "block": "repo.publish-cache",
+    "model": ".g5/Verus_verification/coverage-20261117/iter75/r8a_oras.rs"
+   }
+  },
+  {
+   "id": "repo.publish-cache#3",
+   "old_grade": "partial",
+   "new_grade": "full",
+   "check": "proved",
+   "models": [
+    ".g5/Verus_verification/consolidated/iter2/registry.rs::oras_cache",
+    ".g5/Verus_verification/consolidated/iter2/registry.rs::cache_changes_operator_observation",
+    ".g5/Verus_verification/coverage-20261117/iter75/r8a_oras.rs::oras_manager_probes_each_call"
+   ],
+   "evidence_add": [
+    ".g5/uplift/coverage-20261117/iter75/mutations.jsonl",
+    ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+    ".g5/uplift/coverage-20261117/iter75/ledger/R8A.json",
+    ".g5/uplift/coverage-20261117/iter75/receipts/coverage-20261117__iter75__r8a_oras.rs.log"
+   ],
+   "support": "mutation-checked",
+   "mutations": [
+    "R8a-m07"
+   ],
+   "receipts": [
+    "receipts/coverage-20261117__iter75__r8a_oras.rs.log"
+   ],
+   "product": "src/cls/IPM/Repo/Oras/PublishManager.cls:4-20 CheckServiceCache (\"TODO actually implement cache\"): Enabled is read and IsAvailable called on every call, pAvailable is its answer",
+   "neighbour": "oras_manager_probes_each_call: enabled with an unavailable probe is unavailable, enabled with an available probe is available, disabled is unavailable; the Remote manager stays available on the same probe sequence",
+   "basis_note": "inherited iter2 oras_cache (faithful, stateless like the product) with a probe neighbour; G4-m77 re-run as R8a-m07 is killed. \"Each call\" is represented by the absence of state.",
+   "instance_scoped": true,
+   "metadata_link": {
+    "page": ".g5/ontology/architecture/package-sources.g5.md",
+    "block": "repo.publish-cache",
+    "model": ".g5/Verus_verification/coverage-20261117/iter75/r8a_oras.rs"
+   }
+  },
+  {
+   "id": "repo.oras#5",
+   "old_grade": "partial",
+   "new_grade": "full",
+   "check": "proved",
+   "models": [
+    ".g5/Verus_verification/consolidated/verus/thin_surfaces.rs::oras_available",
+    ".g5/Verus_verification/coverage-20261117/iter75/r8a_oras.rs::oras_available_neighbors"
+   ],
+   "evidence_add": [
+    ".g5/uplift/coverage-20261117/iter75/mutations.jsonl",
+    ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+    ".g5/uplift/coverage-20261117/iter75/ledger/R8A.json",
+    ".g5/uplift/coverage-20261117/iter75/receipts/coverage-20261117__iter75__r8a_oras.rs.log"
+   ],
+   "support": "mutation-checked",
+   "mutations": [
+    "R8a-m09",
+    "R8a-m10",
+    "R8a-m11"
+   ],
+   "receipts": [
+    "receipts/coverage-20261117__iter75__r8a_oras.rs.log"
+   ],
+   "product": "src/cls/IPM/Repo/Oras/PackageService.cls:93-109 IsAvailable: transport error 0; 200-299 1; 401 1 only with a WWW-Authenticate header; otherwise 0 (CheckNoPath throws for a URL with a path, outside this obligation)",
+   "neighbour": "oras_available_neighbors (exec): 200 and 299 available; 401 with header available; 401 without header, 403 with header, 300 with header and a transport failure unavailable",
+   "basis_note": "inherited exec oras_available (body verified against its ensures, faithful) with exec neighbours; G4-m128 (spec and body changed together) re-run as R8a-m09 is killed, as are headerless-401 (R8a-m10) and transport-ignored (R8a-m11) mutants.",
+   "instance_scoped": true,
+   "metadata_link": {
+    "page": ".g5/ontology/architecture/package-sources.g5.md",
+    "block": "repo.oras",
+    "model": ".g5/Verus_verification/coverage-20261117/iter75/r8a_oras.rs"
+   }
+  },
+  {
+   "id": "settings.report-format#1",
+   "old_grade": "partial",
+   "new_grade": "full",
+   "check": "proved",
+   "models": [
+    ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::format_valid",
+    ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::lower",
+    ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::set_format",
+    ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::setting_neighbors",
+    "playbook-uplift/models/verus/settings.rs::valid_trf",
+    "playbook-uplift/models/verus/settings.rs::repo_refines_config_set",
+    ".g5/Verus_verification/coverage-20261117/iter75/r8a_settings.rs::yaml_and_toon_accepted",
+    ".g5/Verus_verification/coverage-20261117/iter75/r8a_settings.rs::config_set_stores_yaml_and_toon"
+   ],
+   "evidence_add": [
+    ".g5/uplift/coverage-20261117/iter75/mutations.jsonl",
+    ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+    ".g5/uplift/coverage-20261117/iter75/ledger/R8A.json",
+    ".g5/uplift/coverage-20261117/iter75/receipts/coverage-20261117__iter75__r8a_settings.rs.log"
+   ],
+   "support": "mutation-checked",
+   "mutations": [
+    "R8a-m12",
+    "R8a-m13",
+    "R8a-m14"
+   ],
+   "receipts": [
+    "receipts/coverage-20261117__iter75__r8a_settings.rs.log"
+   ],
+   "product": "src/cls/IPM/Repo/UniversalSettings.cls:225-233 SetTestReportFormat: a non-empty value whose $zconvert(val,\"l\") is not in Test/Abstract.cls:7 VALIDFORMATS \"json,yaml,toon\" is refused; otherwise SetValue stores val as supplied",
+   "neighbour": "yaml_and_toon_accepted: \"YAML\", \"yaml\" and \"ToOn\" accepted and stored as supplied, \"yam\" refused; config_set_stores_yaml_and_toon: the playbook config set path stores yaml and toon and keeps an unknown value out",
+   "basis_note": "inherited public_repairs.rs and playbook settings.rs definitions (faithful transcriptions of the product literal list) with YAML/TOON neighbours; G7-m18 and G7-m30 re-run as R8a-m12 and R8a-m13 are killed, as is a case-sensitive yaml mutant R8a-m14.",
+   "instance_scoped": true,
+   "metadata_link": {
+    "page": ".g5/ontology/operations/settings.g5.md",
+    "block": "settings.report-format",
+    "model": ".g5/Verus_verification/coverage-20261117/iter75/r8a_settings.rs"
+   }
+  },
+  {
+   "id": "build.test.selection#1",
+   "old_grade": "partial",
+   "new_grade": "full",
+   "check": "proved",
+   "models": [
+    ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::valid_test_target",
+    ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::test_neighbors",
+    ".g5/Verus_verification/coverage-20261117/iter75/r8a_settings.rs::package_only_test_target_valid"
+   ],
+   "evidence_add": [
+    ".g5/uplift/coverage-20261117/iter75/mutations.jsonl",
+    ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+    ".g5/uplift/coverage-20261117/iter75/ledger/R8A.json",
+    ".g5/uplift/coverage-20261117/iter75/receipts/coverage-20261117__iter75__r8a_settings.rs.log"
+   ],
+   "support": "mutation-checked",
+   "mutations": [
+    "R8a-m15"
+   ],
+   "receipts": [
+    "receipts/coverage-20261117__iter75__r8a_settings.rs.log"
+   ],
+   "product": "src/cls/IPM/ResourceProcessor/Test.cls:615-621 %OnValidateObject: neither or both of Package and Class gives \"EXACTLY ONE ...\" error",
+   "neighbour": "package_only_test_target_valid: Package only and Class only valid; both and neither refused",
+   "basis_note": "inherited valid_test_target (faithful) with a Package-only neighbour; G6-m15 re-run as R8a-m15 is killed.",
+   "instance_scoped": true,
+   "metadata_link": {
+    "page": ".g5/ontology/concepts/testing-policy.g5.md",
+    "block": "build.test.selection",
+    "model": ".g5/Verus_verification/coverage-20261117/iter75/r8a_settings.rs"
+   }
+  }
+ ],
+ "bindings": [
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/r8a_import.rs::recursive_import_reaches_subdirectory",
+   "file": "src/cls/IPM/Main.cls",
+   "member": "%IPM.Main::Import",
+   "lines": "3334,3352-3358",
+   "role": "neighbour",
+   "note": "tRecurse from -norecurse passed to ImportDir"
+  },
+  {
+   "formal": ".g5/Verus_verification/consolidated/iter49/importcmd.rs::selected",
+   "file": "src/cls/IPM/Main.cls",
+   "member": "%IPM.Main::Import",
+   "lines": "3350-3374",
+   "role": "decide",
+   "note": "directory/file/missing branch; missing path throws before any load"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/r8a_import.rs::missing_path_defines_nothing",
+   "file": "src/cls/IPM/Main.cls",
+   "member": "%IPM.Main::Import",
+   "lines": "3371-3374",
+   "role": "neighbour",
+   "note": "FileDoesNotExist thrown before UserAction and load"
+  },
+  {
+   "formal": ".g5/Verus_verification/consolidated/iter15/oras.rs::tag_for",
+   "file": "src/cls/IPM/Repo/Oras/PackageService.cls",
+   "member": "%IPM.Repo.Oras.PackageService::TagForReference",
+   "lines": "270-280",
+   "role": "decide",
+   "note": "Semver2Tag (Common.inc:82) and __platform for deployed; deployed without platform throws"
+  },
+  {
+   "formal": ".g5/Verus_verification/consolidated/iter8/catalog.rs::tag_for",
+   "file": "src/cls/IPM/Repo/Oras/PackageService.cls",
+   "member": "%IPM.Repo.Oras.PackageService::TagForReference",
+   "lines": "273-279",
+   "role": "decide",
+   "note": "abstract tag kind"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/r8a_oras.rs::source_tag_is_encoded_version",
+   "file": "src/inc/IPM/Common.inc",
+   "member": "Semver2Tag",
+   "lines": "82,86",
+   "role": "neighbour",
+   "note": "+ to _, separator __"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/r8a_oras.rs::only_deployed_reference_needs_platform",
+   "file": "src/cls/IPM/Repo/Oras/PackageService.cls",
+   "member": "%IPM.Repo.Oras.PackageService::TagForReference",
+   "lines": "273-276",
+   "role": "neighbour",
+   "note": "only Deployed checks PlatformVersion"
+  },
+  {
+   "formal": ".g5/Verus_verification/consolidated/iter2/registry.rs::remote_cache",
+   "file": "src/cls/IPM/Repo/Remote/PublishManager.cls",
+   "member": "%IPM.Repo.Remote.PublishManager::CheckServiceCache",
+   "lines": "12-43",
+   "role": "decide",
+   "note": "UnavailableNames, ServiceCache, Enabled read and IsAvailable only when uncached"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/r8a_oras.rs::retained_remote_client_is_not_reprobed",
+   "file": "src/cls/IPM/Repo/Remote/PublishManager.cls",
+   "member": "%IPM.Repo.Remote.PublishManager::CheckServiceCache",
+   "lines": "38-41",
+   "role": "neighbour",
+   "note": "cached client: pAvailable = 1, no provider call"
+  },
+  {
+   "formal": ".g5/Verus_verification/consolidated/iter2/registry.rs::oras_cache",
+   "file": "src/cls/IPM/Repo/Oras/PublishManager.cls",
+   "member": "%IPM.Repo.Oras.PublishManager::CheckServiceCache",
+   "lines": "4-20",
+   "role": "decide",
+   "note": "no cache; Enabled and IsAvailable every call"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/r8a_oras.rs::oras_manager_probes_each_call",
+   "file": "src/cls/IPM/Repo/Oras/PublishManager.cls",
+   "member": "%IPM.Repo.Oras.PublishManager::CheckServiceCache",
+   "lines": "15-18",
+   "role": "neighbour",
+   "note": "probe answer is pAvailable"
+  },
+  {
+   "formal": ".g5/Verus_verification/consolidated/verus/thin_surfaces.rs::oras_available",
+   "file": "src/cls/IPM/Repo/Oras/PackageService.cls",
+   "member": "%IPM.Repo.Oras.PackageService::IsAvailable",
+   "lines": "93-109",
+   "role": "decide",
+   "note": "transport, 2xx, 401 + WWW-Authenticate"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/r8a_oras.rs::oras_available_neighbors",
+   "file": "src/cls/IPM/Repo/Oras/PackageService.cls",
+   "member": "%IPM.Repo.Oras.PackageService::IsAvailable",
+   "lines": "98-108",
+   "role": "neighbour",
+   "note": "five status cases"
+  },
+  {
+   "formal": ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::format_valid",
+   "file": "src/cls/IPM/Repo/UniversalSettings.cls",
+   "member": "%IPM.Repo.UniversalSettings::SetTestReportFormat",
+   "lines": "225-233",
+   "role": "decide",
+   "note": "lowercased value in VALIDFORMATS (Test/Abstract.cls:7) or empty"
+  },
+  {
+   "formal": "playbook-uplift/models/verus/settings.rs::valid_trf",
+   "file": "src/cls/IPM/Test/Abstract.cls",
+   "member": "%IPM.Test.Abstract::VALIDFORMATS",
+   "lines": "7",
+   "role": "decide",
+   "note": "json,yaml,toon as codes 10,11,12"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/r8a_settings.rs::yaml_and_toon_accepted",
+   "file": "src/cls/IPM/Repo/UniversalSettings.cls",
+   "member": "%IPM.Repo.UniversalSettings::SetTestReportFormat",
+   "lines": "228-232",
+   "role": "neighbour",
+   "note": "stores val as supplied"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/r8a_settings.rs::config_set_stores_yaml_and_toon",
+   "file": "src/cls/IPM/Repo/UniversalSettings.cls",
+   "member": "%IPM.Repo.UniversalSettings::UpdateOne",
+   "lines": "123-125",
+   "role": "neighbour",
+   "note": "config set routes TestReportFormat to SetTestReportFormat"
+  },
+  {
+   "formal": ".g5/Verus_verification/consolidated/iter3/public_repairs.rs::valid_test_target",
+   "file": "src/cls/IPM/ResourceProcessor/Test.cls",
+   "member": "%IPM.ResourceProcessor.Test::%OnValidateObject",
+   "lines": "615-621",
+   "role": "decide",
+   "note": "exactly one of Package and Class"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/r8a_settings.rs::package_only_test_target_valid",
+   "file": "src/cls/IPM/ResourceProcessor/Test.cls",
+   "member": "%IPM.ResourceProcessor.Test::%OnValidateObject",
+   "lines": "617",
+   "role": "neighbour",
+   "note": "Package-only admitted"
+  }
+ ],
+ "not_done": [],
+ "cost": "fork R8A: about 25 minutes wall, 15 mutation runs (all killed), 3 receipts; tokens not visible to the fork"
+}

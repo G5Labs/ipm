@@ -177,20 +177,29 @@
      "text": "-delete removes server items whose files were deleted (and their baselines).",
      "cases": "-delete with a deleted compilable file vs without",
      "observation": "presence of the server document; baseline row",
-     "grade": "partial",
+     "grade": "full",
      "check": "proved",
      "models": [
+      ".g5/Verus_verification/consolidated/iter32/sync.rs::sync_file",
       ".g5/Verus_verification/consolidated/iter32/sync.rs::delete_flag_removes_compilable",
-      ".g5/Verus_verification/consolidated/iter32/sync.rs::delete_schedule"
+      ".g5/Verus_verification/coverage-20261117/iter75/r8b_sync.rs::delete_flag_removes_baseline",
+      ".g5/Verus_verification/coverage-20261117/iter75/r8b_sync.rs::no_flag_keeps_baseline",
+      ".g5/Verus_verification/coverage-20261117/iter75/r8b_sync.rs::baseline_neighbors"
      ],
      "evidence": [
       ".g5/uplift/consolidated/iter32/run.json",
       ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json",
-      ".g5/uplift/coverage-20261117/iter72/mutations/G5.jsonl"
+      ".g5/uplift/coverage-20261117/iter72/mutations/G5.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/mutations.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata; iteration-72 rule-4a re-audit (G5): partial, support mutation-checked (mutations G5-m01; control .g5/Verus_verification/consolidated/iter32/cases.json: delete-keeps-document (document half))",
-     "assessed_in": "iteration-72",
-     "gap": "Rule 4a (iteration-72): The baseline row removal is never asserted. G5-m01, which keeps the baseline row of a deleted file, survives. Only server-document presence is observed."
+     "basis": "new:iteration-75 (Baseline removal is now asserted on both sides; G5-m01 replay (R8b-m09) and a compilable-only baseline removal mutant (R8b-m10) are killed. A SyncCompile failure throws before CommitChanges and is not represented (outside the stated cases).) || earlier: reused:.g5/ontology/features/developer-tools.g5.md metadata; iteration-72 rule-4a re-audit (G5): partial, support mutation-checked (mutations G5-m01; control .g5/Verus_verification/consolidated/iter32/cases.json: delete-keeps-document (document half))",
+     "assessed_in": "iteration-75",
+     "support": "mutation-checked",
+     "mutations": [
+      "R8b-m09",
+      "R8b-m10"
+     ]
     },
     {
      "id": "devtools.sync#6",
@@ -710,22 +719,28 @@
      "text": "Only already-defined class files and all non-class files are recompiled; resources compiled from a deployed project are skipped without a warning.",
      "cases": "undefined class vs routine vs CompileFromProject resource",
      "observation": "compile called; warning count",
-     "grade": "partial",
+     "grade": "full",
      "check": "proved",
      "models": [
-      ".g5/Verus_verification/consolidated/iter4/sync_compile.rs::sync_compile_neighbors",
+      ".g5/Verus_verification/consolidated/iter4/sync_compile.rs::eligible",
       ".g5/Verus_verification/consolidated/iter4/sync_compile.rs::kept",
-      ".g5/Verus_verification/consolidated/iter4/sync_compile.rs::eligible"
+      ".g5/Verus_verification/consolidated/iter4/sync_compile.rs::sync_compile_neighbors",
+      ".g5/Verus_verification/coverage-20261117/iter75/r8b_sync.rs::project_resource_neighbors"
      ],
      "evidence": [
       ".g5/uplift/consolidated/iter4/run_all.json",
       ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
       ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json",
-      ".g5/uplift/coverage-20261117/iter72/mutations/G5.jsonl"
+      ".g5/uplift/coverage-20261117/iter72/mutations/G5.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/mutations.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata; iteration-72 rule-4a re-audit (G5): partial, support mutation-checked (mutations G5-m02, G5-m03, G5-m06)",
-     "assessed_in": "iteration-72",
-     "gap": "Rule 4a (iteration-72): The rule that skips a deployed-project resource in the compile set is never exercised. The only project neighbour has resolve_ok false, so G5-m02, which compiles project resources, survives. The warning half (G5-m03) and the undefined-class/routine split (G5-m06) are killed."
+     "basis": "new:iteration-75 (The project skip is now exercised with resolution succeeding; G5-m02 replay (R8b-m11) killed. The warning half (G5-m03) and the undefined-class/routine split (G5-m06) were killed in iteration 72.) || earlier: reused:.g5/ontology/features/developer-tools.g5.md metadata; iteration-72 rule-4a re-audit (G5): partial, support mutation-checked (mutations G5-m02, G5-m03, G5-m06)",
+     "assessed_in": "iteration-75",
+     "support": "mutation-checked",
+     "mutations": [
+      "R8b-m11"
+     ]
     }
    ]
   },
@@ -1468,21 +1483,31 @@
      "text": "import loads class files and compiles them; a directory is searched recursively unless -norecurse; -nocompile loads without compiling.",
      "cases": "subdirectory item with/without -norecurse; -nocompile",
      "observation": "defined / compiled",
-     "grade": "partial",
+     "grade": "full",
      "check": "proved",
      "models": [
+      ".g5/Verus_verification/consolidated/iter49/importcmd.rs::selected",
       ".g5/Verus_verification/consolidated/iter49/importcmd.rs::norecurse_skips_subdirectories",
       ".g5/Verus_verification/consolidated/iter49/importcmd.rs::nocompile_defines_only",
-      ".g5/Verus_verification/consolidated/iter49/importcmd.rs::selected"
+      ".g5/Verus_verification/coverage-20261117/iter75/r8a_import.rs::recursive_import_reaches_subdirectory"
      ],
      "evidence": [
       ".g5/uplift/consolidated/iter49/run.json",
       ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json",
-      ".g5/uplift/coverage-20261117/iter72/mutations/G5.jsonl"
+      ".g5/uplift/coverage-20261117/iter72/mutations/G5.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/mutations.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/ledger/R8A.json",
+      ".g5/uplift/coverage-20261117/iter75/receipts/coverage-20261117__iter75__r8a_import.rs.log",
+      ".g5/uplift/consolidated/iter49/native/20261116T180209444815Z/observations.json"
      ],
-     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata; iteration-72 rule-4a re-audit (G5): partial, support mutation-checked (mutations G5-m10; control .g5/Verus_verification/consolidated/iter49/cases.json: norecurse-ignored, nocompile-ignored)",
-     "assessed_in": "iteration-72",
-     "gap": "Rule 4a (iteration-72): The recursive case (a subdirectory item imported without -norecurse) is never asserted. G5-m10, which never recurses, survives. The -norecurse and -nocompile halves are controlled."
+     "basis": "new:iteration-75 (inherited iter49 selected (faithful) with a recursion neighbour; G5-m10 re-run as R8a-m01 is killed. The ImportDir recursion premise is covered by the iteration-49 native receipt (case i2).) || earlier: reused:.g5/ontology/features/developer-tools.g5.md metadata; iteration-72 rule-4a re-audit (G5): partial, support mutation-checked (mutations G5-m10; control .g5/Verus_verification/consolidated/iter49/cases.json: norecurse-ignored, nocompile-ignored)",
+     "assessed_in": "iteration-75",
+     "support": "mutation-checked",
+     "instance_scoped": true,
+     "mutations": [
+      "R8a-m01"
+     ]
     },
     {
      "id": "devtools.authoring.import#2",
@@ -1513,20 +1538,29 @@
      "text": "A missing path fails before anything loads.",
      "cases": "missing vs existing path",
      "observation": "status; items defined; source-control actions",
-     "grade": "partial",
+     "grade": "full",
      "check": "proved",
      "models": [
+      ".g5/Verus_verification/consolidated/iter49/importcmd.rs::selected",
       ".g5/Verus_verification/consolidated/iter49/importcmd.rs::missing_path_fails",
-      ".g5/Verus_verification/consolidated/iter49/importcmd.rs::selected"
+      ".g5/Verus_verification/coverage-20261117/iter75/r8a_import.rs::missing_path_defines_nothing"
      ],
      "evidence": [
       ".g5/uplift/consolidated/iter49/run.json",
       ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json",
-      ".g5/uplift/coverage-20261117/iter72/mutations/G5.jsonl"
+      ".g5/uplift/coverage-20261117/iter72/mutations/G5.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/mutations.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/ledger/R8A.json",
+      ".g5/uplift/coverage-20261117/iter75/receipts/coverage-20261117__iter75__r8a_import.rs.log",
+      ".g5/uplift/consolidated/iter49/native/20261116T180209444815Z/observations.json"
      ],
-     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata; iteration-72 rule-4a re-audit (G5): partial, support mutation-checked (mutations G5-m11)",
-     "assessed_in": "iteration-72",
-     "gap": "Rule 4a (iteration-72): The obligation observes the items defined, but defined() for a missing path is never asserted. G5-m11, which selects items for a missing path, survives. Only the status and the missing source-control calls are pinned."
+     "basis": "new:iteration-75 (inherited iter49 selected (faithful) with a general missing-path neighbour; G5-m11 re-run as R8a-m02 is killed. Iteration-49 native case i6 observed the failure.) || earlier: reused:.g5/ontology/features/developer-tools.g5.md metadata; iteration-72 rule-4a re-audit (G5): partial, support mutation-checked (mutations G5-m11)",
+     "assessed_in": "iteration-75",
+     "support": "mutation-checked",
+     "mutations": [
+      "R8a-m02"
+     ]
     },
     {
      "id": "devtools.authoring.import#4",
@@ -1628,23 +1662,32 @@
      "text": "major, minor and patch bump that part and reset later parts; -prerelease and -build then set those parts.",
      "cases": "each bump kind; with pre/build",
      "observation": "resulting version",
-     "grade": "partial",
+     "grade": "full",
      "check": "proved",
      "models": [
+      ".g5/Verus_verification/consolidated/verus/owners.rs::module_version",
       ".g5/Verus_verification/consolidated/verus/owners.rs::bump",
       ".g5/Verus_verification/consolidated/verus/owners.rs::with_pre",
       ".g5/Verus_verification/consolidated/verus/owners.rs::with_build",
-      ".g5/Verus_verification/consolidated/verus/owners.rs::bump_preserves_unselected_core"
+      ".g5/Verus_verification/coverage-20261117/iter75/r8b_versioning.rs::pre_and_build_applied"
      ],
      "evidence": [
       ".g5/Verus_verification/consolidated/verus/owners-results.json",
       ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
       ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json",
-      ".g5/uplift/coverage-20261117/iter72/mutations/G5.jsonl"
+      ".g5/uplift/coverage-20261117/iter72/mutations/G5.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/mutations.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata; iteration-72 rule-4a re-audit (G5): partial, support mutation-checked (mutations G5-m13, G5-m14)",
-     "assessed_in": "iteration-72",
-     "gap": "Rule 4a (iteration-72): Bumping is pinned (G5-m13 killed), but applying -prerelease and -build is never asserted. G5-m14, which drops -prerelease from module_version, survives, and with_pre is only checked to preserve build."
+     "basis": "new:iteration-75 (Applying -prerelease and -build is now asserted through module_version; G5-m14 replay (R8b-m12), a -build-ignored mutant (R8b-m13) and a WithPrerelease-drops-build mutant (R8b-m14) are killed. Bumping was killed in iteration 72 (G5-m13).) || earlier: reused:.g5/ontology/features/developer-tools.g5.md metadata; iteration-72 rule-4a re-audit (G5): partial, support mutation-checked (mutations G5-m13, G5-m14)",
+     "assessed_in": "iteration-75",
+     "support": "mutation-checked",
+     "instance_scoped": true,
+     "mutations": [
+      "R8b-m12",
+      "R8b-m13",
+      "R8b-m14"
+     ]
     },
     {
      "id": "devtools.authoring.module-version#3",
@@ -2332,22 +2375,30 @@
      "text": "The installed namespace and app-default marker are left out so installation can choose them.",
      "cases": "provider namespace / NamespaceDefault present",
      "observation": "keys absent",
-     "grade": "partial",
+     "grade": "full",
      "check": "proved",
      "models": [
       ".g5/Verus_verification/consolidated/iter8/webapps.rs::generated_props",
       ".g5/Verus_verification/consolidated/iter8/webapps.rs::skipped",
-      ".g5/Verus_verification/consolidated/iter8/webapps.rs::generated_neighbors"
+      ".g5/Verus_verification/consolidated/iter8/webapps.rs::generated_neighbors",
+      ".g5/Verus_verification/coverage-20261117/iter75/webapps_neighbours.rs::namespace_and_default_marker_left_out"
      ],
      "evidence": [
       ".g5/uplift/consolidated/iter8/run.json",
       ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
       ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json",
-      ".g5/uplift/coverage-20261117/iter72/mutations/G5.jsonl"
+      ".g5/uplift/coverage-20261117/iter72/mutations/G5.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/mutations.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+      ".g5/Verus_verification/coverage-20261117/iter75/webapps_neighbours.rs"
      ],
-     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata; iteration-72 rule-4a re-audit (G5): partial, support mutation-checked (mutations G5-m16)",
-     "assessed_in": "iteration-72",
-     "gap": "Rule 4a (iteration-72): The app-default marker (NamespaceDefault) case is never exercised. G5-m16, which keeps NamespaceDefault, survives. Only Namespace is asserted absent."
+     "basis": "new:iteration-75 (The NamespaceDefault case is now exercised beside a written non-skipped property; G5-m16 rerun as R4-m04 and a dropped NameSpace skip (R4-m05) are killed.) || earlier: reused:.g5/ontology/features/developer-tools.g5.md metadata; iteration-72 rule-4a re-audit (G5): partial, support mutation-checked (mutations G5-m16)",
+     "assessed_in": "iteration-75",
+     "support": "mutation-checked",
+     "mutations": [
+      "R4-m04",
+      "R4-m05"
+     ]
     },
     {
      "id": "devtools.generate.webapps#4",
@@ -2357,22 +2408,31 @@
      "text": "A file-serving app with no dispatch class gets a Path; an old path under the CSP root becomes {$cspdir}...; dispatch-only apps get no file path.",
      "cases": "dispatch vs none; path under root vs not",
      "observation": "generated Path expression",
-     "grade": "partial",
+     "grade": "full",
      "check": "proved",
      "models": [
-      ".g5/Verus_verification/consolidated/iter8/webapps.rs::generated_path",
-      ".g5/Verus_verification/consolidated/iter8/webapps.rs::manifest_path",
+      ".g5/Verus_verification/coverage-20261117/iter75/webapps_neighbours.rs::generated_path75",
+      ".g5/Verus_verification/coverage-20261117/iter75/webapps_neighbours.rs::replace_root",
+      ".g5/Verus_verification/coverage-20261117/iter75/webapps_neighbours.rs::path_neighbours",
       ".g5/Verus_verification/consolidated/iter8/webapps.rs::generated_neighbors"
      ],
      "evidence": [
       ".g5/uplift/consolidated/iter8/run.json",
       ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
       ".g5/uplift/coverage-20261117/iter72/audit/features__developer-tools.json",
-      ".g5/uplift/coverage-20261117/iter72/mutations/G5.jsonl"
+      ".g5/uplift/coverage-20261117/iter72/mutations/G5.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/mutations.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+      ".g5/Verus_verification/coverage-20261117/iter75/webapps_neighbours.rs"
      ],
-     "basis": "reused:.g5/ontology/features/developer-tools.g5.md metadata; iteration-72 rule-4a re-audit (G5): partial, support mutation-checked (mutations G5-m17)",
-     "assessed_in": "iteration-72",
-     "gap": "Rule 4a (iteration-72): The path-not-under-CSP-root case (a Literal path) is never asserted. G5-m17, which makes every path {$cspdir}-relative, survives. The dispatch and under-root cases are pinned."
+     "basis": "new:iteration-75 (Corrected successor generated_path75/replace_root: the inherited manifest_path tests a prefix, which is not faithful to the product $replace for a path that contains the root after its start. The outside-root and dispatch cases are asserted; R4-m06/m07 survived the first neighbour file (asserted replace_root, not generated_path75) and were rerun as R4-m06b (G5-m17 analogue) and R4-m07b (prefix-only semantics), both killed, as is R4-m08b (dispatch apps get a Path).) || earlier: reused:.g5/ontology/features/developer-tools.g5.md metadata; iteration-72 rule-4a re-audit (G5): partial, support mutation-checked (mutations G5-m17)",
+     "assessed_in": "iteration-75",
+     "support": "mutation-checked",
+     "mutations": [
+      "R4-m06b",
+      "R4-m07b",
+      "R4-m08b"
+     ]
     },
     {
      "id": "devtools.generate.webapps#5",

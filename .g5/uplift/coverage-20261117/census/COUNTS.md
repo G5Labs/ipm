@@ -2,39 +2,39 @@
 
 Inventory blocks: 265. Status: enumerated 258, structural 7, unenumerated 0, stale 0.
 
-Assessed obligations: 1105 (full 605, partial 341, absent 159, unassessed 0).
-Design checks on assessed obligations: proved 643, bounded 19, refuted 66, unchecked 218, none 159. Full with a passing (proved or bounded) check: 544.
-Assessed-scope coverage: 0.5475 (upper bound with unassessed 0.5475). Whole-foundation coverage: 0.5475.
+Assessed obligations: 1105 (full 649, partial 297, absent 159, unassessed 0).
+Design checks on assessed obligations: proved 647, bounded 19, refuted 67, unchecked 213, none 159. Full with a passing (proved or bounded) check: 586.
+Assessed-scope coverage: 0.5873 (upper bound with unassessed 0.5873). Whole-foundation coverage: 0.5873.
 
 | Page | Blocks | Unenumerated or stale | Full | Partial | Absent | Unassessed |
 |---|---|---|---|---|---|---|
-| architecture/lifecycle.g5.md | 15 | 0 | 37 | 27 | 5 | 0 |
-| architecture/package-sources.g5.md | 12 | 0 | 39 | 17 | 7 | 0 |
+| architecture/lifecycle.g5.md | 15 | 0 | 41 | 23 | 5 | 0 |
+| architecture/package-sources.g5.md | 12 | 0 | 49 | 7 | 7 | 0 |
 | concepts/data-policy.g5.md | 12 | 0 | 17 | 9 | 8 | 0 |
 | concepts/download-security.g5.md | 5 | 0 | 11 | 1 | 1 | 0 |
 | concepts/repositories.g5.md | 6 | 0 | 11 | 3 | 2 | 0 |
-| concepts/testing-policy.g5.md | 11 | 0 | 33 | 7 | 3 | 0 |
+| concepts/testing-policy.g5.md | 11 | 0 | 34 | 6 | 3 | 0 |
 | concepts/transactions-and-dev-mode.g5.md | 10 | 0 | 23 | 12 | 6 | 0 |
 | concepts/versions.g5.md | 7 | 0 | 19 | 2 | 0 | 0 |
-| features/artifact-download.g5.md | 6 | 0 | 12 | 10 | 5 | 0 |
-| features/build-and-publish.g5.md | 12 | 0 | 19 | 24 | 4 | 0 |
-| features/dependencies.g5.md | 5 | 0 | 8 | 12 | 3 | 0 |
-| features/developer-tools.g5.md | 18 | 0 | 52 | 31 | 14 | 0 |
+| features/artifact-download.g5.md | 6 | 0 | 17 | 5 | 5 | 0 |
+| features/build-and-publish.g5.md | 12 | 0 | 20 | 23 | 4 | 0 |
+| features/dependencies.g5.md | 5 | 0 | 9 | 11 | 3 | 0 |
+| features/developer-tools.g5.md | 18 | 0 | 59 | 24 | 14 | 0 |
 | features/history.g5.md | 24 | 0 | 69 | 20 | 22 | 0 |
 | features/inspection.g5.md | 10 | 0 | 25 | 16 | 10 | 0 |
 | features/install.g5.md | 7 | 0 | 17 | 5 | 2 | 0 |
-| features/load.g5.md | 22 | 0 | 40 | 22 | 13 | 0 |
-| features/manifest.g5.md | 10 | 0 | 23 | 26 | 6 | 0 |
+| features/load.g5.md | 22 | 0 | 42 | 20 | 13 | 0 |
+| features/manifest.g5.md | 10 | 0 | 28 | 21 | 6 | 0 |
 | features/package-commands.g5.md | 3 | 0 | 1 | 2 | 0 | 0 |
 | features/packaging-deployed-code.g5.md | 4 | 0 | 12 | 5 | 2 | 0 |
-| features/resources.g5.md | 18 | 0 | 40 | 36 | 14 | 0 |
-| features/uninstall.g5.md | 13 | 0 | 28 | 12 | 3 | 0 |
-| features/update.g5.md | 7 | 0 | 12 | 8 | 4 | 0 |
-| features/web-applications.g5.md | 8 | 0 | 14 | 13 | 5 | 0 |
+| features/resources.g5.md | 18 | 0 | 42 | 34 | 14 | 0 |
+| features/uninstall.g5.md | 13 | 0 | 30 | 10 | 3 | 0 |
+| features/update.g5.md | 7 | 0 | 13 | 7 | 4 | 0 |
+| features/web-applications.g5.md | 8 | 0 | 16 | 11 | 5 | 0 |
 | operations/ipm-setup.g5.md | 3 | 0 | 1 | 3 | 5 | 0 |
 | operations/namespaces.g5.md | 8 | 0 | 21 | 6 | 5 | 0 |
 | operations/repositories.g5.md | 2 | 0 | 1 | 2 | 3 | 0 |
-| operations/settings.g5.md | 7 | 0 | 20 | 10 | 7 | 0 |
+| operations/settings.g5.md | 7 | 0 | 21 | 9 | 7 | 0 |
 
 | Block | Status | Full | Partial | Absent | Unassessed | Coverage |
 |---|---|---|---|---|---|---|
@@ -45,26 +45,26 @@ Assessed-scope coverage: 0.5475 (upper bound with unassessed 0.5475). Whole-foun
 | lifecycle.module-action | enumerated | 1 | 1 | 1 | 0 | 0.3333 |
 | lifecycle.alias | enumerated | 1 | 1 | 0 | 0 | 0.5 |
 | lifecycle.only | enumerated | 3 | 0 | 0 | 0 | 1.0 |
-| lifecycle.custom | enumerated | 6 | 2 | 1 | 0 | 0.6667 |
-| module.lifecycle-class | enumerated | 0 | 5 | 1 | 0 | 0.0 |
+| lifecycle.custom | enumerated | 8 | 0 | 1 | 0 | 0.8889 |
+| module.lifecycle-class | enumerated | 1 | 4 | 1 | 0 | 0.1667 |
 | lifecycle.hooks | enumerated | 0 | 1 | 0 | 0 | 0.0 |
 | module.invoke | enumerated | 5 | 2 | 0 | 0 | 0.7143 |
 | lifecycle.installer | enumerated | 4 | 4 | 0 | 0 | 0.5 |
 | lifecycle.installer.parameters | enumerated | 1 | 0 | 0 | 0 | 1.0 |
 | lifecycle.source-control | enumerated | 3 | 3 | 0 | 0 | 0.5 |
-| lifecycle.source-control.editor | enumerated | 3 | 3 | 1 | 0 | 0.4286 |
-| repo.filesystem | enumerated | 5 | 2 | 1 | 0 | 0.625 |
+| lifecycle.source-control.editor | enumerated | 4 | 2 | 1 | 0 | 0.5714 |
+| repo.filesystem | enumerated | 7 | 0 | 1 | 0 | 0.875 |
 | repo.filesystem.duplicates | enumerated | 7 | 0 | 0 | 0 | 1.0 |
 | repo.filesystem.mutable-source | enumerated | 3 | 0 | 0 | 0 | 1.0 |
-| repo.oras | enumerated | 0 | 1 | 6 | 0 | 0.0 |
-| repo.oras.integrity | enumerated | 3 | 4 | 0 | 0 | 0.4286 |
-| repo.oras.archive-boundary | enumerated | 0 | 4 | 0 | 0 | 0.0 |
+| repo.oras | enumerated | 1 | 0 | 6 | 0 | 0.1429 |
+| repo.oras.integrity | enumerated | 5 | 2 | 0 | 0 | 0.7143 |
+| repo.oras.archive-boundary | enumerated | 1 | 3 | 0 | 0 | 0.25 |
 | repo.oras.signed-admission | enumerated | 4 | 0 | 0 | 0 | 1.0 |
-| repo.oras.tag-decode | enumerated | 1 | 2 | 0 | 0 | 0.3333 |
+| repo.oras.tag-decode | enumerated | 3 | 0 | 0 | 0 | 1.0 |
 | repo.oras.platform-selection | enumerated | 5 | 0 | 0 | 0 | 1.0 |
 | repo.oras.selection-modes | enumerated | 7 | 1 | 0 | 0 | 0.875 |
 | repo.oras.build-readers | enumerated | 2 | 1 | 0 | 0 | 0.6667 |
-| repo.publish-cache | enumerated | 2 | 2 | 0 | 0 | 0.5 |
+| repo.publish-cache | enumerated | 4 | 0 | 0 | 0 | 1.0 |
 | module | structural | 0 | 0 | 0 | 0 | N/A |
 | module.identity | enumerated | 0 | 1 | 1 | 0 | 0.0 |
 | module.resource | enumerated | 0 | 1 | 1 | 0 | 0.0 |
@@ -89,7 +89,7 @@ Assessed-scope coverage: 0.5475 (upper bound with unassessed 0.5475). Whole-foun
 | repo.install.version-request | enumerated | 1 | 0 | 0 | 0 | 1.0 |
 | repo.search.version-list | enumerated | 2 | 0 | 0 | 0 | 1.0 |
 | module.resource.scope | enumerated | 2 | 0 | 0 | 0 | 1.0 |
-| build.test.selection | enumerated | 5 | 2 | 0 | 0 | 0.7143 |
+| build.test.selection | enumerated | 6 | 1 | 0 | 0 | 0.8571 |
 | build.test.outcome | enumerated | 3 | 2 | 0 | 0 | 0.6 |
 | build.test.outcome.not-fatal | enumerated | 1 | 0 | 1 | 0 | 0.5 |
 | build.test.outcome.empty | enumerated | 2 | 0 | 1 | 0 | 0.6667 |
@@ -117,11 +117,11 @@ Assessed-scope coverage: 0.5475 (upper bound with unassessed 0.5475). Whole-foun
 | version.range.combine | enumerated | 3 | 1 | 0 | 0 | 0.75 |
 | version.range.snapshot-intersection | enumerated | 2 | 0 | 0 | 0 | 1.0 |
 | artifact | enumerated | 0 | 1 | 0 | 0 | 0.0 |
-| artifact.filter | enumerated | 1 | 4 | 0 | 0 | 0.2 |
+| artifact.filter | enumerated | 5 | 0 | 0 | 0 | 1.0 |
 | artifact.selection | enumerated | 5 | 2 | 1 | 0 | 0.625 |
 | artifact.failure | enumerated | 1 | 2 | 2 | 0 | 0.2 |
 | artifact.archive-admission | enumerated | 3 | 0 | 0 | 0 | 1.0 |
-| artifact.local-content | enumerated | 2 | 1 | 2 | 0 | 0.4 |
+| artifact.local-content | enumerated | 3 | 0 | 2 | 0 | 0.6 |
 | build | structural | 0 | 0 | 0 | 0 | N/A |
 | build.test | enumerated | 2 | 3 | 0 | 0 | 0.4 |
 | build.test-output | enumerated | 2 | 5 | 1 | 0 | 0.25 |
@@ -133,25 +133,25 @@ Assessed-scope coverage: 0.5475 (upper bound with unassessed 0.5475). Whole-foun
 | build.verify | enumerated | 0 | 1 | 1 | 0 | 0.0 |
 | build.publish | enumerated | 1 | 3 | 0 | 0 | 0.25 |
 | build.publish.external-identity | enumerated | 2 | 3 | 0 | 0 | 0.4 |
-| build.publish.partial-effects | enumerated | 5 | 1 | 0 | 0 | 0.8333 |
-| deps | enumerated | 0 | 3 | 1 | 0 | 0.0 |
+| build.publish.partial-effects | enumerated | 6 | 0 | 0 | 0 | 1.0 |
+| deps | enumerated | 1 | 2 | 1 | 0 | 0.25 |
 | deps.conflict | enumerated | 0 | 2 | 1 | 0 | 0.0 |
 | deps.installed | enumerated | 4 | 2 | 0 | 0 | 0.6667 |
 | deps.lockfile | enumerated | 2 | 4 | 1 | 0 | 0.2857 |
 | deps.lockfile.content | enumerated | 2 | 1 | 0 | 0 | 0.6667 |
 | devtools | structural | 0 | 0 | 0 | 0 | N/A |
-| devtools.sync | enumerated | 9 | 9 | 2 | 0 | 0.45 |
+| devtools.sync | enumerated | 10 | 8 | 2 | 0 | 0.5 |
 | devtools.sync.retry | enumerated | 1 | 0 | 0 | 0 | 1.0 |
-| devtools.sync.compile-after-resolve | enumerated | 3 | 2 | 0 | 0 | 0.6 |
+| devtools.sync.compile-after-resolve | enumerated | 4 | 1 | 0 | 0 | 0.8 |
 | devtools.sync.empty-hash | enumerated | 1 | 1 | 1 | 0 | 0.3333 |
 | devtools.sync.test-paths | enumerated | 3 | 0 | 1 | 0 | 0.75 |
 | devtools.sync.skipped-tracking | enumerated | 4 | 0 | 2 | 0 | 0.6667 |
 | devtools.authoring | enumerated | 1 | 1 | 4 | 0 | 0.1667 |
 | devtools.authoring.generate | enumerated | 3 | 2 | 2 | 0 | 0.4286 |
-| devtools.authoring.import | enumerated | 2 | 3 | 0 | 0 | 0.4 |
-| devtools.authoring.module-version | enumerated | 2 | 5 | 0 | 0 | 0.2857 |
+| devtools.authoring.import | enumerated | 4 | 1 | 0 | 0 | 0.8 |
+| devtools.authoring.module-version | enumerated | 3 | 4 | 0 | 0 | 0.4286 |
 | devtools.generate.resources | enumerated | 14 | 2 | 0 | 0 | 0.875 |
-| devtools.generate.webapps | enumerated | 2 | 4 | 0 | 0 | 0.3333 |
+| devtools.generate.webapps | enumerated | 4 | 2 | 0 | 0 | 0.6667 |
 | devtools.generate.cors | enumerated | 1 | 0 | 1 | 0 | 0.5 |
 | devtools.scripting | enumerated | 1 | 0 | 0 | 0 | 1.0 |
 | devtools.scripting.file-sequence | enumerated | 3 | 0 | 0 | 0 | 1.0 |
@@ -205,14 +205,14 @@ Assessed-scope coverage: 0.5475 (upper bound with unassessed 0.5475). Whole-foun
 | load.core | enumerated | 2 | 2 | 0 | 0 | 0.5 |
 | load.options | enumerated | 2 | 0 | 2 | 0 | 0.5 |
 | load.dependencies | enumerated | 2 | 1 | 0 | 0 | 0.6667 |
-| load.dependencies.local-repo | enumerated | 2 | 4 | 2 | 0 | 0.25 |
+| load.dependencies.local-repo | enumerated | 3 | 3 | 2 | 0 | 0.375 |
 | load.refusal | enumerated | 4 | 1 | 0 | 0 | 0.8 |
 | load.refusal.path | enumerated | 0 | 3 | 0 | 0 | 0.0 |
 | load.refusal.manifest | enumerated | 1 | 1 | 0 | 0 | 0.5 |
 | load.refusal.downgrade | enumerated | 3 | 0 | 1 | 0 | 0.75 |
 | load.refusal.update-required | enumerated | 3 | 0 | 1 | 0 | 0.75 |
 | load.refusal.requirements | enumerated | 2 | 1 | 0 | 0 | 0.6667 |
-| load.same-version | enumerated | 0 | 1 | 0 | 0 | 0.0 |
+| load.same-version | enumerated | 1 | 0 | 0 | 0 | 1.0 |
 | load.reload.root | enumerated | 4 | 0 | 0 | 0 | 1.0 |
 | load.outcome | enumerated | 3 | 3 | 0 | 0 | 0.5 |
 | load.outcome.dev | enumerated | 4 | 0 | 0 | 0 | 1.0 |
@@ -223,13 +223,13 @@ Assessed-scope coverage: 0.5475 (upper bound with unassessed 0.5475). Whole-foun
 | module.identity.document | enumerated | 4 | 3 | 0 | 0 | 0.5714 |
 | module.dependency | enumerated | 0 | 1 | 0 | 0 | 0.0 |
 | module.requirement | enumerated | 0 | 0 | 2 | 0 | 0.0 |
-| module.requirement.values | enumerated | 4 | 4 | 1 | 0 | 0.4444 |
+| module.requirement.values | enumerated | 5 | 3 | 1 | 0 | 0.5556 |
 | module.parameter | enumerated | 2 | 1 | 1 | 0 | 0.5 |
-| module.parameter.expressions | enumerated | 6 | 6 | 1 | 0 | 0.4615 |
+| module.parameter.expressions | enumerated | 8 | 4 | 1 | 0 | 0.6154 |
 | module.parameter.literal-values | enumerated | 2 | 0 | 0 | 0 | 1.0 |
 | module.parameter.cycles | enumerated | 0 | 3 | 0 | 0 | 0.0 |
 | module.list.delimiter | enumerated | 2 | 0 | 0 | 0 | 1.0 |
-| module.env | enumerated | 3 | 8 | 1 | 0 | 0.25 |
+| module.env | enumerated | 5 | 6 | 1 | 0 | 0.4167 |
 | ipm | structural | 0 | 0 | 0 | 0 | N/A |
 | ipm.shell | enumerated | 0 | 0 | 0 | 0 | N/A |
 | ipm.shell.forms | enumerated | 1 | 2 | 0 | 0 | 0.3333 |
@@ -241,7 +241,7 @@ Assessed-scope coverage: 0.5475 (upper bound with unassessed 0.5475). Whole-foun
 | module.processor.defaults | enumerated | 3 | 4 | 0 | 0 | 0.4286 |
 | module.processor.default-sweep | enumerated | 1 | 0 | 0 | 0 | 1.0 |
 | module.placement | enumerated | 5 | 3 | 1 | 0 | 0.5556 |
-| module.global.roundtrip | enumerated | 1 | 1 | 1 | 0 | 0.3333 |
+| module.global.roundtrip | enumerated | 2 | 0 | 1 | 0 | 0.6667 |
 | module.processor.deepsee | enumerated | 0 | 4 | 1 | 0 | 0.0 |
 | module.processor.interoperability | enumerated | 1 | 2 | 1 | 0 | 0.25 |
 | module.processor.localized-messages | enumerated | 2 | 2 | 0 | 0 | 0.5 |
@@ -250,13 +250,13 @@ Assessed-scope coverage: 0.5475 (upper bound with unassessed 0.5475). Whole-foun
 | module.processor.file-copy | enumerated | 3 | 7 | 1 | 0 | 0.2727 |
 | module.processor.file-copy.protection | enumerated | 6 | 0 | 2 | 0 | 0.75 |
 | module.processor.file-copy.unix-overlay | enumerated | 1 | 2 | 1 | 0 | 0.25 |
-| module.processor.cpf | enumerated | 3 | 2 | 1 | 0 | 0.5 |
+| module.processor.cpf | enumerated | 4 | 1 | 1 | 0 | 0.6667 |
 | module.processor.cpf-effects | enumerated | 0 | 2 | 0 | 0 | 0.0 |
 | module.system-setting | enumerated | 2 | 1 | 1 | 0 | 0.5 |
 | module.python | enumerated | 0 | 1 | 2 | 0 | 0.0 |
 | module.python.explicit-wheel | enumerated | 6 | 2 | 0 | 0 | 0.75 |
 | uninstall | enumerated | 2 | 0 | 1 | 0 | 0.6667 |
-| uninstall.cleanup | enumerated | 3 | 5 | 0 | 0 | 0.375 |
+| uninstall.cleanup | enumerated | 5 | 3 | 0 | 0 | 0.625 |
 | uninstall.package-ownership | enumerated | 3 | 1 | 0 | 0 | 0.75 |
 | uninstall.class-delete-error | enumerated | 2 | 0 | 0 | 0 | 1.0 |
 | uninstall.dependents | enumerated | 2 | 0 | 2 | 0 | 0.5 |
@@ -274,7 +274,7 @@ Assessed-scope coverage: 0.5475 (upper bound with unassessed 0.5475). Whole-foun
 | update.requirements | enumerated | 0 | 2 | 0 | 0 | 0.0 |
 | update.steps | enumerated | 5 | 2 | 0 | 0 | 0.7143 |
 | update.steps.shared-execution | enumerated | 3 | 0 | 0 | 0 | 1.0 |
-| update.steps.records | enumerated | 2 | 1 | 0 | 0 | 0.6667 |
+| update.steps.records | enumerated | 3 | 0 | 0 | 0 | 1.0 |
 | module.webapp | enumerated | 7 | 3 | 1 | 0 | 0.6364 |
 | module.webapp.upgrade | enumerated | 0 | 1 | 0 | 0 | 0.0 |
 | module.webapp.validation | enumerated | 0 | 1 | 1 | 0 | 0.0 |
@@ -282,7 +282,7 @@ Assessed-scope coverage: 0.5475 (upper bound with unassessed 0.5475). Whole-foun
 | module.webapp.failure | enumerated | 0 | 2 | 0 | 0 | 0.0 |
 | module.webapp.package | enumerated | 1 | 2 | 0 | 0 | 0.3333 |
 | module.csp.directory | enumerated | 3 | 0 | 1 | 0 | 0.75 |
-| module.csp.lifecycle | enumerated | 1 | 3 | 1 | 0 | 0.2 |
+| module.csp.lifecycle | enumerated | 3 | 1 | 1 | 0 | 0.6 |
 | setup | enumerated | 0 | 0 | 1 | 0 | 0.0 |
 | setup.installer | enumerated | 0 | 2 | 4 | 0 | 0.0 |
 | setup.language-extension | enumerated | 1 | 1 | 0 | 0 | 0.5 |
@@ -299,7 +299,7 @@ Assessed-scope coverage: 0.5475 (upper bound with unassessed 0.5475). Whole-foun
 | settings | enumerated | 1 | 3 | 6 | 0 | 0.1 |
 | settings.print | enumerated | 2 | 1 | 0 | 0 | 0.6667 |
 | settings.writes | enumerated | 5 | 0 | 0 | 0 | 1.0 |
-| settings.report-format | enumerated | 1 | 2 | 1 | 0 | 0.25 |
+| settings.report-format | enumerated | 2 | 1 | 1 | 0 | 0.5 |
 | settings.analytics | enumerated | 1 | 1 | 0 | 0 | 0.5 |
 | settings.default-modifiers | enumerated | 10 | 2 | 0 | 0 | 0.8333 |
 | settings.install-flags | enumerated | 0 | 1 | 0 | 0 | 0.0 |

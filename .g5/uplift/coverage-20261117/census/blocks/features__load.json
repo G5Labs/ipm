@@ -852,23 +852,31 @@
      "text": "As built (C:D2), a failed cache creation leaves no repository row but the manager keeps its allocated id, and cleanup warns about the missing row.",
      "cases": "cache creation fails vs succeeds",
      "observation": "repository rows; manager id/object; cleanup warning",
-     "grade": "partial",
+     "grade": "full",
      "check": "proved",
      "models": [
-      ".g5/Verus_verification/consolidated/verus/temp_repo.rs::on_new",
-      ".g5/Verus_verification/consolidated/verus/temp_repo.rs::failed_creation_can_warn_without_row",
+      ".g5/Verus_verification/coverage-20261117/iter75/r8b_records.rs::build_cache",
+      ".g5/Verus_verification/coverage-20261117/iter75/r8b_records.rs::on_new75",
+      ".g5/Verus_verification/coverage-20261117/iter75/r8b_records.rs::temp_repo_neighbors",
       ".g5/Verus_verification/consolidated/verus/temp_repo.rs::cleanup"
      ],
      "evidence": [
       ".g5/uplift/consolidated/extension/bindings.json",
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
       ".g5/uplift/coverage-20261117/iter72/audit/features__load.json",
-      ".g5/uplift/coverage-20261117/iter72/mutations/G2.jsonl"
+      ".g5/uplift/coverage-20261117/iter72/mutations/G2.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/mutations.jsonl",
+      ".g5/uplift/consolidated/findings-audit-iter28/runs/20261116T031715006352Z-early/receipt.json"
      ],
-     "basis": "reused:.g5/ontology/features/load.g5.md metadata (temp_repo.rs on_new); project map TempLocalRepoManager.cls::%OnNew; iteration-72 rule-4a re-audit (G2): partial, support mutation-checked (mutations G2-m07)",
+     "basis": "new:iteration-75 (Successor on_new75 derives the missing row from the BuildCache TSTART/TROLLBACK position instead of writing it into on_new's failure branch; inherited cleanup is faithful. G2-m07 replay (R8b-m07) and a no-rollback mutant (R8b-m08) are killed. %DeleteId of a missing row returning an error and the in-memory id surviving the rollback are IRIS behaviour, covered by the C:D2 native receipt (TR7 warning and no row; TR2/TR7b success).) || earlier: reused:.g5/ontology/features/load.g5.md metadata (temp_repo.rs on_new); project map TempLocalRepoManager.cls::%OnNew; iteration-72 rule-4a re-audit (G2): partial, support mutation-checked (mutations G2-m07)",
      "id": "load.dependencies.local-repo#6",
-     "assessed_in": "iteration-72",
-     "gap": "Rule 4a (iteration-72): The missing repository row after a failed cache creation is written into on_new's failure branch (BuildCache rollback is an environment premise, not modelled), and cleanup's warning about the missing row is never exercised: mutant G2-m07 (cleanup never warns) survives; the success neighbour is not asserted."
+     "assessed_in": "iteration-75",
+     "support": "mutation-checked",
+     "mutations": [
+      "R8b-m07",
+      "R8b-m08"
+     ]
     },
     {
      "units": [
@@ -1608,25 +1616,37 @@
      "text": "Loading or installing the installed version succeeds without -force or -dev and loads that version again.",
      "cases": "equal version reinstall from another supplier vs first install; strict downgrade",
      "observation": "command status; payload and supplier after the second install",
-     "grade": "partial",
+     "grade": "full",
      "check": "proved",
      "models": [
-      ".g5/Verus_verification/consolidated/iter18/reloading.rs::admission_neighbor",
-      ".g5/Verus_verification/consolidated/iter18/reloading.rs::module_neighbor",
-      ".g5/Verus_verification/consolidated/iter18/reloading.rs::selected_source_controls_effect",
-      ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::l1_verdict"
+      ".g5/Verus_verification/coverage-20261117/iter75/r9_same_version.rs::load_guard",
+      ".g5/Verus_verification/coverage-20261117/iter75/r9_same_version.rs::reload75",
+      ".g5/Verus_verification/coverage-20261117/iter75/r9_same_version.rs::guard_neighbors",
+      ".g5/Verus_verification/coverage-20261117/iter75/r9_same_version.rs::same_version_reload_neighbor",
+      ".g5/Verus_verification/coverage-20261117/iter75/r9_same_version.rs::downgrade_refused",
+      ".g5/Verus_verification/consolidated/verus/semver.rs::follows",
+      ".g5/Verus_verification/consolidated/iter18/reloading.rs::successful_selected_load",
+      "playbook-uplift/models/verus/update_steps.rs::refuses"
      ],
      "evidence": [
       ".g5/uplift/consolidated/iter18/HANDOFF.md",
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
       ".g5/Verus_verification/results/verus/20261113T223110Z-survey-asbuilt-r3/survey.json",
       ".g5/uplift/coverage-20261117/iter72/audit/features__load.json",
-      ".g5/uplift/coverage-20261117/iter72/mutations/G2.jsonl"
+      ".g5/uplift/coverage-20261117/iter72/mutations/G2.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/mutations.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/load.g5.md metadata (iter18 reloading.rs); iteration-72 rule-4a re-audit (G2): partial, support mutation-checked (mutations G2-m11, G2-m12)",
+     "basis": "new:iteration-75 (Citation check (HANDOFF-72 item 9): update_steps.rs::refuses computes the guard over version ranks (G2-m12 killed) but carries no payload or supplier. Successor r9_same_version.rs::reload75 replaces reloading.rs's constant skip_equal_load with the product guard over semver.rs::follows and reuses reloading.rs's successful writer for payload and supplier. Mutants R9-m01 (equal refused), R9-m02 (no downgrade refusal), R9-m03 (equal-version skip before the loader) and R9-m04 (Follows treats equal as following) are killed. Premise: from/to are the parsed installed and new manifest versions; the successful path keeps reloading.rs's successful-provider premises (iteration-18 native probes).) || earlier: reused:.g5/ontology/features/load.g5.md metadata (iter18 reloading.rs); iteration-72 rule-4a re-audit (G2): partial, support mutation-checked (mutations G2-m11, G2-m12)",
      "id": "load.same-version#1",
-     "assessed_in": "iteration-72",
-     "gap": "Rule 4a (iteration-72): In the cited reloading.rs the equal-version admission is the constant skip_equal_load=false plus a literal 1.0.0 comparator, not the product guard (Utils/Module.cls:1213-1222), and the strict-downgrade neighbour is unassessed there. update_steps.rs::refuses does compute it (G2-m12 killed) but is not cited and carries no payload/supplier observation."
+     "assessed_in": "iteration-75",
+     "support": "mutation-checked",
+     "mutations": [
+      "R9-m01",
+      "R9-m02",
+      "R9-m03",
+      "R9-m04"
+     ]
     }
    ]
   },

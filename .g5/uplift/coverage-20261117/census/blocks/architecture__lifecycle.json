@@ -825,21 +825,30 @@
      "text": "As built, a custom phase runs only when it is the only name in the command, with or without -only.",
      "cases": "custom alone vs custom with a standard phase, with and without -only",
      "observation": "custom hook count, status",
-     "grade": "partial",
+     "grade": "full",
      "check": "proved",
      "models": [
-      ".g5/Verus_verification/consolidated/iter30/phases.rs::custom_and_unknown_neighbors",
+      ".g5/Verus_verification/consolidated/iter30/phases.rs::plan",
       ".g5/Verus_verification/consolidated/iter30/phases.rs::only_plan",
-      ".g5/Verus_verification/consolidated/iter30/phases.rs::native_sequence"
+      ".g5/Verus_verification/consolidated/iter30/phases.rs::complete_plan",
+      ".g5/Verus_verification/consolidated/iter30/phases.rs::custom_and_unknown_neighbors",
+      ".g5/Verus_verification/coverage-20261117/iter75/lifecycle_neighbours.rs::custom_alone_or_beside"
      ],
      "evidence": [
       ".g5/uplift/consolidated/iter30/run.json",
       ".g5/uplift/coverage-20261117/iter72/audit/architecture__lifecycle.json",
-      ".g5/uplift/coverage-20261117/iter72/mutations/G3.jsonl"
+      ".g5/uplift/coverage-20261117/iter72/mutations/G3.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/mutations.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/ledger/R67.json"
      ],
-     "basis": "reused:lifecycle.custom metadata (iter30); iteration-72 rule-4a re-audit (G3): partial, support inspection (mutations G3-m12)",
-     "assessed_in": "iteration-72",
-     "gap": "Rule 4a (iteration-72): the -only cases (custom alone with -only runs; custom beside a standard phase with -only fails) are never asserted; mutant G3-m12 (custom alone with -only fails) survives"
+     "basis": "new:iteration-75 (Neighbours over the inherited phases.rs plan and execute. G3-m12 re-run as R7-m05 (custom alone with -only fails) and R7-m06 (-only runs the first of several names) are killed. The -only failure of a comma-joined name rests on the inherited native-qualified premise (METHOD DOES NOT EXIST for an unknown lifecycle method; native case c10).) || earlier: reused:lifecycle.custom metadata (iter30); iteration-72 rule-4a re-audit (G3): partial, support inspection (mutations G3-m12)",
+     "assessed_in": "iteration-75",
+     "support": "mutation-checked",
+     "mutations": [
+      "R7-m05",
+      "R7-m06"
+     ]
     },
     {
      "id": "lifecycle.custom#5",
@@ -937,18 +946,28 @@
      "text": "Two custom phase names in one command run neither custom phase.",
      "cases": "mycustom othercustom vs mycustom",
      "observation": "custom hooks run; status",
-     "grade": "partial",
-     "check": "unchecked",
+     "grade": "full",
+     "check": "proved",
      "models": [
-      ".g5/Verus_verification/consolidated/iter30/phases.rs::complete_plan",
+      ".g5/Verus_verification/coverage-20261117/iter75/lifecycle_neighbours.rs::complete_plan",
+      ".g5/Verus_verification/coverage-20261117/iter75/lifecycle_neighbours.rs::only_plan",
+      ".g5/Verus_verification/coverage-20261117/iter75/lifecycle_neighbours.rs::execute",
+      ".g5/Verus_verification/coverage-20261117/iter75/lifecycle_neighbours.rs::two_custom_names",
       ".g5/Verus_verification/consolidated/iter30/phases.rs::ordered_from"
      ],
      "evidence": [
-      ".g5/uplift/coverage-20261117/iter72/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter72/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/mutations.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/ledger/R67.json"
      ],
-     "basis": "new:iteration-72 (review-71 B)",
-     "assessed_in": "iteration-72",
-     "gap": "complete_plan of two non-standard names is the empty plan (ok, nothing runs), but no theorem or native case exercises two custom names, and phases.rs has a single CUSTOM token, so two distinct custom phases are not represented. The block does not say that the command succeeds."
+     "basis": "new:iteration-75 (Successor tokens with a declared custom set (phases.rs has a single CUSTOM token, so two distinct custom phases were not representable); the chain union is the inherited ordered_from. Mutations R7-m07 (single-name guard dropped) and R7-m08 (custom names kept in a multi-name union) are killed. Complete-mode success depends only on product code (empty phase list); no native case runs two custom names.) || earlier: new:iteration-72 (review-71 B)",
+     "assessed_in": "iteration-75",
+     "support": "mutation-checked",
+     "mutations": [
+      "R7-m07",
+      "R7-m08"
+     ]
     }
    ]
   },
@@ -981,20 +1000,27 @@
      "text": "A manifest LifecycleClass picks the lifecycle IPM runs.",
      "cases": "named class compiled vs absent name",
      "observation": "lifecycle used",
-     "grade": "partial",
+     "grade": "full",
      "check": "proved",
      "models": [
       ".g5/Verus_verification/consolidated/iter52/record.rs::resolve",
-      ".g5/Verus_verification/consolidated/iter52/record.rs::lifecycle_neighbors"
+      ".g5/Verus_verification/consolidated/iter52/record.rs::lifecycle_neighbors",
+      ".g5/Verus_verification/coverage-20261117/iter75/lifecycle_neighbours.rs::lifecycle_class_neighbours"
      ],
      "evidence": [
       ".g5/uplift/consolidated/iter52/run.json",
       ".g5/uplift/coverage-20261117/iter72/audit/architecture__lifecycle.json",
-      ".g5/uplift/coverage-20261117/iter72/mutations/G3.jsonl"
+      ".g5/uplift/coverage-20261117/iter72/mutations/G3.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/mutations.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/ledger/R67.json"
      ],
-     "basis": "reused:module.lifecycle-class metadata (iter52); iteration-72 rule-4a re-audit (G3): partial, support inspection (mutations G3-m24, G3-m25)",
-     "assessed_in": "iteration-72",
-     "gap": "Rule 4a (iteration-72): the no-LifecycleClass case (resolve(None, _) = Module) is never asserted; mutant G3-m25 (None -> a named class) survives; the compiled/not-compiled branch is mutation-checked (G3-m24 killed)"
+     "basis": "new:iteration-75 (Neighbours over the inherited record.rs resolve. G3-m25 re-run as R7-m12 (no LifecycleClass resolves to a named class) is killed; G3-m24 (compiled branch) was already killed in iteration 72. OverrideLifecycleClass is outside this obligation.) || earlier: reused:module.lifecycle-class metadata (iter52); iteration-72 rule-4a re-audit (G3): partial, support inspection (mutations G3-m24, G3-m25)",
+     "assessed_in": "iteration-75",
+     "support": "mutation-checked",
+     "mutations": [
+      "R7-m12"
+     ]
     },
     {
      "id": "module.lifecycle-class#2",
@@ -1898,20 +1924,30 @@
      "text": "An empty primary name leaves the previous primary in place.",
      "cases": "empty vs class name",
      "observation": "primary after set",
-     "grade": "partial",
+     "grade": "full",
      "check": "proved",
      "models": [
+      ".g5/Verus_verification/coverage-20261117/iter75/lifecycle_neighbours.rs::set_primary",
+      ".g5/Verus_verification/coverage-20261117/iter75/lifecycle_neighbours.rs::primary_neighbours",
+      ".g5/Verus_verification/coverage-20261117/iter75/lifecycle_neighbours.rs::inherited_agrees",
       ".g5/Verus_verification/consolidated/iter67/composite.rs::primary_after_set",
       ".g5/Verus_verification/consolidated/iter67/composite.rs::empty_primary_ignored"
      ],
      "evidence": [
       ".g5/uplift/consolidated/iter67/run.json",
       ".g5/uplift/coverage-20261117/iter72/audit/architecture__lifecycle.json",
-      ".g5/uplift/coverage-20261117/iter72/mutations/G3.jsonl"
+      ".g5/uplift/coverage-20261117/iter72/mutations/G3.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/mutations.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/ledger/R67.json"
      ],
-     "basis": "reused:lifecycle.source-control.editor metadata (iter67); iteration-72 rule-4a re-audit (G3): partial, support inspection (mutations G3-m43)",
-     "assessed_in": "iteration-72",
-     "gap": "Rule 4a (iteration-72): only the empty-name case is asserted; the class-name case (primary replaced) is never exercised, and mutant G3-m43 (primary never changes) survives"
+     "basis": "new:iteration-75 (set_primary derives the decision from the class dictionary instead of the new_is_class flag and agrees with the inherited primary_after_set on absent and extension names (inherited_agrees). G3-m43 re-run as R7-m10 (primary never changes) and R7-m11 (existence check removed) are killed. Premise: no class has the empty name, so %ExistsId(\"\") is false.) || earlier: reused:lifecycle.source-control.editor metadata (iter67); iteration-72 rule-4a re-audit (G3): partial, support inspection (mutations G3-m43)",
+     "assessed_in": "iteration-75",
+     "support": "mutation-checked",
+     "mutations": [
+      "R7-m10",
+      "R7-m11"
+     ]
     }
    ]
   }

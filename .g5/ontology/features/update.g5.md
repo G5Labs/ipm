@@ -155,3 +155,5 @@ State machines: [shared steps · iter11](../../Verus_verification/models/iter11-
 [Formal contract](../../Verus_verification/consolidated/iter9/ownership.rs): `get_add`, `seed`, `delete_module`, `cascade_preserves_other_home`, `both_moved`, `cascade_neighbors`. The home must exist and persistence must succeed. Generated uniqueness/FK cascade is an IRIS boundary validated against both native stores; class-list parsing and mirrors are outside this contract. [Bindings and observations](../../uplift/consolidated/iter9/INDEX.md).
 
 State machines: [ownership · iter9](../../Verus_verification/models/iter9-ownership/manifest.json)
+
+Iteration75 neighbours: [r8b_records.rs](../../Verus_verification/coverage-20261117/iter75/r8b_records.rs) ([handoff](../../uplift/coverage-20261117/iter75/HANDOFF.md)).

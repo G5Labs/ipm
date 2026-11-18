@@ -407,10 +407,11 @@
      "text": "Health true also requires an interoperability-enabled namespace, even with Interoperability=\"disabled\".",
      "cases": "Health=true, Interoperability=disabled, namespace interoperability off vs on",
      "observation": "Interoperability failure",
-     "grade": "partial",
+     "grade": "full",
      "check": "proved",
      "models": [
       ".g5/Verus_verification/consolidated/iter3/resources.rs::requirement_failures",
+      ".g5/Verus_verification/coverage-20261117/iter75/r8b_manifest.rs::health_interop_neighbors",
       ".g5/Verus_verification/consolidated/iter3/resources.rs::requirement_neighbors"
      ],
      "evidence": [
@@ -418,11 +419,16 @@
       ".g5/Verus_verification/consolidated/iter3/run_models.py",
       ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
       ".g5/uplift/coverage-20261117/iter72/audit/features__manifest.json",
-      ".g5/uplift/coverage-20261117/iter72/mutations/G6.jsonl"
+      ".g5/uplift/coverage-20261117/iter72/mutations/G6.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/mutations.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/manifest.g5.md metadata module.requirement.values (resources.rs requirement_failures, requirement_neighbors; iter3 controls in run_models.py) (control health-does-not-imply-interop rejected); iteration-72 rule-4a re-audit (G6): partial, support mutation-checked (mutations G6-m73)",
-     "assessed_in": "iteration-72",
-     "gap": "Rule 4a (iteration-72): Only the interoperability-off namespace is exercised with Health=true (:180, :186); the \"on\" neighbour (Health=true on an interoperability-enabled namespace, no failure) is never asserted, so a rule failing Health=true regardless of the namespace (G6-m73) verifies."
+     "basis": "new:iteration-75 (r8b_manifest.rs::health_interop_neighbors asserts both namespace sides over the inherited requirement_failures; the G6-m73 replay (R8b-m01) is killed at the enabled-namespace assertion.) || earlier: reused:.g5/ontology/features/manifest.g5.md metadata module.requirement.values (resources.rs requirement_failures, requirement_neighbors; iter3 controls in run_models.py) (control health-does-not-imply-interop rejected); iteration-72 rule-4a re-audit (G6): partial, support mutation-checked (mutations G6-m73)",
+     "assessed_in": "iteration-75",
+     "support": "mutation-checked",
+     "mutations": [
+      "R8b-m01"
+     ]
     },
     {
      "id": "module.requirement.values#5",
@@ -825,22 +831,30 @@
      "text": "$$$name takes an IRIS macro value, or nothing if the macro is undefined.",
      "cases": "defined vs undefined macro",
      "observation": "evaluated value",
-     "grade": "partial",
+     "grade": "full",
      "check": "proved",
      "models": [
       ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::macro_value",
-      ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::undefined_macro_is_empty"
+      ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::undefined_macro_is_empty",
+      ".g5/Verus_verification/coverage-20261117/iter75/r8b_manifest.rs::defined_macro_gives_value",
+      ".g5/Verus_verification/coverage-20261117/iter75/r8b_manifest.rs::macro_neighbors"
      ],
      "evidence": [
       ".g5/Verus_verification/consolidated/verus/results/env-attr/checks.json",
       ".g5/uplift/consolidated/extension/bindings.json",
       ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
       ".g5/uplift/coverage-20261117/iter72/audit/features__manifest.json",
-      ".g5/uplift/coverage-20261117/iter72/mutations/G6.jsonl"
+      ".g5/uplift/coverage-20261117/iter72/mutations/G6.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/mutations.jsonl",
+      ".g5/Verus_verification/consolidated/native/results/20261114T025636Z-r1-evaluator/receipt.json"
      ],
-     "basis": "reused:.g5/ontology/features/manifest.g5.md metadata module.parameter.expressions (verus/attr_evaluator.rs); iteration-72 rule-4a re-audit (G6): partial, support mutation-checked (mutations G6-m77)",
-     "assessed_in": "iteration-72",
-     "gap": "Rule 4a (iteration-72): Only the undefined-macro case is exercised (undefined_macro_is_empty); no theorem asserts that a defined macro yields its value, so a macro_value returning nothing for defined macros (G6-m77) verifies."
+     "basis": "new:iteration-75 (Defined and undefined macros are both asserted over the inherited macro_value; G6-m77 replay (R8b-m02) killed. The macro value is the preprocessor's (input); native receipt consolidated/native/results/20261114T025636Z-r1-evaluator E16 ($$$OK gives 1) and E17 (undefined gives \"\") covers both sides.) || earlier: reused:.g5/ontology/features/manifest.g5.md metadata module.parameter.expressions (verus/attr_evaluator.rs); iteration-72 rule-4a re-audit (G6): partial, support mutation-checked (mutations G6-m77)",
+     "assessed_in": "iteration-75",
+     "support": "mutation-checked",
+     "mutations": [
+      "R8b-m02"
+     ]
     },
     {
      "id": "module.parameter.expressions#7",
@@ -866,23 +880,30 @@
      "text": "#{expression} gives the value of an ObjectScript expression, or nothing if it fails.",
      "cases": "interpreter success vs failure",
      "observation": "evaluated value",
-     "grade": "partial",
+     "grade": "full",
      "check": "proved",
      "models": [
       ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::evaluate_expression",
       ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::expression_failure_is_empty",
-      ".g5/Verus_verification/consolidated/verus/attr_evaluator.rs::expression_strips_leading_blank"
+      ".g5/Verus_verification/coverage-20261117/iter75/r8b_manifest.rs::expression_success_gives_value",
+      ".g5/Verus_verification/coverage-20261117/iter75/r8b_manifest.rs::expression_neighbors"
      ],
      "evidence": [
       ".g5/Verus_verification/consolidated/verus/results/env-attr/checks.json",
       ".g5/uplift/consolidated/extension/bindings.json",
       ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
       ".g5/uplift/coverage-20261117/iter72/audit/features__manifest.json",
-      ".g5/uplift/coverage-20261117/iter72/mutations/G6.jsonl"
+      ".g5/uplift/coverage-20261117/iter72/mutations/G6.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/mutations.jsonl",
+      ".g5/Verus_verification/consolidated/native/results/20261114T025636Z-r1-evaluator/receipt.json"
      ],
-     "basis": "reused:.g5/ontology/features/manifest.g5.md metadata module.parameter.expressions (verus/attr_evaluator.rs); iteration-72 rule-4a re-audit (G6): partial, support mutation-checked (mutations G6-m78)",
-     "assessed_in": "iteration-72",
-     "gap": "Rule 4a (iteration-72): The success case is never asserted to yield the interpreter value (expression_strips_leading_blank compares the function with itself); an expression() that always returns nothing (G6-m78) verifies. The interpreter result is an input (provider)."
+     "basis": "new:iteration-75 (The success side is now asserted (the interpreter result is an input); G6-m78 replay (R8b-m03) killed. Native receipt 20261114T025636Z-r1-evaluator E10/E11 (#{1+2} and #{ 1+2} give 3) and E13/E14 (failures give \"\").) || earlier: reused:.g5/ontology/features/manifest.g5.md metadata module.parameter.expressions (verus/attr_evaluator.rs); iteration-72 rule-4a re-audit (G6): partial, support mutation-checked (mutations G6-m78)",
+     "assessed_in": "iteration-75",
+     "support": "mutation-checked",
+     "mutations": [
+      "R8b-m03"
+     ]
     },
     {
      "id": "module.parameter.expressions#9",
@@ -1328,23 +1349,32 @@
      "text": "A missing -env file is an error.",
      "cases": "missing vs readable file",
      "observation": "command status",
-     "grade": "partial",
+     "grade": "full",
      "check": "proved",
      "models": [
+      ".g5/Verus_verification/coverage-20261117/iter75/env_loader.rs::file_input",
+      ".g5/Verus_verification/coverage-20261117/iter75/env_loader.rs::env_command",
+      ".g5/Verus_verification/coverage-20261117/iter75/env_loader.rs::missing_versus_readable",
       ".g5/Verus_verification/consolidated/verus/env_config.rs::load_file",
-      ".g5/Verus_verification/consolidated/verus/env_config.rs::any_file_error_clears",
-      ".g5/Verus_verification/consolidated/verus/env_config.rs::later_failure_erases_earlier"
+      ".g5/Verus_verification/consolidated/verus/env_config.rs::any_file_error_clears"
      ],
      "evidence": [
       ".g5/Verus_verification/consolidated/verus/results/env-attr/checks.json",
       ".g5/uplift/consolidated/extension/bindings.json",
       ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
       ".g5/uplift/coverage-20261117/iter72/audit/features__manifest.json",
-      ".g5/uplift/coverage-20261117/iter72/mutations/G6.jsonl"
+      ".g5/uplift/coverage-20261117/iter72/mutations/G6.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/mutations.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/ledger/R67.json"
      ],
-     "basis": "reused:.g5/ontology/features/manifest.g5.md metadata module.env (verus/env_config.rs); iteration-72 rule-4a re-audit (G6): partial, support mutation-checked (mutations G6-m94)",
-     "assessed_in": "iteration-72",
-     "gap": "Rule 4a (iteration-72): Settled by review-71: no theorem or control covers the readable-file case; a loader that always fails (G6-m94) still verifies (env_config.rs:121-141). Readability is an input."
+     "basis": "new:iteration-75 (env_loader.rs derives read_parse_ok from a filesystem map (present and parsable) instead of taking it as an input, and reuses the inherited load_file/load_files/command. G6-m94 re-run as R6-m01 (loader always fails) is killed by the readable-file witness; R6-m02 (presence not read) is killed by the missing-file side.) || earlier: reused:.g5/ontology/features/manifest.g5.md metadata module.env (verus/env_config.rs); iteration-72 rule-4a re-audit (G6): partial, support mutation-checked (mutations G6-m94)",
+     "assessed_in": "iteration-75",
+     "support": "mutation-checked",
+     "mutations": [
+      "R6-m01",
+      "R6-m02"
+     ]
     },
     {
      "id": "module.env#5",
@@ -1481,9 +1511,11 @@
      "text": "A missing or malformed later file clears earlier values and raises; each LoadEnvironmentConfig call clears first, so the failed command keeps nothing from any file.",
      "cases": "good file then bad file vs two good files; array root",
      "observation": "configuration and status",
-     "grade": "partial",
+     "grade": "full",
      "check": "proved",
      "models": [
+      ".g5/Verus_verification/coverage-20261117/iter75/env_loader.rs::env_command",
+      ".g5/Verus_verification/coverage-20261117/iter75/env_loader.rs::later_files",
       ".g5/Verus_verification/consolidated/verus/env_config.rs::later_failure_erases_earlier",
       ".g5/Verus_verification/consolidated/verus/env_config.rs::every_failed_file_sequence_is_empty",
       ".g5/Verus_verification/consolidated/verus/env_config.rs::any_file_error_clears",
@@ -1494,11 +1526,20 @@
       ".g5/uplift/consolidated/extension/bindings.json",
       ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
       ".g5/uplift/coverage-20261117/iter72/audit/features__manifest.json",
-      ".g5/uplift/coverage-20261117/iter72/mutations/G6.jsonl"
+      ".g5/uplift/coverage-20261117/iter72/mutations/G6.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/mutations.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/ledger/R67.json"
      ],
-     "basis": "reused:.g5/ontology/features/manifest.g5.md metadata module.env (verus/env_config.rs); iteration-72 rule-4a re-audit (G6): partial, support mutation-checked (mutations G6-m94)",
-     "assessed_in": "iteration-72",
-     "gap": "Rule 4a (iteration-72): Settled by review-71 (same weakness as module.env#4): the success branch of load_file is never exercised with a readable file, so a loader that always fails verifies (G6-m94); file readability/parse success is an input."
+     "basis": "new:iteration-75 (Input-independent failure: the array-root file is present and parsable (parses(fs0(),4)), and the command still fails and clears. Mutations: R6-m01 (always fail) and R6-m02 (presence ignored) killed by env_loader.rs; R6-m03 (array root accepted) is killed by the inherited any_file_error_clears; in the product and the model the array would still fail at the merge (MergeDynamicObjects:114-117 object/array mismatch), so the array check alone is an equivalent mutant for this observation; R6-m04 (failure keeps earlier values) killed.) || earlier: reused:.g5/ontology/features/manifest.g5.md metadata module.env (verus/env_config.rs); iteration-72 rule-4a re-audit (G6): partial, support mutation-checked (mutations G6-m94)",
+     "assessed_in": "iteration-75",
+     "support": "mutation-checked",
+     "mutations": [
+      "R6-m01",
+      "R6-m02",
+      "R6-m03",
+      "R6-m04"
+     ]
     },
     {
      "id": "module.env#11",

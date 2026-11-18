@@ -132,12 +132,13 @@
      "text": "Uninstall deletes the module's classes, packages, includes and routines with their compiled forms.",
      "cases": "code kinds; mapped code without -global (as built skipped, Lifecycle/Base.cls:375-378) vs with -global",
      "observation": "code present after uninstall",
-     "grade": "partial",
-     "check": "unchecked",
+     "grade": "full",
+     "check": "refuted",
      "models": [
       "playbook-uplift/models/verus/uninstall.rs::clean_code",
       "playbook-uplift/models/verus/uninstall.rs::code_gone",
       "playbook-uplift/models/verus/uninstall.rs::unin_refines_complete",
+      ".g5/Verus_verification/coverage-20261117/iter75/uninstall_neighbours.rs::mapped_code_needs_global",
       ".g5/Verus_verification/consolidated/iter63/cleanup.rs::code_removed"
      ],
      "evidence": [
@@ -145,11 +146,22 @@
       "playbook-uplift/models/verus/results/uninstall.json",
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
       ".g5/uplift/coverage-20261117/iter72/audit/features__uninstall.json",
-      ".g5/uplift/coverage-20261117/iter72/mutations/M.jsonl"
+      ".g5/uplift/coverage-20261117/iter72/mutations/M.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/mutations.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/ledger/R12.json",
+      ".g5/uplift/coverage-20261117/iter75/receipts/coverage-20261117__iter75__uninstall_neighbours.rs.log"
      ],
-     "basis": "reused:.g5/ontology/features/uninstall.g5.md metadata (iter63 cleanup.rs); playbook clean_code/record_delete added in iteration-70; iteration-72 rule-4a re-audit (G2): partial, support control (control playbook-uplift/models/verus/results/uninstall.json impl-code-not-collected, impl-record-delete-keeps-manifest); iteration-72 (review-71 B): split into code (#1), record (#7), stored manifest (#8, #10) and sync baseline (#9)",
-     "assessed_in": "iteration-72",
-     "gap": "clean_code removes non-mapped code and exempts mapped code without -global (code_gone), but no theorem pins the mapped-code condition. M-m08 (delete mapped code without -global) survives and M-m09 (never delete mapped code) is killed. The block omits the as-built condition."
+     "basis": "new:iteration-75 (whole-command neighbours over the faithful playbook clean_code/code_gone; M-m08 and M-m09 re-run as R2-m01/m02 are killed, as are -global not reaching Clean.GlobalScope (R2-m05) and tRemoveMapped fixed to 1 (R2-m06). Check refuted for the unqualified block wording: as built, mapped code survives uninstall without -global (proved for the as-built claim in the recorded cases). IsMapped is an environment input (namespace mapping); no native receipt observes the skip.) || earlier: reused:.g5/ontology/features/uninstall.g5.md metadata (iter63 cleanup.rs); playbook clean_code/record_delete added in iteration-70; iteration-72 rule-4a re-audit (G2): partial, support control (control playbook-uplift/models/verus/results/uninstall.json impl-code-not-collected, impl-record-delete-keeps-manifest); iteration-72 (review-71 B): split into code (#1), record (#7), stored manifest (#8, #10) and sync baseline (#9)",
+     "assessed_in": "iteration-75",
+     "support": "mutation-checked",
+     "instance_scoped": true,
+     "mutations": [
+      "R2-m01",
+      "R2-m02",
+      "R2-m05",
+      "R2-m06"
+     ]
     },
     {
      "id": "uninstall.cleanup#2",
@@ -159,12 +171,13 @@
      "text": "A global resource's data is deleted only when the resource names it with the Global attribute.",
      "cases": "Global attribute set vs name-only global resource; Global set with Preserve on (product keeps it, Default/Global.cls:76-80)",
      "observation": "global data after uninstall",
-     "grade": "partial",
-     "check": "unchecked",
+     "grade": "full",
+     "check": "proved",
      "models": [
       ".g5/Verus_verification/consolidated/iter63/cleanup.rs::globals_by_declaration",
       "playbook-uplift/models/verus/uninstall.rs::clean_step",
-      "playbook-uplift/models/verus/uninstall.rs::unin_witness_global_kept"
+      "playbook-uplift/models/verus/uninstall.rs::unin_witness_global_kept",
+      ".g5/Verus_verification/coverage-20261117/iter75/uninstall_neighbours.rs::preserve_keeps_global_data"
      ],
      "evidence": [
       ".g5/uplift/consolidated/iter63/run.json",
@@ -172,11 +185,20 @@
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
       ".g5/uplift/coverage-20261117/iter72/audit/features__uninstall.json",
       ".g5/uplift/coverage-20261117/iter72/mutations/G2.jsonl",
-      ".g5/uplift/coverage-20261117/iter72/mutations/M.jsonl"
+      ".g5/uplift/coverage-20261117/iter72/mutations/M.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/mutations.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/ledger/R12.json",
+      ".g5/uplift/coverage-20261117/iter75/receipts/coverage-20261117__iter75__uninstall_neighbours.rs.log"
      ],
-     "basis": "reused:.g5/ontology/features/uninstall.g5.md metadata (iter63 cleanup.rs); iteration-72 rule-4a re-audit (G2): full, support mutation-checked (mutations G2-m53)",
-     "assessed_in": "iteration-72",
-     "gap": "The Global-attribute contrast is pinned (M-m13 killed; unin_witness_global_kept), but the Preserve condition is not: M-m12 (delete Global data even with Preserve) survives. The block does not state Preserve."
+     "basis": "new:iteration-75 (M-m12 re-run as R2-m03 (kill even with Preserve) and M-m13 re-run as R2-m04 (kill name-only data) are killed. \"Only when named\" holds; the block does not mention Preserve, which narrows deletion further (omission, not a contradiction).) || earlier: reused:.g5/ontology/features/uninstall.g5.md metadata (iter63 cleanup.rs); iteration-72 rule-4a re-audit (G2): full, support mutation-checked (mutations G2-m53)",
+     "assessed_in": "iteration-75",
+     "support": "mutation-checked",
+     "instance_scoped": true,
+     "mutations": [
+      "R2-m03",
+      "R2-m04"
+     ]
     },
     {
      "id": "uninstall.cleanup#3",

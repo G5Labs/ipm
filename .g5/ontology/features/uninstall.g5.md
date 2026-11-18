@@ -140,6 +140,8 @@ Findings: [Uninstall leaves a developer-mode module's `^Sources` entries](../../
 
 State machines: [cleanup · iter63](../../Verus_verification/models/iter63-cleanup/manifest.json)
 
+Iteration75 neighbours: [uninstall_neighbours.rs](../../Verus_verification/coverage-20261117/iter75/uninstall_neighbours.rs) ([handoff](../../uplift/coverage-20261117/iter75/HANDOFF.md)).
+
 ### uninstall.package-ownership
 
 - design-verified

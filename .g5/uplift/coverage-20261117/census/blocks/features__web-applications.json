@@ -788,21 +788,31 @@
      "text": "A deprecated <CSPApplication> creates or updates its web application during Activate and deletes it during uninstall.",
      "cases": "load vs uninstall",
      "observation": "app presence",
-     "grade": "partial",
+     "grade": "full",
      "check": "proved",
      "models": [
       ".g5/Verus_verification/consolidated/iter57/cspapp.rs::load",
       ".g5/Verus_verification/consolidated/iter57/cspapp.rs::uninstall",
-      ".g5/Verus_verification/consolidated/iter57/cspapp.rs::deploy_path_uninstall_purges_deploy"
+      ".g5/Verus_verification/consolidated/iter57/cspapp.rs::deploy_path_uninstall_purges_deploy",
+      ".g5/Verus_verification/coverage-20261117/iter75/cspapp_neighbours.rs::load_creates_and_uninstall_deletes",
+      ".g5/Verus_verification/coverage-20261117/iter75/cspapp_neighbours.rs::created_application_instance"
      ],
      "evidence": [
       ".g5/uplift/consolidated/iter57/run.json",
       ".g5/uplift/coverage-20261117/iter72/audit/features__web-applications.json",
-      ".g5/uplift/coverage-20261117/iter72/mutations/G7.jsonl"
+      ".g5/uplift/coverage-20261117/iter72/mutations/G7.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/mutations.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+      ".g5/Verus_verification/coverage-20261117/iter75/cspapp_neighbours.rs",
+      ".g5/uplift/consolidated/iter57/native/20261116T182314549001Z/observations.json"
      ],
-     "basis": "reused:.g5/ontology/features/web-applications.g5.md metadata module.csp.lifecycle (iter57 cspapp.rs); iteration-72 rule-4a re-audit (G7): partial, support mutation-checked (mutations G7-m76, G7-m80)",
-     "assessed_in": "iteration-72",
-     "gap": "Rule 4a (iteration-72): creating an application when none exists is never exercised: G7-m76 (load only updates an existing app) survives; only update of an existing app (takeover_resets_undeclared) and deletion are asserted"
+     "basis": "new:iteration-75 (The create-from-none case is now asserted beside update and delete; G7-m76 rerun as R4-m01 and a uninstall that keeps the application (R4-m03) are killed. The phase (Activate) is not distinguished from the rest of load in the model; the obligation's cases are load vs uninstall. Native iteration-57 a1/a3 observed creation and deletion.) || earlier: reused:.g5/ontology/features/web-applications.g5.md metadata module.csp.lifecycle (iter57 cspapp.rs); iteration-72 rule-4a re-audit (G7): partial, support mutation-checked (mutations G7-m76, G7-m80)",
+     "assessed_in": "iteration-75",
+     "support": "mutation-checked",
+     "mutations": [
+      "R4-m01",
+      "R4-m03"
+     ]
     },
     {
      "id": "module.csp.lifecycle#2",
@@ -828,20 +838,29 @@
      "text": "Each load copies the source folder into DeployPath when one is given.",
      "cases": "DeployPath given vs not; source edited between loads",
      "observation": "files under DeployPath",
-     "grade": "partial",
+     "grade": "full",
      "check": "proved",
      "models": [
       ".g5/Verus_verification/consolidated/iter57/cspapp.rs::load",
-      ".g5/Verus_verification/consolidated/iter57/cspapp.rs::reload_recopies"
+      ".g5/Verus_verification/consolidated/iter57/cspapp.rs::reload_recopies",
+      ".g5/Verus_verification/coverage-20261117/iter75/cspapp_neighbours.rs::no_deploy_path_no_copy",
+      ".g5/Verus_verification/coverage-20261117/iter75/cspapp_neighbours.rs::copy_instances"
      ],
      "evidence": [
       ".g5/uplift/consolidated/iter57/run.json",
       ".g5/uplift/coverage-20261117/iter72/audit/features__web-applications.json",
-      ".g5/uplift/coverage-20261117/iter72/mutations/G7.jsonl"
+      ".g5/uplift/coverage-20261117/iter72/mutations/G7.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/mutations.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+      ".g5/Verus_verification/coverage-20261117/iter75/cspapp_neighbours.rs",
+      ".g5/uplift/consolidated/iter57/native/20261116T182314549001Z/observations.json"
      ],
-     "basis": "reused:.g5/ontology/features/web-applications.g5.md metadata module.csp.lifecycle (iter57 cspapp.rs) (control no-copy-on-load rejected); iteration-72 rule-4a re-audit (G7): partial, support mutation-checked (mutations G7-m77, G7-m78)",
-     "assessed_in": "iteration-72",
-     "gap": "Rule 4a (iteration-72): the no-DeployPath case is never exercised: G7-m77 (copy even without DeployPath) survives; only the recopy with DeployPath is asserted"
+     "basis": "new:iteration-75 (The no-DeployPath side is now asserted; G7-m77 rerun as R4-m02 is killed. Provider premise: the model copies into a DeployPath that does not exist yet, although CSPApplication.cls:163 requires the directory at After Reload. Native iteration-57 case a1 observed that copy (a1.deployA=1, receipt .g5/uplift/consolidated/iter57/native/20261116T182314549001Z/observations.json), which covers the premise; the source path that creates the directory first was not identified.) || earlier: reused:.g5/ontology/features/web-applications.g5.md metadata module.csp.lifecycle (iter57 cspapp.rs) (control no-copy-on-load rejected); iteration-72 rule-4a re-audit (G7): partial, support mutation-checked (mutations G7-m77, G7-m78)",
+     "assessed_in": "iteration-75",
+     "support": "mutation-checked",
+     "mutations": [
+      "R4-m02"
+     ]
     },
     {
      "id": "module.csp.lifecycle#4",

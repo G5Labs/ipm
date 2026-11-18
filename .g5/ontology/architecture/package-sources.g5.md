@@ -159,6 +159,8 @@ Extension Verus: [owners.rs::build_cache](../../Verus_verification/consolidated/
 
 Open questions: [Should a module with an invalid name in a filesystem repository's folder block the whole repository?](../../Verus_verification/open_questions.md#repo.filesystem.bad-module), [Does cache replacement need its explicit lock until the caller's transaction ends?](../../Verus_verification/open_questions.md#repo.filesystem.concurrent-refresh)
 
+Iteration75 neighbours: [fs_cache.rs](../../Verus_verification/coverage-20261117/iter75/fs_cache.rs) ([handoff](../../uplift/coverage-20261117/iter75/HANDOFF.md)).
+
 ### repo.filesystem.duplicates
 
 - design-verified
@@ -195,6 +197,8 @@ Extension Verus: [thin_surfaces.rs::oras_available](../../Verus_verification/con
 
 Open questions: [Should changing an ORAS registry address clear its stored credentials?](../../Verus_verification/open_questions.md#repo.oras.credentials-change-policy), [Which platform tags should unpublish remove when only a version is named?](../../Verus_verification/open_questions.md#repo.oras.unpublish-platform-policy)
 
+Iteration75 neighbours: [r8a_oras.rs](../../Verus_verification/coverage-20261117/iter75/r8a_oras.rs) ([handoff](../../uplift/coverage-20261117/iter75/HANDOFF.md)).
+
 ### repo.oras.integrity
 
 - design-verified
@@ -211,6 +215,8 @@ Open questions: [Should an untagged pull always select the highest semantic vers
 
 State machines: [registry · iter2](../../Verus_verification/models/iter2-registry/manifest.json)
 
+Iteration75 neighbours: [oras_integrity.rs](../../Verus_verification/coverage-20261117/iter75/oras_integrity.rs) ([handoff](../../uplift/coverage-20261117/iter75/HANDOFF.md)).
+
 ### repo.oras.archive-boundary
 
 - agent
@@ -220,6 +226,8 @@ State machines: [registry · iter2](../../Verus_verification/models/iter2-regist
 [As-built model and receipts](../../uplift/consolidated/iter68/HANDOFF.md) trace the bundled provider, IPM's status gate, installed files, history and a live dependency consumer. [Pinned source bindings](../../uplift/consolidated/iter68/exact-bindings.json) include the installed wheel implementation.
 
 State machines: [ORAS archive boundary](../../Verus_verification/models/iter68-as-built/manifest.json)
+
+Iteration75 neighbours: [oras_integrity.rs](../../Verus_verification/coverage-20261117/iter75/oras_integrity.rs) ([handoff](../../uplift/coverage-20261117/iter75/HANDOFF.md)).
 
 ### repo.oras.signed-admission
 
@@ -242,6 +250,8 @@ State machines: [Proposed signed admission](../../Verus_verification/models/iter
 [Codec model](../../Verus_verification/consolidated/iter15/oras.rs): `replace`, `encode`, `decode`, `parse`, `tag_for`, `codec_roundtrip`, `raw_neighbors`. Sources: Common.inc macros Semver2Tag/Tag2Semver/OrasTagPlatformSeparator and Oras.PackageService::TagForReference. No direct body proof or generic invalid-tag parser claim.
 
 State machines: [oras · iter15](../../Verus_verification/models/iter15-oras/manifest.json)
+
+Iteration75 neighbours: [r8a_oras.rs](../../Verus_verification/coverage-20261117/iter75/r8a_oras.rs) ([handoff](../../uplift/coverage-20261117/iter75/HANDOFF.md)).
 
 ### repo.oras.platform-selection
 
@@ -290,3 +300,5 @@ State machines: [oras · iter15](../../Verus_verification/models/iter15-oras/man
 Sources: `Repo/Remote/PublishManager.cls`, `Repo/Oras/PublishManager.cls`, `General/Singleton.cls`. [State and capability projections](../../Verus_verification/consolidated/iter2/registry.rs); [paired native manager observations](../../uplift/consolidated/iter2/native/receipt.json). Probe transport, manager lifetime and competing configuration writers remain explicit premises.
 
 State machines: [registry · iter2](../../Verus_verification/models/iter2-registry/manifest.json)
+
+Iteration75 neighbours: [r8a_oras.rs](../../Verus_verification/coverage-20261117/iter75/r8a_oras.rs) ([handoff](../../uplift/coverage-20261117/iter75/HANDOFF.md)).

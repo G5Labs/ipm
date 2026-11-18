@@ -264,6 +264,8 @@ Sources: `ResourceProcessor/Default/Global.cls::{OnItemRelativePath,OnResolveChi
 
 State machines: [workflows · iter6](../../Verus_verification/models/iter6-workflows/manifest.json)
 
+Iteration75 neighbours: [global_path.rs](../../Verus_verification/coverage-20261117/iter75/global_path.rs) ([handoff](../../uplift/coverage-20261117/iter75/HANDOFF.md)).
+
 ### module.processor.deepsee
 
 - design-verified
@@ -390,6 +392,8 @@ State machines: [protection · iter14](../../Verus_verification/models/iter14-pr
 Sources: `ResourceProcessor/CPF.cls` (`OnBeforePhase`, `OnAfterPhase`, `OnCustomPhase`, `DoMerge`, `MergeCPF`); test `CPFMerge.cls` and fixture `cpf-merge`. Model: [cpfmerge.rs](../../Verus_verification/consolidated/iter48/cpfmerge.rs) `merges_in`, `neighbors`, `after_is_not_before` ([handoff](../../uplift/consolidated/iter48/HANDOFF.md)). Compensation after a later failure is the open question C:Q12.
 
 State machines: [cpfmerge · iter48](../../Verus_verification/models/iter48-cpfmerge/manifest.json)
+
+Iteration75 neighbours: [lifecycle_neighbours.rs](../../Verus_verification/coverage-20261117/iter75/lifecycle_neighbours.rs) ([handoff](../../uplift/coverage-20261117/iter75/HANDOFF.md)).
 
 ### module.processor.cpf-effects
 

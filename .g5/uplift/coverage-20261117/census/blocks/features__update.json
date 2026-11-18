@@ -609,22 +609,29 @@
      "text": "A saved update-step record is unique by class and method within its kind, not by module; registering the key for another module moves its home and keeps completion and status.",
      "cases": "module 1 seeds, module 2 registers the same key",
      "observation": "row home, completed, ok",
-     "grade": "partial",
+     "grade": "full",
      "check": "proved",
      "models": [
       ".g5/Verus_verification/consolidated/iter9/ownership.rs::get_add",
-      ".g5/Verus_verification/consolidated/iter9/ownership.rs::seed",
-      ".g5/Verus_verification/consolidated/iter9/ownership.rs::cascade_neighbors"
+      ".g5/Verus_verification/consolidated/iter9/ownership.rs::cascade_neighbors",
+      ".g5/Verus_verification/coverage-20261117/iter75/r8b_records.rs::get_add_keeps_completion",
+      ".g5/Verus_verification/coverage-20261117/iter75/r8b_records.rs::registration_neighbors"
      ],
      "evidence": [
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
       ".g5/uplift/consolidated/iter9/INDEX.md",
       ".g5/uplift/coverage-20261117/iter72/audit/features__update.json",
-      ".g5/uplift/coverage-20261117/iter72/mutations/G2.jsonl"
+      ".g5/uplift/coverage-20261117/iter72/mutations/G2.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/mutations.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/update.g5.md metadata (iter9 ownership.rs); iteration-72 rule-4a re-audit (G2): partial, support mutation-checked (mutations G2-m38)",
-     "assessed_in": "iteration-72",
-     "gap": "Rule 4a (iteration-72): Uniqueness by key and the home move are computed, but \"keeps completion and status\" is never exercised: the neighbours only call seed, which re-marks the row completed and ok, so G2-m38 (get_add resets completion) survives."
+     "basis": "new:iteration-75 (Completion and status retention is now asserted for get_add itself, not via seed; G2-m38 replay (R8b-m05) and a status-reset mutant (R8b-m06) are killed.) || earlier: reused:.g5/ontology/features/update.g5.md metadata (iter9 ownership.rs); iteration-72 rule-4a re-audit (G2): partial, support mutation-checked (mutations G2-m38)",
+     "assessed_in": "iteration-75",
+     "support": "mutation-checked",
+     "mutations": [
+      "R8b-m05",
+      "R8b-m06"
+     ]
     },
     {
      "id": "update.steps.records#2",

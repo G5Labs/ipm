@@ -95,21 +95,29 @@
      "text": "Without credentials the filter must give a name or at least one @property.",
      "cases": "repo-only filter vs name filter",
      "observation": "parse_fields result",
-     "grade": "partial",
+     "grade": "full",
      "check": "proved",
      "models": [
       ".g5/Verus_verification/consolidated/iter3/artifacts.rs::parse_fields",
-      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::filter_boundaries"
+      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::filter_boundaries",
+      ".g5/Verus_verification/coverage-20261117/iter75/artifact_filter.rs::property_alone_is_enough"
      ],
      "evidence": [
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
       ".g5/uplift/consolidated/iter3/proofs/models.json",
       ".g5/uplift/coverage-20261117/iter72/audit/features__artifact-download.json",
-      ".g5/uplift/coverage-20261117/iter72/mutations/G4.jsonl"
+      ".g5/uplift/coverage-20261117/iter72/mutations/G4.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/mutations.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+      ".g5/Verus_verification/coverage-20261117/iter75/artifact_filter.rs"
      ],
-     "basis": "reused:artifact-download metadata (iter3 artifacts.rs; control repo-only-filter-admitted rejected); iteration-72 rule-4a re-audit (G4): partial, support mutation-checked (mutations G4-m06, G4-m07)",
-     "assessed_in": "iteration-72",
-     "gap": "Rule 4a (iteration-72): rule 4a: the @property-only filter is never exercised; dropping the property alternative (G4-m06) verifies. The repo-only refusal is pinned (m07)."
+     "basis": "new:iteration-75 (artifact_filter.rs exercises the property-only and repo+property filters beside the repo-only refusal over the inherited parse_fields; G4-m06 rerun as R3-m01 and the dropped property store R3-m06 are killed.) || earlier: reused:artifact-download metadata (iter3 artifacts.rs; control repo-only-filter-admitted rejected); iteration-72 rule-4a re-audit (G4): partial, support mutation-checked (mutations G4-m06, G4-m07)",
+     "assessed_in": "iteration-75",
+     "support": "mutation-checked",
+     "mutations": [
+      "R3-m01",
+      "R3-m06"
+     ]
     },
     {
      "id": "artifact.filter#2",
@@ -119,22 +127,31 @@
      "text": "Unsupported keys or operators fail instead of silently broadening the search.",
      "cases": "unknown key; array condition vs supported key",
      "observation": "parse result",
-     "grade": "partial",
+     "grade": "full",
      "check": "proved",
      "models": [
+      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::parse_fields",
       ".g5/Verus_verification/consolidated/iter3/artifacts.rs::parse_field",
       ".g5/Verus_verification/consolidated/iter3/artifacts.rs::condition",
-      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::filter_boundaries"
+      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::filter_boundaries",
+      ".g5/Verus_verification/coverage-20261117/iter75/artifact_filter.rs::unsupported_key_or_operator_fails"
      ],
      "evidence": [
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
       ".g5/uplift/consolidated/iter3/proofs/models.json",
       ".g5/uplift/coverage-20261117/iter72/audit/features__artifact-download.json",
-      ".g5/uplift/coverage-20261117/iter72/mutations/G4.jsonl"
+      ".g5/uplift/coverage-20261117/iter72/mutations/G4.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/mutations.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+      ".g5/Verus_verification/coverage-20261117/iter75/artifact_filter.rs"
      ],
-     "basis": "reused:artifact-download metadata (iter3 artifacts.rs); iteration-72 rule-4a re-audit (G4): partial, support mutation-checked (mutations G4-m08, G4-m09)",
-     "assessed_in": "iteration-72",
-     "gap": "Rule 4a (iteration-72): rule 4a: the array condition is never exercised (G4-m08 accepting arrays verifies) and the unknown-key refusal is pinned only through the name/property requirement (G4-m09 ignoring unknown keys verifies in artifacts.rs; it is caught only by the uncited iter3 native_bridge.rs key filter-4)."
+     "basis": "new:iteration-75 (Neighbours assert the unknown-key refusal beside a valid name and the array refusal on supported keys; G4-m08 and G4-m09 rerun as R3-m02 and R3-m03 are killed.) || earlier: reused:artifact-download metadata (iter3 artifacts.rs); iteration-72 rule-4a re-audit (G4): partial, support mutation-checked (mutations G4-m08, G4-m09)",
+     "assessed_in": "iteration-75",
+     "support": "mutation-checked",
+     "mutations": [
+      "R3-m02",
+      "R3-m03"
+     ]
     },
     {
      "id": "artifact.filter#3",
@@ -144,21 +161,28 @@
      "text": "Allowed keys are repo, name, path, type and @property; type, when supplied, must be file.",
      "cases": "type=file vs other type value",
      "observation": "parse result",
-     "grade": "partial",
+     "grade": "full",
      "check": "proved",
      "models": [
       ".g5/Verus_verification/consolidated/iter3/artifacts.rs::parse_field",
-      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::filter_boundaries"
+      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::filter_boundaries",
+      ".g5/Verus_verification/coverage-20261117/iter75/artifact_filter.rs::allowed_keys_and_type_file"
      ],
      "evidence": [
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
       ".g5/uplift/consolidated/iter3/proofs/models.json",
       ".g5/uplift/coverage-20261117/iter72/audit/features__artifact-download.json",
-      ".g5/uplift/coverage-20261117/iter72/mutations/G4.jsonl"
+      ".g5/uplift/coverage-20261117/iter72/mutations/G4.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/mutations.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+      ".g5/Verus_verification/coverage-20261117/iter75/artifact_filter.rs"
      ],
-     "basis": "reused:artifact-download metadata (iter3 artifacts.rs; control nonfile-type-admitted rejected); iteration-72 rule-4a re-audit (G4): partial, support mutation-checked (mutations G4-m10, G4-m11)",
-     "assessed_in": "iteration-72",
-     "gap": "Rule 4a (iteration-72): rule 4a: type=file is never exercised as accepted; refusing every type (G4-m10) verifies. Rejecting other type values is pinned (m11)."
+     "basis": "new:iteration-75 (type=file is now exercised as accepted (plain and $eq) beside the other-value refusal; G4-m10 rerun as R3-m04 is killed.) || earlier: reused:artifact-download metadata (iter3 artifacts.rs; control nonfile-type-admitted rejected); iteration-72 rule-4a re-audit (G4): partial, support mutation-checked (mutations G4-m10, G4-m11)",
+     "assessed_in": "iteration-75",
+     "support": "mutation-checked",
+     "mutations": [
+      "R3-m04"
+     ]
     },
     {
      "id": "artifact.filter#4",
@@ -168,21 +192,30 @@
      "text": "A condition is a plain value or an object with exactly one $eq; only name and path allow $match; arrays, nested operator values and multiple operators are refused.",
      "cases": "$match on repo vs name; two operators; non-text operand; array",
      "observation": "condition result",
-     "grade": "partial",
+     "grade": "full",
      "check": "proved",
      "models": [
       ".g5/Verus_verification/consolidated/iter3/artifacts.rs::condition",
-      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::filter_boundaries"
+      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::parse_field",
+      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::filter_boundaries",
+      ".g5/Verus_verification/coverage-20261117/iter75/artifact_filter.rs::condition_shapes"
      ],
      "evidence": [
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
       ".g5/uplift/consolidated/iter3/proofs/models.json",
       ".g5/uplift/coverage-20261117/iter72/audit/features__artifact-download.json",
-      ".g5/uplift/coverage-20261117/iter72/mutations/G4.jsonl"
+      ".g5/uplift/coverage-20261117/iter72/mutations/G4.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/mutations.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+      ".g5/Verus_verification/coverage-20261117/iter75/artifact_filter.rs"
      ],
-     "basis": "reused:artifact-download metadata (iter3 artifacts.rs; controls multi-operator-object-admitted, match-allowed-on-repository rejected); iteration-72 rule-4a re-audit (G4): partial, support mutation-checked (mutations G4-m12, G4-m13, G4-m08)",
-     "assessed_in": "iteration-72",
-     "gap": "Rule 4a (iteration-72): rule 4a: arrays are never exercised (G4-m08 verifies). Two operators (m12), $match on other keys (m13) and missing operand are pinned."
+     "basis": "new:iteration-75 (Every condition shape is asserted on both sides; G4-m08 rerun (R3-m02) and $match allowed on every key (R3-m05) are killed.) || earlier: reused:artifact-download metadata (iter3 artifacts.rs; controls multi-operator-object-admitted, match-allowed-on-repository rejected); iteration-72 rule-4a re-audit (G4): partial, support mutation-checked (mutations G4-m12, G4-m13, G4-m08)",
+     "assessed_in": "iteration-75",
+     "support": "mutation-checked",
+     "mutations": [
+      "R3-m02",
+      "R3-m05"
+     ]
     },
     {
      "id": "artifact.filter#5",
@@ -652,21 +685,28 @@
      "text": "Activate reuses an existing local artifact folder without checking its contents or contacting the server.",
      "cases": "local folder present vs absent",
      "observation": "download requested; copy called",
-     "grade": "partial",
+     "grade": "full",
      "check": "proved",
      "models": [
       ".g5/Verus_verification/consolidated/iter3/artifacts.rs::activate",
-      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::cache_and_failure_neighbors"
+      ".g5/Verus_verification/consolidated/iter3/artifacts.rs::cache_and_failure_neighbors",
+      ".g5/Verus_verification/coverage-20261117/iter75/r8b_remote.rs::local_folder_neighbors"
      ],
      "evidence": [
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
       ".g5/uplift/consolidated/iter3/proofs/models.json",
       ".g5/uplift/coverage-20261117/iter72/audit/features__artifact-download.json",
-      ".g5/uplift/coverage-20261117/iter72/mutations/G4.jsonl"
+      ".g5/uplift/coverage-20261117/iter72/mutations/G4.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/mutations.jsonl"
      ],
-     "basis": "reused:artifact-download metadata (iter3 artifacts.rs; control existing-directory-is-refetched rejected); iteration-72 rule-4a re-audit (G4): partial, support mutation-checked (mutations G4-m32, G4-m33, G4-m34)",
-     "assessed_in": "iteration-72",
-     "gap": "Rule 4a (iteration-72): rule 4a: the absent-folder neighbour never asserts that a download is requested; request_download:false (G4-m32) verifies. The present-folder side is pinned (m33, m34)."
+     "basis": "new:iteration-75 (The absent-folder request is now asserted; G4-m32 replay (R8b-m17) and a download-always mutant (R8b-m18) are killed. The model takes \"copy after download\" from the download result rather than a second DirectoryExists check.) || earlier: reused:artifact-download metadata (iter3 artifacts.rs; control existing-directory-is-refetched rejected); iteration-72 rule-4a re-audit (G4): partial, support mutation-checked (mutations G4-m32, G4-m33, G4-m34)",
+     "assessed_in": "iteration-75",
+     "support": "mutation-checked",
+     "mutations": [
+      "R8b-m17",
+      "R8b-m18"
+     ]
     },
     {
      "id": "artifact.local-content#2",

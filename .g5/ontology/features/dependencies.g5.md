@@ -85,6 +85,8 @@ Findings: [P:F-DEP-1 — e2e reproduced](../../Verus_verification/bugs_issues.md
 
 Findings: [P:F-DEP-7 — e2e reproduced](../../Verus_verification/bugs_issues.md#p-f-dep-7). The linked entry qualifies the caller, reader and providers.
 
+Iteration75 neighbours: [r8b_deps.rs](../../Verus_verification/coverage-20261117/iter75/r8b_deps.rs) ([handoff](../../uplift/coverage-20261117/iter75/HANDOFF.md)).
+
 ### deps.conflict
 
 - human-verified

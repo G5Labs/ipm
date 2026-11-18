@@ -251,6 +251,8 @@ Open questions: [When a phase list mixes standard phases with a custom or unknow
 
 State machines: [phases · iter30](../../Verus_verification/models/iter30-phases/manifest.json)
 
+Iteration75 neighbours: [lifecycle_neighbours.rs](../../Verus_verification/coverage-20261117/iter75/lifecycle_neighbours.rs) ([handoff](../../uplift/coverage-20261117/iter75/HANDOFF.md)).
+
 ### module.lifecycle-class
 
 - design-verified
@@ -265,6 +267,8 @@ Sources: `Storage/Module.cls::LifecycleGet`, `::ExecutePhases`. Model: [record.r
 Open questions: [Should a load fail or warn when `LifecycleClass` names a class that is not available when the lifecycle is resolved?](../../Verus_verification/open_questions.md#module.lifecycle-class.unknown-policy)
 
 State machines: [record · iter52](../../Verus_verification/models/iter52-record/manifest.json)
+
+Iteration75 neighbours: [lifecycle_neighbours.rs](../../Verus_verification/coverage-20261117/iter75/lifecycle_neighbours.rs) ([handoff](../../uplift/coverage-20261117/iter75/HANDOFF.md)).
 
 ### lifecycle.hooks
 
@@ -346,3 +350,5 @@ Findings: [The composite's read-only check ignores other extensions](../../Verus
 Findings: [Configuring a nonexistent composite extension succeeds and then breaks source control in the namespace](../../Verus_verification/bugs_issues.md#c-d71)
 
 State machines: [composite · iter67](../../Verus_verification/models/iter67-composite/manifest.json)
+
+Iteration75 neighbours: [lifecycle_neighbours.rs](../../Verus_verification/coverage-20261117/iter75/lifecycle_neighbours.rs) ([handoff](../../uplift/coverage-20261117/iter75/HANDOFF.md)).

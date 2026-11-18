@@ -128,6 +128,8 @@ Iteration 4 phase-domain repair: the phase admission producer is `Test.cls` prop
 
 State machines: [repairs4 · iter4](../../Verus_verification/models/iter4-repairs4/manifest.json)
 
+Iteration75 neighbours: [r8a_settings.rs](../../Verus_verification/coverage-20261117/iter75/r8a_settings.rs) ([handoff](../../uplift/coverage-20261117/iter75/HANDOFF.md)).
+
 ### build.test.outcome
 
 - design-verified

@@ -176,3 +176,5 @@ Findings: [Uninstalling a CSPApplication without DeployPath deletes the module's
 Findings: [A CSPApplication load resets an existing application's undeclared properties](../../Verus_verification/bugs_issues.md#c-d61)
 
 State machines: [cspapp · iter57](../../Verus_verification/models/iter57-cspapp/manifest.json)
+
+Iteration75 neighbours: [cspapp_neighbours.rs](../../Verus_verification/coverage-20261117/iter75/cspapp_neighbours.rs) ([handoff](../../uplift/coverage-20261117/iter75/HANDOFF.md)).

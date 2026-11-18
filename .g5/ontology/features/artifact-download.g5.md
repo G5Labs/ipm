@@ -102,6 +102,8 @@ Open questions: [When should an existing artifact folder or same-named temporary
 
 Sources: `ArtifactoryTarball.cls::ParseAnonymousFilter`, `::ParseCondition`, `::WildcardMatch`; native upstream unit fixtures and iteration 3 probes. Verus: `artifacts.rs::{condition,parse_fields,wildcard,filter_boundaries,wildcard_neighbors}`.
 
+Iteration75 neighbours: [artifact_filter.rs](../../Verus_verification/coverage-20261117/iter75/artifact_filter.rs) ([handoff](../../uplift/coverage-20261117/iter75/HANDOFF.md)).
+
 ### artifact.selection
 
 - agent
@@ -129,3 +131,5 @@ Sources: `General/Archive.cls::Extract`; `Utils/FileBinaryTar.cls::{ExtractFile,
 - Expands: [Artifact download](#artifact).
 
 Sources: `ArtifactoryTarball.cls::{OnAfterPhase,OnExportItem,RetrieveArtifact}`; `Lifecycle/Base.cls::ExportSingleModule`; native `%Library.File.CopyDir` signature and documentation. Verus: `artifacts.rs::{save_download,activate,copy_export,cache_and_failure_neighbors}`.
+
+Iteration75 neighbours: [r8b_remote.rs](../../Verus_verification/coverage-20261117/iter75/r8b_remote.rs) ([handoff](../../uplift/coverage-20261117/iter75/HANDOFF.md)).

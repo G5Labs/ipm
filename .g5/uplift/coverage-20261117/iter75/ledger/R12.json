@@ -1,0 +1,351 @@
+{
+ "group": "R12",
+ "items": "HANDOFF-72 \u00a76 items 1 and 2",
+ "entries": [
+  {
+   "id": "repo.oras.integrity#3",
+   "old_grade": "partial",
+   "new_grade": "full",
+   "check": "proved",
+   "models": [
+    ".g5/Verus_verification/consolidated/iter2/registry.rs::verify_layers",
+    ".g5/Verus_verification/consolidated/iter2/registry.rs::first_tar_controls_integrity",
+    ".g5/Verus_verification/coverage-20261117/iter75/oras_integrity.rs::size_and_digest_each_decide"
+   ],
+   "evidence_add": [
+    ".g5/uplift/coverage-20261117/iter75/mutations.jsonl",
+    ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+    ".g5/uplift/coverage-20261117/iter75/ledger/R12.json",
+    ".g5/uplift/coverage-20261117/iter75/receipts/coverage-20261117__iter75__oras_integrity.rs.log"
+   ],
+   "support": "mutation-checked",
+   "mutations": [
+    "R1-m01",
+    "R1-m02",
+    "R1-m03",
+    "R1-m04"
+   ],
+   "receipts": [
+    "receipts/coverage-20261117__iter75__oras_integrity.rs.log"
+   ],
+   "product": "src/cls/IPM/Repo/Oras/PackageService.cls:1014-1021 (skip non-tar mediaType; first tar layer returns manifest_size == size and manifest_hash == expected_hash; no tar layer returns False)",
+   "neighbour": "size_and_digest_each_decide: size-only and digest-only mismatches of the first tar layer are refused, a non-tar layer carrying the pulled size and digest does not stand in, a later matching tar layer does not rescue either single mismatch",
+   "basis_note": "iter2 verify_layers is a faithful transcription of VerifyModuleHashAndSize; the size-only/digest-only neighbours kill G4-m67/m68 (re-run as R1-m01/m02), the mediaType skip (R1-m03) and the later-layer rescue (R1-m04).",
+   "instance_scoped": true,
+   "metadata_link": {
+    "page": ".g5/ontology/architecture/package-sources.g5.md",
+    "block": "repo.oras.integrity",
+    "model": ".g5/Verus_verification/coverage-20261117/iter75/oras_integrity.rs"
+   }
+  },
+  {
+   "id": "repo.oras.integrity#7",
+   "old_grade": "partial",
+   "new_grade": "partial",
+   "check": "proved",
+   "models": [
+    ".g5/Verus_verification/consolidated/iter2/registry.rs::verify_layers",
+    ".g5/Verus_verification/coverage-20261117/iter75/oras_integrity.rs::size_and_digest_each_decide",
+    ".g5/Verus_verification/consolidated/iter2/registry.rs::last_tag",
+    ".g5/Verus_verification/coverage-20261117/iter75/oras_integrity.rs::pull_tag"
+   ],
+   "evidence_add": [
+    ".g5/uplift/coverage-20261117/iter75/mutations.jsonl",
+    ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+    ".g5/uplift/coverage-20261117/iter75/ledger/R12.json",
+    ".g5/uplift/coverage-20261117/iter75/receipts/coverage-20261117__iter75__oras_integrity.rs.log"
+   ],
+   "mutations": [
+    "R1-m01",
+    "R1-m02"
+   ],
+   "receipts": [
+    "receipts/coverage-20261117__iter75__oras_integrity.rs.log"
+   ],
+   "product": "src/cls/IPM/Repo/Oras/PackageService.cls:1014-1021",
+   "neighbour": "size_and_digest_each_decide (retaining both checks is now pinned: dropping either comparison fails)",
+   "basis_note": "the \"retain size and digest checking\" half is now mutation-checked (R1-m01, R1-m02 killed).",
+   "gap": "\"Expose the tag-order and file/layer mismatches\" is a documentation policy with no formal observation, and the alternatives in the bullet stay undecided (open question repo.oras.integrity.policy). Retaining both checks is pinned (R1-m01/m02 killed).",
+   "metadata_link": {
+    "page": ".g5/ontology/architecture/package-sources.g5.md",
+    "block": "repo.oras.integrity",
+    "model": ".g5/Verus_verification/coverage-20261117/iter75/oras_integrity.rs"
+   }
+  },
+  {
+   "id": "repo.oras.integrity#1",
+   "old_grade": "partial",
+   "new_grade": "full",
+   "check": "proved",
+   "models": [
+    ".g5/Verus_verification/consolidated/iter2/registry.rs::last_tag",
+    ".g5/Verus_verification/consolidated/iter2/registry.rs::tag_order_is_a_real_input",
+    ".g5/Verus_verification/coverage-20261117/iter75/oras_integrity.rs::pull_tag",
+    ".g5/Verus_verification/coverage-20261117/iter75/oras_integrity.rs::tag_selection_neighbours"
+   ],
+   "evidence_add": [
+    ".g5/uplift/coverage-20261117/iter75/mutations.jsonl",
+    ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+    ".g5/uplift/coverage-20261117/iter75/ledger/R12.json",
+    ".g5/uplift/coverage-20261117/iter75/receipts/coverage-20261117__iter75__oras_integrity.rs.log",
+    ".g5/uplift/consolidated/iter2/native/receipt.json"
+   ],
+   "support": "mutation-checked",
+   "mutations": [
+    "R1-m09",
+    "R1-m10",
+    "R1-m11"
+   ],
+   "receipts": [
+    "receipts/coverage-20261117__iter75__oras_integrity.rs.log"
+   ],
+   "product": "src/cls/IPM/Repo/Oras/PackageService.cls:785-787 (empty tag replaced by GetLatestTag), 920-923 (tags[-1] if tags else \"\")",
+   "neighbour": "tag_selection_neighbours: no tag picks the last listed tag ([2,1] -> 1, [1,2] -> 2, [] -> none); an explicit tag is used as given whatever the provider lists",
+   "basis_note": "pull_tag adds the explicit-tag input that iter2 last_tag lacked (Pull lines 785-787); mutants that ignore the explicit tag (R1-m09), pick the first tag (R1-m10) or ignore the tag list (R1-m11) are killed. The provider tag order is an input (ORAS get_tags), observed in the iteration-2 native receipt (raw.log TAG-g5iter2order value=1.0.0, TAG-g5iter2sorted value=2.0.0).",
+   "instance_scoped": true,
+   "metadata_link": {
+    "page": ".g5/ontology/architecture/package-sources.g5.md",
+    "block": "repo.oras.integrity",
+    "model": ".g5/Verus_verification/coverage-20261117/iter75/oras_integrity.rs"
+   }
+  },
+  {
+   "id": "repo.oras.archive-boundary#2",
+   "old_grade": "partial",
+   "new_grade": "full",
+   "check": "proved",
+   "models": [
+    ".g5/Verus_verification/coverage-20261117/iter75/oras_integrity.rs::pull_effects",
+    ".g5/Verus_verification/coverage-20261117/iter75/oras_integrity.rs::failed_check_keeps_installed_root",
+    ".g5/Verus_verification/coverage-20261117/iter75/oras_integrity.rs::refused_archive_never_replaces_root",
+    ".g5/Verus_verification/consolidated/iter2/registry.rs::verify_layers",
+    ".g5/Verus_verification/consolidated/iter2/registry.rs::pull"
+   ],
+   "evidence_add": [
+    ".g5/uplift/coverage-20261117/iter75/mutations.jsonl",
+    ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+    ".g5/uplift/coverage-20261117/iter75/ledger/R12.json",
+    ".g5/uplift/coverage-20261117/iter75/receipts/coverage-20261117__iter75__oras_integrity.rs.log",
+    ".g5/uplift/consolidated/iter68/native/observations.json"
+   ],
+   "support": "mutation-checked",
+   "mutations": [
+    "R1-m01",
+    "R1-m02",
+    "R1-m05",
+    "R1-m06",
+    "R1-m07",
+    "R1-m08"
+   ],
+   "receipts": [
+    "receipts/coverage-20261117__iter75__oras_integrity.rs.log"
+   ],
+   "product": "src/cls/IPM/Repo/Oras/PackageService.cls:826-829 (Pull throws when not verified), 239-246 (GetModule throws the failed status before returning the stream); src/cls/IPM/Utils/Module.cls:142-172 (only a returned stream reaches LoadModuleFromArchive)",
+   "neighbour": "failed_check_keeps_installed_root: on a writable root a matching archive reaches the loader and replaces the root; a size-only or digest-only mismatch releases nothing, never enters the loader and leaves the root; refused_archive_never_replaces_root states it for every manifest",
+   "basis_note": "successor pull_effects computes the status from the manifest layers and pulled file through verify_layers instead of the iter68 fixture bool size_matches. G4-m115/m116/m117 re-run as R1-m06/m02/m05 are killed, as are root-replaced-regardless (R1-m07) and a Pull status that ignores the verdict (R1-m08). Native correspondence: the iteration-68 receipt observed the size-mismatch refusal keeping the installed-root sentinel and the valid replacement removing it. The digest-only case is not observed natively; it is decided by the same product line 1020 and the bundled oras 0.1.30 download_blob (provider.py:446-474) writes the blob without checking its digest, so the case reaches IPM's check.",
+   "instance_scoped": false,
+   "metadata_link": {
+    "page": ".g5/ontology/architecture/package-sources.g5.md",
+    "block": "repo.oras.archive-boundary",
+    "model": ".g5/Verus_verification/coverage-20261117/iter75/oras_integrity.rs"
+   }
+  },
+  {
+   "id": "uninstall.cleanup#1",
+   "old_grade": "partial",
+   "new_grade": "full",
+   "check": "refuted",
+   "models": [
+    "playbook-uplift/models/verus/uninstall.rs::clean_code",
+    "playbook-uplift/models/verus/uninstall.rs::code_gone",
+    "playbook-uplift/models/verus/uninstall.rs::unin_refines_complete",
+    ".g5/Verus_verification/coverage-20261117/iter75/uninstall_neighbours.rs::mapped_code_needs_global",
+    ".g5/Verus_verification/consolidated/iter63/cleanup.rs::code_removed"
+   ],
+   "evidence_add": [
+    ".g5/uplift/coverage-20261117/iter75/mutations.jsonl",
+    ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+    ".g5/uplift/coverage-20261117/iter75/ledger/R12.json",
+    ".g5/uplift/coverage-20261117/iter75/receipts/coverage-20261117__iter75__uninstall_neighbours.rs.log"
+   ],
+   "support": "mutation-checked",
+   "mutations": [
+    "R2-m01",
+    "R2-m02",
+    "R2-m05",
+    "R2-m06"
+   ],
+   "receipts": [
+    "receipts/coverage-20261117__iter75__uninstall_neighbours.rs.log"
+   ],
+   "product": "src/cls/IPM/Lifecycle/Base.cls:314 (tRemoveMapped = Clean.GlobalScope), 375-378 and 414-417 (IsMapped items skipped with a WARNING unless tRemoveMapped); src/cls/IPM/Main.cls:500 (-global sets Clean.GlobalScope)",
+   "neighbour": "mapped_code_needs_global: uninstall without -global keeps a mapped class and succeeds; with -global it is deleted; unmapped code is deleted either way",
+   "basis_note": "whole-command neighbours over the faithful playbook clean_code/code_gone; M-m08 and M-m09 re-run as R2-m01/m02 are killed, as are -global not reaching Clean.GlobalScope (R2-m05) and tRemoveMapped fixed to 1 (R2-m06). Check refuted for the unqualified block wording: as built, mapped code survives uninstall without -global (proved for the as-built claim in the recorded cases). IsMapped is an environment input (namespace mapping); no native receipt observes the skip.",
+   "instance_scoped": true,
+   "refutation": "The block says uninstall deletes the module's classes, packages, includes and routines; as built, mapped items are skipped with a WARNING unless -global is given (Lifecycle/Base.cls:375-378, 414-417).",
+   "ontology_repair": "uninstall.cleanup P1: state that mapped code is skipped unless -global (HANDOFF-72 \u00a75 item 10, first omission).",
+   "metadata_link": {
+    "page": ".g5/ontology/features/uninstall.g5.md",
+    "block": "uninstall.cleanup",
+    "model": ".g5/Verus_verification/coverage-20261117/iter75/uninstall_neighbours.rs"
+   }
+  },
+  {
+   "id": "uninstall.cleanup#2",
+   "old_grade": "partial",
+   "new_grade": "full",
+   "check": "proved",
+   "models": [
+    ".g5/Verus_verification/consolidated/iter63/cleanup.rs::globals_by_declaration",
+    "playbook-uplift/models/verus/uninstall.rs::clean_step",
+    "playbook-uplift/models/verus/uninstall.rs::unin_witness_global_kept",
+    ".g5/Verus_verification/coverage-20261117/iter75/uninstall_neighbours.rs::preserve_keeps_global_data"
+   ],
+   "evidence_add": [
+    ".g5/uplift/coverage-20261117/iter75/mutations.jsonl",
+    ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+    ".g5/uplift/coverage-20261117/iter75/ledger/R12.json",
+    ".g5/uplift/coverage-20261117/iter75/receipts/coverage-20261117__iter75__uninstall_neighbours.rs.log"
+   ],
+   "support": "mutation-checked",
+   "mutations": [
+    "R2-m03",
+    "R2-m04"
+   ],
+   "receipts": [
+    "receipts/coverage-20261117__iter75__uninstall_neighbours.rs.log"
+   ],
+   "product": "src/cls/IPM/ResourceProcessor/Default/Global.cls:76-80 (Clean: kill @..Global only when Global is non-empty and Preserve is off)",
+   "neighbour": "preserve_keeps_global_data: a Global-attribute resource with Preserve keeps its data with and without -global; without Preserve it is killed; unin_witness_global_kept (inherited) keeps a name-only global",
+   "basis_note": "M-m12 re-run as R2-m03 (kill even with Preserve) and M-m13 re-run as R2-m04 (kill name-only data) are killed. \"Only when named\" holds; the block does not mention Preserve, which narrows deletion further (omission, not a contradiction).",
+   "instance_scoped": true,
+   "ontology_repair": "uninstall.cleanup P1: state that Global data is kept when Preserve is set (HANDOFF-72 \u00a75 item 10, second omission).",
+   "metadata_link": {
+    "page": ".g5/ontology/features/uninstall.g5.md",
+    "block": "uninstall.cleanup",
+    "model": ".g5/Verus_verification/coverage-20261117/iter75/uninstall_neighbours.rs"
+   }
+  }
+ ],
+ "bindings": [
+  {
+   "formal": ".g5/Verus_verification/consolidated/iter2/registry.rs::verify_layers",
+   "file": "src/cls/IPM/Repo/Oras/PackageService.cls",
+   "member": "%IPM.Repo.Oras.PackageService::VerifyModuleHashAndSize",
+   "lines": "1014-1021",
+   "role": "decide",
+   "note": "first application/vnd.oci.image.layer.v1.tar layer: size and digest both equal"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/oras_integrity.rs::pull_effects",
+   "file": "src/cls/IPM/Repo/Oras/PackageService.cls",
+   "member": "%IPM.Repo.Oras.PackageService::Pull",
+   "lines": "822-829",
+   "role": "decide",
+   "note": "hash and size of the linked tgz checked; failure throws \"Module size and/or hash failed validation!\""
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/oras_integrity.rs::pull_effects",
+   "file": "src/cls/IPM/Repo/Oras/PackageService.cls",
+   "member": "%IPM.Repo.Oras.PackageService::GetModule",
+   "lines": "239-246",
+   "role": "guard",
+   "note": "$$$ThrowOnError(status) before returning the stream"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/oras_integrity.rs::pull_effects",
+   "file": "src/cls/IPM/Utils/Module.cls",
+   "member": "%IPM.Utils.Module::LoadModuleReference",
+   "lines": "142-172",
+   "role": "read",
+   "note": "only a returned payload is copied and passed to LoadModuleFromArchive"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/oras_integrity.rs::pull_tag",
+   "file": "src/cls/IPM/Repo/Oras/PackageService.cls",
+   "member": "%IPM.Repo.Oras.PackageService::Pull",
+   "lines": "785-787",
+   "role": "decide",
+   "note": "empty tag replaced by GetLatestTag"
+  },
+  {
+   "formal": ".g5/Verus_verification/consolidated/iter2/registry.rs::last_tag",
+   "file": "src/cls/IPM/Repo/Oras/PackageService.cls",
+   "member": "%IPM.Repo.Oras.PackageService::GetLatestTag",
+   "lines": "920-923",
+   "role": "decide",
+   "note": "tags[-1] if tags else \"\""
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/oras_integrity.rs::size_and_digest_each_decide",
+   "file": "src/cls/IPM/Repo/Oras/PackageService.cls",
+   "member": "%IPM.Repo.Oras.PackageService::VerifyModuleHashAndSize",
+   "lines": "1014-1021",
+   "role": "neighbour",
+   "note": "size-only and digest-only mismatches"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/oras_integrity.rs::failed_check_keeps_installed_root",
+   "file": "src/cls/IPM/Repo/Oras/PackageService.cls",
+   "member": "%IPM.Repo.Oras.PackageService::GetModule",
+   "lines": "239-246",
+   "role": "neighbour",
+   "note": "match on a writable root vs single mismatches"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/oras_integrity.rs::tag_selection_neighbours",
+   "file": "src/cls/IPM/Repo/Oras/PackageService.cls",
+   "member": "%IPM.Repo.Oras.PackageService::Pull",
+   "lines": "785-787",
+   "role": "neighbour",
+   "note": "explicit tag vs no tag"
+  },
+  {
+   "formal": "playbook-uplift/models/verus/uninstall.rs::code_gone",
+   "file": "src/cls/IPM/Lifecycle/Base.cls",
+   "member": "%IPM.Lifecycle.Base::%Clean",
+   "lines": "314,375-378,414-417",
+   "role": "decide",
+   "note": "IsMapped items skipped unless Clean.GlobalScope"
+  },
+  {
+   "formal": "playbook-uplift/models/verus/uninstall.rs::storage_uninstall",
+   "file": "src/cls/IPM/Main.cls",
+   "member": "%IPM.Main (Commands XDATA, uninstall)",
+   "lines": "500",
+   "role": "write",
+   "note": "-global sets Clean.GlobalScope=1"
+  },
+  {
+   "formal": "playbook-uplift/models/verus/uninstall.rs::clean_step",
+   "file": "src/cls/IPM/ResourceProcessor/Default/Global.cls",
+   "member": "%IPM.ResourceProcessor.Default.Global::OnPhase",
+   "lines": "76-80",
+   "role": "decide",
+   "note": "kill @..Global when Global non-empty and not Preserve"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/uninstall_neighbours.rs::mapped_code_needs_global",
+   "file": "src/cls/IPM/Lifecycle/Base.cls",
+   "member": "%IPM.Lifecycle.Base::%Clean",
+   "lines": "375-378,414-417",
+   "role": "neighbour",
+   "note": "mapped class with and without -global"
+  },
+  {
+   "formal": ".g5/Verus_verification/coverage-20261117/iter75/uninstall_neighbours.rs::preserve_keeps_global_data",
+   "file": "src/cls/IPM/ResourceProcessor/Default/Global.cls",
+   "member": "%IPM.ResourceProcessor.Default.Global::OnPhase",
+   "lines": "76-80",
+   "role": "neighbour",
+   "note": "Global with and without Preserve"
+  }
+ ],
+ "not_done": [
+  {
+   "id": "repo.oras.archive-boundary#4",
+   "why": "outside item 1: needs declared_blob derived from the pull manifest versus the metadata manifest (a larger successor of iter68 changed_tag)"
+  }
+ ],
+ "cost": "builder session; about 25 minutes for items 1-2"
+}

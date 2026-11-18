@@ -117,21 +117,33 @@
      "text": "A readable manifest whose module name is invalid fails the whole refresh, which then changes nothing.",
      "cases": "invalid name within scan depth vs beyond scan depth; failed vs successful build",
      "observation": "refresh status; cache rows unchanged",
-     "grade": "partial",
+     "grade": "full",
      "check": "proved",
      "models": [
+      ".g5/Verus_verification/consolidated/verus/owners.rs::build_cache",
       ".g5/Verus_verification/consolidated/verus/owners.rs::scanned_error",
       ".g5/Verus_verification/consolidated/verus/owners.rs::failed_cache_preserves_rows",
-      ".g5/Verus_verification/consolidated/verus/owners.rs::witnessed_owners_distinctions"
+      ".g5/Verus_verification/consolidated/verus/owners.rs::witnessed_owners_distinctions",
+      ".g5/Verus_verification/coverage-20261117/iter75/fs_cache.rs::invalid_name_fails_whole_refresh"
      ],
      "evidence": [
       ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
       ".g5/uplift/coverage-20261117/iter72/audit/architecture__package-sources.json",
-      ".g5/uplift/coverage-20261117/iter72/mutations/G4.jsonl"
+      ".g5/uplift/coverage-20261117/iter72/mutations/G4.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/mutations.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+      ".g5/Verus_verification/coverage-20261117/iter75/fs_cache.rs",
+      ".g5/Verus_verification/consolidated/native/results/20261114T025102Z-r1-temp-repo/raw.log"
      ],
-     "basis": "reused:package-sources metadata (TR7, owners.rs); iteration-72 rule-4a re-audit (G4): partial, support mutation-checked (mutations G4-m86)",
-     "assessed_in": "iteration-72",
-     "gap": "Rule 4a (iteration-72): rule 4a: no theorem or neighbour links an invalid-name entry to a failed refresh; scanned_error is witnessed alone and a mutant whose ok ignores scanned_error (G4-m86) survives owners.rs and owners_native.rs. \"Changes nothing on failure\" is proved (failed_cache_preserves_rows)."
+     "basis": "new:iteration-75 (The invalid-name entry is now linked to the failed refresh, beside the beyond-depth and unreadable neighbours; G4-m86 rerun as R5-m01, the intended skip (R5-m02), a depth-blind scan (R5-m03) and a failed refresh that keeps its writes (R5-m04) are killed. Native TR7/TR7b (consolidated round 1) observed the failed and the successful build.) || earlier: reused:package-sources metadata (TR7, owners.rs); iteration-72 rule-4a re-audit (G4): partial, support mutation-checked (mutations G4-m86)",
+     "assessed_in": "iteration-75",
+     "support": "mutation-checked",
+     "mutations": [
+      "R5-m01",
+      "R5-m02",
+      "R5-m03",
+      "R5-m04"
+     ]
     },
     {
      "id": "repo.filesystem#5",
@@ -210,22 +222,31 @@
      "text": "Working assumption (intended): a module with an invalid name should be skipped with a warning, like an unreadable manifest, so the other modules stay available.",
      "cases": "invalid-name manifest alongside a valid one",
      "observation": "refresh status and the valid module's cache row",
-     "grade": "partial",
+     "grade": "full",
      "check": "refuted",
      "models": [
       ".g5/Verus_verification/consolidated/verus/owners.rs::build_cache",
       ".g5/Verus_verification/consolidated/verus/owners.rs::scanned_error",
-      ".g5/Verus_verification/consolidated/verus/owners.rs::failed_cache_preserves_rows",
-      ".g5/Verus_verification/consolidated/verus/owners.rs::witnessed_owners_distinctions"
+      ".g5/Verus_verification/consolidated/verus/owners.rs::add_cache",
+      ".g5/Verus_verification/coverage-20261117/iter75/fs_cache.rs::intended_skip_refuted",
+      ".g5/Verus_verification/coverage-20261117/iter75/fs_cache.rs::intended_add"
      ],
      "evidence": [
       ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
       ".g5/uplift/coverage-20261117/iter72/audit/architecture__package-sources.json",
-      ".g5/uplift/coverage-20261117/iter72/mutations/G4.jsonl"
+      ".g5/uplift/coverage-20261117/iter72/mutations/G4.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/mutations.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+      ".g5/Verus_verification/coverage-20261117/iter75/fs_cache.rs",
+      ".g5/Verus_verification/consolidated/native/results/20261114T025102Z-r1-temp-repo/raw.log"
      ],
-     "basis": "new:iteration-70 (as-built model: an InvalidName entry fails the whole build and preserves the old rows, contradicting the intended skip); iteration-72 rule-4a re-audit (G4): partial, support mutation-checked (mutations G4-m86)",
-     "assessed_in": "iteration-72",
-     "gap": "Rule 4a (iteration-72): rule 4a: the refutation (as built the whole refresh fails, so the valid module is not offered) is not established by any theorem or neighbour: a mutant implementing the intended skip (ok ignores scanned_error, G4-m86) still verifies. Needs a neighbour build_cache([valid, invalid-name]) -> !ok with the valid key absent."
+     "basis": "new:iteration-75 (The refutation of the intended skip is now established by a neighbour: the as-built build of [valid, invalid-name] fails without the valid key. The intended-skip mutant (R5-m02) and G4-m86 rerun (R5-m01) are killed, i.e. a model implementing the working assumption fails the as-built assertion. Native TR7 observed no repository created.) || earlier: new:iteration-70 (as-built model: an InvalidName entry fails the whole build and preserves the old rows, contradicting the intended skip); iteration-72 rule-4a re-audit (G4): partial, support mutation-checked (mutations G4-m86)",
+     "assessed_in": "iteration-75",
+     "support": "mutation-checked",
+     "mutations": [
+      "R5-m01",
+      "R5-m02"
+     ]
     }
    ],
    "parent": {
@@ -625,20 +646,31 @@
      "text": "The ORAS availability adapter accepts a 2xx reply or a 401 carrying WWW-Authenticate; a headerless 401 and a 403 are unavailable.",
      "cases": "200 vs 401+header vs 401 without header vs 403; transport failure",
      "observation": "IsAvailable result",
-     "grade": "partial",
+     "grade": "full",
      "check": "proved",
      "models": [
-      ".g5/Verus_verification/consolidated/verus/thin_surfaces.rs::oras_available"
+      ".g5/Verus_verification/consolidated/verus/thin_surfaces.rs::oras_available",
+      ".g5/Verus_verification/coverage-20261117/iter75/r8a_oras.rs::oras_available_neighbors"
      ],
      "evidence": [
       ".g5/uplift/coverage-20261117/iter68/receipts/index.jsonl",
       ".g5/Verus_verification/consolidated/verus/results/thin_surfaces.json",
       ".g5/uplift/coverage-20261117/iter72/audit/architecture__package-sources.json",
-      ".g5/uplift/coverage-20261117/iter72/mutations/G4.jsonl"
+      ".g5/uplift/coverage-20261117/iter72/mutations/G4.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/mutations.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/ledger/R8A.json",
+      ".g5/uplift/coverage-20261117/iter75/receipts/coverage-20261117__iter75__r8a_oras.rs.log"
      ],
-     "basis": "reused:package-sources metadata (Extension Verus thin_surfaces.rs::oras_available); iteration-72 rule-4a re-audit (G4): partial, support mutation-checked (mutations G4-m127, G4-m128)",
-     "assessed_in": "iteration-72",
-     "gap": "Rule 4a (iteration-72): rule 4a: the only formal statement is the exec body restated as its ensures; no neighbour assertion pins 200 / 401+header / headerless 401 / 403 / transport failure, so changing spec and body together (403+header accepted, G4-m128) verifies. The cases are checked only by the native print harness in main()."
+     "basis": "new:iteration-75 (inherited exec oras_available (body verified against its ensures, faithful) with exec neighbours; G4-m128 (spec and body changed together) re-run as R8a-m09 is killed, as are headerless-401 (R8a-m10) and transport-ignored (R8a-m11) mutants.) || earlier: reused:package-sources metadata (Extension Verus thin_surfaces.rs::oras_available); iteration-72 rule-4a re-audit (G4): partial, support mutation-checked (mutations G4-m127, G4-m128)",
+     "assessed_in": "iteration-75",
+     "support": "mutation-checked",
+     "instance_scoped": true,
+     "mutations": [
+      "R8a-m09",
+      "R8a-m10",
+      "R8a-m11"
+     ]
     },
     {
      "id": "repo.oras#6",
@@ -707,21 +739,34 @@
      "text": "As built, an ORAS pull without a tag selects the last tag supplied by the registry, unsorted: [2.0.0,1.0.0] selects 1.0.0 and the reverse selects 2.0.0.",
      "cases": "no tag: provider order [2,1] vs [1,2], empty tag list; explicit tag vs no tag",
      "observation": "selected tag",
-     "grade": "partial",
-     "check": "unchecked",
+     "grade": "full",
+     "check": "proved",
      "models": [
       ".g5/Verus_verification/consolidated/iter2/registry.rs::last_tag",
-      ".g5/Verus_verification/consolidated/iter2/registry.rs::tag_order_is_a_real_input"
+      ".g5/Verus_verification/consolidated/iter2/registry.rs::tag_order_is_a_real_input",
+      ".g5/Verus_verification/coverage-20261117/iter75/oras_integrity.rs::pull_tag",
+      ".g5/Verus_verification/coverage-20261117/iter75/oras_integrity.rs::tag_selection_neighbours"
      ],
      "evidence": [
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
       ".g5/uplift/consolidated/iter2/proofs/models.json",
       ".g5/uplift/coverage-20261117/iter72/audit/architecture__package-sources.json",
-      ".g5/uplift/coverage-20261117/iter72/mutations/G4.jsonl"
+      ".g5/uplift/coverage-20261117/iter72/mutations/G4.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/mutations.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/ledger/R12.json",
+      ".g5/uplift/coverage-20261117/iter75/receipts/coverage-20261117__iter75__oras_integrity.rs.log",
+      ".g5/uplift/consolidated/iter2/native/receipt.json"
      ],
-     "basis": "reused:package-sources metadata (iter2 registry.rs; control provider-order-erased rejected); iteration-72 rule-4a re-audit (G4): full, support mutation-checked (mutations G4-m66)",
-     "assessed_in": "iteration-72",
-     "gap": "last_tag has no tag input. A pull with an explicit tag (the tag used as given) is not modeled, so the \"without a tag\" condition is not distinguished (review-71 B)."
+     "basis": "new:iteration-75 (pull_tag adds the explicit-tag input that iter2 last_tag lacked (Pull lines 785-787); mutants that ignore the explicit tag (R1-m09), pick the first tag (R1-m10) or ignore the tag list (R1-m11) are killed. The provider tag order is an input (ORAS get_tags), observed in the iteration-2 native receipt (raw.log TAG-g5iter2order value=1.0.0, TAG-g5iter2sorted value=2.0.0).) || earlier: reused:package-sources metadata (iter2 registry.rs; control provider-order-erased rejected); iteration-72 rule-4a re-audit (G4): full, support mutation-checked (mutations G4-m66)",
+     "assessed_in": "iteration-75",
+     "support": "mutation-checked",
+     "instance_scoped": true,
+     "mutations": [
+      "R1-m09",
+      "R1-m10",
+      "R1-m11"
+     ]
     },
     {
      "id": "repo.oras.integrity#2",
@@ -756,21 +801,33 @@
      "text": "Archive validation skips non-tar layers and compares size and digest with the first tar layer; a later matching tar layer does not rescue an earlier mismatch.",
      "cases": "first tar mismatching then matching; non-tar before matching tar; first tar matching",
      "observation": "validation result",
-     "grade": "partial",
+     "grade": "full",
      "check": "proved",
      "models": [
       ".g5/Verus_verification/consolidated/iter2/registry.rs::verify_layers",
-      ".g5/Verus_verification/consolidated/iter2/registry.rs::first_tar_controls_integrity"
+      ".g5/Verus_verification/consolidated/iter2/registry.rs::first_tar_controls_integrity",
+      ".g5/Verus_verification/coverage-20261117/iter75/oras_integrity.rs::size_and_digest_each_decide"
      ],
      "evidence": [
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
       ".g5/uplift/consolidated/iter2/proofs/models.json",
       ".g5/uplift/coverage-20261117/iter72/audit/architecture__package-sources.json",
-      ".g5/uplift/coverage-20261117/iter72/mutations/G4.jsonl"
+      ".g5/uplift/coverage-20261117/iter72/mutations/G4.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/mutations.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/ledger/R12.json",
+      ".g5/uplift/coverage-20261117/iter75/receipts/coverage-20261117__iter75__oras_integrity.rs.log"
      ],
-     "basis": "reused:package-sources metadata (iter2 registry.rs); iteration-72 rule-4a re-audit (G4): partial, support mutation-checked (mutations G4-m67, G4-m68, G4-m69, G4-m75)",
-     "assessed_in": "iteration-72",
-     "gap": "Rule 4a (iteration-72): rule 4a: the mismatch neighbour fails size and digest together, so a digest-only (G4-m67) or size-only (G4-m68) check verifies. First-tar control (m69) and non-tar skip (m75) are killed. Needs a size-match/digest-mismatch neighbour and the converse."
+     "basis": "new:iteration-75 (iter2 verify_layers is a faithful transcription of VerifyModuleHashAndSize; the size-only/digest-only neighbours kill G4-m67/m68 (re-run as R1-m01/m02), the mediaType skip (R1-m03) and the later-layer rescue (R1-m04).) || earlier: reused:package-sources metadata (iter2 registry.rs); iteration-72 rule-4a re-audit (G4): partial, support mutation-checked (mutations G4-m67, G4-m68, G4-m69, G4-m75)",
+     "assessed_in": "iteration-75",
+     "support": "mutation-checked",
+     "instance_scoped": true,
+     "mutations": [
+      "R1-m01",
+      "R1-m02",
+      "R1-m03",
+      "R1-m04"
+     ]
     },
     {
      "id": "repo.oras.integrity#4",
@@ -850,18 +907,27 @@
      "cases": "first tar layer: size mismatch only vs digest mismatch only vs both match",
      "observation": "validation result",
      "grade": "partial",
-     "check": "unchecked",
+     "check": "proved",
      "models": [
       ".g5/Verus_verification/consolidated/iter2/registry.rs::verify_layers",
-      ".g5/Verus_verification/consolidated/iter2/registry.rs::first_tar_controls_integrity",
-      ".g5/Verus_verification/consolidated/iter2/registry.rs::last_tag"
+      ".g5/Verus_verification/coverage-20261117/iter75/oras_integrity.rs::size_and_digest_each_decide",
+      ".g5/Verus_verification/consolidated/iter2/registry.rs::last_tag",
+      ".g5/Verus_verification/coverage-20261117/iter75/oras_integrity.rs::pull_tag"
      ],
      "evidence": [
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/mutations.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/ledger/R12.json",
+      ".g5/uplift/coverage-20261117/iter75/receipts/coverage-20261117__iter75__oras_integrity.rs.log"
      ],
-     "basis": "new:iteration-72 (review-71 B): B4 was excluded as undecided alternatives; its first sentence is a working assumption (rule 3)",
-     "assessed_in": "iteration-72",
-     "gap": "Retaining both checks is the as-built verify_layers, but its mismatching neighbour differs in size and digest together, so dropping either comparison still verifies (repo.oras.integrity#3). \"Expose the mismatch\" is a documentation policy with no formal observation. The alternatives in the bullet stay undecided (open question repo.oras.integrity.policy)."
+     "basis": "new:iteration-75 (the \"retain size and digest checking\" half is now mutation-checked (R1-m01, R1-m02 killed).) || earlier: new:iteration-72 (review-71 B): B4 was excluded as undecided alternatives; its first sentence is a working assumption (rule 3)",
+     "assessed_in": "iteration-75",
+     "gap": "\"Expose the tag-order and file/layer mismatches\" is a documentation policy with no formal observation, and the alternatives in the bullet stay undecided (open question repo.oras.integrity.policy). Retaining both checks is pinned (R1-m01/m02 killed).",
+     "mutations": [
+      "R1-m01",
+      "R1-m02"
+     ]
     }
    ]
   },
@@ -911,21 +977,37 @@
      "text": "A failed archive size or digest check stops IPM from replacing the installed module's directory.",
      "cases": "size/digest mismatch vs match on a writable installed root",
      "observation": "installed root replaced; loader entered",
-     "grade": "partial",
+     "grade": "full",
      "check": "proved",
      "models": [
-      ".g5/Verus_verification/consolidated/iter68/as_built.rs::observe",
-      ".g5/Verus_verification/consolidated/iter68/as_built.rs::rejection_stops_loader_after_provider_effect"
+      ".g5/Verus_verification/coverage-20261117/iter75/oras_integrity.rs::pull_effects",
+      ".g5/Verus_verification/coverage-20261117/iter75/oras_integrity.rs::failed_check_keeps_installed_root",
+      ".g5/Verus_verification/coverage-20261117/iter75/oras_integrity.rs::refused_archive_never_replaces_root",
+      ".g5/Verus_verification/consolidated/iter2/registry.rs::verify_layers",
+      ".g5/Verus_verification/consolidated/iter2/registry.rs::pull"
      ],
      "evidence": [
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
       ".g5/uplift/consolidated/iter68/proofs/models.json",
       ".g5/uplift/coverage-20261117/iter72/audit/architecture__package-sources.json",
-      ".g5/uplift/coverage-20261117/iter72/mutations/G4.jsonl"
+      ".g5/uplift/coverage-20261117/iter72/mutations/G4.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/mutations.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/ledger/R12.json",
+      ".g5/uplift/coverage-20261117/iter75/receipts/coverage-20261117__iter75__oras_integrity.rs.log",
+      ".g5/uplift/consolidated/iter68/native/observations.json"
      ],
-     "basis": "reused:package-sources metadata (iter68 as_built.rs); iteration-72 rule-4a re-audit (G4): partial, support mutation-checked (mutations G4-m115, G4-m116, G4-m117)",
-     "assessed_in": "iteration-72",
-     "gap": "Rule 4a (iteration-72): rule 4a: only the size-mismatch side is asserted. The matching archive on a writable root (root replaced, G4-m115 never-replace survives) and a digest-only mismatch (G4-m116 size-only check survives) are never exercised, nor is loader_entered on rejection (G4-m117)."
+     "basis": "new:iteration-75 (successor pull_effects computes the status from the manifest layers and pulled file through verify_layers instead of the iter68 fixture bool size_matches. G4-m115/m116/m117 re-run as R1-m06/m02/m05 are killed, as are root-replaced-regardless (R1-m07) and a Pull status that ignores the verdict (R1-m08). Native correspondence: the iteration-68 receipt observed the size-mismatch refusal keeping the installed-root sentinel and the valid replacement removing it. The digest-only case is not observed natively; it is decided by the same product line 1020 and the bundled oras 0.1.30 download_blob (provider.py:446-474) writes the blob without checking its digest, so the case reaches IPM's check.) || earlier: reused:package-sources metadata (iter68 as_built.rs); iteration-72 rule-4a re-audit (G4): partial, support mutation-checked (mutations G4-m115, G4-m116, G4-m117)",
+     "assessed_in": "iteration-75",
+     "support": "mutation-checked",
+     "mutations": [
+      "R1-m01",
+      "R1-m02",
+      "R1-m05",
+      "R1-m06",
+      "R1-m07",
+      "R1-m08"
+     ]
     },
     {
      "id": "repo.oras.archive-boundary#3",
@@ -1110,23 +1192,32 @@
      "text": "ORAS tags encode a version's + as _ and append __PLATFORM for a deployed artifact.",
      "cases": "source vs deployed artifact; version with build metadata",
      "observation": "tag text",
-     "grade": "partial",
+     "grade": "full",
      "check": "proved",
      "models": [
       ".g5/Verus_verification/consolidated/iter15/oras.rs::encode",
       ".g5/Verus_verification/consolidated/iter15/oras.rs::joined",
       ".g5/Verus_verification/consolidated/iter15/oras.rs::tag_for",
-      ".g5/Verus_verification/consolidated/iter15/oras.rs::raw_neighbors"
+      ".g5/Verus_verification/consolidated/iter15/oras.rs::raw_neighbors",
+      ".g5/Verus_verification/coverage-20261117/iter75/r8a_oras.rs::source_tag_is_encoded_version"
      ],
      "evidence": [
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
       ".g5/uplift/consolidated/iter15/run.json",
       ".g5/uplift/coverage-20261117/iter72/audit/architecture__package-sources.json",
-      ".g5/uplift/coverage-20261117/iter72/mutations/G4.jsonl"
+      ".g5/uplift/coverage-20261117/iter72/mutations/G4.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/mutations.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/ledger/R8A.json",
+      ".g5/uplift/coverage-20261117/iter75/receipts/coverage-20261117__iter75__r8a_oras.rs.log"
      ],
-     "basis": "reused:package-sources metadata (iter15 oras.rs); iteration-72 rule-4a re-audit (G4): partial, support mutation-checked (mutations G4-m37, G4-m41, G4-m42)",
-     "assessed_in": "iteration-72",
-     "gap": "Rule 4a (iteration-72): rule 4a: the source-artifact case (tag_for with deployed=false) is never exercised; a mutant that leaves source tags unencoded (G4-m37) verifies. Deployed encoding and the __ separator are pinned (m41, m42)."
+     "basis": "new:iteration-75 (inherited iter15 tag_for (faithful) with a source-artifact neighbour; G4-m37 re-run as R8a-m03 is killed.) || earlier: reused:package-sources metadata (iter15 oras.rs); iteration-72 rule-4a re-audit (G4): partial, support mutation-checked (mutations G4-m37, G4-m41, G4-m42)",
+     "assessed_in": "iteration-75",
+     "support": "mutation-checked",
+     "instance_scoped": true,
+     "mutations": [
+      "R8a-m03"
+     ]
     },
     {
      "id": "repo.oras.tag-decode#2",
@@ -1163,23 +1254,32 @@
      "text": "A deployed reference with no selected platform is refused before download.",
      "cases": "deployed with vs without selected platform; source package",
      "observation": "tag_for result (None = refused)",
-     "grade": "partial",
+     "grade": "full",
      "check": "proved",
      "models": [
       ".g5/Verus_verification/consolidated/iter15/oras.rs::tag_for",
-      ".g5/Verus_verification/consolidated/iter15/oras.rs::raw_neighbors",
-      ".g5/Verus_verification/consolidated/iter8/catalog.rs::platform_neighbors"
+      ".g5/Verus_verification/consolidated/iter8/catalog.rs::tag_for",
+      ".g5/Verus_verification/coverage-20261117/iter75/r8a_oras.rs::only_deployed_reference_needs_platform"
      ],
      "evidence": [
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
       ".g5/uplift/consolidated/iter15/run.json",
       ".g5/uplift/consolidated/iter8/run.json",
       ".g5/uplift/coverage-20261117/iter72/audit/architecture__package-sources.json",
-      ".g5/uplift/coverage-20261117/iter72/mutations/G4.jsonl"
+      ".g5/uplift/coverage-20261117/iter72/mutations/G4.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/mutations.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/ledger/R8A.json",
+      ".g5/uplift/coverage-20261117/iter75/receipts/coverage-20261117__iter75__r8a_oras.rs.log"
      ],
-     "basis": "reused:package-sources metadata (iter15 oras.rs, iter8 catalog.rs); iteration-72 rule-4a re-audit (G4): partial, support mutation-checked (mutations G4-m38, G4-m39)",
-     "assessed_in": "iteration-72",
-     "gap": "Rule 4a (iteration-72): rule 4a: the source-package neighbour is never exercised in either model; refusing source packages too (G4-m38 in oras.rs, G4-m39 in catalog.rs) verifies."
+     "basis": "new:iteration-75 (inherited iter15 and iter8 tag_for (faithful) with source-package neighbours; G4-m38 and G4-m39 re-run as R8a-m04 and R8a-m05 are killed.) || earlier: reused:package-sources metadata (iter15 oras.rs, iter8 catalog.rs); iteration-72 rule-4a re-audit (G4): partial, support mutation-checked (mutations G4-m38, G4-m39)",
+     "assessed_in": "iteration-75",
+     "support": "mutation-checked",
+     "instance_scoped": true,
+     "mutations": [
+      "R8a-m04",
+      "R8a-m05"
+     ]
     }
    ]
   },
@@ -1685,21 +1785,31 @@
      "text": "As built, a retained Remote publishing manager reuses an available client without rechecking Enabled or availability.",
      "cases": "retained available client, repository then disabled",
      "observation": "manager availability; provider called",
-     "grade": "partial",
+     "grade": "full",
      "check": "proved",
      "models": [
       ".g5/Verus_verification/consolidated/iter2/registry.rs::remote_cache",
-      ".g5/Verus_verification/consolidated/iter2/registry.rs::cache_changes_operator_observation"
+      ".g5/Verus_verification/consolidated/iter2/registry.rs::cache_changes_operator_observation",
+      ".g5/Verus_verification/coverage-20261117/iter75/r8a_oras.rs::retained_remote_client_is_not_reprobed"
      ],
      "evidence": [
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
       ".g5/uplift/consolidated/iter2/proofs/models.json",
       ".g5/uplift/coverage-20261117/iter72/audit/architecture__package-sources.json",
-      ".g5/uplift/coverage-20261117/iter72/mutations/G4.jsonl"
+      ".g5/uplift/coverage-20261117/iter72/mutations/G4.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/mutations.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/ledger/R8A.json",
+      ".g5/uplift/coverage-20261117/iter75/receipts/coverage-20261117__iter75__r8a_oras.rs.log"
      ],
-     "basis": "reused:package-sources metadata (iter2 registry.rs); iteration-72 rule-4a re-audit (G4): partial, support mutation-checked (mutations G4-m72, G4-m73)",
-     "assessed_in": "iteration-72",
-     "gap": "Rule 4a (iteration-72): rule 4a: \"without rechecking availability\" is not observed: provider_called on the retained-available branch is never asserted, so a re-probing mutant (G4-m73) verifies. Rechecking Enabled is pinned (m72)."
+     "basis": "new:iteration-75 (inherited iter2 remote_cache (faithful) with provider_called neighbours; G4-m73 re-run as R8a-m06 and a recheck-on-retained mutant R8a-m08 are killed.) || earlier: reused:package-sources metadata (iter2 registry.rs); iteration-72 rule-4a re-audit (G4): partial, support mutation-checked (mutations G4-m72, G4-m73)",
+     "assessed_in": "iteration-75",
+     "support": "mutation-checked",
+     "instance_scoped": true,
+     "mutations": [
+      "R8a-m06",
+      "R8a-m08"
+     ]
     },
     {
      "id": "repo.publish-cache#2",
@@ -1733,21 +1843,30 @@
      "text": "The ORAS publishing manager rereads Enabled and probes on each call.",
      "cases": "enabled false vs true with an available provider",
      "observation": "manager availability",
-     "grade": "partial",
+     "grade": "full",
      "check": "proved",
      "models": [
       ".g5/Verus_verification/consolidated/iter2/registry.rs::oras_cache",
-      ".g5/Verus_verification/consolidated/iter2/registry.rs::cache_changes_operator_observation"
+      ".g5/Verus_verification/consolidated/iter2/registry.rs::cache_changes_operator_observation",
+      ".g5/Verus_verification/coverage-20261117/iter75/r8a_oras.rs::oras_manager_probes_each_call"
      ],
      "evidence": [
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
       ".g5/uplift/consolidated/iter2/proofs/models.json",
       ".g5/uplift/coverage-20261117/iter72/audit/architecture__package-sources.json",
-      ".g5/uplift/coverage-20261117/iter72/mutations/G4.jsonl"
+      ".g5/uplift/coverage-20261117/iter72/mutations/G4.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/mutations.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/ledger/R8A.json",
+      ".g5/uplift/coverage-20261117/iter75/receipts/coverage-20261117__iter75__r8a_oras.rs.log"
      ],
-     "basis": "reused:package-sources metadata (iter2 registry.rs); iteration-72 rule-4a re-audit (G4): partial, support mutation-checked (mutations G4-m77, G4-m78)",
-     "assessed_in": "iteration-72",
-     "gap": "Rule 4a (iteration-72): rule 4a: the probe is never varied; oras_cache ignoring provider_available (G4-m77) verifies. Rereading Enabled is pinned (m78)."
+     "basis": "new:iteration-75 (inherited iter2 oras_cache (faithful, stateless like the product) with a probe neighbour; G4-m77 re-run as R8a-m07 is killed. \"Each call\" is represented by the absence of state.) || earlier: reused:package-sources metadata (iter2 registry.rs); iteration-72 rule-4a re-audit (G4): partial, support mutation-checked (mutations G4-m77, G4-m78)",
+     "assessed_in": "iteration-75",
+     "support": "mutation-checked",
+     "instance_scoped": true,
+     "mutations": [
+      "R8a-m07"
+     ]
     },
     {
      "id": "repo.publish-cache#4",

@@ -1253,22 +1253,31 @@
      "text": "Remote publishing and deletion require credentials and exactly HTTP 200 for success.",
      "cases": "status 200 vs 201/204; with vs without password",
      "observation": "success",
-     "grade": "partial",
+     "grade": "full",
      "check": "proved",
      "models": [
       ".g5/Verus_verification/consolidated/iter2/registry.rs::remote_publish",
+      ".g5/Verus_verification/consolidated/iter2/registry.rs::remote_authorized",
       ".g5/Verus_verification/consolidated/iter2/registry.rs::remote_delete",
-      ".g5/Verus_verification/consolidated/iter2/registry.rs::remote_delete_enabled",
+      ".g5/Verus_verification/coverage-20261117/iter75/r8b_remote.rs::remote_unpublish",
+      ".g5/Verus_verification/coverage-20261117/iter75/r8b_remote.rs::unpublish_credential_neighbors",
       ".g5/Verus_verification/consolidated/iter2/registry.rs::remote_exact_status_contract"
      ],
      "evidence": [
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
       ".g5/uplift/coverage-20261117/iter72/audit/features__build-and-publish.json",
-      ".g5/uplift/coverage-20261117/iter72/mutations/G5.jsonl"
+      ".g5/uplift/coverage-20261117/iter72/mutations/G5.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/receipts/index.jsonl",
+      ".g5/uplift/coverage-20261117/iter75/mutations.jsonl"
      ],
-     "basis": "reused:.g5/ontology/features/build-and-publish.g5.md metadata (iter2 registry.rs); iteration-72 rule-4a re-audit (G5): partial, support mutation-checked (mutations G5-m40, G5-m43)",
-     "assessed_in": "iteration-72",
-     "gap": "Rule 4a (iteration-72): The credential requirement for deletion is never exercised, and remote_delete takes `authorized` as an input. G5-m43, a delete without credentials, survives. The status-200 rule for publish and delete and the publish credential rule are pinned (G5-m40)."
+     "basis": "new:iteration-75 (Successor remote_unpublish computes the authorization that registry.rs::remote_delete took as an input, from the credential fields through the inherited remote_authorized; G5-m43 replay (R8b-m15) and a user-without-password mutant (R8b-m16) are killed. CheckUnpublishEnabled (:38-53) repeats the guard but remote_delete_enabled still takes it as input.) || earlier: reused:.g5/ontology/features/build-and-publish.g5.md metadata (iter2 registry.rs); iteration-72 rule-4a re-audit (G5): partial, support mutation-checked (mutations G5-m40, G5-m43)",
+     "assessed_in": "iteration-75",
+     "support": "mutation-checked",
+     "instance_scoped": true,
+     "mutations": [
+      "R8b-m15",
+      "R8b-m16"
+     ]
     },
     {
      "id": "build.publish.partial-effects#5",
