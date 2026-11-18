@@ -2,9 +2,9 @@
 
 Inventory blocks: 265. Status: enumerated 258, structural 7, unenumerated 0, stale 0.
 
-Assessed obligations: 1100 (full 587, partial 349, absent 164, unassessed 0).
-Design checks on assessed obligations: proved 627, bounded 19, refuted 64, unchecked 226, none 164. Full with a passing (proved or bounded) check: 528.
-Assessed-scope coverage: 0.5336 (upper bound with unassessed 0.5336). Whole-foundation coverage: 0.5336.
+Assessed obligations: 1105 (full 605, partial 341, absent 159, unassessed 0).
+Design checks on assessed obligations: proved 643, bounded 19, refuted 66, unchecked 218, none 159. Full with a passing (proved or bounded) check: 544.
+Assessed-scope coverage: 0.5475 (upper bound with unassessed 0.5475). Whole-foundation coverage: 0.5475.
 
 | Page | Blocks | Unenumerated or stale | Full | Partial | Absent | Unassessed |
 |---|---|---|---|---|---|---|
@@ -20,7 +20,7 @@ Assessed-scope coverage: 0.5336 (upper bound with unassessed 0.5336). Whole-foun
 | features/build-and-publish.g5.md | 12 | 0 | 19 | 24 | 4 | 0 |
 | features/dependencies.g5.md | 5 | 0 | 8 | 12 | 3 | 0 |
 | features/developer-tools.g5.md | 18 | 0 | 52 | 31 | 14 | 0 |
-| features/history.g5.md | 24 | 0 | 51 | 28 | 27 | 0 |
+| features/history.g5.md | 24 | 0 | 69 | 20 | 22 | 0 |
 | features/inspection.g5.md | 10 | 0 | 25 | 16 | 10 | 0 |
 | features/install.g5.md | 7 | 0 | 17 | 5 | 2 | 0 |
 | features/load.g5.md | 22 | 0 | 40 | 22 | 13 | 0 |
@@ -158,17 +158,17 @@ Assessed-scope coverage: 0.5336 (upper bound with unassessed 0.5336). Whole-foun
 | devtools.exec | enumerated | 0 | 2 | 0 | 0 | 0.0 |
 | devtools.init | enumerated | 2 | 0 | 1 | 0 | 0.6667 |
 | history | structural | 0 | 0 | 0 | 0 | N/A |
-| history.actions | enumerated | 2 | 2 | 2 | 0 | 0.3333 |
-| history.record | enumerated | 5 | 1 | 2 | 0 | 0.625 |
-| history.fields | enumerated | 5 | 4 | 2 | 0 | 0.4545 |
-| history.phases | enumerated | 2 | 2 | 1 | 0 | 0.4 |
+| history.actions | enumerated | 9 | 1 | 0 | 0 | 0.9 |
+| history.record | enumerated | 7 | 1 | 0 | 0 | 0.875 |
+| history.fields | enumerated | 6 | 3 | 2 | 0 | 0.5455 |
+| history.phases | enumerated | 4 | 1 | 0 | 0 | 0.8 |
 | history.survives-rollback | enumerated | 4 | 0 | 0 | 0 | 1.0 |
 | history.survives-rollback.temp-copy | enumerated | 2 | 1 | 0 | 0 | 0.6667 |
 | history.dependencies | enumerated | 1 | 0 | 0 | 0 | 1.0 |
 | history.dependencies.parent-rollback | enumerated | 1 | 1 | 0 | 0 | 0.5 |
-| history.committed | enumerated | 10 | 3 | 1 | 0 | 0.7143 |
-| history.committed.marking | enumerated | 1 | 2 | 0 | 0 | 0.3333 |
-| history.committed.uninstall | enumerated | 0 | 1 | 0 | 0 | 0.0 |
+| history.committed | enumerated | 12 | 1 | 1 | 0 | 0.8571 |
+| history.committed.marking | enumerated | 3 | 0 | 0 | 0 | 1.0 |
+| history.committed.uninstall | enumerated | 2 | 0 | 0 | 0 | 1.0 |
 | history.committed.vs-success | enumerated | 1 | 0 | 0 | 0 | 1.0 |
 | history.committed.side-effects | enumerated | 0 | 0 | 1 | 0 | 0.0 |
 | history.read | enumerated | 0 | 1 | 1 | 0 | 0.0 |

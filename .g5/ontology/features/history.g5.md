@@ -33,9 +33,10 @@ IPM keeps a log, per namespace, of the package changes it attempts, whether or n
 
 IPM records every `install`, `load`, `uninstall` and `update` it attempts.
 
-- Attempts that fail or are refused are recorded too, for example a load of a folder with a broken manifest.
+- Attempts that fail or are refused are recorded too, for example a load of a folder with a broken manifest, an install of a name that no repository has, or an uninstall of a module that is not installed.
+- As built, a refusal that comes before the record is created leaves no record. These are `update` with `-DPermitDowngrade=1` or of a module that is not installed, `reinstall` of a module that is not installed, `uninstall` with no name, and `install`, `update` or `reinstall` with no name, which the command parser refuses. Whether they should be recorded is an [open question](../../Verus_verification/open_questions.md#history.record.unlogged-refusals).
 - Installs that IPM starts for dependencies get their [own records](#history.dependencies).
-- Other commands, such as `list`, `sync`, `reload` and lifecycle phase commands, are not recorded.
+- Other commands, such as `list`, `sync` and lifecycle phase commands like `reload` or `compile`, write no record of their own. A phase command still records the dependency changes it makes. `<module> clean` records an `uninstall` for each installed dependency it cleans, and `<module> test` or `<module> verify` records a `load` for each dependency of that phase that it installs.
 
 <a id="history.record"></a>
 [I · history.record]
@@ -142,14 +143,15 @@ For `load`, `install` and `update`, `Committed` shows whether the action kept an
 <a id="history.committed.marking"></a>
 [D · history.committed.marking]
 
-IPM sets `Committed` at each commit, or just before the first write when there is no transaction. It does not work it out afterwards from developer mode and the final status.
+For `load`, `install` and `update`, IPM sets `Committed` at each commit, or just before the first write when there is no transaction. It does not work it out afterwards from developer mode and the final status.
 
+- For `uninstall`, which runs no transaction, nothing sets `Committed` early. IPM sets it when the action ends, from the final status, as described in [Committed for uninstall](#history.committed.uninstall).
 - Working assumption: Keep the intent that a no-write refusal is uncommitted; classify the early marker as a defect.
 
 <a id="history.committed.uninstall"></a>
 [I · history.committed.uninstall]
 
-Uninstall runs without a transaction, so for uninstall `Committed` only shows whether it succeeded. A failed uninstall that removed some resources still reads uncommitted.
+Uninstall runs without a transaction, so for uninstall `Committed` only shows whether it succeeded. A failed uninstall that removed some resources still reads uncommitted. The same holds for the `uninstall` records of the dependencies that `uninstall -r` or `<module> clean` removes.
 
 <a id="history.committed.vs-success"></a>
 [I · history.committed.vs-success]
@@ -307,6 +309,10 @@ Findings: [G:D13 — e2e reproduced](../../Verus_verification/bugs_issues.md#g-d
 
 Sources: `Main.cls:820`; `wiki/09` L18; issue #366; PR #578 review r2557338086 by isc-dchui ("install, load, uninstall, and update seem most important"). Inventory: INT-HIST-01, INT-LOAD-17; OP-HIST-02. Tests: `TestSimpleHistory`, `TestUpdate`, `TestDevMode` (refused load recorded). Observed: `reinstall` is recorded as `install`. Loads of test-scoped or verify-scoped dependencies during `test` and `verify` are recorded as `load`, and the module itself is not recorded when `verify` loads it into the VERIFY namespace (OP-LOAD-28, OP-LOAD-29). Native evidence: every B2 load case produced a top-level record (`182759Z-cases-a`, `182820Z-cases-b`, `182903Z-cases-c-terminate`, `182832Z-cases-dg`), and the History suite passed 13 of 13 (`175623Z-smoke-history-suite-oras`).
 
+Iteration74 actions: [actions.rs](../../Verus_verification/coverage-20261117/iter74/actions.rs) `cli_install`, `api_install`, `cli_update`, `cli_reinstall`, `cli_uninstall`, `cli_clean`, `cmd_rows`; theorems `install_always_recorded`, `update_recorded_iff`, `reinstall_not_installed`, `uninstall_one_record`, `uninstall_no_name`, `clean_without_deps_writes_nothing`, `other_commands_no_record` ([handoff](../../uplift/coverage-20261117/iter74/HANDOFF.md)). Native cases i1-i7, u1-u5, n1-n5, c1, c2 and t1 settle which commands write records; `<module> clean` writing dependency records was observed in c1 and `<module> test` in t1.
+
+State machines: [history actions · coverage iter74](../../Verus_verification/models/cov20261117-iter74-history-actions/manifest.json)
+
 ### history.record
 
 - uncertain
@@ -328,6 +334,10 @@ Observed: `load` creates its record before checking the path, and `install` befo
 Findings: [C:D12 — e2e reproduced](../../Verus_verification/bugs_issues.md#c-d12). The linked entry qualifies the caller, reader and providers.
 
 Open questions: [What should `Committed` say on the record of an action that never ended?](../../Verus_verification/open_questions.md#history.record.abnormal-end), [Should IPM record `update`, `reinstall` and `uninstall` attempts it refuses because of their arguments, as it records refused loads and installs?](../../Verus_verification/open_questions.md#history.record.unlogged-refusals)
+
+Iteration74 actions: [actions.rs](../../Verus_verification/coverage-20261117/iter74/actions.rs) `init`, `twin_while_running`, `top_rec`, `cli_uninstall` (top record before the dependency records) ([handoff](../../uplift/coverage-20261117/iter74/HANDOFF.md)). Native: the permanent row exists while install, update and uninstall run, with Success 0 and no end time, and lists no phases until the end (mid.install, mid.update, mid.uninstall).
+
+State machines: [history actions · coverage iter74](../../Verus_verification/models/cov20261117-iter74-history-actions/manifest.json)
 
 ### history.fields
 
@@ -365,6 +375,10 @@ State machines: [render · iter38](../../Verus_verification/models/iter38-render
 Sources: `wiki/09` L135-161 ("A phase with no elapsed time never finished"); `Main.cls:824`. Inventory: A1 3.2 `Phases`; OP-HIST-08, OP-HIST-09, OP-LOAD-23. Tests: `TestPhases`, `TestFailingPhases`. Observed: Configure runs inside Activate and is not recorded as its own phase. Issue I1 (formerly D8) shows an open phase as `ERROR #00: (no error description)` (case R2, `184444Z-cases-hr`). No source governs that text. Case C2 shows the open Activate phase after termination (`182903Z-cases-c-terminate`).
 
 Open questions: [Must every phase that starts also record its end and status, including when an `<Invoke>` returns an error status instead of throwing one?](../../Verus_verification/open_questions.md#history.phases.returned-errors)
+
+Iteration74 actions: [actions.rs](../../Verus_verification/coverage-20261117/iter74/actions.rs) `run_list`, `run_from`, `logged_lists`, `run_shape`, `install_phases`, `dep_rec_committed` ([handoff](../../uplift/coverage-20261117/iter74/HANDOFF.md)). Native: install five phases, update six ending in ApplyUpdateSteps, uninstall Clean, a Compile failure listing four.
+
+State machines: [history actions · coverage iter74](../../Verus_verification/models/cov20261117-iter74-history-actions/manifest.json)
 
 ### history.survives-rollback
 
@@ -429,7 +443,9 @@ Sources: property comment `General/AbstractHistory.cls:41-43`; CHANGELOG 0.10.11
 
 Open questions: [Should a parent record count writes kept only by its NoJournal dependency?](../../Verus_verification/open_questions.md#history.committed.escaped-dependency), [When a caller wraps an IPM command in its own transaction, must the record survive the caller's rollback, and what should `Committed` say?](../../Verus_verification/open_questions.md#history.committed.nested), [What history outcome is required when an operator commits a stopped load at the terminal?](../../Verus_verification/open_questions.md#history.committed.terminal-choice-policy)
 
-State machines: [Load outcome contracts](../../Verus_verification/models/load-outcomes/manifest.json)
+Iteration74 actions: [actions.rs](../../Verus_verification/coverage-20261117/iter74/actions.rs) `lnm`, `install_committed_is_kept`, `install_refusal_uncommitted`, `dev_failure_committed` for install and update ([handoff](../../uplift/coverage-20261117/iter74/HANDOFF.md)).
+
+State machines: [Load outcome contracts](../../Verus_verification/models/load-outcomes/manifest.json), [history actions · coverage iter74](../../Verus_verification/models/cov20261117-iter74-history-actions/manifest.json)
 
 ### history.committed.marking
 
@@ -444,7 +460,9 @@ Sources: PR #1322 body ("`LoadNewModule` now marks it at each commit, or before 
 
 Open questions: [Should the no-transaction marker run only after every refusal?](../../Verus_verification/open_questions.md#history.committed.marking.refusal-policy)
 
-State machines: [Commit marker soundness](../../Verus_verification/models/commit-soundness/manifest.json)
+Iteration74 actions: [actions.rs](../../Verus_verification/coverage-20261117/iter74/actions.rs) `lnm` (the three LoadNewModule marks under the install and update callers), `install_committed_is_kept`; `top_rec` and `uninstall_committed_is_success` (no mark on the uninstall path) ([handoff](../../uplift/coverage-20261117/iter74/HANDOFF.md)).
+
+State machines: [Commit marker soundness](../../Verus_verification/models/commit-soundness/manifest.json), [history actions · coverage iter74](../../Verus_verification/models/cov20261117-iter74-history-actions/manifest.json)
 
 ### history.committed.uninstall
 
@@ -454,6 +472,10 @@ State machines: [Commit marker soundness](../../Verus_verification/models/commit
 - Expands: [Committed](#history.committed).
 
 Sources: `General/AbstractHistory.cls:43`; PR #1322 body ("Uninstall is unchanged. Its validation runs inside `Clean`, so there is no single point where its writes begin"). Inventory: INT-HIST-06; OP-HIST-02, OP-HIST-24. Test: `TestSimpleHistory` (successful uninstall reads committed). Suspected gap, not run natively by B2: an uninstall that IPM skips because other modules need the module returns success and reads committed while the module stays ([dependents](uninstall.g5.md#uninstall.dependents), OBS-L17, OBS-H8). `uninstall zpm` records success before its Clean phase runs (OBS-H15).
+
+Iteration74 actions: [actions.rs](../../Verus_verification/coverage-20261117/iter74/actions.rs) `top_rec`, `dep_rec`, `uninstall_committed_is_success`, `dep_rec_committed`, `n5_facts` ([handoff](../../uplift/coverage-20261117/iter74/HANDOFF.md)). Native n4 and n5: a failed uninstall that deleted files or classes reads uncommitted.
+
+State machines: [history actions · coverage iter74](../../Verus_verification/models/cov20261117-iter74-history-actions/manifest.json)
 
 ### history.committed.vs-success
 

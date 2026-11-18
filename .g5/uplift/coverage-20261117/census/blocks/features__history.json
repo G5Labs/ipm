@@ -29,7 +29,7 @@
    }
   },
   "history.actions": {
-   "body_sha": "ac2cd9df02b0a844",
+   "body_sha": "1d995fe6065f4b1b",
    "status": "enumerated",
    "units": {
     "P1": [
@@ -42,15 +42,21 @@
     "B1": [
      "history.actions#1",
      "history.actions#2",
-     "history.actions#3",
-     "history.actions#6",
-     "history.actions#7"
+     "history.actions#3"
     ],
     "B2": [
-     "history.actions#4"
+     "history.actions#6",
+     "history.actions#7",
+     "history.actions#8",
+     "history.actions#9"
     ],
     "B3": [
-     "history.actions#5"
+     "history.actions#4"
+    ],
+    "B4": [
+     "history.actions#5",
+     "history.actions#10",
+     "history.actions#11"
     ]
    },
    "obligations": [
@@ -87,22 +93,33 @@
       "P1",
       "B1"
      ],
-     "text": "Every install and update attempt that reaches its History init is recorded, including failed ones and refusals after the init (for example install with no module name).",
-     "cases": "reinstall success vs failure (each one row); install with no name or an unknown name; update reaching Install",
+     "text": "Every install and update attempt that reaches its History init is recorded, including failed ones and refusals after the init (no enabled repository, a name no repository has, a downgrade or update-required refusal, a Compile or ApplyUpdateSteps failure, and a program calling Install with no name).",
+     "cases": "install success, reinstall over the installed version, name not found, API call with no name, Compile failure, downgrade refusal with and without transactions; update success, ApplyUpdateSteps failure with and without transactions",
      "observation": "History row with Action install or update",
-     "grade": "partial",
-     "check": "unchecked",
+     "grade": "full",
+     "check": "proved",
      "models": [
-      ".g5/Verus_verification/consolidated/iter22/reinstall.rs::history_neighbor",
-      ".g5/Verus_verification/consolidated/iter22/reinstall.rs::reinstall",
-      ".g5/Verus_verification/consolidated/iter22/reinstall.rs::begin_install"
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::main_install",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::api_install",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::install_body",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::cli_update",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::install_always_recorded",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::update_recorded_iff",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::install_neighbours",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::update_neighbours"
      ],
      "evidence": [
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter74/run.json",
+      ".g5/uplift/coverage-20261117/iter74/proofs/models.json",
+      ".g5/uplift/coverage-20261117/iter74/replay/receipt.json",
+      ".g5/uplift/coverage-20261117/iter74/native/20261118T044846583014Z/observations.json",
+      ".g5/uplift/coverage-20261117/iter74/mutations/S.jsonl",
+      ".g5/uplift/coverage-20261117/iter74/predictions.md",
+      ".g5/uplift/coverage-20261117/iter74/bindings.json"
      ],
-     "basis": "new:iteration-72 (review-71 A2); text narrowed: refusals that throw before the init are history.actions#6 and #7",
-     "assessed_in": "iteration-72",
-     "gap": "reinstall.rs computes the install-record delta: a successful and a failed reinstall each add one record (history_neighbor), but the failed rows are FailedInstallFieldsUnknown. Plain install (no name, unknown name, not found; InstallInit at Main.cls:2565-2566 precedes the name check) and the update path (UpdateInit, Main.cls:4432) are not modeled."
+     "basis": "iteration-74: InstallInit (Main.cls:2565-2566) precedes every check and Finalize runs in both exits (2666-2670); UpdateInit (4438) follows the two refusals and Install writes the update row (4445). install_always_recorded: one finalized install record for every input; update_recorded_iff: one update record exactly when the update passes its checks. Controls install-init-after-name-check and update-init-before-installed-check rejected; native i1-i7, i4api, u1-u3 replayed (flips i3.rows, i4api.rows, u2.r1.committed rejected).",
+     "assessed_in": "iteration-74",
+     "support": "mutation-checked"
     },
     {
      "id": "history.actions#3",
@@ -111,27 +128,38 @@
       "B1"
      ],
      "text": "Every uninstall attempt, including a failed one or one naming a module that is not installed, is recorded.",
-     "cases": "uninstall of an installed module (success or failure) vs uninstall of a name that is not installed",
+     "cases": "uninstall of an installed module (success n1, failure n4 and n5) vs uninstall of a name that is not installed (n2)",
      "observation": "uninstall History rows",
-     "grade": "partial",
-     "check": "unchecked",
+     "grade": "full",
+     "check": "proved",
      "models": [
-      "playbook-uplift/models/verus/uninstall.rs::storage_uninstall",
-      "playbook-uplift/models/verus/uninstall.rs::unin_refines_rows_honest",
-      "playbook-uplift/models/verus/uninstall.rs::l1_rows_honest"
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::cli_uninstall",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::top_rec",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::top_unin",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::uninstall_committed_is_success",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::uninstall_one_record",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::n2_facts",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::n5_facts",
+      "playbook-uplift/models/verus/uninstall.rs::storage_uninstall"
      ],
      "evidence": [
-      "playbook-uplift/models/verus/results/uninstall.json",
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl"
+      ".g5/uplift/coverage-20261117/iter74/run.json",
+      ".g5/uplift/coverage-20261117/iter74/proofs/models.json",
+      ".g5/uplift/coverage-20261117/iter74/replay/receipt.json",
+      ".g5/uplift/coverage-20261117/iter74/native/20261118T044846583014Z/observations.json",
+      ".g5/uplift/coverage-20261117/iter74/mutations/S.jsonl",
+      ".g5/uplift/coverage-20261117/iter74/predictions.md",
+      ".g5/uplift/coverage-20261117/iter74/bindings.json"
      ],
-     "basis": "new:iteration-70",
-     "assessed_in": "iteration-70",
-     "gap": "unin_refines_rows_honest ensures only that rows written are honest (vacuous if none); the one-row-per-uninstall fact appears as an internal assertion under premises PR (no -r), PB, PG and PNF. The not-installed branch (storage_uninstall pushes HRow{m: None, ok: false}) is never exercised by a theorem, and uninstall with no name / refusals before Storage.Module:Uninstall are not modeled. Contrast: uninstall of a missing name leaves exactly one failed row, against an installed module's success row."
+     "basis": "iteration-74: UninstallInit (Storage/Module.cls:734) precedes NameOpen, so every name gets a record: uninstall_committed_is_success (rows >= 1, the first is the uninstall record of the typed name, for every uninstall.rs world) and uninstall_one_record (exactly one without -r). The not-found record has no phase and the placeholder version (n2_facts). Controls uninstall-init-after-lookup, S-m06 and S-m07 rejected; native n1, n2, n4, n5 replayed (flip n2.rows rejected).",
+     "assessed_in": "iteration-74",
+     "support": "mutation-checked",
+     "note": "Domain: every uninstall.rs world whose target is not IPM. Self-uninstall (finalized before Clean, Storage/Module.cls:630-643) and uninstall -all are outside it; uninstall with no name is history.actions#8."
     },
     {
      "id": "history.actions#4",
      "units": [
-      "B2"
+      "B3"
      ],
      "text": "Installs started for dependencies get their own records.",
      "alias_of": "history.dependencies#1",
@@ -140,26 +168,39 @@
     {
      "id": "history.actions#5",
      "units": [
-      "B3"
+      "B4"
      ],
-     "text": "Other commands (list, sync, reload, lifecycle phase commands) write no History record.",
-     "cases": "list / sync / reload / <module> <phase> vs load",
+     "text": "List, sync and lifecycle phase commands such as reload or compile write no record of their own.",
+     "cases": "list / sync / `<module> reload` / `<module> compile` / `reload <module>` / activate chain, and `<module> clean` (no record for the module itself) vs load",
      "observation": "History row count before and after the command",
-     "grade": "absent",
-     "check": "none",
-     "models": [],
-     "evidence": [
-      ".g5/Verus_verification/coverage-map.md"
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::cmd_rows",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::run_list",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::cli_clean",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::other_commands_no_record",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::clean_without_deps_writes_nothing",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::c1_facts"
      ],
-     "basis": "new:iteration-70",
-     "assessed_in": "iteration-70",
-     "gap": "No model of the Main.cls command dispatch to HistoryTemp. The playbook uninstall.rs clean_cmd (`<module> clean`, Clean.Level 0, Recurse 1) reuses exec_clean, whose dep_step pushes History rows for cleaned dependencies, and no theorem examines clean's history effect. Contrast: `<module> clean` on a module with a dependency, and `sync`, must leave the History row count unchanged."
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter74/run.json",
+      ".g5/uplift/coverage-20261117/iter74/proofs/models.json",
+      ".g5/uplift/coverage-20261117/iter74/replay/receipt.json",
+      ".g5/uplift/coverage-20261117/iter74/native/20261118T044846583014Z/observations.json",
+      ".g5/uplift/coverage-20261117/iter74/mutations/S.jsonl",
+      ".g5/uplift/coverage-20261117/iter74/predictions.md",
+      ".g5/uplift/coverage-20261117/iter74/bindings.json"
+     ],
+     "basis": "iteration-74: Settles iteration70 finding 17: `<module> clean` writes no record for the module itself but does write dependency records (history.actions#10). Phase commands run ExecutePhases with no log (Main.cls:2753-2766, 2830-2856); the only records a phase command can reach are Clean dependency records and %Test/%Verify dependency loads, decided by the computed chain (run_list). list (ListInstalled, Main.cls:2939) and sync (ExecutePhases of the Sync chain, Main.cls:2375-2410) reach no init site; their empty rows transcribe that. Controls phase-command-records, clean-writes-own-record, S-m04, S-m05 rejected; native c2 (list, h74a reload, h74a compile, reload h74a, sync: 0 rows; flip c2.rows rejected) and c1.",
+     "assessed_in": "iteration-74",
+     "support": "mutation-checked"
     },
     {
      "id": "history.actions#6",
      "units": [
       "P1",
-      "B1"
+      "B2"
      ],
      "text": "Intended: a refused reinstall is recorded too. As built, reinstall of a module that is not installed throws before any History row (Main.cls:2685-2687).",
      "cases": "reinstall of a name that is not installed vs reinstalls that reach Install (success, failure)",
@@ -169,13 +210,22 @@
      "models": [
       ".g5/Verus_verification/consolidated/iter22/reinstall.rs::reinstall",
       ".g5/Verus_verification/consolidated/iter22/reinstall.rs::history_neighbor",
-      ".g5/Verus_verification/consolidated/iter22/reinstall.rs::begin_install"
+      ".g5/Verus_verification/consolidated/iter22/reinstall.rs::begin_install",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::cli_reinstall",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::reinstall_not_installed"
      ],
      "evidence": [
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
-      ".g5/uplift/coverage-20261117/iter72/mutations/M.jsonl"
+      ".g5/uplift/coverage-20261117/iter72/mutations/M.jsonl",
+      ".g5/uplift/coverage-20261117/iter74/run.json",
+      ".g5/uplift/coverage-20261117/iter74/proofs/models.json",
+      ".g5/uplift/coverage-20261117/iter74/replay/receipt.json",
+      ".g5/uplift/coverage-20261117/iter74/native/20261118T044846583014Z/observations.json",
+      ".g5/uplift/coverage-20261117/iter74/mutations/S.jsonl",
+      ".g5/uplift/coverage-20261117/iter74/predictions.md",
+      ".g5/uplift/coverage-20261117/iter74/bindings.json"
      ],
-     "basis": "new:iteration-72 (review-71 A2): reinstall() checks installed_name before begin_install; history_neighbor asserts record_delta 0 for missing() against 1 for the failed and successful reinstalls. Mutation M-m06 (enter install before the check) killed.",
+     "basis": "new:iteration-72 (review-71 A2): reinstall() checks installed_name before begin_install; history_neighbor asserts record_delta 0 for missing() against 1 for the failed and successful reinstalls. Mutation M-m06 (enter install before the check) killed. iteration-74: also actions.rs cli_reinstall / reinstall_not_installed (Main.cls:2685-2688), control reinstall-enters-install rejected, native r1 (0 rows, flip rejected).",
      "assessed_in": "iteration-72",
      "support": "mutation-checked"
     },
@@ -183,20 +233,154 @@
      "id": "history.actions#7",
      "units": [
       "P1",
-      "B1"
+      "B2"
      ],
-     "text": "Intended: a refused update is recorded too. As built, update with -PermitDowngrade or of a module that is not installed throws before HistoryTemp.UpdateInit writes any row (Main.cls:4415-4423).",
-     "cases": "update of a not-installed module vs an update reaching Install",
+     "text": "Intended: a refused update is recorded too. As built, update with -PermitDowngrade or of a module that is not installed throws before HistoryTemp.UpdateInit writes any row (Main.cls:4415-4424, init at 4438).",
+     "cases": "update of a not-installed module (u4) and with -DPermitDowngrade=1 (u5) vs an update reaching Install (u1, u2)",
      "observation": "History row count",
-     "grade": "absent",
-     "check": "none",
-     "models": [],
-     "evidence": [
-      ".g5/uplift/coverage-20261117/reviews/review-71.md"
+     "grade": "full",
+     "check": "refuted",
+     "models": [
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::cli_update",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::update_recorded_iff",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::update_neighbours"
      ],
-     "basis": "new:iteration-72 (review-71 A2)",
-     "assessed_in": "iteration-72",
-     "gap": "No model of Main.cls::Update. Source reading (review-71 A2) shows both refusals throw before UpdateInit at Main.cls:4432. Contrast: update of a not-installed module leaves the History row count unchanged, against an update that reaches Install and adds one row."
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter74/run.json",
+      ".g5/uplift/coverage-20261117/iter74/proofs/models.json",
+      ".g5/uplift/coverage-20261117/iter74/replay/receipt.json",
+      ".g5/uplift/coverage-20261117/iter74/native/20261118T044846583014Z/observations.json",
+      ".g5/uplift/coverage-20261117/iter74/mutations/S.jsonl",
+      ".g5/uplift/coverage-20261117/iter74/predictions.md",
+      ".g5/uplift/coverage-20261117/iter74/bindings.json"
+     ],
+     "basis": "iteration-74: update_recorded_iff: a record exactly when the name is non-empty, -PermitDowngrade is absent and the module is installed, so the intended promise is refuted for the two refusals. Controls update-init-before-permit-check and update-init-before-installed-check rejected; native u4, u5 (0 rows) against u1-u3 (1 row); flips u4.rows and u5.rows rejected.",
+     "assessed_in": "iteration-74",
+     "support": "mutation-checked"
+    },
+    {
+     "id": "history.actions#8",
+     "units": [
+      "B2"
+     ],
+     "text": "As built, uninstall with no name throws before Storage.Module:Uninstall (Main.cls:2710-2712), so it leaves no record.",
+     "cases": "uninstall with no name (n3) vs uninstall of a name that is not installed (n2, one record)",
+     "observation": "History row count",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::cli_uninstall",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::uninstall_no_name",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::n2_facts"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter74/run.json",
+      ".g5/uplift/coverage-20261117/iter74/proofs/models.json",
+      ".g5/uplift/coverage-20261117/iter74/replay/receipt.json",
+      ".g5/uplift/coverage-20261117/iter74/native/20261118T044846583014Z/observations.json",
+      ".g5/uplift/coverage-20261117/iter74/mutations/S.jsonl",
+      ".g5/uplift/coverage-20261117/iter74/predictions.md",
+      ".g5/uplift/coverage-20261117/iter74/bindings.json"
+     ],
+     "basis": "iteration-74: new obligation for the as-built bullet. Control uninstall-no-name-recorded rejected; native n3 (0 rows) against n2 (1); flip n3.rows rejected. Whether it should be recorded is the open question history.record.unlogged-refusals.",
+     "assessed_in": "iteration-74",
+     "support": "mutation-checked"
+    },
+    {
+     "id": "history.actions#9",
+     "units": [
+      "B2"
+     ],
+     "text": "As built, install, update and reinstall with no name are refused by the command parser before dispatch, so they leave no record; a program calling ##class(%IPM.Main).Install with no name gets a failed install record.",
+     "cases": "CLI install with no name (i4, 0 rows) vs API Install with no name (i4api, 1 row)",
+     "observation": "History row count",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::cli_install",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::api_install",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::cli_update",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::cli_reinstall",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::install_always_recorded",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::update_recorded_iff"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter74/run.json",
+      ".g5/uplift/coverage-20261117/iter74/proofs/models.json",
+      ".g5/uplift/coverage-20261117/iter74/replay/receipt.json",
+      ".g5/uplift/coverage-20261117/iter74/native/20261118T044846583014Z/observations.json",
+      ".g5/uplift/coverage-20261117/iter74/mutations/S.jsonl",
+      ".g5/uplift/coverage-20261117/iter74/predictions.md",
+      ".g5/uplift/coverage-20261117/iter74/bindings.json"
+     ],
+     "basis": "iteration-74: the parser rule is the required=\"true\" module parameter (Main.cls:177, 427, 469). Mutants S-m01 (install parser check removed) and S-m02 (update) and control install-init-after-name-check rejected; native i4 and i4api; flips i4.rows and i4api.rows rejected. Reinstall with no name is decided by the same parser rule but was not run natively.",
+     "assessed_in": "iteration-74",
+     "support": "mutation-checked"
+    },
+    {
+     "id": "history.actions#10",
+     "units": [
+      "B4"
+     ],
+     "text": "`<module> clean` writes an uninstall record for each installed dependency its Clean recursion visits, and none for the module itself.",
+     "cases": "`h74m clean` with one installed dependency (c1: one record, for h74d) vs a module with no dependencies (no record)",
+     "observation": "History rows, their Package and the dependency record",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::cli_clean",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::dep_rec",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::c1_facts",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::clean_without_deps_writes_nothing",
+      "playbook-uplift/models/verus/uninstall.rs::dep_step",
+      "playbook-uplift/models/verus/uninstall.rs::clean_cmd"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter74/run.json",
+      ".g5/uplift/coverage-20261117/iter74/proofs/models.json",
+      ".g5/uplift/coverage-20261117/iter74/replay/receipt.json",
+      ".g5/uplift/coverage-20261117/iter74/native/20261118T044846583014Z/observations.json",
+      ".g5/uplift/coverage-20261117/iter74/mutations/S.jsonl",
+      ".g5/uplift/coverage-20261117/iter74/predictions.md",
+      ".g5/uplift/coverage-20261117/iter74/bindings.json"
+     ],
+     "basis": "iteration-74: new obligation. The rows come from uninstall.rs dep_step (Lifecycle/Base.cls:438-485) under Clean.Recurse defaulting to 1 (:313). clean_without_deps_writes_nothing holds for every world; c1_facts is the one-dependency instance (uninstall.rs w_recremove). Control clean-writes-own-record and dependency control clean-recursion-no-dependency-record rejected; native c1 (flip c1.rows rejected). Instance-scoped for the count with dependencies.",
+     "assessed_in": "iteration-74",
+     "support": "mutation-checked",
+     "note": "Row order is exact for one nesting level: uninstall.rs appends a nested dependency record after its own dependencies, while the product creates it before them.",
+     "instance_scoped": true
+    },
+    {
+     "id": "history.actions#11",
+     "units": [
+      "B4"
+     ],
+     "text": "`<module> test` and `<module> verify` write a load record for each dependency scoped to that phase that they install.",
+     "cases": "`h74t test` installing its test-scoped dependency h74b (t1, one load record) vs reload/compile (no record)",
+     "observation": "History rows and their Action",
+     "grade": "partial",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::cmd_rows",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::scoped_rows",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::dep_load_row",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::dep_load_label",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::t1_facts",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::other_commands_no_record"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter74/run.json",
+      ".g5/uplift/coverage-20261117/iter74/proofs/models.json",
+      ".g5/uplift/coverage-20261117/iter74/replay/receipt.json",
+      ".g5/uplift/coverage-20261117/iter74/native/20261118T044846583014Z/observations.json",
+      ".g5/uplift/coverage-20261117/iter74/mutations/S.jsonl",
+      ".g5/uplift/coverage-20261117/iter74/predictions.md",
+      ".g5/uplift/coverage-20261117/iter74/bindings.json"
+     ],
+     "basis": "iteration-74: new obligation. Controls test-scoped-deps-unrecorded and scoped-dep-recorded-as-install (and mutant S-m12) rejected; native t1 replayed (flip t1.r1.action rejected).",
+     "assessed_in": "iteration-74",
+     "gap": "The list of phase-scoped dependencies LoadDependencies installs is an input (BuildDependencyGraph is not modelled), and verify (Lifecycle/Base.cls:1557, plus its LoadModuleFromDirectory at 1551) was not run natively.",
+     "support": "control"
     }
    ]
   },
@@ -255,17 +439,35 @@
       "P1"
      ],
      "text": "For install, update and uninstall, the record is created at start and filled in at the end.",
-     "cases": "install/update/uninstall start vs end",
+     "cases": "install/update/uninstall while running (mid.*) vs after the end; refusals after the init (i3, n2) still leave a record; uninstall record before its dependency records (n5)",
      "observation": "History row at start and at end",
-     "grade": "absent",
-     "check": "none",
-     "models": [],
-     "evidence": [
-      ".g5/Verus_verification/coverage-map.md"
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::init",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::twin_while_running",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::running_ok",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::main_install",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::cli_update",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::top_rec",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::cli_uninstall",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::fin",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::persist",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::n5_facts"
      ],
-     "basis": "new:iteration-70",
-     "assessed_in": "iteration-70",
-     "gap": "Only Main:Load is bound in the crate; playbook uninstall.rs appends rows only at the end of Clean (no start row). Contrast: an install refused for a missing name, and an uninstall killed inside Clean, must each leave a row created at start."
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter74/run.json",
+      ".g5/uplift/coverage-20261117/iter74/proofs/models.json",
+      ".g5/uplift/coverage-20261117/iter74/replay/receipt.json",
+      ".g5/uplift/coverage-20261117/iter74/native/20261118T044846583014Z/observations.json",
+      ".g5/uplift/coverage-20261117/iter74/mutations/S.jsonl",
+      ".g5/uplift/coverage-20261117/iter74/predictions.md",
+      ".g5/uplift/coverage-20261117/iter74/bindings.json"
+     ],
+     "basis": "iteration-74: init (AbstractHistory.cls:51-63, HistoryTemp.cls:9-26) is the first step of main_install, the update branch of cli_update and top_rec; fin and persist fill it at the end. Controls install-init-after-name-check, uninstall-init-after-lookup and uninstall-top-created-last rejected; native mid.install / mid.update / mid.uninstall (permanent row in progress while the action runs), n5 ID order; flips n5.r1.pkg and mid.install.permph rejected.",
+     "assessed_in": "iteration-74",
+     "support": "mutation-checked",
+     "note": "Normal ends only. Abnormal ends (process death) are modelled for load in the ipm-load-history crate (history.record#3). While running, the permanent row lists no phases (history.record#6, refuted)."
     },
     {
      "id": "history.record#3",
@@ -384,15 +586,28 @@
      "text": "Working assumption: IPM records refused update and reinstall of a module that is not installed and uninstall with no name.",
      "cases": "update/reinstall of a non-installed module, uninstall with no name vs a refused load",
      "observation": "History row count",
-     "grade": "absent",
-     "check": "none",
-     "models": [],
-     "evidence": [
-      ".g5/Verus_verification/coverage-map.md"
+     "grade": "full",
+     "check": "refuted",
+     "models": [
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::update_recorded_iff",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::reinstall_not_installed",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::uninstall_no_name",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::cli_update",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::cli_reinstall",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::cli_uninstall"
      ],
-     "basis": "new:iteration-70",
-     "assessed_in": "iteration-70",
-     "gap": "Open question history.record.unlogged-refusals is \"not modeled\" in the coverage map. Main.cls argument checks before HistoryTemp init are not represented. Contrast: `update nosuchmod` and `uninstall` with no name each add one error row, against a refused load that does."
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter74/run.json",
+      ".g5/uplift/coverage-20261117/iter74/proofs/models.json",
+      ".g5/uplift/coverage-20261117/iter74/replay/receipt.json",
+      ".g5/uplift/coverage-20261117/iter74/native/20261118T044846583014Z/observations.json",
+      ".g5/uplift/coverage-20261117/iter74/mutations/S.jsonl",
+      ".g5/uplift/coverage-20261117/iter74/predictions.md",
+      ".g5/uplift/coverage-20261117/iter74/bindings.json"
+     ],
+     "basis": "iteration-74: the as-built model refutes the working assumption for all three: no record (u4, r1, n3), while a refused load (crate) and a refused install (i3) are recorded. Controls update-init-before-installed-check, reinstall-enters-install and uninstall-no-name-recorded rejected. The policy stays open (history.record.unlogged-refusals).",
+     "assessed_in": "iteration-74",
+     "support": "mutation-checked"
     },
     {
      "id": "history.record#9",
@@ -471,19 +686,35 @@
      "text": "Action records which of load, install, uninstall or update ran.",
      "cases": "load vs install vs uninstall vs update (reinstall recorded as install)",
      "observation": "Action column",
-     "grade": "partial",
-     "check": "unchecked",
+     "grade": "full",
+     "check": "proved",
      "models": [
       ".g5/Verus_verification/consolidated/iter16/provenance.rs::local_and_refusal_neighbors",
-      ".g5/Verus_verification/consolidated/iter16/provenance.rs::ordinary_neighbors"
+      ".g5/Verus_verification/consolidated/iter16/provenance.rs::ordinary_neighbors",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::main_install",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::cli_update",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::top_rec",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::dep_rec",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::dep_load_row",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::dep_load_label",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::install_always_recorded",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::update_recorded_iff",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::uninstall_committed_is_success"
      ],
      "evidence": [
       ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
-      ".g5/Verus_verification/consolidated/iter16/model-lane/controls/receipt.json"
+      ".g5/Verus_verification/consolidated/iter16/model-lane/controls/receipt.json",
+      ".g5/uplift/coverage-20261117/iter74/run.json",
+      ".g5/uplift/coverage-20261117/iter74/proofs/models.json",
+      ".g5/uplift/coverage-20261117/iter74/replay/receipt.json",
+      ".g5/uplift/coverage-20261117/iter74/native/20261118T044846583014Z/observations.json",
+      ".g5/uplift/coverage-20261117/iter74/mutations/S.jsonl",
+      ".g5/uplift/coverage-20261117/iter74/predictions.md",
+      ".g5/uplift/coverage-20261117/iter74/bindings.json"
      ],
-     "basis": "new:iteration-70",
-     "assessed_in": "iteration-70",
-     "gap": "iteration16 provenance proves install rows carry Action=Install and a local load row Action=Load (control local-action-treated-as-install). Uninstall and update labels and reinstall-as-install are not modeled. Contrast: an update row reads update, an uninstall row uninstall, `reinstall` reads install."
+     "basis": "new:iteration-70 iteration-74: update records are labelled update (cli_update, update_recorded_iff), uninstall and dependency uninstall records uninstall (top_rec, dep_rec), phase-scoped dependency records load (dep_load_label); reinstall is labelled install by composition (cli_reinstall delegates to cli_install, install_always_recorded). Mutants S-m10, S-m11, S-m12 rejected; native action fields of i1-i7, u1-u3, n1-n5, c1, t1 replayed.",
+     "assessed_in": "iteration-74",
+     "support": "mutation-checked"
     },
     {
      "id": "history.fields#2",
@@ -531,8 +762,8 @@
       ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json"
      ],
      "basis": "new:iteration-70",
-     "assessed_in": "iteration-70",
-     "gap": "The reader half is proved in render.rs (control placeholder-only-when-unknown rejected). The writer half is not: the crate Twin carries a version slot (0 = placeholder) but no theorem or clause says when it leaves the placeholder, and iter38 takes vunset as the stored input. Contrast: a refused load before the version is read stores 0.0.0-0, while a load refused after SetVersion stores the declared version."
+     "assessed_in": "iteration-74",
+     "gap": "The writer half is now modelled for install, update and uninstall (iteration74 init stores the placeholder; set_version from the search result, LoadNewModule or NameOpen; mutants install-version-not-from-search and S-m07 rejected; native verplaceholder fields). The load writer half (crate Twin version slot) still has no theorem, and a module whose real version is 0.0.0-0 is C:D43."
     },
     {
      "id": "history.fields#4",
@@ -774,8 +1005,8 @@
       ".g5/uplift/consolidated/iter38/run.json"
      ],
      "basis": "new:iteration-70",
-     "assessed_in": "iteration-70",
-     "gap": "The crate summarises Phases as a count and the last phase's status (ph, phst); per-phase start/end times and the status of earlier phases are not represented, and render.rs takes the stored phases as input. Contrast: a load whose Compile phase logs an error recovered by a later phase must show Compile with its error and Activate OK."
+     "assessed_in": "iteration-74",
+     "gap": "iteration74 run_from represents every phase entry of install, update and uninstall with its status and whether it ended; the start and end times themselves are not represented, and load phases stay summarised in the crate."
     },
     {
      "id": "history.phases#2",
@@ -806,17 +1037,33 @@
       "B1"
      ],
      "text": "Install records the same five phases, update also records ApplyUpdateSteps, and uninstall records Clean.",
-     "cases": "install vs update vs uninstall",
+     "cases": "install (i1) vs update (u1) vs uninstall (n1) and dependency uninstall (c1)",
      "observation": "phase names on the row",
-     "grade": "absent",
-     "check": "none",
-     "models": [],
-     "evidence": [
-      ".g5/Verus_verification/coverage-map.md"
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::phase_order",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::chain",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::order_by",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::logged",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::run_list",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::logged_lists",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::install_phases",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::uninstall_committed_is_success",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::dep_rec_committed"
      ],
-     "basis": "new:iteration-70",
-     "assessed_in": "iteration-70",
-     "gap": "No model of the phase lists for install, update (ApplyUpdateSteps) or uninstall (Clean). Contrast: an update row lists ApplyUpdateSteps after Activate; an uninstall row lists only Clean."
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter74/run.json",
+      ".g5/uplift/coverage-20261117/iter74/proofs/models.json",
+      ".g5/uplift/coverage-20261117/iter74/replay/receipt.json",
+      ".g5/uplift/coverage-20261117/iter74/native/20261118T044846583014Z/observations.json",
+      ".g5/uplift/coverage-20261117/iter74/mutations/S.jsonl",
+      ".g5/uplift/coverage-20261117/iter74/predictions.md",
+      ".g5/uplift/coverage-20261117/iter74/bindings.json"
+     ],
+     "basis": "iteration-74: the logged list is computed from PhaseName VALUELIST, GetCompletePhasesForOne and the \"*\" skip in ExecutePhases. Controls update-without-apply-update-steps, chain-drops-apply-update-steps, star-logged and S-m06 rejected; native i1 (five), u1 (six, flip u1.r1.ph6 rejected), n1 and c1 (Clean).",
+     "assessed_in": "iteration-74",
+     "support": "mutation-checked"
     },
     {
      "id": "history.phases#4",
@@ -824,21 +1071,28 @@
       "B2"
      ],
      "text": "A failed action lists the phases up to and including the one that failed.",
-     "cases": "failure in Initialize / Reload / Validate / Compile / Activate",
+     "cases": "failure in Compile (i5), ApplyUpdateSteps (u2, u3), Clean (n4, n5); any failing index of any phase list (run_shape)",
      "observation": "listed phases and last status",
-     "grade": "partial",
-     "check": "unchecked",
+     "grade": "full",
+     "check": "proved",
      "models": [
-      ".g5/Verus_verification/crates/ipm-load-history/src/contract.rs::top_rec",
-      ".g5/Verus_verification/crates/ipm-load-history/src/cases.rs::case_c28_phase_left_open"
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::run_from",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::run_shape",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::install_phases",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::uninstall_committed_is_success"
      ],
      "evidence": [
-      ".g5/Verus_verification/results/verus/20261113T223453Z-asbuilt-l1-normal-conforming-domain/receipt.json",
-      ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json"
+      ".g5/uplift/coverage-20261117/iter74/run.json",
+      ".g5/uplift/coverage-20261117/iter74/proofs/models.json",
+      ".g5/uplift/coverage-20261117/iter74/replay/receipt.json",
+      ".g5/uplift/coverage-20261117/iter74/native/20261118T044846583014Z/observations.json",
+      ".g5/uplift/coverage-20261117/iter74/mutations/S.jsonl",
+      ".g5/uplift/coverage-20261117/iter74/predictions.md",
+      ".g5/uplift/coverage-20261117/iter74/bindings.json"
      ],
-     "basis": "new:iteration-70",
-     "assessed_in": "iteration-70",
-     "gap": "Only an Activate failure is modeled (Pkg.act); a failure in Initialize, Reload, Validate or Compile is not an input. Contrast: a Compile error lists Initialize..Compile with Compile in error and no Activate entry."
+     "basis": "iteration-74: run_shape: for every phase list and failing index i, exactly i+1 entries, the last is the failing phase with an error, ended exactly when the error was thrown. install_phases applies it to install and update; load reaches the same loop through the same LoadNewModule call (Utils/Module.cls:1346; the crate covers its Activate failure). Controls failure-does-not-stop and thrown-failure-left-open rejected; native i5 (four entries, Compile ended with an error; flips i5.r1.nph and i5.r1.ph4.ended rejected).",
+     "assessed_in": "iteration-74",
+     "support": "mutation-checked"
     },
     {
      "id": "history.phases#5",
@@ -1304,19 +1558,31 @@
       "P1"
      ],
      "text": "For install and update, Committed shows whether the action kept changes.",
-     "cases": "install / update success, failure, refusal",
-     "observation": "Committed vs namespace",
-     "grade": "partial",
-     "check": "unchecked",
+     "cases": "install / update success (i1, u1), failure rolled back (i5, u2), failure without a transaction (u3), refusal (i3, i6, i7), developer-mode failure after its commit (dev_failure_committed)",
+     "observation": "Committed vs namespace (installed version after the command)",
+     "grade": "full",
+     "check": "proved",
      "models": [
-      ".g5/Verus_verification/crates/ipm-load-history/src/proofs.rs::theorem_commit_sound"
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::lnm",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::install_body",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::install_committed_is_kept",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::install_refusal_uncommitted",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::dev_failure_committed",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::after_version"
      ],
      "evidence": [
-      ".g5/Verus_verification/results/verus/20261113T222933Z-asbuilt-proofs-r3/receipt.json"
+      ".g5/uplift/coverage-20261117/iter74/run.json",
+      ".g5/uplift/coverage-20261117/iter74/proofs/models.json",
+      ".g5/uplift/coverage-20261117/iter74/replay/receipt.json",
+      ".g5/uplift/coverage-20261117/iter74/native/20261118T044846583014Z/observations.json",
+      ".g5/uplift/coverage-20261117/iter74/mutations/S.jsonl",
+      ".g5/uplift/coverage-20261117/iter74/predictions.md",
+      ".g5/uplift/coverage-20261117/iter74/bindings.json"
      ],
-     "basis": "new:iteration-70",
-     "assessed_in": "iteration-70",
-     "gap": "The SetCommitted sites are inside the shared Utils/Module.cls::LoadNewModule, which the crate models, but only from the Main:Load caller; Main:Install and the update path (ApplyUpdateSteps, its own transaction handling) are not modeled. Contrast: an update whose ApplyUpdateSteps fails after its commit reads Committed=1 with the steps kept, against a refused install that reads 0."
+     "basis": "iteration-74: install_committed_is_kept: for every input, Committed == kept || early_marker, where kept follows the transaction semantics (rollback at Utils/Module.cls:1358-1361, commits at 1311 and 1348) and early_marker is the no-transaction mark before a module.xml that fails to load (history.committed#9, refuted). Controls no-commit-mark-without-transaction, no-commit-mark-dev, guard-after-commit-mark, dependency control finalize-status-only and S-m09 rejected; native u2 (0, version stays 1.0.0), u3 (1, 1.1.0 kept), i5, i6, i7 replayed; flips u2.r1.committed, u3.r1.committed, i7.r1.committed rejected.",
+     "assessed_in": "iteration-74",
+     "support": "mutation-checked",
+     "note": "Mutant S-m08 (update keeps -dev for a non-snapshot) survives: no case distinguishes a developer-mode update, whose mode LoadModuleReference overrides (F-INST-5). Read-only repositories forcing developer mode off (Utils/Module.cls:1277-1287) are not modelled."
     },
     {
      "id": "history.committed#4",
@@ -1324,24 +1590,30 @@
       "B1"
      ],
      "text": "A successful top-level action is committed.",
-     "cases": "returned OK vs error",
+     "cases": "returned OK vs error, for load, install, update and uninstall",
      "observation": "Committed on the row",
-     "grade": "partial",
+     "grade": "full",
      "check": "proved",
      "models": [
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::install_committed_is_kept",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::uninstall_committed_is_success",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::dep_rec_committed",
       "playbook-uplift/models/verus/load_general.rs::honest",
-      "playbook-uplift/models/verus/load_general.rs::g_refines",
       ".g5/Verus_verification/crates/ipm-load-history/src/proofs.rs::theorem_top_record_complete"
      ],
      "evidence": [
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
-      "playbook-uplift/models/verus/results/load_general.json",
-      ".g5/Verus_verification/results/verus/20261113T223451Z-asbuilt-invariants-default/receipt.json",
-      ".g5/uplift/coverage-20261117/iter72/audit/features__history.json"
+      ".g5/uplift/coverage-20261117/iter74/run.json",
+      ".g5/uplift/coverage-20261117/iter74/proofs/models.json",
+      ".g5/uplift/coverage-20261117/iter74/replay/receipt.json",
+      ".g5/uplift/coverage-20261117/iter74/native/20261118T044846583014Z/observations.json",
+      ".g5/uplift/coverage-20261117/iter74/mutations/S.jsonl",
+      ".g5/uplift/coverage-20261117/iter74/predictions.md",
+      ".g5/uplift/coverage-20261117/iter74/bindings.json"
      ],
-     "basis": "new:iteration-70 (honest(): top_row.ok => committed; explorer ISOK-REDUNDANT); iteration-72 rule-4a re-audit (G1): partial, support inspection (control crate control-05 (Finalize ISOK term removed) survives for load)",
-     "assessed_in": "iteration-72",
-     "gap": "Rule 4a (iteration-72): Claims every action, but only load is modelled; install/update/uninstall Committed on success is not represented (uninstall Committed comes from AbstractHistory.cls:131, update/install via Utils/Module.cls SetCommitted)."
+     "basis": "iteration-74: install and update: ok implies kept implies Committed (install_committed_is_kept); uninstall: Committed == ok (uninstall_committed_is_success), where only the ISOK term of Finalize sets it, so dependency control finalize-without-isok is rejected (n1 and c1 read uncommitted); load from the crate and load_general.rs as before. Native i1, u1, n1, c1, t1 successes read Committed.",
+     "assessed_in": "iteration-74",
+     "support": "mutation-checked",
+     "note": "For install and update the ISOK term is redundant with the mark at Utils/Module.cls:1350 (ISOK-REDUNDANT, as for load)."
     },
     {
      "id": "history.committed#5",
@@ -1605,15 +1877,17 @@
    }
   },
   "history.committed.marking": {
-   "body_sha": "a3ca45304bcf0c92",
+   "body_sha": "4246cd2ee76e2184",
    "status": "enumerated",
    "units": {
     "P1": [
      "history.committed.marking#1",
-     "history.committed.marking#3",
-     "history.committed.marking#4"
+     "history.committed.marking#3"
     ],
     "B1": [
+     "history.committed.marking#4"
+    ],
+    "B2": [
      "history.committed.marking#2"
     ]
    },
@@ -1652,7 +1926,7 @@
     {
      "id": "history.committed.marking#2",
      "units": [
-      "B1"
+      "B2"
      ],
      "text": "Working assumption: a no-write refusal is uncommitted; the early marker is a defect.",
      "alias_of": "history.committed#9",
@@ -1664,50 +1938,70 @@
       "P1"
      ],
      "text": "For install and update, IPM sets Committed at each commit or before the first write without a transaction (the shared LoadNewModule sites), not from the final status.",
-     "cases": "install / update success, failure after a commit, refusal",
+     "cases": "install / update success, failure after a commit (u3 without a transaction, developer mode), refusal before the mark (i6, i7)",
      "observation": "Committed vs kept writes",
-     "grade": "partial",
-     "check": "unchecked",
+     "grade": "full",
+     "check": "proved",
      "models": [
-      ".g5/Verus_verification/crates/ipm-load-history/src/model.rs::set_com",
-      ".g5/Verus_verification/crates/ipm-load-history/src/proofs.rs::theorem_commit_sound"
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::lnm",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::mode_of",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::guard_refuses",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::install_committed_is_kept",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::install_refusal_uncommitted",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::dev_failure_committed"
      ],
      "evidence": [
-      ".g5/uplift/coverage-20261117/reviews/review-71.md"
+      ".g5/uplift/coverage-20261117/iter74/run.json",
+      ".g5/uplift/coverage-20261117/iter74/proofs/models.json",
+      ".g5/uplift/coverage-20261117/iter74/replay/receipt.json",
+      ".g5/uplift/coverage-20261117/iter74/native/20261118T044846583014Z/observations.json",
+      ".g5/uplift/coverage-20261117/iter74/mutations/S.jsonl",
+      ".g5/uplift/coverage-20261117/iter74/predictions.md",
+      ".g5/uplift/coverage-20261117/iter74/bindings.json"
      ],
-     "basis": "new:iteration-72 (review-71 A3)",
-     "assessed_in": "iteration-72",
-     "gap": "The SetCommitted sites (Utils/Module.cls:1227,1313,1350) are inside LoadNewModule, which the crate models only under the Main:Load caller. Main:Install and Main:Update are not modeled."
+     "basis": "iteration-74: the three marks (Utils/Module.cls:1227, 1313, 1350) are modelled under the Main.Install and Main.Update callers, after the guards (1213-1222). Controls no-commit-mark-without-transaction, no-commit-mark-dev, guard-after-commit-mark and dependency control finalize-status-only rejected; native u3 (failed, committed), i7 (refused without a transaction, uncommitted).",
+     "assessed_in": "iteration-74",
+     "support": "mutation-checked"
     },
     {
      "id": "history.committed.marking#4",
      "units": [
-      "P1"
+      "B1"
      ],
-     "text": "P1 applied to uninstall: Committed is set when changes are kept, not derived from the final status. As built, uninstall never calls SetCommitted and Finalize sets Committed = Committed || ISOK(status) (General/AbstractHistory.cls:131).",
-     "cases": "uninstall that fails after deleting resources vs one that succeeds",
+     "text": "For uninstall, which runs no transaction, nothing sets Committed early: Finalize sets it at the end from the final status (Committed || ISOK, General/AbstractHistory.cls:131).",
+     "cases": "uninstall that fails after deleting resources (n4, n5) vs one that succeeds (n1); dependency records (c1, n5)",
      "observation": "Committed on the uninstall row",
-     "grade": "partial",
-     "check": "unchecked",
+     "grade": "full",
+     "check": "proved",
      "models": [
-      ".g5/Verus_verification/consolidated/verus/history.rs::finalize"
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::top_rec",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::dep_rec",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::uninstall_committed_is_success",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::dep_rec_committed",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::n5_facts"
      ],
      "evidence": [
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
-      ".g5/uplift/coverage-20261117/reviews/review-71.md"
+      ".g5/uplift/coverage-20261117/iter74/run.json",
+      ".g5/uplift/coverage-20261117/iter74/proofs/models.json",
+      ".g5/uplift/coverage-20261117/iter74/replay/receipt.json",
+      ".g5/uplift/coverage-20261117/iter74/native/20261118T044846583014Z/observations.json",
+      ".g5/uplift/coverage-20261117/iter74/mutations/S.jsonl",
+      ".g5/uplift/coverage-20261117/iter74/predictions.md",
+      ".g5/uplift/coverage-20261117/iter74/bindings.json"
      ],
-     "basis": "new:iteration-72 (review-71 A3)",
-     "assessed_in": "iteration-72",
-     "gap": "history.rs::finalize computes Committed || status OK as AbstractHistory.cls:131 does, but no theorem exercises a row that never had SetCommitted (uninstall), and the uninstall.rs rows carry no Committed field. The contradiction is source-confirmed, not modeled. Contrast: an uninstall that fails after deleting a resource reads Committed=0 although it kept changes, against a successful one that reads 1."
+     "basis": "iteration-74: text changed with the ontology (the statement now scopes the early marks to load, install and update; source PR #1322 \"Uninstall is unchanged\"). Controls uninstall-sets-committed, S-m03 and dependency control finalize-without-isok rejected; native n1 (1), n4 and n5 (0 with kept removals); flips n1.r1.committed, n4.r1.committed and n5.r1.committed rejected.",
+     "assessed_in": "iteration-74",
+     "support": "mutation-checked"
     }
    ]
   },
   "history.committed.uninstall": {
-   "body_sha": "716da2e56118fd06",
+   "body_sha": "f1a4f07a91f61026",
    "status": "enumerated",
    "units": {
     "P1": [
-     "history.committed.uninstall#1"
+     "history.committed.uninstall#1",
+     "history.committed.uninstall#2"
     ]
    },
    "obligations": [
@@ -1717,21 +2011,58 @@
       "P1"
      ],
      "text": "Uninstall runs without a transaction, so its Committed equals its success: a failed uninstall that removed some resources reads uncommitted.",
-     "cases": "uninstall success vs failure after removing some resources",
+     "cases": "uninstall success (n1) vs failure after removing some resources (n4: FileCopy target deleted; n5: the module's class deleted)",
      "observation": "Committed on the uninstall row",
-     "grade": "partial",
-     "check": "unchecked",
+     "grade": "full",
+     "check": "proved",
      "models": [
-      ".g5/Verus_verification/consolidated/verus/history.rs::finalize",
-      "playbook-uplift/models/verus/uninstall.rs::l1_rows_honest"
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::top_rec",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::uninstall_committed_is_success",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::n5_facts",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::n1_facts"
      ],
      "evidence": [
-      ".g5/uplift/coverage-20261117/iter70/receipts/index.jsonl",
-      "playbook-uplift/models/verus/results/uninstall.json"
+      ".g5/uplift/coverage-20261117/iter74/run.json",
+      ".g5/uplift/coverage-20261117/iter74/proofs/models.json",
+      ".g5/uplift/coverage-20261117/iter74/replay/receipt.json",
+      ".g5/uplift/coverage-20261117/iter74/native/20261118T044846583014Z/observations.json",
+      ".g5/uplift/coverage-20261117/iter74/mutations/S.jsonl",
+      ".g5/uplift/coverage-20261117/iter74/predictions.md",
+      ".g5/uplift/coverage-20261117/iter74/bindings.json"
      ],
-     "basis": "new:iteration-70",
-     "assessed_in": "iteration-70",
-     "gap": "history.rs finalize sets committed = committed || status OK, and playbook uninstall rows carry only ok; no model states that uninstall never calls SetCommitted, and no theorem exercises an uninstall row's Committed. Contrast: an uninstall whose Clean fails after deleting a resource reads Committed=0 and Success error."
+     "basis": "iteration-74: uninstall_committed_is_success holds for every uninstall.rs world; n5_facts exhibits the kept removal (class 12 gone) with Committed 0. Controls uninstall-sets-committed and finalize-without-isok rejected; native n1, n4 (replayed from its observed Clean status: uninstall.rs has no resource-processor failure), n5 (fully computed).",
+     "assessed_in": "iteration-74",
+     "support": "mutation-checked"
+    },
+    {
+     "id": "history.committed.uninstall#2",
+     "units": [
+      "P1"
+     ],
+     "text": "The uninstall records of the dependencies that uninstall -r or `<module> clean` removes read Committed exactly when that dependency's Clean succeeded.",
+     "cases": "dependency removed by clean (c1, committed) vs dependency whose Clean failed under uninstall -r (n5, uncommitted)",
+     "observation": "Committed on the dependency row",
+     "grade": "full",
+     "check": "proved",
+     "models": [
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::dep_rec",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::dep_rec_committed",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::c1_facts",
+      ".g5/Verus_verification/coverage-20261117/iter74/actions.rs::n5_facts"
+     ],
+     "evidence": [
+      ".g5/uplift/coverage-20261117/iter74/run.json",
+      ".g5/uplift/coverage-20261117/iter74/proofs/models.json",
+      ".g5/uplift/coverage-20261117/iter74/replay/receipt.json",
+      ".g5/uplift/coverage-20261117/iter74/native/20261118T044846583014Z/observations.json",
+      ".g5/uplift/coverage-20261117/iter74/mutations/S.jsonl",
+      ".g5/uplift/coverage-20261117/iter74/predictions.md",
+      ".g5/uplift/coverage-20261117/iter74/bindings.json"
+     ],
+     "basis": "iteration-74: new obligation for the added sentence. dep_rec_committed holds for every row uninstall.rs dep_step appends. Mutant S-m03 and dependency control finalize-without-isok rejected; native c1 and n5 (r2).",
+     "assessed_in": "iteration-74",
+     "support": "mutation-checked",
+     "note": "A dependency skipped because another module still needs it is recorded as a successful, committed uninstall (uninstall.rs unin_witness_recurse_skipped_dep, P:F-UNIN-6 inside -r)."
     }
    ]
   },

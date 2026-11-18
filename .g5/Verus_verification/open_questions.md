@@ -1359,7 +1359,7 @@ default_assumption: Q16).
 [Q · history.record.unlogged-refusals]
 
 - Provisional answer: record them. Examples are `update` or `reinstall` of a module that is not installed, and `uninstall` with no name.
-- Reason: [recorded actions](../ontology/features/history.g5.md#history.actions) include refused attempts, and the wiki says IPM records every action "it attempts, whether or not the attempt succeeded". `install` with no name is already recorded.
+- Reason: [recorded actions](../ontology/features/history.g5.md#history.actions) include refused attempts, and the wiki says IPM records every action "it attempts, whether or not the attempt succeeded". `install` with no name is recorded only when a program calls `##class(%IPM.Main).Install` directly. At the command line the parser refuses it before any record, as it does `update` and `reinstall` with no name (iteration74 native cases i4 and i4api).
 - Alternative: argument refusals are not attempts, because IPM refuses them before the action starts.
 
 - G:Q-09 · Q-09: Should argument refusals of `update`, `reinstall` and `uninstall` be recorded? · open
