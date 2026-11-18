@@ -2,9 +2,9 @@
 
 Inventory blocks: 265. Status: enumerated 56, structural 2, unenumerated 207, stale 0.
 
-Assessed obligations: 280 (full 174, partial 63, absent 43, unassessed 0).
-Design checks on assessed obligations: proved 166, bounded 0, refuted 8, unchecked 63, none 43. Full with a passing (proved or bounded) check: 166.
-Assessed-scope coverage: 0.6214 (upper bound with unassessed 0.6214). Whole-foundation coverage: unmeasured.
+Assessed obligations: 286 (full 185, partial 60, absent 41, unassessed 0).
+Design checks on assessed obligations: proved 177, bounded 0, refuted 8, unchecked 60, none 41. Full with a passing (proved or bounded) check: 177.
+Assessed-scope coverage: 0.6469 (upper bound with unassessed 0.6469). Whole-foundation coverage: unmeasured.
 
 | Page | Blocks | Unenumerated or stale | Full | Partial | Absent | Unassessed |
 |---|---|---|---|---|---|---|
@@ -19,7 +19,7 @@ Assessed-scope coverage: 0.6214 (upper bound with unassessed 0.6214). Whole-foun
 | features/artifact-download.g5.md | 6 | 6 | 0 | 0 | 0 | 0 |
 | features/build-and-publish.g5.md | 12 | 12 | 0 | 0 | 0 | 0 |
 | features/dependencies.g5.md | 5 | 5 | 0 | 0 | 0 | 0 |
-| features/developer-tools.g5.md | 18 | 0 | 55 | 16 | 16 | 0 |
+| features/developer-tools.g5.md | 18 | 0 | 66 | 13 | 14 | 0 |
 | features/history.g5.md | 24 | 24 | 0 | 0 | 0 | 0 |
 | features/inspection.g5.md | 10 | 10 | 0 | 0 | 0 | 0 |
 | features/install.g5.md | 7 | 7 | 0 | 0 | 0 | 0 |
@@ -147,10 +147,10 @@ Assessed-scope coverage: 0.6214 (upper bound with unassessed 0.6214). Whole-foun
 | devtools.sync.test-paths | enumerated | 3 | 0 | 1 | 0 | 0.75 |
 | devtools.sync.skipped-tracking | enumerated | 4 | 0 | 2 | 0 | 0.6667 |
 | devtools.authoring | enumerated | 2 | 0 | 4 | 0 | 0.3333 |
-| devtools.authoring.generate | enumerated | 3 | 1 | 3 | 0 | 0.4286 |
+| devtools.authoring.generate | enumerated | 3 | 2 | 2 | 0 | 0.4286 |
 | devtools.authoring.import | enumerated | 4 | 1 | 0 | 0 | 0.8 |
 | devtools.authoring.module-version | enumerated | 4 | 2 | 0 | 0 | 0.6667 |
-| devtools.generate.resources | enumerated | 2 | 4 | 1 | 0 | 0.2857 |
+| devtools.generate.resources | enumerated | 13 | 0 | 0 | 0 | 1.0 |
 | devtools.generate.webapps | enumerated | 4 | 2 | 0 | 0 | 0.6667 |
 | devtools.generate.cors | enumerated | 1 | 0 | 1 | 0 | 0.5 |
 | devtools.scripting | enumerated | 1 | 0 | 0 | 0 | 1.0 |

@@ -132,11 +132,15 @@ Commands for writing modules:
 <a id="devtools.generate.resources"></a>
 [D · devtools.generate.resources]
 
-`generate` keeps classes under the chosen tests folder out of application resources, even when that folder is inside the source folder. It writes those tests as UnitTest entries with Phase="test" and their package and test directory.
+`generate` keeps classes under the chosen tests folder out of application resources, even when that folder is inside the source folder. It writes those tests as UnitTest entries with Phase="test". Each entry is named by the tests folder and directory and carries the package its classes share.
 
-- A missing source folder fails before resources are added. A missing tests folder adds no tests.
-- Files with unsupported extensions or source that cannot load are skipped. [Whether invalid source should instead fail generation is open](../../Verus_verification/open_questions.md#devtools.generate.invalid-source).
-- Classes are grouped by directory and their shared top-level package. The exact grouping algorithm has source evidence but no general proof here.
+- A missing source folder fails before resources are added, and no `module.xml` is written. A missing tests folder adds no tests.
+- Files with unsupported extensions, and files whose class or routine name cannot be read, are skipped. A class whose name can be read is listed even if its body does not compile. [Whether invalid source should instead fail generation is open](../../Verus_verification/open_questions.md#devtools.generate.invalid-source).
+- Classes are grouped by their directory and top-level package. Each group becomes one package resource, named by the deepest package that all its classes share. For example, A.B.C with A.B.D gives A.B.PKG, A.B.C with A.D.E gives A.PKG, and A.B.C alone gives A.B.PKG.
+- A resource's Directory is the folder that holds its package folders, relative to the source folder. It is left out when that folder is the source folder itself.
+- Routines, include files and classes without a package are written one by one under their own names. Such files in the tests folder are written nowhere.
+- `module.xml` keeps one resource per name. As built, when one package sits in two directories, only one directory's resource is kept and the other directory's classes are missing from the module (defect C:D72).
+- As built, `load` cannot find a class without a package in the source folder when a `cls` folder also exists, or a class file named with dots outside package folders, so the load fails (defect C:D73).
 
 - Working assumption: Generation skips an invalid source file and may produce a manifest without it.
 
@@ -367,11 +371,17 @@ Open questions: [Should `module-version` also update the `module.xml` file a mod
 - Expands: [Authoring](#devtools.authoring).
 - Children: [Should `generate` report or refuse a source file that cannot load?](../../Verus_verification/open_questions.md#devtools.generate.invalid-source).
 
-Sources: `Storage/ModuleTemplate.cls::{ReadResources,ReadItems,AddPackages,GroupClasses,ProcessResources,ReadFolder}` → `SaveFile`. Tests: `Generate::{TestTestsUnderSourceFolderAreNotPackaged,TestUnitTestsFromTestsFolder,TestMissingSourceFolderThrows}`. [Iteration 6 index](../../uplift/consolidated/iter6/INDEX.md) S6-01. [Contract](../../Verus_verification/consolidated/iter6/workflows.rs): `application_item`, `test_item`, `template_status`; normalized paths, file-loader success and filesystem existence are explicit provider inputs. General package grouping remains unproved.
+Sources: `Storage/ModuleTemplate.cls::{ReadResources,ReadItems,GroupClasses,SharedPackage,AddPackages,ProcessResources,ReadFolder}` → `SaveFile` (through `Storage/Module.cls::CalculatedResourcesGet` and `ResourceReference.cls::GetSortKey`); load reader `ResourceProcessor/Default/Document.cls::{%OnNew,OnPhase}`. Tests: `Generate::{TestTestsUnderSourceFolderAreNotPackaged,TestUnitTestsFromTestsFolder,TestMissingSourceFolderThrows}`. [Iteration 6 index](../../uplift/consolidated/iter6/INDEX.md) S6-01. [Contract](../../Verus_verification/consolidated/iter6/workflows.rs): `application_item`, `test_item`, `template_status`.
+
+Model: [grouping.rs](../../Verus_verification/coverage-20261117/iter69/grouping.rs) `group_characterized` (group name for every file sequence), `grouping_names`, `singles_exact`, `leftovers_and_skips`, `tests_and_status`, `writer_one_entry_per_name`, `same_name_two_directories_keeps_one`, `same_package_two_directories_loses_class`, `package_layout_round_trip`, `load_resolution` ([handoff](../../uplift/coverage-20261117/iter69/HANDOFF.md)). The listing result (`$system.OBJ.Load` list-only) and directory existence are provider inputs, observed natively.
+
+Findings: [`generate` drops a package's classes from one directory when the same package also sits in another](../../Verus_verification/bugs_issues.md#c-d72)
+
+Findings: [`generate` writes resources that `load` cannot find for a package-less root class beside a `cls` folder and for flat-named files](../../Verus_verification/bugs_issues.md#c-d73)
 
 Open questions: [Should `generate` report or refuse a source file that cannot load?](../../Verus_verification/open_questions.md#devtools.generate.invalid-source)
 
-State machines: [generator · iter53](../../Verus_verification/models/iter53-generator/manifest.json), [workflows · iter6](../../Verus_verification/models/iter6-workflows/manifest.json)
+State machines: [grouping · coverage iter69](../../Verus_verification/models/cov20261117-iter69-grouping/manifest.json), [generator · iter53](../../Verus_verification/models/iter53-generator/manifest.json), [workflows · iter6](../../Verus_verification/models/iter6-workflows/manifest.json)
 
 ### devtools.generate.webapps
 

@@ -1,0 +1,406 @@
+{
+ "verus_dir": ".g5/Verus_verification/coverage-20261117/iter69",
+ "changed_files": [
+  "grouping.rs",
+  "cases.json",
+  "run.py",
+  "native/**",
+  "../common/harness.py"
+ ],
+ "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+ "rows": [
+  {
+   "id": "S69-01",
+   "owner": ".g5/ontology/features/developer-tools.g5.md#devtools.generate.resources",
+   "model": "grouping.rs",
+   "symbols": [
+    "directory",
+    "pkg_len",
+    "grouped",
+    "package",
+    "in_group",
+    "shared",
+    "group",
+    "pkg_entry",
+    "pkg_entries",
+    "lemma_shared_prefix",
+    "group_characterized",
+    "class_in_own_group",
+    "class_written_before_collapse",
+    "grouping_names"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "ReadItems"
+    ],
+    [
+     "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "GroupClasses"
+    ],
+    [
+     "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "SharedPackage"
+    ],
+    [
+     "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "AddPackages"
+    ]
+   ],
+   "reader": [
+    [
+     "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "ProcessResources"
+    ],
+    [
+     "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "SaveFile"
+    ],
+    [
+     "src/cls/IPM/Storage/Module.cls",
+     "CalculatedResourcesGet"
+    ]
+   ],
+   "roles": [
+    {
+     "symbol": "directory",
+     "file": "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "member": "ReadItems",
+     "lines": "477-487",
+     "role": "decide",
+     "note": "Directory = leading path pieces left after one piece per package segment"
+    },
+    {
+     "symbol": "group",
+     "file": "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "member": "GroupClasses",
+     "lines": "494-515",
+     "role": "decide",
+     "note": "packages(\"/\"_Directory, topLevel), seeded with the first class's package"
+    },
+    {
+     "symbol": "shared",
+     "file": "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "member": "SharedPackage",
+     "lines": "518-528",
+     "role": "decide",
+     "note": "longest common leading segments"
+    },
+    {
+     "symbol": "pkg_entries",
+     "file": "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "member": "AddPackages",
+     "lines": "413-431",
+     "role": "write",
+     "note": "Name <package>.PKG, Directory when non-empty, key pkg:<dirKey>:<package>"
+    }
+   ],
+   "scope": "Name of the package resource per (directory, top-level package): the deepest package the group's classes share (A.B.C+A.B.D -> A.B.PKG; A.B.C+A.D.E -> A.PKG; a lone A.B.C -> A.B.PKG). Proved for every file sequence (group_characterized: prefix of every member, deepest such, so independent of file order). Native m1 (all four shapes), m3 (Id2 split by directory)."
+  },
+  {
+   "id": "S69-02",
+   "owner": ".g5/ontology/features/developer-tools.g5.md#devtools.generate.resources",
+   "model": "grouping.rs",
+   "symbols": [
+    "supported",
+    "kept",
+    "single",
+    "singles",
+    "singles_exact",
+    "leftovers_and_skips"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "ReadItems"
+    ],
+    [
+     "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "GroupClasses"
+    ],
+    [
+     "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "ReadResources"
+    ]
+   ],
+   "reader": [
+    [
+     "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "ProcessResources"
+    ],
+    [
+     "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "SaveFile"
+    ]
+   ],
+   "roles": [
+    {
+     "symbol": "supported",
+     "file": "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "member": "ReadItems",
+     "lines": "458-467",
+     "role": "decide",
+     "note": "extensions cls, mac, inc, int"
+    },
+    {
+     "symbol": "kept",
+     "file": "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "member": "ReadItems",
+     "lines": "468-475",
+     "role": "decide",
+     "note": "tests-directory prefix skip; listing failure skip. File.listed is the provider result of $system.OBJ.Load(file,\"-d\",,.list,1) (observed: a class header with a broken body is listed; a file without a class header is not)"
+    },
+    {
+     "symbol": "single",
+     "file": "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "member": "GroupClasses",
+     "lines": "503-505",
+     "role": "decide",
+     "note": "non-class items and classes without a package stay in items"
+    },
+    {
+     "symbol": "singles",
+     "file": "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "member": "ReadResources",
+     "lines": "401",
+     "role": "write",
+     "note": "merge items into TemplateResources: Name = listed item (e.g. Ir2a.cls, Ir69.MAC), Directory from ReadItems"
+    }
+   ],
+   "scope": "Leftovers are written once each under the listed item name; unsupported, unlisted and tests-folder files are written nowhere. Native m1 (Ir69.MAC, Ii69.INC, notes.txt, Ij1/Junk.cls), m2a/m2e (Ir2a.cls, Ir2e.cls), m5 (body-broken Ig2 listed, headerless Ig3 not)."
+  },
+  {
+   "id": "S69-03",
+   "owner": ".g5/ontology/features/developer-tools.g5.md#devtools.generate.resources",
+   "model": "grouping.rs",
+   "symbols": [
+    "same_key",
+    "drop_key",
+    "collapse",
+    "writer_one_entry_per_name",
+    "lemma_two_entries",
+    "same_name_two_directories_keeps_one",
+    "same_package_two_directories_loses_class",
+    "m3_keeps_one_directory"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/Storage/Module.cls",
+     "CalculatedResourcesGet"
+    ],
+    [
+     "src/cls/IPM/Utils/CodeGeneration.cls",
+     "BuildRelationshipSorter"
+    ],
+    [
+     "src/cls/IPM/Storage/ResourceReference.cls",
+     "GetSortKey"
+    ],
+    [
+     "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "ProcessResources"
+    ]
+   ],
+   "reader": [
+    [
+     "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "SaveFile"
+    ]
+   ],
+   "roles": [
+    {
+     "symbol": "collapse",
+     "file": "src/cls/IPM/Utils/CodeGeneration.cls",
+     "member": "BuildRelationshipSorter",
+     "lines": "4-31",
+     "role": "decide",
+     "note": "tTempArray.SetAt(element, sortKey): the later resource with an equal key replaces the earlier"
+    },
+    {
+     "symbol": "same_key",
+     "file": "src/cls/IPM/Storage/ResourceReference.cls",
+     "member": "GetSortKey",
+     "lines": "509-537",
+     "role": "decide",
+     "note": "key from name and extension; Directory is not part of it"
+    },
+    {
+     "symbol": "collapse",
+     "file": "src/cls/IPM/Storage/Module.cls",
+     "member": "CalculatedResourcesGet",
+     "lines": "38-47",
+     "role": "observe",
+     "note": "XML projection of Resources used by SaveFile"
+    },
+    {
+     "symbol": "generate",
+     "file": "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "member": "ProcessResources",
+     "lines": "530-549",
+     "role": "write",
+     "note": "creates ResourceReference objects in TemplateResources $order (file paths, then pkg:, then test:)"
+    }
+   ],
+   "scope": "The written module.xml keeps one resource per (name, extension). Proved generally (writer_one_entry_per_name; same_name_two_directories_keeps_one). As-built divergence C:D72: the same package in two directories keeps only the later directory, and load never sees the other's classes. Native m3: Id1.B.PKG only with Directory y, class Id1.B.C absent after load."
+  },
+  {
+   "id": "S69-04",
+   "owner": ".g5/ontology/features/developer-tools.g5.md#devtools.generate.resources",
+   "model": "grouping.rs",
+   "symbols": [
+    "test_entries",
+    "generate",
+    "tests_and_status"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "ReadResources"
+    ],
+    [
+     "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "AddPackages"
+    ]
+   ],
+   "reader": [
+    [
+     "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "SaveFile"
+    ]
+   ],
+   "roles": [
+    {
+     "symbol": "generate",
+     "file": "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "member": "ReadResources",
+     "lines": "397-408",
+     "role": "decide",
+     "note": "tests directory normalized against the module folder; UnitTests only when it exists; test leftovers never merged"
+    },
+    {
+     "symbol": "test_entries",
+     "file": "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "member": "AddPackages",
+     "lines": "432-438",
+     "role": "write",
+     "note": "Name /<tests>/<dir>/, ProcessorClass UnitTest, Package = group package, Phase test"
+    }
+   ],
+   "scope": "UnitTest entries per (directory, top-level package) of the tests listing, inside or outside the source folder; tests-folder routines and package-less classes are written nowhere. Native m1 (/tests/, It1), m4 (/src/tests/, Ie1T), m3 (no tests folder, no UnitTest)."
+  },
+  {
+   "id": "S69-05",
+   "owner": ".g5/ontology/features/developer-tools.g5.md#devtools.generate.resources",
+   "model": "grouping.rs",
+   "symbols": [
+    "generate",
+    "tests_and_status"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "ReadFolder"
+    ],
+    [
+     "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "ReadItems"
+    ]
+   ],
+   "reader": [
+    [
+     "src/cls/IPM/Main.cls",
+     "GenerateModuleXML"
+    ]
+   ],
+   "roles": [
+    {
+     "symbol": "generate",
+     "file": "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "member": "ReadFolder",
+     "lines": "555-558",
+     "role": "decide",
+     "note": "missing directory returns error 5001"
+    },
+    {
+     "symbol": "generate",
+     "file": "src/cls/IPM/Storage/ModuleTemplate.cls",
+     "member": "ReadItems",
+     "lines": "459",
+     "role": "write",
+     "note": "$$$ThrowOnError before any TemplateResources write"
+    },
+    {
+     "symbol": "generate",
+     "file": "src/cls/IPM/Main.cls",
+     "member": "GenerateModuleXML",
+     "lines": "1487,1556-1557",
+     "role": "observe",
+     "note": "exception leaves ProcessResources and SaveFile unreached"
+    }
+   ],
+   "scope": "A missing source folder fails with \"Directory ... doesn't exist\" and writes no module.xml. Native m6."
+  },
+  {
+   "id": "S69-06",
+   "owner": ".g5/ontology/features/developer-tools.g5.md#devtools.generate.resources",
+   "model": "grouping.rs",
+   "symbols": [
+    "ext_dir",
+    "reader_dir",
+    "reader_finds",
+    "dir_exists",
+    "entry_ext",
+    "provides",
+    "provided",
+    "resolves",
+    "load_ok",
+    "loads_class",
+    "package_layout_round_trip",
+    "load_resolution"
+   ],
+   "direct": [
+    [
+     "src/cls/IPM/ResourceProcessor/Default/Document.cls",
+     "%OnNew"
+    ],
+    [
+     "src/cls/IPM/ResourceProcessor/Default/Document.cls",
+     "OnPhase"
+    ]
+   ],
+   "reader": [
+    [
+     "src/cls/IPM/ResourceProcessor/Default/Document.cls",
+     "OnPhase"
+    ]
+   ],
+   "roles": [
+    {
+     "symbol": "reader_dir",
+     "file": "src/cls/IPM/ResourceProcessor/Default/Document.cls",
+     "member": "%OnNew",
+     "lines": "464-471",
+     "role": "decide",
+     "note": "empty Directory defaults to the lower-case extension"
+    },
+    {
+     "symbol": "reader_dir",
+     "file": "src/cls/IPM/ResourceProcessor/Default/Document.cls",
+     "member": "OnPhase",
+     "lines": "70-130",
+     "role": "decide",
+     "note": "search list [Directory, \"\" when not defined]; first existing directory wins"
+    },
+    {
+     "symbol": "reader_finds",
+     "file": "src/cls/IPM/ResourceProcessor/Default/Document.cls",
+     "member": "OnPhase",
+     "lines": "145",
+     "role": "observe",
+     "note": "file path = directory + name with . translated to /"
+    }
+   ],
+   "scope": "load of the generated manifest: package-layout files round-trip (proved generally); a package-less class in the source root beside a cls directory and a flat-named class file are not found and the load fails (C:D73). The model treats a PKG entry as resolving when some listed class lies under it, and does not model the extension-fallback attempt seen in error text (Ir2a.xml). Native m1, m3, m4 load; m2a, m2b fail; m2e loads (class compiled as User.Ir2e)."
+  }
+ ]
+}

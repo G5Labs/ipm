@@ -1,0 +1,3 @@
+# Unsuccessful native attempt
+
+`20261118T014601656513Z` is the first harness run of iteration69 (harness output in `harness.out`). It stopped at the native-expectation gate with one mismatch: `class.Ir2e` observed 0, model 1. The observer checked `%Dictionary.CompiledClass` for `Ir2e`, but IRIS compiles a class declared without a package into `User`, so the class loaded as `User.Ir2e`. A probe container (`ipmcov20261117-iter69-probe`) showed `zpm "load"` compiling `User.Ip1` from `Ip1.cls`. The observer was fixed and the run repeated from scratch (`../native/LATEST`). Every other field, including the m3 class loss and the m2a/m2b load failures, matched in both runs.
