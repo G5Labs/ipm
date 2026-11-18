@@ -1,0 +1,33 @@
+verification results:: 97 verified, 2 errors
+error: postcondition not satisfied
+   --> /home/ziniu_wu_g5labs_ai/experiments/model-coverage-uplift-20261117/ipm/ipm/.g5/uplift/coverage-20261117/iter74/proofs/controls/actions.rs/uninstall-sets-committed.rs:495:13
+    |
+494 |   pub proof fn uninstall_committed_is_success(w: unin::W, k: nat, force: bool, recurse: bool, global: bool, fuel: nat)
+    |   -------------------------------------------------------------------------------------------------------------------- at the end of the function body
+495 |       ensures ({
+    |  _____________^
+496 | |         let o = unin_out(w, k, force, recurse, global, fuel);
+497 | |         let rs = cli_uninstall(w, Some(k), force, recurse, global, fuel);
+498 | |         &&& rs.len() >= 1
+...   |
+502 | |         &&& (unin::lookup(w, k) is Some) ==> rs[0].phases == seq![PE { name: Ph::Clean, ok: o.ok, ended: true }]
+503 | |     })
+    | |______^ failed this postcondition
+
+error: postcondition not satisfied
+   --> /home/ziniu_wu_g5labs_ai/experiments/model-coverage-uplift-20261117/ipm/ipm/.g5/uplift/coverage-20261117/iter74/proofs/controls/actions.rs/uninstall-sets-committed.rs:737:13
+    |
+736 |   pub proof fn n5_facts()
+    |   ----------------------- at the end of the function body
+737 |       ensures ({
+    |  _____________^
+738 | |         let w = w_hookfail();
+739 | |         let o = unin_out(w, 3, false, true, false, 3);
+740 | |         let rs = cli_uninstall(w, Some(3nat), false, true, false, 3);
+...   |
+746 | |         &&& rs[1].row.package == pkg_of(2) && !rs[1].row.committed && !ok_of(rs[1])
+747 | |     })
+    | |______^ failed this postcondition
+
+error: aborting due to 2 previous errors
+

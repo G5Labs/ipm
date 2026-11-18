@@ -1,0 +1,708 @@
+{
+ "verus_dir": ".g5/Verus_verification/coverage-20261117/iter74",
+ "changed_files": [
+  "actions.rs",
+  "cases.json",
+  "make_cases.py",
+  "run.py",
+  "publish.py",
+  "native/**"
+ ],
+ "pin": "571e04a19aba9f9b4bc0ea23fbe09182038f4e55",
+ "shared_models": [
+  ".g5/Verus_verification/consolidated/verus/history.rs (Row, Action, finalize)",
+  "playbook-uplift/models/verus/uninstall.rs (storage_uninstall, main_uninstall, clean_cmd, dep_step, worlds)"
+ ],
+ "rows": [
+  {
+   "id": "S74-01",
+   "owner": ".g5/ontology/features/history.g5.md#history.actions",
+   "model": "actions.rs",
+   "symbols": [
+    "cli_install",
+    "api_install",
+    "main_install",
+    "install_body",
+    "install_always_recorded"
+   ],
+   "roles": [
+    {
+     "symbol": "main_install",
+     "file": "src/cls/IPM/Main.cls",
+     "member": "Install",
+     "lines": "2565-2569",
+     "role": "write",
+     "note": "InstallInit(tModuleName) before any check: the record exists for every refusal that follows"
+    },
+    {
+     "symbol": "install_body",
+     "file": "src/cls/IPM/Main.cls",
+     "member": "Install",
+     "lines": "2572-2574",
+     "role": "decide",
+     "note": "no module name: thrown after the init"
+    },
+    {
+     "symbol": "install_body",
+     "file": "src/cls/IPM/Main.cls",
+     "member": "Install",
+     "lines": "2580-2585",
+     "role": "decide",
+     "note": "no enabled repository: thrown after the init"
+    },
+    {
+     "symbol": "install_body",
+     "file": "src/cls/IPM/Main.cls",
+     "member": "Install",
+     "lines": "2635-2659",
+     "role": "decide",
+     "note": "not found / platform-incompatible: thrown after the init"
+    },
+    {
+     "symbol": "main_install",
+     "file": "src/cls/IPM/Main.cls",
+     "member": "Install",
+     "lines": "2666-2670",
+     "role": "write",
+     "note": "Finalize in the catch and on success"
+    },
+    {
+     "symbol": "cli_install",
+     "file": "src/cls/IPM/Main.cls",
+     "member": "Commands XDATA",
+     "lines": "427",
+     "role": "decide",
+     "note": "install's module parameter is required: the parser refuses an empty name before dispatch"
+    },
+    {
+     "symbol": "cli_install",
+     "file": "src/cls/IPM/Main.cls",
+     "member": "ShellInternal",
+     "lines": "1091",
+     "role": "observe",
+     "note": "dispatch of install"
+    },
+    {
+     "symbol": "main_install",
+     "file": "src/cls/IPM/General/AbstractHistory.cls",
+     "member": "InstallInit",
+     "lines": "65-68",
+     "role": "write",
+     "note": "Init with Action install"
+    }
+   ],
+   "scope": "Row creation for install computed from the name, repository count, search result and later refusals. Controls install-init-after-name-check (api_install), install-version-not-from-search. Native i1-i5, i4api, i6, i7."
+  },
+  {
+   "id": "S74-02",
+   "owner": ".g5/ontology/features/history.g5.md#history.actions",
+   "model": "actions.rs",
+   "symbols": [
+    "cli_update",
+    "update_recorded_iff",
+    "has_name"
+   ],
+   "roles": [
+    {
+     "symbol": "cli_update",
+     "file": "src/cls/IPM/Main.cls",
+     "member": "Update",
+     "lines": "4415-4417",
+     "role": "decide",
+     "note": "-DPermitDowngrade refusal before UpdateInit"
+    },
+    {
+     "symbol": "cli_update",
+     "file": "src/cls/IPM/Main.cls",
+     "member": "Update",
+     "lines": "4422-4424",
+     "role": "decide",
+     "note": "NameExists || ExternalNameExists refusal before UpdateInit (the model's installed list stands for both indexes)"
+    },
+    {
+     "symbol": "cli_update",
+     "file": "src/cls/IPM/Main.cls",
+     "member": "Update",
+     "lines": "4438",
+     "role": "write",
+     "note": "UpdateInit(moduleName)"
+    },
+    {
+     "symbol": "cli_update",
+     "file": "src/cls/IPM/Main.cls",
+     "member": "Update",
+     "lines": "4445",
+     "role": "decide",
+     "note": "Install with the update log: Install's checks and Finalize write the update row (Main.cls:2568, 2666-2670)"
+    },
+    {
+     "symbol": "cli_update",
+     "file": "src/cls/IPM/Main.cls",
+     "member": "Commands XDATA",
+     "lines": "177",
+     "role": "decide",
+     "note": "update's module parameter is required"
+    },
+    {
+     "symbol": "cli_update",
+     "file": "src/cls/IPM/Main.cls",
+     "member": "ShellInternal",
+     "lines": "1119",
+     "role": "observe",
+     "note": "dispatch of update"
+    },
+    {
+     "symbol": "cli_update",
+     "file": "src/cls/IPM/General/AbstractHistory.cls",
+     "member": "UpdateInit",
+     "lines": "81-84",
+     "role": "write",
+     "note": "Init with Action update"
+    }
+   ],
+   "scope": "Update records iff name, no -PermitDowngrade, installed. Controls update-init-before-permit-check, update-init-before-installed-check. Native u1-u5. -path (Main.Load with the update log) not modelled."
+  },
+  {
+   "id": "S74-03",
+   "owner": ".g5/ontology/features/history.g5.md#history.actions",
+   "model": "actions.rs",
+   "symbols": [
+    "cli_reinstall",
+    "reinstall_not_installed"
+   ],
+   "roles": [
+    {
+     "symbol": "cli_reinstall",
+     "file": "src/cls/IPM/Main.cls",
+     "member": "Reinstall",
+     "lines": "2685-2688",
+     "role": "decide",
+     "note": "NameOpen of a name that is not installed throws before Install"
+    },
+    {
+     "symbol": "cli_reinstall",
+     "file": "src/cls/IPM/Main.cls",
+     "member": "Commands XDATA",
+     "lines": "469",
+     "role": "decide",
+     "note": "reinstall's module parameter is required"
+    }
+   ],
+   "scope": "Shares iter22 reinstall.rs's fact; control reinstall-enters-install. Native r1."
+  },
+  {
+   "id": "S74-04",
+   "owner": ".g5/ontology/features/history.g5.md#history.actions",
+   "model": "actions.rs",
+   "symbols": [
+    "cli_uninstall",
+    "top_rec",
+    "top_unin",
+    "uninstall_no_name",
+    "uninstall_one_record",
+    "uninstall_committed_is_success"
+   ],
+   "roles": [
+    {
+     "symbol": "cli_uninstall",
+     "file": "src/cls/IPM/Main.cls",
+     "member": "Uninstall",
+     "lines": "2710-2712",
+     "role": "decide",
+     "note": "no name: thrown before Storage.Module:Uninstall, no record"
+    },
+    {
+     "symbol": "cli_uninstall",
+     "file": "src/cls/IPM/Main.cls",
+     "member": "Uninstall",
+     "lines": "2749",
+     "role": "decide",
+     "note": "Storage.Module:Uninstall for any other name"
+    },
+    {
+     "symbol": "top_rec",
+     "file": "src/cls/IPM/Storage/Module.cls",
+     "member": "Uninstall",
+     "lines": "734",
+     "role": "write",
+     "note": "UninstallInit(pModuleName) first: a name that is not installed still gets a record"
+    },
+    {
+     "symbol": "top_rec",
+     "file": "src/cls/IPM/Storage/Module.cls",
+     "member": "Uninstall",
+     "lines": "735-738",
+     "role": "write",
+     "note": "SetVersion only when NameOpen finds the module"
+    },
+    {
+     "symbol": "top_rec",
+     "file": "src/cls/IPM/Storage/Module.cls",
+     "member": "ExecutePhases",
+     "lines": "457-463",
+     "role": "decide",
+     "note": "module not found: thrown before InitPhase, so no phase entry"
+    },
+    {
+     "symbol": "top_rec",
+     "file": "src/cls/IPM/Storage/Module.cls",
+     "member": "Uninstall",
+     "lines": "745-756",
+     "role": "write",
+     "note": "ExecutePhases(Clean) with the log, then Finalize(tSC); no SetCommitted on this path"
+    },
+    {
+     "symbol": "cli_uninstall",
+     "file": "src/cls/IPM/Main.cls",
+     "member": "ShellInternal",
+     "lines": "1095",
+     "role": "observe",
+     "note": "dispatch of uninstall"
+    },
+    {
+     "symbol": "top_rec",
+     "file": "src/cls/IPM/General/AbstractHistory.cls",
+     "member": "UninstallInit",
+     "lines": "76-79",
+     "role": "write",
+     "note": "Init with Action uninstall (also the dependency records, Lifecycle/Base.cls:440)"
+    }
+   ],
+   "scope": "Top record composed with playbook uninstall.rs storage_uninstall/main_uninstall (Clean outcome and the rows it appends). Controls uninstall-init-after-lookup, uninstall-no-name-recorded, uninstall-top-created-last. Native n1-n5. Self-uninstall (IPM) and -all not modelled."
+  },
+  {
+   "id": "S74-05",
+   "owner": ".g5/ontology/features/history.g5.md#history.actions",
+   "model": "actions.rs",
+   "symbols": [
+    "cli_clean",
+    "dep_rec",
+    "cmd_rows",
+    "other_commands_no_record",
+    "clean_without_deps_writes_nothing",
+    "c1_facts"
+   ],
+   "roles": [
+    {
+     "symbol": "cmd_rows",
+     "file": "src/cls/IPM/Main.cls",
+     "member": "ModuleAction",
+     "lines": "2830-2856",
+     "role": "decide",
+     "note": "module-action runs ExecutePhases with no log (2848)"
+    },
+    {
+     "symbol": "cmd_rows",
+     "file": "src/cls/IPM/Main.cls",
+     "member": "RunOnePhase",
+     "lines": "2753-2766",
+     "role": "decide",
+     "note": "standard phase commands (reload, compile, ...) run ExecutePhases with no log"
+    },
+    {
+     "symbol": "cmd_rows",
+     "file": "src/cls/IPM/Main.cls",
+     "member": "ShellInternal",
+     "lines": "1120-1125",
+     "role": "observe",
+     "note": "dispatch of STANDARDPHASES and module-action; list (1096) and sync (1141) reach no init site"
+    },
+    {
+     "symbol": "cli_clean",
+     "file": "src/cls/IPM/Lifecycle/Base.cls",
+     "member": "%Clean",
+     "lines": "313",
+     "role": "decide",
+     "note": "Clean.Recurse defaults to 1: `<module> clean` recurses into dependencies"
+    },
+    {
+     "symbol": "dep_rec",
+     "file": "src/cls/IPM/Lifecycle/Base.cls",
+     "member": "%Clean",
+     "lines": "438-441",
+     "role": "write",
+     "note": "UninstallInit(dependency) and InitPhase(Clean) before the nested Clean"
+    },
+    {
+     "symbol": "dep_rec",
+     "file": "src/cls/IPM/Lifecycle/Base.cls",
+     "member": "%Clean",
+     "lines": "452",
+     "role": "write",
+     "note": "SetVersion of the dependency"
+    },
+    {
+     "symbol": "dep_rec",
+     "file": "src/cls/IPM/Lifecycle/Base.cls",
+     "member": "%Clean",
+     "lines": "463-469",
+     "role": "write",
+     "note": "nested Clean failed: FinalizePhase/Finalize with the error"
+    },
+    {
+     "symbol": "dep_rec",
+     "file": "src/cls/IPM/Lifecycle/Base.cls",
+     "member": "%Clean",
+     "lines": "471-484",
+     "role": "write",
+     "note": "record deleted unless skipped, FinalizePhase/Finalize OK"
+    },
+    {
+     "symbol": "cmd_rows",
+     "file": "src/cls/IPM/Lifecycle/Base.cls",
+     "member": "%Test",
+     "lines": "1261",
+     "role": "decide",
+     "note": "LoadDependencies for test-scoped dependencies (each LoadModuleReference with no log writes a load record, Utils/Module.cls:63-68)"
+    },
+    {
+     "symbol": "cmd_rows",
+     "file": "src/cls/IPM/Lifecycle/Base.cls",
+     "member": "%Verify",
+     "lines": "1557",
+     "role": "decide",
+     "note": "LoadDependencies for verify-scoped dependencies"
+    }
+   ],
+   "scope": "Clean's dependency rows computed by uninstall.rs dep_step; phase-scoped dependency list for test/verify is an input (BuildDependencyGraph not modelled). Controls clean-writes-own-record, phase-command-records, test-scoped-deps-unrecorded, scoped-dep-recorded-as-install, dependency control clean-recursion-no-dependency-record. Native c1, c2, t1."
+  },
+  {
+   "id": "S74-06",
+   "owner": ".g5/ontology/features/history.g5.md#history.record",
+   "model": "actions.rs",
+   "symbols": [
+    "init",
+    "twin_while_running",
+    "persist",
+    "fin"
+   ],
+   "roles": [
+    {
+     "symbol": "init",
+     "file": "src/cls/IPM/General/AbstractHistory.cls",
+     "member": "Init",
+     "lines": "51-63",
+     "role": "write",
+     "note": "Action, Package, placeholder version, saved"
+    },
+    {
+     "symbol": "init",
+     "file": "src/cls/IPM/General/HistoryTemp.cls",
+     "member": "Init",
+     "lines": "9-26",
+     "role": "write",
+     "note": "permanent twin saved at init"
+    },
+    {
+     "symbol": "twin_while_running",
+     "file": "src/cls/IPM/General/HistoryTemp.cls",
+     "member": "PersistToTwin",
+     "lines": "30-59",
+     "role": "write",
+     "note": "the twin receives phases, Success, Committed and TimeEnd only here"
+    },
+    {
+     "symbol": "persist",
+     "file": "src/cls/IPM/General/HistoryTemp.cls",
+     "member": "%OnClose",
+     "lines": "62-73",
+     "role": "write",
+     "note": "PersistToTwin when the log object closes"
+    },
+    {
+     "symbol": "fin",
+     "file": "src/cls/IPM/General/AbstractHistory.cls",
+     "member": "Finalize",
+     "lines": "127-134",
+     "role": "write",
+     "note": "Success, Committed || ISOK, TimeEnd"
+    }
+   ],
+   "scope": "Created at start, filled at the end. Native mid.install/update/uninstall (twin in progress, no phases) and n5 order. Abnormal ends are the ipm-load-history crate's (load only)."
+  },
+  {
+   "id": "S74-07",
+   "owner": ".g5/ontology/features/history.g5.md#history.phases",
+   "model": "actions.rs",
+   "symbols": [
+    "phase_order",
+    "chain",
+    "order_by",
+    "logged",
+    "run_list",
+    "run_from",
+    "run_shape",
+    "logged_lists",
+    "install_phases"
+   ],
+   "roles": [
+    {
+     "symbol": "phase_order",
+     "file": "src/cls/IPM/DataType/PhaseName.cls",
+     "member": "VALUELIST",
+     "lines": "13",
+     "role": "decide",
+     "note": "PHASES order"
+    },
+    {
+     "symbol": "chain",
+     "file": "src/cls/IPM/Lifecycle/Base.cls",
+     "member": "GetCompletePhasesForOne",
+     "lines": "165-189",
+     "role": "decide",
+     "note": "chain per target phase"
+    },
+    {
+     "symbol": "order_by",
+     "file": "src/cls/IPM/Lifecycle/Base.cls",
+     "member": "GetCompletePhases",
+     "lines": "139-162",
+     "role": "decide",
+     "note": "chain members in PHASES order"
+    },
+    {
+     "symbol": "logged",
+     "file": "src/cls/IPM/Storage/Module.cls",
+     "member": "ExecutePhases",
+     "lines": "557-568",
+     "role": "decide",
+     "note": "'*' refreshes the module before InitPhase: no entry"
+    },
+    {
+     "symbol": "run_from",
+     "file": "src/cls/IPM/Storage/Module.cls",
+     "member": "ExecutePhases",
+     "lines": "570-572",
+     "role": "write",
+     "note": "InitPhase"
+    },
+    {
+     "symbol": "run_from",
+     "file": "src/cls/IPM/Storage/Module.cls",
+     "member": "ExecutePhases",
+     "lines": "692-697",
+     "role": "write",
+     "note": "thrown error: FinalizePhase(error)"
+    },
+    {
+     "symbol": "run_from",
+     "file": "src/cls/IPM/Storage/Module.cls",
+     "member": "ExecutePhases",
+     "lines": "608-610",
+     "role": "decide",
+     "note": "Invoke error status quits the try without FinalizePhase"
+    },
+    {
+     "symbol": "run_from",
+     "file": "src/cls/IPM/Storage/Module.cls",
+     "member": "ExecutePhases",
+     "lines": "669-671",
+     "role": "decide",
+     "note": "same after the phase"
+    },
+    {
+     "symbol": "run_from",
+     "file": "src/cls/IPM/Storage/Module.cls",
+     "member": "ExecutePhases",
+     "lines": "707-711",
+     "role": "decide",
+     "note": "stop at the first error; FinalizePhase(OK)"
+    },
+    {
+     "symbol": "run_list",
+     "file": "src/cls/IPM/Utils/Module.cls",
+     "member": "LoadNewModule",
+     "lines": "1345-1346",
+     "role": "decide",
+     "note": "target ApplyUpdateSteps for update, Activate otherwise"
+    }
+   ],
+   "scope": "Logged phase list computed; failing index and kind are environment inputs. Controls update-without-apply-update-steps, chain-drops-apply-update-steps, star-logged, failure-does-not-stop, thrown-failure-left-open. Native i1, i5, u1, u2, n1, n4."
+  },
+  {
+   "id": "S74-08",
+   "owner": ".g5/ontology/features/history.g5.md#history.committed.marking",
+   "model": "actions.rs",
+   "symbols": [
+    "lnm",
+    "mode_of",
+    "dev_eff",
+    "guard_refuses",
+    "install_committed_is_kept",
+    "install_refusal_uncommitted",
+    "dev_failure_committed"
+   ],
+   "roles": [
+    {
+     "symbol": "mode_of",
+     "file": "src/cls/IPM/Utils/Module.cls",
+     "member": "LoadNewModule",
+     "lines": "1172",
+     "role": "decide",
+     "note": "no transaction under NoTransaction or NoJournal"
+    },
+    {
+     "symbol": "guard_refuses",
+     "file": "src/cls/IPM/Utils/Module.cls",
+     "member": "LoadNewModule",
+     "lines": "1213-1222",
+     "role": "decide",
+     "note": "downgrade and update-required refusals, before the first mark"
+    },
+    {
+     "symbol": "lnm",
+     "file": "src/cls/IPM/Utils/Module.cls",
+     "member": "LoadNewModule",
+     "lines": "1225-1228",
+     "role": "write",
+     "note": "SetCommitted without a transaction"
+    },
+    {
+     "symbol": "lnm",
+     "file": "src/cls/IPM/Utils/Module.cls",
+     "member": "LoadNewModule",
+     "lines": "1292-1295",
+     "role": "write",
+     "note": "SetName, SetVersion"
+    },
+    {
+     "symbol": "lnm",
+     "file": "src/cls/IPM/Utils/Module.cls",
+     "member": "LoadNewModule",
+     "lines": "1309-1314",
+     "role": "write",
+     "note": "developer mode: TCOMMIT and SetCommitted"
+    },
+    {
+     "symbol": "lnm",
+     "file": "src/cls/IPM/Utils/Module.cls",
+     "member": "LoadNewModule",
+     "lines": "1347-1352",
+     "role": "write",
+     "note": "non-dev with transactions: TCOMMIT and SetCommitted after the phases"
+    },
+    {
+     "symbol": "lnm",
+     "file": "src/cls/IPM/Utils/Module.cls",
+     "member": "LoadNewModule",
+     "lines": "1358-1361",
+     "role": "decide",
+     "note": "rollback of everything not committed (defines kept)"
+    },
+    {
+     "symbol": "dev_eff",
+     "file": "src/cls/IPM/Utils/Module.cls",
+     "member": "LoadModuleReference",
+     "lines": "130-136",
+     "role": "decide",
+     "note": "dev passed to LoadModuleFromDirectory only for a snapshot"
+    },
+    {
+     "symbol": "dev_eff",
+     "file": "src/cls/IPM/Utils/Module.cls",
+     "member": "LoadModuleFromDirectory",
+     "lines": "307-310",
+     "role": "decide",
+     "note": "override applied when Install is not set (update)"
+    },
+    {
+     "symbol": "install_body",
+     "file": "src/cls/IPM/Main.cls",
+     "member": "Install",
+     "lines": "2631-2632",
+     "role": "write",
+     "note": "SetSource/SetVersion from the search result"
+    },
+    {
+     "symbol": "install_body",
+     "file": "src/cls/IPM/Utils/Module.cls",
+     "member": "LoadModuleReference",
+     "lines": "51, 84-126",
+     "role": "decide",
+     "note": "prelogged: refusals before LoadNewModule, no finalize of the caller's log (207-209)"
+    }
+   ],
+   "scope": "Committed computed from the three marks and Finalize under the Install and Update callers; theorem install_committed_is_kept: Committed iff kept, except the early marker. Controls no-commit-mark-without-transaction, no-commit-mark-dev, guard-after-commit-mark, dependency controls finalize-status-only, finalize-without-isok. Native u2, u3, i5, i6, i7."
+  },
+  {
+   "id": "S74-09",
+   "owner": ".g5/ontology/features/history.g5.md#history.committed.uninstall",
+   "model": "actions.rs",
+   "symbols": [
+    "top_rec",
+    "dep_rec",
+    "uninstall_committed_is_success",
+    "dep_rec_committed",
+    "n5_facts"
+   ],
+   "roles": [
+    {
+     "symbol": "top_rec",
+     "file": "src/cls/IPM/Storage/Module.cls",
+     "member": "Uninstall",
+     "lines": "752",
+     "role": "write",
+     "note": "Finalize(tSC): Committed = 0 || ISOK"
+    },
+    {
+     "symbol": "top_rec",
+     "file": "src/cls/IPM/General/AbstractHistory.cls",
+     "member": "Finalize",
+     "lines": "131",
+     "role": "decide",
+     "note": "Committed || ISOK(status)"
+    },
+    {
+     "symbol": "dep_rec",
+     "file": "src/cls/IPM/Lifecycle/Base.cls",
+     "member": "%Clean",
+     "lines": "446, 465, 475, 484",
+     "role": "write",
+     "note": "dependency records finalized with the nested Clean's status"
+    },
+    {
+     "symbol": "n5_facts",
+     "file": "src/cls/IPM/Lifecycle/Base.cls",
+     "member": "%Unconfigure",
+     "lines": "545-570",
+     "role": "decide",
+     "note": "installer OnUnconfigureComponent error fails the dependency's Clean (uninstall.rs hook_ok)"
+    }
+   ],
+   "scope": "Top and dependency uninstall records read Committed exactly when their Clean returned OK. Control uninstall-sets-committed, dependency control finalize-without-isok. Native n1, n2, n4 (status-conditioned replay), n5, c1."
+  }
+ ],
+ "members_newly_reached": [
+  "General/AbstractHistory.cls::UpdateInit"
+ ],
+ "members_gaining_active_binding": [
+  "Main.cls::Install",
+  "Main.cls::Update",
+  "Main.cls::Reinstall",
+  "Main.cls::Uninstall",
+  "Main.cls::RunOnePhase",
+  "Main.cls::ModuleAction",
+  "Main.cls::ShellInternal",
+  "General/AbstractHistory.cls::Init",
+  "General/AbstractHistory.cls::InstallInit",
+  "General/AbstractHistory.cls::UninstallInit",
+  "General/AbstractHistory.cls::SetVersion",
+  "General/AbstractHistory.cls::SetName",
+  "General/AbstractHistory.cls::SetCommitted",
+  "General/AbstractHistory.cls::Finalize",
+  "General/HistoryTemp.cls::Init",
+  "General/HistoryTemp.cls::PersistToTwin",
+  "General/HistoryTemp.cls::%OnClose",
+  "Storage/Module.cls::ExecutePhases",
+  "Storage/Module.cls::Uninstall",
+  "Lifecycle/Base.cls::GetCompletePhases",
+  "Lifecycle/Base.cls::GetCompletePhasesForOne",
+  "Lifecycle/Base.cls::%Clean",
+  "Lifecycle/Base.cls::%Test",
+  "Lifecycle/Base.cls::%Verify",
+  "Lifecycle/Base.cls::%Unconfigure",
+  "Utils/Module.cls::LoadNewModule",
+  "Utils/Module.cls::LoadModuleReference",
+  "Utils/Module.cls::LoadModuleFromDirectory"
+ ]
+}

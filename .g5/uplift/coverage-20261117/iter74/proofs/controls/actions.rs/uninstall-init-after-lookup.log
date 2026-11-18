@@ -1,0 +1,49 @@
+verification results:: 97 verified, 2 errors
+note: function body check: not all errors may have been reported; rerun with a higher value for --multiple-errors to find other potential errors in this function
+   --> /home/ziniu_wu_g5labs_ai/experiments/model-coverage-uplift-20261117/ipm/ipm/.g5/uplift/coverage-20261117/iter74/proofs/controls/actions.rs/uninstall-init-after-lookup.rs:494:1
+    |
+494 | pub proof fn uninstall_committed_is_success(w: unin::W, k: nat, force: bool, recurse: bool, global: bool, fuel: nat)
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: postcondition not satisfied
+   --> /home/ziniu_wu_g5labs_ai/experiments/model-coverage-uplift-20261117/ipm/ipm/.g5/uplift/coverage-20261117/iter74/proofs/controls/actions.rs/uninstall-init-after-lookup.rs:495:13
+    |
+494 |   pub proof fn uninstall_committed_is_success(w: unin::W, k: nat, force: bool, recurse: bool, global: bool, fuel: nat)
+    |   -------------------------------------------------------------------------------------------------------------------- at the end of the function body
+495 |       ensures ({
+    |  _____________^
+496 | |         let o = unin_out(w, k, force, recurse, global, fuel);
+497 | |         let rs = cli_uninstall(w, Some(k), force, recurse, global, fuel);
+498 | |         &&& rs.len() >= 1
+...   |
+502 | |         &&& (unin::lookup(w, k) is Some) ==> rs[0].phases == seq![PE { name: Ph::Clean, ok: o.ok, ended: true }]
+503 | |     })
+    | |______^ failed this postcondition
+
+note: recommendation not met
+   --> /home/ziniu_wu_g5labs_ai/experiments/model-coverage-uplift-20261117/ipm/ipm/.g5/uplift/coverage-20261117/iter74/proofs/controls/actions.rs/uninstall-init-after-lookup.rs:508:12
+    |
+508 |     assert(rs[0] == top_unin(w, k, o.ok));
+    |            ^^^^^
+    |
+   --> seq.rs:981:12
+    |
+    = note: recommendation not met
+
+error: assertion failed
+   --> /home/ziniu_wu_g5labs_ai/experiments/model-coverage-uplift-20261117/ipm/ipm/.g5/uplift/coverage-20261117/iter74/proofs/controls/actions.rs/uninstall-init-after-lookup.rs:508:12
+    |
+508 |     assert(rs[0] == top_unin(w, k, o.ok));
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ assertion failed
+
+error: postcondition not satisfied
+   --> /home/ziniu_wu_g5labs_ai/experiments/model-coverage-uplift-20261117/ipm/ipm/.g5/uplift/coverage-20261117/iter74/proofs/controls/actions.rs/uninstall-init-after-lookup.rs:562:13
+    |
+560 | pub proof fn uninstall_one_record(w: unin::W, k: nat, force: bool, global: bool, fuel: nat)
+    | ------------------------------------------------------------------------------------------- at the end of the function body
+561 |     requires unin::lookup(w, k) != Some(unin::ipm_id())
+562 |     ensures cli_uninstall(w, Some(k), force, false, global, fuel).len() == 1
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: aborting due to 3 previous errors
+

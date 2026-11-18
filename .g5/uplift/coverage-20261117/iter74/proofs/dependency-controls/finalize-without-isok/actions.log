@@ -1,0 +1,41 @@
+verification results:: 96 verified, 3 errors
+error: postcondition not satisfied
+   --> /home/ziniu_wu_g5labs_ai/experiments/model-coverage-uplift-20261117/ipm/ipm/.g5/uplift/coverage-20261117/iter74/proofs/dependency-controls/finalize-without-isok/actions.rs:495:13
+    |
+494 |   pub proof fn uninstall_committed_is_success(w: unin::W, k: nat, force: bool, recurse: bool, global: bool, fuel: nat)
+    |   -------------------------------------------------------------------------------------------------------------------- at the end of the function body
+495 |       ensures ({
+    |  _____________^
+496 | |         let o = unin_out(w, k, force, recurse, global, fuel);
+497 | |         let rs = cli_uninstall(w, Some(k), force, recurse, global, fuel);
+498 | |         &&& rs.len() >= 1
+...   |
+502 | |         &&& (unin::lookup(w, k) is Some) ==> rs[0].phases == seq![PE { name: Ph::Clean, ok: o.ok, ended: true }]
+503 | |     })
+    | |______^ failed this postcondition
+
+error: postcondition not satisfied
+   --> /home/ziniu_wu_g5labs_ai/experiments/model-coverage-uplift-20261117/ipm/ipm/.g5/uplift/coverage-20261117/iter74/proofs/dependency-controls/finalize-without-isok/actions.rs:517:13
+    |
+516 | pub proof fn dep_rec_committed(hr: unin::HRow)
+    | ---------------------------------------------- at the end of the function body
+517 |     ensures dep_rec(hr).row.committed == hr.ok, ok_of(dep_rec(hr)) == hr.ok, dep_rec(hr).row.action == h::Action::Uninstall,
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+
+error: postcondition not satisfied
+   --> /home/ziniu_wu_g5labs_ai/experiments/model-coverage-uplift-20261117/ipm/ipm/.g5/uplift/coverage-20261117/iter74/proofs/dependency-controls/finalize-without-isok/actions.rs:794:13
+    |
+793 |   pub proof fn c1_facts()
+    |   ----------------------- at the end of the function body
+794 |       ensures ({
+    |  _____________^
+795 | |         let w = unin::w_recremove();
+796 | |         let o = unin::clean_cmd(w, 3, false, false, 3);
+797 | |         let rs = cli_clean(w, 3, false, false, 3);
+...   |
+800 | |         &&& rs[0].row.action == h::Action::Uninstall && rs[0].phases == seq![PE { name: Ph::Clean, ok: true, ended: true }]
+801 | |     })
+    | |______^ failed this postcondition
+
+error: aborting due to 3 previous errors
+

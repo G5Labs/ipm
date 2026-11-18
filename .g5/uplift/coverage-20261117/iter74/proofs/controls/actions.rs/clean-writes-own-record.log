@@ -1,0 +1,32 @@
+verification results:: 97 verified, 2 errors
+error: postcondition not satisfied
+   --> /home/ziniu_wu_g5labs_ai/experiments/model-coverage-uplift-20261117/ipm/ipm/.g5/uplift/coverage-20261117/iter74/proofs/controls/actions.rs/clean-writes-own-record.rs:579:13
+    |
+579 |       ensures cli_clean(w, k, force, global, fuel).len() == 0
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ failed this postcondition
+580 |   {
+581 | /     match unin::lookup(w, k) {
+582 | |         None => {}
+583 | |         Some(t) => {
+584 | |             let p = unin::P { level: 0, force: force, recurse: true, global: global, nested: false, full: false, cycle: Set::empt...
+...   |
+587 | |     }
+    | |_____- at the end of the function body
+
+error: postcondition not satisfied
+   --> /home/ziniu_wu_g5labs_ai/experiments/model-coverage-uplift-20261117/ipm/ipm/.g5/uplift/coverage-20261117/iter74/proofs/controls/actions.rs/clean-writes-own-record.rs:794:13
+    |
+793 |   pub proof fn c1_facts()
+    |   ----------------------- at the end of the function body
+794 |       ensures ({
+    |  _____________^
+795 | |         let w = unin::w_recremove();
+796 | |         let o = unin::clean_cmd(w, 3, false, false, 3);
+797 | |         let rs = cli_clean(w, 3, false, false, 3);
+...   |
+800 | |         &&& rs[0].row.action == h::Action::Uninstall && rs[0].phases == seq![PE { name: Ph::Clean, ok: true, ended: true }]
+801 | |     })
+    | |______^ failed this postcondition
+
+error: aborting due to 2 previous errors
+
